@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Also read `instructions.md` at the repo root — it holds standing behavioral rules
+the repo owner has given (how to conduct changes, verification steps, etc.),
+separate from this file's codebase documentation.
+
 ## Project
 
 A static portfolio site ("what does a tree smell like") — hand-written HTML, one shared
