@@ -14,12 +14,20 @@
 </head>
 <body class="snap-page">
 
+<!-- Wash, squared paper and static. Purely decorative; all three are
+     drawn and faded in by paper.js. -->
+<div class="paper" aria-hidden="true">
+  <div class="paper-wash"></div>
+  <canvas class="paper-grid"></canvas>
+  <canvas class="paper-noise"></canvas>
+</div>
+
 <main id="scroll-container">
 
   <!-- SLIDE 1 — TITLE. Edit: the big line, the line under it. -->
   <section class="slide title-slide" id="slide-1">
     <div class="title-content">
-      <h1>What does a tree smell like?</h1>
+      <h1>what does a tree smell like?</h1>
       <p class="title-sub">Photography and architecture</p>
     </div>
     <div class="title-block">
@@ -51,7 +59,6 @@
     you need to touch to add, remove, or relabel one.
   -->
   <section class="slide node-slide" id="slide-3">
-    <h2>a few things I keep coming back to — drag to rotate</h2>
     <div class="node-scene-wrap" id="node-scene">
       <canvas id="node-canvas"></canvas>
       <div class="node-labels" id="node-labels"></div>
@@ -65,5 +72,7 @@
 <script src="nav.js"></script>
 <script src="landing.js"></script>
 <script src="node-scene.js"></script>
+<script src="paper.js"></script>
+<script src="thread.js"></script>
 </body>
 </html>
