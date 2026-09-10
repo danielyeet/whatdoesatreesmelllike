@@ -21,7 +21,7 @@
 const EXTRAS = {
   dimensions: false,
   orthographics: true,
-  chromatogram: true,
+  chromatogram: false,
 };
 
 (function () {
