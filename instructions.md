@@ -23,3 +23,16 @@ How to do this here (static site, no build step):
    is pre-installed in this environment) and take a screenshot.
 3. Compare against what was asked for. Note anything that looks wrong —
    layout, console errors, missing assets — before reporting the task done.
+
+## Test every requested feature; never assume (2026-09-10)
+
+> Conduct tests for every feature I request to make sure it behaves as
+> expected. When unsure about something always double check and never
+> assume.
+
+Applies on top of the visual check above: a screenshot confirms it *looks*
+right, this rule covers whether it *behaves* right — click through
+interactions, check state changes, check the console for errors, re-read the
+relevant code rather than guessing at what it does. If something about the
+request, the existing code, or the expected behavior is unclear, verify it
+(read the code, run it, ask) instead of assuming an answer and proceeding.
