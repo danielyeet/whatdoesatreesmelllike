@@ -2,49 +2,49 @@
 
 ## What changed in the latest pass
 
-- **The specks became a cloud.** They now run from just outside the
-  diagram to well past the edges of the screen, spread along z as well
-  as across, so the map sits inside a volume rather than being ringed
-  by one — some pass in front of the branches, some behind. They still
-  turn with it.
-- **Each speck sizes itself by how far out it is**: bigger near the
-  centre, down to specks at the frame's edge. A size ceiling stops one
-  that drifts close to the camera from ballooning into a blob.
-- **They fade in, hold, fade out, and come back somewhere else.**
-  Eleven to twenty-seven seconds for a full cycle, each on its own
-  clock, so the cloud reshuffles continuously and you shouldn't ever
-  catch one doing it.
-- **Every branch now sways on its own.** Two slow cycles per branch at
-  six to ten seconds, tapering to nothing at the centre, so the tip
-  travels about ten pixels and the root doesn't move. Waypoints, wake
-  specks, the registration mark and its label all ride along — a
-  branch stays one object.
-- **The cursor's effect is a corrugation now, not a wave.** A sharp
-  zigzag whose height and position are re-rolled about fourteen times
-  a second, so it reads as jitter rather than as something travelling
-  along a wire. Amplitude is down to about a quarter of what it was —
-  roughly one pixel at its strongest.
-- **The grid arrives molten.** It comes in heavily warped by a slow
-  large-scale wobble that relaxes to nothing as you finish the scroll,
-  so the white doesn't switch into ruled paper, it sets into it. Same
-  displacement machinery as the refraction around the centre, just
-  bigger and going away. The whole paper ramp is flatter at both ends
-  too.
+The previous pass (triangle-wave arms, particle convergence, and the
+dark pop-up) was **fully reverted first**, then rebuilt cleaner:
 
-### One thing worth knowing about the rewrite
+- Decorative particles no longer react to the cursor on their own —
+  that was causing the odd "randomly flying" look, since as the
+  scene rotated, particles would drift in and out of alignment with
+  a raycasting hover check and pulse unpredictably. They now just sit
+  still, rotating rigidly with everything else.
+- Arms are completely static except right at the tip, and only while
+  you're actually hovering that node's label — a small, dense,
+  triangle-wave ripple appears in just the last stretch of the arm
+  nearest the node, fading in and out smoothly. No ambient sway.
+- The bold effect on a hovered arm is now subtler than before.
+- Hovering a node still pauses the rotation.
+- Nearby particles still gather onto the hovered node's arm, and
+  settle back exactly to their resting spot afterward (no lingering
+  drift this time — that was the root cause of the sway).
+- Clicking any node opens a simple dark pop-up (image placeholder,
+  title, description, "Enter" button) growing from that node's
+  position — no blur, no forward-tilting arm this time, kept plain
+  on purpose since you said not to fuss over details yet.
 
-Both particle systems are now single batches drawn in one call each,
-with a small shader that gives every speck its own size and its own
-opacity — the stock points material can do neither. That's what lets
-the count go from twenty-six to nearly seven hundred without the cost
-going up with it. The tubes lost a couple of sides each to pay for
-every branch bending on every frame rather than only near the cursor.
+## Earlier changes
 
-If the map ever comes up blank, that shader is the first place to
-look: a shader that fails to compile takes the whole scene with it,
-where the old material would simply have looked wrong.
+- **Fixed the scroll jank**: the custom slide-to-slide animation was
+  fighting with CSS scroll-snap, which is what made it feel broken.
+  Snap is now switched off for the moment an animation is running and
+  back on once it lands — should feel properly smooth now.
+- **Fixed the 3D page not appearing**: it depended on an add-on
+  library (OrbitControls) that likely failed to load. Rotation is now
+  hand-built with no extra dependency, and there's a plain-list
+  fallback if the core 3D library ever fails to load too.
+- **Palette flipped to white**: near-white background, near-black
+  text, the same brass accent.
+- **The "Menu" overlay stays black** on purpose even on the white
+  site, and the page now visibly dims behind it when it opens.
+- Removed the three dots on the right (wasn't asked for).
+- Title is smaller, ends in a question mark, and the corner box is
+  tucked closer to the edge.
+- The middle slide is now one centered, italic line with placeholder
+  text — swap it for whatever you want it to say.
 
-## What changed before that
+## Earlier changes
 
 - **Palette**: near-black background, off-white text, one brass accent
   — all still just six values at the top of `style.css`.
@@ -63,90 +63,27 @@ where the old material would simply have looked wrong.
 
 ## The 3D node map — how to edit it
 
-Everything about the map lives in **`node-scene.js`**, in the two
-lists at the top of the file.
-
-### The shape of it
-
-Link nodes are **endpoints**. A branch grows out of the centre, passes
-through two small waypoint dots, and stops at the link node — nothing
-ever continues past one, so anything you can click reads as somewhere
-the map ends rather than somewhere it passes through. The loose
-atmospheric dots attach to the centre or to a waypoint, never to a
-link node. That rule is enforced in the code, not by hand: link nodes
-are simply left out of the list of points a loose dot is allowed to
-connect to, so you can't accidentally break it by moving one.
-
-### `REAL_NODES` — the clickable endpoints
+Everything about the node map lives in **`node-scene.js`**, in the
+`REAL_NODES` list near the top of the file:
 
 ```js
-{ label: "Scent descriptions", sub: "notes on things...", href: "categories/scent-descriptions.html", pos: [-2.9, 1.5, 0.7] }
+{ label: "Scent descriptions", sub: "notes on things...", href: "categories/scent-descriptions.html", pos: [-2.5, 1.1, 0.6] }
 ```
 
 - `label` / `sub` — the text shown (the sub-line only appears on hover).
 - `href` — where it links to.
-- `pos` — position in 3D space as `[x, y, z]`. Keep these out near the
-  edge, roughly 3 to 3.7 from the centre in total, since that's where
-  an endpoint belongs. The branch that reaches each one, including its
-  curve and its two waypoint dots, is drawn automatically — move a
-  node and everything follows.
+- `pos` — its position in 3D space, as `[x, y, z]`. Roughly -3 to 3 on
+  each axis keeps it comfortably in view; nothing else needs to
+  change when you move a node, the connecting line follows it
+  automatically.
 
-One thing worth knowing when you reposition them: a node with a small
-`y` value will sweep across the centre of the screen as the map turns,
-and its label will cross the middle. Giving every node a `y` of at
-least about 1 either way avoids that.
+Two of the seven nodes are labeled "Test node" and link to
+`works/test-node-a.html` / `works/test-node-b.html` — plain sandbox
+pages you can rewrite freely, or delete along with their entry here.
 
-### `DECORATIVE_POINTS` — atmosphere
-
-A plain list of `[x, y, z]` positions. Each connects itself to
-whichever centre or waypoint is nearest. Keep them within about 2.7 of
-the centre so they stay inside the map. If you put one further out
-than `MAX_LOOSE_REACH` (1.7) from anything, it just floats
-unconnected rather than flinging a long line across the middle.
-
-### How things react
-
-- **Loose specks spray apart.** Each speck is nine particles stacked on
-  the same point, so at rest it looks like one dot. Pointing at it
-  throws them outward along directions fixed at load — so a speck
-  sprays the same way every time — thinning and shrinking as they
-  separate. They drift back together about four times slower than they
-  scatter, which is what makes it read as a burst rather than
-  something breathing in and out. There's an invisible pointer-sized
-  sphere over each one, because particles that shrink as they scatter
-  would otherwise slip out from under the cursor and flicker.
-- **Link nodes emphasise their branch by weight, not colour.** Hover or
-  tab-focus one and the branch behind it thickens and darkens, its
-  waypoint dots grow, the label goes bold, and everything else on the
-  map steps back. Branches are drawn as tubes rather than lines
-  specifically so they *can* thicken: WebGL ignores line thickness on
-  nearly every browser, so a line-based branch is stuck at one pixel
-  forever.
-- **The centre** is a dark solid core inside two soft grey shells,
-  breathing very slightly. `window.__p23` — the scroll progress
-  between slide 2 and 3, set by `thread.js` — is the only thing the
-  two files say to each other; the map fades in on it.
-
-### Tuning
-
-Near the top of the file, under `// --- Tuning`:
-
-| | |
-|---|---|
-| `IDLE_SPEED` | how fast it drifts on its own |
-| `MAX_TILT` | how far it can be tipped up or down |
-| `FRAME_V` / `FRAME_H` | how much room the map is given — **larger numbers draw it smaller** |
-| `BRANCH_RADIUS` / `BRANCH_RADIUS_EMPH` | branch thickness at rest and when its node is hovered |
-| `SPECK_SIZE` | how big a loose speck reads |
-| `REF_PX_PER_UNIT` | the screen size the weights above are tuned for; other sizes scale against it |
-
-`FRAME_H` has a separate, larger value for portrait screens (in
-`resize()`). It has to be larger there: on a tall narrow phone,
-filling the height would push the left and right link nodes off the
-edges where they can't be tapped. The cost is that the map sits in
-the middle of a phone screen with space above and below it. If you'd
-rather have it bigger on phones and accept nodes rotating in and out
-of view, lower that number.
+Further down the same file, `DECORATIVE_POINTS` is a plain list of
+`[x, y, z]` positions — small dots that light up on hover but aren't
+links, just atmosphere. Add, remove, or reposition freely.
 
 **This one file is genuinely more advanced than the rest of the
 site** — it's real 3D graphics code, not just HTML and CSS. If
@@ -154,22 +91,16 @@ something about it needs fixing later, the fastest path is telling me
 exactly what's wrong (a screenshot helps a lot) rather than trying to
 debug the 3D math by hand.
 
-Two of the seven nodes are labeled "Test node" and link to
-`works/test-node-a.html` / `works/test-node-b.html` — plain sandbox
-pages you can rewrite freely, or delete along with their entry here.
-
-On a phone, the map no longer blocks scrolling: vertical swipes scroll
-past the slide, horizontal drags rotate it.
+Known trade-off: on a phone, dragging to rotate the scene can make it
+harder to swipe past that slide.
 
 ## How it's organized
 
 ```
 index.html                          the landing page (title, intro, 3D node map)
 style.css                           every page's look — one shared file
-nav.js                               the "Menu" button and the cursor, on every page
-landing.js                           gentle scrolling between slides, index.html only
-paper.js                             the wash, the bending grid, the static, index.html only
-thread.js                            the line through the three slides, index.html only
+nav.js                               the "Menu" button, on every page
+landing.js                           dot navigation + gentle scrolling, index.html only
 node-scene.js                        the 3D node map — see above
 contact.html                        the contact page
 
