@@ -35,9 +35,9 @@
   const GRID_SMALL = 13;        // the small squares
   const GRID_MAJOR_EVERY = 4;   // a stronger line every fourth one
   const GRID_MICRO_EVERY = 4;   // and each small square split this many ways
-  const MICRO_ALPHA = 0.012;
-  const MINOR_ALPHA = 0.022;
-  const MAJOR_ALPHA = 0.056;
+  const MICRO_ALPHA = 0.009;  // was 0.012 — the grid asked to be a touch less prominent
+  const MINOR_ALPHA = 0.017;  // was 0.022
+  const MAJOR_ALPHA = 0.042;  // was 0.056
 
   // The static is drawn at a fraction of screen resolution and scaled
   // up, so each grain is this many CSS pixels across. 1 is the finest
@@ -283,9 +283,14 @@
   let paintedOnce = false;
   let lastCurtain = -1;
 
-  // Two panels drawing in from the edges. Written as a mask rather
-  // than as two moving divs so the wash, the grid and the static are
-  // all cut by the same edge, and so that edge can be soft.
+  // A soft disc growing from the centre outward, in place of the old
+  // two-panel curtain sliding in from the left and right edges. Still
+  // a mask rather than a moving div, so the wash, the grid and the
+  // static are all cut by the same edge, and that edge can be soft —
+  // but a circle reads as the paper materializing around the map's
+  // own centre (where the branches themselves grow from) rather than
+  // as two hard edges sliding together, which is what made it feel
+  // like a strictly left-right effect instead of a single arrival.
   function setCurtain(c) {
     if (!paper) return;
     if (Math.abs(c - lastCurtain) < 0.004) return;
@@ -295,17 +300,17 @@
       paper.style.maskImage = "none";
       return;
     }
-    const near = 50 * c;
-    const far = 100 - near;
-    const feather = Math.min(CURTAIN_FEATHER * (1 - c * 0.7), (far - near) / 2 - 0.2);
+    // Sized in % of distance-to-farthest-corner (radial-gradient's
+    // default), so radius 100 always just covers the viewport whatever
+    // its aspect ratio, and the hand-off to "no mask" above is seamless.
+    const radius = 100 * c;
+    const feather = Math.max(2, CURTAIN_FEATHER * (1.4 - c * 0.9));
     const gradient =
-      "linear-gradient(to right," +
+      "radial-gradient(circle at 50% 50%," +
       " #000 0%," +
-      " #000 " + near.toFixed(2) + "%," +
-      " rgba(0,0,0,0) " + (near + feather).toFixed(2) + "%," +
-      " rgba(0,0,0,0) " + (far - feather).toFixed(2) + "%," +
-      " #000 " + far.toFixed(2) + "%," +
-      " #000 100%)";
+      " #000 " + radius.toFixed(2) + "%," +
+      " rgba(0,0,0,0) " + (radius + feather).toFixed(2) + "%," +
+      " rgba(0,0,0,0) 100%)";
     paper.style.webkitMaskImage = gradient;
     paper.style.maskImage = gradient;
   }

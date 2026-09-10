@@ -172,6 +172,13 @@ const SITE_LINKS = [
     dot.classList.toggle("near", !!target);
   });
 
+  // Held rather than reset to 0 below the speed threshold: the ring is
+  // still visibly stretched at that point (pull isn't quite zero yet),
+  // so snapping the angle back to 0 there showed as a little flick
+  // right as the cursor settled. Holding the last real direction lets
+  // the stretch relax away to nothing before its angle stops mattering.
+  let ringAngle = 0;
+
   function follow() {
     requestAnimationFrame(follow);
     const dx = tx - rx;
@@ -182,11 +189,11 @@ const SITE_LINKS = [
     // Pulled along its own direction of travel, by however far it is
     // currently behind.
     const speed = Math.min(60, Math.hypot(dx, dy));
-    const angle = speed > 1 ? (Math.atan2(dy, dx) * 180) / Math.PI : 0;
+    if (speed > 1) ringAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
     const pull = speed * STRETCH;
     ring.style.transform =
       "translate(" + rx.toFixed(1) + "px," + ry.toFixed(1) + "px) translate(-50%,-50%)" +
-      " rotate(" + angle.toFixed(1) + "deg) scale(" + (1 + pull * 0.16).toFixed(3) + "," + (1 - pull * 0.1).toFixed(3) + ")";
+      " rotate(" + ringAngle.toFixed(1) + "deg) scale(" + (1 + pull * 0.16).toFixed(3) + "," + (1 - pull * 0.1).toFixed(3) + ")";
   }
   requestAnimationFrame(follow);
 })();

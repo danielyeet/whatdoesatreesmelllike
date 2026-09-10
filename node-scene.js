@@ -122,6 +122,13 @@ const ATMOSPHERE_LABELS = [
   const TUBE_SIDES = 8;
   const REF_PX_PER_UNIT = 94;
 
+  // A short tapered collar at the hub end of every branch, widening
+  // from the tube's own thin radius out to something the core and its
+  // halo can absorb — without it a branch reads as a wire poked into a
+  // ball rather than something growing out of it.
+  const ROOT_FLARE_RADIUS = 0.062; // how wide it gets at the hub end
+  const ROOT_FLARE_LENGTH = 0.17;  // how far out it reaches before handing off to the plain tube
+
   const COL_INK = new THREE.Color(0x22221a);
   const COL_BRANCH = new THREE.Color(0x807c73);
   const COL_SPECK = new THREE.Color(0x999590);
@@ -287,6 +294,19 @@ const ATMOSPHERE_LABELS = [
     const resting = tube(BRANCH_RADIUS, COL_BRANCH, 0.78);
     const emphasised = tube(BRANCH_RADIUS_EMPH, COL_INK, 0);
 
+    // A short tapered collar at the hub end, widening from the tube's
+    // own thin radius out to something the core's halo can absorb —
+    // otherwise a branch reads as a wire poked into a ball rather than
+    // something growing out of it. Open-ended: both its ends are meant
+    // to disappear, one into the core, one into the tube.
+    const rootFlare = new THREE.Mesh(
+      new THREE.CylinderGeometry(BRANCH_RADIUS, ROOT_FLARE_RADIUS, ROOT_FLARE_LENGTH, 12, 1, true)
+        .translate(0, ROOT_FLARE_LENGTH / 2, 0),
+      new THREE.MeshBasicMaterial({ color: COL_BRANCH.clone(), transparent: true, opacity: 0.78, depthWrite: false })
+    );
+    rootFlare.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curve.getTangent(0));
+    rig.add(rootFlare);
+
     const dots = [
       { mesh: null, base: w1.clone(), t: 0.32, scale: 0.95 },
       { mesh: null, base: w2.clone(), t: 0.69, scale: 0.78 },
@@ -345,7 +365,7 @@ const ATMOSPHERE_LABELS = [
     const period2 = SWAY_PERIOD[0] + Math.random() * (SWAY_PERIOD[1] - SWAY_PERIOD[0]);
     branches.push({
       emerge: 0,
-      curve: curve, resting: resting, emphasised: emphasised, dots: dots, weight: 0,
+      curve: curve, resting: resting, emphasised: emphasised, rootFlare: rootFlare, dots: dots, weight: 0,
       samplePoints: curve.getPoints(48), // for the converge effect below to search against
       armSamples: curve.getPoints(64),   // a finer trace, for the preview arm
       swayA: perp.clone(), swayB: perp2,
@@ -850,11 +870,31 @@ const ATMOSPHERE_LABELS = [
 
   // Where a point at t along this branch has been carried to.
   function swayAt(branch, t, out) {
+    // SWAY is 0 right now, which makes branch.amp 0 for every branch --
+    // skip the two Math.sin() calls in that case rather than computing
+    // a result that gets multiplied away to nothing. If SWAY is raised
+    // above 0 later this stops applying automatically, no other change
+    // needed.
+    if (branch.amp === 0) return out.set(0, 0, 0);
     const taper = Math.pow(t, SWAY_TAPER) * branch.amp;
     const a = Math.sin(clock * branch.w1 + branch.p1) * taper;
     const b = Math.sin(clock * branch.w2 + branch.p2) * taper;
     out.set(0, 0, 0).addScaledVector(branch.swayA, a).addScaledVector(branch.swayB, b);
     return out;
+  }
+
+  // A node's distance from the camera barely moves projected.z off the
+  // far end of its -1..1 range for a scene this small sitting this far
+  // from the near/far planes -- raw NDC depth is nearly identical for
+  // every node, so it was never actually distinguishing near from far
+  // for label fade, z-index stacking, or the chromatogram's per-node
+  // height. The camera sits on the Z axis looking straight at the
+  // origin with no rotation of its own, so distance-from-camera is
+  // just camera.position.z - worldPos.z, and camera.position.z cancels
+  // out entirely once that's normalised against the map's own radius —
+  // cheaper than going through the camera matrix, too.
+  function viewDepth(worldPos) {
+    return Math.min(1, Math.max(0, 0.5 - worldPos.z / (2 * mapRadius)));
   }
 
   const perRing = TUBE_SIDES + 1;
@@ -885,8 +925,12 @@ const ATMOSPHERE_LABELS = [
         const along = scratch.dot(rayDir);
         if (along > 0) {
           scratch.addScaledVector(rayDir, -along);
-          const d = scratch.length();
-          if (d < CORR_REACH) {
+          // Compare squared distance first so the sqrt only runs for
+          // rings actually within reach, not for every ring of every
+          // branch on every frame.
+          const d2 = scratch.lengthSq();
+          if (d2 < CORR_REACH * CORR_REACH) {
+            const d = Math.sqrt(d2);
             const falloff = 1 - d / CORR_REACH;
             const phase = t * CORR_PITCH + branch.jitterPhase;
             // a second, differently-tuned zigzag riding on the first so
@@ -951,7 +995,8 @@ const ATMOSPHERE_LABELS = [
     // --- re-roll the jitter a few times a second, and work out where
     // the cursor is pointing inside the map's own frame of reference
     invRig.copy(rig.matrixWorld).invert();
-    if (pointerLive && arrival > 0.5 && !REDUCE_MOTION) {
+    const rayLive = pointerLive && arrival > 0.5 && !REDUCE_MOTION;
+    if (rayLive) {
       rayOrigin.copy(raycaster.ray.origin).applyMatrix4(invRig);
       rayDir.copy(raycaster.ray.direction).transformDirection(invRig);
     } else {
@@ -978,7 +1023,16 @@ const ATMOSPHERE_LABELS = [
     ghostEmerge = emergeEase((arrival - EMERGE_STAGGER * 0.5) / (1 - EMERGE_STAGGER));
 
     branches.forEach((branch) => {
-      bendTube(branch, branch.resting);
+      // Nothing can be moving this tube: it's done emerging, sway is
+      // structurally off (amp is 0 unless SWAY is raised above 0), and
+      // with the ray parked, corrugation is provably zero too -- so the
+      // vertex buffer already holds the right positions from the last
+      // frame that actually changed something, and redoing that work
+      // (plus the GPU re-upload it triggers) here would be pure waste,
+      // every frame, forever, for every branch. Real cost on modest
+      // hardware even though nothing about it is visible.
+      const settled = branch.emerge >= 0.9995 && branch.amp === 0 && !rayLive;
+      if (!settled) bendTube(branch, branch.resting);
       if (branch.weight > 0.02) bendTube(branch, branch.emphasised);
       branch.dots.forEach((dot) => {
         swayAt(branch, dot.t, swayVec);
@@ -1102,6 +1156,12 @@ const ATMOSPHERE_LABELS = [
       branch.emphasised.material.opacity = 0.6 * w * held;
       branch.resting.material.opacity = 0.78 * (1 - 0.45 * back) * held;
       branch.resting.material.color.copy(COL_BRANCH).lerp(COL_INK, w * 0.6); // was a full lerp to w
+      // The root collar fades and darkens exactly like the resting tube
+      // it hands off to, and grows in with the same emerge as the rest
+      // of the branch rather than sitting there at full size early.
+      branch.rootFlare.material.opacity = branch.resting.material.opacity;
+      branch.rootFlare.material.color.copy(branch.resting.material.color);
+      branch.rootFlare.scale.setScalar(penWeight * branch.emerge);
       branch.dots.forEach((dot) => {
         // On hover they shrink away into the curve they already sit on,
         // so a hovered branch reads as one unbroken line rather than a
@@ -1141,7 +1201,7 @@ const ATMOSPHERE_LABELS = [
       n._el.style.transform =
         "translate(" + x + "px," + y + "px)" +
         (flip ? " translate(-100%, -50%) translateX(13px)" : " translate(-13px, -50%)");
-      const depth = (projected.z + 1) / 2;
+      const depth = viewDepth(worldPos);
       const back = stepBack(branches[i]);
       n._el.style.opacity = String(Math.max(0.5, 1 - depth * 0.45) * (1 - 0.55 * back));
       n._el.style.zIndex = String(Math.round((1 - depth) * 100));
@@ -1157,7 +1217,7 @@ const ATMOSPHERE_LABELS = [
       ghost.anchor.position.copy(ghost.base).multiplyScalar(ghostEmerge);
       ghost.anchor.getWorldPosition(worldPos);
       projected.copy(worldPos).project(camera);
-      const depth = (projected.z + 1) / 2;
+      const depth = viewDepth(worldPos);
       ghost.el.style.transform =
         "translate(" + ((projected.x * 0.5 + 0.5) * w) + "px," + ((-projected.y * 0.5 + 0.5) * h) + "px)" +
         " translate(14px, -50%)";
@@ -1181,6 +1241,7 @@ const ATMOSPHERE_LABELS = [
     readout.arrival = arrival;
     readout.previewOpen = previewOpen;
     readout.radius = mapRadius;
+    readout.activeIndex = activeBranch; // which node (if any) is currently hovered/focused
     window.__mapReadout = readout;
 
     updateArm();

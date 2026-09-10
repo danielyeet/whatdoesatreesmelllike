@@ -436,7 +436,11 @@ body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transitio
    z-index 65 puts it over the window (60), which is what lets the end
    mark straddle the window's edge. The ribbon itself stops short of
    the edge, so nothing is ever drawn across the panel. */
-.node-preview-arm-svg { position: fixed; inset: 0; z-index: 65; pointer-events: none; overflow: visible; }
+/* width/height are required here, not just inset: 0 — an <svg> is a
+   replaced element, and without them it falls back to the CSS default
+   replaced-element size (300x150) instead of filling the viewport, which
+   silently clipped the whole arm to a corner box. */
+.node-preview-arm-svg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 65; pointer-events: none; overflow: visible; }
 .node-preview-arm-path { stroke: none; }
 
 /* the notch cut into the window's dark edge */

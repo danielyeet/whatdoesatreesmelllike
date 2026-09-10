@@ -82,9 +82,14 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
 - **`thread.js`** — the line running down all three slides. `TRANSITION` at the top
   selects between two finished treatments of its final leg (`"dissolve"` / `"fork"`);
   both are maintained, so keep both working.
-- **`extras.js`** — optional furniture around the map, switched by the `EXTRAS` object
-  (`dimensions` / `orthographics` / `chromatogram`). Nothing depends on it; the file and
-  its `<script>` tag can be deleted with no other change.
+- **`extras.js`** — a gas-chromatograph trace along the foot of the slide, one peak per
+  node, reading `window.__mapReadout` for depth (peak height) and `activeIndex` (the
+  hovered node's peak gets a guaranteed floor height, not just a multiplier, so hovering
+  a currently-distant node still visibly reacts). Toggled by `SHOW_CHROMATOGRAM`, a
+  single boolean. Two earlier ideas that lived here — dimension strings between nodes,
+  and plan/elevation boxes in the corners — were removed outright rather than left
+  toggled off. Nothing depends on this file; it and its `<script>` tag can be deleted
+  with no other change.
 
 ### `node-scene.js` — the 3D map
 
@@ -130,9 +135,20 @@ Other things that will bite you:
   links. Keep that fallback working when editing the top of the file.
 - The `TUNING` block near the top holds every magic number (`IDLE_SPEED`, `FRAME_V` /
   `FRAME_H` — larger values draw the map *smaller* — `BRANCH_RADIUS`, `SPECK_SIZE`,
-  `REF_PX_PER_UNIT`, and the wake / cloud / corrugation groups). Tune there, not inline.
-  Several systems are dialled to zero but left wired up (`SWAY = 0`, `CLOUD_COUNT = 0`);
-  bring them back by raising the number rather than rebuilding the machinery.
+  `REF_PX_PER_UNIT`, `ROOT_FLARE_RADIUS`/`ROOT_FLARE_LENGTH`, and the wake / cloud /
+  corrugation groups). Tune there, not inline. Several systems are dialled to zero but
+  left wired up (`SWAY = 0`, `CLOUD_COUNT = 0`); bring them back by raising the number
+  rather than rebuilding the machinery.
+- Each branch has a short tapered `rootFlare` mesh bridging its thin tube radius up to
+  something the core's halo can absorb, so it reads as growing out of the centre rather
+  than as a wire poked into a ball. It's derived from the branch's curve (built off
+  `curve.getTangent(0)`) and kept in sync with the tube's own emerge/weight/opacity every
+  frame — don't hand-place or hand-animate it separately.
+- `viewDepth(worldPos)` is the real per-node depth (0 near, 1 far), used for label
+  opacity, z-index stacking, ghost opacity, and the chromatogram's peak heights. Raw NDC
+  `projected.z` looked plausible but was useless here — every node landed within 0.01 of
+  the far end of its range for a scene this small this far from the camera's near/far
+  planes — so don't reach for `projected.z` as a stand-in for depth anywhere in this file.
 
 ### Styling
 
@@ -177,13 +193,14 @@ obvious from the code, ask rather than guessing — then add it to this list.
 |---|---|
 | **slide** | One of the three full-screen sections of `index.html` (`#slide-1` title, `#slide-2` the italic line, `#slide-3` the node map). |
 | **the paper** | The three decorative layers behind the landing page, drawn by `paper.js`: the black **wash**, the squared **grid**, and the **static** (grain). |
-| **curtain** | How the paper arrives — present at the left and right edges, with the gap up the middle closing as you scroll (`CURTAIN_*` in `paper.js`). |
+| **curtain** | How the paper arrives: a soft circular mask growing from the centre of the screen outward as you scroll from slide 2 into slide 3 (`CURTAIN_*` in `paper.js`, `setCurtain()`). Applies only to `.paper` (the wash/grid/static) — the map and thread are unaffected, each fading in on its own via `arrival`/opacity. |
 | **the thread** | The single line running down all three slides, drawn by `thread.js`. |
 | **the map** / **node map** | The 3D scene on slide 3 (`node-scene.js`). |
 | **hub** / **the centre** | The origin `(0,0,0)` that every branch grows from; rendered as a dark `core` mesh inside two translucent `shell`s. |
 | **link node** / **real node** | A clickable endpoint from `REAL_NODES`. A branch *stops* at one; nothing continues past it. |
 | **branch** | The tube from hub to a link node — a `CatmullRomCurve3` through two waypoints. Tubes, not lines, so they can thicken on hover. |
 | **waypoint** | The two small dots along a branch (at t ≈ 0.32 and 0.69), derived from the node's position, not placed by hand. |
+| **root flare** / **collar** | The short tapered mesh at a branch's hub end, blending its thin tube radius into the core's halo instead of poking into it as a wire. |
 | **wake** / **wake speck** | The specks strung along a branch, sampled off its own curve. Each speck is 9 stacked particles that spray apart when pointed at. |
 | **cloud** | The separate drifting background speck system. Currently off (`CLOUD_COUNT = 0`) but still wired up. |
 | **ghost** / **atmosphere label** | The same thing under two names: a faint non-clickable word from `ATMOSPHERE_LABELS`, placed on a ring of `GHOST_RADIUS`. The code calls them `ghosts`. |
