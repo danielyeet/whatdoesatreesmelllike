@@ -61,6 +61,7 @@ const SITE_LINKS = [
 
   function setOpen(open) {
     overlay.classList.toggle("open", open);
+    document.body.classList.toggle("menu-open", open);
     trigger.textContent = open ? "Close" : "Menu";
     trigger.setAttribute("aria-expanded", String(open));
   }

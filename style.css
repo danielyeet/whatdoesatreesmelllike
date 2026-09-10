@@ -2,12 +2,12 @@
    DESIGN TOKENS
    ================================================================== */
 :root {
-  --blueprint: #0a0a0a;    /* page background — near black */
-  --blueprint-2: #151515;  /* slightly lighter panel background */
-  --line: #383838;         /* hairline rules, borders, connecting lines */
-  --paper: #e7e6e1;        /* main text color */
-  --muted: #8a8a85;        /* secondary text (meta, labels, captions) */
-  --brass: #c6924b;        /* the one accent color */
+  --bg: #fafaf9;      /* page background — near white */
+  --bg-2: #f0efe9;    /* slightly deeper panel background */
+  --line: #ddd9cf;    /* hairlines, borders */
+  --ink: #17170f;     /* main text color — near black */
+  --muted: #6d6c62;   /* secondary text */
+  --brass: #9c6f35;   /* the one accent color, deepened for contrast on white */
 
   --sans: "Archivo", -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
@@ -20,8 +20,8 @@
 html { height: 100%; margin: 0; }
 body {
   margin: 0;
-  background: var(--blueprint);
-  color: var(--paper);
+  background: var(--bg);
+  color: var(--ink);
   font-family: var(--sans);
   font-size: 16px;
   line-height: 1.6;
@@ -29,7 +29,7 @@ body {
 body.snap-page { height: 100%; overflow: hidden; }
 
 h1, h2, h3 { font-family: var(--sans); font-weight: 600; margin: 0; }
-a { color: var(--paper); }
+a { color: var(--ink); }
 dl { margin: 0; }
 img { max-width: 100%; display: block; }
 
@@ -56,7 +56,10 @@ img { max-width: 100%; display: block; }
 }
 
 /* ==================================================================
-   SITE MENU (top-left "Menu" / "Close", the same on every page)
+   SITE MENU (top-left "Menu" / "Close")
+   The trigger sits on the normal light page, but the overlay itself
+   stays black on purpose, regardless of the site's light theme —
+   opening it dims the page behind it rather than just covering it.
    ================================================================== */
 .menu-trigger {
   position: fixed;
@@ -65,53 +68,56 @@ img { max-width: 100%; display: block; }
   z-index: 30;
   background: none;
   border: none;
-  color: var(--paper);
+  color: var(--ink);
   font-family: var(--mono);
   font-size: 13px;
   letter-spacing: 0.02em;
   cursor: pointer;
   padding: 4px 0;
+  transition: color 0.3s ease;
 }
 .menu-trigger:hover { color: var(--brass); }
+body.menu-open .menu-trigger { color: #f0efe8; }
+body.menu-open .menu-trigger:hover { color: var(--brass); }
 
 .menu-overlay {
   position: fixed;
   inset: 0;
-  background: var(--blueprint);
+  background: #0a0a0a;
   z-index: 25;
   display: flex;
   align-items: center;
   padding: 0 64px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.45s ease;
 }
 .menu-overlay.open { opacity: 1; pointer-events: auto; }
 .menu-list { list-style: none; margin: 0; padding: 0; }
 .menu-list li { margin: 6px 0; }
-.menu-list a { font-family: var(--sans); font-weight: 500; font-size: clamp(28px, 5vw, 48px); text-decoration: none; color: var(--paper); }
+.menu-list a { font-family: var(--sans); font-weight: 500; font-size: clamp(28px, 5vw, 48px); text-decoration: none; color: #f0efe8; }
 .menu-list a:hover, .menu-list a:focus-visible { color: var(--brass); }
 .menu-list .menu-current { color: var(--brass); }
 
-/* ==================================================================
-   DOT NAVIGATION (landing page only)
-   ================================================================== */
-.dot-nav { position: fixed; top: 50%; right: 44px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 14px; z-index: 20; }
-.dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--muted); background: transparent; padding: 0; cursor: pointer; }
-.dot.active { background: var(--brass); border-color: var(--brass); }
+/* The rest of the page gently dims while the menu is open, so the
+   overlay reads as coming forward rather than just appearing. */
+body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
+  transition: opacity 0.45s ease;
+  opacity: 0.12;
+}
 
 /* ==================================================================
    TITLE SLIDE — centered
    ================================================================== */
 .title-slide { justify-content: center; }
 .title-content { text-align: center; }
-.title-content h1 { font-size: clamp(40px, 7.5vw, 92px); line-height: 1.05; }
+.title-content h1 { font-size: clamp(32px, 5.6vw, 68px); line-height: 1.1; }
 .title-sub { font-size: 17px; color: var(--muted); margin: 18px 0 0; }
 
 .title-block {
   position: absolute;
-  bottom: 64px;
-  right: 64px;
+  bottom: 28px;
+  right: 28px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -124,8 +130,8 @@ img { max-width: 100%; display: block; }
 }
 .scroll-cue {
   position: absolute;
-  bottom: 64px;
-  left: 64px;
+  bottom: 28px;
+  left: 28px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -136,7 +142,7 @@ img { max-width: 100%; display: block; }
   font-size: 12px;
   cursor: pointer;
 }
-.scroll-cue:hover { color: var(--paper); }
+.scroll-cue:hover { color: var(--ink); }
 
 @media (prefers-reduced-motion: no-preference) {
   .title-content, .title-block { animation: rise 0.9s ease both; }
@@ -145,11 +151,19 @@ img { max-width: 100%; display: block; }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ==================================================================
-   INTRO SLIDE
+   MIDDLE SLIDE — a single centered, italic line
    ================================================================== */
-.intro-content { max-width: 640px; }
-.intro-lede { font-family: var(--sans); font-weight: 400; font-size: clamp(22px, 2.8vw, 30px); line-height: 1.45; margin: 0 0 28px; }
-.intro-body { max-width: 56ch; color: var(--muted); margin: 0 0 16px; }
+.intro-slide { justify-content: center; text-align: center; }
+.intro-content { max-width: 680px; margin: 0 auto; }
+.intro-lede {
+  font-family: var(--sans);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(24px, 3.4vw, 38px);
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0;
+}
 
 /* ==================================================================
    NODE MAP SLIDE — 3D scene built by node-scene.js
@@ -183,7 +197,7 @@ img { max-width: 100%; display: block; }
   gap: 9px;
   white-space: nowrap;
   text-decoration: none;
-  color: var(--paper);
+  color: var(--ink);
   pointer-events: auto;
   padding: 4px;
 }
@@ -192,7 +206,7 @@ img { max-width: 100%; display: block; }
   height: 8px;
   border-radius: 50%;
   border: 1.2px solid var(--brass);
-  background: var(--blueprint-2);
+  background: var(--bg);
   flex: none;
   transition: background 0.2s ease;
 }
@@ -209,12 +223,15 @@ img { max-width: 100%; display: block; }
   white-space: normal;
   width: 220px;
 }
-.node3d-label:hover .node3d-sub,
-.node3d-label:focus-visible .node3d-sub { opacity: 1; }
-.node3d-label:hover .node3d-dot,
-.node3d-label:focus-visible .node3d-dot { background: var(--brass); }
-.node3d-label:hover .node3d-text,
-.node3d-label:focus-visible .node3d-text { color: var(--brass); }
+.node3d-label:hover .node3d-sub, .node3d-label:focus-visible .node3d-sub { opacity: 1; }
+.node3d-label:hover .node3d-dot, .node3d-label:focus-visible .node3d-dot { background: var(--brass); }
+.node3d-label:hover .node3d-text, .node3d-label:focus-visible .node3d-text { color: var(--brass); }
+
+/* Plain-link fallback, shown only if the 3D library fails to load */
+.node-fallback-list { display: flex; flex-direction: column; gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); width: min(640px, 92vw); }
+.node-fallback-list a { display: flex; flex-direction: column; gap: 4px; background: var(--bg); padding: 18px 16px; text-decoration: none; color: var(--ink); }
+.node-fallback-list a:hover { background: var(--bg-2); color: var(--brass); }
+.node-fallback-list a span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 
 /* ==================================================================
    CATEGORY PAGES
@@ -223,8 +240,8 @@ img { max-width: 100%; display: block; }
 .category-lede { font-size: clamp(22px, 2.8vw, 28px); line-height: 1.45; max-width: 640px; margin: 24px 0 64px; }
 
 .work-list { display: flex; flex-direction: column; gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.work-row { display: flex; align-items: center; gap: 32px; background: var(--blueprint); padding: 24px 8px; text-decoration: none; color: var(--paper); }
-.work-row:hover { background: var(--blueprint-2); }
+.work-row { display: flex; align-items: center; gap: 32px; background: var(--bg); padding: 24px 8px; text-decoration: none; color: var(--ink); }
+.work-row:hover { background: var(--bg-2); }
 .work-row:hover .work-row-title { color: var(--brass); }
 .work-thumb { width: 96px; height: 72px; flex: none; border: 1px solid var(--line); background-image: repeating-linear-gradient(-45deg, var(--line) 0px, var(--line) 1px, transparent 1px, transparent 10px); }
 .work-row-title { font-family: var(--sans); font-weight: 500; font-size: 19px; transition: color 0.2s ease; }
@@ -240,8 +257,8 @@ img { max-width: 100%; display: block; }
 
 .gallery-entry { max-width: 900px; margin: 0 auto; padding: 48px 64px; display: flex; gap: 48px; align-items: flex-start; border-top: 1px solid var(--line); }
 .gallery-entry .entry-number { font-family: var(--mono); font-size: 12px; color: var(--brass); flex: none; width: 32px; padding-top: 4px; }
-.gallery-entry .entry-media { flex: 1 1 55%; aspect-ratio: 4 / 3; border: 1px solid var(--line); background-color: var(--blueprint-2); background-image: repeating-linear-gradient(-45deg, var(--line) 0px, var(--line) 1px, transparent 1px, transparent 14px); position: relative; }
-.gallery-entry .entry-media::after { content: "your image here"; position: absolute; bottom: 12px; left: 12px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--blueprint); padding: 3px 7px; border: 1px solid var(--line); }
+.gallery-entry .entry-media { flex: 1 1 55%; aspect-ratio: 4 / 3; border: 1px solid var(--line); background-color: var(--bg-2); background-image: repeating-linear-gradient(-45deg, var(--line) 0px, var(--line) 1px, transparent 1px, transparent 14px); position: relative; }
+.gallery-entry .entry-media::after { content: "your image here"; position: absolute; bottom: 12px; left: 12px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--bg); padding: 3px 7px; border: 1px solid var(--line); }
 .gallery-entry .entry-media:has(img) { background-image: none; }
 .gallery-entry .entry-media:has(img)::after { display: none; }
 .gallery-entry .entry-media img { width: 100%; height: 100%; object-fit: cover; }
@@ -255,7 +272,7 @@ img { max-width: 100%; display: block; }
 .article-body p { margin: 0 0 18px; color: var(--muted); }
 .article-body p + h2 { margin-top: 56px; }
 
-.infobox { float: right; width: 260px; margin: 0 0 24px 32px; border: 1px solid var(--line); background: var(--blueprint-2); padding: 16px; }
+.infobox { float: right; width: 260px; margin: 0 0 24px 32px; border: 1px solid var(--line); background: var(--bg-2); padding: 16px; }
 .infobox .infobox-media { aspect-ratio: 4/3; border: 1px solid var(--line); background-image: repeating-linear-gradient(-45deg, var(--line) 0px, var(--line) 1px, transparent 1px, transparent 10px); margin-bottom: 12px; }
 .infobox dl { font-family: var(--mono); font-size: 12px; }
 .infobox > dl > div { display: flex; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
@@ -275,7 +292,7 @@ img { max-width: 100%; display: block; }
 .contact-email:hover { color: var(--brass); }
 .contact-links { margin-top: 32px; display: flex; gap: 24px; }
 .contact-links a { font-family: var(--mono); color: var(--muted); text-decoration: none; font-size: 13px; }
-.contact-links a:hover { color: var(--paper); }
+.contact-links a:hover { color: var(--ink); }
 
 /* ==================================================================
    FOCUS STATES
@@ -286,11 +303,10 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
    RESPONSIVE
    ================================================================== */
 @media (max-width: 860px) {
-  .dot-nav { right: 18px; }
   .menu-overlay { padding: 0 24px; }
   .slide { padding: 0 24px; flex-direction: column !important; justify-content: center; gap: 20px; }
-  .title-block { right: 24px; bottom: 96px; }
-  .scroll-cue { left: 24px; bottom: 96px; }
+  .title-block { right: 16px; bottom: 16px; }
+  .scroll-cue { left: 16px; bottom: 16px; }
   .page-content, .work-header, .article-body { padding-left: 24px; padding-right: 24px; }
   .gallery-entry { flex-direction: column; padding: 32px 24px; gap: 20px; }
   .gallery-entry .entry-text { max-width: none; }

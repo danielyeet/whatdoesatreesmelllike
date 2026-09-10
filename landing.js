@@ -1,49 +1,38 @@
 // ============================================================
-// Behavior for index.html's three locked slides: the dots on
-// the right, gentle scrolling between slides (by wheel, keys,
-// dots, or the "Scroll" button), and syncing which dot is lit.
+// Behavior for index.html's three locked slides: gentle
+// scrolling between them (by wheel, keys, or the "Scroll"
+// button on the title slide).
 // ============================================================
 
 const slides = Array.from(document.querySelectorAll(".slide"));
-const dotNav = document.getElementById("dot-nav");
 const container = document.getElementById("scroll-container");
-
-slides.forEach((slide, i) => {
-  const dot = document.createElement("button");
-  dot.className = "dot";
-  dot.setAttribute("aria-label", "Go to section " + (i + 1) + " of " + slides.length);
-  dot.addEventListener("click", () => goTo(i));
-  dotNav.appendChild(dot);
-});
-const dots = Array.from(document.querySelectorAll(".dot"));
 
 let activeIndex = 0;
 let animating = false;
 const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function setActiveDot(index) {
-  activeIndex = index;
-  dots.forEach((d, i) => d.classList.toggle("active", i === index));
-}
-
-// --- A slow, gentle ease — this is what makes the transition between
-// slides feel soft rather than snappy. easeInOutCubic.
 function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
 function goTo(index) {
   index = Math.max(0, Math.min(slides.length - 1, index));
-  if (index === activeIndex && !animating) { /* still fine to re-run */ }
   const startY = container.scrollTop;
   const endY = slides[index].offsetTop;
   const distance = endY - startY;
 
   if (REDUCE_MOTION || distance === 0) {
     container.scrollTop = endY;
-    setActiveDot(index);
+    activeIndex = index;
     return;
   }
 
-  const duration = 1100; // ms — slower and gentler than the old default
+  // IMPORTANT: CSS scroll-snap fights with a hand-animated scrollTop —
+  // the browser tries to immediately snap back while we're mid-animation,
+  // which is what made this look broken/not-smooth before. Turning snap
+  // off for the duration of the animation, then back on once we land
+  // exactly on the target slide, fixes that.
+  container.style.scrollSnapType = "none";
+
+  const duration = 1100;
   const startTime = performance.now();
   animating = true;
 
@@ -54,26 +43,26 @@ function goTo(index) {
       requestAnimationFrame(step);
     } else {
       animating = false;
-      setActiveDot(index);
+      activeIndex = index;
+      container.style.scrollSnapType = "y mandatory";
     }
   }
   requestAnimationFrame(step);
 }
 
-// Keep the dots in sync if the user drags the scrollbar directly.
+// Keep activeIndex correct if the user scrolls by some other means
+// (scrollbar drag, touch) rather than through goTo().
 const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting && !animating) setActiveDot(slides.indexOf(entry.target));
+      if (entry.isIntersecting && !animating) activeIndex = slides.indexOf(entry.target);
     });
   },
   { threshold: 0.6 }
 );
 slides.forEach((slide) => observer.observe(slide));
-setActiveDot(0);
 
-// --- Wheel / trackpad: one gentle gesture moves exactly one slide,
-// instead of the browser's native (often abrupt) snap jump.
+// --- Wheel / trackpad: one gentle gesture moves exactly one slide.
 let wheelLock = false;
 container.addEventListener(
   "wheel",

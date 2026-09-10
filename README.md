@@ -1,6 +1,26 @@
 # Your portfolio site
 
-## What changed in this pass
+## What changed in the latest pass
+
+- **Fixed the scroll jank**: the custom slide-to-slide animation was
+  fighting with CSS scroll-snap, which is what made it feel broken.
+  Snap is now switched off for the moment an animation is running and
+  back on once it lands — should feel properly smooth now.
+- **Fixed the 3D page not appearing**: it depended on an add-on
+  library (OrbitControls) that likely failed to load. Rotation is now
+  hand-built with no extra dependency, and there's a plain-list
+  fallback if the core 3D library ever fails to load too.
+- **Palette flipped to white**: near-white background, near-black
+  text, the same brass accent.
+- **The "Menu" overlay stays black** on purpose even on the white
+  site, and the page now visibly dims behind it when it opens.
+- Removed the three dots on the right (wasn't asked for).
+- Title is smaller, ends in a question mark, and the corner box is
+  tucked closer to the edge.
+- The middle slide is now one centered, italic line with placeholder
+  text — swap it for whatever you want it to say.
+
+## What changed before that
 
 - **Palette**: near-black background, off-white text, one brass accent
   — all still just six values at the top of `style.css`.
@@ -48,8 +68,7 @@ exactly what's wrong (a screenshot helps a lot) rather than trying to
 debug the 3D math by hand.
 
 Known trade-off: on a phone, dragging to rotate the scene can make it
-harder to swipe past that slide — the dots on the right always work
-as a fallback.
+harder to swipe past that slide.
 
 ## How it's organized
 
