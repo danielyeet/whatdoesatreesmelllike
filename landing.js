@@ -32,7 +32,10 @@ function goTo(index) {
   // exactly on the target slide, fixes that.
   container.style.scrollSnapType = "none";
 
-  const duration = 1100;
+  // The move onto the node map slide gets longer: the paper, the
+  // thread and the map itself all arrive during it, and at 1100ms
+  // they pile up on top of each other.
+  const duration = (index === 2 || activeIndex === 2) ? 1500 : 1100;
   const startTime = performance.now();
   animating = true;
 
@@ -70,7 +73,7 @@ container.addEventListener(
     e.preventDefault();
     if (wheelLock || animating) return;
     wheelLock = true;
-    setTimeout(() => { wheelLock = false; }, 700);
+    setTimeout(() => { wheelLock = false; }, 820);
     if (e.deltaY > 0) goTo(activeIndex + 1);
     else if (e.deltaY < 0) goTo(activeIndex - 1);
   },

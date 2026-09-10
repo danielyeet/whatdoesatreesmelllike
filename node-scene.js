@@ -7,11 +7,11 @@
 // Every link node is an ENDPOINT. A branch grows out of the
 // centre, passes through two small waypoint dots, and stops at
 // the link node — nothing ever continues past one. The loose
-// atmospheric dots attach to the centre or to a waypoint, never
-// to a link node.
+// atmospheric specks attach to the centre or to a waypoint,
+// never to a link node.
 //
 // THE ONLY PARTS MEANT TO BE HAND-EDITED ARE THE TWO LISTS
-// BELOW. Everything after them is machinery.
+// BELOW, plus the tuning block a little further down.
 // ============================================================
 
 // Each one needs a label, a one-line sub-line (shown on hover), a
@@ -29,11 +29,11 @@ const REAL_NODES = [
   { label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html", pos: [3.3, 1.6, -1.3] },
 ];
 
-// Loose dots — atmosphere, not links. They dissolve when you point
-// at them. Each one automatically connects to whichever centre or
-// waypoint is nearest, so they stay inside the map: keep them
-// within about 2.7 of the centre and they'll never reach out past
-// a link node. Add, remove, or move them freely.
+// Loose specks — atmosphere, not links. Each one is really a tight
+// cluster of particles that sprays apart when you point at it.
+// They connect themselves to whichever centre or waypoint is
+// nearest, so they stay inside the map: keep them within about 2.7
+// of the centre. Add, remove, or move them freely.
 const DECORATIVE_POINTS = [
   [-1.4, 0.9, 0.5], [0.9, 1.5, -0.6], [1.7, 0.4, 1.0], [-0.8, -1.3, -0.7],
   [0.3, -1.7, 0.6], [-1.9, -0.5, -1.1], [2.1, 1.1, -0.3], [-0.5, 1.9, 1.0],
@@ -64,18 +64,32 @@ const DECORATIVE_POINTS = [
 
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // --- Tuning. Most of what you'd want to nudge lives here.
-  const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00045; // slow drift, roughly a full turn every 4 minutes
+  // ============================================================
+  // TUNING — most of what you'd want to nudge lives here
+  // ============================================================
+  const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00045; // slow drift on its own
   const DRAG_SENSITIVITY = 0.0028;
   const MAX_SPIN = 0.045;
-  const MAX_TILT = 0.38;  // how far it can be tipped up or down
-  const FRAME_V = 3.72;   // how much vertical room the map is given
-  const FRAME_H = 4.2;    // and horizontal — smaller numbers fill more of the screen
-  const MAX_LOOSE_REACH = 1.7; // past this, a loose dot floats unconnected
+  const MAX_TILT = 0.38;        // how far it can be tipped up or down
+  const FRAME_V = 3.72;         // how much vertical room the map is given
+  const FRAME_H = 4.2;          // and horizontal — smaller fills more of the screen
+  const MAX_LOOSE_REACH = 1.7;  // past this, a loose speck floats unconnected
+  const PARTICLES_PER_SPECK = 9;
+  const BRANCH_RADIUS = 0.011;  // the resting thickness of a branch
+  const BRANCH_RADIUS_EMPH = 0.025; // and its thickness when its node is hovered
+
+  // Monochrome throughout: the map carries hierarchy by weight and
+  // darkness, not by hue.
+  const COL_INK = new THREE.Color(0x22221a);
+  const COL_BRANCH = new THREE.Color(0x8e8a7f);
+  const COL_HAIRLINE = new THREE.Color(0xcac6bc);
+  const COL_SPECK = new THREE.Color(0xa6a298);
+  const COL_CENTRE = new THREE.Color(0x1c1c14);
+  const COL_CENTRE_HALO = new THREE.Color(0x8d8a80);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   // Everything lives inside one group so the whole map can be
@@ -83,80 +97,49 @@ const DECORATIVE_POINTS = [
   const rig = new THREE.Group();
   scene.add(rig);
 
-  const COL_LINE = new THREE.Color(0xdcd8ce);    // loose connections
-  const COL_BRANCH = new THREE.Color(0xbfbbae);  // branches that lead to a link
-  const COL_DOT = new THREE.Color(0xb5b1a4);
-  const COL_ACCENT = new THREE.Color(0x9c6f35);
-
   const hub = new THREE.Vector3(0, 0, 0);
-
-  // Collected so a single pass at the end of each frame can recolour
-  // the entire map at once — that's what a link-node hover does.
-  const allLines = [];
-  const allDots = [];
+  const branches = [];  // one per link node
+  const specks = [];    // the loose clusters
+  const hairlines = []; // the thin connections to loose specks
 
   // ============================================================
   // THE CENTRE
-  // A solid core with two soft shells around it, so it reads as the
+  // A dark, solid core inside two soft shells, so it reads as the
   // source everything grows from rather than just another dot.
   // ============================================================
   const core = new THREE.Mesh(
-    new THREE.SphereGeometry(0.115, 28, 28),
-    new THREE.MeshBasicMaterial({ color: COL_ACCENT.clone() })
+    new THREE.SphereGeometry(0.145, 28, 28),
+    new THREE.MeshBasicMaterial({ color: COL_CENTRE.clone() })
   );
   rig.add(core);
 
   function shell(radius, opacity) {
     const mesh = new THREE.Mesh(
       new THREE.SphereGeometry(radius, 24, 24),
-      new THREE.MeshBasicMaterial({ color: COL_ACCENT.clone(), transparent: true, opacity: opacity, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: COL_CENTRE_HALO.clone(), transparent: true, opacity: opacity, depthWrite: false })
     );
     mesh.userData.baseOpacity = opacity;
     rig.add(mesh);
     return mesh;
   }
-  const shellInner = shell(0.26, 0.16);
-  const shellOuter = shell(0.52, 0.055);
-
-  // ============================================================
-  // GEOMETRY HELPERS
-  // ============================================================
-  function makeLine(points, color, opacity, branchIndex) {
-    const curve = new THREE.CatmullRomCurve3(points);
-    const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(48));
-    const material = new THREE.LineBasicMaterial({ color: color.clone(), transparent: true, opacity: opacity });
-    const line = new THREE.Line(geometry, material);
-    line.userData = { baseColor: color.clone(), baseOpacity: opacity, fade: 1, branchIndex: branchIndex };
-    allLines.push(line);
-    rig.add(line);
-    return line;
-  }
-
-  const dotGeometry = new THREE.SphereGeometry(0.042, 12, 12);
-  function makeDot(position, scale, opacity, branchIndex) {
-    const material = new THREE.MeshBasicMaterial({ color: COL_DOT.clone(), transparent: true, opacity: opacity, depthWrite: false });
-    const mesh = new THREE.Mesh(dotGeometry, material);
-    mesh.position.copy(position);
-    mesh.scale.setScalar(scale);
-    mesh.userData = { baseColor: COL_DOT.clone(), baseOpacity: opacity, baseScale: scale, fade: 1, dissolve: 0, branchIndex: branchIndex };
-    allDots.push(mesh);
-    rig.add(mesh);
-    return mesh;
-  }
+  const shellInner = shell(0.3, 0.24);
+  const shellOuter = shell(0.62, 0.085);
 
   // ============================================================
   // BRANCHES — one per link node, each ending at that node
   // ============================================================
-  // Every point a loose dot is allowed to connect to. Link nodes are
-  // deliberately absent from this list: that's what keeps them final.
+  // Every point a loose speck is allowed to connect to. Link nodes
+  // are deliberately absent: that's what keeps them final.
   const anchors = [hub.clone()];
+
+  const waypointGeometry = new THREE.SphereGeometry(0.04, 12, 12);
 
   REAL_NODES.forEach((n, i) => {
     const end = new THREE.Vector3(n.pos[0], n.pos[1], n.pos[2]);
     const length = end.length();
 
     // Two waypoints, pushed off the straight line so the branch
-    // curves. The sideways direction is derived from the node's own
+    // curves. The sideways direction comes from the node's own
     // position, so it's stable — move a node and its branch follows.
     const seed = i * 1.618;
     const axis = new THREE.Vector3(Math.sin(seed * 2.1), Math.cos(seed * 1.3), Math.sin(seed * 0.7 + 2.0));
@@ -166,10 +149,34 @@ const DECORATIVE_POINTS = [
 
     const w1 = end.clone().multiplyScalar(0.32).addScaledVector(perp, length * 0.16);
     const w2 = end.clone().multiplyScalar(0.69).addScaledVector(perp, length * 0.095);
+    const curve = new THREE.CatmullRomCurve3([hub, w1, w2, end]);
 
-    makeLine([hub, w1, w2, end], COL_BRANCH, 0.55, i);
-    makeDot(w1, 0.85, 0.7, i);
-    makeDot(w2, 0.7, 0.6, i);
+    // A branch is drawn as a tube, not a line: WebGL ignores line
+    // thickness on nearly every browser, and thickening is how a
+    // hovered branch is meant to stand out.
+    function tube(radius, color, opacity) {
+      const mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 64, radius, 7, false),
+        new THREE.MeshBasicMaterial({ color: color.clone(), transparent: true, opacity: opacity, depthWrite: false })
+      );
+      rig.add(mesh);
+      return mesh;
+    }
+    const resting = tube(BRANCH_RADIUS, COL_BRANCH, 0.75);
+    const emphasised = tube(BRANCH_RADIUS_EMPH, COL_INK, 0);
+
+    const dots = [w1, w2].map((p, k) => {
+      const mesh = new THREE.Mesh(
+        waypointGeometry,
+        new THREE.MeshBasicMaterial({ color: COL_BRANCH.clone(), transparent: true, opacity: 0.8, depthWrite: false })
+      );
+      mesh.position.copy(p);
+      mesh.scale.setScalar(k === 0 ? 0.95 : 0.78);
+      mesh.userData.baseScale = k === 0 ? 0.95 : 0.78;
+      rig.add(mesh);
+      return mesh;
+    });
+
     anchors.push(w1.clone(), w2.clone());
 
     // The clickable node itself is plain HTML positioned over the
@@ -177,8 +184,6 @@ const DECORATIVE_POINTS = [
     const anchorObj = new THREE.Object3D();
     anchorObj.position.copy(end);
     rig.add(anchorObj);
-    n._anchor = anchorObj;
-    n._index = i;
 
     const a = document.createElement("a");
     a.href = n.href;
@@ -188,15 +193,33 @@ const DECORATIVE_POINTS = [
       '<span class="node3d-text">' + n.label + "</span>" +
       '<span class="node3d-sub">' + n.sub + "</span>";
     labelLayer.appendChild(a);
+
     n._el = a;
+    n._anchor = anchorObj;
+    n._index = i;
+    branches.push({ resting: resting, emphasised: emphasised, dots: dots, weight: 0 });
   });
 
   // ============================================================
-  // LOOSE DOTS — attach to the nearest centre or waypoint
+  // LOOSE SPECKS — clusters that spray apart when pointed at
   // ============================================================
-  // A pointer-sized invisible sphere sits over each one. Without it,
-  // a dot that shrinks as it dissolves would slip out from under the
-  // cursor, re-form, and flicker.
+  // Each speck is a handful of particles sitting on top of one
+  // another, so at rest it looks like a single dot. Hovering pushes
+  // them out along fixed directions and thins them out as they go.
+  function speckSprite() {
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const g = c.getContext("2d");
+    const gradient = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, "rgba(255,255,255,1)");
+    gradient.addColorStop(0.6, "rgba(255,255,255,0.95)");
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = gradient;
+    g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+  const sprite = speckSprite();
+
   const hitGeometry = new THREE.SphereGeometry(0.3, 8, 8);
   const hitMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
   const hitTargets = [];
@@ -211,22 +234,63 @@ const DECORATIVE_POINTS = [
       if (d < nearestDistance) { nearestDistance = d; nearest = candidate; }
     });
 
-    // A dot with nothing near it simply floats, unconnected — without
-    // this, moving one out to the edge would fling a long line right
-    // across the middle of the map.
-    let line = null;
+    // A speck with nothing near it simply floats, unconnected —
+    // without this, moving one out to the edge would fling a long
+    // line right across the middle of the map.
+    let hairline = null;
     if (Math.sqrt(nearestDistance) < MAX_LOOSE_REACH) {
-      // A slight bow in the connecting line, rather than dead straight.
       const mid = nearest.clone().add(p).multiplyScalar(0.5);
       mid.add(new THREE.Vector3((p.z - nearest.z) * 0.12, (p.x - nearest.x) * -0.08, (nearest.y - p.y) * 0.1));
-      line = makeLine([nearest, mid, p], COL_LINE, 0.3, -1);
+      const curve = new THREE.CatmullRomCurve3([nearest, mid, p]);
+      const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(24));
+      const material = new THREE.LineBasicMaterial({ color: COL_HAIRLINE.clone(), transparent: true, opacity: 0.34 });
+      hairline = new THREE.Line(geometry, material);
+      hairline.userData.baseOpacity = 0.34;
+      rig.add(hairline);
+      hairlines.push(hairline);
     }
 
-    const dot = makeDot(p, 1, 0.8, -1);
+    // Where each particle flies to, fixed once so a speck sprays the
+    // same way every time rather than jittering differently each hover.
+    const directions = [];
+    const coords = new Float32Array(PARTICLES_PER_SPECK * 3);
+    for (let k = 0; k < PARTICLES_PER_SPECK; k++) {
+      const v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+      if (v.lengthSq() < 0.0001) v.set(1, 0, 0);
+      v.normalize().multiplyScalar(0.14 + Math.random() * 0.34);
+      directions.push(v);
+      coords[k * 3] = p.x;
+      coords[k * 3 + 1] = p.y;
+      coords[k * 3 + 2] = p.z;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(coords, 3));
+    const material = new THREE.PointsMaterial({
+      color: COL_SPECK.clone(),
+      size: 0.088,
+      sizeAttenuation: true,
+      map: sprite,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+    });
+    const points = new THREE.Points(geometry, material);
+    rig.add(points);
+
+    const speck = {
+      origin: p,
+      directions: directions,
+      points: points,
+      hairline: hairline,
+      spray: 0,
+      lastSpray: -1,
+    };
+    specks.push(speck);
 
     const hit = new THREE.Mesh(hitGeometry, hitMaterial);
     hit.position.copy(p);
-    hit.userData = { dot: dot, line: line };
+    hit.userData.speck = speck;
     rig.add(hit);
     hitTargets.push(hit);
   });
@@ -236,7 +300,6 @@ const DECORATIVE_POINTS = [
   // ============================================================
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2(-10, -10);
-  let hovered = null;
 
   let rotY = 0, rotX = 0;
   let velY = IDLE_SPEED;
@@ -277,15 +340,13 @@ const DECORATIVE_POINTS = [
   wrap.addEventListener("pointerleave", () => pointer.set(-10, -10));
 
   // ============================================================
-  // LINK HOVER — recolours the whole map
+  // LINK HOVER — its branch thickens, everything else steps back
   // ============================================================
-  let tint = 0;
-  let tintTarget = 0;
   let activeBranch = -1;
 
   REAL_NODES.forEach((n) => {
-    function on() { tintTarget = 1; activeBranch = n._index; }
-    function off() { tintTarget = 0; activeBranch = -1; }
+    function on() { activeBranch = n._index; }
+    function off() { if (activeBranch === n._index) activeBranch = -1; }
     n._el.addEventListener("pointerenter", on);
     n._el.addEventListener("focus", on);
     n._el.addEventListener("pointerleave", off);
@@ -297,6 +358,12 @@ const DECORATIVE_POINTS = [
       if (e.detail !== 0 && dragDistance > 6) e.preventDefault();
     });
   });
+
+  // ============================================================
+  // ARRIVAL PULSE — thread.js calls this when its line lands
+  // ============================================================
+  let pulse = 0;
+  window.__nodeScenePulse = function () { pulse = 1; };
 
   // ============================================================
   // SIZING — the scene is full-bleed, so it reframes on every resize
@@ -324,11 +391,21 @@ const DECORATIVE_POINTS = [
   // ============================================================
   const worldPos = new THREE.Vector3();
   const projected = new THREE.Vector3();
+  const scratch = new THREE.Vector3();
   let clock = 0;
+  let arrival = 0; // 0 to 1: how much of the way in the map is
 
   function animate() {
     requestAnimationFrame(animate);
     clock += 0.016;
+
+    // --- how far through the slide-2-to-3 transition we are.
+    // thread.js sets this; if that file isn't loaded, the map just
+    // stays fully present.
+    const target = window.__p23 === undefined ? 1 : window.__p23;
+    arrival += (target - arrival) * 0.18;
+    wrap.style.opacity = arrival.toFixed(3);
+    const scale = 0.93 + 0.07 * arrival;
 
     // --- rotation: ease back to the slow idle drift after a drag,
     // and let the vertical tilt settle back to level
@@ -343,73 +420,103 @@ const DECORATIVE_POINTS = [
     rotX = Math.max(-MAX_TILT, Math.min(MAX_TILT, rotX + velX));
     rig.rotation.y = rotY;
     rig.rotation.x = rotX;
+    rig.scale.setScalar(scale);
     rig.updateMatrixWorld(true);
 
-    // --- what the pointer is over (loose dots only; the link nodes
-    // are HTML and handle their own hover)
+    // --- what the pointer is over (loose specks only; the link
+    // nodes are HTML and handle their own hover)
     raycaster.setFromCamera(pointer, camera);
     const hit = raycaster.intersectObjects(hitTargets)[0];
-    hovered = hit ? hit.object : null;
+    const hoveredSpeck = hit ? hit.object.userData.speck : null;
 
-    // --- dissolve: a pointed-at loose dot fades away and contracts
-    // to nothing, taking its connecting line most of the way with it
-    hitTargets.forEach((target) => {
-      const dot = target.userData.dot;
-      const goal = target === hovered ? 1 : 0;
-      dot.userData.dissolve += (goal - dot.userData.dissolve) * 0.09;
-      const d = dot.userData.dissolve;
-      dot.userData.fade = 1 - d;
-      dot.scale.setScalar(dot.userData.baseScale * (1 - 0.8 * d));
-      if (target.userData.line) target.userData.line.userData.fade = 1 - 0.75 * d;
+    // --- branch weights first, so everything below is reacting to
+    // the same frame rather than to the last one
+    let strongest = 0, runnerUp = 0;
+    branches.forEach((branch, i) => {
+      const goal = i === activeBranch ? 1 : 0;
+      branch.weight += (goal - branch.weight) * 0.12;
+      if (branch.weight > strongest) { runnerUp = strongest; strongest = branch.weight; }
+      else if (branch.weight > runnerUp) { runnerUp = branch.weight; }
+    });
+    // How far anything not being hovered should step back. For a
+    // branch, that's the strongest weight among the OTHERS.
+    const stepBack = (branch) => (branch.weight >= strongest ? runnerUp : strongest);
+
+    // --- spray: out fast, back slowly, so it reads as a burst
+    // scattering rather than something breathing in and out
+    specks.forEach((speck) => {
+      const goal = speck === hoveredSpeck ? 1 : 0;
+      const rate = goal > speck.spray ? 0.17 : 0.045;
+      speck.spray += (goal - speck.spray) * rate;
+      const s = speck.spray;
+
+      if (Math.abs(s - speck.lastSpray) > 0.0015) {
+        const coords = speck.points.geometry.attributes.position;
+        for (let k = 0; k < speck.directions.length; k++) {
+          scratch.copy(speck.origin).addScaledVector(speck.directions[k], s);
+          coords.setXYZ(k, scratch.x, scratch.y, scratch.z);
+        }
+        coords.needsUpdate = true;
+        speck.lastSpray = s;
+      }
+      // As the particles separate they thin out and shrink, so a
+      // sprayed speck disperses instead of just moving apart.
+      speck.points.material.size = 0.088 * (1 - 0.4 * s);
+      speck.points.material.opacity = 0.9 * (1 - s * 0.95) * (1 - 0.5 * strongest);
+      if (speck.hairline) {
+        speck.hairline.material.opacity =
+          speck.hairline.userData.baseOpacity * (1 - 0.8 * s) * (1 - 0.55 * strongest);
+      }
     });
 
-    // --- one pass to recolour everything at once
-    tint += (tintTarget - tint) * 0.06;
-    const lit = tint > 0.002;
-
-    allLines.forEach((line) => {
-      const u = line.userData;
-      const amount = lit ? tint * (u.branchIndex === activeBranch && activeBranch >= 0 ? 1 : 0.6) : 0;
-      line.material.color.copy(u.baseColor).lerp(COL_ACCENT, amount);
-      line.material.opacity = Math.min(1, u.baseOpacity * u.fade * (1 + amount * 0.5));
+    // --- branch emphasis: the hovered branch thickens and darkens,
+    // the rest of the map recedes. No colour change anywhere.
+    branches.forEach((branch) => {
+      const w = branch.weight;
+      const back = stepBack(branch);
+      branch.emphasised.material.opacity = 0.88 * w;
+      branch.resting.material.opacity = 0.75 * (1 - 0.45 * back);
+      branch.resting.material.color.copy(COL_BRANCH).lerp(COL_INK, w);
+      branch.dots.forEach((dot) => {
+        dot.material.opacity = 0.8 * (1 - 0.5 * back);
+        dot.material.color.copy(COL_BRANCH).lerp(COL_INK, w);
+        dot.scale.setScalar(dot.userData.baseScale * (1 + 0.45 * w));
+      });
     });
 
-    allDots.forEach((dot) => {
-      const u = dot.userData;
-      const amount = lit ? tint * (u.branchIndex === activeBranch && activeBranch >= 0 ? 1 : 0.6) : 0;
-      dot.material.color.copy(u.baseColor).lerp(COL_ACCENT, amount);
-      dot.material.opacity = Math.min(1, u.baseOpacity * u.fade * (1 + amount * 0.4));
-    });
-
-    // --- the centre breathes, very slightly, and brightens with the
-    // rest of the map
+    // --- the centre breathes very slightly, and blooms once when
+    // the thread from the slide above lands on it
+    if (pulse > 0.001) pulse *= 0.93; else pulse = 0;
     const breathe = REDUCE_MOTION ? 1 : 1 + Math.sin(clock * 0.55) * 0.035;
-    shellInner.scale.setScalar(breathe);
-    shellOuter.scale.setScalar(1 + (breathe - 1) * 1.8);
-    shellInner.material.opacity = shellInner.userData.baseOpacity * (1 + tint * 1.1);
-    shellOuter.material.opacity = shellOuter.userData.baseOpacity * (1 + tint * 1.4);
+    core.scale.setScalar(1 + pulse * 0.45);
+    shellInner.scale.setScalar(breathe + pulse * 0.7);
+    shellOuter.scale.setScalar(1 + (breathe - 1) * 1.8 + pulse * 1.1);
+    shellInner.material.opacity = shellInner.userData.baseOpacity * (1 + pulse * 1.6);
+    shellOuter.material.opacity = shellOuter.userData.baseOpacity * (1 + pulse * 2.2);
 
     // --- position the HTML link nodes over the scene
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
-    REAL_NODES.forEach((n) => {
+    REAL_NODES.forEach((n, i) => {
       n._anchor.getWorldPosition(worldPos);
       projected.copy(worldPos).project(camera);
       const x = (projected.x * 0.5 + 0.5) * w;
       const y = (-projected.y * 0.5 + 0.5) * h;
-      // The extra 10.5px cancels the label's own padding so the small
-      // dot lands exactly on the node, whichever side the text is on.
+      // The extra 12px cancels the label's own padding so the marker
+      // lands exactly on the node, whichever side the text is on.
       const flip = x > w * 0.68;
       n._el.classList.toggle("flip", flip);
       n._el.style.transform =
         "translate(" + x + "px," + y + "px)" +
-        (flip ? " translate(-100%, -50%) translateX(10.5px)" : " translate(-10.5px, -50%)");
+        (flip ? " translate(-100%, -50%) translateX(12px)" : " translate(-12px, -50%)");
       const depth = (projected.z + 1) / 2;
-      n._el.style.opacity = String(Math.max(0.45, 1 - depth * 0.55));
+      const back = stepBack(branches[i]);
+      n._el.style.opacity = String(Math.max(0.5, 1 - depth * 0.45) * (1 - 0.55 * back));
       n._el.style.zIndex = String(Math.round((1 - depth) * 100));
     });
 
-    renderer.render(scene, camera);
+    if (arrival > 0.004) renderer.render(scene, camera);
   }
+
   animate();
 })();
