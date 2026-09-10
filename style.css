@@ -11,6 +11,13 @@
 
   --sans: "Archivo", -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* The squared paper and the static are drawn on canvases now, by
+     paper.js — their sizes and strengths are the tuning block at the
+     top of that file. What stays here is the tone they add up to:
+     --bg darkened by the wash, which the node markers and labels use
+     to cut a clean hole in the paper behind them. */
+  --paper-tone: #e4e4e3;
 }
 
 /* ==================================================================
@@ -34,9 +41,72 @@ dl { margin: 0; }
 img { max-width: 100%; display: block; }
 
 /* ==================================================================
+   THE PAPER (landing page only)
+   Squared paper with grain moving over it, sitting behind
+   everything. It's keyed to --paper-in, which thread.js drives from
+   the scroll position, so it arrives with the node map rather than
+   being switched on. At full strength it should still be something
+   you notice only if you look for it.
+   ================================================================== */
+.paper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+/* All three opacities are set frame by frame in paper.js, so the
+   paper can come in later and more slowly than the map does. */
+.paper-wash { position: absolute; inset: 0; background: #000; opacity: 0; }
+.paper-grid, .paper-noise {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+/* ==================================================================
+   THE THREAD (landing page only)
+   One line down the whole page, drawn by thread.js. It sits above
+   the slides so it stays visible where it crosses the node map's
+   canvas — that crossing is the point of it.
+   ================================================================== */
+.thread {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
+  pointer-events: none;
+  overflow: visible;
+}
+.thread-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.26;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+/* The wandering leg is a curve once it starts drifting, and its
+   dashes become dots — both want round ends and smooth rendering. */
+.thread-wander {
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  shape-rendering: auto;
+}
+/* Present from the moment the page loads — this only stops it
+   appearing at the same instant as the text above it. */
+@media (prefers-reduced-motion: no-preference) {
+  .thread-line { animation: thread-in 1.1s ease both 0.2s; }
+}
+@keyframes thread-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ==================================================================
    SCROLL SNAP (landing page only)
    ================================================================== */
 #scroll-container {
+  position: relative;
+  z-index: 1;
   height: 100vh;
   height: 100svh;
   overflow-y: scroll;
@@ -61,6 +131,12 @@ img { max-width: 100%; display: block; }
    stays black on purpose, regardless of the site's light theme —
    opening it dims the page behind it rather than just covering it.
    ================================================================== */
+
+/* One shared easing curve for the whole menu, so every part of the
+   transition moves with the same character. It starts almost
+   imperceptibly and settles rather than stopping. */
+:root { --menu-ease: cubic-bezier(0.32, 0.08, 0.24, 1); }
+
 .menu-trigger {
   position: fixed;
   top: 22px;
@@ -74,9 +150,10 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.02em;
   cursor: pointer;
   padding: 4px 0;
-  transition: color 0.3s ease;
+  transition: color 0.6s var(--menu-ease), opacity 0.2s ease;
 }
 .menu-trigger:hover { color: var(--brass); }
+.menu-trigger.label-swap { opacity: 0; }
 body.menu-open .menu-trigger { color: #f0efe8; }
 body.menu-open .menu-trigger:hover { color: var(--brass); }
 
@@ -90,20 +167,66 @@ body.menu-open .menu-trigger:hover { color: var(--brass); }
   padding: 0 64px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.45s ease;
+  transition: opacity 0.85s var(--menu-ease);
 }
 .menu-overlay.open { opacity: 1; pointer-events: auto; }
+
 .menu-list { list-style: none; margin: 0; padding: 0; }
-.menu-list li { margin: 6px 0; }
-.menu-list a { font-family: var(--sans); font-weight: 500; font-size: clamp(28px, 5vw, 48px); text-decoration: none; color: #f0efe8; }
+.menu-list li {
+  margin: 6px 0;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s var(--menu-ease), transform 0.7s var(--menu-ease);
+}
+/* Opening: the lines arrive one after another, just behind the
+   backdrop. Closing: the .open class goes, so the delays go with it
+   and they leave together — quicker than they came, which is what
+   keeps closing from feeling sluggish. */
+.menu-overlay.open .menu-list li { opacity: 1; transform: translateY(0); }
+.menu-overlay.open .menu-list li:nth-child(1) { transition-delay: 0.14s; }
+.menu-overlay.open .menu-list li:nth-child(2) { transition-delay: 0.20s; }
+.menu-overlay.open .menu-list li:nth-child(3) { transition-delay: 0.26s; }
+.menu-overlay.open .menu-list li:nth-child(4) { transition-delay: 0.32s; }
+.menu-overlay.open .menu-list li:nth-child(5) { transition-delay: 0.38s; }
+.menu-overlay.open .menu-list li:nth-child(6) { transition-delay: 0.44s; }
+.menu-overlay.open .menu-list li:nth-child(7) { transition-delay: 0.50s; }
+.menu-overlay.open .menu-list li:nth-child(n + 8) { transition-delay: 0.56s; }
+
+.menu-list a {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(28px, 5vw, 48px);
+  text-decoration: none;
+  color: #f0efe8;
+  transition: color 0.35s var(--menu-ease);
+}
 .menu-list a:hover, .menu-list a:focus-visible { color: var(--brass); }
 .menu-list .menu-current { color: var(--brass); }
 
 /* The rest of the page gently dims while the menu is open, so the
-   overlay reads as coming forward rather than just appearing. */
-body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
-  transition: opacity 0.45s ease;
-  opacity: 0.12;
+   overlay reads as coming forward rather than just appearing.
+   The transition sits on the base selector, not on .menu-open — when
+   it lived on the open state only, closing the menu snapped the page
+   back to full brightness with no fade at all. */
+body > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
+  transition: opacity 0.85s var(--menu-ease);
+}
+body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
+  opacity: 0.1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-list li { transform: none; }
+  .menu-overlay, body > *:not(.menu-trigger):not(.menu-overlay) {
+    transition-duration: 0.01s;
+  }
+  /* :nth-child(n) matches everything — it's here only to outweigh the
+     stagger delays above, which are more specific than a plain li. */
+  .menu-overlay.open .menu-list li:nth-child(n) {
+    transition-duration: 0.01s;
+    transition-delay: 0s;
+    transform: none;
+  }
 }
 
 /* ==================================================================
@@ -111,7 +234,13 @@ body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
    ================================================================== */
 .title-slide { justify-content: center; }
 .title-content { text-align: center; }
-.title-content h1 { font-size: clamp(32px, 5.6vw, 68px); line-height: 1.1; }
+.title-content h1 {
+  font-size: clamp(32px, 5.6vw, 68px);
+  line-height: 1.1;
+  font-style: italic;
+  font-weight: 500;   /* italics read heavier, so this drops a step to compensate */
+  letter-spacing: -0.005em;
+}
 .title-sub { font-size: 17px; color: var(--muted); margin: 18px 0 0; }
 
 .title-block {
@@ -168,20 +297,21 @@ body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
 /* ==================================================================
    NODE MAP SLIDE — 3D scene built by node-scene.js
    ================================================================== */
-.node-slide { flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-.node-slide h2 {
-  font-family: var(--mono);
-  font-weight: 400;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  color: var(--muted);
-}
+/* The scene is full-bleed: it fills the whole slide, edge to edge, so
+   the branches run off the sides of the screen rather than sitting in
+   a box in the middle. .slide.node-slide is two classes deep on
+   purpose — it has to outrank the plain .slide padding, including the
+   one set inside the mobile media query at the bottom of this file. */
+.slide.node-slide { padding: 0; gap: 0; align-items: stretch; }
 
 .node-scene-wrap {
-  position: relative;
-  width: min(940px, 92vw);
-  height: min(560px, 62vh);
-  touch-action: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* pan-y, not none: vertical swipes still scroll the page on a phone,
+     horizontal drags rotate the scene. */
+  touch-action: pan-y;
   cursor: grab;
 }
 .node-scene-wrap.grabbing { cursor: grabbing; }
@@ -194,38 +324,198 @@ body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
   top: 0;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   white-space: nowrap;
   text-decoration: none;
   color: var(--ink);
   pointer-events: auto;
-  padding: 4px;
+  padding: 6px;
 }
-.node3d-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1.2px solid var(--brass);
-  background: var(--bg);
+/* A registration mark rather than a dot: hollow square, centre
+   point, on a ring of page colour so it keeps its edge wherever it
+   crosses the grid or a branch. */
+.node3d-mark {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--ink);
   flex: none;
-  transition: background 0.2s ease;
+  box-shadow: 0 0 0 4px var(--paper-tone);
+  transition: transform 0.3s ease;
 }
-.node3d-text { font-family: var(--sans); font-weight: 500; font-size: 15px; }
+.node3d-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 4px;
+  height: 4px;
+  background: var(--ink);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+.node3d-text {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink);
+  /* the label has to stay readable over grid, grain and branches */
+  text-shadow: 0 0 7px var(--paper-tone), 0 0 14px var(--paper-tone), 0 1px 0 var(--paper-tone);
+  transition: letter-spacing 0.3s ease;
+}
 .node3d-sub {
   position: absolute;
-  left: 21px;
-  top: 20px;
+  left: 29px;
+  top: 24px;
   font-family: var(--mono);
   font-size: 11px;
+  line-height: 1.45;
   color: var(--muted);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.35s ease;
   white-space: normal;
-  width: 220px;
+  width: 210px;
 }
+
+/* Hover and focus emphasise by weight, not by colour: the mark
+   fills in, the text tightens and goes bold, and out in the scene
+   the branch behind it thickens to match. */
 .node3d-label:hover .node3d-sub, .node3d-label:focus-visible .node3d-sub { opacity: 1; }
-.node3d-label:hover .node3d-dot, .node3d-label:focus-visible .node3d-dot { background: var(--brass); }
-.node3d-label:hover .node3d-text, .node3d-label:focus-visible .node3d-text { color: var(--brass); }
+.node3d-label:hover .node3d-mark, .node3d-label:focus-visible .node3d-mark { transform: scale(1.1); }
+.node3d-label:hover .node3d-mark::after, .node3d-label:focus-visible .node3d-mark::after { width: 8px; height: 8px; }
+.node3d-label:hover .node3d-text, .node3d-label:focus-visible .node3d-text { font-weight: 700; letter-spacing: 0.14em; }
+
+/* Nodes drifting near the right edge flip their text to the other
+   side of the mark so the sub-line doesn't run off screen. The mark
+   itself stays exactly on the node either way. */
+.node3d-label.flip { flex-direction: row-reverse; }
+.node3d-label.flip .node3d-sub { left: auto; right: 29px; text-align: right; }
+
+/* The second tier: words the map is about, floating in it. Not
+   links, not clickable, and deliberately quiet. */
+.node3d-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 0 6px var(--paper-tone);
+}
+
+/* ==================================================================
+   NODE CLICK PREVIEW (trial: Scent descriptions)
+   The rest of the page defocuses behind it — same dark tone the
+   menu overlay uses, for the same "coming forward" reason.
+   ================================================================== */
+body.preview-open #scroll-container,
+body.preview-open .paper {
+  filter: blur(8px);
+  transition: filter 0.6s var(--menu-ease);
+}
+body.preview-open #scroll-container { opacity: 0.55; pointer-events: none; transition: filter 0.6s var(--menu-ease), opacity 0.6s var(--menu-ease); }
+body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transition: opacity 0.6s var(--menu-ease); }
+
+.node-preview-backdrop { position: fixed; inset: 0; z-index: 50; background: transparent; cursor: pointer; }
+
+.node-preview-layer { position: fixed; inset: 0; z-index: 55; perspective: 1000px; pointer-events: none; }
+.node-preview-arm {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 240px;
+  background: linear-gradient(to top, rgba(10, 10, 10, 0) 0%, rgba(10, 10, 10, 0.55) 45%, #0a0a0a 100%);
+  transform-origin: bottom center;
+  opacity: 0;
+  transform: translate(-50%, -100%) rotate(var(--arm-angle, 0deg)) translateZ(0px) scale(1);
+  transition: opacity 0.5s ease, transform 0.7s var(--menu-ease);
+}
+.node-preview-arm.open {
+  opacity: 1;
+  transform: translate(-50%, -100%) rotate(var(--arm-angle, 0deg)) translateZ(150px) scale(1.15);
+}
+
+.node-preview-modal {
+  position: fixed;
+  width: min(480px, 88vw);
+  background: #0a0a0a;
+  color: #f0efe8;
+  padding: 32px;
+  z-index: 60;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: left 0.6s var(--menu-ease), top 0.6s var(--menu-ease), transform 0.6s var(--menu-ease), opacity 0.4s ease;
+}
+.node-preview-media {
+  aspect-ratio: 4 / 3;
+  border: 1px solid #333;
+  background-color: #141414;
+  background-image: repeating-linear-gradient(-45deg, #2a2a2a 0px, #2a2a2a 1px, transparent 1px, transparent 14px);
+  margin-bottom: 22px;
+}
+.node-preview-desc { font-family: var(--sans); font-size: 14px; line-height: 1.6; color: #c9c6bb; margin: 0 0 26px; }
+.node-preview-close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: #8f8c81;
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.node-preview-close:hover { color: #f0efe8; }
+.node-preview-button {
+  display: block;
+  margin-left: auto;
+  width: fit-content;
+  border: 1px solid var(--brass);
+  color: var(--brass);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-decoration: none;
+  padding: 9px 18px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.node-preview-button:hover { background: var(--brass); color: #0a0a0a; }
+
+/* ==================================================================
+   THE CURSOR
+   Built by nav.js, so it appears on every page.
+   ================================================================== */
+html.has-cursor, html.has-cursor * { cursor: none !important; }
+.cursor-ring, .cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 900;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease, width 0.22s ease, height 0.22s ease, border-color 0.25s ease, background 0.22s ease;
+}
+html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
+.cursor-ring {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--ink);
+}
+.cursor-ring.near { width: 11px; height: 11px; }
+.cursor-dot {
+  width: 3px;
+  height: 3px;
+  background: var(--ink);
+}
+.cursor-dot.near { width: 5px; height: 5px; }
+body.menu-open .cursor-ring { border-color: #f0efe8; }
+body.menu-open .cursor-dot { background: #f0efe8; }
 
 /* Plain-link fallback, shown only if the 3D library fails to load */
 .node-fallback-list { display: flex; flex-direction: column; gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); width: min(640px, 92vw); }
@@ -300,66 +590,6 @@ body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
 a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline-offset: 3px; }
 
 /* ==================================================================
-   NODE CLICK PREVIEW — deliberately simple for now
-   ================================================================== */
-.node-preview-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgba(10, 10, 10, 0);
-  cursor: pointer;
-  transition: background 0.5s ease;
-}
-.node-preview-backdrop.open { background: rgba(10, 10, 10, 0.35); }
-
-.node-preview-modal {
-  position: fixed;
-  width: min(480px, 88vw);
-  background: #0a0a0a;
-  color: #f0efe8;
-  padding: 32px;
-  z-index: 60;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  transition: left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
-    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
-}
-.node-preview-media {
-  aspect-ratio: 4 / 3;
-  border: 1px solid #333;
-  background-color: #141414;
-  background-image: repeating-linear-gradient(-45deg, #2a2a2a 0px, #2a2a2a 1px, transparent 1px, transparent 14px);
-  margin-bottom: 22px;
-}
-.node-preview-title { font-family: var(--sans); font-weight: 600; font-size: 22px; margin: 0 0 10px; }
-.node-preview-desc { font-family: var(--sans); font-size: 14px; line-height: 1.6; color: #c9c6bb; margin: 0 0 26px; }
-.node-preview-close {
-  position: absolute;
-  top: 16px;
-  right: 18px;
-  background: none;
-  border: none;
-  color: #8f8c81;
-  font-family: var(--mono);
-  font-size: 12px;
-  cursor: pointer;
-}
-.node-preview-close:hover { color: #f0efe8; }
-.node-preview-button {
-  display: block;
-  margin-left: auto;
-  width: fit-content;
-  border: 1px solid var(--brass);
-  color: var(--brass);
-  font-family: var(--mono);
-  font-size: 13px;
-  text-decoration: none;
-  padding: 9px 18px;
-  transition: background 0.25s ease, color 0.25s ease;
-}
-.node-preview-button:hover { background: var(--brass); color: #0a0a0a; }
-
-/* ==================================================================
    RESPONSIVE
    ================================================================== */
 @media (max-width: 860px) {
@@ -371,5 +601,6 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   .gallery-entry { flex-direction: column; padding: 32px 24px; gap: 20px; }
   .gallery-entry .entry-text { max-width: none; }
   .infobox { float: none; width: 100%; margin: 0 0 32px; }
-  .node-scene-wrap { width: 100%; height: 50vh; }
+  .node3d-text { font-size: 14px; }
+  .node3d-sub { width: 160px; }
 }

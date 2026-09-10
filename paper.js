@@ -30,8 +30,8 @@
   // ============================================================
   const GRID_SMALL = 13;        // the small squares
   const GRID_MAJOR_EVERY = 4;   // a stronger line every fourth one
-  const MINOR_ALPHA = 0.03;
-  const MAJOR_ALPHA = 0.075;
+  const MINOR_ALPHA = 0.022;    // was 0.03 — a touch more low-key
+  const MAJOR_ALPHA = 0.056;    // was 0.075
 
   const NOISE_FLOOR = 0.016;    // grain everywhere, including slides 1 and 2
   const NOISE_PEAK = 0.058;     // and how strong it gets under the map
