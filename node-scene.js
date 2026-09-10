@@ -620,7 +620,19 @@ const ATMOSPHERE_LABELS = [
     defs.appendChild(gradient);
     svg.appendChild(defs);
 
-    const ribbon = svgEl("path", { class: "node-preview-arm-path" });
+    // Anything of the arm that falls behind the window is cut away —
+    // white shows, black hides, and the black rectangle tracks the
+    // window as it flies in. Only the ribbon is masked: the fittings
+    // at the dock sit on the window's edge on purpose.
+    const maskId = "arm-cut-" + Math.random().toString(36).slice(2, 8);
+    const mask = svgEl("mask", { id: maskId, maskUnits: "userSpaceOnUse" });
+    const maskShow = svgEl("rect", { x: 0, y: 0, fill: "#fff" });
+    const maskCut = svgEl("rect", { fill: "#000" });
+    mask.appendChild(maskShow);
+    mask.appendChild(maskCut);
+    defs.appendChild(mask);
+
+    const ribbon = svgEl("path", { class: "node-preview-arm-path", mask: "url(#" + maskId + ")" });
     ribbon.style.fill = "url(#" + gradientId + ")";
     ribbon.style.stroke = "none";
     svg.appendChild(ribbon);
@@ -651,6 +663,7 @@ const ATMOSPHERE_LABELS = [
     activePreview = {
       modal: modal, svg: svg, ribbon: ribbon, gradient: gradient,
       dockStub: dockStub, dockLine: dockLine, dockMark: dockMark, dockDot: dockDot,
+      maskShow: maskShow, maskCut: maskCut,
       backdrop: backdrop, originX: originX, originY: originY,
       dockX: dockX, dockY: dockY, onLeft: onLeft,
     };
@@ -788,6 +801,16 @@ const ATMOSPHERE_LABELS = [
     preview.dockDot.setAttribute("x", markX - 1.5);
     preview.dockDot.setAttribute("y", preview.dockY - 1.5);
 
+    // keep the cut-out sitting exactly on the window, wherever it has
+    // animated to this frame
+    const box = preview.modal.getBoundingClientRect();
+    preview.maskShow.setAttribute("width", window.innerWidth);
+    preview.maskShow.setAttribute("height", window.innerHeight);
+    preview.maskCut.setAttribute("x", box.left);
+    preview.maskCut.setAttribute("y", box.top);
+    preview.maskCut.setAttribute("width", Math.max(0, box.width));
+    preview.maskCut.setAttribute("height", Math.max(0, box.height));
+
     preview.svg.style.opacity = String(Math.min(1, armMix * 1.4));
     preview.dockStub.style.opacity = String(docked);
     preview.dockMark.style.opacity = String(docked);
@@ -810,6 +833,11 @@ const ATMOSPHERE_LABELS = [
   let clock = 0;
   let arrival = 0;
   let ghostEmerge = 0;
+  const readout = {};
+  const readoutNodes = [];
+  const mapRadius = REAL_NODES.reduce(function (m, n) {
+    return Math.max(m, Math.hypot(n.pos[0], n.pos[1], n.pos[2]));
+  }, 0);
   let lastRoll = 0;
   let lastFrame = performance.now();
 
@@ -1075,9 +1103,13 @@ const ATMOSPHERE_LABELS = [
       branch.resting.material.opacity = 0.78 * (1 - 0.45 * back) * held;
       branch.resting.material.color.copy(COL_BRANCH).lerp(COL_INK, w * 0.6); // was a full lerp to w
       branch.dots.forEach((dot) => {
-        dot.mesh.material.opacity = 0.8 * (1 - 0.5 * back);
+        // On hover they shrink away into the curve they already sit on,
+        // so a hovered branch reads as one unbroken line rather than a
+        // beaded one. They fade slightly ahead of shrinking, so the
+        // last of them isn't a hard dot popping out of existence.
+        dot.mesh.material.opacity = 0.8 * (1 - 0.5 * back) * (1 - w * 0.96);
         dot.mesh.material.color.copy(COL_BRANCH).lerp(COL_INK, w);
-        dot.mesh.scale.setScalar(dot.scale * penWeight * (1 + 0.45 * w));
+        dot.mesh.scale.setScalar(dot.scale * penWeight * Math.max(0.02, 1 - w * 0.94));
       });
     });
 
@@ -1114,6 +1146,11 @@ const ATMOSPHERE_LABELS = [
       n._el.style.opacity = String(Math.max(0.5, 1 - depth * 0.45) * (1 - 0.55 * back));
       n._el.style.zIndex = String(Math.round((1 - depth) * 100));
       field.push({ x: x, y: y, r: 78 * penWeight, s: 7 });
+      readoutNodes[i] = readoutNodes[i] || {};
+      const rn = readoutNodes[i];
+      rn.x = x; rn.y = y; rn.depth = depth; rn.label = n.label;
+      rn.wx = worldPos.x; rn.wy = worldPos.y; rn.wz = worldPos.z;
+      rn.px = n._end.x; rn.py = n._end.y; rn.pz = n._end.z;
     });
 
     ghosts.forEach((ghost) => {
@@ -1135,6 +1172,16 @@ const ATMOSPHERE_LABELS = [
       r: 210 * penWeight, s: 17,
     });
     window.__mapField = field;
+
+    // Everything extras.js needs in order to draw alongside the map,
+    // so that file can be deleted outright without touching this one.
+    readout.hubX = (projected.x * 0.5 + 0.5) * w;
+    readout.hubY = (-projected.y * 0.5 + 0.5) * h;
+    readout.nodes = readoutNodes;
+    readout.arrival = arrival;
+    readout.previewOpen = previewOpen;
+    readout.radius = mapRadius;
+    window.__mapReadout = readout;
 
     updateArm();
 

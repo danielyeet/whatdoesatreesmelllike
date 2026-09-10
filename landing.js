@@ -32,10 +32,11 @@ function goTo(index) {
   // exactly on the target slide, fixes that.
   container.style.scrollSnapType = "none";
 
-  // The move onto the node map slide gets longer: the paper, the
-  // thread and the map itself all arrive during it, and at 1100ms
-  // they pile up on top of each other.
-  const duration = (index === 2 || activeIndex === 2) ? 1500 : 1100;
+  // The move onto the node map slide is much longer than the others:
+  // the curtain, the grid, the static and the constellation leaving
+  // the centre all happen during it, and rushing them turns a sequence
+  // into a flicker. This is the number to change if it drags.
+  const duration = (index === 2 || activeIndex === 2) ? 2400 : 1100;
   const startTime = performance.now();
   animating = true;
 
@@ -73,7 +74,7 @@ container.addEventListener(
     e.preventDefault();
     if (wheelLock || animating) return;
     wheelLock = true;
-    setTimeout(() => { wheelLock = false; }, 820);
+    setTimeout(() => { wheelLock = false; }, 1000);
     if (e.deltaY > 0) goTo(activeIndex + 1);
     else if (e.deltaY < 0) goTo(activeIndex - 1);
   },

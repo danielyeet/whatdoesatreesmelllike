@@ -15,6 +15,7 @@
 
 (function () {
   const container = document.getElementById("scroll-container");
+  const paper = document.querySelector(".paper");
   const wash = document.querySelector(".paper-wash");
   const gridCanvas = document.querySelector(".paper-grid");
   const noiseCanvas = document.querySelector(".paper-noise");
@@ -38,10 +39,19 @@
   const MINOR_ALPHA = 0.022;
   const MAJOR_ALPHA = 0.056;
 
+  // The static is drawn at a fraction of screen resolution and scaled
+  // up, so each grain is this many CSS pixels across. 1 is the finest
+  // it goes; larger reads coarser, like a worse signal.
+  const NOISE_SCALE = 2;
   const NOISE_FLOOR = 0.016;    // grain everywhere, including slides 1 and 2
   const NOISE_PEAK = 0.058;     // and how strong it gets under the map
   const WASH_PEAK = 0.09;       // the black wash under the map
 
+  // The paper arrives as a curtain: it is already there at the left
+  // and right edges when you start scrolling, and the gap up the
+  // middle closes as you go.
+  const CURTAIN_FEATHER = 9;    // how soft the closing edges are, in % of width
+  const CURTAIN_START = 0.02;   // where in the scroll the gap starts closing
   const BEND = 1.0;             // how hard the map refracts the grid
   const MOLTEN = 46;            // how far the grid is still running when it arrives
   const MOLTEN_SETTLE = 1.6;    // >1 means it firms up early and holds still
@@ -113,10 +123,12 @@
     gridCanvas.height = Math.ceil(H * dpr);
     gridCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // The static is deliberately 1:1 with CSS pixels — it wants to be
-    // coarse, and it keeps the repaint cheap.
-    noiseCanvas.width = W;
-    noiseCanvas.height = H;
+    // Drawn small and stretched to fit, which is what makes the grain
+    // chunky; nearest-neighbour keeps each one a hard square instead of
+    // a smudge.
+    noiseCanvas.width = Math.ceil(W / NOISE_SCALE);
+    noiseCanvas.height = Math.ceil(H / NOISE_SCALE);
+    noiseCanvas.style.imageRendering = "pixelated";
     buildTiles();
 
     cols = Math.ceil(W / CELL) + 2;
@@ -269,6 +281,34 @@
 
   let lastGrid = 0, lastNoise = 0;
   let paintedOnce = false;
+  let lastCurtain = -1;
+
+  // Two panels drawing in from the edges. Written as a mask rather
+  // than as two moving divs so the wash, the grid and the static are
+  // all cut by the same edge, and so that edge can be soft.
+  function setCurtain(c) {
+    if (!paper) return;
+    if (Math.abs(c - lastCurtain) < 0.004) return;
+    lastCurtain = c;
+    if (c >= 0.995) {
+      paper.style.webkitMaskImage = "none";
+      paper.style.maskImage = "none";
+      return;
+    }
+    const near = 50 * c;
+    const far = 100 - near;
+    const feather = Math.min(CURTAIN_FEATHER * (1 - c * 0.7), (far - near) / 2 - 0.2);
+    const gradient =
+      "linear-gradient(to right," +
+      " #000 0%," +
+      " #000 " + near.toFixed(2) + "%," +
+      " rgba(0,0,0,0) " + (near + feather).toFixed(2) + "%," +
+      " rgba(0,0,0,0) " + (far - feather).toFixed(2) + "%," +
+      " #000 " + far.toFixed(2) + "%," +
+      " #000 100%)";
+    paper.style.webkitMaskImage = gradient;
+    paper.style.maskImage = gradient;
+  }
 
   function frame(now) {
     requestAnimationFrame(frame);
@@ -277,14 +317,19 @@
     const leg = (slides[2].offsetTop - slides[1].offsetTop) || 1;
     const raw = clamp((top - slides[1].offsetTop) / leg);
 
-    // The map arrives on the plain progress; the paper comes in over
-    // a longer stretch and on a flatter curve, so you never catch it
-    // switching on.
+    // The map arrives on the plain progress. The paper is deliberately
+    // ahead of it now: the exponent below is less than 1, so it is
+    // already faintly present the moment you start scrolling and
+    // spends the whole leg building rather than appearing near the
+    // end. What holds it back from the middle of the screen is the
+    // curtain, not its opacity.
     window.__p23 = smooth(raw);
-    const paperIn = smoother(clamp((raw - 0.04) / 0.9));
+    const paperIn = Math.pow(clamp(raw / 0.95), 0.7);
+    const curtain = smoother(clamp((raw - CURTAIN_START) / (0.94 - CURTAIN_START)));
     molten = MOLTEN * Math.pow(1 - paperIn, MOLTEN_SETTLE);
     moltenClock = now / 1000;
 
+    setCurtain(curtain);
     if (wash) wash.style.opacity = (WASH_PEAK * paperIn).toFixed(4);
     gridCanvas.style.opacity = paperIn.toFixed(3);
     noiseCanvas.style.opacity = (NOISE_FLOOR + (NOISE_PEAK - NOISE_FLOOR) * paperIn).toFixed(4);
