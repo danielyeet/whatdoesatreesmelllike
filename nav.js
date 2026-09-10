@@ -114,6 +114,32 @@ const SITE_LINKS = [
   let tx = window.innerWidth / 2, ty = window.innerHeight / 2;
   let rx = tx, ry = ty;
   let awake = false;
+  let lastUnder = null;
+
+  // Rather than trusting a .dark-surface class to have been put on
+  // everything dark, this reads the actual colour underneath: walk up
+  // from whatever is under the pointer until something is painting an
+  // opaque background, and go light if that colour is dark. The class
+  // is still honoured, as a shortcut for panels whose own background
+  // is transparent. Only re-checked when the element underneath
+  // changes, so getComputedStyle isn't called on every mouse move.
+  function isDark(el) {
+    let node = el;
+    while (node && node.nodeType === 1) {
+      if (node.classList && node.classList.contains("dark-surface")) return true;
+      const colour = getComputedStyle(node).backgroundColor;
+      const parts = colour && colour.match(/[\d.]+/g);
+      if (parts && parts.length >= 3) {
+        const alpha = parts.length > 3 ? parseFloat(parts[3]) : 1;
+        if (alpha > 0.5) {
+          const luminance = 0.2126 * +parts[0] + 0.7152 * +parts[1] + 0.0722 * +parts[2];
+          return luminance < 115;
+        }
+      }
+      node = node.parentElement;
+    }
+    return false;
+  }
 
   window.addEventListener("pointermove", (e) => {
     if (e.pointerType !== "mouse") return;
@@ -129,9 +155,12 @@ const SITE_LINKS = [
     // pointer-events:none on the ring/dot means elementFromPoint sees
     // straight through them to whatever's actually underneath.
     const under = document.elementFromPoint(tx, ty);
-    const onDark = !!(under && under.closest(".dark-surface"));
-    ring.classList.toggle("on-dark", onDark);
-    dot.classList.toggle("on-dark", onDark);
+    if (under !== lastUnder) {
+      lastUnder = under;
+      const onDark = isDark(under);
+      ring.classList.toggle("on-dark", onDark);
+      dot.classList.toggle("on-dark", onDark);
+    }
   }, { passive: true });
 
   document.addEventListener("mouseleave", () => document.documentElement.classList.remove("cursor-awake"));

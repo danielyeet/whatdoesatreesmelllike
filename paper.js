@@ -28,10 +28,15 @@
   // ============================================================
   // TUNING
   // ============================================================
+  // Three tiers now: a big square every fourth small one, and each
+  // small square divided 4x4 again. The finest tier is meant to read
+  // as a faint tone rather than as lines you can count.
   const GRID_SMALL = 13;        // the small squares
   const GRID_MAJOR_EVERY = 4;   // a stronger line every fourth one
-  const MINOR_ALPHA = 0.022;    // was 0.03 — a touch more low-key
-  const MAJOR_ALPHA = 0.056;    // was 0.075
+  const GRID_MICRO_EVERY = 4;   // and each small square split this many ways
+  const MICRO_ALPHA = 0.012;
+  const MINOR_ALPHA = 0.022;
+  const MAJOR_ALPHA = 0.056;
 
   const NOISE_FLOOR = 0.016;    // grain everywhere, including slides 1 and 2
   const NOISE_PEAK = 0.058;     // and how strong it gets under the map
@@ -43,10 +48,11 @@
   const GRID_MS = 50;           // the grid redraws at about 20fps
   const NOISE_MS = 33;          // the static at about 30
 
-  const CURSOR_REACH = 130;     // the cursor pushes the grid too, like a small version of the centre
-  const CURSOR_STRENGTH = 9;
+  const CURSOR_REACH = 88;      // was 130 — the cursor's own dent in the grid, pulled in
+  const CURSOR_STRENGTH = 3.6;  // was 9 — and made much shallower
 
   const SAMPLE = 14;            // how finely a bent grid line is subdivided
+  const SAMPLE_MICRO = 30;      // the finest tier can afford to be coarser
   const CELL = 40;              // resolution of the displacement field
 
   // ============================================================
@@ -191,12 +197,39 @@
     }
   }
 
-  function drawGrid() {
+  function drawGrid(withMicro) {
     gridCtx.clearRect(0, 0, W, H);
     gridCtx.lineWidth = 1;
 
-    const originX = (W / 2) % (GRID_SMALL * GRID_MAJOR_EVERY);
-    const originY = (H / 2) % (GRID_SMALL * GRID_MAJOR_EVERY);
+    const MICRO = GRID_SMALL / GRID_MICRO_EVERY;
+    const BLOCK = GRID_SMALL * GRID_MAJOR_EVERY;
+    const originX = (W / 2) % BLOCK;
+    const originY = (H / 2) % BLOCK;
+
+    // Finest tier first, so the two heavier ones draw over it.
+    if (withMicro) {
+      gridCtx.strokeStyle = "rgba(23,23,15," + MICRO_ALPHA + ")";
+      gridCtx.beginPath();
+      let index = 0;
+      for (let x = originX - BLOCK; x < W + MICRO; x += MICRO, index++) {
+        if (index % GRID_MICRO_EVERY === 0) continue; // that one belongs to the tier above
+        for (let y = -SAMPLE_MICRO; y <= H + SAMPLE_MICRO; y += SAMPLE_MICRO) {
+          sampleField(x, y);
+          if (y <= -SAMPLE_MICRO) gridCtx.moveTo(x + sx, y + sy);
+          else gridCtx.lineTo(x + sx, y + sy);
+        }
+      }
+      index = 0;
+      for (let y = originY - BLOCK; y < H + MICRO; y += MICRO, index++) {
+        if (index % GRID_MICRO_EVERY === 0) continue;
+        for (let x = -SAMPLE_MICRO; x <= W + SAMPLE_MICRO; x += SAMPLE_MICRO) {
+          sampleField(x, y);
+          if (x <= -SAMPLE_MICRO) gridCtx.moveTo(x + sx, y + sy);
+          else gridCtx.lineTo(x + sx, y + sy);
+        }
+      }
+      gridCtx.stroke();
+    }
 
     for (let pass = 0; pass < 2; pass++) {
       const major = pass === 1;
@@ -204,7 +237,7 @@
       gridCtx.beginPath();
 
       let index = 0;
-      for (let x = originX - GRID_SMALL * GRID_MAJOR_EVERY; x < W + GRID_SMALL; x += GRID_SMALL, index++) {
+      for (let x = originX - BLOCK; x < W + GRID_SMALL; x += GRID_SMALL, index++) {
         if ((index % GRID_MAJOR_EVERY === 0) !== major) continue;
         for (let y = -SAMPLE; y <= H + SAMPLE; y += SAMPLE) {
           sampleField(x, y);
@@ -213,7 +246,7 @@
         }
       }
       index = 0;
-      for (let y = originY - GRID_SMALL * GRID_MAJOR_EVERY; y < H + GRID_SMALL; y += GRID_SMALL, index++) {
+      for (let y = originY - BLOCK; y < H + GRID_SMALL; y += GRID_SMALL, index++) {
         if ((index % GRID_MAJOR_EVERY === 0) !== major) continue;
         for (let x = -SAMPLE; x <= W + SAMPLE; x += SAMPLE) {
           sampleField(x, y);
@@ -268,7 +301,11 @@
     if (paperIn > 0.004 && now - lastGrid >= gridInterval) {
       lastGrid = now;
       buildField(BEND * paperIn);
-      drawGrid();
+      // The finest tier is skipped while the grid is still molten: it
+      // is four times the line count for something you can't see
+      // through the warp anyway, and that is where the frame budget
+      // is tightest.
+      drawGrid(molten < 1.5);
     }
   }
 

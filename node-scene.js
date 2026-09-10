@@ -18,24 +18,32 @@
 // moves the way an arm does rather than as one rigid object.
 // ============================================================
 
+// Positions are a Fibonacci sphere: seven points spaced as evenly as
+// seven points can be on a sphere, rather than the near-flat ring they
+// used to be. z now carries as much of the arrangement as x and y do,
+// so branches genuinely leave the centre in every direction.
+//
+// If you move one by hand, keep it roughly 3.2 to 3.7 from the centre,
+// and keep its y clear of 0 — a node sitting on the equator slides
+// straight across the middle of the screen on every rotation.
 const REAL_NODES = [
   {
     label: "Scent descriptions", sub: "notes on things I've smelled and tried to describe",
-    href: "categories/scent-descriptions.html", pos: [-2.9, 1.5, 0.7],
+    href: "categories/scent-descriptions.html", pos: [1.57, 2.62, 0.0],
     preview: { description: "Here I describe things, from scents to houses to notes to anything else." },
   },
-  { label: "Theories", sub: "half-formed ideas I keep coming back to", href: "categories/theories.html", pos: [2.0, 2.3, -1.1] },
-  { label: "Favorites", sub: "things I like, no other reason needed", href: "categories/favorites.html", pos: [3.2, -1.3, 0.9] },
-  { label: "Other", sub: "whatever doesn't fit anywhere else", href: "categories/other-1.html", pos: [-2.2, -2.4, -0.6] },
-  { label: "Other", sub: "the other other pile", href: "categories/other-2.html", pos: [0.4, -2.9, 1.4] },
-  { label: "Test node", sub: "a working sandbox node — safe to repurpose", href: "works/test-node-a.html", pos: [-3.2, -1.1, -1.4] },
-  { label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html", pos: [3.3, 1.6, -1.3] },
+  { label: "Theories", sub: "half-formed ideas I keep coming back to", href: "categories/theories.html", pos: [-2.09, 1.97, 1.91] },
+  { label: "Favorites", sub: "things I like, no other reason needed", href: "categories/favorites.html", pos: [0.27, 0.93, -3.1] },
+  { label: "Other", sub: "whatever doesn't fit anywhere else", href: "categories/other-1.html", pos: [1.78, 1.0, 2.33] },
+  { label: "Other", sub: "the other other pile", href: "categories/other-2.html", pos: [-3.25, -0.99, -0.57] },
+  { label: "Test node", sub: "a working sandbox node — safe to repurpose", href: "works/test-node-a.html", pos: [2.26, -1.86, -1.43] },
+  { label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html", pos: [-0.4, -2.62, 1.52] },
 ];
 
 // PLACEHOLDERS — replace or empty this list. The faint grey words
 // floating in the map: not links, not clickable, just things the map
-// is "about". They sit on fixed points of their own, so they don't
-// drift with the cloud.
+// is "about". They sit on fixed points of their own and ride out of
+// the centre with everything else.
 const ATMOSPHERE_LABELS = [
   "SLOW", "ROOTS", "AFTER RAIN", "MARGINALIA", "SMOKE", "REPETITION",
 ];
@@ -66,8 +74,14 @@ const ATMOSPHERE_LABELS = [
   const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00024; // was 0.00018 — a slightly quicker drift
   const DRAG_SENSITIVITY = 0.0026;
   const MAX_SPIN = 0.04;
-  const MAX_TILT = 0.38;
-  const FRAME_V = 4.35;         // room the map is given — larger draws it smaller
+  // No tilt limit any more: the map turns freely in every direction.
+  const EMERGE_STAGGER = 0.35;  // how much later the last branch leaves than the first
+  const EMERGE_OVERSHOOT = 1.15;// >0 gives them a slight sail past their mark
+  // A touch more room than before: turning freely means a node can now
+  // swing to the top or bottom of its arc while also sitting near the
+  // camera, which throws it further out than the old limited tilt ever
+  // could. This keeps the worst case comfortably on screen.
+  const FRAME_V = 4.5;          // room the map is given — larger draws it smaller
   const FRAME_H = 4.9;
 
   // Sway is disabled — the map spins as a rigid whole, nothing sways
@@ -91,7 +105,9 @@ const ATMOSPHERE_LABELS = [
   const WAKE_TO = 0.95;
   const PARTICLES_PER_SPECK = 9;
 
-  const CLOUD_COUNT = 240;
+  // The drifting background specks are off. The machinery is left in
+  // place — put a count back here to bring them back.
+  const CLOUD_COUNT = 0;
   const CLOUD_INNER = 2.6;      // starts outside the diagram
   const CLOUD_OUTER = 7.4;      // and runs well past the edges of the screen
   const CLOUD_DEPTH = 1.45;     // extra spread along z, out of the diagram's plane
@@ -328,8 +344,10 @@ const ATMOSPHERE_LABELS = [
     const period1 = SWAY_PERIOD[0] + Math.random() * (SWAY_PERIOD[1] - SWAY_PERIOD[0]);
     const period2 = SWAY_PERIOD[0] + Math.random() * (SWAY_PERIOD[1] - SWAY_PERIOD[0]);
     branches.push({
+      emerge: 0,
       curve: curve, resting: resting, emphasised: emphasised, dots: dots, weight: 0,
       samplePoints: curve.getPoints(48), // for the converge effect below to search against
+      armSamples: curve.getPoints(64),   // a finer trace, for the preview arm
       swayA: perp.clone(), swayB: perp2,
       amp: SWAY * length,
       w1: (Math.PI * 2) / period1, w2: (Math.PI * 2) / period2,
@@ -343,7 +361,7 @@ const ATMOSPHERE_LABELS = [
   // ============================================================
   // THE CLOUD — out past the diagram and past the frame
   // ============================================================
-  const cloud = speckBatch(CLOUD_COUNT, CLOUD_OUTER * 1.6);
+  const cloud = CLOUD_COUNT > 0 ? speckBatch(CLOUD_COUNT, CLOUD_OUTER * 1.6) : null;
   const cloudParticles = [];
 
   function placeCloudParticle(particle) {
@@ -388,7 +406,7 @@ const ATMOSPHERE_LABELS = [
     el.className = "node3d-ghost";
     el.textContent = word;
     labelLayer.appendChild(el);
-    ghosts.push({ el: el, anchor: anchorObj });
+    ghosts.push({ el: el, anchor: anchorObj, base: p.clone() });
   });
 
   // ============================================================
@@ -487,11 +505,13 @@ const ATMOSPHERE_LABELS = [
     // Matches the convention the stock points material uses, so the
     // sizes in the tuning block keep meaning what they meant.
     const scale = h * renderer.getPixelRatio() * 0.5;
+    if (cloud) {
+      cloud.points.material.uniforms.uScale.value = scale;
+      cloud.points.material.uniforms.uMaxSize.value = 9 * renderer.getPixelRatio();
+    }
     const ceiling = 9 * renderer.getPixelRatio();
     wake.points.material.uniforms.uScale.value = scale;
-    cloud.points.material.uniforms.uScale.value = scale;
     wake.points.material.uniforms.uMaxSize.value = ceiling;
-    cloud.points.material.uniforms.uMaxSize.value = ceiling;
 
     const pxPerUnit = (h / 2) / (camera.position.z * halfFov);
     const wanted = Math.min(2, Math.max(1, Math.pow(REF_PX_PER_UNIT / pxPerUnit, 0.75)));
@@ -529,7 +549,7 @@ const ATMOSPHERE_LABELS = [
   }
 
   const PREVIEW_MARGIN = 64;
-  const ARM_WIDTH_HUB = 0.35;   // half-width where it leaves the centre
+  const ARM_WIDTH_HUB = 0.62;   // half-width where it leaves the centre
   const ARM_WIDTH_DOCK = 2.6;   // and where it meets the window
   const ARM_REACH_STEPS = 20;   // how finely the last stretch is drawn
   const ARM_MARK_GAP = 13;      // how far off the window the end mark stands
@@ -585,10 +605,12 @@ const ATMOSPHERE_LABELS = [
     const gradient = svgEl("linearGradient", { id: gradientId, gradientUnits: "userSpaceOnUse" });
     // All but gone at the centre, full ink at the window.
     [
-      { offset: "0", color: "#b6b2a8", opacity: "0" },
-      { offset: "0.22", color: "#a5a197", opacity: "0.1" },
-      { offset: "0.55", color: "#6f6b62", opacity: "0.45" },
-      { offset: "0.82", color: "#3a3a30", opacity: "0.85" },
+      // It recedes toward the centre but never disappears into it —
+      // the arm has to stay readable all the way back to the hub.
+      { offset: "0", color: "#8b877e", opacity: "0.34" },
+      { offset: "0.3", color: "#77736a", opacity: "0.48" },
+      { offset: "0.62", color: "#524f47", opacity: "0.72" },
+      { offset: "0.85", color: "#33332b", opacity: "0.9" },
       { offset: "1", color: "#22221a", opacity: "1" },
     ].forEach((stop) => {
       gradient.appendChild(svgEl("stop", {
@@ -664,9 +686,8 @@ const ATMOSPHERE_LABELS = [
 
   function armRibbonPath(points, reveal) {
     const count = points.length;
-    const shown = Math.max(2, Math.round(count * reveal));
-    let out = "";
-    let back = "";
+    const shown = Math.max(3, Math.round(count * reveal));
+    const left = [], right = [];
     for (let i = 0; i < shown; i++) {
       const p = points[i];
       const a = points[Math.max(0, i - 1)];
@@ -676,10 +697,21 @@ const ATMOSPHERE_LABELS = [
       tx /= len; ty /= len;
       const s = i / (count - 1);
       const half = ARM_WIDTH_HUB + (ARM_WIDTH_DOCK - ARM_WIDTH_HUB) * Math.pow(s, 1.35);
-      out += (i === 0 ? "M " : " L ") + (p.x - ty * half).toFixed(1) + " " + (p.y + tx * half).toFixed(1);
-      back = " L " + (p.x + ty * half).toFixed(1) + " " + (p.y - tx * half).toFixed(1) + back;
+      left.push({ x: p.x - ty * half, y: p.y + tx * half });
+      right.push({ x: p.x + ty * half, y: p.y - tx * half });
     }
-    return out + back + " Z";
+    // One closed outline, drawn with quadratics through the midpoints
+    // rather than straight segments between them — that is what takes
+    // the faceting out of the edge.
+    const loop = left.concat(right.reverse());
+    let d = "M " + loop[0].x.toFixed(1) + " " + loop[0].y.toFixed(1);
+    for (let i = 1; i <= loop.length; i++) {
+      const cur = loop[i % loop.length];
+      const next = loop[(i + 1) % loop.length];
+      d += " Q " + cur.x.toFixed(1) + " " + cur.y.toFixed(1) +
+           " " + ((cur.x + next.x) / 2).toFixed(1) + " " + ((cur.y + next.y) / 2).toFixed(1);
+    }
+    return d + " Z";
   }
 
   function updateArm() {
@@ -692,14 +724,14 @@ const ATMOSPHERE_LABELS = [
     const preview = activePreview;
     const branch = branches[armIndex];
     const rect = wrap.getBoundingClientRect();
-    const sample = branch.samplePoints;
+    const sample = branch.armSamples;
     armPoints.length = 0;
 
     // 1. the branch itself, exactly as it is being drawn in 3D
     for (let i = 0; i < sample.length; i++) {
       const t = i / (sample.length - 1);
       swayAt(branch, t, swayVec);
-      scratch.copy(sample[i]).add(swayVec).applyMatrix4(rig.matrixWorld);
+      scratch.copy(sample[i]).multiplyScalar(branch.emerge).add(swayVec).applyMatrix4(rig.matrixWorld);
       projected.copy(scratch).project(camera);
       armPoints.push({
         x: rect.left + (projected.x * 0.5 + 0.5) * wrap.clientWidth,
@@ -777,6 +809,7 @@ const ATMOSPHERE_LABELS = [
 
   let clock = 0;
   let arrival = 0;
+  let ghostEmerge = 0;
   let lastRoll = 0;
   let lastFrame = performance.now();
 
@@ -797,8 +830,18 @@ const ATMOSPHERE_LABELS = [
   }
 
   const perRing = TUBE_SIDES + 1;
+  // Ease with a little sail past the mark at the end, so a branch
+  // arrives like something thrown rather than something slid.
+  function emergeEase(t) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    const c1 = EMERGE_OVERSHOOT, c3 = c1 + 1, p = t - 1;
+    return 1 + c3 * p * p * p + c1 * p * p;
+  }
+
   function bendTube(branch, mesh) {
     const base = mesh.userData.base;
+    const em = branch.emerge;
     const attr = mesh.geometry.attributes.position;
     const array = attr.array;
 
@@ -831,9 +874,9 @@ const ATMOSPHERE_LABELS = [
       const oz = swayVec.z + corrAxis.z * corr;
       for (let j = 0; j < perRing; j++) {
         const idx = (ring * perRing + j) * 3;
-        array[idx] = base[idx] + ox;
-        array[idx + 1] = base[idx + 1] + oy;
-        array[idx + 2] = base[idx + 2] + oz;
+        array[idx] = base[idx] * em + ox;
+        array[idx + 1] = base[idx + 1] * em + oy;
+        array[idx + 2] = base[idx + 2] * em + oz;
       }
     }
     attr.needsUpdate = true;
@@ -855,13 +898,13 @@ const ATMOSPHERE_LABELS = [
       const idle = (activeBranch >= 0 || previewOpen) ? 0 : IDLE_SPEED;
       velY += (idle - velY) * 0.012;
       velX += (0 - velX) * 0.04;
-      rotX += (0 - rotX) * 0.004;
+      // No easing back to level, and no clamp below: wherever you turn
+      // it to is where it stays, all the way round on either axis.
     }
     rotY += velY;
-    rotX = Math.max(-MAX_TILT, Math.min(MAX_TILT, rotX + velX));
+    rotX += velX;
     rig.rotation.y = rotY;
     rig.rotation.x = rotX;
-    rig.scale.setScalar(0.93 + 0.07 * arrival);
     rig.updateMatrixWorld(true);
 
     raycaster.setFromCamera(pointer, camera);
@@ -897,17 +940,26 @@ const ATMOSPHERE_LABELS = [
     }
 
     // --- every branch bends every frame now: the sway is always on
+    // --- how far out of the centre each branch has travelled. They
+    // leave one after another rather than all at once, which is what
+    // makes it read as escaping rather than as one object scaling up.
+    const stagger = EMERGE_STAGGER / Math.max(1, branches.length - 1);
+    branches.forEach((branch, i) => {
+      branch.emerge = emergeEase((arrival - i * stagger) / (1 - EMERGE_STAGGER));
+    });
+    ghostEmerge = emergeEase((arrival - EMERGE_STAGGER * 0.5) / (1 - EMERGE_STAGGER));
+
     branches.forEach((branch) => {
       bendTube(branch, branch.resting);
       if (branch.weight > 0.02) bendTube(branch, branch.emphasised);
       branch.dots.forEach((dot) => {
         swayAt(branch, dot.t, swayVec);
-        dot.mesh.position.copy(dot.base).add(swayVec);
+        dot.mesh.position.copy(dot.base).multiplyScalar(branch.emerge).add(swayVec);
       });
     });
     REAL_NODES.forEach((n, i) => {
       swayAt(branches[i], 1, swayVec);
-      n._anchor.position.copy(n._end).add(swayVec);
+      n._anchor.position.copy(n._end).multiplyScalar(branches[i].emerge).add(swayVec);
     });
     rig.updateMatrixWorld(true);
 
@@ -939,14 +991,15 @@ const ATMOSPHERE_LABELS = [
       const bx = speck.base.x + (speck.onCurve.x - speck.base.x) * speck.converge;
       const by = speck.base.y + (speck.onCurve.y - speck.base.y) * speck.converge;
       const bz = speck.base.z + (speck.onCurve.z - speck.base.z) * speck.converge;
+      const em = branches[speck.branchIndex].emerge;
 
       for (let q = 0; q < PARTICLES_PER_SPECK; q++) {
         const idx = s * PARTICLES_PER_SPECK + q;
         const dir = speck.directions[q];
         wake.position.setXYZ(idx,
-          bx + swayVec.x + dir.x * speck.spray,
-          by + swayVec.y + dir.y * speck.spray,
-          bz + swayVec.z + dir.z * speck.spray);
+          bx * em + swayVec.x + dir.x * speck.spray,
+          by * em + swayVec.y + dir.y * speck.spray,
+          bz * em + swayVec.z + dir.z * speck.spray);
         wake.size.array[idx] = size;
         wake.fade.array[idx] = alpha;
         wake.tint.array[idx] = mine;
@@ -963,7 +1016,7 @@ const ATMOSPHERE_LABELS = [
     // catch any one of them doing it. Hovering a node's branch pulls
     // nearby specks in against it — that gathering is what reads as
     // the branch going bold, more than the branch's own thickness does.
-    if (!previewOpen) {
+    if (cloud && !previewOpen) {
     for (let i = 0; i < CLOUD_COUNT; i++) {
       const particle = cloudParticles[i];
       particle.life += particle.rate * dt;
@@ -1028,9 +1081,14 @@ const ATMOSPHERE_LABELS = [
       });
     });
 
+    // The centre is the first thing here and the thing the rest leaves
+    // from, so it lands early and swells briefly as they go.
+    const coreIn = emergeEase(Math.min(1, arrival / 0.34));
+    const launch = Math.max(0, Math.min(1, (arrival - 0.1) / 0.35)) * (1 - Math.min(1, Math.max(0, (arrival - 0.45) / 0.4)));
     const breathe = REDUCE_MOTION ? 1 : 1 + Math.sin(clock * 0.55) * 0.035;
-    shellInner.scale.setScalar(breathe);
-    shellOuter.scale.setScalar(1 + (breathe - 1) * 1.8);
+    core.scale.setScalar(coreIn * (1 + launch * 0.5));
+    shellInner.scale.setScalar(coreIn * (breathe + launch * 0.8));
+    shellOuter.scale.setScalar(coreIn * (1 + (breathe - 1) * 1.8 + launch * 1.3));
 
     // --- place the HTML labels, and publish where the map's masses
     // are so paper.js can bend the grid around them
@@ -1059,6 +1117,7 @@ const ATMOSPHERE_LABELS = [
     });
 
     ghosts.forEach((ghost) => {
+      ghost.anchor.position.copy(ghost.base).multiplyScalar(ghostEmerge);
       ghost.anchor.getWorldPosition(worldPos);
       projected.copy(worldPos).project(camera);
       const depth = (projected.z + 1) / 2;
