@@ -1,70 +1,99 @@
 # Your portfolio site
 
+## What changed in this pass
+
+- **Palette**: near-black background, off-white text, one brass accent
+  — all still just six values at the top of `style.css`.
+- **Fonts**: Archivo (a formal grotesque sans) for headings and body,
+  IBM Plex Mono for small technical labels (the title-block, work
+  meta, node sub-lines) — no more serif, nothing hand-drawn-looking.
+- **Title slide** is now centered, and reads "What does a tree smell
+  like" — edit that line directly in `index.html`.
+- **The node map is now a real 3D scene** (see below) instead of a
+  flat diagram, built with a small graphics library called Three.js.
+- **Scrolling between the three landing slides** is now hand-animated
+  with a slower, gentler ease, instead of relying on the browser's
+  default (which could feel abrupt).
+- The persistent border/corner-marks/compass "frame" has been removed
+  entirely, on every page.
+
+## The 3D node map — how to edit it
+
+Everything about the node map lives in **`node-scene.js`**, in the
+`REAL_NODES` list near the top of the file:
+
+```js
+{ label: "Scent descriptions", sub: "notes on things...", href: "categories/scent-descriptions.html", pos: [-2.5, 1.1, 0.6] }
+```
+
+- `label` / `sub` — the text shown (the sub-line only appears on hover).
+- `href` — where it links to.
+- `pos` — its position in 3D space, as `[x, y, z]`. Roughly -3 to 3 on
+  each axis keeps it comfortably in view; nothing else needs to
+  change when you move a node, the connecting line follows it
+  automatically.
+
+Two of the seven nodes are labeled "Test node" and link to
+`works/test-node-a.html` / `works/test-node-b.html` — plain sandbox
+pages you can rewrite freely, or delete along with their entry here.
+
+Further down the same file, `DECORATIVE_POINTS` is a plain list of
+`[x, y, z]` positions — small dots that light up on hover but aren't
+links, just atmosphere. Add, remove, or reposition freely.
+
+**This one file is genuinely more advanced than the rest of the
+site** — it's real 3D graphics code, not just HTML and CSS. If
+something about it needs fixing later, the fastest path is telling me
+exactly what's wrong (a screenshot helps a lot) rather than trying to
+debug the 3D math by hand.
+
+Known trade-off: on a phone, dragging to rotate the scene can make it
+harder to swipe past that slide — the dots on the right always work
+as a fallback.
+
 ## How it's organized
 
 ```
-index.html                          the landing page (title, intro, node map)
+index.html                          the landing page (title, intro, 3D node map)
 style.css                           every page's look — one shared file
-nav.js                               the "Menu" button + frame, on every page
-landing.js                           dot navigation, only used by index.html
+nav.js                               the "Menu" button, on every page
+landing.js                           dot navigation + gentle scrolling, index.html only
+node-scene.js                        the 3D node map — see above
 contact.html                        the contact page
 
 categories/
   scent-descriptions.html           fully filled in — use as your example
-  theories.html                     currently empty, ready for pieces
-  favorites.html                    currently empty
-  other-1.html                      currently empty
-  other-2.html                      currently empty
+  theories.html / favorites.html / other-1.html / other-2.html    empty, ready for pieces
 
 works/
   example-gallery-work.html         template for a long image+paragraph piece
   example-article-work.html         template for a reference/article piece
+  test-node-a.html / test-node-b.html   sandbox pages, see above
 
 images/                             put your photos here
 ```
 
 ## Adding a new piece of work
 
-1. Duplicate whichever template fits — `works/example-gallery-work.html`
-   for something built from repeating image + paragraph blocks, or
-   `works/example-article-work.html` for a written, reference-style piece.
-2. Rename the file (e.g. `works/coastal-house.html`) and edit its title,
-   heading, and body content. Each file has comments explaining exactly
-   which blocks to copy for more entries.
-3. Add one line linking to it from the relevant category page, inside
+1. Duplicate whichever template fits in `/works/`, rename it, and
+   edit its content — comments inside explain which blocks to copy
+   for more entries.
+2. Add one line linking to it from the relevant category page, inside
    its `work-list` — copy an existing `<a class="work-row">` block in
    `categories/scent-descriptions.html` as your pattern.
 
 ## Adding a whole new category (body of work)
 
-1. Duplicate any file in `/categories/`, rename it, and change its
-   `<h1>` and lede paragraph.
-2. Add one line for it in the `SITE_LINKS` list near the top of `nav.js`
-   — that's the only place the menu is defined, so it updates on every
-   page automatically.
-3. Optional: add a matching node (a dot + line) to the map on slide 3
-   of `index.html`, following the pattern of the existing five.
-
-## Changing the look
-
-All colors live at the top of `style.css`:
-
-```css
-:root {
-  --blueprint: #17222c;
-  --paper: #ece7da;
-  --brass: #c6924b;
-  ...
-}
-```
-
-The two fonts (Fraunces and Space Grotesk) are loaded from Google Fonts
-in the `<head>` of every page — change the link and the `--serif` /
-`--sans` variables together if you want different ones.
+1. Duplicate any file in `/categories/`, rename it, change its `<h1>`
+   and lede paragraph.
+2. Add one line for it in the `SITE_LINKS` list near the top of
+   `nav.js` — the only place the menu is defined.
+3. Optional: add a matching entry to `REAL_NODES` in `node-scene.js`
+   so it appears in the 3D map too.
 
 ## Publishing changes
 
-Once the site is live on GitHub Pages, adding a new page later just
-means uploading that one new file (and any new images) to the same
-repository — GitHub Pages picks it up automatically within a minute
-or two, no other steps needed.
+Once the site is live on GitHub Pages, adding or changing a page later
+just means uploading that file (and any new images) to the same
+repository — GitHub Pages rebuilds automatically within a minute or
+two.
