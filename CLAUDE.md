@@ -6,6 +6,24 @@ Also read `instructions.md` at the repo root — it holds standing behavioral ru
 the repo owner has given (how to conduct changes, verification steps, etc.),
 separate from this file's codebase documentation.
 
+## Communication style
+
+I don't have coding experience. Explain things in plain English, avoid jargon, and if
+you have to use a technical term, briefly define it the first time you use it.
+
+## Before merging or pushing
+
+Always run the full test suite before merging or pushing any change, and after
+implementing any feature request. Report results simply — what passed, what failed, and
+what you did about any failures — not raw test-framework output.
+
+See "Tests" below for how to run them.
+
+## Keeping this file correct
+
+Whenever a code change makes something in this file out of date or incorrect, update it
+as part of that same change. Don't leave stale or wrong information in here.
+
 ## Project
 
 A static portfolio site ("what does a tree smell like") — hand-written HTML, one shared
