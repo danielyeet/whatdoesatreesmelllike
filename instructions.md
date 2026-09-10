@@ -55,3 +55,18 @@ registration mark, and so on), each definition checked against the code.
   entry if the code moves on.
 - Definitions are verified against the code, not `README.md`, which has
   drifted in several places.
+
+## Push straight to main; no PRs to approve (2026-09-11)
+
+> Automatically push changes to the repo and don't do any pull requests
+> that I have to approve.
+
+Going forward, work merges into `main` without waiting on a review step:
+push commits directly to `main` (or open a PR and merge it immediately)
+rather than leaving a PR open for the owner to approve. `main` is what
+GitHub Pages deploys, so this means changes go live as soon as they're
+pushed — which is exactly why the checks above (visual verification, and
+testing that a feature actually behaves as expected) matter more, not
+less, under this rule: there's no review step left to catch a mistake
+before it's live. Still never rewrite `main`'s history (no force-push, no
+rebase of already-merged commits) — only ordinary forward commits.
