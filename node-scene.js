@@ -59,7 +59,16 @@ const ATMOSPHERE_LABELS = [
     REAL_NODES.forEach((n) => {
       const a = document.createElement("a");
       a.href = n.href;
-      a.innerHTML = "<strong>" + n.label + "</strong><span>" + n.sub + "</span>";
+      // Built as elements with their text set separately, rather than by
+      // pasting the label into a string of HTML. Pasted text stops being
+      // text the moment it contains a character HTML cares about — a "<"
+      // or a quote in a label would break the markup around it — and the
+      // whole point of REAL_NODES is that you can write anything in it.
+      const strong = document.createElement("strong");
+      strong.textContent = n.label;
+      const span = document.createElement("span");
+      span.textContent = n.sub;
+      a.append(strong, span);
       list.appendChild(a);
     });
     wrap.replaceWith(list);
@@ -350,10 +359,17 @@ const ATMOSPHERE_LABELS = [
     const a = document.createElement("a");
     a.href = n.href;
     a.className = "node3d-label";
-    a.innerHTML =
-      '<span class="node3d-mark"></span>' +
-      '<span class="node3d-text">' + n.label + "</span>" +
-      '<span class="node3d-sub">' + n.sub + "</span>";
+    // Elements built and filled with textContent rather than pasted into
+    // a string of HTML — see the note on the fallback list above.
+    const mark = document.createElement("span");
+    mark.className = "node3d-mark";
+    const textEl = document.createElement("span");
+    textEl.className = "node3d-text";
+    textEl.textContent = n.label;
+    const subEl = document.createElement("span");
+    subEl.className = "node3d-sub";
+    subEl.textContent = n.sub;
+    a.append(mark, textEl, subEl);
     labelLayer.appendChild(a);
 
     n._el = a;
@@ -599,14 +615,29 @@ const ATMOSPHERE_LABELS = [
 
     const modal = document.createElement("div");
     modal.className = "node-preview-modal dark-surface";
+    // The fixed chrome (close button, image placeholder) is a constant
+    // string, so it's safe to set as markup in one go. The two pieces
+    // that come from REAL_NODES — the description and the link — are
+    // attached afterwards as text and as a property, so a quote or an
+    // angle bracket in either one stays harmless punctuation instead of
+    // breaking the window it's being written into.
     modal.innerHTML =
       '<button class="node-preview-close" type="button" aria-label="Close preview">' +
         '<span class="node-preview-close-mark" aria-hidden="true"></span>' +
         '<span class="node-preview-close-word">Close</span>' +
       "</button>" +
-      '<div class="node-preview-media"></div>' +
-      '<p class="node-preview-desc">' + node.preview.description + "</p>" +
-      '<a class="node-preview-button" href="' + node.href + '">Enter</a>';
+      '<div class="node-preview-media"></div>';
+
+    const desc = document.createElement("p");
+    desc.className = "node-preview-desc";
+    desc.textContent = node.preview.description;
+
+    const enter = document.createElement("a");
+    enter.className = "node-preview-button";
+    enter.href = node.href;
+    enter.textContent = "Enter";
+
+    modal.append(desc, enter);
     modal.style.left = originX + "px";
     modal.style.top = originY + "px";
     modal.style.transform = "translate(-50%, -50%) scale(0.06)";
