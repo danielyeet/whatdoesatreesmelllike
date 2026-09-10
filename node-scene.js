@@ -71,19 +71,21 @@ const DECORATIVE_POINTS = [
   const DRAG_SENSITIVITY = 0.0028;
   const MAX_SPIN = 0.045;
   const MAX_TILT = 0.38;        // how far it can be tipped up or down
-  const FRAME_V = 3.72;         // how much vertical room the map is given
-  const FRAME_H = 4.2;          // and horizontal — smaller fills more of the screen
+  const FRAME_V = 4.35;         // how much room the map is given — larger draws it smaller
+  const FRAME_H = 4.9;
   const MAX_LOOSE_REACH = 1.7;  // past this, a loose speck floats unconnected
   const PARTICLES_PER_SPECK = 9;
-  const BRANCH_RADIUS = 0.011;  // the resting thickness of a branch
-  const BRANCH_RADIUS_EMPH = 0.025; // and its thickness when its node is hovered
+  const SPECK_SIZE = 0.072;
+  const REF_PX_PER_UNIT = 94;   // what one scene unit measures on a normal desktop
+  const BRANCH_RADIUS = 0.0075; // the resting thickness of a branch
+  const BRANCH_RADIUS_EMPH = 0.017; // and its thickness when its node is hovered
 
   // Monochrome throughout: the map carries hierarchy by weight and
   // darkness, not by hue.
   const COL_INK = new THREE.Color(0x22221a);
-  const COL_BRANCH = new THREE.Color(0x8e8a7f);
-  const COL_HAIRLINE = new THREE.Color(0xcac6bc);
-  const COL_SPECK = new THREE.Color(0xa6a298);
+  const COL_BRANCH = new THREE.Color(0x807c73);
+  const COL_HAIRLINE = new THREE.Color(0xb8b4aa);
+  const COL_SPECK = new THREE.Color(0x999590);
   const COL_CENTRE = new THREE.Color(0x1c1c14);
   const COL_CENTRE_HALO = new THREE.Color(0x8d8a80);
 
@@ -108,7 +110,7 @@ const DECORATIVE_POINTS = [
   // source everything grows from rather than just another dot.
   // ============================================================
   const core = new THREE.Mesh(
-    new THREE.SphereGeometry(0.145, 28, 28),
+    new THREE.SphereGeometry(0.097, 32, 32),
     new THREE.MeshBasicMaterial({ color: COL_CENTRE.clone() })
   );
   rig.add(core);
@@ -122,8 +124,8 @@ const DECORATIVE_POINTS = [
     rig.add(mesh);
     return mesh;
   }
-  const shellInner = shell(0.3, 0.24);
-  const shellOuter = shell(0.62, 0.085);
+  const shellInner = shell(0.23, 0.24);
+  const shellOuter = shell(0.5, 0.09);
 
   // ============================================================
   // BRANCHES — one per link node, each ending at that node
@@ -132,7 +134,7 @@ const DECORATIVE_POINTS = [
   // are deliberately absent: that's what keeps them final.
   const anchors = [hub.clone()];
 
-  const waypointGeometry = new THREE.SphereGeometry(0.04, 12, 12);
+  const waypointGeometry = new THREE.SphereGeometry(0.032, 14, 14);
 
   REAL_NODES.forEach((n, i) => {
     const end = new THREE.Vector3(n.pos[0], n.pos[1], n.pos[2]);
@@ -156,7 +158,7 @@ const DECORATIVE_POINTS = [
     // hovered branch is meant to stand out.
     function tube(radius, color, opacity) {
       const mesh = new THREE.Mesh(
-        new THREE.TubeGeometry(curve, 64, radius, 7, false),
+        new THREE.TubeGeometry(curve, 96, radius, 10, false),
         new THREE.MeshBasicMaterial({ color: color.clone(), transparent: true, opacity: opacity, depthWrite: false })
       );
       rig.add(mesh);
@@ -197,7 +199,7 @@ const DECORATIVE_POINTS = [
     n._el = a;
     n._anchor = anchorObj;
     n._index = i;
-    branches.push({ resting: resting, emphasised: emphasised, dots: dots, weight: 0 });
+    branches.push({ curve: curve, resting: resting, emphasised: emphasised, dots: dots, weight: 0 });
   });
 
   // ============================================================
@@ -268,7 +270,7 @@ const DECORATIVE_POINTS = [
     geometry.setAttribute("position", new THREE.BufferAttribute(coords, 3));
     const material = new THREE.PointsMaterial({
       color: COL_SPECK.clone(),
-      size: 0.088,
+      size: SPECK_SIZE,
       sizeAttenuation: true,
       map: sprite,
       transparent: true,
@@ -360,14 +362,23 @@ const DECORATIVE_POINTS = [
   });
 
   // ============================================================
-  // ARRIVAL PULSE — thread.js calls this when its line lands
-  // ============================================================
-  let pulse = 0;
-  window.__nodeScenePulse = function () { pulse = 1; };
-
-  // ============================================================
   // SIZING — the scene is full-bleed, so it reframes on every resize
   // ============================================================
+  // A narrow screen draws the whole map smaller, which would take the
+  // branches below a pixel wide and lose them. The layout stays small;
+  // only the pen gets heavier, the way a map redrawn at a smaller
+  // scale keeps the same nib.
+  let penWeight = 1;
+
+  function repen(weight) {
+    branches.forEach((branch) => {
+      branch.resting.geometry.dispose();
+      branch.emphasised.geometry.dispose();
+      branch.resting.geometry = new THREE.TubeGeometry(branch.curve, 96, BRANCH_RADIUS * weight, 10, false);
+      branch.emphasised.geometry = new THREE.TubeGeometry(branch.curve, 96, BRANCH_RADIUS_EMPH * weight, 10, false);
+    });
+  }
+
   function resize() {
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
@@ -377,11 +388,18 @@ const DECORATIVE_POINTS = [
     renderer.setSize(w, h, false);
 
     const halfFov = Math.tan((camera.fov * Math.PI) / 360);
-    const frameH = camera.aspect < 1 ? 4.05 : FRAME_H; // portrait needs the link nodes kept on screen
+    const frameH = camera.aspect < 1 ? 4.6 : FRAME_H; // portrait needs the link nodes kept on screen
     const distanceForHeight = FRAME_V / halfFov;
     const distanceForWidth = frameH / (halfFov * camera.aspect);
     camera.position.z = Math.max(distanceForHeight, distanceForWidth);
     camera.lookAt(0, 0, 0);
+
+    const pxPerUnit = (h / 2) / (camera.position.z * halfFov);
+    const wanted = Math.min(2, Math.max(1, Math.pow(REF_PX_PER_UNIT / pxPerUnit, 0.75)));
+    if (Math.abs(wanted - penWeight) > 0.02) {
+      penWeight = wanted;
+      repen(penWeight);
+    }
   }
   window.addEventListener("resize", resize);
   resize();
@@ -461,7 +479,7 @@ const DECORATIVE_POINTS = [
       }
       // As the particles separate they thin out and shrink, so a
       // sprayed speck disperses instead of just moving apart.
-      speck.points.material.size = 0.088 * (1 - 0.4 * s);
+      speck.points.material.size = SPECK_SIZE * penWeight * (1 - 0.4 * s);
       speck.points.material.opacity = 0.9 * (1 - s * 0.95) * (1 - 0.5 * strongest);
       if (speck.hairline) {
         speck.hairline.material.opacity =
@@ -480,19 +498,14 @@ const DECORATIVE_POINTS = [
       branch.dots.forEach((dot) => {
         dot.material.opacity = 0.8 * (1 - 0.5 * back);
         dot.material.color.copy(COL_BRANCH).lerp(COL_INK, w);
-        dot.scale.setScalar(dot.userData.baseScale * (1 + 0.45 * w));
+        dot.scale.setScalar(dot.userData.baseScale * penWeight * (1 + 0.45 * w));
       });
     });
 
-    // --- the centre breathes very slightly, and blooms once when
-    // the thread from the slide above lands on it
-    if (pulse > 0.001) pulse *= 0.93; else pulse = 0;
+    // --- the centre breathes, very slightly
     const breathe = REDUCE_MOTION ? 1 : 1 + Math.sin(clock * 0.55) * 0.035;
-    core.scale.setScalar(1 + pulse * 0.45);
-    shellInner.scale.setScalar(breathe + pulse * 0.7);
-    shellOuter.scale.setScalar(1 + (breathe - 1) * 1.8 + pulse * 1.1);
-    shellInner.material.opacity = shellInner.userData.baseOpacity * (1 + pulse * 1.6);
-    shellOuter.material.opacity = shellOuter.userData.baseOpacity * (1 + pulse * 2.2);
+    shellInner.scale.setScalar(breathe);
+    shellOuter.scale.setScalar(1 + (breathe - 1) * 1.8);
 
     // --- position the HTML link nodes over the scene
     const w = wrap.clientWidth;

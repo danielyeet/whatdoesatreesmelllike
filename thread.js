@@ -1,16 +1,20 @@
 // ============================================================
-// THE THREAD (index.html only)
-// One line runs the whole length of the landing page: it leaves
-// the title, drops into the second slide's sentence, comes out
-// the other side, and finally arrives at the centre of the node
-// map. It draws itself as you scroll, so the three slides read
-// as one continuous descent rather than three separate screens.
+// THE THREAD + THE PAPER (index.html only)
 //
-// This file also drives two things that belong to the same
-// transition:
-//   - the paper background (grid + grain) fading in for slide 3
-//   - window.__p23, the 0-to-1 progress between slide 2 and 3,
-//     which node-scene.js reads to fade the map in alongside it
+// One straight line runs down the middle of the landing page: it
+// leaves the title, meets the second slide's sentence, and picks
+// up again below it to end on the centre of the node map. It is
+// simply there — it does not draw itself as you scroll.
+//
+// What DOES change is its character. On the last leg, as the
+// squared paper and the static fade in for the node map, the line
+// breaks into a fine dashed rule on the same rhythm as the grid
+// and starts to shimmer with the static, so it belongs to that
+// page rather than arriving from a different one.
+//
+// This file also runs the television static on the paper, and
+// sets window.__p23 — the 0-to-1 progress between slide 2 and 3 —
+// which node-scene.js reads to fade the map in alongside it.
 // ============================================================
 
 (function () {
@@ -25,10 +29,13 @@
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg";
 
-  const GAP = 26;          // breathing room between the line and the text it leaves
-  const RIPPLE_MS = 1150;  // how long the arrival bloom lasts
-  const LEAD = 1.15;       // the line finishes slightly before the scroll settles
+  const GAP = 26;         // breathing room between the line and the text it leaves
+  const GRID_STEP = 16;   // matches --grid-small, so the dashes land on the grid
+  const FRAME_MS = 33;    // the static and the shimmer both run at about 30fps
 
+  // ============================================================
+  // THE LINE
+  // ============================================================
   function svgEl(name, attrs) {
     const node = document.createElementNS(NS, name);
     for (const key in attrs) node.setAttribute(key, attrs[key]);
@@ -36,29 +43,12 @@
   }
 
   const svg = svgEl("svg", { class: "thread", "aria-hidden": "true" });
-  const lineToText = svgEl("path", { class: "thread-line" });
-  const lineToNode = svgEl("path", { class: "thread-line" });
-  const rippleOuter = svgEl("circle", { class: "thread-ripple", r: 0 });
-  const rippleInner = svgEl("circle", { class: "thread-ripple", r: 0 });
-  const sparkGlow = svgEl("circle", { class: "thread-spark-glow", r: 8 });
-  const spark = svgEl("circle", { class: "thread-spark", r: 2.4 });
-
-  svg.appendChild(lineToText);
-  svg.appendChild(lineToNode);
-  svg.appendChild(rippleOuter);
-  svg.appendChild(rippleInner);
-  svg.appendChild(sparkGlow);
-  svg.appendChild(spark);
+  const toText = svgEl("line", { class: "thread-line" });
+  const toNode = svgEl("line", { class: "thread-line" });
+  svg.appendChild(toText);
+  svg.appendChild(toNode);
   container.insertBefore(svg, container.firstChild);
 
-  let lenText = 0, lenNode = 0;
-  let centre = { x: 0, y: 0 };
-
-  // ============================================================
-  // MEASURING — the path is rebuilt from where the text actually
-  // sits, so it survives a resize, a longer sentence, or a
-  // different font loading in late.
-  // ============================================================
   function measure() {
     const width = container.clientWidth;
     const total = container.scrollHeight;
@@ -71,47 +61,79 @@
     const scrolled = container.scrollTop;
     function place(element) {
       const r = element.getBoundingClientRect();
-      return {
-        cx: r.left - base.left + r.width / 2,
-        top: r.top - base.top + scrolled,
-        bottom: r.bottom - base.top + scrolled,
-      };
+      return { top: r.top - base.top + scrolled, bottom: r.bottom - base.top + scrolled };
     }
 
+    // Everything it connects is centred, so the line is a single
+    // straight drop down the middle.
+    const x = Math.round(width / 2);
     const title = place(titleEl);
     const intro = place(introEl);
-    const start = { x: title.cx, y: title.bottom + GAP };
-    const textIn = { x: intro.cx, y: intro.top - GAP };
-    const textOut = { x: intro.cx, y: intro.bottom + GAP };
-    centre = { x: width / 2, y: slides[2].offsetTop + slides[2].offsetHeight / 2 };
+    const centreY = slides[2].offsetTop + slides[2].offsetHeight / 2;
 
-    // A shallow S on each leg — enough to read as drawn rather than
-    // ruled, not enough to draw attention to itself.
-    const bow = Math.min(150, width * 0.13);
-    const legA = textIn.y - start.y;
-    const legB = centre.y - textOut.y;
+    toText.setAttribute("x1", x);
+    toText.setAttribute("x2", x);
+    toText.setAttribute("y1", title.bottom + GAP);
+    toText.setAttribute("y2", intro.top - GAP);
 
-    lineToText.setAttribute("d",
-      "M " + start.x + " " + start.y +
-      " C " + (start.x + bow) + " " + (start.y + legA * 0.36) +
-      ", " + (textIn.x - bow) + " " + (textIn.y - legA * 0.36) +
-      ", " + textIn.x + " " + textIn.y);
+    toNode.setAttribute("x1", x);
+    toNode.setAttribute("x2", x);
+    toNode.setAttribute("y1", intro.bottom + GAP);
+    toNode.setAttribute("y2", centreY);
+  }
 
-    lineToNode.setAttribute("d",
-      "M " + textOut.x + " " + textOut.y +
-      " C " + (textOut.x - bow) + " " + (textOut.y + legB * 0.32) +
-      ", " + (centre.x + bow * 0.9) + " " + (centre.y - legB * 0.38) +
-      ", " + centre.x + " " + centre.y);
+  // ============================================================
+  // THE STATIC
+  // Real television static means every pixel changing, which is far
+  // too much random number generation to do per frame. Instead a
+  // handful of noise tiles are built once, and each frame paints one
+  // of them at a random offset — the eye reads the switching as the
+  // picture boiling.
+  // ============================================================
+  const noiseCanvas = document.querySelector(".paper-noise");
+  const ctx = noiseCanvas ? noiseCanvas.getContext("2d") : null;
+  const TILE = 256;
+  const TILE_COUNT = 9;
+  let patterns = [];
 
-    lenText = lineToText.getTotalLength();
-    lenNode = lineToNode.getTotalLength();
-    lineToText.style.strokeDasharray = lenText;
-    lineToNode.style.strokeDasharray = lenNode;
+  function buildTiles() {
+    if (!ctx) return;
+    patterns = [];
+    for (let i = 0; i < TILE_COUNT; i++) {
+      const tile = document.createElement("canvas");
+      tile.width = tile.height = TILE;
+      const tileCtx = tile.getContext("2d");
+      const image = tileCtx.createImageData(TILE, TILE);
+      const data = image.data;
+      for (let k = 0; k < data.length; k += 4) {
+        // Grey rather than black: on the washed background the light
+        // specks matter as much as the dark ones.
+        const v = (Math.random() * 255) | 0;
+        data[k] = data[k + 1] = data[k + 2] = v;
+        data[k + 3] = 255;
+      }
+      tileCtx.putImageData(image, 0, 0);
+      patterns.push(ctx.createPattern(tile, "repeat"));
+    }
+  }
 
-    rippleOuter.setAttribute("cx", centre.x);
-    rippleOuter.setAttribute("cy", centre.y);
-    rippleInner.setAttribute("cx", centre.x);
-    rippleInner.setAttribute("cy", centre.y);
+  function sizeCanvas() {
+    if (!noiseCanvas) return;
+    // Deliberately 1:1 with CSS pixels rather than device pixels —
+    // static wants to be coarse, and it keeps the repaint cheap.
+    noiseCanvas.width = Math.ceil(window.innerWidth);
+    noiseCanvas.height = Math.ceil(window.innerHeight);
+    buildTiles();
+  }
+
+  function paintStatic() {
+    if (!ctx || !patterns.length) return;
+    const dx = (Math.random() * TILE) | 0;
+    const dy = (Math.random() * TILE) | 0;
+    ctx.setTransform(1, 0, 0, 1, -dx, -dy);
+    ctx.fillStyle = patterns[(Math.random() * patterns.length) | 0];
+    ctx.fillRect(0, 0, noiseCanvas.width + TILE, noiseCanvas.height + TILE);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   // ============================================================
@@ -120,91 +142,51 @@
   const clamp = (v) => Math.max(0, Math.min(1, v));
   const smooth = (v) => v * v * (3 - 2 * v);
 
-  // A short stub of line is already showing under the title before
-  // you touch anything — otherwise the first slide looks like it
-  // has a stray mark under the heading rather than the start of
-  // something. It grows in on load.
-  let stub = 0;
-  const stubTarget = 0.075;
-  let started = null;
-
-  let rippleAt = -1;
-  let armed = true;
-  let lastFrame = performance.now();
+  let lastTick = 0;
+  let painted = false;
 
   function frame(now) {
     requestAnimationFrame(frame);
-    const dt = Math.min(64, now - lastFrame);
-    lastFrame = now;
-
-    if (started === null) started = now;
-    if (stub < stubTarget) {
-      stub = REDUCE_MOTION ? stubTarget : stubTarget * clamp((now - started - 250) / 900);
-    }
 
     const top = container.scrollTop;
-    const firstLeg = slides[1].offsetTop || 1;
     const secondLeg = (slides[2].offsetTop - slides[1].offsetTop) || 1;
-    const p1 = clamp(top / firstLeg);
     const p2 = clamp((top - slides[1].offsetTop) / secondLeg);
-
-    const drawA = Math.max(stub, clamp(p1 * LEAD));
-    const drawB = clamp(p2 * LEAD);
-
-    lineToText.style.strokeDashoffset = lenText * (1 - drawA);
-    lineToNode.style.strokeDashoffset = lenNode * (1 - drawB);
-
-    // The paper and the map itself come in on the same curve as the
-    // line, so nothing appears independently of anything else.
     const eased = smooth(p2);
+
     document.documentElement.style.setProperty("--paper-in", eased.toFixed(3));
     window.__p23 = eased;
 
-    // A point of light travelling the last leg, ahead of the line.
-    if (drawB > 0.002 && drawB < 0.999 && lenNode) {
-      const at = lineToNode.getPointAtLength(lenNode * drawB);
-      const fade = Math.min(1, drawB * 6) * Math.min(1, (1 - drawB) * 6);
-      spark.setAttribute("cx", at.x);
-      spark.setAttribute("cy", at.y);
-      sparkGlow.setAttribute("cx", at.x);
-      sparkGlow.setAttribute("cy", at.y);
-      spark.style.opacity = 0.75 * fade;
-      sparkGlow.style.opacity = 0.16 * fade;
-    } else {
-      spark.style.opacity = 0;
-      sparkGlow.style.opacity = 0;
+    if (now - lastTick < FRAME_MS) return;
+    lastTick = now;
+
+    if (eased > 0.01) {
+      if (!REDUCE_MOTION || !painted) { paintStatic(); painted = true; }
     }
 
-    // Arrival: the line reaches the centre and the node takes it.
-    if (drawB > 0.998 && armed) {
-      armed = false;
-      rippleAt = 0;
-      if (typeof window.__nodeScenePulse === "function") window.__nodeScenePulse();
-    }
-    if (p2 < 0.55) armed = true;
-
-    if (rippleAt >= 0 && !REDUCE_MOTION) {
-      rippleAt += dt;
-      const t = rippleAt / RIPPLE_MS;
-      if (t >= 1) {
-        rippleAt = -1;
-        rippleOuter.style.opacity = 0;
-        rippleInner.style.opacity = 0;
-      } else {
-        const out = 1 - Math.pow(1 - t, 3);
-        rippleOuter.setAttribute("r", 6 + out * 96);
-        rippleOuter.style.opacity = 0.3 * (1 - t);
-        const lag = Math.max(0, (t - 0.14) / 0.86);
-        rippleInner.setAttribute("r", 6 + (1 - Math.pow(1 - lag, 3)) * 58);
-        rippleInner.style.opacity = 0.34 * (1 - lag);
+    // The last leg of the line joins the page it's arriving on: it
+    // breaks into a dashed rule on the grid's rhythm, and flickers
+    // on the same beat as the static.
+    if (eased > 0.005) {
+      const gap = GRID_STEP * 0.34 * eased;
+      toNode.style.strokeDasharray = (GRID_STEP - gap).toFixed(2) + " " + gap.toFixed(2);
+      if (!REDUCE_MOTION) {
+        const flicker = 1 - eased * (0.12 + Math.random() * 0.3);
+        toNode.style.strokeOpacity = (0.26 * flicker).toFixed(3);
+        const waver = eased * (Math.random() - 0.5) * 1.1;
+        toNode.style.transform = "translateX(" + waver.toFixed(2) + "px)";
       }
+    } else {
+      toNode.style.strokeDasharray = "none";
+      toNode.style.strokeOpacity = "";
+      toNode.style.transform = "";
     }
   }
 
   measure();
+  sizeCanvas();
   requestAnimationFrame(frame);
 
-  window.addEventListener("resize", measure);
+  window.addEventListener("resize", () => { measure(); sizeCanvas(); });
   window.addEventListener("load", measure);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
