@@ -19,8 +19,8 @@
 //   dimensions: false, orthographics: false   <- neither
 // ------------------------------------------------------------
 const EXTRAS = {
-  dimensions: true,
-  orthographics: false,
+  dimensions: false,
+  orthographics: true,
   chromatogram: true,
 };
 
