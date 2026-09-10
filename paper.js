@@ -43,6 +43,9 @@
   const GRID_MS = 50;           // the grid redraws at about 20fps
   const NOISE_MS = 33;          // the static at about 30
 
+  const CURSOR_REACH = 130;     // the cursor pushes the grid too, like a small version of the centre
+  const CURSOR_STRENGTH = 9;
+
   const SAMPLE = 14;            // how finely a bent grid line is subdivided
   const CELL = 40;              // resolution of the displacement field
 
@@ -116,6 +119,14 @@
     fieldY = new Float32Array(cols * rows);
   }
 
+  let cursorX = -9999, cursorY = -9999, cursorLive = false;
+  window.addEventListener("pointermove", (e) => {
+    cursorX = e.clientX;
+    cursorY = e.clientY;
+    cursorLive = true;
+  }, { passive: true });
+  window.addEventListener("pointerleave", () => { cursorLive = false; });
+
   // The displacement is computed on a coarse lattice and read back
   // with bilinear interpolation. Doing it per grid vertex instead
   // would mean a few hundred thousand distance checks a frame.
@@ -123,15 +134,17 @@
     const masses = window.__mapField;
     fieldX.fill(0);
     fieldY.fill(0);
-    if (!masses || !masses.length || strength <= 0.001) return;
+    const list = masses ? masses.slice() : [];
+    if (cursorLive) list.push({ x: cursorX, y: cursorY, r: CURSOR_REACH, s: CURSOR_STRENGTH });
+    if (!list.length || strength <= 0.001) return;
 
     for (let r = 0; r < rows; r++) {
       const py = r * CELL;
       for (let c = 0; c < cols; c++) {
         const px = c * CELL;
         let dx = 0, dy = 0;
-        for (let m = 0; m < masses.length; m++) {
-          const mass = masses[m];
+        for (let m = 0; m < list.length; m++) {
+          const mass = list[m];
           const ax = px - mass.x;
           const ay = py - mass.y;
           const d2 = ax * ax + ay * ay;

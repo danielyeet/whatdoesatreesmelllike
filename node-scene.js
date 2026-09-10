@@ -63,7 +63,7 @@ const ATMOSPHERE_LABELS = [
   // ============================================================
   // TUNING
   // ============================================================
-  const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00018;
+  const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00024; // was 0.00018 — a slightly quicker drift
   const DRAG_SENSITIVITY = 0.0026;
   const MAX_SPIN = 0.04;
   const MAX_TILT = 0.38;
@@ -290,9 +290,9 @@ const ATMOSPHERE_LABELS = [
     // they ride the sway with it.
     for (let k = 1; k <= WAKE_PER_BRANCH; k++) {
       const t = WAKE_FROM + (WAKE_TO - WAKE_FROM) * Math.pow(k / (WAKE_PER_BRANCH + 1), WAKE_BIAS);
-      const on = curve.getPoint(t);
+      const onCurve = curve.getPoint(t);
       const side = k % 2 === 0 ? 1 : -1;
-      on.addScaledVector(perp, WAKE_OFFSET * side * (0.35 + t * 1.1));
+      const on = onCurve.clone().addScaledVector(perp, WAKE_OFFSET * side * (0.35 + t * 1.1));
 
       const directions = [];
       for (let q = 0; q < PARTICLES_PER_SPECK; q++) {
@@ -302,8 +302,8 @@ const ATMOSPHERE_LABELS = [
         directions.push(v);
       }
       wakeSpecks.push({
-        base: on, t: t, branchIndex: i, directions: directions,
-        scale: 0.62 + 0.5 * (1 - t), spray: 0,
+        base: on, onCurve: onCurve, t: t, branchIndex: i, directions: directions,
+        scale: 0.62 + 0.5 * (1 - t), spray: 0, converge: 0,
       });
     }
 
@@ -505,36 +505,47 @@ const ATMOSPHERE_LABELS = [
 
   // ============================================================
   // NODE CLICK PREVIEW (trial: Scent descriptions)
-  // Opens from the clicked node's screen position, on a layer that
-  // sits visually forward of the map, while the rest of the page
-  // defocuses behind it. See openPreview() usage in the click
-  // handler above.
+  // Opens to whichever side of the screen the node was already on,
+  // and a curved line — the same weight and colour the branch itself
+  // goes to when hovered — draws itself from the centre, through the
+  // node, out to the window. The rest of the page defocuses behind
+  // all of it. See openPreview() usage in the click handler above.
   // ============================================================
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  function svgEl(name, attrs) {
+    const el = document.createElementNS(SVG_NS, name);
+    for (const key in attrs) el.setAttribute(key, attrs[key]);
+    return el;
+  }
+  function screenPosOf(object3D) {
+    object3D.getWorldPosition(worldPos);
+    projected.copy(worldPos).project(camera);
+    const rect = wrap.getBoundingClientRect();
+    return {
+      x: rect.left + (projected.x * 0.5 + 0.5) * wrap.clientWidth,
+      y: rect.top + (-projected.y * 0.5 + 0.5) * wrap.clientHeight,
+    };
+  }
+
+  const PREVIEW_MARGIN = 64;
   let previewOpen = false;
+  let previewNodeIndex = -1;
   let activePreview = null;
 
   function openPreview(node) {
     if (previewOpen) return;
     previewOpen = true;
+    previewNodeIndex = node._index;
     document.body.classList.add("preview-open");
 
     const originX = node._lastScreenX || window.innerWidth / 2;
     const originY = node._lastScreenY || window.innerHeight / 2;
-    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
-    const angle = (Math.atan2(cx - originX, -(cy - originY)) * 180) / Math.PI;
+    const onLeft = originX < window.innerWidth / 2;
+    const hubPos = screenPosOf(core);
 
     const backdrop = document.createElement("div");
     backdrop.className = "node-preview-backdrop";
     backdrop.addEventListener("click", closePreview);
-
-    const layer = document.createElement("div");
-    layer.className = "node-preview-layer";
-    const arm = document.createElement("div");
-    arm.className = "node-preview-arm";
-    arm.style.left = originX + "px";
-    arm.style.top = originY + "px";
-    arm.style.setProperty("--arm-angle", angle + "deg");
-    layer.appendChild(arm);
 
     const modal = document.createElement("div");
     modal.className = "node-preview-modal";
@@ -547,35 +558,55 @@ const ATMOSPHERE_LABELS = [
     modal.style.top = originY + "px";
     modal.style.transform = "translate(-50%, -50%) scale(0.06)";
     modal.style.opacity = "0";
-
-    document.body.appendChild(backdrop);
-    document.body.appendChild(layer);
     document.body.appendChild(modal);
+
+    const modalWidth = modal.offsetWidth || 480;
+    const finalLeft = onLeft ? PREVIEW_MARGIN : window.innerWidth - PREVIEW_MARGIN - modalWidth;
+    const targetX = onLeft ? finalLeft + modalWidth + 22 : finalLeft - 22;
+    const targetY = window.innerHeight / 2;
+
+    // A single curve from the centre, bowed toward where the node
+    // actually is, out to the window — not a straight line, and not
+    // a hard corner at the node either.
+    const svg = svgEl("svg", { class: "node-preview-arm-svg", "aria-hidden": "true" });
+    const path = svgEl("path", {
+      class: "node-preview-arm-path",
+      d: "M " + hubPos.x + " " + hubPos.y + " Q " + originX + " " + originY + " " + targetX + " " + targetY,
+    });
+    svg.appendChild(path);
+    document.body.appendChild(svg);
+    const pathLength = path.getTotalLength();
+    path.style.strokeDasharray = String(pathLength);
+    path.style.strokeDashoffset = String(pathLength);
+
     void modal.offsetWidth; // force layout so the start state registers before animating
 
     requestAnimationFrame(() => {
-      arm.classList.add("open");
-      modal.style.left = "50%";
+      path.classList.add("open");
+      path.style.strokeDashoffset = "0";
+      modal.style.left = finalLeft + "px";
       modal.style.top = "50%";
-      modal.style.transform = "translate(-50%, -50%) scale(1)";
+      modal.style.transform = "translate(0%, -50%) scale(1)";
       modal.style.opacity = "1";
     });
 
     modal.querySelector(".node-preview-close").addEventListener("click", closePreview);
-    activePreview = { modal, arm, backdrop, layer, originX, originY };
+    activePreview = { modal, svg, path, backdrop, originX, originY, pathLength };
   }
 
   function closePreview() {
     if (!previewOpen || !activePreview) return;
-    const { modal, arm, backdrop, layer, originX, originY } = activePreview;
+    const { modal, svg, path, backdrop, originX, originY, pathLength } = activePreview;
     modal.style.left = originX + "px";
     modal.style.top = originY + "px";
     modal.style.transform = "translate(-50%, -50%) scale(0.06)";
     modal.style.opacity = "0";
-    arm.classList.remove("open");
+    path.classList.remove("open");
+    path.style.strokeDashoffset = String(pathLength);
     document.body.classList.remove("preview-open");
     previewOpen = false;
-    setTimeout(() => { modal.remove(); layer.remove(); backdrop.remove(); }, 700);
+    previewNodeIndex = -1;
+    setTimeout(() => { modal.remove(); svg.remove(); backdrop.remove(); }, 700);
     activePreview = null;
   }
   window.addEventListener("keydown", (e) => { if (e.key === "Escape" && previewOpen) closePreview(); });
@@ -685,7 +716,7 @@ const ATMOSPHERE_LABELS = [
 
     let strongest = 0, runnerUp = 0;
     branches.forEach((branch, i) => {
-      const goal = i === activeBranch ? 1 : 0;
+      const goal = (i === activeBranch || (previewOpen && i === previewNodeIndex)) ? 1 : 0;
       branch.weight += (goal - branch.weight) * 0.12;
       if (branch.weight > strongest) { runnerUp = strongest; strongest = branch.weight; }
       else if (branch.weight > runnerUp) { runnerUp = branch.weight; }
@@ -735,19 +766,28 @@ const ATMOSPHERE_LABELS = [
       speck.spray += (goal - speck.spray) * rate;
 
       const branch = branches[speck.branchIndex];
+      const convergeGoal = speck.branchIndex === activeBranch ? 1 : 0;
+      speck.converge += (convergeGoal - speck.converge) * 0.1;
+
       swayAt(branch, speck.t, swayVec);
       const mine = branch.weight;
       const back = stepBack(branch);
       const size = SPECK_SIZE * speck.scale * penWeight * (1 - 0.4 * speck.spray);
       const alpha = 0.9 * (1 - speck.spray * 0.95) * (1 - 0.5 * back) * (1 + 0.35 * mine);
 
+      // blended between its resting offset and sitting exactly on the
+      // curve, so it visibly gathers into the branch when hovered
+      const bx = speck.base.x + (speck.onCurve.x - speck.base.x) * speck.converge;
+      const by = speck.base.y + (speck.onCurve.y - speck.base.y) * speck.converge;
+      const bz = speck.base.z + (speck.onCurve.z - speck.base.z) * speck.converge;
+
       for (let q = 0; q < PARTICLES_PER_SPECK; q++) {
         const idx = s * PARTICLES_PER_SPECK + q;
         const dir = speck.directions[q];
         wake.position.setXYZ(idx,
-          speck.base.x + swayVec.x + dir.x * speck.spray,
-          speck.base.y + swayVec.y + dir.y * speck.spray,
-          speck.base.z + swayVec.z + dir.z * speck.spray);
+          bx + swayVec.x + dir.x * speck.spray,
+          by + swayVec.y + dir.y * speck.spray,
+          bz + swayVec.z + dir.z * speck.spray);
         wake.size.array[idx] = size;
         wake.fade.array[idx] = alpha;
         wake.tint.array[idx] = mine;

@@ -416,31 +416,28 @@ body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.
    ================================================================== */
 body.preview-open #scroll-container,
 body.preview-open .paper {
-  filter: blur(8px);
-  transition: filter 0.6s var(--menu-ease);
+  filter: blur(5px);
+  transition: filter 1s var(--menu-ease);
 }
-body.preview-open #scroll-container { opacity: 0.55; pointer-events: none; transition: filter 0.6s var(--menu-ease), opacity 0.6s var(--menu-ease); }
-body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transition: opacity 0.6s var(--menu-ease); }
+body.preview-open #scroll-container { opacity: 0.7; pointer-events: none; transition: filter 1s var(--menu-ease), opacity 1s var(--menu-ease); }
+body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transition: opacity 1s var(--menu-ease); }
 
 .node-preview-backdrop { position: fixed; inset: 0; z-index: 50; background: transparent; cursor: pointer; }
 
-.node-preview-layer { position: fixed; inset: 0; z-index: 55; perspective: 1000px; pointer-events: none; }
-.node-preview-arm {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 2px;
-  height: 240px;
-  background: linear-gradient(to top, rgba(10, 10, 10, 0) 0%, rgba(10, 10, 10, 0.55) 45%, #0a0a0a 100%);
-  transform-origin: bottom center;
-  opacity: 0;
-  transform: translate(-50%, -100%) rotate(var(--arm-angle, 0deg)) translateZ(0px) scale(1);
-  transition: opacity 0.5s ease, transform 0.7s var(--menu-ease);
+/* The curve from the centre, through the node, out to the window —
+   drawn on, not just faded in, using the classic stroke-dasharray
+   trick: the whole length is one dash, offset by its own length so
+   nothing shows, then the offset animates to 0. */
+.node-preview-arm-svg { position: fixed; inset: 0; z-index: 55; pointer-events: none; overflow: visible; }
+.node-preview-arm-path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  opacity: 0.5;
+  transition: stroke-dashoffset 0.9s var(--menu-ease), stroke-width 0.9s var(--menu-ease), opacity 0.5s ease;
 }
-.node-preview-arm.open {
-  opacity: 1;
-  transform: translate(-50%, -100%) rotate(var(--arm-angle, 0deg)) translateZ(150px) scale(1.15);
-}
+.node-preview-arm-path.open { stroke-width: 3.2; opacity: 0.85; }
 
 .node-preview-modal {
   position: fixed;
@@ -490,6 +487,10 @@ body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transitio
 /* ==================================================================
    THE CURSOR
    Built by nav.js, so it appears on every page.
+   mix-blend-mode: difference means the cursor never needs to know
+   what it's over — white against white paper reads as black, white
+   against the dark menu or preview window reads as white. One rule
+   instead of a manual override for every dark surface on the site.
    ================================================================== */
 html.has-cursor, html.has-cursor * { cursor: none !important; }
 .cursor-ring, .cursor-dot {
@@ -499,23 +500,23 @@ html.has-cursor, html.has-cursor * { cursor: none !important; }
   z-index: 900;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.25s ease, width 0.22s ease, height 0.22s ease, border-color 0.25s ease, background 0.22s ease;
+  mix-blend-mode: difference;
+  transition: opacity 0.25s ease, width 0.22s ease, height 0.22s ease, background 0.22s ease;
 }
 html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
 .cursor-ring {
   width: 18px;
   height: 18px;
-  border: 1px solid var(--ink);
+  border: 1px solid #fff;
+  background: transparent;
 }
 .cursor-ring.near { width: 11px; height: 11px; }
 .cursor-dot {
   width: 3px;
   height: 3px;
-  background: var(--ink);
+  background: #fff;
 }
 .cursor-dot.near { width: 5px; height: 5px; }
-body.menu-open .cursor-ring { border-color: #f0efe8; }
-body.menu-open .cursor-dot { background: #f0efe8; }
 
 /* Plain-link fallback, shown only if the 3D library fails to load */
 .node-fallback-list { display: flex; flex-direction: column; gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); width: min(640px, 92vw); }

@@ -2,6 +2,31 @@
 
 ## What changed in this pass
 
+- **Rotation** is slightly faster (`IDLE_SPEED` in `node-scene.js`).
+- **Wake specks now converge onto their own branch** when it's
+  hovered — they sit offset to the side normally, and gather exactly
+  onto the curve while that node is active.
+- **The cursor now uses `mix-blend-mode: difference`** — a white ring
+  and dot that auto-invert against whatever is behind them, so they
+  read correctly over the light page, the dark menu, or the dark
+  preview window alike, without needing a manual override for each.
+- **The cursor now distorts the grid too**, the same way the centre
+  and the nodes do — it's just another "mass" in `paper.js`'s
+  displacement field, sized smaller and gentler than the centre.
+- **The preview pop-up now opens to whichever side of the screen the
+  node was on** (left node → opens left, etc.) rather than dead
+  centre.
+- **The connector is a real drawn curve now**, not a straight bar:
+  an SVG path from the centre, bowed through the node's position, out
+  to the window, animating itself in with the classic "draw the
+  line on" technique, thickening and darkening to match the branch's
+  own hover-bold look. The branch itself also stays bold for as long
+  as the window is open, even if your cursor moves elsewhere.
+- **The blur behind the pop-up is gentler**: lower blur radius,
+  smaller opacity drop, slower transition.
+
+## What changed the pass before that
+
 Working from the files you uploaded (adopted as-is, nothing rebuilt):
 
 - **Sway disabled.** `SWAY` is now `0` in `node-scene.js` — the map
