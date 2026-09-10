@@ -1,37 +1,44 @@
 // ============================================================
 // 3D NODE MAP
-// Draws the "bodies of work" as dots in a small rotatable 3D
-// scene. Drag to rotate; it also turns gently on its own.
+// A slowly turning map that fills the whole third slide. Drag
+// to rotate; it also turns gently on its own.
 //
-// THE ONLY PART MEANT TO BE HAND-EDITED IS RIGHT BELOW: the
-// REAL_NODES list. Each one needs a label, an optional one-line
-// sub-line, a link, and a position in 3D space as [x, y, z] —
-// roughly -3 to 3 on each axis keeps it comfortably in view.
-// The connecting line to the center is drawn automatically.
+// HOW IT'S PUT TOGETHER (this matters if you edit it):
+// Every link node is an ENDPOINT. A branch grows out of the
+// centre, passes through two small waypoint dots, and stops at
+// the link node — nothing ever continues past one. The loose
+// atmospheric dots attach to the centre or to a waypoint, never
+// to a link node.
 //
-// DECORATIVE_POINTS further down are the small dots that light
-// up on hover but aren't links — pure atmosphere. Add, remove,
-// or move [x, y, z] entries freely; nothing else needs to change.
-//
-// Everything after that is the machinery (rendering, rotation,
-// hover glow) — you shouldn't need to touch it.
+// THE ONLY PARTS MEANT TO BE HAND-EDITED ARE THE TWO LISTS
+// BELOW. Everything after them is machinery.
 // ============================================================
 
+// Each one needs a label, a one-line sub-line (shown on hover), a
+// link, and a position as [x, y, z]. These sit on the outside of
+// the map — roughly 3 to 3.7 away from the centre in total keeps
+// them at the edge where an endpoint belongs. The branch that
+// reaches each one is drawn automatically.
 const REAL_NODES = [
-  { label: "Scent descriptions", sub: "notes on things I've smelled and tried to describe", href: "categories/scent-descriptions.html", pos: [-2.5, 1.1, 0.6] },
-  { label: "Theories", sub: "half-formed ideas I keep coming back to", href: "categories/theories.html", pos: [1.7, 1.7, -0.9] },
-  { label: "Favorites", sub: "things I like, no other reason needed", href: "categories/favorites.html", pos: [2.7, -0.5, 0.8] },
-  { label: "Other", sub: "whatever doesn't fit anywhere else", href: "categories/other-1.html", pos: [-1.6, -1.8, -0.4] },
-  { label: "Other", sub: "the other other pile", href: "categories/other-2.html", pos: [0.3, -2.1, 1.1] },
-  { label: "Test node", sub: "a working sandbox node — safe to repurpose", href: "works/test-node-a.html", pos: [-3.0, -0.2, -1.3] },
-  { label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html", pos: [3.1, 0.7, -1.3] },
+  { label: "Scent descriptions", sub: "notes on things I've smelled and tried to describe", href: "categories/scent-descriptions.html", pos: [-2.9, 1.5, 0.7] },
+  { label: "Theories", sub: "half-formed ideas I keep coming back to", href: "categories/theories.html", pos: [2.0, 2.3, -1.1] },
+  { label: "Favorites", sub: "things I like, no other reason needed", href: "categories/favorites.html", pos: [3.2, -1.3, 0.9] },
+  { label: "Other", sub: "whatever doesn't fit anywhere else", href: "categories/other-1.html", pos: [-2.2, -2.4, -0.6] },
+  { label: "Other", sub: "the other other pile", href: "categories/other-2.html", pos: [0.4, -2.9, 1.4] },
+  { label: "Test node", sub: "a working sandbox node — safe to repurpose", href: "works/test-node-a.html", pos: [-3.2, -1.1, -1.4] },
+  { label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html", pos: [3.3, 1.6, -1.3] },
 ];
 
+// Loose dots — atmosphere, not links. They dissolve when you point
+// at them. Each one automatically connects to whichever centre or
+// waypoint is nearest, so they stay inside the map: keep them
+// within about 2.7 of the centre and they'll never reach out past
+// a link node. Add, remove, or move them freely.
 const DECORATIVE_POINTS = [
-  [-3.6, 2.3, -1.1], [-0.9, 3.0, 0.8], [1.1, 2.9, 1.6], [3.5, 2.0, -0.6],
-  [4.0, 0.1, 1.2], [3.7, -1.8, -0.9], [1.6, -3.0, 0.4], [-0.6, -3.3, -1.0],
-  [-2.6, -2.8, 1.0], [-4.0, -0.9, 0.3], [-3.6, 1.0, 1.7], [0.2, 0.4, -2.4],
-  [2.0, -0.4, -2.2], [-1.4, 1.9, -1.9],
+  [-1.4, 0.9, 0.5], [0.9, 1.5, -0.6], [1.7, 0.4, 1.0], [-0.8, -1.3, -0.7],
+  [0.3, -1.7, 0.6], [-1.9, -0.5, -1.1], [2.1, 1.1, -0.3], [-0.5, 1.9, 1.0],
+  [1.2, -1.0, -1.4], [-2.1, 1.4, -0.5], [0.6, 0.6, 1.7], [-1.0, -2.0, 0.9],
+  [2.2, -1.6, 0.3], [-1.3, 0.2, 1.8],
 ];
 
 (function () {
@@ -57,51 +64,121 @@ const DECORATIVE_POINTS = [
 
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(42, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
-  camera.position.set(0, 0, 9.2);
-  camera.lookAt(0, 0, 0);
+  // --- Tuning. Most of what you'd want to nudge lives here.
+  const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00045; // slow drift, roughly a full turn every 4 minutes
+  const DRAG_SENSITIVITY = 0.0028;
+  const MAX_SPIN = 0.045;
+  const MAX_TILT = 0.38;  // how far it can be tipped up or down
+  const FRAME_V = 3.72;   // how much vertical room the map is given
+  const FRAME_H = 4.2;    // and horizontal — smaller numbers fill more of the screen
+  const MAX_LOOSE_REACH = 1.7; // past this, a loose dot floats unconnected
 
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
 
-  // Everything lives inside one group so the whole scene can be
-  // rotated as a single rigid object — see the drag handling below.
+  // Everything lives inside one group so the whole map can be
+  // rotated as a single rigid object.
   const rig = new THREE.Group();
   scene.add(rig);
 
-  const LINE_COLOR = new THREE.Color(0xd6d3c9);
-  const LINE_COLOR_REAL = new THREE.Color(0xb5b1a4);
-  const DOT_COLOR = new THREE.Color(0xb5b1a4);
-  const HOVER_COLOR = new THREE.Color(0x9c6f35);
+  const COL_LINE = new THREE.Color(0xdcd8ce);    // loose connections
+  const COL_BRANCH = new THREE.Color(0xbfbbae);  // branches that lead to a link
+  const COL_DOT = new THREE.Color(0xb5b1a4);
+  const COL_ACCENT = new THREE.Color(0x9c6f35);
 
   const hub = new THREE.Vector3(0, 0, 0);
-  rig.add(new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), new THREE.MeshBasicMaterial({ color: 0xa19d92 })));
 
-  // A gently curved line rather than a perfectly straight one — a
-  // small deliberate offset at the midpoint, smoothed into a curve.
-  function curvedLine(a, b, color, opacity) {
-    const mid = a.clone().add(b).multiplyScalar(0.5);
-    const offset = new THREE.Vector3((b.z - a.z) * 0.14, (b.x - a.x) * -0.09, (a.y - b.y) * 0.11);
-    mid.add(offset);
-    const curve = new THREE.CatmullRomCurve3([a, mid, b]);
-    const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(20));
-    const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity });
-    return new THREE.Line(geometry, material);
+  // Collected so a single pass at the end of each frame can recolour
+  // the entire map at once — that's what a link-node hover does.
+  const allLines = [];
+  const allDots = [];
+
+  // ============================================================
+  // THE CENTRE
+  // A solid core with two soft shells around it, so it reads as the
+  // source everything grows from rather than just another dot.
+  // ============================================================
+  const core = new THREE.Mesh(
+    new THREE.SphereGeometry(0.115, 28, 28),
+    new THREE.MeshBasicMaterial({ color: COL_ACCENT.clone() })
+  );
+  rig.add(core);
+
+  function shell(radius, opacity) {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(radius, 24, 24),
+      new THREE.MeshBasicMaterial({ color: COL_ACCENT.clone(), transparent: true, opacity: opacity, depthWrite: false })
+    );
+    mesh.userData.baseOpacity = opacity;
+    rig.add(mesh);
+    return mesh;
+  }
+  const shellInner = shell(0.26, 0.16);
+  const shellOuter = shell(0.52, 0.055);
+
+  // ============================================================
+  // GEOMETRY HELPERS
+  // ============================================================
+  function makeLine(points, color, opacity, branchIndex) {
+    const curve = new THREE.CatmullRomCurve3(points);
+    const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(48));
+    const material = new THREE.LineBasicMaterial({ color: color.clone(), transparent: true, opacity: opacity });
+    const line = new THREE.Line(geometry, material);
+    line.userData = { baseColor: color.clone(), baseOpacity: opacity, fade: 1, branchIndex: branchIndex };
+    allLines.push(line);
+    rig.add(line);
+    return line;
   }
 
-  // --- Real nodes: the line is drawn in 3D, but the clickable dot
-  // and label are plain HTML, positioned over the scene each frame —
-  // that keeps them fully accessible (real links, keyboard-focusable).
-  REAL_NODES.forEach((n) => {
-    const localPos = new THREE.Vector3(...n.pos);
-    rig.add(curvedLine(hub, localPos, LINE_COLOR_REAL, 0.7));
+  const dotGeometry = new THREE.SphereGeometry(0.042, 12, 12);
+  function makeDot(position, scale, opacity, branchIndex) {
+    const material = new THREE.MeshBasicMaterial({ color: COL_DOT.clone(), transparent: true, opacity: opacity, depthWrite: false });
+    const mesh = new THREE.Mesh(dotGeometry, material);
+    mesh.position.copy(position);
+    mesh.scale.setScalar(scale);
+    mesh.userData = { baseColor: COL_DOT.clone(), baseOpacity: opacity, baseScale: scale, fade: 1, dissolve: 0, branchIndex: branchIndex };
+    allDots.push(mesh);
+    rig.add(mesh);
+    return mesh;
+  }
 
-    const anchor = new THREE.Object3D();
-    anchor.position.copy(localPos);
-    rig.add(anchor);
-    n._anchor = anchor;
+  // ============================================================
+  // BRANCHES — one per link node, each ending at that node
+  // ============================================================
+  // Every point a loose dot is allowed to connect to. Link nodes are
+  // deliberately absent from this list: that's what keeps them final.
+  const anchors = [hub.clone()];
+
+  REAL_NODES.forEach((n, i) => {
+    const end = new THREE.Vector3(n.pos[0], n.pos[1], n.pos[2]);
+    const length = end.length();
+
+    // Two waypoints, pushed off the straight line so the branch
+    // curves. The sideways direction is derived from the node's own
+    // position, so it's stable — move a node and its branch follows.
+    const seed = i * 1.618;
+    const axis = new THREE.Vector3(Math.sin(seed * 2.1), Math.cos(seed * 1.3), Math.sin(seed * 0.7 + 2.0));
+    const perp = new THREE.Vector3().crossVectors(end, axis);
+    if (perp.lengthSq() < 0.0001) perp.set(0, 1, 0);
+    perp.normalize();
+
+    const w1 = end.clone().multiplyScalar(0.32).addScaledVector(perp, length * 0.16);
+    const w2 = end.clone().multiplyScalar(0.69).addScaledVector(perp, length * 0.095);
+
+    makeLine([hub, w1, w2, end], COL_BRANCH, 0.55, i);
+    makeDot(w1, 0.85, 0.7, i);
+    makeDot(w2, 0.7, 0.6, i);
+    anchors.push(w1.clone(), w2.clone());
+
+    // The clickable node itself is plain HTML positioned over the
+    // scene each frame — a real link, keyboard-focusable, selectable.
+    const anchorObj = new THREE.Object3D();
+    anchorObj.position.copy(end);
+    rig.add(anchorObj);
+    n._anchor = anchorObj;
+    n._index = i;
 
     const a = document.createElement("a");
     a.href = n.href;
@@ -114,118 +191,221 @@ const DECORATIVE_POINTS = [
     n._el = a;
   });
 
-  // --- Decorative nodes: small spheres, not links, that glow on
-  // hover via raycasting, along with the line connecting them.
-  const decoGeometry = new THREE.SphereGeometry(0.045, 10, 10);
-  const decorativeMeshes = [];
-  DECORATIVE_POINTS.forEach((pos, i) => {
-    const p = new THREE.Vector3(...pos);
-    const material = new THREE.MeshBasicMaterial({ color: DOT_COLOR.clone(), transparent: true, opacity: 0.9 });
-    const mesh = new THREE.Mesh(decoGeometry, material);
-    mesh.position.copy(p);
-    rig.add(mesh);
+  // ============================================================
+  // LOOSE DOTS — attach to the nearest centre or waypoint
+  // ============================================================
+  // A pointer-sized invisible sphere sits over each one. Without it,
+  // a dot that shrinks as it dissolves would slip out from under the
+  // cursor, re-form, and flicker.
+  const hitGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+  const hitMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+  const hitTargets = [];
 
-    const targetPos = i % 3 === 0 ? hub : REAL_NODES[i % REAL_NODES.length].pos;
-    const targetVec = targetPos instanceof THREE.Vector3 ? targetPos : new THREE.Vector3(...targetPos);
-    const line = curvedLine(p, targetVec, LINE_COLOR, 0.35);
-    rig.add(line);
+  DECORATIVE_POINTS.forEach((pos) => {
+    const p = new THREE.Vector3(pos[0], pos[1], pos[2]);
 
-    mesh.userData.hover = 0;
-    mesh.userData.line = line;
-    decorativeMeshes.push(mesh);
+    let nearest = anchors[0];
+    let nearestDistance = Infinity;
+    anchors.forEach((candidate) => {
+      const d = p.distanceToSquared(candidate);
+      if (d < nearestDistance) { nearestDistance = d; nearest = candidate; }
+    });
+
+    // A dot with nothing near it simply floats, unconnected — without
+    // this, moving one out to the edge would fling a long line right
+    // across the middle of the map.
+    let line = null;
+    if (Math.sqrt(nearestDistance) < MAX_LOOSE_REACH) {
+      // A slight bow in the connecting line, rather than dead straight.
+      const mid = nearest.clone().add(p).multiplyScalar(0.5);
+      mid.add(new THREE.Vector3((p.z - nearest.z) * 0.12, (p.x - nearest.x) * -0.08, (nearest.y - p.y) * 0.1));
+      line = makeLine([nearest, mid, p], COL_LINE, 0.3, -1);
+    }
+
+    const dot = makeDot(p, 1, 0.8, -1);
+
+    const hit = new THREE.Mesh(hitGeometry, hitMaterial);
+    hit.position.copy(p);
+    hit.userData = { dot: dot, line: line };
+    rig.add(hit);
+    hitTargets.push(hit);
   });
 
-  // --- Hover raycasting (decorative nodes only)
+  // ============================================================
+  // POINTER — hover, drag, and clicks that survive a drag
+  // ============================================================
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2(-10, -10);
   let hovered = null;
 
-  wrap.addEventListener("pointermove", (e) => {
-    const rect = wrap.getBoundingClientRect();
-    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-  });
-  wrap.addEventListener("pointerleave", () => pointer.set(-10, -10));
-
-  // --- Drag-to-rotate, hand-rolled (no external controls library).
-  // Dragging sets the spin speed directly; releasing lets it ease
-  // back down to a slow, constant idle rotation rather than
-  // stopping abruptly — that's what keeps it feeling gentle.
   let rotY = 0, rotX = 0;
-  const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.0016;
   let velY = IDLE_SPEED;
   let velX = 0;
   let dragging = false;
   let lastX = 0, lastY = 0;
+  let dragDistance = 0;
 
   wrap.addEventListener("pointerdown", (e) => {
     dragging = true;
+    dragDistance = 0;
     lastX = e.clientX;
     lastY = e.clientY;
     wrap.classList.add("grabbing");
-    wrap.setPointerCapture(e.pointerId);
   });
-  window.addEventListener("pointerup", () => {
-    dragging = false;
-    wrap.classList.remove("grabbing");
-  });
-  wrap.addEventListener("pointermove", (e) => {
+
+  window.addEventListener("pointermove", (e) => {
+    const rect = wrap.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
     if (!dragging) return;
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
     lastX = e.clientX;
     lastY = e.clientY;
-    velY = dx * 0.004;
-    velX = dy * 0.004;
+    dragDistance += Math.abs(dx) + Math.abs(dy);
+    velY = Math.max(-MAX_SPIN, Math.min(MAX_SPIN, dx * DRAG_SENSITIVITY));
+    velX = Math.max(-MAX_SPIN, Math.min(MAX_SPIN, dy * DRAG_SENSITIVITY));
   });
 
-  // --- Resize
-  function onResize() {
-    const w = wrap.clientWidth, h = wrap.clientHeight;
+  function endDrag() {
+    dragging = false;
+    wrap.classList.remove("grabbing");
+  }
+  window.addEventListener("pointerup", endDrag);
+  window.addEventListener("pointercancel", endDrag);
+  wrap.addEventListener("pointerleave", () => pointer.set(-10, -10));
+
+  // ============================================================
+  // LINK HOVER — recolours the whole map
+  // ============================================================
+  let tint = 0;
+  let tintTarget = 0;
+  let activeBranch = -1;
+
+  REAL_NODES.forEach((n) => {
+    function on() { tintTarget = 1; activeBranch = n._index; }
+    function off() { tintTarget = 0; activeBranch = -1; }
+    n._el.addEventListener("pointerenter", on);
+    n._el.addEventListener("focus", on);
+    n._el.addEventListener("pointerleave", off);
+    n._el.addEventListener("blur", off);
+    // Rotating the map by dragging across a label shouldn't count as
+    // clicking it. detail is 0 for keyboard activation, which must
+    // always go through.
+    n._el.addEventListener("click", (e) => {
+      if (e.detail !== 0 && dragDistance > 6) e.preventDefault();
+    });
+  });
+
+  // ============================================================
+  // SIZING — the scene is full-bleed, so it reframes on every resize
+  // ============================================================
+  function resize() {
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    if (!w || !h) return;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  }
-  window.addEventListener("resize", onResize);
+    renderer.setSize(w, h, false);
 
-  // --- Animate
+    const halfFov = Math.tan((camera.fov * Math.PI) / 360);
+    const frameH = camera.aspect < 1 ? 4.05 : FRAME_H; // portrait needs the link nodes kept on screen
+    const distanceForHeight = FRAME_V / halfFov;
+    const distanceForWidth = frameH / (halfFov * camera.aspect);
+    camera.position.z = Math.max(distanceForHeight, distanceForWidth);
+    camera.lookAt(0, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // ============================================================
+  // FRAME LOOP
+  // ============================================================
   const worldPos = new THREE.Vector3();
+  const projected = new THREE.Vector3();
+  let clock = 0;
+
   function animate() {
     requestAnimationFrame(animate);
+    clock += 0.016;
 
+    // --- rotation: ease back to the slow idle drift after a drag,
+    // and let the vertical tilt settle back to level
     if (!dragging) {
-      // ease back toward the slow idle spin, and let vertical tilt
-      // settle back to level — both gently, not instantly
-      velY += (IDLE_SPEED - velY) * 0.02;
-      velX += (0 - velX) * 0.05;
+      velY += (IDLE_SPEED - velY) * 0.012;
+      velX += (0 - velX) * 0.04;
+      // Tilt returns to level over roughly ten seconds. Left tilted,
+      // the idle turn would keep sweeping nodes across the centre.
+      rotX += (0 - rotX) * 0.004;
     }
     rotY += velY;
-    rotX = Math.max(-0.6, Math.min(0.6, rotX + velX));
+    rotX = Math.max(-MAX_TILT, Math.min(MAX_TILT, rotX + velX));
     rig.rotation.y = rotY;
     rig.rotation.x = rotX;
     rig.updateMatrixWorld(true);
 
+    // --- what the pointer is over (loose dots only; the link nodes
+    // are HTML and handle their own hover)
     raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(decorativeMeshes)[0];
+    const hit = raycaster.intersectObjects(hitTargets)[0];
     hovered = hit ? hit.object : null;
 
-    decorativeMeshes.forEach((m) => {
-      const target = m === hovered ? 1 : 0;
-      m.userData.hover += (target - m.userData.hover) * 0.12;
-      m.material.color.copy(DOT_COLOR).lerp(HOVER_COLOR, m.userData.hover);
-      m.scale.setScalar(1 + m.userData.hover * 1.8);
-      m.userData.line.material.color.copy(LINE_COLOR).lerp(HOVER_COLOR, m.userData.hover);
-      m.userData.line.material.opacity = 0.35 + m.userData.hover * 0.5;
+    // --- dissolve: a pointed-at loose dot fades away and contracts
+    // to nothing, taking its connecting line most of the way with it
+    hitTargets.forEach((target) => {
+      const dot = target.userData.dot;
+      const goal = target === hovered ? 1 : 0;
+      dot.userData.dissolve += (goal - dot.userData.dissolve) * 0.09;
+      const d = dot.userData.dissolve;
+      dot.userData.fade = 1 - d;
+      dot.scale.setScalar(dot.userData.baseScale * (1 - 0.8 * d));
+      if (target.userData.line) target.userData.line.userData.fade = 1 - 0.75 * d;
     });
 
+    // --- one pass to recolour everything at once
+    tint += (tintTarget - tint) * 0.06;
+    const lit = tint > 0.002;
+
+    allLines.forEach((line) => {
+      const u = line.userData;
+      const amount = lit ? tint * (u.branchIndex === activeBranch && activeBranch >= 0 ? 1 : 0.6) : 0;
+      line.material.color.copy(u.baseColor).lerp(COL_ACCENT, amount);
+      line.material.opacity = Math.min(1, u.baseOpacity * u.fade * (1 + amount * 0.5));
+    });
+
+    allDots.forEach((dot) => {
+      const u = dot.userData;
+      const amount = lit ? tint * (u.branchIndex === activeBranch && activeBranch >= 0 ? 1 : 0.6) : 0;
+      dot.material.color.copy(u.baseColor).lerp(COL_ACCENT, amount);
+      dot.material.opacity = Math.min(1, u.baseOpacity * u.fade * (1 + amount * 0.4));
+    });
+
+    // --- the centre breathes, very slightly, and brightens with the
+    // rest of the map
+    const breathe = REDUCE_MOTION ? 1 : 1 + Math.sin(clock * 0.55) * 0.035;
+    shellInner.scale.setScalar(breathe);
+    shellOuter.scale.setScalar(1 + (breathe - 1) * 1.8);
+    shellInner.material.opacity = shellInner.userData.baseOpacity * (1 + tint * 1.1);
+    shellOuter.material.opacity = shellOuter.userData.baseOpacity * (1 + tint * 1.4);
+
+    // --- position the HTML link nodes over the scene
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
     REAL_NODES.forEach((n) => {
       n._anchor.getWorldPosition(worldPos);
-      const v = worldPos.clone().project(camera);
-      const x = (v.x * 0.5 + 0.5) * wrap.clientWidth;
-      const y = (-v.y * 0.5 + 0.5) * wrap.clientHeight;
-      n._el.style.transform = "translate(" + x + "px," + y + "px)";
-      const depth = (v.z + 1) / 2;
-      n._el.style.opacity = String(Math.max(0.5, 1 - depth * 0.5));
+      projected.copy(worldPos).project(camera);
+      const x = (projected.x * 0.5 + 0.5) * w;
+      const y = (-projected.y * 0.5 + 0.5) * h;
+      // The extra 10.5px cancels the label's own padding so the small
+      // dot lands exactly on the node, whichever side the text is on.
+      const flip = x > w * 0.68;
+      n._el.classList.toggle("flip", flip);
+      n._el.style.transform =
+        "translate(" + x + "px," + y + "px)" +
+        (flip ? " translate(-100%, -50%) translateX(10.5px)" : " translate(-10.5px, -50%)");
+      const depth = (projected.z + 1) / 2;
+      n._el.style.opacity = String(Math.max(0.45, 1 - depth * 0.55));
       n._el.style.zIndex = String(Math.round((1 - depth) * 100));
     });
 

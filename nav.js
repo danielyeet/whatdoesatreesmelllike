@@ -59,10 +59,23 @@ const SITE_LINKS = [
   document.body.appendChild(trigger);
   document.body.appendChild(overlay);
 
+  // The trigger's word changes mid-transition rather than the instant
+  // you click, and fades out and back in as it does — swapping the text
+  // instantly is the one thing that still read as abrupt.
+  let labelTimer = null;
+  function setLabel(text) {
+    clearTimeout(labelTimer);
+    trigger.classList.add("label-swap");
+    labelTimer = setTimeout(function () {
+      trigger.textContent = text;
+      trigger.classList.remove("label-swap");
+    }, 200);
+  }
+
   function setOpen(open) {
     overlay.classList.toggle("open", open);
     document.body.classList.toggle("menu-open", open);
-    trigger.textContent = open ? "Close" : "Menu";
+    setLabel(open ? "Close" : "Menu");
     trigger.setAttribute("aria-expanded", String(open));
   }
 
