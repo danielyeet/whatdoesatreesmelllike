@@ -8,16 +8,16 @@
 // centre, passes through two waypoints, and stops at the link
 // node — nothing ever continues past one.
 //
-// Nothing in the atmosphere is placed by hand any more. Each
-// branch carries a WAKE of specks strung along it, and a SHELL
-// of specks is distributed by golden angle so it can't clump or
-// lean. Both are generated from the numbers in the tuning block.
+// Nothing in the atmosphere is placed by hand. Each branch
+// carries a WAKE of specks strung along it, and a CLOUD of
+// specks surrounds the whole thing, well past the diagram and
+// past the edges of the screen, drifting in and out of view.
+// Both are generated from the tuning block below.
+//
+// Every branch also sways on its own slow cycle, so the map
+// moves the way an arm does rather than as one rigid object.
 // ============================================================
 
-// Each one needs a label, a one-line sub-line (shown on hover), a
-// link, and a position as [x, y, z]. These sit on the outside of
-// the map — roughly 3 to 3.7 from the centre keeps them at the
-// edge where an endpoint belongs.
 const REAL_NODES = [
   { label: "Scent descriptions", sub: "notes on things I've smelled and tried to describe", href: "categories/scent-descriptions.html", pos: [-2.9, 1.5, 0.7] },
   { label: "Theories", sub: "half-formed ideas I keep coming back to", href: "categories/theories.html", pos: [2.0, 2.3, -1.1] },
@@ -28,10 +28,10 @@ const REAL_NODES = [
   { label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html", pos: [3.3, 1.6, -1.3] },
 ];
 
-// PLACEHOLDERS — replace or empty this list. These are the faint
-// grey words floating in the map: not links, not clickable, just
-// things the map is "about". They're handed out to shell specks in
-// order, spaced evenly around it. An empty list is fine.
+// PLACEHOLDERS — replace or empty this list. The faint grey words
+// floating in the map: not links, not clickable, just things the map
+// is "about". They sit on fixed points of their own, so they don't
+// drift with the cloud.
 const ATMOSPHERE_LABELS = [
   "SLOW", "ROOTS", "AFTER RAIN", "MARGINALIA", "SMOKE", "REPETITION",
 ];
@@ -41,9 +41,6 @@ const ATMOSPHERE_LABELS = [
   const canvas = document.getElementById("node-canvas");
   const labelLayer = document.getElementById("node-labels");
 
-  // Safety net: if the 3D library didn't load for any reason (a
-  // blocked CDN request, an old browser without WebGL), show a
-  // plain list of links instead of a blank, broken-looking box.
   if (typeof THREE === "undefined") {
     const list = document.createElement("div");
     list.className = "node-fallback-list";
@@ -62,34 +59,47 @@ const ATMOSPHERE_LABELS = [
   // ============================================================
   // TUNING
   // ============================================================
-  const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00018; // the drift on its own
+  const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00018;
   const DRAG_SENSITIVITY = 0.0026;
   const MAX_SPIN = 0.04;
   const MAX_TILT = 0.38;
   const FRAME_V = 4.35;         // room the map is given — larger draws it smaller
   const FRAME_H = 4.9;
 
-  const WAKE_PER_BRANCH = 7;    // specks strung along each branch
-  const WAKE_OFFSET = 0.17;     // how far the wake sits off its branch
-  const WAKE_BIAS = 1.45;       // >1 crowds them toward the centre
-  const WAKE_FROM = 0.19;       // but never closer in than this, or they silt up the hub
-  const WAKE_TO = 0.95;
-  const SHELL_COUNT = 26;       // specks in the surrounding shell
-  const SHELL_RADIUS = 2.4;
-  const PARTICLES_PER_SPECK = 9;
-  const SPECK_SIZE = 0.072;
+  // Each branch drifts on its own two slow cycles, tapering to
+  // nothing at the centre so only the far end really travels.
+  const SWAY = 0.03;            // tip wander, as a fraction of branch length
+  const SWAY_PERIOD = [6, 10];  // seconds per cycle, picked per branch
+  const SWAY_TAPER = 1.6;       // >1 keeps the movement out at the tip
 
+  // The corrugation the cursor drags across a branch: a sharp zigzag
+  // whose height and position are re-rolled several times a second,
+  // so it reads as jitter and not as a wave travelling along a wire.
+  const CORR_REACH = 0.95;      // how near the cursor has to be, in scene units
+  const CORR_HEIGHT = 0.012;    // how far it throws the line at the very centre of it
+  const CORR_PITCH = 18;        // corrugations along the length of a branch
+  const CORR_ROLL_MS = 70;      // how often the jitter is re-rolled
+
+  const WAKE_PER_BRANCH = 7;
+  const WAKE_OFFSET = 0.17;
+  const WAKE_BIAS = 1.45;
+  const WAKE_FROM = 0.19;
+  const WAKE_TO = 0.95;
+  const PARTICLES_PER_SPECK = 9;
+
+  const CLOUD_COUNT = 240;
+  const CLOUD_INNER = 2.6;      // starts outside the diagram
+  const CLOUD_OUTER = 7.4;      // and runs well past the edges of the screen
+  const CLOUD_DEPTH = 1.45;     // extra spread along z, out of the diagram's plane
+  const CLOUD_LIFE = [11, 27];  // seconds for one fade-in, hold, fade-out
+  const GHOST_RADIUS = 2.95;
+
+  const SPECK_SIZE = 0.072;
   const BRANCH_RADIUS = 0.0075;
   const BRANCH_RADIUS_EMPH = 0.017;
   const TUBE_SEGMENTS = 96;
-  const TUBE_SIDES = 10;
-  const REF_PX_PER_UNIT = 94;   // the screen the weights above are tuned for
-
-  // The oscilloscope shake the cursor drags across the branches.
-  const SHAKE_REACH = 0.95;     // how near the cursor has to be, in scene units
-  const SHAKE_AMPLITUDE = 0.05; // how far a line is thrown at the very centre of it
-  const SHAKE_WAVES = 90;       // oscillations along the length of a branch
-  const SHAKE_SPEED = 26;       // and how fast they travel
+  const TUBE_SIDES = 8;
+  const REF_PX_PER_UNIT = 94;
 
   const COL_INK = new THREE.Color(0x22221a);
   const COL_BRANCH = new THREE.Color(0x807c73);
@@ -107,7 +117,6 @@ const ATMOSPHERE_LABELS = [
 
   const hub = new THREE.Vector3(0, 0, 0);
   const branches = [];
-  const specks = [];
   const ghosts = [];
 
   // ============================================================
@@ -132,7 +141,11 @@ const ATMOSPHERE_LABELS = [
   const shellOuter = shell(0.5, 0.09);
 
   // ============================================================
-  // SPECKS — a cluster of particles that sprays apart on hover
+  // SPECK RENDERING
+  // Both particle systems are single batches with per-particle
+  // size and per-particle opacity, which the stock points material
+  // can't do — hence the small shader. One draw call each, so the
+  // counts can go up without the cost going up with them.
   // ============================================================
   function speckSprite() {
     const c = document.createElement("canvas");
@@ -147,43 +160,83 @@ const ATMOSPHERE_LABELS = [
     return new THREE.CanvasTexture(c);
   }
   const sprite = speckSprite();
-  const speckClouds = [];
 
-  function makeSpeck(position, branchIndex, scale) {
-    const directions = [];
-    const coords = new Float32Array(PARTICLES_PER_SPECK * 3);
-    for (let k = 0; k < PARTICLES_PER_SPECK; k++) {
-      const v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
-      if (v.lengthSq() < 0.0001) v.set(1, 0, 0);
-      v.normalize().multiplyScalar(0.14 + Math.random() * 0.34);
-      directions.push(v);
-      coords[k * 3] = position.x;
-      coords[k * 3 + 1] = position.y;
-      coords[k * 3 + 2] = position.z;
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(coords, 3));
-    const material = new THREE.PointsMaterial({
-      color: COL_SPECK.clone(), size: SPECK_SIZE * scale, sizeAttenuation: true,
-      map: sprite, transparent: true, opacity: 0.9, depthWrite: false,
+  const VERT = [
+    "attribute float aSize;",
+    "attribute float aFade;",
+    "attribute float aTint;",
+    "uniform float uScale;",
+    "uniform float uMaxSize;",
+    "varying float vFade;",
+    "varying float vTint;",
+    "void main() {",
+    "  vFade = aFade;",
+    "  vTint = aTint;",
+    "  vec4 mv = modelViewMatrix * vec4( position, 1.0 );",
+    "  gl_PointSize = min( aSize * ( uScale / max( 0.0001, - mv.z ) ), uMaxSize );",
+    "  gl_Position = projectionMatrix * mv;",
+    "}",
+  ].join("\n");
+
+  const FRAG = [
+    "uniform sampler2D uMap;",
+    "uniform vec3 uBase;",
+    "uniform vec3 uInk;",
+    "varying float vFade;",
+    "varying float vTint;",
+    "void main() {",
+    "  float a = texture2D( uMap, gl_PointCoord ).a * vFade;",
+    "  if ( a < 0.004 ) discard;",
+    "  gl_FragColor = vec4( mix( uBase, uInk, vTint ), a );",
+    "}",
+  ].join("\n");
+
+  function speckMaterial() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uMap: { value: sprite },
+        uScale: { value: 400 },
+        // Without a ceiling, a speck that drifts close to the camera
+        // balloons into a blob and pulls the eye straight to it.
+        uMaxSize: { value: 20 },
+        uBase: { value: COL_SPECK.clone() },
+        uInk: { value: COL_INK.clone() },
+      },
+      vertexShader: VERT,
+      fragmentShader: FRAG,
+      transparent: true,
+      depthWrite: false,
     });
-    const points = new THREE.Points(geometry, material);
-    rig.add(points);
+  }
 
-    const speck = {
-      origin: position.clone(), directions: directions, points: points,
-      branchIndex: branchIndex, scale: scale, spray: 0, lastSpray: -1,
-    };
-    points.userData.speck = speck;
-    specks.push(speck);
-    speckClouds.push(points);
-    return speck;
+  function speckBatch(count, reach) {
+    const geometry = new THREE.BufferGeometry();
+    const position = new THREE.BufferAttribute(new Float32Array(count * 3), 3);
+    const size = new THREE.BufferAttribute(new Float32Array(count), 1);
+    const fade = new THREE.BufferAttribute(new Float32Array(count), 1);
+    const tint = new THREE.BufferAttribute(new Float32Array(count), 1);
+    position.setUsage(THREE.DynamicDrawUsage);
+    size.setUsage(THREE.DynamicDrawUsage);
+    fade.setUsage(THREE.DynamicDrawUsage);
+    tint.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute("position", position);
+    geometry.setAttribute("aSize", size);
+    geometry.setAttribute("aFade", fade);
+    geometry.setAttribute("aTint", tint);
+    // Set once and left alone: the positions change every frame, and
+    // recomputing this each time would cost more than the loose fit.
+    geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), reach);
+    const points = new THREE.Points(geometry, speckMaterial());
+    points.frustumCulled = false;
+    rig.add(points);
+    return { points: points, position: position, size: size, fade: fade, tint: tint };
   }
 
   // ============================================================
-  // BRANCHES, EACH WITH ITS WAKE
+  // BRANCHES
   // ============================================================
   const waypointGeometry = new THREE.SphereGeometry(0.032, 14, 14);
+  const wakeSpecks = [];
 
   REAL_NODES.forEach((n, i) => {
     const end = new THREE.Vector3(n.pos[0], n.pos[1], n.pos[2]);
@@ -194,14 +247,14 @@ const ATMOSPHERE_LABELS = [
     const perp = new THREE.Vector3().crossVectors(end, axis);
     if (perp.lengthSq() < 0.0001) perp.set(0, 1, 0);
     perp.normalize();
+    // A second direction across the branch, so it can sway in a
+    // circle rather than only side to side.
+    const perp2 = new THREE.Vector3().crossVectors(end, perp).normalize();
 
     const w1 = end.clone().multiplyScalar(0.32).addScaledVector(perp, length * 0.16);
     const w2 = end.clone().multiplyScalar(0.69).addScaledVector(perp, length * 0.095);
     const curve = new THREE.CatmullRomCurve3([hub, w1, w2, end]);
 
-    // A branch is a tube, not a line: WebGL ignores line thickness on
-    // nearly every browser, and thickening is how a hovered branch is
-    // meant to stand out.
     function tube(radius, color, opacity) {
       const mesh = new THREE.Mesh(
         new THREE.TubeGeometry(curve, TUBE_SEGMENTS, radius, TUBE_SIDES, false),
@@ -213,27 +266,40 @@ const ATMOSPHERE_LABELS = [
     const resting = tube(BRANCH_RADIUS, COL_BRANCH, 0.78);
     const emphasised = tube(BRANCH_RADIUS_EMPH, COL_INK, 0);
 
-    const dots = [w1, w2].map((p, k) => {
-      const mesh = new THREE.Mesh(
+    const dots = [
+      { mesh: null, base: w1.clone(), t: 0.32, scale: 0.95 },
+      { mesh: null, base: w2.clone(), t: 0.69, scale: 0.78 },
+    ];
+    dots.forEach((dot) => {
+      dot.mesh = new THREE.Mesh(
         waypointGeometry,
         new THREE.MeshBasicMaterial({ color: COL_BRANCH.clone(), transparent: true, opacity: 0.8, depthWrite: false })
       );
-      mesh.position.copy(p);
-      mesh.userData.baseScale = k === 0 ? 0.95 : 0.78;
-      rig.add(mesh);
-      return mesh;
+      dot.mesh.position.copy(dot.base);
+      rig.add(dot.mesh);
     });
 
     // The wake: specks strung along the branch itself, crowded toward
     // the centre and drifting further off-line as they go out. Their
-    // positions come from the branch, so they can't be lopsided —
-    // move the node and the whole wake follows it.
+    // positions come from the branch, so they can't be lopsided, and
+    // they ride the sway with it.
     for (let k = 1; k <= WAKE_PER_BRANCH; k++) {
       const t = WAKE_FROM + (WAKE_TO - WAKE_FROM) * Math.pow(k / (WAKE_PER_BRANCH + 1), WAKE_BIAS);
       const on = curve.getPoint(t);
-      const side = (k % 2 === 0 ? 1 : -1);
+      const side = k % 2 === 0 ? 1 : -1;
       on.addScaledVector(perp, WAKE_OFFSET * side * (0.35 + t * 1.1));
-      makeSpeck(on, i, 0.62 + 0.5 * (1 - t));
+
+      const directions = [];
+      for (let q = 0; q < PARTICLES_PER_SPECK; q++) {
+        const v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+        if (v.lengthSq() < 0.0001) v.set(1, 0, 0);
+        v.normalize().multiplyScalar(0.14 + Math.random() * 0.34);
+        directions.push(v);
+      }
+      wakeSpecks.push({
+        base: on, t: t, branchIndex: i, directions: directions,
+        scale: 0.62 + 0.5 * (1 - t), spray: 0,
+      });
     }
 
     const anchorObj = new THREE.Object3D();
@@ -251,45 +317,77 @@ const ATMOSPHERE_LABELS = [
 
     n._el = a;
     n._anchor = anchorObj;
+    n._end = end.clone();
     n._index = i;
-    branches.push({ curve: curve, resting: resting, emphasised: emphasised, dots: dots, weight: 0 });
+
+    const period1 = SWAY_PERIOD[0] + Math.random() * (SWAY_PERIOD[1] - SWAY_PERIOD[0]);
+    const period2 = SWAY_PERIOD[0] + Math.random() * (SWAY_PERIOD[1] - SWAY_PERIOD[0]);
+    branches.push({
+      curve: curve, resting: resting, emphasised: emphasised, dots: dots, weight: 0,
+      swayA: perp.clone(), swayB: perp2,
+      amp: SWAY * length,
+      w1: (Math.PI * 2) / period1, w2: (Math.PI * 2) / period2,
+      p1: Math.random() * Math.PI * 2, p2: Math.random() * Math.PI * 2,
+      jitterAmp: 0, jitterPhase: 0,
+    });
   });
 
+  const wake = speckBatch(wakeSpecks.length * PARTICLES_PER_SPECK, 12);
+
   // ============================================================
-  // THE SHELL — golden angle, so it is even by construction
+  // THE CLOUD — out past the diagram and past the frame
+  // ============================================================
+  const cloud = speckBatch(CLOUD_COUNT, CLOUD_OUTER * 1.6);
+  const cloudParticles = [];
+
+  function placeCloudParticle(particle) {
+    // Uniform on a sphere, then pulled out along z so the cloud is a
+    // volume the diagram sits inside rather than a ring around it.
+    const u = Math.random() * 2 - 1;
+    const theta = Math.random() * Math.PI * 2;
+    const ring = Math.sqrt(Math.max(0, 1 - u * u));
+    const radius = CLOUD_INNER + Math.pow(Math.random(), 0.65) * (CLOUD_OUTER - CLOUD_INNER);
+    particle.x = Math.cos(theta) * ring * radius;
+    particle.y = u * radius;
+    particle.z = Math.sin(theta) * ring * radius * CLOUD_DEPTH;
+    // Near the centre they read larger, further out smaller.
+    const reach = Math.sqrt(particle.x * particle.x + particle.y * particle.y + particle.z * particle.z);
+    const nearness = Math.max(0, Math.min(1, 1 - (reach - CLOUD_INNER) / (CLOUD_OUTER - CLOUD_INNER)));
+    particle.size = SPECK_SIZE * (0.42 + 0.78 * nearness * nearness);
+  }
+
+  for (let i = 0; i < CLOUD_COUNT; i++) {
+    const particle = { x: 0, y: 0, z: 0, size: 0, life: 0, rate: 0 };
+    placeCloudParticle(particle);
+    particle.rate = 1 / (CLOUD_LIFE[0] + Math.random() * (CLOUD_LIFE[1] - CLOUD_LIFE[0]));
+    particle.life = Math.random(); // scattered through their cycles at the start
+    cloudParticles.push(particle);
+  }
+
+  // ============================================================
+  // THE GREY WORDS — on fixed points, so they hold still
   // ============================================================
   const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-  const labelStride = ATMOSPHERE_LABELS.length ? SHELL_COUNT / ATMOSPHERE_LABELS.length : 0;
-  let labelsPlaced = 0;
-
-  for (let i = 0; i < SHELL_COUNT; i++) {
-    const y = 1 - (i / (SHELL_COUNT - 1)) * 2;
-    const ring = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = i * GOLDEN_ANGLE;
-    // A little in-and-out so it reads as a cloud rather than a ball.
-    const radius = SHELL_RADIUS * (0.86 + 0.28 * ((i * 7919) % 100) / 100);
-    const p = new THREE.Vector3(Math.cos(theta) * ring, y, Math.sin(theta) * ring).multiplyScalar(radius);
-    const speck = makeSpeck(p, -1, 0.8);
-
-    if (labelStride && labelsPlaced < ATMOSPHERE_LABELS.length && i >= labelsPlaced * labelStride) {
-      const ghost = document.createElement("div");
-      ghost.className = "node3d-ghost";
-      ghost.textContent = ATMOSPHERE_LABELS[labelsPlaced];
-      labelLayer.appendChild(ghost);
-      const anchorObj = new THREE.Object3D();
-      anchorObj.position.copy(p);
-      rig.add(anchorObj);
-      ghosts.push({ el: ghost, anchor: anchorObj });
-      labelsPlaced++;
-    }
-  }
+  ATMOSPHERE_LABELS.forEach((word, i) => {
+    const count = Math.max(1, ATMOSPHERE_LABELS.length);
+    const u = 1 - ((i + 0.5) / count) * 2;
+    const ring = Math.sqrt(Math.max(0, 1 - u * u));
+    const theta = i * GOLDEN_ANGLE * 2.5;
+    const p = new THREE.Vector3(Math.cos(theta) * ring, u, Math.sin(theta) * ring).multiplyScalar(GHOST_RADIUS);
+    const anchorObj = new THREE.Object3D();
+    anchorObj.position.copy(p);
+    rig.add(anchorObj);
+    const el = document.createElement("div");
+    el.className = "node3d-ghost";
+    el.textContent = word;
+    labelLayer.appendChild(el);
+    ghosts.push({ el: el, anchor: anchorObj });
+  });
 
   // ============================================================
   // POINTER
   // ============================================================
   const raycaster = new THREE.Raycaster();
-  // Generous enough that a speck stays caught while it sprays apart,
-  // which is what stops it flickering back and forth under the cursor.
   raycaster.params.Points.threshold = 0.26;
   const pointer = new THREE.Vector2(-10, -10);
   let pointerLive = false;
@@ -346,18 +444,11 @@ const ATMOSPHERE_LABELS = [
   // ============================================================
   // SIZING
   // ============================================================
-  // A narrow screen draws the whole map smaller, which would take the
-  // branches below a pixel wide and lose them. The layout still
-  // shrinks; only the pen gets heavier.
   let penWeight = 1;
-  let pxPerUnit = REF_PX_PER_UNIT;
 
   function prepareTube(mesh) {
-    const attr = mesh.geometry.attributes.position;
-    mesh.userData.base = new Float32Array(attr.array);
-    mesh.userData.rings = TUBE_SEGMENTS + 1;
-    mesh.userData.perRing = TUBE_SIDES + 1;
-    mesh.userData.shaking = false;
+    mesh.userData.base = new Float32Array(mesh.geometry.attributes.position.array);
+    mesh.geometry.attributes.position.setUsage(THREE.DynamicDrawUsage);
   }
 
   function repen(weight) {
@@ -385,7 +476,16 @@ const ATMOSPHERE_LABELS = [
     camera.position.z = Math.max(FRAME_V / halfFov, frameH / (halfFov * camera.aspect));
     camera.lookAt(0, 0, 0);
 
-    pxPerUnit = (h / 2) / (camera.position.z * halfFov);
+    // Matches the convention the stock points material uses, so the
+    // sizes in the tuning block keep meaning what they meant.
+    const scale = h * renderer.getPixelRatio() * 0.5;
+    const ceiling = 9 * renderer.getPixelRatio();
+    wake.points.material.uniforms.uScale.value = scale;
+    cloud.points.material.uniforms.uScale.value = scale;
+    wake.points.material.uniforms.uMaxSize.value = ceiling;
+    cloud.points.material.uniforms.uMaxSize.value = ceiling;
+
+    const pxPerUnit = (h / 2) / (camera.position.z * halfFov);
     const wanted = Math.min(2, Math.max(1, Math.pow(REF_PX_PER_UNIT / pxPerUnit, 0.75)));
     if (Math.abs(wanted - penWeight) > 0.02) {
       penWeight = wanted;
@@ -401,60 +501,79 @@ const ATMOSPHERE_LABELS = [
   const worldPos = new THREE.Vector3();
   const projected = new THREE.Vector3();
   const scratch = new THREE.Vector3();
+  const swayVec = new THREE.Vector3();
   const invRig = new THREE.Matrix4();
   const rayOrigin = new THREE.Vector3();
   const rayDir = new THREE.Vector3();
-  const shakeAxis = new THREE.Vector3();
-  const ringPoint = new THREE.Vector3();
-  const ringAmp = new Float32Array(TUBE_SEGMENTS + 1);
+  const corrAxis = new THREE.Vector3();
   const field = [];
+
   let clock = 0;
   let arrival = 0;
+  let lastRoll = 0;
+  let lastFrame = performance.now();
 
-  function shakeTube(mesh) {
+  // A triangle wave: sharp corners rather than a rolling curve, which
+  // is the difference between corrugated and merely wavy.
+  function zigzag(x) {
+    const f = x - Math.floor(x);
+    return 4 * Math.abs(f - 0.5) - 1;
+  }
+
+  // Where a point at t along this branch has been carried to.
+  function swayAt(branch, t, out) {
+    const taper = Math.pow(t, SWAY_TAPER) * branch.amp;
+    const a = Math.sin(clock * branch.w1 + branch.p1) * taper;
+    const b = Math.sin(clock * branch.w2 + branch.p2) * taper;
+    out.set(0, 0, 0).addScaledVector(branch.swayA, a).addScaledVector(branch.swayB, b);
+    return out;
+  }
+
+  const perRing = TUBE_SIDES + 1;
+  function bendTube(branch, mesh) {
     const base = mesh.userData.base;
-    const perRing = mesh.userData.perRing;
     const attr = mesh.geometry.attributes.position;
     const array = attr.array;
-    let touched = false;
-
-    for (let ring = 0; ring <= TUBE_SEGMENTS; ring++) {
-      const i0 = ring * perRing * 3;
-      ringPoint.set(base[i0], base[i0 + 1], base[i0 + 2]);
-      scratch.copy(ringPoint).sub(rayOrigin);
-      const along = scratch.dot(rayDir);
-      let amp = 0;
-      if (along > 0) {
-        scratch.addScaledVector(rayDir, -along);
-        const d = scratch.length();
-        if (d < SHAKE_REACH) {
-          const falloff = 1 - d / SHAKE_REACH;
-          amp = SHAKE_AMPLITUDE * penWeight * falloff * falloff;
-        }
-      }
-      ringAmp[ring] = amp;
-      if (amp > 0.0004) touched = true;
-    }
-
-    if (!touched && !mesh.userData.shaking) return;
 
     for (let ring = 0; ring <= TUBE_SEGMENTS; ring++) {
       const t = ring / TUBE_SEGMENTS;
-      const offset = ringAmp[ring] * Math.sin(t * SHAKE_WAVES + clock * SHAKE_SPEED);
+      swayAt(branch, t, swayVec);
+
+      // the cursor's corrugation, only near where it is pointing
+      let corr = 0;
+      if (branch.jitterAmp > 0) {
+        const i0 = ring * perRing * 3;
+        scratch.set(base[i0], base[i0 + 1], base[i0 + 2]).sub(rayOrigin);
+        const along = scratch.dot(rayDir);
+        if (along > 0) {
+          scratch.addScaledVector(rayDir, -along);
+          const d = scratch.length();
+          if (d < CORR_REACH) {
+            const falloff = 1 - d / CORR_REACH;
+            corr = CORR_HEIGHT * penWeight * falloff * falloff * branch.jitterAmp *
+              zigzag(t * CORR_PITCH + branch.jitterPhase);
+          }
+        }
+      }
+
+      const ox = swayVec.x + corrAxis.x * corr;
+      const oy = swayVec.y + corrAxis.y * corr;
+      const oz = swayVec.z + corrAxis.z * corr;
       for (let j = 0; j < perRing; j++) {
         const idx = (ring * perRing + j) * 3;
-        array[idx] = base[idx] + shakeAxis.x * offset;
-        array[idx + 1] = base[idx + 1] + shakeAxis.y * offset;
-        array[idx + 2] = base[idx + 2] + shakeAxis.z * offset;
+        array[idx] = base[idx] + ox;
+        array[idx + 1] = base[idx + 1] + oy;
+        array[idx + 2] = base[idx + 2] + oz;
       }
     }
     attr.needsUpdate = true;
-    mesh.userData.shaking = touched;
   }
 
-  function animate() {
+  function animate(now) {
     requestAnimationFrame(animate);
-    clock += 0.016;
+    const dt = Math.min(0.1, (now - lastFrame) / 1000) || 0.016;
+    lastFrame = now;
+    clock += dt;
 
     const target = window.__p23 === undefined ? 1 : window.__p23;
     arrival += (target - arrival) * 0.18;
@@ -473,8 +592,8 @@ const ATMOSPHERE_LABELS = [
     rig.updateMatrixWorld(true);
 
     raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(speckClouds)[0];
-    const hoveredSpeck = hit ? hit.object.userData.speck : null;
+    const hit = raycaster.intersectObject(wake.points)[0];
+    const hovered = hit ? Math.floor(hit.index / PARTICLES_PER_SPECK) : -1;
 
     let strongest = 0, runnerUp = 0;
     branches.forEach((branch, i) => {
@@ -485,47 +604,97 @@ const ATMOSPHERE_LABELS = [
     });
     const stepBack = (branch) => (branch.weight >= strongest ? runnerUp : strongest);
 
-    // --- the cursor drags a high-frequency wobble across whatever
-    // branch it comes near, strongest right under the pointer
-    if (arrival > 0.5 && !REDUCE_MOTION) {
-      invRig.copy(rig.matrixWorld).invert();
-      if (pointerLive) {
-        rayOrigin.copy(raycaster.ray.origin).applyMatrix4(invRig);
-        rayDir.copy(raycaster.ray.direction).transformDirection(invRig);
-      } else {
-        // Pointed away from everything, so the same pass settles any
-        // branch still mid-wobble back onto its true line.
-        rayOrigin.set(0, 0, 9999);
-        rayDir.set(0, 0, 1);
-      }
-      shakeAxis.set(0, 1, 0).transformDirection(invRig);
+    // --- re-roll the jitter a few times a second, and work out where
+    // the cursor is pointing inside the map's own frame of reference
+    invRig.copy(rig.matrixWorld).invert();
+    if (pointerLive && arrival > 0.5 && !REDUCE_MOTION) {
+      rayOrigin.copy(raycaster.ray.origin).applyMatrix4(invRig);
+      rayDir.copy(raycaster.ray.direction).transformDirection(invRig);
+    } else {
+      rayOrigin.set(0, 0, 9999);
+      rayDir.set(0, 0, 1);
+    }
+    corrAxis.set(0, 1, 0).transformDirection(invRig);
+    if (now - lastRoll > CORR_ROLL_MS) {
+      lastRoll = now;
       branches.forEach((branch) => {
-        shakeTube(branch.resting);
-        if (branch.weight > 0.02) shakeTube(branch.emphasised);
+        branch.jitterAmp = REDUCE_MOTION ? 0 : 0.35 + Math.random() * 0.65;
+        branch.jitterPhase = Math.random() * 10;
       });
     }
 
-    specks.forEach((speck) => {
-      const goal = speck === hoveredSpeck ? 1 : 0;
+    // --- every branch bends every frame now: the sway is always on
+    branches.forEach((branch) => {
+      bendTube(branch, branch.resting);
+      if (branch.weight > 0.02) bendTube(branch, branch.emphasised);
+      branch.dots.forEach((dot) => {
+        swayAt(branch, dot.t, swayVec);
+        dot.mesh.position.copy(dot.base).add(swayVec);
+      });
+    });
+    REAL_NODES.forEach((n, i) => {
+      swayAt(branches[i], 1, swayVec);
+      n._anchor.position.copy(n._end).add(swayVec);
+    });
+    rig.updateMatrixWorld(true);
+
+    // --- the wake rides the sway, and sprays where it is pointed at
+    for (let s = 0; s < wakeSpecks.length; s++) {
+      const speck = wakeSpecks[s];
+      const goal = s === hovered ? 1 : 0;
       const rate = goal > speck.spray ? 0.17 : 0.045;
       speck.spray += (goal - speck.spray) * rate;
-      const s = speck.spray;
 
-      if (Math.abs(s - speck.lastSpray) > 0.0015) {
-        const coords = speck.points.geometry.attributes.position;
-        for (let k = 0; k < speck.directions.length; k++) {
-          scratch.copy(speck.origin).addScaledVector(speck.directions[k], s);
-          coords.setXYZ(k, scratch.x, scratch.y, scratch.z);
-        }
-        coords.needsUpdate = true;
-        speck.lastSpray = s;
+      const branch = branches[speck.branchIndex];
+      swayAt(branch, speck.t, swayVec);
+      const mine = branch.weight;
+      const back = stepBack(branch);
+      const size = SPECK_SIZE * speck.scale * penWeight * (1 - 0.4 * speck.spray);
+      const alpha = 0.9 * (1 - speck.spray * 0.95) * (1 - 0.5 * back) * (1 + 0.35 * mine);
+
+      for (let q = 0; q < PARTICLES_PER_SPECK; q++) {
+        const idx = s * PARTICLES_PER_SPECK + q;
+        const dir = speck.directions[q];
+        wake.position.setXYZ(idx,
+          speck.base.x + swayVec.x + dir.x * speck.spray,
+          speck.base.y + swayVec.y + dir.y * speck.spray,
+          speck.base.z + swayVec.z + dir.z * speck.spray);
+        wake.size.array[idx] = size;
+        wake.fade.array[idx] = alpha;
+        wake.tint.array[idx] = mine;
       }
-      const mine = speck.branchIndex >= 0 ? branches[speck.branchIndex].weight : 0;
-      const back = speck.branchIndex >= 0 ? stepBack(branches[speck.branchIndex]) : strongest;
-      speck.points.material.size = SPECK_SIZE * speck.scale * penWeight * (1 - 0.4 * s);
-      speck.points.material.opacity = 0.9 * (1 - s * 0.95) * (1 - 0.5 * back) * (1 + 0.35 * mine);
-      speck.points.material.color.copy(COL_SPECK).lerp(COL_INK, mine);
-    });
+    }
+    wake.position.needsUpdate = true;
+    wake.size.needsUpdate = true;
+    wake.fade.needsUpdate = true;
+    wake.tint.needsUpdate = true;
+
+    // --- the cloud: each speck fades up, holds, fades away, and comes
+    // back somewhere else entirely. Slowly enough that you shouldn't
+    // catch any one of them doing it.
+    for (let i = 0; i < CLOUD_COUNT; i++) {
+      const particle = cloudParticles[i];
+      particle.life += particle.rate * dt;
+      if (particle.life >= 1) {
+        particle.life -= 1;
+        placeCloudParticle(particle);
+        particle.rate = 1 / (CLOUD_LIFE[0] + Math.random() * (CLOUD_LIFE[1] - CLOUD_LIFE[0]));
+      }
+      const l = particle.life;
+      // in over the first third, out over the last third
+      let visible;
+      if (l < 0.33) visible = l / 0.33;
+      else if (l > 0.67) visible = (1 - l) / 0.33;
+      else visible = 1;
+      visible = visible * visible * (3 - 2 * visible);
+
+      cloud.position.setXYZ(i, particle.x, particle.y, particle.z);
+      cloud.size.array[i] = particle.size * penWeight;
+      cloud.fade.array[i] = 0.62 * visible * (1 - 0.5 * strongest);
+    }
+    cloud.position.needsUpdate = true;
+    cloud.size.needsUpdate = true;
+    cloud.fade.needsUpdate = true;
 
     branches.forEach((branch) => {
       const w = branch.weight;
@@ -534,9 +703,9 @@ const ATMOSPHERE_LABELS = [
       branch.resting.material.opacity = 0.78 * (1 - 0.45 * back);
       branch.resting.material.color.copy(COL_BRANCH).lerp(COL_INK, w);
       branch.dots.forEach((dot) => {
-        dot.material.opacity = 0.8 * (1 - 0.5 * back);
-        dot.material.color.copy(COL_BRANCH).lerp(COL_INK, w);
-        dot.scale.setScalar(dot.userData.baseScale * penWeight * (1 + 0.45 * w));
+        dot.mesh.material.opacity = 0.8 * (1 - 0.5 * back);
+        dot.mesh.material.color.copy(COL_BRANCH).lerp(COL_INK, w);
+        dot.mesh.scale.setScalar(dot.scale * penWeight * (1 + 0.45 * w));
       });
     });
 
@@ -570,10 +739,10 @@ const ATMOSPHERE_LABELS = [
     ghosts.forEach((ghost) => {
       ghost.anchor.getWorldPosition(worldPos);
       projected.copy(worldPos).project(camera);
-      const x = (projected.x * 0.5 + 0.5) * w;
-      const y = (-projected.y * 0.5 + 0.5) * h;
       const depth = (projected.z + 1) / 2;
-      ghost.el.style.transform = "translate(" + x + "px," + y + "px) translate(14px, -50%)";
+      ghost.el.style.transform =
+        "translate(" + ((projected.x * 0.5 + 0.5) * w) + "px," + ((-projected.y * 0.5 + 0.5) * h) + "px)" +
+        " translate(14px, -50%)";
       ghost.el.style.opacity = String((0.34 + (1 - depth) * 0.4) * (1 - 0.55 * strongest));
     });
 
@@ -589,5 +758,5 @@ const ATMOSPHERE_LABELS = [
     if (arrival > 0.004) renderer.render(scene, camera);
   }
 
-  animate();
+  requestAnimationFrame(animate);
 })();

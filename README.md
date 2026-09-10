@@ -2,59 +2,47 @@
 
 ## What changed in the latest pass
 
-- **Nothing in the map's atmosphere is placed by hand any more.** The
-  hand-typed list of coordinates was why it looked arbitrary and
-  lopsided — you can't type twenty positions and have them come out
-  even. Each branch now carries a **wake** of specks strung along it,
-  and a **shell** of specks is distributed by golden angle, which
-  can't clump or lean by construction. Move a node and its whole wake
-  follows it.
-- **End nodes are registration marks** — a hollow square with a point
-  at its centre, echoing the cursor and the grid. Labels are uppercase
-  and letter-spaced, in two tiers: black for the real destinations,
-  faint grey for the words the map is *about*. Those grey words are
-  `ATMOSPHERE_LABELS` at the top of `node-scene.js` and are
-  placeholders — replace them or empty the list.
-- **The diagram refracts the paper behind it.** The grid is drawn on a
-  canvas now rather than in CSS, and `node-scene.js` publishes where
-  the centre and the nodes currently sit; the grid is pushed outward
-  around them, hardest at the centre. It bends as the map turns.
-- **A custom cursor**: a hollow square with a dot in the middle. The
-  dot is exactly where the pointer is, the square runs a beat behind,
-  so it stretches when you move fast and settles square when you stop.
-  Over anything clickable it closes in and the dot opens up.
-- **The cursor drags a wobble across the branches.** Come near one and
-  it oscillates at high frequency like a scope trace, strongest right
-  under the pointer and falling off with distance.
-- **Slower again** — the idle turn is about two and a half times
-  slower than it was.
-- **A gentler entry into the paper.** There's a little grain on every
-  slide now, so it never appears out of nothing, and the wash and grid
-  come in later and over a longer stretch than the map does.
-- **The grid is scaled down** to 13px squares with a stronger line
-  every fourth.
+- **The specks became a cloud.** They now run from just outside the
+  diagram to well past the edges of the screen, spread along z as well
+  as across, so the map sits inside a volume rather than being ringed
+  by one — some pass in front of the branches, some behind. They still
+  turn with it.
+- **Each speck sizes itself by how far out it is**: bigger near the
+  centre, down to specks at the frame's edge. A size ceiling stops one
+  that drifts close to the camera from ballooning into a blob.
+- **They fade in, hold, fade out, and come back somewhere else.**
+  Eleven to twenty-seven seconds for a full cycle, each on its own
+  clock, so the cloud reshuffles continuously and you shouldn't ever
+  catch one doing it.
+- **Every branch now sways on its own.** Two slow cycles per branch at
+  six to ten seconds, tapering to nothing at the centre, so the tip
+  travels about ten pixels and the root doesn't move. Waypoints, wake
+  specks, the registration mark and its label all ride along — a
+  branch stays one object.
+- **The cursor's effect is a corrugation now, not a wave.** A sharp
+  zigzag whose height and position are re-rolled about fourteen times
+  a second, so it reads as jitter rather than as something travelling
+  along a wire. Amplitude is down to about a quarter of what it was —
+  roughly one pixel at its strongest.
+- **The grid arrives molten.** It comes in heavily warped by a slow
+  large-scale wobble that relaxes to nothing as you finish the scroll,
+  so the white doesn't switch into ruled paper, it sets into it. Same
+  displacement machinery as the refraction around the centre, just
+  bigger and going away. The whole paper ramp is flatter at both ends
+  too.
 
-## The line between the slides — two versions
+### One thing worth knowing about the rewrite
 
-`thread.js` opens with one line:
+Both particle systems are now single batches drawn in one call each,
+with a small shader that gives every speck its own size and its own
+opacity — the stock points material can do neither. That's what lets
+the count go from twenty-six to nearly seven hundred without the cost
+going up with it. The tubes lost a couple of sides each to pay for
+every branch bending on every frame rather than only near the cursor.
 
-```js
-const TRANSITION = "dissolve";
-```
-
-Change it to `"fork"` and reload. I built it as a switch rather than
-two copies of the file so the two can't drift apart as you keep
-editing.
-
-- **`"dissolve"`** (A+B) — the line breaks into dots on the same
-  rhythm as the map's own trails, and at the same time starts losing
-  lock: drifting off true and jittering at the static's frequency,
-  worse the further it descends, then snapping dead still the instant
-  it touches the centre.
-- **`"fork"`** (D) — the line stays clean and divides. One strand
-  becomes three, then five, then seven, fanning out and landing on the
-  centre from every side, so it has turned into the diagram's own
-  structure by the time the map arrives.
+If the map ever comes up blank, that shader is the first place to
+look: a shader that fails to compile takes the whole scene with it,
+where the old material would simply have looked wrong.
 
 ## What changed before that
 

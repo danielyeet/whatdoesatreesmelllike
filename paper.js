@@ -38,6 +38,8 @@
   const WASH_PEAK = 0.09;       // the black wash under the map
 
   const BEND = 1.0;             // how hard the map refracts the grid
+  const MOLTEN = 46;            // how far the grid is still running when it arrives
+  const MOLTEN_SETTLE = 1.6;    // >1 means it firms up early and holds still
   const GRID_MS = 50;           // the grid redraws at about 20fps
   const NOISE_MS = 33;          // the static at about 30
 
@@ -147,6 +149,14 @@
     }
   }
 
+  // While the paper is arriving, the whole grid is still liquid: a
+  // slow large-scale wobble that relaxes to nothing by the time you
+  // land, so the white doesn't switch into ruled paper — it sets into
+  // it. Same idea as the refraction around the centre, just bigger
+  // and going away.
+  let molten = 0;
+  let moltenClock = 0;
+
   let sx = 0, sy = 0;
   function sampleField(x, y) {
     const fx = x / CELL, fy = y / CELL;
@@ -160,6 +170,12 @@
     const w01 = (1 - tx) * ty, w11 = tx * ty;
     sx = fieldX[i00] * w00 + fieldX[i10] * w10 + fieldX[i01] * w01 + fieldX[i11] * w11;
     sy = fieldY[i00] * w00 + fieldY[i10] * w10 + fieldY[i01] * w01 + fieldY[i11] * w11;
+
+    if (molten > 0.04) {
+      const t = moltenClock;
+      sx += (Math.sin(y * 0.0105 + t * 0.55) + Math.sin(y * 0.0265 - t * 0.83) * 0.45) * molten;
+      sy += (Math.sin(x * 0.0092 - t * 0.62) * 0.8 + Math.cos(x * 0.0208 + t * 0.4) * 0.35) * molten;
+    }
   }
 
   function drawGrid() {
@@ -201,6 +217,9 @@
   // ============================================================
   const clamp = (v) => Math.max(0, Math.min(1, v));
   const smooth = (v) => v * v * (3 - 2 * v);
+  // Flat at both ends, so neither the start nor the finish of the
+  // paper coming in has an edge you can catch.
+  const smoother = (v) => v * v * v * (v * (v * 6 - 15) + 10);
 
   let lastGrid = 0, lastNoise = 0;
   let paintedOnce = false;
@@ -212,10 +231,13 @@
     const leg = (slides[2].offsetTop - slides[1].offsetTop) || 1;
     const raw = clamp((top - slides[1].offsetTop) / leg);
 
-    // The map arrives on the plain progress; the paper comes in later
-    // and over a longer stretch, so you never catch it switching on.
+    // The map arrives on the plain progress; the paper comes in over
+    // a longer stretch and on a flatter curve, so you never catch it
+    // switching on.
     window.__p23 = smooth(raw);
-    const paperIn = smooth(clamp((raw - 0.12) / 0.78));
+    const paperIn = smoother(clamp((raw - 0.04) / 0.9));
+    molten = MOLTEN * Math.pow(1 - paperIn, MOLTEN_SETTLE);
+    moltenClock = now / 1000;
 
     if (wash) wash.style.opacity = (WASH_PEAK * paperIn).toFixed(4);
     gridCanvas.style.opacity = paperIn.toFixed(3);
@@ -226,7 +248,11 @@
       if (!REDUCE_MOTION || !paintedOnce) { paintStatic(); paintedOnce = true; }
     }
 
-    if (paperIn > 0.01 && now - lastGrid >= GRID_MS) {
+    // While it's still moving there's more to redraw per frame, so it
+    // gets the full rate; once it has set, it only needs to keep up
+    // with the map turning behind it.
+    const gridInterval = molten > 0.5 ? 33 : GRID_MS;
+    if (paperIn > 0.004 && now - lastGrid >= gridInterval) {
       lastGrid = now;
       buildField(BEND * paperIn);
       drawGrid();
