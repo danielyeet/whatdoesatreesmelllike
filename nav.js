@@ -38,7 +38,7 @@ const SITE_LINKS = [
   trigger.setAttribute("aria-controls", "site-menu-overlay");
 
   const overlay = document.createElement("div");
-  overlay.className = "menu-overlay";
+  overlay.className = "menu-overlay dark-surface";
   overlay.id = "site-menu-overlay";
 
   const list = document.createElement("ul");
@@ -125,6 +125,13 @@ const SITE_LINKS = [
       document.documentElement.classList.add("cursor-awake");
     }
     dot.style.transform = "translate(" + tx + "px," + ty + "px) translate(-50%,-50%)";
+
+    // pointer-events:none on the ring/dot means elementFromPoint sees
+    // straight through them to whatever's actually underneath.
+    const under = document.elementFromPoint(tx, ty);
+    const onDark = !!(under && under.closest(".dark-surface"));
+    ring.classList.toggle("on-dark", onDark);
+    dot.classList.toggle("on-dark", onDark);
   }, { passive: true });
 
   document.addEventListener("mouseleave", () => document.documentElement.classList.remove("cursor-awake"));

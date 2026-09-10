@@ -2,6 +2,33 @@
 
 ## What changed in this pass
 
+- **Fixed a real bug**: wake specks near a hovered node's branch
+  could also get individually raycast-hit and spray apart at the
+  same time as converging onto the curve — the two effects fighting
+  is what looked like "converging into themselves." A speck on the
+  active branch now converges only.
+- **Cursor color-over-dark, rebuilt**: `mix-blend-mode: difference`
+  wasn't compositing correctly here, so it's gone. The cursor now
+  explicitly checks what's under the pointer on every move
+  (`document.elementFromPoint`) and switches to a light color over
+  anything tagged `.dark-surface` (the menu, the preview window).
+  More code, but it can't silently fail to invert the way blend-mode
+  apparently was.
+- **Popup positioning, hardened**: the side-placement math looked
+  correct on review, but it depended on reading the modal's rendered
+  width from the DOM at a specific moment — replaced with a plain
+  calculation that mirrors the CSS width rule exactly, removing that
+  dependency entirely. If it's still opening centered after a hard
+  refresh, tell me and we'll dig further.
+- **Blur, softened again**: lower radius, much longer transition,
+  smaller opacity dip.
+- **The hover ripple is far more pronounced** now — taller, denser,
+  faster-changing, with a second offset wave riding on the first so
+  the spikes come out uneven rather than one clean zigzag, closer to
+  the reference image.
+
+## What changed the pass before that
+
 - **Rotation** is slightly faster (`IDLE_SPEED` in `node-scene.js`).
 - **Wake specks now converge onto their own branch** when it's
   hovered — they sit offset to the side normally, and gather exactly

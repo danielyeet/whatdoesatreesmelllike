@@ -79,10 +79,10 @@ const ATMOSPHERE_LABELS = [
   // The corrugation the cursor drags across a branch: a sharp zigzag
   // whose height and position are re-rolled several times a second,
   // so it reads as jitter and not as a wave travelling along a wire.
-  const CORR_REACH = 0.95;      // how near the cursor has to be, in scene units
-  const CORR_HEIGHT = 0.012;    // how far it throws the line at the very centre of it
-  const CORR_PITCH = 18;        // corrugations along the length of a branch
-  const CORR_ROLL_MS = 70;      // how often the jitter is re-rolled
+  const CORR_REACH = 1.15;      // how near the cursor has to be, in scene units
+  const CORR_HEIGHT = 0.034;    // how far it throws the line at the very centre of it
+  const CORR_PITCH = 34;        // corrugations along the length of a branch
+  const CORR_ROLL_MS = 45;      // how often the jitter is re-rolled
 
   const WAKE_PER_BRANCH = 7;
   const WAKE_OFFSET = 0.17;
@@ -548,7 +548,7 @@ const ATMOSPHERE_LABELS = [
     backdrop.addEventListener("click", closePreview);
 
     const modal = document.createElement("div");
-    modal.className = "node-preview-modal";
+    modal.className = "node-preview-modal dark-surface";
     modal.innerHTML =
       '<button class="node-preview-close" type="button" aria-label="Close preview">Close</button>' +
       '<div class="node-preview-media"></div>' +
@@ -560,7 +560,7 @@ const ATMOSPHERE_LABELS = [
     modal.style.opacity = "0";
     document.body.appendChild(modal);
 
-    const modalWidth = modal.offsetWidth || 480;
+    const modalWidth = Math.min(480, window.innerWidth * 0.88); // matches the CSS width rule exactly — no DOM measurement to get stale
     const finalLeft = onLeft ? PREVIEW_MARGIN : window.innerWidth - PREVIEW_MARGIN - modalWidth;
     const targetX = onLeft ? finalLeft + modalWidth + 22 : finalLeft - 22;
     const targetY = window.innerHeight / 2;
@@ -666,8 +666,11 @@ const ATMOSPHERE_LABELS = [
           const d = scratch.length();
           if (d < CORR_REACH) {
             const falloff = 1 - d / CORR_REACH;
-            corr = CORR_HEIGHT * penWeight * falloff * falloff * branch.jitterAmp *
-              zigzag(t * CORR_PITCH + branch.jitterPhase);
+            const phase = t * CORR_PITCH + branch.jitterPhase;
+            // a second, differently-tuned zigzag riding on the first so
+            // the spikes come out uneven rather than one clean wave
+            const irregular = 0.5 + 0.5 * Math.abs(zigzag(t * CORR_PITCH * 0.43 + branch.jitterPhase * 1.9));
+            corr = CORR_HEIGHT * penWeight * falloff * falloff * branch.jitterAmp * irregular * zigzag(phase);
           }
         }
       }
@@ -761,12 +764,17 @@ const ATMOSPHERE_LABELS = [
     if (!previewOpen) {
     for (let s = 0; s < wakeSpecks.length; s++) {
       const speck = wakeSpecks[s];
-      const goal = s === hovered ? 1 : 0;
+      // A speck on the active branch converges onto the line instead —
+      // letting it also spray apart from a direct hover hit at the same
+      // time was what made it look like it was gathering into itself
+      // rather than into the branch.
+      const onActiveBranch = speck.branchIndex === activeBranch;
+      const goal = (s === hovered && !onActiveBranch) ? 1 : 0;
       const rate = goal > speck.spray ? 0.17 : 0.045;
       speck.spray += (goal - speck.spray) * rate;
 
       const branch = branches[speck.branchIndex];
-      const convergeGoal = speck.branchIndex === activeBranch ? 1 : 0;
+      const convergeGoal = onActiveBranch ? 1 : 0;
       speck.converge += (convergeGoal - speck.converge) * 0.1;
 
       swayAt(branch, speck.t, swayVec);
