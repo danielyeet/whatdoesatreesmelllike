@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scent descriptions — Your Name</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  This page is one full "body of work" — a category. It's a normal
+  scrolling page (no snap-page class), listing every individual piece
+  that belongs to it.
+
+  TO ADD A NEW PIECE TO THIS CATEGORY: copy one whole
+  <a class="work-row">...</a> block below and point its href at
+  the new page you've made in /works/.
+
+  TO ADD A NEW CATEGORY ENTIRELY: duplicate this whole file, rename
+  it inside /categories/, update the <h1> and the lede, and add a
+  line for it in the SITE_LINKS list near the top of nav.js.
+-->
+<body data-breadcrumb="Scent descriptions" data-orientation="120">
+
+<div class="page-content">
+  <h1>Scent descriptions</h1>
+  <p class="category-lede">
+    Attempts at putting smell into words — some are quick notes, some
+    turned into much longer pieces.
+  </p>
+
+  <div class="work-list">
+
+    <a class="work-row" href="../works/example-gallery-work.html">
+      <div class="work-thumb">
+        <!-- <img src="../images/your-thumb.jpg" alt=""> -->
+      </div>
+      <div>
+        <div class="work-row-title">Vetiver, in fifty-two parts</div>
+        <div class="work-row-meta">A long-form piece · 52 entries</div>
+      </div>
+    </a>
+
+    <a class="work-row" href="../works/example-article-work.html">
+      <div class="work-thumb">
+        <!-- <img src="../images/your-thumb.jpg" alt=""> -->
+      </div>
+      <div>
+        <div class="work-row-title">A short history of vetiver</div>
+        <div class="work-row-meta">Reference piece</div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../nav.js"></script>
+</body>
+</html>
