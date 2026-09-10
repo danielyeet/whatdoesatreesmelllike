@@ -1,0 +1,57 @@
+# instructions.md
+
+Standing instructions from the repo owner about how Claude should behave and
+conduct commands in this repository. Unlike `CLAUDE.md` (which documents the
+codebase), this file records behavioral rules the owner has asked for. Append
+new rules here as they're given, in their own dated section; don't remove or
+reword an existing rule without being asked.
+
+## Verify changes visually before calling them done (2026-09-10)
+
+> When conducting any changes: run the site locally, take a screenshot of the
+> result, and check it matches what I asked for. Tell me if anything looks
+> off before we call this done.
+
+Applies to any change made in this repo, including changes with no expected
+visual effect (repo hygiene, docs, config) — run the check anyway and report
+that the screenshot is unchanged, rather than skipping it.
+
+How to do this here (static site, no build step):
+1. Serve the repo root over HTTP (e.g. `python3 -m http.server`) — the pages
+   rely on relative paths and pointer APIs that misbehave on `file://`.
+2. Load the relevant page(s) in a browser (headless Chromium via Playwright
+   is pre-installed in this environment) and take a screenshot.
+3. Compare against what was asked for. Note anything that looks wrong —
+   layout, console errors, missing assets — before reporting the task done.
+
+## Test every requested feature; never assume (2026-09-10)
+
+> Conduct tests for every feature I request to make sure it behaves as
+> expected. When unsure about something always double check and never
+> assume.
+
+Applies on top of the visual check above: a screenshot confirms it *looks*
+right, this rule covers whether it *behaves* right — click through
+interactions, check state changes, check the console for errors, re-read the
+relevant code rather than guessing at what it does. If something about the
+request, the existing code, or the expected behavior is unclear, verify it
+(read the code, run it, ask) instead of assuming an answer and proceeding.
+
+## Keep a glossary of unfamiliar terms (2026-09-10)
+
+> When user uses an unfamiliar term, add it to a glossary section inside the
+> CLAUDE.md file, and whenever unsure about term usage, refer to the glossary
+> or request clarification.
+
+The glossary lives in `CLAUDE.md` under `## Glossary`, seeded with the
+project's existing vocabulary (slide, branch, waypoint, wake, ghost,
+registration mark, and so on), each definition checked against the code.
+
+- When the owner uses a term that isn't in the glossary and isn't obvious
+  from the code, **ask** — don't infer a meaning and build on it.
+- Once its meaning is settled, add it to the glossary table in the same
+  commit as the work that prompted it.
+- When a term *is* in the glossary, use it in that sense, and correct the
+  entry if the code moves on.
+- Definitions are verified against the code, not `README.md`, which has
+  drifted in several places.
