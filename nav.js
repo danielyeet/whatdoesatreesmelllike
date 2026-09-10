@@ -28,7 +28,11 @@ const SITE_LINKS = [
 
 (function () {
   const root = typeof window.SITE_ROOT === "string" ? window.SITE_ROOT : "";
-  const currentPath = window.location.pathname.split("/").pop();
+  // A URL ending in "/" — which is how the site root is normally visited —
+  // has no filename on the end of it, and the server quietly serves
+  // index.html for it. Without treating that empty case as index.html, the
+  // Home link never gets marked as the page you're currently on.
+  const currentPath = window.location.pathname.split("/").pop() || "index.html";
 
   const trigger = document.createElement("button");
   trigger.className = "menu-trigger";
