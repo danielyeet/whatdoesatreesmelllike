@@ -505,11 +505,21 @@ const ATMOSPHERE_LABELS = [
 
   // ============================================================
   // NODE CLICK PREVIEW (trial: Scent descriptions)
-  // Opens to whichever side of the screen the node was already on,
-  // and a curved line — the same weight and colour the branch itself
-  // goes to when hovered — draws itself from the centre, through the
-  // node, out to the window. The rest of the page defocuses behind
-  // all of it. See openPreview() usage in the click handler above.
+  //
+  // The arm that reaches the window IS the node's own branch — not a
+  // second curve drawn alongside it, which is what it used to be and
+  // why two lines appeared. While the window is open the 3D tube for
+  // that branch is faded out and an SVG ribbon takes its place,
+  // traced from the very same curve (projected to the screen every
+  // frame, sway included), then carried on past the node and out to
+  // the window along the tangent it was already travelling — so
+  // there is no kink where the branch ends and the reach begins.
+  //
+  // The ribbon is a filled shape rather than a stroked line so it can
+  // taper: thin and pale where it leaves the centre, full weight
+  // where it docks against the window. The fade runs the same way, so
+  // the arm reads as coming forward out of the background rather than
+  // lying flat across it.
   // ============================================================
   const SVG_NS = "http://www.w3.org/2000/svg";
   function svgEl(name, attrs) {
@@ -517,40 +527,43 @@ const ATMOSPHERE_LABELS = [
     for (const key in attrs) el.setAttribute(key, attrs[key]);
     return el;
   }
-  function screenPosOf(object3D) {
-    object3D.getWorldPosition(worldPos);
-    projected.copy(worldPos).project(camera);
-    const rect = wrap.getBoundingClientRect();
-    return {
-      x: rect.left + (projected.x * 0.5 + 0.5) * wrap.clientWidth,
-      y: rect.top + (-projected.y * 0.5 + 0.5) * wrap.clientHeight,
-    };
-  }
 
   const PREVIEW_MARGIN = 64;
+  const ARM_WIDTH_HUB = 0.35;   // half-width where it leaves the centre
+  const ARM_WIDTH_DOCK = 2.6;   // and where it meets the window
+  const ARM_REACH_STEPS = 20;   // how finely the last stretch is drawn
+  const ARM_MARK_GAP = 13;      // how far off the window the end mark stands
+  const DOCK_BAR = 34;          // the notch it lands in, on the window's edge
+
   let previewOpen = false;
   let previewNodeIndex = -1;
   let activePreview = null;
+  let armIndex = -1;            // the branch currently standing in as the arm
+  let armMix = 0;               // 0 = drawn as its 3D tube, 1 = drawn as the ribbon
 
   function openPreview(node) {
     if (previewOpen) return;
     previewOpen = true;
     previewNodeIndex = node._index;
+    armIndex = node._index;
     document.body.classList.add("preview-open");
 
     const originX = node._lastScreenX || window.innerWidth / 2;
     const originY = node._lastScreenY || window.innerHeight / 2;
     const onLeft = originX < window.innerWidth / 2;
-    const hubPos = screenPosOf(core);
 
     const backdrop = document.createElement("div");
     backdrop.className = "node-preview-backdrop";
     backdrop.addEventListener("click", closePreview);
+    document.body.appendChild(backdrop); // it was being built and never added
 
     const modal = document.createElement("div");
     modal.className = "node-preview-modal dark-surface";
     modal.innerHTML =
-      '<button class="node-preview-close" type="button" aria-label="Close preview">Close</button>' +
+      '<button class="node-preview-close" type="button" aria-label="Close preview">' +
+        '<span class="node-preview-close-mark" aria-hidden="true"></span>' +
+        '<span class="node-preview-close-word">Close</span>' +
+      "</button>" +
       '<div class="node-preview-media"></div>' +
       '<p class="node-preview-desc">' + node.preview.description + "</p>" +
       '<a class="node-preview-button" href="' + node.href + '">Enter</a>';
@@ -560,30 +573,52 @@ const ATMOSPHERE_LABELS = [
     modal.style.opacity = "0";
     document.body.appendChild(modal);
 
-    const modalWidth = Math.min(480, window.innerWidth * 0.88); // matches the CSS width rule exactly — no DOM measurement to get stale
+    const modalWidth = Math.min(480, window.innerWidth * 0.88); // matches the CSS width rule exactly
     const finalLeft = onLeft ? PREVIEW_MARGIN : window.innerWidth - PREVIEW_MARGIN - modalWidth;
-    const targetX = onLeft ? finalLeft + modalWidth + 22 : finalLeft - 22;
-    const targetY = window.innerHeight / 2;
+    // The arm now reaches the window's edge instead of stopping short.
+    const dockX = onLeft ? finalLeft + modalWidth : finalLeft;
+    const dockY = window.innerHeight / 2;
 
-    // A single curve from the centre, bowed toward where the node
-    // actually is, out to the window — not a straight line, and not
-    // a hard corner at the node either.
     const svg = svgEl("svg", { class: "node-preview-arm-svg", "aria-hidden": "true" });
-    const path = svgEl("path", {
-      class: "node-preview-arm-path",
-      d: "M " + hubPos.x + " " + hubPos.y + " Q " + originX + " " + originY + " " + targetX + " " + targetY,
+    const defs = svgEl("defs", {});
+    const gradientId = "arm-fade-" + Math.random().toString(36).slice(2, 8);
+    const gradient = svgEl("linearGradient", { id: gradientId, gradientUnits: "userSpaceOnUse" });
+    // All but gone at the centre, full ink at the window.
+    [
+      { offset: "0", color: "#b6b2a8", opacity: "0" },
+      { offset: "0.22", color: "#a5a197", opacity: "0.1" },
+      { offset: "0.55", color: "#6f6b62", opacity: "0.45" },
+      { offset: "0.82", color: "#3a3a30", opacity: "0.85" },
+      { offset: "1", color: "#22221a", opacity: "1" },
+    ].forEach((stop) => {
+      gradient.appendChild(svgEl("stop", {
+        offset: stop.offset, "stop-color": stop.color, "stop-opacity": stop.opacity,
+      }));
     });
-    svg.appendChild(path);
+    defs.appendChild(gradient);
+    svg.appendChild(defs);
+
+    const ribbon = svgEl("path", { class: "node-preview-arm-path" });
+    ribbon.style.fill = "url(#" + gradientId + ")";
+    ribbon.style.stroke = "none";
+    svg.appendChild(ribbon);
+
+    // Where the arm meets the window: a notch in the edge, a short
+    // stub, and the same registration mark the nodes themselves use —
+    // so it reads as docked into the window rather than pointing at it.
+    const dockStub = svgEl("line", { class: "node-preview-dock-stub" });
+    const dockLine = svgEl("line", { class: "node-preview-dock-bar" });
+    const dockMark = svgEl("rect", { class: "node-preview-dock-mark", width: 11, height: 11 });
+    const dockDot = svgEl("rect", { class: "node-preview-dock-dot", width: 3, height: 3 });
+    svg.appendChild(dockStub);
+    svg.appendChild(dockLine);
+    svg.appendChild(dockMark);
+    svg.appendChild(dockDot);
     document.body.appendChild(svg);
-    const pathLength = path.getTotalLength();
-    path.style.strokeDasharray = String(pathLength);
-    path.style.strokeDashoffset = String(pathLength);
 
     void modal.offsetWidth; // force layout so the start state registers before animating
 
     requestAnimationFrame(() => {
-      path.classList.add("open");
-      path.style.strokeDashoffset = "0";
       modal.style.left = finalLeft + "px";
       modal.style.top = "50%";
       modal.style.transform = "translate(0%, -50%) scale(1)";
@@ -591,25 +626,141 @@ const ATMOSPHERE_LABELS = [
     });
 
     modal.querySelector(".node-preview-close").addEventListener("click", closePreview);
-    activePreview = { modal, svg, path, backdrop, originX, originY, pathLength };
+    activePreview = {
+      modal: modal, svg: svg, ribbon: ribbon, gradient: gradient,
+      dockStub: dockStub, dockLine: dockLine, dockMark: dockMark, dockDot: dockDot,
+      backdrop: backdrop, originX: originX, originY: originY,
+      dockX: dockX, dockY: dockY, onLeft: onLeft,
+    };
   }
 
   function closePreview() {
     if (!previewOpen || !activePreview) return;
-    const { modal, svg, path, backdrop, originX, originY, pathLength } = activePreview;
-    modal.style.left = originX + "px";
-    modal.style.top = originY + "px";
-    modal.style.transform = "translate(-50%, -50%) scale(0.06)";
-    modal.style.opacity = "0";
-    path.classList.remove("open");
-    path.style.strokeDashoffset = String(pathLength);
+    const preview = activePreview;
+    preview.modal.style.left = preview.originX + "px";
+    preview.modal.style.top = preview.originY + "px";
+    preview.modal.style.transform = "translate(-50%, -50%) scale(0.06)";
+    preview.modal.style.opacity = "0";
     document.body.classList.remove("preview-open");
     previewOpen = false;
     previewNodeIndex = -1;
-    setTimeout(() => { modal.remove(); svg.remove(); backdrop.remove(); }, 700);
-    activePreview = null;
+    // activePreview is deliberately kept until the elements are gone,
+    // so the frame loop can keep easing the ribbon out while the tube
+    // fades back in underneath it. Dropping it here showed both at
+    // once on the way out — the same doubling, in reverse.
+    setTimeout(() => {
+      preview.modal.remove();
+      preview.svg.remove();
+      preview.backdrop.remove();
+      if (activePreview === preview) activePreview = null;
+    }, 700);
   }
   window.addEventListener("keydown", (e) => { if (e.key === "Escape" && previewOpen) closePreview(); });
+
+  // ------------------------------------------------------------
+  // Tracing the arm, every frame
+  // ------------------------------------------------------------
+  const armPoints = [];
+
+  function armRibbonPath(points, reveal) {
+    const count = points.length;
+    const shown = Math.max(2, Math.round(count * reveal));
+    let out = "";
+    let back = "";
+    for (let i = 0; i < shown; i++) {
+      const p = points[i];
+      const a = points[Math.max(0, i - 1)];
+      const b = points[Math.min(count - 1, i + 1)];
+      let tx = b.x - a.x, ty = b.y - a.y;
+      const len = Math.hypot(tx, ty) || 1;
+      tx /= len; ty /= len;
+      const s = i / (count - 1);
+      const half = ARM_WIDTH_HUB + (ARM_WIDTH_DOCK - ARM_WIDTH_HUB) * Math.pow(s, 1.35);
+      out += (i === 0 ? "M " : " L ") + (p.x - ty * half).toFixed(1) + " " + (p.y + tx * half).toFixed(1);
+      back = " L " + (p.x + ty * half).toFixed(1) + " " + (p.y - tx * half).toFixed(1) + back;
+    }
+    return out + back + " Z";
+  }
+
+  function updateArm() {
+    if (armIndex < 0) return;
+    const target = previewOpen ? 1 : 0;
+    armMix += (target - armMix) * 0.12;
+    if (armMix < 0.002 && !previewOpen) { armMix = 0; armIndex = -1; return; }
+    if (!activePreview) return;
+
+    const preview = activePreview;
+    const branch = branches[armIndex];
+    const rect = wrap.getBoundingClientRect();
+    const sample = branch.samplePoints;
+    armPoints.length = 0;
+
+    // 1. the branch itself, exactly as it is being drawn in 3D
+    for (let i = 0; i < sample.length; i++) {
+      const t = i / (sample.length - 1);
+      swayAt(branch, t, swayVec);
+      scratch.copy(sample[i]).add(swayVec).applyMatrix4(rig.matrixWorld);
+      projected.copy(scratch).project(camera);
+      armPoints.push({
+        x: rect.left + (projected.x * 0.5 + 0.5) * wrap.clientWidth,
+        y: rect.top + (-projected.y * 0.5 + 0.5) * wrap.clientHeight,
+      });
+    }
+
+    // 2. carried on to the window, leaving the node along the
+    // direction the branch was already going
+    const markX = preview.dockX + (preview.onLeft ? 1 : -1) * ARM_MARK_GAP;
+    const tip = armPoints[armPoints.length - 1];
+    const before = armPoints[armPoints.length - 2] || tip;
+    let tx = tip.x - before.x, ty = tip.y - before.y;
+    const tlen = Math.hypot(tx, ty) || 1;
+    tx /= tlen; ty /= tlen;
+
+    const span = Math.hypot(markX - tip.x, preview.dockY - tip.y);
+    const lead = Math.max(60, span * 0.42);
+    const c1x = tip.x + tx * lead, c1y = tip.y + ty * lead;
+    const c2x = markX + (preview.onLeft ? 1 : -1) * lead * 0.9;
+    const c2y = preview.dockY;
+
+    for (let k = 1; k <= ARM_REACH_STEPS; k++) {
+      const u = k / ARM_REACH_STEPS;
+      const m = 1 - u;
+      armPoints.push({
+        x: m * m * m * tip.x + 3 * m * m * u * c1x + 3 * m * u * u * c2x + u * u * u * markX,
+        y: m * m * m * tip.y + 3 * m * m * u * c1y + 3 * m * u * u * c2y + u * u * u * preview.dockY,
+      });
+    }
+
+    // the reach draws itself out; the branch part is there from the start
+    const branchShare = sample.length / armPoints.length;
+    const reveal = branchShare + (1 - branchShare) * Math.min(1, armMix * 1.25);
+    preview.ribbon.setAttribute("d", armRibbonPath(armPoints, reveal));
+
+    const hubPoint = armPoints[0];
+    preview.gradient.setAttribute("x1", hubPoint.x);
+    preview.gradient.setAttribute("y1", hubPoint.y);
+    preview.gradient.setAttribute("x2", markX);
+    preview.gradient.setAttribute("y2", preview.dockY);
+
+    const docked = Math.max(0, (armMix - 0.55) / 0.45);
+    preview.dockLine.setAttribute("x1", preview.dockX);
+    preview.dockLine.setAttribute("x2", preview.dockX);
+    preview.dockLine.setAttribute("y1", preview.dockY - (DOCK_BAR / 2) * docked);
+    preview.dockLine.setAttribute("y2", preview.dockY + (DOCK_BAR / 2) * docked);
+    preview.dockStub.setAttribute("x1", markX);
+    preview.dockStub.setAttribute("y1", preview.dockY);
+    preview.dockStub.setAttribute("x2", preview.dockX);
+    preview.dockStub.setAttribute("y2", preview.dockY);
+    preview.dockMark.setAttribute("x", markX - 5.5);
+    preview.dockMark.setAttribute("y", preview.dockY - 5.5);
+    preview.dockDot.setAttribute("x", markX - 1.5);
+    preview.dockDot.setAttribute("y", preview.dockY - 1.5);
+
+    preview.svg.style.opacity = String(Math.min(1, armMix * 1.4));
+    preview.dockStub.style.opacity = String(docked);
+    preview.dockMark.style.opacity = String(docked);
+    preview.dockDot.style.opacity = String(docked);
+  }
 
   // ============================================================
   // FRAME LOOP
@@ -860,11 +1011,15 @@ const ATMOSPHERE_LABELS = [
     cloud.fade.needsUpdate = true;
     }
 
-    branches.forEach((branch) => {
+    branches.forEach((branch, i) => {
       const w = branch.weight;
       const back = stepBack(branch);
-      branch.emphasised.material.opacity = 0.6 * w;   // was 0.88 — less emphatic
-      branch.resting.material.opacity = 0.78 * (1 - 0.45 * back);
+      // While its window is open this branch is being drawn as the SVG
+      // ribbon instead. Fading rather than switching keeps the
+      // hand-over from being a visible pop.
+      const held = 1 - (i === armIndex ? armMix : 0);
+      branch.emphasised.material.opacity = 0.6 * w * held;
+      branch.resting.material.opacity = 0.78 * (1 - 0.45 * back) * held;
       branch.resting.material.color.copy(COL_BRANCH).lerp(COL_INK, w * 0.6); // was a full lerp to w
       branch.dots.forEach((dot) => {
         dot.mesh.material.opacity = 0.8 * (1 - 0.5 * back);
@@ -921,6 +1076,8 @@ const ATMOSPHERE_LABELS = [
       r: 210 * penWeight, s: 17,
     });
     window.__mapField = field;
+
+    updateArm();
 
     if (arrival > 0.004) renderer.render(scene, camera);
   }

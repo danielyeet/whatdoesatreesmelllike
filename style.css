@@ -424,20 +424,28 @@ body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transitio
 
 .node-preview-backdrop { position: fixed; inset: 0; z-index: 50; background: transparent; cursor: pointer; }
 
-/* The curve from the centre, through the node, out to the window —
-   drawn on, not just faded in, using the classic stroke-dasharray
-   trick: the whole length is one dash, offset by its own length so
-   nothing shows, then the offset animates to 0. */
-.node-preview-arm-svg { position: fixed; inset: 0; z-index: 55; pointer-events: none; overflow: visible; }
-.node-preview-arm-path {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 1.2;
-  stroke-linecap: round;
-  opacity: 0.5;
-  transition: stroke-dashoffset 0.9s var(--menu-ease), stroke-width 0.9s var(--menu-ease), opacity 0.5s ease;
-}
-.node-preview-arm-path.open { stroke-width: 3.2; opacity: 0.85; }
+/* The arm out to the window is the node's own branch, traced from the
+   3D curve every frame by node-scene.js and carried on past the node.
+   It's a filled shape rather than a stroked line so it can taper —
+   almost nothing where it leaves the centre, full weight where it
+   docks — with a gradient fading the same way, so it reads as coming
+   forward out of the background. Both the shape and its fill are set
+   from the script; what's here is only where it sits and what the
+   fittings at the window end look like.
+
+   z-index 65 puts it over the window (60), which is what lets the end
+   mark straddle the window's edge. The ribbon itself stops short of
+   the edge, so nothing is ever drawn across the panel. */
+.node-preview-arm-svg { position: fixed; inset: 0; z-index: 65; pointer-events: none; overflow: visible; }
+.node-preview-arm-path { stroke: none; }
+
+/* the notch cut into the window's dark edge */
+.node-preview-dock-bar { stroke: #dcd8ce; stroke-width: 2; }
+/* the short run from the end mark into that notch */
+.node-preview-dock-stub { stroke: var(--ink); stroke-width: 1.5; }
+/* and the same registration mark the nodes use, to end on */
+.node-preview-dock-mark { stroke: var(--ink); stroke-width: 1.5; fill: var(--paper-tone); }
+.node-preview-dock-dot { fill: var(--ink); stroke: none; }
 
 .node-preview-modal {
   position: fixed;
@@ -458,31 +466,81 @@ body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transitio
   margin-bottom: 22px;
 }
 .node-preview-desc { font-family: var(--sans); font-size: 14px; line-height: 1.6; color: #c9c6bb; margin: 0 0 26px; }
+/* Was a bare word in the corner. It's the same registration mark the
+   nodes use, with the word beside it, so the way out of the window is
+   built from the same vocabulary as the way in. */
 .node-preview-close {
   position: absolute;
-  top: 16px;
+  top: 18px;
   right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
   background: none;
   border: none;
+  padding: 6px;
   color: #8f8c81;
-  font-family: var(--mono);
-  font-size: 12px;
   cursor: pointer;
+  transition: color 0.3s ease;
 }
-.node-preview-close:hover { color: #f0efe8; }
+.node-preview-close:hover, .node-preview-close:focus-visible { color: #f0efe8; }
+.node-preview-close-mark {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border: 1.4px solid currentColor;
+  flex: none;
+}
+.node-preview-close-mark::before, .node-preview-close-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 7px;
+  height: 1.4px;
+  background: currentColor;
+}
+.node-preview-close-mark::before { transform: rotate(45deg); }
+.node-preview-close-mark::after { transform: rotate(-45deg); }
+.node-preview-close-word {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+/* Brass on black read as an illuminated exit sign — the one place the
+   accent was doing something the rest of the site doesn't. Monochrome,
+   with a rule that extends on hover instead of a glow. */
 .node-preview-button {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-left: auto;
   width: fit-content;
-  border: 1px solid var(--brass);
-  color: var(--brass);
+  border: 1px solid #57544c;
+  background: transparent;
+  color: #e8e6e0;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   text-decoration: none;
-  padding: 9px 18px;
-  transition: background 0.25s ease, color 0.25s ease;
+  padding: 13px 22px;
+  transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease;
 }
-.node-preview-button:hover { background: var(--brass); color: #0a0a0a; }
+.node-preview-button::after {
+  content: "";
+  width: 16px;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.35s ease;
+}
+.node-preview-button:hover, .node-preview-button:focus-visible {
+  background: #e8e6e0;
+  color: #16160f;
+  border-color: #e8e6e0;
+}
+.node-preview-button:hover::after { width: 26px; }
 
 /* ==================================================================
    THE CURSOR
