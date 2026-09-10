@@ -20,7 +20,7 @@
 //               the diagram's structure just before it arrives.
 // ============================================================
 
-const TRANSITION = "dissolve";
+const TRANSITION = "fork";
 
 (function () {
   const container = document.getElementById("scroll-container");
