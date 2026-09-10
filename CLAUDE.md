@@ -167,11 +167,40 @@ background luminance, but the class is the reliable path.
   `you@example.com`, the lorem ipsum on slide 2, the `contact.html` social links). Don't
   "fix" these incidentally; they're the author's decisions to make.
 
+## Glossary
+
+Project vocabulary, verified against the code. When the owner uses one of these terms,
+it means what's below. When they use a term that *isn't* here and its meaning isn't
+obvious from the code, ask rather than guessing — then add it to this list.
+
+| term | what it means |
+|---|---|
+| **slide** | One of the three full-screen sections of `index.html` (`#slide-1` title, `#slide-2` the italic line, `#slide-3` the node map). |
+| **the paper** | The three decorative layers behind the landing page, drawn by `paper.js`: the black **wash**, the squared **grid**, and the **static** (grain). |
+| **curtain** | How the paper arrives — present at the left and right edges, with the gap up the middle closing as you scroll (`CURTAIN_*` in `paper.js`). |
+| **the thread** | The single line running down all three slides, drawn by `thread.js`. |
+| **the map** / **node map** | The 3D scene on slide 3 (`node-scene.js`). |
+| **hub** / **the centre** | The origin `(0,0,0)` that every branch grows from; rendered as a dark `core` mesh inside two translucent `shell`s. |
+| **link node** / **real node** | A clickable endpoint from `REAL_NODES`. A branch *stops* at one; nothing continues past it. |
+| **branch** | The tube from hub to a link node — a `CatmullRomCurve3` through two waypoints. Tubes, not lines, so they can thicken on hover. |
+| **waypoint** | The two small dots along a branch (at t ≈ 0.32 and 0.69), derived from the node's position, not placed by hand. |
+| **wake** / **wake speck** | The specks strung along a branch, sampled off its own curve. Each speck is 9 stacked particles that spray apart when pointed at. |
+| **cloud** | The separate drifting background speck system. Currently off (`CLOUD_COUNT = 0`) but still wired up. |
+| **ghost** / **atmosphere label** | The same thing under two names: a faint non-clickable word from `ATMOSPHERE_LABELS`, placed on a ring of `GHOST_RADIUS`. The code calls them `ghosts`. |
+| **registration mark** | The hollow square marker used for node labels, reused for the preview's dock and the scroll cue — not a plain dot. |
+| **emerge** | A branch's 0→1 growth out from the centre on arrival, staggered per branch (`EMERGE_STAGGER`). |
+| **arrival** | The eased follow of `window.__p23`; drives the scene's opacity and every branch's `emerge`. |
+| **corrugation** | The sharp zigzag the cursor drags across a nearby branch (`CORR_*`), re-rolled several times a second so it reads as jitter, not a travelling wave. |
+| **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
+| **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. |
+| **work** | An individual piece, one page in `works/`. |
+| **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
+
 ## Maintaining this file
 
 Keep this file current: when the `window` contract, the landing page's layer list, the
-`node-scene.js` data lists, or the content workflow changes, update the matching section
-in the same commit.
+`node-scene.js` data lists, the content workflow, or the glossary changes, update the
+matching section in the same commit.
 
 `README.md` is a running changelog written for the site's author and has drifted in
 several places (`__p23`'s owner, the palette, `DECORATIVE_POINTS`). Prefer the code

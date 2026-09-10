@@ -36,3 +36,22 @@ interactions, check state changes, check the console for errors, re-read the
 relevant code rather than guessing at what it does. If something about the
 request, the existing code, or the expected behavior is unclear, verify it
 (read the code, run it, ask) instead of assuming an answer and proceeding.
+
+## Keep a glossary of unfamiliar terms (2026-09-10)
+
+> When user uses an unfamiliar term, add it to a glossary section inside the
+> CLAUDE.md file, and whenever unsure about term usage, refer to the glossary
+> or request clarification.
+
+The glossary lives in `CLAUDE.md` under `## Glossary`, seeded with the
+project's existing vocabulary (slide, branch, waypoint, wake, ghost,
+registration mark, and so on), each definition checked against the code.
+
+- When the owner uses a term that isn't in the glossary and isn't obvious
+  from the code, **ask** — don't infer a meaning and build on it.
+- Once its meaning is settled, add it to the glossary table in the same
+  commit as the work that prompted it.
+- When a term *is* in the glossary, use it in that sense, and correct the
+  entry if the code moves on.
+- Definitions are verified against the code, not `README.md`, which has
+  drifted in several places.
