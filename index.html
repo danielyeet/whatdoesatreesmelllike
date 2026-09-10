@@ -14,11 +14,11 @@
 </head>
 <body class="snap-page">
 
-<!-- Squared paper and grain. Purely decorative, and invisible until
-     the node map slide — see .paper in style.css and thread.js. -->
+<!-- Wash, squared paper and static. Purely decorative; all three are
+     drawn and faded in by paper.js. -->
 <div class="paper" aria-hidden="true">
   <div class="paper-wash"></div>
-  <div class="paper-grid"></div>
+  <canvas class="paper-grid"></canvas>
   <canvas class="paper-noise"></canvas>
 </div>
 
@@ -72,6 +72,7 @@
 <script src="nav.js"></script>
 <script src="landing.js"></script>
 <script src="node-scene.js"></script>
+<script src="paper.js"></script>
 <script src="thread.js"></script>
 </body>
 </html>

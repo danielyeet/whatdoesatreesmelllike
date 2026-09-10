@@ -2,33 +2,59 @@
 
 ## What changed in the latest pass
 
-- **The connecting line is straight and simply there.** One vertical
-  rule down the middle: title, second slide's sentence, centre of the
-  node map. It no longer draws itself as you scroll — it's drawn at
-  load and stays drawn.
-- **Its last leg belongs to the page it lands on.** As the paper fades
-  in for the node map, the segment below the second slide breaks into
-  a fine dashed rule on the same 16px rhythm as the grid, and flickers
-  and wavers on the same beat as the static. That's the whole of the
-  transition now — no travelling spark, no bloom at the centre.
-- **The static actually moves.** It was a fixed grain image being
-  shifted around, which reads as a moving texture rather than as
-  noise. It's now a canvas: nine noise tiles are built once at load,
-  and one is painted at a random offset about thirty times a second,
-  which is what makes it boil like an untuned television.
-- **The grid is tighter and quieter** — 64px squares instead of 110,
-  with 16px squares inside them that are close to subliminal.
-- **A 9% black wash sits under the node map**, taking the page off
-  white for that slide. The map is in the scrolling layer above it, so
-  the diagram itself is never dimmed by it.
-- **The map is drawn lighter and slightly smaller.** Branches are back
-  to hairlines, with more segments around and along each one so they
-  stay smooth at that weight, and the centre is smaller to match.
-- **The pen weight now compensates for screen size.** A phone draws
-  the whole map smaller, which was putting the branches under one
-  pixel wide and losing them entirely. The layout still shrinks; only
-  the line weight holds, the way a map redrawn at a smaller scale
-  keeps the same nib.
+- **Nothing in the map's atmosphere is placed by hand any more.** The
+  hand-typed list of coordinates was why it looked arbitrary and
+  lopsided — you can't type twenty positions and have them come out
+  even. Each branch now carries a **wake** of specks strung along it,
+  and a **shell** of specks is distributed by golden angle, which
+  can't clump or lean by construction. Move a node and its whole wake
+  follows it.
+- **End nodes are registration marks** — a hollow square with a point
+  at its centre, echoing the cursor and the grid. Labels are uppercase
+  and letter-spaced, in two tiers: black for the real destinations,
+  faint grey for the words the map is *about*. Those grey words are
+  `ATMOSPHERE_LABELS` at the top of `node-scene.js` and are
+  placeholders — replace them or empty the list.
+- **The diagram refracts the paper behind it.** The grid is drawn on a
+  canvas now rather than in CSS, and `node-scene.js` publishes where
+  the centre and the nodes currently sit; the grid is pushed outward
+  around them, hardest at the centre. It bends as the map turns.
+- **A custom cursor**: a hollow square with a dot in the middle. The
+  dot is exactly where the pointer is, the square runs a beat behind,
+  so it stretches when you move fast and settles square when you stop.
+  Over anything clickable it closes in and the dot opens up.
+- **The cursor drags a wobble across the branches.** Come near one and
+  it oscillates at high frequency like a scope trace, strongest right
+  under the pointer and falling off with distance.
+- **Slower again** — the idle turn is about two and a half times
+  slower than it was.
+- **A gentler entry into the paper.** There's a little grain on every
+  slide now, so it never appears out of nothing, and the wash and grid
+  come in later and over a longer stretch than the map does.
+- **The grid is scaled down** to 13px squares with a stronger line
+  every fourth.
+
+## The line between the slides — two versions
+
+`thread.js` opens with one line:
+
+```js
+const TRANSITION = "dissolve";
+```
+
+Change it to `"fork"` and reload. I built it as a switch rather than
+two copies of the file so the two can't drift apart as you keep
+editing.
+
+- **`"dissolve"`** (A+B) — the line breaks into dots on the same
+  rhythm as the map's own trails, and at the same time starts losing
+  lock: drifting off true and jittering at the static's frequency,
+  worse the further it descends, then snapping dead still the instant
+  it touches the centre.
+- **`"fork"`** (D) — the line stays clean and divides. One strand
+  becomes three, then five, then seven, fanning out and landing on the
+  centre from every side, so it has turned into the diagram's own
+  structure by the time the map arrives.
 
 ## What changed before that
 
@@ -152,9 +178,10 @@ past the slide, horizontal drags rotate it.
 ```
 index.html                          the landing page (title, intro, 3D node map)
 style.css                           every page's look — one shared file
-nav.js                               the "Menu" button, on every page
+nav.js                               the "Menu" button and the cursor, on every page
 landing.js                           gentle scrolling between slides, index.html only
-thread.js                            the line through the three slides + the paper fade
+paper.js                             the wash, the bending grid, the static, index.html only
+thread.js                            the line through the three slides, index.html only
 node-scene.js                        the 3D node map — see above
 contact.html                        the contact page
 

@@ -12,20 +12,11 @@
   --sans: "Archivo", -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  /* Squared paper, the way a maths exercise book is ruled: a faint
-     small grid with a slightly stronger one every fourth line. The
-     small squares are meant to be almost subliminal — if you can
-     read them without looking for them, they're too strong. */
-  --grid-minor: rgba(23, 23, 15, 0.028);
-  --grid-major: rgba(23, 23, 15, 0.07);
-  --grid-small: 16px;
-  --grid-large: 64px;
-
-  /* The wash laid under the node map, and the tone that results from
-     it. If you change --paper-wash, recompute --paper-tone: it's
-     --bg darkened by that amount, and the node markers use it to cut
-     a clean hole in the paper behind them. */
-  --paper-wash: 0.09;
+  /* The squared paper and the static are drawn on canvases now, by
+     paper.js — their sizes and strengths are the tuning block at the
+     top of that file. What stays here is the tone they add up to:
+     --bg darkened by the wash, which the node markers and labels use
+     to cut a clean hole in the paper behind them. */
   --paper-tone: #e4e4e3;
 }
 
@@ -62,40 +53,16 @@ img { max-width: 100%; display: block; }
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: var(--paper-in, 0);
 }
-/* Bottom layer: a flat wash that takes the page off white for this
-   slide only. The node map sits in #scroll-container above it, so
-   the diagram is never dimmed by it. */
-.paper-wash {
-  position: absolute;
-  inset: 0;
-  background: #000;
-  opacity: var(--paper-wash);
-}
-.paper-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(to right, var(--grid-minor) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-minor) 1px, transparent 1px);
-  background-size:
-    var(--grid-large) var(--grid-large),
-    var(--grid-large) var(--grid-large),
-    var(--grid-small) var(--grid-small),
-    var(--grid-small) var(--grid-small);
-  background-position: center center;
-}
-/* Top layer: television static, repainted about thirty times a
-   second by thread.js. */
-.paper-noise {
+/* All three opacities are set frame by frame in paper.js, so the
+   paper can come in later and more slowly than the map does. */
+.paper-wash { position: absolute; inset: 0; background: #000; opacity: 0; }
+.paper-grid, .paper-noise {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.055;
+  opacity: 0;
 }
 
 /* ==================================================================
@@ -119,6 +86,13 @@ img { max-width: 100%; display: block; }
   stroke-opacity: 0.26;
   stroke-width: 1;
   shape-rendering: crispEdges;
+}
+/* The wandering leg is a curve once it starts drifting, and its
+   dashes become dots — both want round ends and smooth rendering. */
+.thread-wander {
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  shape-rendering: auto;
 }
 /* Present from the moment the page loads — this only stops it
    appearing at the same instant as the text above it. */
@@ -234,10 +208,10 @@ body.menu-open .menu-trigger:hover { color: var(--brass); }
    The transition sits on the base selector, not on .menu-open — when
    it lived on the open state only, closing the menu snapped the page
    back to full brightness with no fade at all. */
-body > *:not(.menu-trigger):not(.menu-overlay) {
+body > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
   transition: opacity 0.85s var(--menu-ease);
 }
-body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
+body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
   opacity: 0.1;
 }
 
@@ -357,30 +331,42 @@ body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
   pointer-events: auto;
   padding: 6px;
 }
-.node3d-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1.8px solid var(--ink);
-  background: var(--bg);
-  /* a ring of page colour, so the marker keeps its edge where it
-     crosses the grid or a branch */
-  box-shadow: 0 0 0 4px var(--paper-tone);
+/* A registration mark rather than a dot: hollow square, centre
+   point, on a ring of page colour so it keeps its edge wherever it
+   crosses the grid or a branch. */
+.node3d-mark {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--ink);
   flex: none;
-  transition: background 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 0 0 4px var(--paper-tone);
+  transition: transform 0.3s ease;
+}
+.node3d-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 4px;
+  height: 4px;
+  background: var(--ink);
+  transition: width 0.3s ease, height 0.3s ease;
 }
 .node3d-text {
   font-family: var(--sans);
-  font-weight: 500;
-  font-size: 16px;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
   color: var(--ink);
   /* the label has to stay readable over grid, grain and branches */
   text-shadow: 0 0 7px var(--paper-tone), 0 0 14px var(--paper-tone), 0 1px 0 var(--paper-tone);
-  transition: font-weight 0.2s ease;
+  transition: letter-spacing 0.3s ease;
 }
 .node3d-sub {
   position: absolute;
-  left: 27px;
+  left: 29px;
   top: 24px;
   font-family: var(--mono);
   font-size: 11px;
@@ -391,18 +377,67 @@ body.menu-open > *:not(.menu-trigger):not(.menu-overlay) {
   white-space: normal;
   width: 210px;
 }
-/* Hover and focus emphasise by weight, not by colour: the marker
-   fills in, the text goes bold, and out in the scene the branch
-   behind it thickens to match. */
+
+/* Hover and focus emphasise by weight, not by colour: the mark
+   fills in, the text tightens and goes bold, and out in the scene
+   the branch behind it thickens to match. */
 .node3d-label:hover .node3d-sub, .node3d-label:focus-visible .node3d-sub { opacity: 1; }
-.node3d-label:hover .node3d-dot, .node3d-label:focus-visible .node3d-dot { background: var(--ink); transform: scale(1.12); }
-.node3d-label:hover .node3d-text, .node3d-label:focus-visible .node3d-text { font-weight: 700; }
+.node3d-label:hover .node3d-mark, .node3d-label:focus-visible .node3d-mark { transform: scale(1.1); }
+.node3d-label:hover .node3d-mark::after, .node3d-label:focus-visible .node3d-mark::after { width: 8px; height: 8px; }
+.node3d-label:hover .node3d-text, .node3d-label:focus-visible .node3d-text { font-weight: 700; letter-spacing: 0.14em; }
 
 /* Nodes drifting near the right edge flip their text to the other
-   side of the dot so the sub-line doesn't run off screen. The dot
+   side of the mark so the sub-line doesn't run off screen. The mark
    itself stays exactly on the node either way. */
 .node3d-label.flip { flex-direction: row-reverse; }
-.node3d-label.flip .node3d-sub { left: auto; right: 27px; text-align: right; }
+.node3d-label.flip .node3d-sub { left: auto; right: 29px; text-align: right; }
+
+/* The second tier: words the map is about, floating in it. Not
+   links, not clickable, and deliberately quiet. */
+.node3d-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 0 6px var(--paper-tone);
+}
+
+/* ==================================================================
+   THE CURSOR
+   Built by nav.js, so it appears on every page.
+   ================================================================== */
+html.has-cursor, html.has-cursor * { cursor: none !important; }
+.cursor-ring, .cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 900;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease, width 0.22s ease, height 0.22s ease, border-color 0.25s ease, background 0.22s ease;
+}
+html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
+.cursor-ring {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--ink);
+}
+.cursor-ring.near { width: 11px; height: 11px; }
+.cursor-dot {
+  width: 3px;
+  height: 3px;
+  background: var(--ink);
+}
+.cursor-dot.near { width: 5px; height: 5px; }
+body.menu-open .cursor-ring { border-color: #f0efe8; }
+body.menu-open .cursor-dot { background: #f0efe8; }
 
 /* Plain-link fallback, shown only if the 3D library fails to load */
 .node-fallback-list { display: flex; flex-direction: column; gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); width: min(640px, 92vw); }

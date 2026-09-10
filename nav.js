@@ -83,3 +83,74 @@ const SITE_LINKS = [
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
   list.addEventListener("click", (e) => { if (e.target.tagName === "A") setOpen(false); });
 })();
+
+// ============================================================
+// THE CURSOR
+// Lives here rather than in its own file purely so it reaches
+// every page without a script tag on each one — nav.js is
+// already the shared site chrome.
+//
+// A hollow square with a dot in the middle. The dot is exactly
+// where the pointer is; the square follows a beat behind, which
+// is what makes it stretch when you move quickly and settle
+// square when you stop. Over anything clickable it closes in and
+// the dot opens up.
+// ============================================================
+(function () {
+  // Nothing to replace on a touch screen, and no way to track it.
+  if (!window.matchMedia || !window.matchMedia("(pointer: fine)").matches) return;
+
+  const LAG = 0.16;        // how far behind the square runs
+  const STRETCH = 0.055;   // how much speed pulls it out of square
+
+  const ring = document.createElement("div");
+  ring.className = "cursor-ring";
+  const dot = document.createElement("div");
+  dot.className = "cursor-dot";
+  document.body.appendChild(ring);
+  document.body.appendChild(dot);
+  document.documentElement.classList.add("has-cursor");
+
+  let tx = window.innerWidth / 2, ty = window.innerHeight / 2;
+  let rx = tx, ry = ty;
+  let awake = false;
+
+  window.addEventListener("pointermove", (e) => {
+    if (e.pointerType !== "mouse") return;
+    tx = e.clientX;
+    ty = e.clientY;
+    if (!awake) {
+      awake = true;
+      rx = tx; ry = ty;
+      document.documentElement.classList.add("cursor-awake");
+    }
+    dot.style.transform = "translate(" + tx + "px," + ty + "px) translate(-50%,-50%)";
+  }, { passive: true });
+
+  document.addEventListener("mouseleave", () => document.documentElement.classList.remove("cursor-awake"));
+  document.addEventListener("mouseenter", () => { if (awake) document.documentElement.classList.add("cursor-awake"); });
+
+  document.addEventListener("mouseover", (e) => {
+    const target = e.target.closest && e.target.closest("a, button, [role='button'], input, textarea, select");
+    ring.classList.toggle("near", !!target);
+    dot.classList.toggle("near", !!target);
+  });
+
+  function follow() {
+    requestAnimationFrame(follow);
+    const dx = tx - rx;
+    const dy = ty - ry;
+    rx += dx * LAG;
+    ry += dy * LAG;
+
+    // Pulled along its own direction of travel, by however far it is
+    // currently behind.
+    const speed = Math.min(60, Math.hypot(dx, dy));
+    const angle = speed > 1 ? (Math.atan2(dy, dx) * 180) / Math.PI : 0;
+    const pull = speed * STRETCH;
+    ring.style.transform =
+      "translate(" + rx.toFixed(1) + "px," + ry.toFixed(1) + "px) translate(-50%,-50%)" +
+      " rotate(" + angle.toFixed(1) + "deg) scale(" + (1 + pull * 0.16).toFixed(3) + "," + (1 - pull * 0.1).toFixed(3) + ")";
+  }
+  requestAnimationFrame(follow);
+})();

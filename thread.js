@@ -1,21 +1,26 @@
 // ============================================================
-// THE THREAD + THE PAPER (index.html only)
-//
-// One straight line runs down the middle of the landing page: it
+// THE THREAD (index.html only)
+// One straight line down the middle of the landing page: it
 // leaves the title, meets the second slide's sentence, and picks
 // up again below it to end on the centre of the node map. It is
 // simply there — it does not draw itself as you scroll.
 //
-// What DOES change is its character. On the last leg, as the
-// squared paper and the static fade in for the node map, the line
-// breaks into a fine dashed rule on the same rhythm as the grid
-// and starts to shimmer with the static, so it belongs to that
-// page rather than arriving from a different one.
+// What changes is its character on the last leg, and there are
+// two versions of that. Change the line below and reload to
+// compare them:
 //
-// This file also runs the television static on the paper, and
-// sets window.__p23 — the 0-to-1 progress between slide 2 and 3 —
-// which node-scene.js reads to fade the map in alongside it.
+//   "dissolve"  the line breaks into dots on the same rhythm as
+//               the map's own trails while progressively losing
+//               lock, drifting and jittering like a trace coming
+//               off frequency, then snapping still at the centre.
+//
+//   "fork"      the line stays clean and splits: one strand
+//               becomes two, four, seven, fanning out and landing
+//               on the centre from every side, so it turns into
+//               the diagram's structure just before it arrives.
 // ============================================================
+
+const TRANSITION = "dissolve";
 
 (function () {
   const container = document.getElementById("scroll-container");
@@ -29,13 +34,20 @@
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg";
 
-  const GAP = 26;         // breathing room between the line and the text it leaves
-  const GRID_STEP = 16;   // matches --grid-small, so the dashes land on the grid
-  const FRAME_MS = 33;    // the static and the shimmer both run at about 30fps
+  const GAP = 26;
+  const FRAME_MS = 33;
 
-  // ============================================================
-  // THE LINE
-  // ============================================================
+  // "dissolve"
+  const DOT_PITCH = 5.5;    // spacing once it has broken into dots
+  const DRIFT = 10;         // how far off true it wanders at its worst
+  const SAMPLE = 9;         // how finely the wandering leg is subdivided
+
+  // "fork"
+  const STRANDS = 7;
+  const SPREAD = 190;       // how wide the fan opens
+  const SPLIT_AT = 0.46;    // where down the leg it starts dividing
+  const ORDER = [3, 2, 4, 1, 5, 0, 6]; // centre outward, so it opens symmetrically
+
   function svgEl(name, attrs) {
     const node = document.createElementNS(NS, name);
     for (const key in attrs) node.setAttribute(key, attrs[key]);
@@ -44,10 +56,26 @@
 
   const svg = svgEl("svg", { class: "thread", "aria-hidden": "true" });
   const toText = svgEl("line", { class: "thread-line" });
-  const toNode = svgEl("line", { class: "thread-line" });
   svg.appendChild(toText);
-  svg.appendChild(toNode);
+
+  const forking = TRANSITION === "fork";
+  const trunk = forking ? svgEl("line", { class: "thread-line" }) : null;
+  const strands = [];
+  const wander = forking ? null : svgEl("path", { class: "thread-line thread-wander" });
+
+  if (forking) {
+    svg.appendChild(trunk);
+    for (let i = 0; i < STRANDS; i++) {
+      const strand = svgEl("path", { class: "thread-line" });
+      svg.appendChild(strand);
+      strands.push(strand);
+    }
+  } else {
+    svg.appendChild(wander);
+  }
   container.insertBefore(svg, container.firstChild);
+
+  let top0 = 0, bottom0 = 0, centreX = 0, centreY = 0;
 
   function measure() {
     const width = container.clientWidth;
@@ -66,127 +94,100 @@
 
     // Everything it connects is centred, so the line is a single
     // straight drop down the middle.
-    const x = Math.round(width / 2);
+    centreX = Math.round(width / 2);
     const title = place(titleEl);
     const intro = place(introEl);
-    const centreY = slides[2].offsetTop + slides[2].offsetHeight / 2;
+    centreY = slides[2].offsetTop + slides[2].offsetHeight / 2;
+    top0 = intro.bottom + GAP;
+    bottom0 = centreY;
 
-    toText.setAttribute("x1", x);
-    toText.setAttribute("x2", x);
+    toText.setAttribute("x1", centreX);
+    toText.setAttribute("x2", centreX);
     toText.setAttribute("y1", title.bottom + GAP);
     toText.setAttribute("y2", intro.top - GAP);
 
-    toNode.setAttribute("x1", x);
-    toNode.setAttribute("x2", x);
-    toNode.setAttribute("y1", intro.bottom + GAP);
-    toNode.setAttribute("y2", centreY);
-  }
-
-  // ============================================================
-  // THE STATIC
-  // Real television static means every pixel changing, which is far
-  // too much random number generation to do per frame. Instead a
-  // handful of noise tiles are built once, and each frame paints one
-  // of them at a random offset — the eye reads the switching as the
-  // picture boiling.
-  // ============================================================
-  const noiseCanvas = document.querySelector(".paper-noise");
-  const ctx = noiseCanvas ? noiseCanvas.getContext("2d") : null;
-  const TILE = 256;
-  const TILE_COUNT = 9;
-  let patterns = [];
-
-  function buildTiles() {
-    if (!ctx) return;
-    patterns = [];
-    for (let i = 0; i < TILE_COUNT; i++) {
-      const tile = document.createElement("canvas");
-      tile.width = tile.height = TILE;
-      const tileCtx = tile.getContext("2d");
-      const image = tileCtx.createImageData(TILE, TILE);
-      const data = image.data;
-      for (let k = 0; k < data.length; k += 4) {
-        // Grey rather than black: on the washed background the light
-        // specks matter as much as the dark ones.
-        const v = (Math.random() * 255) | 0;
-        data[k] = data[k + 1] = data[k + 2] = v;
-        data[k + 3] = 255;
-      }
-      tileCtx.putImageData(image, 0, 0);
-      patterns.push(ctx.createPattern(tile, "repeat"));
+    if (forking) {
+      const splitY = top0 + (bottom0 - top0) * SPLIT_AT;
+      trunk.setAttribute("x1", centreX);
+      trunk.setAttribute("x2", centreX);
+      trunk.setAttribute("y1", top0);
+      trunk.setAttribute("y2", splitY);
     }
   }
 
-  function sizeCanvas() {
-    if (!noiseCanvas) return;
-    // Deliberately 1:1 with CSS pixels rather than device pixels —
-    // static wants to be coarse, and it keeps the repaint cheap.
-    noiseCanvas.width = Math.ceil(window.innerWidth);
-    noiseCanvas.height = Math.ceil(window.innerHeight);
-    buildTiles();
-  }
+  // ============================================================
+  // "dissolve" — losing lock on the way down
+  // ============================================================
+  function drawWander(p, t) {
+    const span = bottom0 - top0;
+    let d = "M " + centreX + " " + top0;
+    for (let y = top0 + SAMPLE; y <= bottom0; y += SAMPLE) {
+      const depth = Math.min(1, (y - top0) / span);
+      // Grows the further it gets from the sentence above, then goes
+      // to nothing right at the end — it arrives dead centre.
+      const settle = Math.min(1, (1 - depth) / 0.1);
+      const envelope = Math.pow(depth, 1.3) * settle * p;
+      const wave = Math.sin(depth * 41 + t * 7.5) * 0.55 + Math.sin(depth * 113 - t * 4) * 0.2;
+      const noise = REDUCE_MOTION ? 0 : (Math.random() - 0.5) * 0.9;
+      d += " L " + (centreX + envelope * DRIFT * (wave + noise)).toFixed(2) + " " + y.toFixed(1);
+    }
+    d += " L " + centreX + " " + bottom0.toFixed(1);
+    wander.setAttribute("d", d);
 
-  function paintStatic() {
-    if (!ctx || !patterns.length) return;
-    const dx = (Math.random() * TILE) | 0;
-    const dy = (Math.random() * TILE) | 0;
-    ctx.setTransform(1, 0, 0, 1, -dx, -dy);
-    ctx.fillStyle = patterns[(Math.random() * patterns.length) | 0];
-    ctx.fillRect(0, 0, noiseCanvas.width + TILE, noiseCanvas.height + TILE);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // and breaks into dots on the map's own rhythm as it goes
+    const gap = DOT_PITCH * p;
+    wander.style.strokeDasharray = Math.max(0.01, DOT_PITCH - gap).toFixed(2) + " " + gap.toFixed(2);
+    wander.style.strokeOpacity = (0.26 * (1 - p * (0.1 + Math.random() * 0.22))).toFixed(3);
   }
 
   // ============================================================
-  // THE LOOP
+  // "fork" — one strand becomes seven
   // ============================================================
-  const clamp = (v) => Math.max(0, Math.min(1, v));
-  const smooth = (v) => v * v * (3 - 2 * v);
+  function drawFork(p) {
+    const splitY = top0 + (bottom0 - top0) * SPLIT_AT;
+    const span = bottom0 - splitY;
+    const spread = SPREAD * Math.min(1, p / 0.85);
 
-  let lastTick = 0;
-  let painted = false;
+    for (let rank = 0; rank < STRANDS; rank++) {
+      const i = ORDER[rank];
+      const strand = strands[i];
+      const lateral = ((i - (STRANDS - 1) / 2) / ((STRANDS - 1) / 2)) * spread;
+
+      strand.setAttribute("d",
+        "M " + centreX + " " + splitY.toFixed(1) +
+        " C " + (centreX + lateral * 0.35).toFixed(1) + " " + (splitY + span * 0.34).toFixed(1) +
+        ", " + (centreX + lateral).toFixed(1) + " " + (bottom0 - span * 0.42).toFixed(1) +
+        ", " + centreX + " " + bottom0.toFixed(1));
+
+      // The centre strand is the line itself and is always there; the
+      // rest arrive in pairs outward from it.
+      const appearsAt = rank === 0 ? -1 : 0.3 + rank * 0.085;
+      const shown = rank === 0 ? 1 : Math.max(0, Math.min(1, (p - appearsAt) / 0.13));
+      strand.style.strokeOpacity = (0.26 * shown).toFixed(3);
+    }
+  }
+
+  // ============================================================
+  // LOOP
+  // ============================================================
+  let last = 0;
+  let clock = 0;
 
   function frame(now) {
     requestAnimationFrame(frame);
+    if (now - last < FRAME_MS) return;
+    clock += (now - last) / 1000;
+    last = now;
 
-    const top = container.scrollTop;
-    const secondLeg = (slides[2].offsetTop - slides[1].offsetTop) || 1;
-    const p2 = clamp((top - slides[1].offsetTop) / secondLeg);
-    const eased = smooth(p2);
-
-    document.documentElement.style.setProperty("--paper-in", eased.toFixed(3));
-    window.__p23 = eased;
-
-    if (now - lastTick < FRAME_MS) return;
-    lastTick = now;
-
-    if (eased > 0.01) {
-      if (!REDUCE_MOTION || !painted) { paintStatic(); painted = true; }
-    }
-
-    // The last leg of the line joins the page it's arriving on: it
-    // breaks into a dashed rule on the grid's rhythm, and flickers
-    // on the same beat as the static.
-    if (eased > 0.005) {
-      const gap = GRID_STEP * 0.34 * eased;
-      toNode.style.strokeDasharray = (GRID_STEP - gap).toFixed(2) + " " + gap.toFixed(2);
-      if (!REDUCE_MOTION) {
-        const flicker = 1 - eased * (0.12 + Math.random() * 0.3);
-        toNode.style.strokeOpacity = (0.26 * flicker).toFixed(3);
-        const waver = eased * (Math.random() - 0.5) * 1.1;
-        toNode.style.transform = "translateX(" + waver.toFixed(2) + "px)";
-      }
-    } else {
-      toNode.style.strokeDasharray = "none";
-      toNode.style.strokeOpacity = "";
-      toNode.style.transform = "";
-    }
+    const p = window.__p23 === undefined ? 0 : window.__p23;
+    if (forking) drawFork(p);
+    else drawWander(p, clock);
   }
 
   measure();
-  sizeCanvas();
   requestAnimationFrame(frame);
 
-  window.addEventListener("resize", () => { measure(); sizeCanvas(); });
+  window.addEventListener("resize", measure);
   window.addEventListener("load", measure);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
