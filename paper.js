@@ -52,6 +52,10 @@
   // middle closes as you go.
   const CURTAIN_FEATHER = 9;    // how soft the closing edges are, in % of width
   const CURTAIN_START = 0.02;   // where in the scroll the gap starts closing
+  // Half the opening angle of the wake the paper arrives along, measured
+  // from straight down. A real duck's wake opens at about 37 degrees in
+  // total however fast it swims, which is where 18.5 comes from.
+  const WAKE_HALF_ANGLE = 18.5;
   const BEND = 1.0;             // how hard the map refracts the grid
   const MOLTEN = 46;            // how far the grid is still running when it arrives
   const MOLTEN_SETTLE = 1.6;    // >1 means it firms up early and holds still
@@ -308,27 +312,57 @@
     if (c >= 0.995) {
       paper.style.webkitMaskImage = "none";
       paper.style.maskImage = "none";
+      paper.style.webkitMaskComposite = "";
+      paper.style.maskComposite = "";
       return;
     }
-    // Biased downward: the shape starts high on the page and is taller
-    // than it is wide, so its lower edge sweeps down the screen much
-    // further and faster than its upper edge climbs. It reads as the
-    // paper spreading downwards rather than opening evenly in all
-    // directions, while still being a soft shape rather than a wipe.
+    // A duck's wake. The vertex sits at the middle of the page — that's
+    // where the bird is — and two arms trail back and outward from it
+    // towards the bottom corners, so the paper arrives along the V and
+    // the sides fill in before the middle does.
     //
-    // Sized in % of the page's own width and height, generously enough
-    // that by the time the mask is dropped altogether (just above) it
-    // has covered the corners — otherwise the last of it would pop.
-    const rx = 105 * c;
-    const ry = 150 * c;
+    // Real wakes open at a fixed angle however fast the bird is going;
+    // WAKE_HALF_ANGLE is half of that, measured from straight down.
+    //
+    // Three masks intersected: the two arms are half-planes, one per
+    // side, and the radial one is what actually grows — so the shape
+    // stays the same V throughout and simply reaches further.
     const feather = Math.max(2, CURTAIN_FEATHER * (1.4 - c * 0.9));
-    const gradient =
-      "radial-gradient(ellipse " + rx.toFixed(2) + "% " + ry.toFixed(2) + "% at 50% 18%," +
+    const reach = 150 * c;
+
+    // A half-plane, as a gradient that flips from clear to solid across
+    // the middle of the page. Note the 90 degree turn: a linear-gradient
+    // runs *along* its angle, so the edge it draws lies across that —
+    // to put the edge on the arm, the gradient has to point square out
+    // of it, towards the inside of the V.
+    function arm(deg) {
+      return (
+        "linear-gradient(" + deg.toFixed(2) + "deg," +
+        " rgba(0,0,0,0) " + (50 - feather * 0.5).toFixed(2) + "%," +
+        " #000 " + (50 + feather * 0.5).toFixed(2) + "%)"
+      );
+    }
+
+    // "ellipse" with two percentages, not "circle" with one: a circle's
+    // size has to be given as a length, and a percentage there is
+    // invalid — which silently throws the whole mask away.
+    const spread =
+      "radial-gradient(ellipse " + reach.toFixed(2) + "% " + reach.toFixed(2) + "% at 50% 50%," +
       " #000 0%," +
       " #000 " + (100 - feather).toFixed(2) + "%," +
       " rgba(0,0,0,0) 100%)";
-    paper.style.webkitMaskImage = gradient;
-    paper.style.maskImage = gradient;
+
+    const masks = [
+      spread,
+      arm(90 + WAKE_HALF_ANGLE),   // edge along the arm trailing down-left
+      arm(270 - WAKE_HALF_ANGLE),  // and the one trailing down-right
+    ].join(", ");
+    const composite = "intersect, intersect";
+
+    paper.style.webkitMaskImage = masks;
+    paper.style.maskImage = masks;
+    paper.style.webkitMaskComposite = "source-in, source-in";
+    paper.style.maskComposite = composite;
   }
 
   // ============================================================
