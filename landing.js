@@ -47,8 +47,8 @@
   // Both sit at 0 the rest of the time, so nothing else in the site has
   // to care that any of this exists.
   // ============================================================
-  const EXIT_MS = 1200;    // how long the map takes to fall inwards
-  const REFORM_MS = 750;   // and the line to draw itself back out
+  const EXIT_MS = 820;     // how long the map takes to fall inwards
+  const REFORM_MS = 520;   // and the line to draw itself back out
 
   function runPhase(duration, onProgress, onDone) {
     const started = performance.now();

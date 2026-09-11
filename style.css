@@ -95,11 +95,11 @@ img { max-width: 100%; display: block; }
   shape-rendering: auto;
 }
 /* The line that reforms on the way back up, from the sphere to the top
-   of the screen. Pale rather than ink, because by the time it draws
-   itself the page behind it has gone black — the normal near-black
-   stroke would be invisible against it. */
+   of the screen. The collapse clears the page to white rather than
+   darkening it, so this keeps the same ink as the rest of the thread —
+   just drawn a little heavier, since for a moment it is the only thing
+   on the page. */
 .thread-reform {
-  stroke: #f0efe8;
   stroke-width: 1.5;
   shape-rendering: auto;
 }

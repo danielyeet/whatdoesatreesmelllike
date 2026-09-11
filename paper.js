@@ -158,6 +158,15 @@
   // dimpling near the middle the way the node masses do.
   let suction = 0, suctionX = 0, suctionY = 0;
 
+  // A ring closing on the same point, ahead of the collapse and much
+  // faster than it. Unlike the suction, which pulls everywhere at once,
+  // this is concentrated in a narrow band at whatever radius it has
+  // reached, so it reads as a single wave passing through the grid and
+  // dragging it inward as it goes.
+  let waveRadius = 0, waveAmount = 0;
+  const WAVE_WIDTH = 190;   // how thick the band is, in pixels
+  const WAVE_STRENGTH = 74; // how hard it drags the grid as it passes
+
   function buildField(strength) {
     const masses = window.__mapField;
     fieldX.fill(0);
@@ -174,6 +183,17 @@
         if (suction > 0.001) {
           dx -= (px - suctionX) * suction;
           dy -= (py - suctionY) * suction;
+        }
+        if (waveAmount > 0.001) {
+          const wx = px - suctionX, wy = py - suctionY;
+          const wd = Math.sqrt(wx * wx + wy * wy) || 0.0001;
+          const band = (wd - waveRadius) / WAVE_WIDTH;
+          const inBand = Math.exp(-band * band);
+          if (inBand > 0.004) {
+            const drag = WAVE_STRENGTH * waveAmount * inBand;
+            dx -= (wx / wd) * drag;
+            dy -= (wy / wd) * drag;
+          }
         }
         for (let m = 0; m < list.length; m++) {
           const mass = list[m];
@@ -388,6 +408,7 @@
         // Put everything back exactly as it was, once only.
         collapsing = false;
         suction = 0;
+        waveAmount = 0;
         if (wash) {
           wash.style.backgroundImage = "";
           wash.style.backgroundColor = "";
@@ -410,35 +431,37 @@
     suctionX = hubX;
     suctionY = hubY;
 
+    // The wave runs on its own, faster clock: it has crossed the whole
+    // screen and closed on the centre by the time the collapse itself is
+    // only half done, so it arrives as a shock ahead of the pull rather
+    // than as part of it.
+    const waveT = Math.min(1, pull * 2.1);
+    const far = Math.hypot(window.innerWidth, window.innerHeight) * 0.62;
+    waveRadius = far * (1 - waveT);
+    // Full strength in the middle of its run, nothing at either end, so
+    // it neither appears nor vanishes abruptly.
+    waveAmount = Math.sin(Math.PI * waveT);
+
     // The grain can't be bent the same way — it's random dots, there's
     // nothing in it to bend — so it simply leaves.
     noiseCanvas.style.opacity = (
       (NOISE_FLOOR + (NOISE_PEAK - NOISE_FLOOR) * paperIn) * (1 - pull)
     ).toFixed(4);
 
+    // Everything is drawn inward and cleared away, and what's left is
+    // the plain white page — the grid and grain are pulled in and faded
+    // rather than buried under anything. So the wash simply lifts,
+    // taking the slight darkening it normally carries with it.
     if (wash) {
-      // Dark closing in on the centre: a clear hole over the sphere that
-      // shrinks as the collapse finishes, so the last thing left on the
-      // page is the sphere itself with everything else gone to black.
-      //
-      // The flat black this element normally carries has to be turned
-      // off while that runs, or it sits behind the gradient and fills
-      // the clear hole straight back in.
-      wash.style.backgroundColor = "transparent";
-      // The clear hole closes completely by the end, so the page is
-      // genuinely black and the only things left showing are the sphere
-      // and the line rising out of it — both of which turn pale as this
-      // runs (see node-scene.js and .thread-reform) so they read against
-      // it instead of disappearing into it.
-      const hole = Math.max(0, 92 * (1 - pull) - 6) * (1 - pull);
-      const edge = hole + (10 + 30 * (1 - pull));
-      wash.style.backgroundImage =
-        "radial-gradient(circle at " + hubX.toFixed(1) + "px " + hubY.toFixed(1) + "px," +
-        " rgba(0,0,0,0) 0%," +
-        " rgba(0,0,0,0) " + hole.toFixed(1) + "%," +
-        " #000 " + edge.toFixed(1) + "%)";
-      wash.style.opacity = Math.min(1, WASH_PEAK * paperIn + pull * 1.2).toFixed(4);
+      wash.style.backgroundImage = "";
+      wash.style.backgroundColor = "";
+      wash.style.opacity = (WASH_PEAK * paperIn * (1 - pull)).toFixed(4);
     }
+
+    // The grid goes the same way as the grain once the pull is well
+    // under way, so the page is clear by the end rather than holding a
+    // knot of compressed lines at the middle.
+    gridCanvas.style.opacity = (paperIn * Math.max(0, 1 - pull * 1.45)).toFixed(3);
   }
 
   function frame(now) {
@@ -484,7 +507,7 @@
     // Full rate while it's still molten on arrival, and while it's
     // imploding on the way out — both are fast movements that look
     // stepped at the slower resting rate.
-    const gridInterval = (molten > 0.5 || suction > 0.001) ? 33 : GRID_MS;
+    const gridInterval = (molten > 0.5 || suction > 0.001 || waveAmount > 0.001) ? 16 : GRID_MS;
     if (paperIn > 0.004 && now - lastGrid >= gridInterval) {
       lastGrid = now;
       buildField(BEND * paperIn);

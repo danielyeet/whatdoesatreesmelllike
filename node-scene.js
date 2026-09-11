@@ -98,6 +98,7 @@ const REAL_NODES = [
   const CORR_HEIGHT = 0.034;    // how far it throws the line at the very centre of it
   const CORR_PITCH = 34;        // corrugations along the length of a branch
   const CORR_ROLL_MS = 45;      // how often the jitter is re-rolled
+  const CORR_SHARPEN = 1.9;     // how much finer the teeth get right under the cursor
 
   const WAKE_PER_BRANCH = 7;
   const WAKE_OFFSET = 0.17;
@@ -133,10 +134,6 @@ const REAL_NODES = [
   const COL_BRANCH = new THREE.Color(0x807c73);
   const COL_SPECK = new THREE.Color(0x999590);
   const COL_CENTRE = new THREE.Color(0x1c1c14);
-  // What the centre turns into while the page collapses to black around
-  // it on the way back up. A near-black sphere would simply vanish into
-  // that, and it is the one thing that has to stay visible.
-  const COL_CENTRE_COLLAPSED = new THREE.Color(0xf0efe8);
   const COL_CENTRE_HALO = new THREE.Color(0x8d8a80);
 
   const scene = new THREE.Scene();
@@ -156,7 +153,7 @@ const REAL_NODES = [
   // CORE_RADIUS is the solid dark sphere at the middle; the two shells
   // are the soft halo around it. Change the first number and the others
   // follow — they're written as multiples of it on purpose.
-  const CORE_RADIUS = 0.16;     // was 0.097 — a more present centre
+  const CORE_RADIUS = 0.2;      // was 0.16, and 0.097 before that
   const core = new THREE.Mesh(
     new THREE.SphereGeometry(CORE_RADIUS, 32, 32),
     new THREE.MeshBasicMaterial({ color: COL_CENTRE.clone() })
@@ -954,11 +951,18 @@ const REAL_NODES = [
           if (d2 < CORR_REACH * CORR_REACH) {
             const d = Math.sqrt(d2);
             const falloff = 1 - d / CORR_REACH;
-            const phase = t * CORR_PITCH + branch.jitterPhase;
+            // Both the pitch and the height climb steeply as the cursor
+            // closes in, so what it drags across a branch goes from a
+            // faint ripple at the edge of its reach to something visibly
+            // torn up right underneath it — more teeth, and taller ones.
+            const bite = falloff * falloff;
+            const pitch = CORR_PITCH * (1 + CORR_SHARPEN * bite);
+            const phase = t * pitch + branch.jitterPhase;
             // a second, differently-tuned zigzag riding on the first so
             // the spikes come out uneven rather than one clean wave
-            const irregular = 0.5 + 0.5 * Math.abs(zigzag(t * CORR_PITCH * 0.43 + branch.jitterPhase * 1.9));
-            corr = CORR_HEIGHT * penWeight * falloff * falloff * branch.jitterAmp * irregular * zigzag(phase);
+            const irregular = 0.5 + 0.5 * Math.abs(zigzag(t * pitch * 0.43 + branch.jitterPhase * 1.9));
+            corr = CORR_HEIGHT * penWeight * bite * (1 + bite * 1.3) *
+                   branch.jitterAmp * irregular * zigzag(phase);
           }
         }
       }
@@ -1222,7 +1226,6 @@ const REAL_NODES = [
     // shrink with the rig and fade away, so what's left at the end of
     // the collapse is a plain solid sphere.
     core.scale.setScalar((coreIn * (1 + launch * 0.5) * (1 + pull * 0.3)) / rigScale);
-    core.material.color.copy(COL_CENTRE).lerp(COL_CENTRE_COLLAPSED, pull);
     shellInner.scale.setScalar(coreIn * (breathe + launch * 0.8));
     shellOuter.scale.setScalar(coreIn * (1 + (breathe - 1) * 1.8 + launch * 1.3));
     shellInner.material.opacity = shellInner.userData.baseOpacity * (1 - pull);
@@ -1249,8 +1252,14 @@ const REAL_NODES = [
         (flip ? " translate(-100%, -50%) translateX(13px)" : " translate(-13px, -50%)");
       const depth = viewDepth(worldPos);
       const back = stepBack(branches[i]);
+      // Gone early, and well before they reach the middle. Each mark
+      // carries a small pale ring around it; seven of them arriving on
+      // the same spot at once stack those rings into a grey square
+      // sitting behind the sphere, which is what used to show up at the
+      // end of the collapse.
+      const labelFade = Math.max(0, 1 - pull * 3.2);
       n._el.style.opacity = String(
-        Math.max(0.5, 1 - depth * 0.45) * (1 - 0.55 * back) * (1 - pull)
+        Math.max(0.5, 1 - depth * 0.45) * (1 - 0.55 * back) * labelFade
       );
       n._el.style.zIndex = String(Math.round((1 - depth) * 100));
       // Each node dimples the paper behind it. During the collapse the
