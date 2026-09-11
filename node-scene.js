@@ -91,14 +91,20 @@ const REAL_NODES = [
   const SWAY_PERIOD = [6, 10];  // seconds per cycle, picked per branch
   const SWAY_TAPER = 1.6;       // >1 keeps the movement out at the tip
 
-  // The corrugation the cursor drags across a branch: a sharp zigzag
-  // whose height and position are re-rolled several times a second,
-  // so it reads as jitter and not as a wave travelling along a wire.
+  // The corrugation the cursor drags across a branch: a sharp zigzag,
+  // evenly spaced along the branch and travelling steadily out along
+  // it. Every tooth is the same width as every other and they keep
+  // their spacing whatever the cursor does — the only thing it changes
+  // is how far they are thrown, so pointing at a branch reads as
+  // exciting a regular wave in a wire rather than roughing it up.
+  //
+  // It used to re-roll its height and its position several times a
+  // second, and taper its spacing towards wherever the cursor was,
+  // which made it jitter rather than repeat. Both are gone.
   const CORR_REACH = 1.15;      // how near the cursor has to be, in scene units
   const CORR_HEIGHT = 0.034;    // how far it throws the line at the very centre of it
   const CORR_PITCH = 34;        // corrugations along the length of a branch
-  const CORR_ROLL_MS = 45;      // how often the jitter is re-rolled
-  const CORR_SHARPEN = 1.9;     // how much finer the teeth get right under the cursor
+  const CORR_SPEED = 2.4;       // teeth per second travelling outward; 0 holds it still
 
   const WAKE_PER_BRANCH = 7;
   const WAKE_OFFSET = 0.17;
@@ -406,7 +412,10 @@ const REAL_NODES = [
       amp: SWAY * length,
       w1: (Math.PI * 2) / period1, w2: (Math.PI * 2) / period2,
       p1: Math.random() * Math.PI * 2, p2: Math.random() * Math.PI * 2,
-      jitterAmp: 0, jitterPhase: 0,
+      // Where this branch's corrugation sits, so the seven are not all
+      // in step with each other. Fixed at load and worked out from the
+      // branch's own number, not rolled, so it is the same every time.
+      corrPhase: i * 0.37,
     });
   });
 
@@ -886,7 +895,7 @@ const REAL_NODES = [
   const mapRadius = REAL_NODES.reduce(function (m, n) {
     return Math.max(m, Math.hypot(n.pos[0], n.pos[1], n.pos[2]));
   }, 0);
-  let lastRoll = 0;
+  let corrLive = false;
   let lastFrame = performance.now();
 
   // A triangle wave: sharp corners rather than a rolling curve, which
@@ -947,7 +956,7 @@ const REAL_NODES = [
 
       // the cursor's corrugation, only near where it is pointing
       let corr = 0;
-      if (branch.jitterAmp > 0) {
+      if (corrLive) {
         const i0 = ring * perRing * 3;
         scratch.set(base[i0], base[i0 + 1], base[i0 + 2]).sub(rayOrigin);
         const along = scratch.dot(rayDir);
@@ -960,18 +969,13 @@ const REAL_NODES = [
           if (d2 < CORR_REACH * CORR_REACH) {
             const d = Math.sqrt(d2);
             const falloff = 1 - d / CORR_REACH;
-            // Both the pitch and the height climb steeply as the cursor
-            // closes in, so what it drags across a branch goes from a
-            // faint ripple at the edge of its reach to something visibly
-            // torn up right underneath it — more teeth, and taller ones.
+            // Only the height answers the cursor. The teeth keep their
+            // own spacing and their own steady travel whatever it does,
+            // so what swells under the pointer is plainly the same wave
+            // rather than a different one each time it moves.
             const bite = falloff * falloff;
-            const pitch = CORR_PITCH * (1 + CORR_SHARPEN * bite);
-            const phase = t * pitch + branch.jitterPhase;
-            // a second, differently-tuned zigzag riding on the first so
-            // the spikes come out uneven rather than one clean wave
-            const irregular = 0.5 + 0.5 * Math.abs(zigzag(t * pitch * 0.43 + branch.jitterPhase * 1.9));
-            corr = CORR_HEIGHT * penWeight * bite * (1 + bite * 1.3) *
-                   branch.jitterAmp * irregular * zigzag(phase);
+            const phase = t * CORR_PITCH + branch.corrPhase - clock * CORR_SPEED;
+            corr = CORR_HEIGHT * penWeight * bite * (1 + bite * 1.3) * zigzag(phase);
           }
         }
       }
@@ -1068,13 +1072,9 @@ const REAL_NODES = [
       rayDir.set(0, 0, 1);
     }
     corrAxis.set(0, 1, 0).transformDirection(invRig);
-    if (now - lastRoll > CORR_ROLL_MS) {
-      lastRoll = now;
-      branches.forEach((branch) => {
-        branch.jitterAmp = REDUCE_MOTION ? 0 : 0.35 + Math.random() * 0.65;
-        branch.jitterPhase = Math.random() * 10;
-      });
-    }
+    // The corrugation only exists where the cursor is pointing, and
+    // rayLive already covers reduced motion and the map still arriving.
+    corrLive = rayLive;
 
     // --- every branch bends every frame now: the sway is always on
     // --- how far out of the centre each branch has travelled. They
