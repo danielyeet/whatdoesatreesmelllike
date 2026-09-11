@@ -185,14 +185,19 @@ test("the trace has ranks of itself receding behind it", async ({ page }) => {
       count: copies.length,
       // Read back in the order they were drawn: furthest first.
       ranks: copies.map((use) => {
-        const m = /translate\([-\d.]+ ([-\d.]+)\)\s*scale\(([\d.]+) ([\d.]+)\)/.exec(
-          use.getAttribute("transform") || ""
+        const transform = use.getAttribute("transform") || "";
+        // Every rank must be moved and scaled vertically only: anything
+        // horizontal would carry its peaks off the column of the node
+        // they read, and the ranks would stop lining up.
+        const m = /^translate\(0 ([-\d.]+)\)\s*scale\(1 ([\d.]+)\)\s*translate\(0 [-\d.]+\)$/.exec(
+          transform
         );
         return {
           references: use.getAttribute("href"),
+          verticalOnly: !!m,
+          transform: transform,
           y: m ? +m[1] : null,
-          narrower: m ? +m[2] : null,
-          shorter: m ? +m[3] : null,
+          shorter: m ? +m[2] : null,
           opacity: +use.getAttribute("opacity"),
         };
       }),
@@ -207,11 +212,14 @@ test("the trace has ranks of itself receding behind it", async ({ page }) => {
   // is, each is nearer than the last, ending at the front line.
   ranks.ranks.forEach((rank, i) => {
     expect(rank.references, "the ranks are copies of the one line").toBe("#chroma-trace-line");
+    expect(
+      rank.verticalOnly,
+      `rank ${i} is moved sideways, so its peaks no longer line up: ${rank.transform}`
+    ).toBe(true);
     if (i === 0) return;
     const behind = ranks.ranks[i - 1];
     expect(rank.y, `rank ${i} should sit below the one behind it`).toBeGreaterThan(behind.y);
     expect(rank.shorter, `rank ${i} should stand taller`).toBeGreaterThan(behind.shorter);
-    expect(rank.narrower, `rank ${i} should run wider`).toBeGreaterThan(behind.narrower);
     expect(rank.opacity, `rank ${i} should be the stronger`).toBeGreaterThan(behind.opacity);
   });
 
@@ -219,4 +227,11 @@ test("the trace has ranks of itself receding behind it", async ({ page }) => {
   const nearest = ranks.ranks[ranks.ranks.length - 1];
   expect(nearest.opacity, "even the nearest is fainter than the front line").toBeLessThan(1);
   expect(nearest.shorter).toBeLessThan(1);
+
+  // And the steps up the page get smaller the further back they go, so
+  // the ranks crowd towards a horizon instead of marching away evenly.
+  const steps = ranks.ranks.slice(1).map((rank, i) => rank.y - ranks.ranks[i].y);
+  steps.slice(1).forEach((step, i) => {
+    expect(step, "each step towards the front should be the larger").toBeGreaterThan(steps[i]);
+  });
 });

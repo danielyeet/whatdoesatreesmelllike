@@ -15,7 +15,6 @@
 
 (function () {
   const container = document.getElementById("scroll-container");
-  const paper = document.querySelector(".paper");
   const wash = document.querySelector(".paper-wash");
   const gridCanvas = document.querySelector(".paper-grid");
   const noiseCanvas = document.querySelector(".paper-noise");
@@ -43,9 +42,17 @@
   // up, so each grain is this many CSS pixels across. 1 is the finest
   // it goes; larger reads coarser, like a worse signal.
   const NOISE_SCALE = 2;
-  const NOISE_FLOOR = 0.010;    // was 0.016 — grain everywhere, slides 1 and 2 included
-  const NOISE_PEAK = 0.036;     // was 0.058 — and how strong it gets under the map
+  const NOISE_PEAK = 0.036;     // how strong the grain gets under the map
   const WASH_PEAK = 0.09;       // the black wash under the map
+  // The grain is the one layer the shaped wipe below is not allowed to
+  // cut, and it has its own ramp rather than following the rest of the
+  // paper. Texture arriving along a moving edge is about the most
+  // noticeable thing a page can do — the eye catches the boundary
+  // however soft it is made — so the grain simply comes up evenly over
+  // the whole window instead, late and slowly, and is the last of the
+  // paper to settle.
+  const NOISE_START = 0.2;      // where in the scroll it begins to come up
+  const NOISE_SPAN = 0.78;      // and how much of the scroll it takes
 
   // The paper arrives as a wipe running from the top of the page
   // downwards, which runs ahead of itself at the left and right edges
@@ -332,9 +339,10 @@
   let lastCurtain = -1;
 
   // A wipe from the top of the page downwards, with the left and right
-  // edges running ahead of the middle. Still a mask rather than a
-  // moving div, so the wash, the grid and the static are all cut by the
-  // same edge and that edge can be soft.
+  // edges running ahead of the middle. Still a mask rather than a moving
+  // div, so the wash and the grid are cut by the same edge and that edge
+  // can be soft. It is set on those two directly rather than on `.paper`
+  // around them, which is what keeps the grain out of it.
   //
   // Three masks added together, not intersected: a plain top-to-bottom
   // sweep, plus a lobe growing out of each top corner. The sweep sets
@@ -342,15 +350,22 @@
   // sides than it does, so the paper closes in on the middle of the
   // page last. Adding is the point — with intersect the lobes would cut
   // the sweep down instead of running out beyond it.
+  const cutLayers = [wash, gridCanvas].filter(Boolean);
+
+  function applyMask(image, composite) {
+    cutLayers.forEach((layer) => {
+      layer.style.webkitMaskImage = image;
+      layer.style.maskImage = image;
+      layer.style.webkitMaskComposite = composite;
+      layer.style.maskComposite = composite ? "add, add" : "";
+    });
+  }
+
   function setCurtain(c) {
-    if (!paper) return;
     if (Math.abs(c - lastCurtain) < 0.004) return;
     lastCurtain = c;
     if (c >= 0.995) {
-      paper.style.webkitMaskImage = "none";
-      paper.style.maskImage = "none";
-      paper.style.webkitMaskComposite = "";
-      paper.style.maskComposite = "";
+      applyMask("none", "");
       return;
     }
 
@@ -379,12 +394,7 @@
       );
     }
 
-    const masks = [sweep, edge("0% 0%"), edge("100% 0%")].join(", ");
-
-    paper.style.webkitMaskImage = masks;
-    paper.style.maskImage = masks;
-    paper.style.webkitMaskComposite = "source-over, source-over";
-    paper.style.maskComposite = "add, add";
+    applyMask([sweep, edge("0% 0%"), edge("100% 0%")].join(", "), "source-over, source-over");
   }
 
   // ============================================================
@@ -402,7 +412,7 @@
   // ============================================================
   let collapsing = false;
 
-  function applyCollapse(readout, paperIn) {
+  function applyCollapse(readout, paperIn, noiseIn) {
     const pull = readout && readout.collapse ? readout.collapse : 0;
 
     if (pull <= 0.0005) {
@@ -446,9 +456,7 @@
 
     // The grain can't be bent the same way — it's random dots, there's
     // nothing in it to bend — so it simply leaves.
-    noiseCanvas.style.opacity = (
-      (NOISE_FLOOR + (NOISE_PEAK - NOISE_FLOOR) * paperIn) * (1 - pull)
-    ).toFixed(4);
+    noiseCanvas.style.opacity = (NOISE_PEAK * noiseIn * (1 - pull)).toFixed(4);
 
     // Everything is drawn inward and cleared away, and what's left is
     // the plain white page — the grid and grain are pulled in and faded
@@ -490,9 +498,14 @@
     molten = MOLTEN * Math.pow(1 - paperIn, MOLTEN_SETTLE);
     moltenClock = now / 1000;
 
+    // Its own ramp, and a later and gentler one than the rest of the
+    // paper: the grain is not cut by the wipe, so all it can do is come
+    // up evenly, and it should be the last thing to settle.
+    const noiseIn = smoother(clamp((raw - NOISE_START) / NOISE_SPAN));
+
     setCurtain(curtain);
     gridCanvas.style.opacity = paperIn.toFixed(3);
-    noiseCanvas.style.opacity = (NOISE_FLOOR + (NOISE_PEAK - NOISE_FLOOR) * paperIn).toFixed(4);
+    noiseCanvas.style.opacity = (NOISE_PEAK * noiseIn).toFixed(4);
 
     // The grain holds still while a preview window is open. Blurring it
     // (in style.css) softens it, but grain that keeps churning behind
@@ -501,7 +514,7 @@
     const readout = window.__mapReadout;
     const previewOpen = !!(readout && readout.previewOpen);
 
-    applyCollapse(readout, paperIn);
+    applyCollapse(readout, paperIn, noiseIn);
 
     if (!previewOpen && now - lastNoise >= NOISE_MS) {
       lastNoise = now;

@@ -252,3 +252,58 @@ test("the line that reforms stops at the sentence rather than crossing it", asyn
     "the line must stop below the sentence, never reach up past its foot"
   ).toBeLessThanOrEqual(0);
 });
+
+// The line drawn out of the collapsing map and the thread's own leg
+// below the sentence are the same line in the same place. The handover
+// between them used to be visible twice over: a dissolving dotted line
+// and a solid one drawn over each other on the way out, and then a
+// heavier line replaced by a lighter one in a single frame on arrival.
+test("the reforming line and the thread become one another without a seam", async ({ page }) => {
+  await page.goto("/index.html");
+  await jumpToSlide(page, "slide-3");
+  await waitForMapSettled(page);
+  await page.waitForTimeout(400);
+
+  await page.evaluate(() => {
+    window.__seam = [];
+    const reform = document.querySelector(".thread-reform");
+    const wander = document.querySelector(".thread-wander");
+    const above = document.querySelector(".thread-line");
+    const tick = () => {
+      requestAnimationFrame(tick);
+      const showing = (el, stroke) =>
+        parseFloat(el.style.opacity === "" ? 1 : el.style.opacity) *
+        parseFloat(el.style.strokeOpacity === "" ? stroke : el.style.strokeOpacity);
+      window.__seam.push({
+        reform: showing(reform, 0),
+        wander: showing(wander, 0.26),
+        above: showing(above, 0.26),
+        x: parseFloat(reform.getAttribute("x1") || "0"),
+        wanderX: (/M (\d+(?:\.\d+)?)/.exec(wander.getAttribute("d") || "") || [])[1],
+      });
+    };
+    requestAnimationFrame(tick);
+  });
+
+  await page.keyboard.press("ArrowUp");
+  await page.waitForTimeout(4300);
+  const frames = await page.evaluate(() => window.__seam);
+
+  // Nowhere are both the dissolving leg and the reforming line really on
+  // screen together.
+  const together = frames.filter((f) => f.reform > 0.04 && f.wander > 0.04);
+  expect(together.length, "the two must not be drawn over each other").toBe(0);
+
+  // The leg above the sentence never leaves: it is what the reforming
+  // line is on its way to join, and it used to snap back on arrival.
+  expect(Math.min(...frames.map((f) => f.above)), "the leg above stays put").toBeGreaterThan(0.2);
+
+  // And at the moment the two swap, they are already the same strength
+  // in the same column, so nothing about the swap is visible.
+  const swap = frames.findIndex((f, i) => i > 0 && frames[i - 1].reform > 0.04 && f.reform <= 0.04);
+  expect(swap, "there should be a moment they swap").toBeGreaterThan(0);
+  const before = frames[swap - 1];
+  const after = frames[swap];
+  expect(Math.abs(after.wander - before.reform), "same strength across the swap").toBeLessThan(0.02);
+  expect(Math.abs(before.x - Number(after.wanderX)), "and the same column").toBeLessThan(1.5);
+});

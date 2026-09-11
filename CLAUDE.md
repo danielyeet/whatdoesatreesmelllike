@@ -67,17 +67,19 @@ publish the site; it exists only for the tests.
 What's covered: every page loads with its stylesheet, menu and correct `SITE_ROOT`; menu
 behaviour, current-page marking, and the menu opening identically on all three slides of
 the landing page; the three slides and their keyboard/button navigation; the 3D map, its
-labels, hover, preview window, the ranks receding behind the trace, and the no-Three.js
-fallback; the paper's arrival — top-down, sides ahead of the middle, and completely
-covering the page before its mask comes off — and the cursor; the exit sequence's
-ordering, the collapse drawing every node into the centre, and the line that reforms out
-of it stopping at the sentence rather than crossing it; plus browserless file checks (no
-link points at a missing file, no credentials committed).
+labels, hover, preview window, the ranks receding behind the trace with their peaks in
+line, and the no-Three.js fallback; the paper's arrival — top-down, sides ahead of the
+middle, completely covering the page before its mask comes off, and the grain never cut
+by that mask — and the cursor; the exit sequence's ordering, the collapse drawing every
+node into the centre, and the reforming line stopping at the sentence and handing over
+to the thread without a seam; plus browserless file checks (no link points at a missing
+file, no credentials committed).
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
-mask being dropped while still feathering, and the reforming line running across the
-slide-2 sentence. Keep them passing rather than adjusting them to match new behaviour,
+mask being dropped while still feathering, grain arriving along a moving edge, and the
+reforming line both running across the slide-2 sentence and being visibly swapped out
+for the thread. Keep them passing rather than adjusting them to match new behaviour,
 unless the behaviour change is deliberate.
 
 Visual/aesthetic judgement is still manual — the suite checks that things work, not that
@@ -154,14 +156,35 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
   - **The finest grid tier fades in rather than switching on.** It is skipped while the
     grid is still molten — four times the line count for something the warp hides
     anyway — but as a threshold that put a whole tier on screen in one frame.
+  - **The grain is never cut by the wipe.** The mask is set on `.paper-wash` and
+    `.paper-grid` themselves, not on `.paper` around them, so `.paper-noise` is left
+    out of it: texture arriving along a moving edge is about the most noticeable thing
+    a page can do, and no amount of feathering hides it. The grain comes up evenly over
+    the whole window on its own later, gentler ramp (`NOISE_START` / `NOISE_SPAN`) and
+    is the last of the paper to settle.
 - **`thread.js`** — the line running down all three slides. `TRANSITION` at the top
   selects between two finished treatments of its final leg (`"dissolve"` / `"fork"`);
-  both are maintained, so keep both working. The line that reforms on the way back up
-  stops at `top0` — the same point below the slide-2 sentence that the downward leg
-  starts from — rather than running to the top of the window the whole way. It draws to
-  the top of the screen while the page is still held on the map, which is the point of
-  it, but the page then scrolls up to the sentence and the line must land on it rather
-  than across it.
+  both are maintained, so keep both working.
+
+  Coming back up, the reforming line and the thread's own leg below the sentence are the
+  same line in the same place, and the whole point is that you cannot see one become the
+  other. Three things make that true, and each was a visible seam before:
+
+  - **Never set `style.opacity` on a leg of the thread — it does nothing.** Every leg
+    carries the `thread-in` arrival animation, whose fill is `both`, so it keeps hold of
+    `opacity` for the life of the element and outranks anything set on the element
+    directly. Fade a leg through `stroke-opacity` (`legFade`) instead. This is why the
+    dissolving leg used to stay on screen right through the collapse, reading as a
+    dotted line competing with the solid one being drawn out.
+  - **The reforming line comes back to the thread's own weight and column as the page
+    travels**, keyed off how much of the map is still on screen. It is drawn heavier
+    (`REFORM_INK`) and anchored to the sphere while it is alone on the page, and is
+    already `THREAD_INK` in the thread's own column by the time the two swap — so the
+    swap itself is not something you can see.
+  - **It stops at `top0`**, the same point below the slide-2 sentence that the downward
+    leg starts from, rather than running to the top of the window the whole way. And the
+    leg *above* the sentence is left alone entirely: it is off screen for the whole
+    collapse, so fading it bought nothing and only made it snap back on arrival.
 - **`extras.js`** — a gas-chromatograph trace along the foot of the slide, one peak per
   node, reading `window.__mapReadout` for depth (peak height) and `activeIndex` (the
   hovered node's peak gets a guaranteed floor height, not just a multiplier, so hovering
@@ -175,15 +198,22 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
   with no other change.
 
   Behind the front line stand `RIDGE_COUNT` **ranks** of it, each higher up the page,
-  slightly shorter, slightly narrower and fainter than the one in front, so the reading
-  recedes like hills. They are `<use>` copies of the one path, not traces of their own:
-  the shape is computed once a frame however many ranks there are, and none of them can
-  fall out of step with it. Each rank's step up the page is `RIDGE_FALLOFF` (below 1) of
-  the last, so they crowd together towards a horizon instead of marching away evenly.
-  Two things to keep true when retuning them: `RIDGE_SPAN` must stay comfortably larger
-  than the tallest peak's shrinkage, or a rank will dip through the one in front of it;
-  and the front line is drawn `RIDGE_OVERDRAW` past both edges of the window precisely
-  so the narrower ranks still reach them.
+  shorter and fainter than the one in front, so the reading recedes like hills. They are
+  `<use>` copies of the one path, not traces of their own: the shape is computed once a
+  frame however many ranks there are, and none of them can fall out of step with it.
+  Each rank's step up the page is `RIDGE_FALLOFF` (below 1) of the last, so they crowd
+  together towards a horizon instead of marching away evenly.
+
+  Two things to keep true when retuning them:
+
+  - **A rank is only ever scaled vertically, about its own baseline.** Squeezing one
+    sideways as well would carry every peak with it, and the same node would then read
+    at a different place across the ranks — they have to stand in the same column to be
+    the same reading. `tests/node-map.spec.js` checks the transforms have no horizontal
+    part at all.
+  - **`RIDGE_SPAN` must stay comfortably larger than the tallest peak's shrinkage**, or
+    a rank dips through the one in front of it. The tallest a peak gets is
+    `CHROMA_PEAK * CHROMA_HOVER_BOOST`.
 
 ### `node-scene.js` — the 3D map
 
@@ -286,7 +316,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 |---|---|
 | **slide** | One of the three full-screen sections of `index.html` (`#slide-1` title, `#slide-2` the italic line, `#slide-3` the node map). |
 | **the paper** | The three decorative layers behind the landing page, drawn by `paper.js`: the black **wash**, the squared **grid**, and the **static** (grain). |
-| **curtain** | The mask that reveals `.paper` (wash/grid/grain) going 2 → 3 — now a wipe from the top of the page downwards whose left and right edges run ahead of its middle, so the sides fill in first and the middle of the page last. Three mask layers **added** (not intersected): one sweep down the page, and a lobe growing out of each top corner. `CURTAIN_*` in `paper.js`, `setCurtain()`. The map and thread fade in on their own via `arrival`/opacity and are never masked. |
+| **curtain** | The mask that reveals the wash and the grid going 2 → 3 — a wipe from the top of the page downwards whose left and right edges run ahead of its middle, so the sides fill in first and the middle of the page last. Three mask layers **added** (not intersected): one sweep down the page, and a lobe growing out of each top corner. `CURTAIN_*` in `paper.js`, `setCurtain()`. It is set on those two layers directly, not on `.paper`: the grain, the map and the thread are never masked — they come up on their own opacity ramps. |
 | **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (a shockwave crosses, the map falls into its centre, everything clears to **white**), then `__reform` 0→1 (an ink line draws from the sphere to the top), and only then scrolls. The reforming line stops below the slide-2 sentence, landing on the same point the downward leg leaves from. |
 | **the wake** | Only the specks along a branch now — see **wake / wake speck** below. The paper's arrival going 2 → 3 used to be shaped as a duck's wake (a V trailing back from the middle of the page, `WAKE_HALF_ANGLE`); that was replaced by the top-down wipe described under **curtain**, and neither the V nor `WAKE_HALF_ANGLE` exists in `paper.js` any more. |
 | **the shockwave** | The narrow ring that closes on the centre ahead of the collapse, on its own faster clock (`WAVE_*` in `paper.js`). Distinct from the suction, which pulls everywhere at once. |

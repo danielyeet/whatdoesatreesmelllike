@@ -37,6 +37,12 @@ const TRANSITION = "dissolve";
   const GAP = 26;
   const FRAME_MS = 33;
 
+  // The resting weight of every leg of the thread (it is `stroke-opacity`
+  // on .thread-line in style.css, and has to match it), and the heavier
+  // weight the reforming line is drawn at while it is alone on the page.
+  const THREAD_INK = 0.26;
+  const REFORM_INK = 0.5;
+
   // "dissolve"
   const DOT_PITCH = 5.5;    // spacing once it has broken into dots
   const DRIFT = 10;         // how far off true it wanders at its worst
@@ -84,6 +90,17 @@ const TRANSITION = "dissolve";
   container.insertBefore(svg, container.firstChild);
 
   let top0 = 0, bottom0 = 0, centreX = 0, centreY = 0;
+
+  // How much of the leg running down into the map is left, 1 to 0, as
+  // the map collapses. It has to be folded into stroke-opacity rather
+  // than set as the element's own opacity: every leg carries the
+  // `thread-in` arrival animation, whose fill is "both", so it keeps
+  // hold of `opacity` for the life of the element and an animation
+  // outranks anything set on the element directly. Setting
+  // `style.opacity` on one of these does nothing at all — which is why
+  // the dissolving leg used to stay on screen through the collapse and
+  // read as a second line competing with the one drawing itself out.
+  let legFade = 1;
 
   function measure() {
     const width = container.clientWidth;
@@ -145,7 +162,8 @@ const TRANSITION = "dissolve";
     // and breaks into dots on the map's own rhythm as it goes
     const gap = DOT_PITCH * p;
     wander.style.strokeDasharray = Math.max(0.01, DOT_PITCH - gap).toFixed(2) + " " + gap.toFixed(2);
-    wander.style.strokeOpacity = (0.26 * (1 - p * (0.1 + Math.random() * 0.22))).toFixed(3);
+    wander.style.strokeOpacity =
+      (THREAD_INK * (1 - p * (0.1 + Math.random() * 0.22)) * legFade).toFixed(3);
   }
 
   // ============================================================
@@ -171,7 +189,7 @@ const TRANSITION = "dissolve";
       // rest arrive in pairs outward from it.
       const appearsAt = rank === 0 ? -1 : 0.3 + rank * 0.085;
       const shown = rank === 0 ? 1 : Math.max(0, Math.min(1, (p - appearsAt) / 0.13));
-      strand.style.strokeOpacity = (0.26 * shown).toFixed(3);
+      strand.style.strokeOpacity = (THREAD_INK * shown * legFade).toFixed(3);
     }
   }
 
@@ -188,6 +206,14 @@ const TRANSITION = "dissolve";
     last = now;
 
     const p = window.__p23 === undefined ? 0 : window.__p23;
+
+    // The leg that runs down into the map goes with the map, and is well
+    // clear before the collapse has finished — so it is gone by the time
+    // the line starts drawing itself back out, rather than the two being
+    // on the same stretch of screen at once.
+    const collapse = (window.__mapReadout && window.__mapReadout.collapse) || 0;
+    legFade = Math.max(0, 1 - collapse * 1.8);
+
     if (forking) drawFork(p);
     else drawWander(p, clock);
     drawReform();
@@ -201,15 +227,13 @@ const TRANSITION = "dissolve";
   // screen, and only once it has arrived does landing.js scroll.
   // ============================================================
   function drawReform() {
-    const collapse = (window.__mapReadout && window.__mapReadout.collapse) || 0;
     const reform = window.__reform || 0;
 
-    // The legs above fade out as the collapse takes hold, so the
-    // reforming line is the only one left by the time it appears.
-    const fade = 1 - collapse;
-    toText.style.strokeOpacity = (0.26 * fade).toFixed(3);
-    if (!forking && wander) wander.style.opacity = fade.toFixed(3);
-    if (forking) strands.forEach((s) => { s.style.opacity = fade.toFixed(3); });
+    // Note the leg above the sentence is left exactly as it is. It is off
+    // screen for the whole collapse, so fading it bought nothing — and it
+    // came back the instant the page arrived, which showed as a line
+    // snapping into place beside one that was vanishing. It is what the
+    // reforming line is on its way to join, so it simply stays.
 
     if (reform <= 0.001) {
       reformLine.style.strokeOpacity = "0";
@@ -236,11 +260,24 @@ const TRANSITION = "dissolve";
     // words rather than running across them.
     const endY = Math.max(top0, topY);
 
-    reformLine.setAttribute("x1", hubX.toFixed(1));
-    reformLine.setAttribute("x2", hubX.toFixed(1));
+    // How much of the map is still on screen: 1 while the page is being
+    // held on it, down to 0 once it has arrived at the sentence. The
+    // reforming line is drawn heavier than the rest of the thread, and
+    // anchored to the sphere, while it is the only thing on the page —
+    // and comes back to the thread's own weight and the thread's own
+    // column as the page travels. By the time it hands over it is
+    // already the same line in the same place at the same strength, so
+    // the swap is not something you can see happen.
+    const leg = (slides[2].offsetTop - slides[1].offsetTop) || 1;
+    const onMap = Math.max(0, Math.min(1, (container.scrollTop - slides[1].offsetTop) / leg));
+    const x = centreX + (hubX - centreX) * onMap;
+    const ink = THREAD_INK + (REFORM_INK - THREAD_INK) * onMap;
+
+    reformLine.setAttribute("x1", x.toFixed(1));
+    reformLine.setAttribute("x2", x.toFixed(1));
     reformLine.setAttribute("y1", hubY.toFixed(1));
     reformLine.setAttribute("y2", (hubY + (endY - hubY) * reform).toFixed(1));
-    reformLine.style.strokeOpacity = (0.5 * Math.min(1, reform * 3)).toFixed(3);
+    reformLine.style.strokeOpacity = (ink * Math.min(1, reform * 3)).toFixed(3);
   }
 
   measure();

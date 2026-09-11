@@ -14,11 +14,56 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe("the paper background", () => {
+  // The wipe is set on the wash and the grid themselves, not on .paper
+  // around them — the grain is deliberately left out of it.
   const maskOf = (page) =>
     page.evaluate(() => {
-      const paper = document.querySelector(".paper");
-      return getComputedStyle(paper).maskImage || getComputedStyle(paper).webkitMaskImage;
+      const grid = document.querySelector(".paper-grid");
+      return getComputedStyle(grid).maskImage || getComputedStyle(grid).webkitMaskImage;
     });
+
+  // Regression test: grain arriving along a moving edge is one of the
+  // most noticeable things a page can do, however soft that edge is
+  // made. It is kept out of the wipe entirely and comes up evenly over
+  // the whole window instead.
+  test("the grain is never cut by the wipe, only faded up", async ({ page }) => {
+    await page.goto("/index.html");
+
+    for (const fraction of [0.2, 0.45, 0.7]) {
+      await jumpToSlide(page, "slide-3", fraction);
+      await page.waitForTimeout(200);
+      const layers = await page.evaluate(() => {
+        const maskOn = (selector) => {
+          const s = getComputedStyle(document.querySelector(selector));
+          const mask = s.maskImage || s.webkitMaskImage;
+          return !!mask && mask !== "none";
+        };
+        return {
+          grain: maskOn(".paper-noise"),
+          grid: maskOn(".paper-grid"),
+          wash: maskOn(".paper-wash"),
+        };
+      });
+      expect(layers.grain, `at ${fraction}: the grain must not be masked`).toBe(false);
+      expect(layers.grid, `at ${fraction}: the grid is`).toBe(true);
+      expect(layers.wash, `at ${fraction}: and so is the wash`).toBe(true);
+    }
+
+    // And it comes up gradually rather than switching on.
+    const steps = [];
+    for (let f = 0; f <= 1.0001; f += 0.05) {
+      await jumpToSlide(page, "slide-3", f);
+      await page.waitForTimeout(80);
+      steps.push(
+        await page.evaluate(() =>
+          parseFloat(getComputedStyle(document.querySelector(".paper-noise")).opacity)
+        )
+      );
+    }
+    const biggest = Math.max(...steps.slice(1).map((v, i) => Math.abs(v - steps[i])));
+    expect(steps[steps.length - 1], "it should have arrived by the end").toBeGreaterThan(0.02);
+    expect(biggest, "and never in one jump").toBeLessThan(0.01);
+  });
 
   // The paper wipes in from the top of the page downwards, with the two
   // edges running ahead of the middle. It has been a left-to-right wipe,
@@ -42,7 +87,7 @@ test.describe("the paper background", () => {
     expect(lobes.length, "one lobe at each top corner").toBe(2);
 
     const composite = await page.evaluate(() => {
-      const p = document.querySelector(".paper");
+      const p = document.querySelector(".paper-grid");
       const s = getComputedStyle(p);
       return s.maskComposite || s.webkitMaskComposite;
     });
@@ -68,7 +113,7 @@ test.describe("the paper background", () => {
     // itself: the lobes' radius is how far down the sides have reached,
     // and the sweep's solid stop is how far the middle has.
     const reach = await page.evaluate(() => {
-      const mask = getComputedStyle(document.querySelector(".paper")).maskImage;
+      const mask = getComputedStyle(document.querySelector(".paper-grid")).maskImage;
       const lobe = /radial-gradient\(([\d.]+)%/.exec(mask);
       const sweep = /linear-gradient\(rgb\([^)]*\)\s*([-\d.]+)%/.exec(mask);
       return { sides: lobe && +lobe[1], middle: sweep && +sweep[1] };
@@ -91,7 +136,7 @@ test.describe("the paper background", () => {
       await jumpToSlide(page, "slide-3", f);
       await page.waitForTimeout(90);
       const state = await page.evaluate(() => {
-        const mask = getComputedStyle(document.querySelector(".paper")).maskImage;
+        const mask = getComputedStyle(document.querySelector(".paper-grid")).maskImage;
         if (!mask || mask === "none") return null;
         // The sweep's first stop is how far down the page is solid.
         const solid = /linear-gradient\(rgb\([^)]*\)\s*([-\d.]+)%/.exec(mask);

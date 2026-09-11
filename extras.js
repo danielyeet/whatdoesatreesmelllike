@@ -53,13 +53,13 @@ const SHOW_CHROMATOGRAM = true;
   const RIDGE_COUNT = 6;
   const RIDGE_SPAN = 54;      // how far above the front line the furthest sits
   const RIDGE_FALLOFF = 0.72; // below 1: each rank sits closer to the last
-  const RIDGE_SHRINK = 0.96;  // each rank's peaks, against the one in front
-  const RIDGE_NARROW = 0.986; // and how much it draws in towards the centre
+  const RIDGE_SHRINK = 0.9;   // each rank's peaks, against the one in front
   const RIDGE_FADE = 0.7;     // and how much of its ink is left
-  // The front line is drawn wider than the screen so that the ranks
-  // behind, being narrower, still reach both edges rather than stopping
-  // short of them.
-  const RIDGE_OVERDRAW = 0.14;
+  // Note there is no narrowing to go with the shrinking: a rank is only
+  // ever scaled about its own baseline, never sideways. Squeezing it
+  // towards the middle of the page would carry every peak with it, and
+  // then the same node would read at a different place across the ranks
+  // — they have to stand in the same column to be the same reading.
 
   function el(name, attrs) {
     const node = document.createElementNS(NS, name);
@@ -166,16 +166,15 @@ const SHOW_CHROMATOGRAM = true;
     ridges.forEach((ridge) => {
       const lift = RIDGE_SPAN * (1 - Math.pow(RIDGE_FALLOFF, ridge.rank));
       const shorter = Math.pow(RIDGE_SHRINK, ridge.rank);
-      const narrower = Math.pow(RIDGE_NARROW, ridge.rank);
-      // Shrunk about the baseline and the middle of the page, then
-      // lifted: so a rank keeps its own feet on its own baseline and
-      // only its peaks come down, and it draws in towards the centre of
-      // the page rather than towards the left edge of it.
+      // Shrunk about its own baseline and then lifted, and nothing
+      // else: a rank keeps its feet on its own baseline, only its peaks
+      // come down, and every peak stays in the column the node it reads
+      // is actually in.
       ridge.node.setAttribute(
         "transform",
-        "translate(" + centreX.toFixed(1) + " " + (baseY - lift).toFixed(1) + ")" +
-        " scale(" + narrower.toFixed(4) + " " + shorter.toFixed(4) + ")" +
-        " translate(" + (-centreX).toFixed(1) + " " + (-baseY).toFixed(1) + ")"
+        "translate(0 " + (baseY - lift).toFixed(1) + ")" +
+        " scale(1 " + shorter.toFixed(4) + ")" +
+        " translate(0 " + (-baseY).toFixed(1) + ")"
       );
     });
 
@@ -190,11 +189,9 @@ const SHOW_CHROMATOGRAM = true;
 
   function drawTrace(W, H) {
     const baseY = H - CHROMA_BASE;
-    // Edge to edge, and then some: the trace is a reading of the whole
-    // width of the page, and it is drawn past both sides so the narrower
-    // ranks behind it still reach them.
-    const left = -W * RIDGE_OVERDRAW;
-    const right = W * (1 + RIDGE_OVERDRAW);
+    // Edge to edge: the trace is a reading of the whole width of the
+    // page, so it shouldn't stop short of either side.
+    const left = 0, right = W;
     let d = "";
     for (let x = left; x <= right; x += CHROMA_STEP) {
       let y = baseY;
