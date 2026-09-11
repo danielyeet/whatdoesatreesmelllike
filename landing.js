@@ -169,4 +169,50 @@
   // --- "Scroll" button on the title slide
   const scrollCue = document.getElementById("scroll-cue");
   if (scrollCue) scrollCue.addEventListener("click", () => goTo(1));
+
+  // ============================================================
+  // THE TITLE BLOCK ("A portfolio / 2026 edition")
+  //
+  // It fades out on its own as you leave the first slide and back in
+  // as you return, tied to how far down the page actually is rather
+  // than to any animation — so it tracks a slow drag or a flicked
+  // wheel equally, and reverses the moment you turn around.
+  //
+  // Driven from the scroll event rather than a frame loop: it has
+  // nothing to say while the page is still, and a listener that only
+  // runs when something moved costs nothing the rest of the time.
+  // ============================================================
+  const titleBlock = document.querySelector(".title-block");
+  if (titleBlock) {
+    const updateTitleBlock = () => {
+      const from = slides[0].offsetTop;
+      const to = slides[1].offsetTop;
+      const leg = to - from || 1;
+      const progress = Math.max(0, Math.min(1, (container.scrollTop - from) / leg));
+      // Gone by a third of the way down, so it leaves early and isn't
+      // still hanging about over the second slide.
+      const shown = Math.max(0, 1 - progress * 3);
+      titleBlock.style.opacity = shown.toFixed(3);
+      // Lifted very slightly as it goes, so it reads as leaving rather
+      // than simply dimming in place.
+      titleBlock.style.transform = "translateY(" + (progress * -18).toFixed(1) + "px)";
+    };
+    // The block arrives with a "rise" keyframe animation whose fill is
+    // "both", which keeps hold of opacity and transform for the life of
+    // the element — and an animation outranks the plain styles set
+    // above, so until it is cleared nothing here has any effect. Handing
+    // over once it has finished playing keeps the entrance and lets the
+    // scroll take it from there. (Under reduced motion there is no
+    // animation to wait for, so the fallback below covers that.)
+    const takeOver = () => {
+      titleBlock.style.animation = "none";
+      updateTitleBlock();
+    };
+    titleBlock.addEventListener("animationend", takeOver, { once: true });
+    setTimeout(takeOver, 1400);
+
+    container.addEventListener("scroll", updateTitleBlock, { passive: true });
+    window.addEventListener("resize", updateTitleBlock);
+    updateTitleBlock();
+  }
 })();

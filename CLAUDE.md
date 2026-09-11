@@ -139,7 +139,10 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
   what previously looked broken. It also **conducts the exit sequence** when leaving the
   map upwards: `__exit` 0→1, then `__reform` 0→1, then the scroll, then both back to 0.
   Nothing scrolls until the first two have finished — that ordering is the whole effect,
-  and `tests/leaving-the-map.spec.js` guards it.
+  and `tests/leaving-the-map.spec.js` guards it. It also fades the title block ("A
+  portfolio / 2026 edition") out and back in with the scroll position between slides 1
+  and 2 — which means first clearing the `rise` keyframe animation that otherwise
+  outranks it, once that animation has finished playing.
 - **`paper.js`** — the wash, the bending squared-paper grid, and the static, drawn on
   canvases at throttled rates (`GRID_MS`, `NOISE_MS`) rather than every frame.
 
