@@ -94,6 +94,16 @@ img { max-width: 100%; display: block; }
   stroke-linecap: round;
   shape-rendering: auto;
 }
+/* The line that reforms on the way back up, from the sphere to the top
+   of the screen. Pale rather than ink, because by the time it draws
+   itself the page behind it has gone black — the normal near-black
+   stroke would be invisible against it. */
+.thread-reform {
+  stroke: #f0efe8;
+  stroke-width: 1.5;
+  shape-rendering: auto;
+}
+
 /* Present from the moment the page loads — this only stops it
    appearing at the same instant as the text above it. */
 @media (prefers-reduced-motion: no-preference) {

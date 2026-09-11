@@ -67,8 +67,9 @@ publish the site; it exists only for the tests.
 What's covered: every page loads with its stylesheet, menu and correct `SITE_ROOT`; menu
 behaviour and current-page marking; the three slides and their keyboard/button
 navigation; the 3D map, its labels, hover, preview window, and the no-Three.js fallback;
-the paper's arrival and the cursor; plus browserless file checks (no link points at a
-missing file, no credentials committed).
+the paper's arrival and the cursor; the exit sequence's ordering, the collapse drawing
+every node into the centre, and the line that reforms out of it; plus browserless file
+checks (no link points at a missing file, no credentials committed).
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu. Keep them
@@ -112,14 +113,16 @@ why it loads on every page, not just the landing page.
 
 `index.html` is three scroll-snapped slides with six scripts over them, loaded in
 dependency order: `nav.js`, `landing.js`, `node-scene.js`, `paper.js`, `thread.js`,
-`extras.js`. Each owns one visual system, and they communicate *only* through three
-globals:
+`extras.js`. Each owns one visual system, and they communicate *only* through these
+globals on `window`:
 
 | global | written by | read by |
 |---|---|---|
 | `__p23` | `paper.js` (0–1 scroll progress, slide 2 → 3) | `node-scene.js` (map fade-in), `thread.js` |
 | `__mapField` | `node-scene.js`, per frame (screen position + mass of centre and nodes) | `paper.js`, to bend the grid around the diagram |
-| `__mapReadout` | `node-scene.js`, per frame | `extras.js`, to place its overlays |
+| `__mapReadout` | `node-scene.js`, per frame (node positions/depth, `hubX`/`hubY` in viewport coords, `activeIndex`, `previewOpen`, `collapse`) | `extras.js` (the trace), `paper.js` (freezing grain behind a preview; aiming the collapse) |
+| `__exit` | `landing.js`, 0→1, only while leaving the map upwards | `node-scene.js`, `paper.js`, `extras.js`, `thread.js` |
+| `__reform` | `landing.js`, 0→1, straight after `__exit` completes | `thread.js` |
 
 That table is the whole contract; these files deliberately never touch each other's DOM
 or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` does.)
@@ -127,7 +130,10 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
 - **`landing.js`** — hand-animates `scrollTop` between slides (wheel, keys, the "Scroll"
   button). It must set `scroll-snap-type: none` for the duration of each animation and
   restore it on landing; leaving snap on makes the browser fight the animation, which is
-  what previously looked broken.
+  what previously looked broken. It also **conducts the exit sequence** when leaving the
+  map upwards: `__exit` 0→1, then `__reform` 0→1, then the scroll, then both back to 0.
+  Nothing scrolls until the first two have finished — that ordering is the whole effect,
+  and `tests/leaving-the-map.spec.js` guards it.
 - **`paper.js`** — the wash, the bending squared-paper grid, and the static, drawn on
   canvases at throttled rates (`GRID_MS`, `NOISE_MS`) rather than every frame.
 - **`thread.js`** — the line running down all three slides. `TRANSITION` at the top
@@ -136,7 +142,10 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
 - **`extras.js`** — a gas-chromatograph trace along the foot of the slide, one peak per
   node, reading `window.__mapReadout` for depth (peak height) and `activeIndex` (the
   hovered node's peak gets a guaranteed floor height, not just a multiplier, so hovering
-  a currently-distant node still visibly reacts). Toggled by `SHOW_CHROMATOGRAM`, a
+  a currently-distant node still visibly reacts). Runs edge to edge with no labels. Every
+  peak keeps its own eased position and height (`CHROMA_EASE`) rather than being drawn
+  from live values, which is what keeps it from twitching as the map turns and makes
+  hovering grow a peak smoothly. Toggled by `SHOW_CHROMATOGRAM`, a
   single boolean. Two earlier ideas that lived here — dimension strings between nodes,
   and plan/elevation boxes in the corners — were removed outright rather than left
   toggled off. Nothing depends on this file; it and its `<script>` tag can be deleted
@@ -144,15 +153,14 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
 
 ### `node-scene.js` — the 3D map
 
-The one genuinely complex file (~1200 lines). Two lists at the top are the intended edit
-surface; everything below is graphics code.
+The one genuinely complex file (~1200 lines). `REAL_NODES` at the top is the intended
+edit surface; everything below is graphics code.
 
 - **`REAL_NODES`** — the clickable endpoints: `label`, `sub`, `href`, `pos: [x, y, z]`,
   plus an optional `preview: { description }`. Positions are a Fibonacci sphere. Keep
   `pos` roughly 3.2–3.7 from the origin, and keep `y` clear of 0 — a node near the
   equator sweeps across the middle of the screen on every rotation, dragging its label
   through the centre.
-- **`ATMOSPHERE_LABELS`** — faint non-clickable words floating in the map.
 
 Everything else is derived, and that is the property to preserve. Each branch is a
 `CatmullRomCurve3` from the hub through two waypoints to the node, with the waypoints
@@ -196,7 +204,7 @@ Other things that will bite you:
   `curve.getTangent(0)`) and kept in sync with the tube's own emerge/weight/opacity every
   frame — don't hand-place or hand-animate it separately.
 - `viewDepth(worldPos)` is the real per-node depth (0 near, 1 far), used for label
-  opacity, z-index stacking, ghost opacity, and the chromatogram's peak heights. Raw NDC
+  opacity, z-index stacking, and the chromatogram's peak heights. Raw NDC
   `projected.z` looked plausible but was useless here — every node landed within 0.01 of
   the far end of its range for a scene this small this far from the camera's near/far
   planes — so don't reach for `projected.z` as a stand-in for depth anywhere in this file.
@@ -244,7 +252,9 @@ obvious from the code, ask rather than guessing — then add it to this list.
 |---|---|
 | **slide** | One of the three full-screen sections of `index.html` (`#slide-1` title, `#slide-2` the italic line, `#slide-3` the node map). |
 | **the paper** | The three decorative layers behind the landing page, drawn by `paper.js`: the black **wash**, the squared **grid**, and the **static** (grain). |
-| **curtain** | How the paper arrives: a soft circular mask growing from the centre of the screen outward as you scroll from slide 2 into slide 3 (`CURTAIN_*` in `paper.js`, `setCurtain()`). Applies only to `.paper` (the wash/grid/static) — the map and thread are unaffected, each fading in on its own via `arrival`/opacity. |
+| **curtain** | How the paper arrives going 2 → 3: a soft mask centred high on the page (`at 50% 18%`) so its lower edge sweeps down the screen — it reads as spreading downwards (`CURTAIN_*` in `paper.js`, `setCurtain()`). Applies only to `.paper` (wash/grid/grain) — the map and thread fade in on their own via `arrival`/opacity. |
+| **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (the map falls into its centre, the page goes black), then `__reform` 0→1 (a pale line draws from the sphere to the top), and only then scrolls. |
+| **suction** | The even, proportional inward pull `paper.js` applies to the whole grid during the collapse, on top of the per-node dimples — what makes the grid implode rather than just dimple near the middle. |
 | **the thread** | The single line running down all three slides, drawn by `thread.js`. |
 | **the map** / **node map** | The 3D scene on slide 3 (`node-scene.js`). |
 | **hub** / **the centre** | The origin `(0,0,0)` that every branch grows from; rendered as a dark `core` mesh inside two translucent `shell`s. |
@@ -254,7 +264,6 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **root flare** / **collar** | The short tapered mesh at a branch's hub end, blending its thin tube radius into the core's halo instead of poking into it as a wire. |
 | **wake** / **wake speck** | The specks strung along a branch, sampled off its own curve. Each speck is 9 stacked particles that spray apart when pointed at. |
 | **cloud** | The separate drifting background speck system. Currently off (`CLOUD_COUNT = 0`) but still wired up. |
-| **ghost** / **atmosphere label** | The same thing under two names: a faint non-clickable word from `ATMOSPHERE_LABELS`, placed on a ring of `GHOST_RADIUS`. The code calls them `ghosts`. |
 | **registration mark** | The hollow square marker used for node labels, reused for the preview's dock and the scroll cue — not a plain dot. |
 | **emerge** | A branch's 0→1 growth out from the centre on arrival, staggered per branch (`EMERGE_STAGGER`). |
 | **arrival** | The eased follow of `window.__p23`; drives the scene's opacity and every branch's `emerge`. |

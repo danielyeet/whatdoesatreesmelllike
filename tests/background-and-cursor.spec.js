@@ -22,8 +22,8 @@ test.describe("the paper background", () => {
 
   // Regression test: this used to be two panels sliding in from the
   // left and right edges, which read as a strictly sideways effect.
-  // It is meant to be a soft circle opening out from the middle.
-  test("arrives as a circle growing from the centre, not a left-to-right wipe", async ({ page }) => {
+  // It is meant to be a soft shape opening out, biased downwards.
+  test("arrives as a soft shape spreading downwards, not a left-to-right wipe", async ({ page }) => {
     await page.goto("/index.html");
     await jumpToSlide(page, "slide-3", 0.5); // halfway between slide 2 and 3
     await page.waitForTimeout(400);
@@ -31,6 +31,14 @@ test.describe("the paper background", () => {
     const mask = await maskOf(page);
     expect(mask, "background should be revealed by a radial shape").toContain("radial-gradient");
     expect(mask, "no sideways wipe").not.toContain("linear-gradient");
+
+    // The bias comes from where the shape is centred: sitting well above
+    // the middle of the page leaves far more of the page below it than
+    // above, so its lower edge sweeps down the screen while its upper
+    // edge has almost nowhere to go. That reads as spreading downwards.
+    const origin = /at\s+[\d.]+%\s+([\d.]+)%/.exec(mask);
+    expect(origin, `expected a positioned radial shape, got: ${mask}`).not.toBeNull();
+    expect(Number(origin[1]), "should be centred above the middle of the page").toBeLessThan(40);
   });
 
   test("is fully revealed by the time the map has arrived", async ({ page }) => {

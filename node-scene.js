@@ -133,6 +133,10 @@ const REAL_NODES = [
   const COL_BRANCH = new THREE.Color(0x807c73);
   const COL_SPECK = new THREE.Color(0x999590);
   const COL_CENTRE = new THREE.Color(0x1c1c14);
+  // What the centre turns into while the page collapses to black around
+  // it on the way back up. A near-black sphere would simply vanish into
+  // that, and it is the one thing that has to stay visible.
+  const COL_CENTRE_COLLAPSED = new THREE.Color(0xf0efe8);
   const COL_CENTRE_HALO = new THREE.Color(0x8d8a80);
 
   const scene = new THREE.Scene();
@@ -982,6 +986,22 @@ const REAL_NODES = [
     arrival += (target - arrival) * 0.18;
     wrap.style.opacity = arrival.toFixed(3);
 
+    // THE COLLAPSE, on the way back up to slide 2. landing.js runs this
+    // from 0 to 1 and holds the page still while it plays, so the whole
+    // map can fall into the centre before anything scrolls.
+    //
+    // Scaling the rig is what does the work: every branch, speck,
+    // waypoint and collar is inside it, so they all converge on the hub
+    // together without any of them needing to know this is happening.
+    // The core is the exception — it has to stay put and stay solid, so
+    // its own scale is divided by the rig's to cancel it out.
+    const collapse = Math.min(1, Math.max(0, window.__exit || 0));
+    // Eased so it starts slowly and accelerates inwards, which reads as
+    // being pulled rather than simply shrinking.
+    const pull = collapse * collapse * (3 - 2 * collapse);
+    const rigScale = 1 - 0.985 * pull;
+    rig.scale.setScalar(rigScale);
+
     if (!dragging) {
       // Hovering a node, or having its preview window open, holds the
       // whole map still rather than letting it keep drifting under you.
@@ -1195,9 +1215,18 @@ const REAL_NODES = [
     const coreIn = emergeEase(Math.min(1, arrival / 0.34));
     const launch = Math.max(0, Math.min(1, (arrival - 0.1) / 0.35)) * (1 - Math.min(1, Math.max(0, (arrival - 0.45) / 0.4)));
     const breathe = REDUCE_MOTION ? 1 : 1 + Math.sin(clock * 0.55) * 0.035;
-    core.scale.setScalar(coreIn * (1 + launch * 0.5));
+    // Dividing by the rig's own scale cancels the collapse out for the
+    // core alone, so while everything else is being drawn into the
+    // middle the sphere holds its size on screen — and swells slightly,
+    // as though it were taking all of it in. The halo shells are left to
+    // shrink with the rig and fade away, so what's left at the end of
+    // the collapse is a plain solid sphere.
+    core.scale.setScalar((coreIn * (1 + launch * 0.5) * (1 + pull * 0.3)) / rigScale);
+    core.material.color.copy(COL_CENTRE).lerp(COL_CENTRE_COLLAPSED, pull);
     shellInner.scale.setScalar(coreIn * (breathe + launch * 0.8));
     shellOuter.scale.setScalar(coreIn * (1 + (breathe - 1) * 1.8 + launch * 1.3));
+    shellInner.material.opacity = shellInner.userData.baseOpacity * (1 - pull);
+    shellOuter.material.opacity = shellOuter.userData.baseOpacity * (1 - pull);
 
     // --- place the HTML labels, and publish where the map's masses
     // are so paper.js can bend the grid around them
@@ -1220,9 +1249,14 @@ const REAL_NODES = [
         (flip ? " translate(-100%, -50%) translateX(13px)" : " translate(-13px, -50%)");
       const depth = viewDepth(worldPos);
       const back = stepBack(branches[i]);
-      n._el.style.opacity = String(Math.max(0.5, 1 - depth * 0.45) * (1 - 0.55 * back));
+      n._el.style.opacity = String(
+        Math.max(0.5, 1 - depth * 0.45) * (1 - 0.55 * back) * (1 - pull)
+      );
       n._el.style.zIndex = String(Math.round((1 - depth) * 100));
-      field.push({ x: x, y: y, r: 78 * penWeight, s: 7 });
+      // Each node dimples the paper behind it. During the collapse the
+      // sign of that is flipped, so instead of pushing the grid away
+      // they draw it in — the same refraction running backwards.
+      field.push({ x: x, y: y, r: 78 * penWeight, s: 7 * (1 - 2 * pull) });
       readoutNodes[i] = readoutNodes[i] || {};
       const rn = readoutNodes[i];
       rn.x = x; rn.y = y; rn.depth = depth; rn.label = n.label;
@@ -1232,22 +1266,28 @@ const REAL_NODES = [
 
     core.getWorldPosition(worldPos);
     projected.copy(worldPos).project(camera);
+    const hubScreenX = (projected.x * 0.5 + 0.5) * w;
+    const hubScreenY = (-projected.y * 0.5 + 0.5) * h;
+    // The centre's own dimple, flipped the same way during the collapse.
     field.push({
-      x: (projected.x * 0.5 + 0.5) * w,
-      y: (-projected.y * 0.5 + 0.5) * h,
-      r: 210 * penWeight, s: 17,
+      x: hubScreenX, y: hubScreenY,
+      r: 210 * penWeight, s: 17 * (1 - 2 * pull),
     });
     window.__mapField = field;
 
     // Everything extras.js needs in order to draw alongside the map,
     // so that file can be deleted outright without touching this one.
-    readout.hubX = (projected.x * 0.5 + 0.5) * w;
-    readout.hubY = (-projected.y * 0.5 + 0.5) * h;
+    // Where the centre is on screen, measured from the top-left of the
+    // window — the same convention _lastScreenX uses for the nodes, and
+    // what paper.js and thread.js need to aim at it during the collapse.
+    readout.hubX = rect.left + hubScreenX;
+    readout.hubY = rect.top + hubScreenY;
     readout.nodes = readoutNodes;
     readout.arrival = arrival;
     readout.previewOpen = previewOpen;
     readout.radius = mapRadius;
     readout.activeIndex = activeBranch; // which node (if any) is currently hovered/focused
+    readout.collapse = pull;            // how far into the scroll-up collapse we are
     window.__mapReadout = readout;
 
     updateArm();

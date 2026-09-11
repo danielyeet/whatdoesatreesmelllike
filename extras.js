@@ -144,7 +144,9 @@ const SHOW_CHROMATOGRAM = true;
     // while a preview window is open, and is the first thing to go
     // when the map starts collapsing on the way back up.
     const exit = window.__exit || 0;
-    const leaving = Math.max(0, 1 - exit * 2.2); // gone by the time the implosion is half done
+    // Gone by the time the collapse is a third done, so it clearly
+    // leads the way out rather than fading along with everything else.
+    const leaving = Math.max(0, 1 - exit * 3);
     const shown = readout.previewOpen
       ? 0
       : Math.max(0, (readout.arrival - 0.45) / 0.55) * leaving;

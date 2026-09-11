@@ -30,15 +30,46 @@
            document.body.classList.contains("preview-open");
   }
 
-  function goTo(index) {
-    index = Math.max(0, Math.min(slides.length - 1, index));
+  // ============================================================
+  // LEAVING THE MAP
+  //
+  // Going back up from the node map is not a plain scroll. The page is
+  // held still while the map falls into its own centre, then while a
+  // line draws itself from that centre up to the top of the screen, and
+  // only then does it move. Two numbers on window carry the state, so
+  // the four files that have to take part can each read it without
+  // knowing about the others:
+  //
+  //   window.__exit    0 to 1, the collapse    (node-scene.js, paper.js,
+  //                                             extras.js, thread.js)
+  //   window.__reform  0 to 1, the line        (thread.js)
+  //
+  // Both sit at 0 the rest of the time, so nothing else in the site has
+  // to care that any of this exists.
+  // ============================================================
+  const EXIT_MS = 1200;    // how long the map takes to fall inwards
+  const REFORM_MS = 750;   // and the line to draw itself back out
+
+  function runPhase(duration, onProgress, onDone) {
+    const started = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - started) / duration);
+      onProgress(t);
+      if (t < 1) requestAnimationFrame(step);
+      else onDone();
+    }
+    requestAnimationFrame(step);
+  }
+
+  /** The plain scroll, used on its own and as the last step of the exit. */
+  function scrollToSlide(index, onDone) {
     const startY = container.scrollTop;
     const endY = slides[index].offsetTop;
     const distance = endY - startY;
 
-    if (REDUCE_MOTION || distance === 0) {
-      container.scrollTop = endY;
+    if (distance === 0) {
       activeIndex = index;
+      onDone();
       return;
     }
 
@@ -54,21 +85,48 @@
     // the centre all happen during it, and rushing them turns a sequence
     // into a flicker. This is the number to change if it drags.
     const duration = (index === 2 || activeIndex === 2) ? 2400 : 1100;
-    const startTime = performance.now();
-    animating = true;
 
-    function step(now) {
-      const t = Math.min(1, (now - startTime) / duration);
-      container.scrollTop = startY + distance * ease(t);
-      if (t < 1) {
-        requestAnimationFrame(step);
-      } else {
-        animating = false;
+    runPhase(
+      duration,
+      (t) => { container.scrollTop = startY + distance * ease(t); },
+      () => {
         activeIndex = index;
         container.style.scrollSnapType = "y mandatory";
+        onDone();
       }
+    );
+  }
+
+  function goTo(index) {
+    index = Math.max(0, Math.min(slides.length - 1, index));
+    const endY = slides[index].offsetTop;
+
+    if (REDUCE_MOTION) {
+      container.scrollTop = endY;
+      activeIndex = index;
+      return;
     }
-    requestAnimationFrame(step);
+    if (container.scrollTop === endY) return;
+
+    animating = true;
+
+    // Leaving the map upwards: collapse, reform, and only then scroll.
+    if (activeIndex === 2 && index < 2) {
+      runPhase(EXIT_MS, (t) => { window.__exit = t; }, () => {
+        runPhase(REFORM_MS, (t) => { window.__reform = t; }, () => {
+          scrollToSlide(index, () => {
+            // Released only once the page has arrived, so nothing springs
+            // back into place while any of it is still on screen.
+            window.__exit = 0;
+            window.__reform = 0;
+            animating = false;
+          });
+        });
+      });
+      return;
+    }
+
+    scrollToSlide(index, () => { animating = false; });
   }
 
   // Keep activeIndex correct if the user scrolls by some other means

@@ -181,17 +181,27 @@ One thing worth knowing when you reposition them: a node with a small
 and its label will cross the middle. Giving every node a `y` of at
 least about 1 either way avoids that.
 
-### `ATMOSPHERE_LABELS` — the faint floating words
+`REAL_NODES` is now the only list to edit. Two things that used to live
+up here are gone: a `DECORATIVE_POINTS` list of loose dots that joined
+themselves to the nearest waypoint (replaced by the per-branch specks
+described above), and an `ATMOSPHERE_LABELS` list of faint floating
+words — SLOW, ROOTS, AFTER RAIN and the rest — which were removed
+along with everything that drew them.
 
-A plain list of words — `"SLOW"`, `"ROOTS"`, `"AFTER RAIN"` and so on.
-They aren't links and aren't clickable; they're just things the map is
-"about", drifting in it and riding out from the centre with everything
-else. Rewrite the list, or empty it, and nothing else needs changing.
+### Leaving the map
 
-(An older version of this file described a `DECORATIVE_POINTS` list and
-a `MAX_LOOSE_REACH` setting for loose dots that joined themselves to the
-nearest waypoint. Neither exists any more — that was replaced by the
-per-branch specks described above.)
+Scrolling back up from the map is not a plain scroll, and it's worth
+knowing the order in case you ever want to change its timing:
+
+1. The page is held still while the whole map falls into its own
+   centre — branches, specks, labels, the grid and the grain all draw
+   inwards — and the page goes black around it, leaving a pale sphere.
+2. A line then draws itself from that sphere up to the top of the
+   screen.
+3. Only once both have finished does the page actually scroll.
+
+The two numbers controlling how long each part takes are `EXIT_MS` and
+`REFORM_MS` at the top of `landing.js`.
 
 ### How things react
 

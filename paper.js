@@ -148,19 +148,29 @@
   // The displacement is computed on a coarse lattice and read back
   // with bilinear interpolation. Doing it per grid vertex instead
   // would mean a few hundred thousand distance checks a frame.
+  // Set while the map is collapsing on the way back up to slide 2: an
+  // even pull of the whole grid towards a point, proportional to how far
+  // each part of it is from there, so the grid implodes rather than just
+  // dimpling near the middle the way the node masses do.
+  let suction = 0, suctionX = 0, suctionY = 0;
+
   function buildField(strength) {
     const masses = window.__mapField;
     fieldX.fill(0);
     fieldY.fill(0);
     const list = masses ? masses.slice() : [];
     if (cursorLive) list.push({ x: cursorX, y: cursorY, r: CURSOR_REACH, s: CURSOR_STRENGTH });
-    if (!list.length || strength <= 0.001) return;
+    if ((!list.length && suction <= 0.001) || strength <= 0.001) return;
 
     for (let r = 0; r < rows; r++) {
       const py = r * CELL;
       for (let c = 0; c < cols; c++) {
         const px = c * CELL;
         let dx = 0, dy = 0;
+        if (suction > 0.001) {
+          dx -= (px - suctionX) * suction;
+          dy -= (py - suctionY) * suction;
+        }
         for (let m = 0; m < list.length; m++) {
           const mass = list[m];
           const ax = px - mass.x;
@@ -321,6 +331,82 @@
     paper.style.maskImage = gradient;
   }
 
+  // ============================================================
+  // THE COLLAPSE (on the way back up to slide 2)
+  //
+  // node-scene.js pulls the map itself into its centre; this is the
+  // paper's half of the same movement. The grid and the grain are
+  // scaled down towards wherever that centre is on screen, so they
+  // are drawn into it rather than simply fading, and the wash turns
+  // into darkness closing in around the same point.
+  //
+  // The wash is deliberately left out of the scaling: it has to stay
+  // covering the whole window while it darkens, or the black would
+  // shrink into a dot instead of swallowing the page.
+  // ============================================================
+  let collapsing = false;
+
+  function applyCollapse(readout, paperIn) {
+    const pull = readout && readout.collapse ? readout.collapse : 0;
+
+    if (pull <= 0.0005) {
+      if (collapsing) {
+        // Put everything back exactly as it was, once only.
+        collapsing = false;
+        suction = 0;
+        if (wash) {
+          wash.style.backgroundImage = "";
+          wash.style.backgroundColor = "";
+        }
+      }
+      if (wash) wash.style.opacity = (WASH_PEAK * paperIn).toFixed(4);
+      return;
+    }
+    collapsing = true;
+
+    const hubX = readout.hubX === undefined ? window.innerWidth / 2 : readout.hubX;
+    const hubY = readout.hubY === undefined ? window.innerHeight / 2 : readout.hubY;
+
+    // The grid is drawn through a displacement field, so the implosion
+    // can be done by pulling every point of that field towards the
+    // centre — the lines bend inward and converge while the canvas they
+    // are drawn on never moves. Scaling the canvas instead would drag
+    // its own edges into view as a hard rectangle.
+    suction = 0.97 * pull;
+    suctionX = hubX;
+    suctionY = hubY;
+
+    // The grain can't be bent the same way — it's random dots, there's
+    // nothing in it to bend — so it simply leaves.
+    noiseCanvas.style.opacity = (
+      (NOISE_FLOOR + (NOISE_PEAK - NOISE_FLOOR) * paperIn) * (1 - pull)
+    ).toFixed(4);
+
+    if (wash) {
+      // Dark closing in on the centre: a clear hole over the sphere that
+      // shrinks as the collapse finishes, so the last thing left on the
+      // page is the sphere itself with everything else gone to black.
+      //
+      // The flat black this element normally carries has to be turned
+      // off while that runs, or it sits behind the gradient and fills
+      // the clear hole straight back in.
+      wash.style.backgroundColor = "transparent";
+      // The clear hole closes completely by the end, so the page is
+      // genuinely black and the only things left showing are the sphere
+      // and the line rising out of it — both of which turn pale as this
+      // runs (see node-scene.js and .thread-reform) so they read against
+      // it instead of disappearing into it.
+      const hole = Math.max(0, 92 * (1 - pull) - 6) * (1 - pull);
+      const edge = hole + (10 + 30 * (1 - pull));
+      wash.style.backgroundImage =
+        "radial-gradient(circle at " + hubX.toFixed(1) + "px " + hubY.toFixed(1) + "px," +
+        " rgba(0,0,0,0) 0%," +
+        " rgba(0,0,0,0) " + hole.toFixed(1) + "%," +
+        " #000 " + edge.toFixed(1) + "%)";
+      wash.style.opacity = Math.min(1, WASH_PEAK * paperIn + pull * 1.2).toFixed(4);
+    }
+  }
+
   function frame(now) {
     requestAnimationFrame(frame);
 
@@ -341,7 +427,6 @@
     moltenClock = now / 1000;
 
     setCurtain(curtain);
-    if (wash) wash.style.opacity = (WASH_PEAK * paperIn).toFixed(4);
     gridCanvas.style.opacity = paperIn.toFixed(3);
     noiseCanvas.style.opacity = (NOISE_FLOOR + (NOISE_PEAK - NOISE_FLOOR) * paperIn).toFixed(4);
 
@@ -352,6 +437,8 @@
     const readout = window.__mapReadout;
     const previewOpen = !!(readout && readout.previewOpen);
 
+    applyCollapse(readout, paperIn);
+
     if (!previewOpen && now - lastNoise >= NOISE_MS) {
       lastNoise = now;
       if (!REDUCE_MOTION || !paintedOnce) { paintStatic(); paintedOnce = true; }
@@ -360,7 +447,10 @@
     // While it's still moving there's more to redraw per frame, so it
     // gets the full rate; once it has set, it only needs to keep up
     // with the map turning behind it.
-    const gridInterval = molten > 0.5 ? 33 : GRID_MS;
+    // Full rate while it's still molten on arrival, and while it's
+    // imploding on the way out — both are fast movements that look
+    // stepped at the slower resting rate.
+    const gridInterval = (molten > 0.5 || suction > 0.001) ? 33 : GRID_MS;
     if (paperIn > 0.004 && now - lastGrid >= gridInterval) {
       lastGrid = now;
       buildField(BEND * paperIn);

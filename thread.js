@@ -73,6 +73,14 @@ const TRANSITION = "dissolve";
   } else {
     svg.appendChild(wander);
   }
+
+  // The line that reforms on the way back up. Once the map has fallen
+  // into its centre, this grows from that sphere to the top of the
+  // screen — drawing the way out before the page takes it.
+  const reformLine = svgEl("line", { class: "thread-line thread-reform" });
+  reformLine.style.strokeOpacity = "0";
+  svg.appendChild(reformLine);
+
   container.insertBefore(svg, container.firstChild);
 
   let top0 = 0, bottom0 = 0, centreX = 0, centreY = 0;
@@ -182,6 +190,48 @@ const TRANSITION = "dissolve";
     const p = window.__p23 === undefined ? 0 : window.__p23;
     if (forking) drawFork(p);
     else drawWander(p, clock);
+    drawReform();
+  }
+
+  // ============================================================
+  // THE WAY BACK UP
+  //
+  // While the map collapses, the line that runs down into it goes with
+  // it. Then this one draws itself from the sphere up to the top of the
+  // screen, and only once it has arrived does landing.js scroll.
+  // ============================================================
+  function drawReform() {
+    const collapse = (window.__mapReadout && window.__mapReadout.collapse) || 0;
+    const reform = window.__reform || 0;
+
+    // The legs above fade out as the collapse takes hold, so the
+    // reforming line is the only one left by the time it appears.
+    const fade = 1 - collapse;
+    toText.style.strokeOpacity = (0.26 * fade).toFixed(3);
+    if (!forking && wander) wander.style.opacity = fade.toFixed(3);
+    if (forking) strands.forEach((s) => { s.style.opacity = fade.toFixed(3); });
+
+    if (reform <= 0.001) {
+      reformLine.style.strokeOpacity = "0";
+      return;
+    }
+
+    const readout = window.__mapReadout;
+    if (!readout || readout.hubX === undefined) return;
+
+    // hubX/hubY are measured from the corner of the window; this SVG is
+    // as tall as the whole scrolling page, so the scroll position has to
+    // be added back to land in its coordinates.
+    const base = container.getBoundingClientRect();
+    const hubX = readout.hubX - base.left;
+    const hubY = readout.hubY - base.top + container.scrollTop;
+    const topY = container.scrollTop; // the top edge of what's on screen
+
+    reformLine.setAttribute("x1", hubX.toFixed(1));
+    reformLine.setAttribute("x2", hubX.toFixed(1));
+    reformLine.setAttribute("y1", hubY.toFixed(1));
+    reformLine.setAttribute("y2", (hubY + (topY - hubY) * reform).toFixed(1));
+    reformLine.style.strokeOpacity = (0.5 * Math.min(1, reform * 3)).toFixed(3);
   }
 
   measure();
