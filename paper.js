@@ -182,6 +182,16 @@
   const WAVE_WIDTH = 190;   // how thick the band is, in pixels
   const WAVE_STRENGTH = 74; // how hard it drags the grid as it passes
 
+  // And a second ring going the other way: it leaves the centre and
+  // spreads outward, shoving the grid ahead of it instead of dragging
+  // it back. Everything else about the collapse pulls inward, so this
+  // is the one thing pushing against all of it — the grid gets thrown
+  // out just as the map is being swallowed. Set OUTWARD_STRENGTH to 0
+  // to take it out again.
+  let outRadius = 0, outAmount = 0;
+  const OUTWARD_WIDTH = 150;
+  const OUTWARD_STRENGTH = 58;
+
   function buildField(strength) {
     const masses = window.__mapField;
     fieldX.fill(0);
@@ -199,15 +209,28 @@
           dx -= (px - suctionX) * suction;
           dy -= (py - suctionY) * suction;
         }
-        if (waveAmount > 0.001) {
+        if (waveAmount > 0.001 || outAmount > 0.001) {
           const wx = px - suctionX, wy = py - suctionY;
           const wd = Math.sqrt(wx * wx + wy * wy) || 0.0001;
-          const band = (wd - waveRadius) / WAVE_WIDTH;
-          const inBand = Math.exp(-band * band);
-          if (inBand > 0.004) {
-            const drag = WAVE_STRENGTH * waveAmount * inBand;
-            dx -= (wx / wd) * drag;
-            dy -= (wy / wd) * drag;
+          const ux = wx / wd, uy = wy / wd;
+
+          if (waveAmount > 0.001) {
+            const band = (wd - waveRadius) / WAVE_WIDTH;
+            const inBand = Math.exp(-band * band);
+            if (inBand > 0.004) {
+              const drag = WAVE_STRENGTH * waveAmount * inBand;
+              dx -= ux * drag;
+              dy -= uy * drag;
+            }
+          }
+          if (outAmount > 0.001) {
+            const band = (wd - outRadius) / OUTWARD_WIDTH;
+            const inBand = Math.exp(-band * band);
+            if (inBand > 0.004) {
+              const shove = OUTWARD_STRENGTH * outAmount * inBand;
+              dx += ux * shove;   // note the sign: this one pushes away
+              dy += uy * shove;
+            }
           }
         }
         for (let m = 0; m < list.length; m++) {
@@ -421,6 +444,7 @@
         collapsing = false;
         suction = 0;
         waveAmount = 0;
+        outAmount = 0;
         if (wash) {
           wash.style.backgroundImage = "";
           wash.style.backgroundColor = "";
@@ -453,6 +477,12 @@
     // Full strength in the middle of its run, nothing at either end, so
     // it neither appears nor vanishes abruptly.
     waveAmount = Math.sin(Math.PI * waveT);
+
+    // The opposite one starts a little later and runs outward, so the
+    // two cross somewhere in the middle of the screen.
+    const outT = Math.min(1, Math.max(0, (pull - 0.12) * 1.7));
+    outRadius = far * outT;
+    outAmount = outT <= 0 ? 0 : Math.sin(Math.PI * outT);
 
     // The grain can't be bent the same way — it's random dots, there's
     // nothing in it to bend — so it simply leaves.
@@ -527,7 +557,8 @@
     // Full rate while it's still molten on arrival, and while it's
     // imploding on the way out — both are fast movements that look
     // stepped at the slower resting rate.
-    const gridInterval = (molten > 0.5 || suction > 0.001 || waveAmount > 0.001) ? 16 : GRID_MS;
+    const gridInterval =
+      (molten > 0.5 || suction > 0.001 || waveAmount > 0.001 || outAmount > 0.001) ? 16 : GRID_MS;
     if (paperIn > 0.004 && now - lastGrid >= gridInterval) {
       lastGrid = now;
       buildField(BEND * paperIn);
