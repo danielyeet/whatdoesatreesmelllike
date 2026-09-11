@@ -642,7 +642,6 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
 /* ==================================================================
    CONTACT
    ================================================================== */
-.contact-content h2 { font-size: clamp(32px, 5vw, 52px); margin-bottom: 24px; }
 .contact-email { display: inline-block; font-size: 19px; text-decoration: none; border-bottom: 1px solid var(--brass); padding-bottom: 2px; }
 .contact-email:hover { color: var(--brass); }
 .contact-links { margin-top: 32px; display: flex; gap: 24px; }
