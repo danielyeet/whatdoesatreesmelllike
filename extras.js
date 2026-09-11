@@ -26,10 +26,17 @@ const SHOW_CHROMATOGRAM = true;
   const INK = "rgba(23,23,15,";
 
   const CHROMA_BASE = 52;        // height of the baseline above the foot
-  const CHROMA_PEAK = 96;        // how tall the tallest peak can run
+  const CHROMA_PEAK = 77;        // how tall the tallest peak can run (was 96)
   const CHROMA_WIDTH = 42;       // peak width in pixels
   const CHROMA_STEP = 4;         // sampling along the trace
   const CHROMA_HOVER_BOOST = 1.45; // how much taller the hovered node's own peak grows
+
+  // How quickly each peak catches up to the height it should be, per
+  // frame at 60fps. Everything the trace does goes through this, so it
+  // eases into every change instead of snapping: the map turning, a
+  // node passing in front of another, and above all hovering one,
+  // which used to jump to its full height in a single frame.
+  const CHROMA_EASE = 0.1;
 
   function el(name, attrs) {
     const node = document.createElementNS(NS, name);
@@ -59,37 +66,55 @@ const SHOW_CHROMATOGRAM = true;
       stroke: INK + alpha + ")", "stroke-width": width || 1,
     });
   }
-  function text(x, y, str, alpha, size, anchor) {
-    const t = el("text", {
-      x: x.toFixed(1), y: y.toFixed(1), fill: INK + alpha + ")",
-      "font-family": '"IBM Plex Mono", ui-monospace, monospace',
-      "font-size": size || 9, "letter-spacing": "0.14em",
-      "text-anchor": anchor || "middle",
-    });
-    t.textContent = str;
-    return t;
-  }
 
   // ============================================================
   // CHROMATOGRAM
+  //
+  // One peak per node. Where a peak sits across the page and how tall
+  // it stands both come from where that node currently is, which
+  // changes constantly as the map turns — so nothing here is drawn
+  // from those live numbers directly. Each peak keeps its own position
+  // and height and eases towards the values it should have, which is
+  // what stops the trace twitching as nodes pass each other and what
+  // makes hovering one grow its peak smoothly rather than in a jump.
   // ============================================================
-  function drawChromatogram(nodes, W, H, activeIndex) {
+  const peaks = []; // one per node: where it is and how tall, smoothed
+
+  function updatePeaks(nodes, activeIndex) {
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      let target = CHROMA_PEAK * (1 - n.depth) * (1 - n.depth);
+      // A flat multiplier alone would be invisible on a node that's
+      // currently far away and already reading as barely a bump, so
+      // hovering guarantees a real peak (a floor), not just a bigger
+      // fraction of whatever was already there.
+      if (i === activeIndex) target = Math.max(target * CHROMA_HOVER_BOOST, CHROMA_PEAK * 0.4);
+
+      if (!peaks[i]) {
+        // First frame for this peak: start where it belongs rather than
+        // easing up from nothing, or the whole trace grows in on arrival.
+        peaks[i] = { x: n.x, height: target };
+      } else {
+        peaks[i].x += (n.x - peaks[i].x) * CHROMA_EASE;
+        peaks[i].height += (target - peaks[i].height) * CHROMA_EASE;
+      }
+    }
+    peaks.length = nodes.length;
+  }
+
+  function drawChromatogram(W, H) {
     const baseY = H - CHROMA_BASE;
-    const left = 64, right = W - 64;
+    // Edge to edge: the trace is a reading of the whole width of the
+    // page, so it shouldn't stop short of either side.
+    const left = 0, right = W;
     let d = "";
     for (let x = left; x <= right; x += CHROMA_STEP) {
       let y = baseY;
-      for (let i = 0; i < nodes.length; i++) {
-        const n = nodes[i];
-        const dx = (x - n.x) / CHROMA_WIDTH;
+      for (let i = 0; i < peaks.length; i++) {
+        const peak = peaks[i];
+        const dx = (x - peak.x) / CHROMA_WIDTH;
         if (dx > 4 || dx < -4) continue;
-        let height = CHROMA_PEAK * (1 - n.depth) * (1 - n.depth);
-        // A flat multiplier alone would be invisible on a node that's
-        // currently far away and already reading as barely a bump, so
-        // hovering guarantees a real peak (a floor), not just a bigger
-        // fraction of whatever was already there.
-        if (i === activeIndex) height = Math.max(height * CHROMA_HOVER_BOOST, CHROMA_PEAK * 0.4);
-        y -= height * Math.exp(-dx * dx);
+        y -= peak.height * Math.exp(-dx * dx);
       }
       y -= Math.sin(x * 0.21) * 0.7 + Math.sin(x * 0.07) * 0.5; // instrument noise
       d += (d ? " L " : "M ") + x.toFixed(1) + " " + y.toFixed(1);
@@ -98,36 +123,40 @@ const SHOW_CHROMATOGRAM = true;
       d: d, fill: "none", stroke: INK + "0.3)", "stroke-width": 1,
     }));
     gChroma.appendChild(line(left, baseY, right, baseY, 0.12));
-    for (let x = left; x <= right; x += 64) {
+    for (let x = left + 64; x <= right - 32; x += 64) {
       gChroma.appendChild(line(x, baseY, x, baseY + 4, 0.12));
     }
-    gChroma.appendChild(text(left, baseY + 18, "RETENTION", 0.26, 8.5, "start"));
-    gChroma.appendChild(text(right, baseY + 18, "ABUNDANCE", 0.26, 8.5, "end"));
   }
 
   // ============================================================
   // LOOP
   // ============================================================
-  let last = 0;
-  function frame(now) {
+  // Redrawn every frame rather than a few times a second: the peaks
+  // are easing towards their targets now, and easing only looks like
+  // easing if it's actually drawn at the rate the screen refreshes.
+  function frame() {
     requestAnimationFrame(frame);
-    if (now - last < 50) return;   // 20fps is plenty for something this quiet
-    last = now;
 
     const readout = window.__mapReadout;
     if (!readout || !readout.nodes || !readout.nodes.length) return;
 
-    // It belongs to the third slide, and it gets out of the way
-    // entirely while a preview window is open.
-    const shown = readout.previewOpen ? 0 : Math.max(0, (readout.arrival - 0.45) / 0.55);
+    // It belongs to the third slide, gets out of the way entirely
+    // while a preview window is open, and is the first thing to go
+    // when the map starts collapsing on the way back up.
+    const exit = window.__exit || 0;
+    const leaving = Math.max(0, 1 - exit * 2.2); // gone by the time the implosion is half done
+    const shown = readout.previewOpen
+      ? 0
+      : Math.max(0, (readout.arrival - 0.45) / 0.55) * leaving;
     svg.style.opacity = shown.toFixed(3);
     if (shown < 0.01) return;
 
     const W = window.innerWidth, H = window.innerHeight;
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
 
+    updatePeaks(readout.nodes, readout.activeIndex);
     clear(gChroma);
-    drawChromatogram(readout.nodes, W, H, readout.activeIndex);
+    drawChromatogram(W, H);
   }
   requestAnimationFrame(frame);
 })();
