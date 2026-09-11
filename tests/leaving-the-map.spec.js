@@ -155,8 +155,7 @@ test("the trace along the foot is the first thing to go", async ({ page }) => {
 
   const traceOpacity = () =>
     page.evaluate(() => {
-      const svgs = document.querySelectorAll("svg");
-      const trace = svgs[svgs.length - 1];
+      const trace = document.querySelector(".chroma-trace");
       return parseFloat(trace.style.opacity || "0");
     });
 

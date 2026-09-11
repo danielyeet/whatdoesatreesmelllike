@@ -43,19 +43,19 @@
   // up, so each grain is this many CSS pixels across. 1 is the finest
   // it goes; larger reads coarser, like a worse signal.
   const NOISE_SCALE = 2;
-  const NOISE_FLOOR = 0.016;    // grain everywhere, including slides 1 and 2
-  const NOISE_PEAK = 0.058;     // and how strong it gets under the map
+  const NOISE_FLOOR = 0.010;    // was 0.016 — grain everywhere, slides 1 and 2 included
+  const NOISE_PEAK = 0.036;     // was 0.058 — and how strong it gets under the map
   const WASH_PEAK = 0.09;       // the black wash under the map
 
-  // The paper arrives as a curtain: it is already there at the left
-  // and right edges when you start scrolling, and the gap up the
-  // middle closes as you go.
-  const CURTAIN_FEATHER = 9;    // how soft the closing edges are, in % of width
-  const CURTAIN_START = 0.02;   // where in the scroll the gap starts closing
-  // Half the opening angle of the wake the paper arrives along, measured
-  // from straight down. A real duck's wake opens at about 37 degrees in
-  // total however fast it swims, which is where 18.5 comes from.
-  const WAKE_HALF_ANGLE = 18.5;
+  // The paper arrives as a wipe running from the top of the page
+  // downwards, which runs ahead of itself at the left and right edges
+  // so the sides fill in before the middle does. It is deliberately
+  // spread over the whole scroll rather than arriving in a rush at one
+  // point in it.
+  const CURTAIN_FEATHER = 15;    // how soft the leading edge is, in % of the page
+  const CURTAIN_START = 0;       // where in the scroll it starts
+  const CURTAIN_SIDE_LEAD = 120; // how far down the edges run ahead, in %
+  const CURTAIN_MID_LAG = 1.25;  // >1 holds the middle back behind them
   const BEND = 1.0;             // how hard the map refracts the grid
   const MOLTEN = 46;            // how far the grid is still running when it arrives
   const MOLTEN_SETTLE = 1.6;    // >1 means it firms up early and holds still
@@ -317,14 +317,17 @@
   let paintedOnce = false;
   let lastCurtain = -1;
 
-  // A soft disc growing from the centre outward, in place of the old
-  // two-panel curtain sliding in from the left and right edges. Still
-  // a mask rather than a moving div, so the wash, the grid and the
-  // static are all cut by the same edge, and that edge can be soft —
-  // but a circle reads as the paper materializing around the map's
-  // own centre (where the branches themselves grow from) rather than
-  // as two hard edges sliding together, which is what made it feel
-  // like a strictly left-right effect instead of a single arrival.
+  // A wipe from the top of the page downwards, with the left and right
+  // edges running ahead of the middle. Still a mask rather than a
+  // moving div, so the wash, the grid and the static are all cut by the
+  // same edge and that edge can be soft.
+  //
+  // Three masks added together, not intersected: a plain top-to-bottom
+  // sweep, plus a lobe growing out of each top corner. The sweep sets
+  // how far down the middle has got; the lobes reach further down the
+  // sides than it does, so the paper closes in on the middle of the
+  // page last. Adding is the point — with intersect the lobes would cut
+  // the sweep down instead of running out beyond it.
   function setCurtain(c) {
     if (!paper) return;
     if (Math.abs(c - lastCurtain) < 0.004) return;
@@ -336,53 +339,38 @@
       paper.style.maskComposite = "";
       return;
     }
-    // A duck's wake. The vertex sits at the middle of the page — that's
-    // where the bird is — and two arms trail back and outward from it
-    // towards the bottom corners, so the paper arrives along the V and
-    // the sides fill in before the middle does.
-    //
-    // Real wakes open at a fixed angle however fast the bird is going;
-    // WAKE_HALF_ANGLE is half of that, measured from straight down.
-    //
-    // Three masks intersected: the two arms are half-planes, one per
-    // side, and the radial one is what actually grows — so the shape
-    // stays the same V throughout and simply reaches further.
-    const feather = Math.max(2, CURTAIN_FEATHER * (1.4 - c * 0.9));
-    const reach = 150 * c;
 
-    // A half-plane, as a gradient that flips from clear to solid across
-    // the middle of the page. Note the 90 degree turn: a linear-gradient
-    // runs *along* its angle, so the edge it draws lies across that —
-    // to put the edge on the arm, the gradient has to point square out
-    // of it, towards the inside of the V.
-    function arm(deg) {
-      return (
-        "linear-gradient(" + deg.toFixed(2) + "deg," +
-        " rgba(0,0,0,0) " + (50 - feather * 0.5).toFixed(2) + "%," +
-        " #000 " + (50 + feather * 0.5).toFixed(2) + "%)"
-      );
-    }
+    // Softest at the start and tightening as it goes, so the paper
+    // gathers rather than switching on behind a hard line.
+    const feather = Math.max(3, CURTAIN_FEATHER * (1.5 - c * 0.8));
+    // Starts just above the top of the page and finishes just below the
+    // bottom, so neither end of the sweep shows as an edge on screen.
+    const mid = -14 + 118 * Math.pow(c, CURTAIN_MID_LAG);
+    const lobe = Math.max(0.5, CURTAIN_SIDE_LEAD * Math.pow(c, 0.8));
+
+    const sweep =
+      "linear-gradient(to bottom," +
+      " #000 " + (mid - feather).toFixed(2) + "%," +
+      " rgba(0,0,0,0) " + (mid + feather).toFixed(2) + "%)";
 
     // "ellipse" with two percentages, not "circle" with one: a circle's
     // size has to be given as a length, and a percentage there is
     // invalid — which silently throws the whole mask away.
-    const spread =
-      "radial-gradient(ellipse " + reach.toFixed(2) + "% " + reach.toFixed(2) + "% at 50% 50%," +
-      " #000 0%," +
-      " #000 " + (100 - feather).toFixed(2) + "%," +
-      " rgba(0,0,0,0) 100%)";
+    function edge(at) {
+      return (
+        "radial-gradient(ellipse " + lobe.toFixed(2) + "% " + lobe.toFixed(2) + "% at " + at + "," +
+        " #000 0%," +
+        " #000 " + Math.max(0, 100 - feather * 1.6).toFixed(2) + "%," +
+        " rgba(0,0,0,0) 100%)"
+      );
+    }
 
-    const masks = [
-      spread,
-      arm(90 + WAKE_HALF_ANGLE),   // edge along the arm trailing down-left
-      arm(270 - WAKE_HALF_ANGLE),  // and the one trailing down-right
-    ].join(", ");
-    const composite = "intersect, intersect";
+    const masks = [sweep, edge("0% 0%"), edge("100% 0%")].join(", ");
 
     paper.style.webkitMaskImage = masks;
     paper.style.maskImage = masks;
-    paper.style.webkitMaskComposite = "source-in, source-in";
-    paper.style.maskComposite = composite;
+    paper.style.webkitMaskComposite = "source-over, source-over";
+    paper.style.maskComposite = "add, add";
   }
 
   // ============================================================

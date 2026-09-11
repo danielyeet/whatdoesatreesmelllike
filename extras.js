@@ -44,7 +44,7 @@ const SHOW_CHROMATOGRAM = true;
     return node;
   }
 
-  const svg = el("svg", { "aria-hidden": "true" });
+  const svg = el("svg", { class: "chroma-trace", "aria-hidden": "true" });
   svg.style.position = "fixed";
   svg.style.left = "0";
   svg.style.top = "0";

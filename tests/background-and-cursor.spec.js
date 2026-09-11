@@ -20,41 +20,62 @@ test.describe("the paper background", () => {
       return getComputedStyle(paper).maskImage || getComputedStyle(paper).webkitMaskImage;
     });
 
-  // The paper arrives along a duck's wake: a V trailing back from the
-  // middle of the page. It has been a left-to-right wipe and a plain
-  // circle before now, so the shape is worth pinning down.
-  test("arrives along a V trailing back from the middle of the page", async ({ page }) => {
+  // The paper wipes in from the top of the page downwards, with the two
+  // edges running ahead of the middle. It has been a left-to-right wipe,
+  // a plain circle and a duck's wake before now, so the shape is worth
+  // pinning down.
+  test("wipes in from the top, with the sides ahead of the middle", async ({ page }) => {
     await page.goto("/index.html");
     await jumpToSlide(page, "slide-3", 0.5); // halfway between slide 2 and 3
     await page.waitForTimeout(400);
 
     const mask = await maskOf(page);
 
-    // Three masks intersected: one that grows, and an arm on each side.
-    expect(mask, "something should be growing").toContain("radial-gradient");
-    const arms = mask.match(/linear-gradient/g) || [];
-    expect(arms.length, "one arm each side of the wake").toBe(2);
+    // One sweep down the page, and a lobe growing out of each top corner.
+    // Note the browser hands the mask back normalised — "to bottom" and
+    // "ellipse" are both a gradient's default and are dropped from it —
+    // so downwards is checked as the absence of any other direction.
+    const sweeps = mask.match(/linear-gradient/g) || [];
+    expect(sweeps.length, "one sweep down the page").toBe(1);
+    expect(mask, "the sweep must run downwards").not.toMatch(/linear-gradient\(\s*(to |[-\d.]+deg)/);
+    const lobes = mask.match(/radial-gradient/g) || [];
+    expect(lobes.length, "one lobe at each top corner").toBe(2);
 
     const composite = await page.evaluate(() => {
       const p = document.querySelector(".paper");
       const s = getComputedStyle(p);
       return s.maskComposite || s.webkitMaskComposite;
     });
-    expect(composite, "arms must cut the shape down, not add to it").toContain("intersect");
+    // The lobes have to reach out past the sweep, not cut it down — with
+    // intersect they would hold the sides back instead of running ahead.
+    expect(composite, "the lobes must add to the sweep").toMatch(/add|source-over/);
 
-    // The vertex sits at the middle of the page — that's where the bird
-    // would be. It used to be up at 18%, which is what "don't start so
-    // high up" was about. The browser drops "at 50% 50%" when reporting
-    // it back, since that is a radial-gradient's default position, so
-    // either spelling of the centre counts; any other position does not.
-    const offCentre = /at\s+(?!50%\s+50%)[\d.]+%\s+[\d.]+%/.test(mask);
-    expect(offCentre, `wake should be centred on the page, got: ${mask}`).toBe(false);
+    // And they sit in the top two corners, which is what puts the sides
+    // ahead of the middle rather than the other way round.
+    const at = [...mask.matchAll(/at\s+([\d.]+)%\s+([\d.]+)%/g)].map((m) => [+m[1], +m[2]]);
+    expect(at, `lobes should be in the top corners, got: ${mask}`).toEqual([
+      [0, 0],
+      [100, 0],
+    ]);
+  });
 
-    // And the arms open at the wake's angle either side of straight down.
-    const angles = [...mask.matchAll(/linear-gradient\(([\d.]+)deg/g)].map((m) => Number(m[1]));
-    expect(angles.length).toBe(2);
-    const half = 18.5;
-    expect(angles.sort((a, b) => a - b)).toEqual([90 + half, 270 - half]);
+  test("the middle of the page is the last part of it to fill in", async ({ page }) => {
+    await page.goto("/index.html");
+    await jumpToSlide(page, "slide-3", 0.45);
+    await page.waitForTimeout(400);
+
+    // How far each part of the page has got is written into the mask
+    // itself: the lobes' radius is how far down the sides have reached,
+    // and the sweep's solid stop is how far the middle has.
+    const reach = await page.evaluate(() => {
+      const mask = getComputedStyle(document.querySelector(".paper")).maskImage;
+      const lobe = /radial-gradient\(([\d.]+)%/.exec(mask);
+      const sweep = /linear-gradient\(rgb\([^)]*\)\s*([-\d.]+)%/.exec(mask);
+      return { sides: lobe && +lobe[1], middle: sweep && +sweep[1] };
+    });
+
+    expect(reach.sides, "the sides should be well down the page by now").toBeGreaterThan(20);
+    expect(reach.middle, "and the middle should be behind them").toBeLessThan(reach.sides);
   });
 
   test("is fully revealed by the time the map has arrived", async ({ page }) => {

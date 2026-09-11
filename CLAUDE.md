@@ -66,15 +66,19 @@ publish the site; it exists only for the tests.
 
 What's covered: every page loads with its stylesheet, menu and correct `SITE_ROOT`; menu
 behaviour and current-page marking; the three slides and their keyboard/button
-navigation; the 3D map, its labels, hover, preview window, and the no-Three.js fallback;
-the paper's arrival and the cursor; the exit sequence's ordering, the collapse drawing
-every node into the centre, and the line that reforms out of it; plus browserless file
-checks (no link points at a missing file, no credentials committed).
+navigation; the three menu modes, the panel actually travelling into place, the slide-1
+line climbing before the page sinks, the slide-2 line being swept aside, and no line
+being drawn across a menu word; the 3D map, its labels, hover, preview window, and the
+no-Three.js fallback; the paper's arrival — top-down, sides ahead of the middle — and
+the cursor; the exit sequence's ordering, the collapse drawing every node into the
+centre, and the line that reforms out of it; plus browserless file checks (no link
+points at a missing file, no credentials committed).
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
-flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu. Keep them
-passing rather than adjusting them to match new behaviour, unless the behaviour change is
-deliberate.
+flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, and the
+menu panel appearing instead of travelling (switching mode ate its own transition). Keep
+them passing rather than adjusting them to match new behaviour, unless the behaviour
+change is deliberate.
 
 Visual/aesthetic judgement is still manual — the suite checks that things work, not that
 they look right.
@@ -154,12 +158,36 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
   with no other change.
 
 - **`menu-modes.js`** — how the menu opens, which differs per slide (title: a line
-  rises and splits one strand per item while the title sinks; intro: in from the side;
-  map: the page inverts, the map falls into its centre and the items reach back out of
-  it). `nav.js` builds one menu for the whole site and fires `menu:open` / `menu:close`;
-  this listens and puts `mode-title` / `mode-side` / `mode-map` on the overlay, with
-  `style.css` doing the movement. Landing page only — delete it and the menu falls back
-  to the plain overlay everywhere.
+  climbs out of the title, the whole page sinks away below it, and at the top it frays
+  into one strand per item; intro: in from the side, sweeping the slide's own line
+  across ahead of it; map: the page inverts, the map falls into its centre and the items
+  reach back out of it). `nav.js` builds one menu for the whole site and fires
+  `menu:open` / `menu:close`; this listens and puts `mode-title` / `mode-side` /
+  `mode-map` on the overlay, with `style.css` doing the movement. Landing page only —
+  delete it and the menu falls back to the plain overlay everywhere.
+
+  Three things here are easy to undo by accident:
+
+  - **Switching mode has to be done with transitions off.** Each mode gives the panel a
+    different closed position, so changing mode is itself a change of `transform`. Left
+    to animate, the transition is spent travelling *to* the closed position and the
+    panel appears where it should have arrived. `open()` puts `no-anim` on the overlay,
+    swaps the mode, reads the page back, then lets `open` do the moving.
+  - **The title's arrival animation has to be let go of before it can sink.** `.rise`
+    has `fill: both`, so it keeps hold of transform for the life of the element;
+    dropped in the same breath as setting where the title sinks to, there is nothing to
+    move from and the page jumps. `settleRise()` finishes and detaches it one read of
+    the page beforehand.
+  - **Neither line layer may be drawn over a menu word.** Both the fan and the rays are
+    drawn through a mask with every word knocked out of it, kept in step with the words
+    while they arrive (`SETTLE_MS`). A line crossing a word passes behind it.
+
+  The fan is fixed to the window rather than living inside the panel: on the title slide
+  the panel spends the whole sequence sliding down from above the window, so anything
+  inside it would be off the top of the screen while the line is meant to be climbing.
+  That is also why `style.css` excludes `.menu-fan` from the rule that dims the page
+  behind an open menu, and why the fan uses `mix-blend-mode: difference` — for most of
+  the sequence its top is over the black panel while its foot is still over white page.
 
 ### `node-scene.js` — the 3D map
 
@@ -262,11 +290,13 @@ obvious from the code, ask rather than guessing — then add it to this list.
 |---|---|
 | **slide** | One of the three full-screen sections of `index.html` (`#slide-1` title, `#slide-2` the italic line, `#slide-3` the node map). |
 | **the paper** | The three decorative layers behind the landing page, drawn by `paper.js`: the black **wash**, the squared **grid**, and the **static** (grain). |
-| **curtain** | The mask that reveals `.paper` (wash/grid/grain) going 2 → 3 — now shaped as **the wake**, below. `CURTAIN_*` in `paper.js`, `setCurtain()`. The map and thread fade in on their own via `arrival`/opacity and are never masked. |
+| **curtain** | The mask that reveals `.paper` (wash/grid/grain) going 2 → 3 — now a wipe from the top of the page downwards whose left and right edges run ahead of its middle, so the sides fill in first and the middle of the page last. Three mask layers **added** (not intersected): one sweep down the page, and a lobe growing out of each top corner. `CURTAIN_*` in `paper.js`, `setCurtain()`. The map and thread fade in on their own via `arrival`/opacity and are never masked. |
 | **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (a shockwave crosses, the map falls into its centre, everything clears to **white**), then `__reform` 0→1 (an ink line draws from the sphere to the top), and only then scrolls. The same inward pull is reused by the slide-3 menu via `__menuCollapse`. |
-| **the wake** | How the paper arrives going 2 → 3: a V trailing back from the middle of the page, vertex where the bird would be, arms at `WAKE_HALF_ANGLE` either side of straight down. Three masks intersected (one growing, one arm each side). |
+| **the wake** | Only the specks along a branch now — see **wake / wake speck** below. The paper's arrival going 2 → 3 used to be shaped as a duck's wake (a V trailing back from the middle of the page, `WAKE_HALF_ANGLE`); that was replaced by the top-down wipe described under **curtain**, and neither the V nor `WAKE_HALF_ANGLE` exists in `paper.js` any more. |
 | **the shockwave** | The narrow ring that closes on the centre ahead of the collapse, on its own faster clock (`WAVE_*` in `paper.js`). Distinct from the suction, which pulls everywhere at once. |
 | **menu modes** | `mode-title` / `mode-side` / `mode-map` — the three ways the menu opens on the landing page, one per slide. |
+| **the fan** | The line drawn for the slide-1 menu, in its own window-fixed layer (`.menu-fan`). Its **trunk** climbs out of the top of the title, turns aside at the top, and frays into seven **strands**, one per menu item; each runs down its own **lane** in the margin beside the words and ticks in to its own. |
+| **knockout** | The menu words punched out of a line layer's mask, so the fan and the rays pass *behind* a word rather than being drawn across it. |
 | **suction** | The even, proportional inward pull `paper.js` applies to the whole grid during the collapse, on top of the per-node dimples — what makes the grid implode rather than just dimple near the middle. |
 | **the thread** | The single line running down all three slides, drawn by `thread.js`. |
 | **the map** / **node map** | The 3D scene on slide 3 (`node-scene.js`). |
