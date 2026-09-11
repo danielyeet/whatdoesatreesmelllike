@@ -283,9 +283,18 @@ const REAL_NODES = [
     // circle rather than only side to side.
     const perp2 = new THREE.Vector3().crossVectors(end, perp).normalize();
 
+    // A short straight run out of the hub before the branch starts to
+    // bow. The node positions are already spaced as evenly as seven
+    // points can be on a sphere, but the bow used to begin at the hub
+    // itself and swing each branch off to one side by a different
+    // amount — so what left the centre was a set of angles nothing had
+    // chosen, and the arms looked randomly placed however evenly the
+    // far ends were. Leaving straight along the line to its own node
+    // means the departures inherit that even spacing exactly.
+    const radialStart = end.clone().normalize().multiplyScalar(length * 0.13);
     const w1 = end.clone().multiplyScalar(0.32).addScaledVector(perp, length * 0.16);
     const w2 = end.clone().multiplyScalar(0.69).addScaledVector(perp, length * 0.095);
-    const curve = new THREE.CatmullRomCurve3([hub, w1, w2, end]);
+    const curve = new THREE.CatmullRomCurve3([hub, radialStart, w1, w2, end]);
 
     function tube(radius, color, opacity) {
       const mesh = new THREE.Mesh(

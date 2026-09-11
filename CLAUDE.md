@@ -227,8 +227,11 @@ edit surface; everything below is graphics code.
   through the centre.
 
 Everything else is derived, and that is the property to preserve. Each branch is a
-`CatmullRomCurve3` from the hub through two waypoints to the node, with the waypoints
-computed from the node's own position and a per-branch perpendicular. The branch stops
+`CatmullRomCurve3` that leaves the hub straight along the line to its own node, then
+bows through two waypoints to reach it — the waypoints computed from the node's own
+position and a per-branch perpendicular, the straight run so that the arms leave the
+centre at the same even spacing the node positions already have (bowing from the hub
+itself threw each one off by a different amount, which read as arms placed at random). The branch stops
 at the node — nothing continues past a link node, so anything clickable reads as a place
 the map *ends*. Its wake specks are sampled off that same curve (`curve.getPoint(t)`),
 which is why they can't end up lopsided and why they ride the branch's motion with it.
@@ -327,7 +330,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the map** / **node map** | The 3D scene on slide 3 (`node-scene.js`). |
 | **hub** / **the centre** | The origin `(0,0,0)` that every branch grows from; rendered as a dark `core` mesh inside two translucent `shell`s. |
 | **link node** / **real node** | A clickable endpoint from `REAL_NODES`. A branch *stops* at one; nothing continues past it. |
-| **branch** | The tube from hub to a link node — a `CatmullRomCurve3` through two waypoints. Tubes, not lines, so they can thicken on hover. |
+| **branch** | The tube from hub to a link node — a `CatmullRomCurve3` that leaves the hub radially, then bows through two waypoints. Tubes, not lines, so they can thicken on hover. |
 | **waypoint** | The two small dots along a branch (at t ≈ 0.32 and 0.69), derived from the node's position, not placed by hand. |
 | **root flare** / **collar** | The short tapered mesh at a branch's hub end, blending its thin tube radius into the core's halo instead of poking into it as a wire. |
 | **wake** / **wake speck** | The specks strung along a branch, sampled off its own curve. Each speck is 9 stacked particles that spray apart when pointed at. |
