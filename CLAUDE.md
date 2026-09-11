@@ -40,10 +40,43 @@ pointer machinery (`document.elementFromPoint`) that misbehaves on `file://`:
 python3 -m http.server 8000    # then open http://localhost:8000/
 ```
 
-There are no tests, linters, or build commands; verification is visual. When changing
-`node-scene.js`, `paper.js`, or `thread.js`, check the browser console first — the
-particle systems use a custom shader, and a shader that fails to compile takes the whole
-3D scene with it, so the map comes up blank rather than merely wrong.
+There is no build or lint step. When changing `node-scene.js`, `paper.js`, or
+`thread.js`, check the browser console first — the particle systems use a custom shader,
+and a shader that fails to compile takes the whole 3D scene with it, so the map comes up
+blank rather than merely wrong.
+
+## Tests
+
+```bash
+npm install     # once
+npm test        # the whole suite
+npm test -- tests/menu.spec.js        # one file
+npm test -- --grep "preview"          # one topic
+```
+
+Playwright drives a real browser against the repo served over HTTP (the config starts
+`python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
+opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
+
+The suite runs **fully offline**: `tests/helpers.js` intercepts the Three.js and Google
+Fonts requests and answers them locally, Three.js from the version pinned in
+`package.json` — which must stay matched to the version `index.html` requests, or the
+tests stop testing what actually ships. Nothing in `package.json` is needed to view or
+publish the site; it exists only for the tests.
+
+What's covered: every page loads with its stylesheet, menu and correct `SITE_ROOT`; menu
+behaviour and current-page marking; the three slides and their keyboard/button
+navigation; the 3D map, its labels, hover, preview window, and the no-Three.js fallback;
+the paper's arrival and the cursor; plus browserless file checks (no link points at a
+missing file, no credentials committed).
+
+Several are regression tests for specific fixed bugs — the clipped connector SVG, the
+flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu. Keep them
+passing rather than adjusting them to match new behaviour, unless the behaviour change is
+deliberate.
+
+Visual/aesthetic judgement is still manual — the suite checks that things work, not that
+they look right.
 
 Two states are easy to forget when reviewing a change:
 

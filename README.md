@@ -151,11 +151,16 @@ lists at the top of the file.
 Link nodes are **endpoints**. A branch grows out of the centre, passes
 through two small waypoint dots, and stops at the link node — nothing
 ever continues past one, so anything you can click reads as somewhere
-the map ends rather than somewhere it passes through. The loose
-atmospheric dots attach to the centre or to a waypoint, never to a
-link node. That rule is enforced in the code, not by hand: link nodes
-are simply left out of the list of points a loose dot is allowed to
-connect to, so you can't accidentally break it by moving one.
+the map ends rather than somewhere it passes through.
+
+Nothing else on the map is placed by hand. The specks strung along each
+branch are worked out from that branch's own curve, so they can't end up
+lopsided and they move with it. Move a node and its branch, its waypoint
+dots and its specks all follow — you never have to reposition them.
+
+Where each branch meets the centre it widens into a short collar, so it
+reads as growing out of the middle rather than as a wire poked into it.
+That's `ROOT_FLARE_RADIUS` and `ROOT_FLARE_LENGTH` in the tuning block.
 
 ### `REAL_NODES` — the clickable endpoints
 
@@ -176,13 +181,17 @@ One thing worth knowing when you reposition them: a node with a small
 and its label will cross the middle. Giving every node a `y` of at
 least about 1 either way avoids that.
 
-### `DECORATIVE_POINTS` — atmosphere
+### `ATMOSPHERE_LABELS` — the faint floating words
 
-A plain list of `[x, y, z]` positions. Each connects itself to
-whichever centre or waypoint is nearest. Keep them within about 2.7 of
-the centre so they stay inside the map. If you put one further out
-than `MAX_LOOSE_REACH` (1.7) from anything, it just floats
-unconnected rather than flinging a long line across the middle.
+A plain list of words — `"SLOW"`, `"ROOTS"`, `"AFTER RAIN"` and so on.
+They aren't links and aren't clickable; they're just things the map is
+"about", drifting in it and riding out from the centre with everything
+else. Rewrite the list, or empty it, and nothing else needs changing.
+
+(An older version of this file described a `DECORATIVE_POINTS` list and
+a `MAX_LOOSE_REACH` setting for loose dots that joined themselves to the
+nearest waypoint. Neither exists any more — that was replaced by the
+per-branch specks described above.)
 
 ### How things react
 
@@ -214,11 +223,14 @@ Near the top of the file, under `// --- Tuning`:
 | | |
 |---|---|
 | `IDLE_SPEED` | how fast it drifts on its own |
-| `MAX_TILT` | how far it can be tipped up or down |
 | `FRAME_V` / `FRAME_H` | how much room the map is given — **larger numbers draw it smaller** |
 | `BRANCH_RADIUS` / `BRANCH_RADIUS_EMPH` | branch thickness at rest and when its node is hovered |
+| `ROOT_FLARE_RADIUS` / `ROOT_FLARE_LENGTH` | the collar where a branch meets the centre |
 | `SPECK_SIZE` | how big a loose speck reads |
 | `REF_PX_PER_UNIT` | the screen size the weights above are tuned for; other sizes scale against it |
+
+There's no tilt limit any more — you can turn the map all the way round
+on either axis, and wherever you leave it is where it stays.
 
 `FRAME_H` has a separate, larger value for portrait screens (in
 `resize()`). It has to be larger there: on a tall narrow phone,
@@ -246,11 +258,12 @@ past the slide, horizontal drags rotate it.
 ```
 index.html                          the landing page (title, intro, 3D node map)
 style.css                           every page's look — one shared file
-nav.js                               the "Menu" button and the cursor, on every page
-landing.js                           gentle scrolling between slides, index.html only
-paper.js                             the wash, the bending grid, the static, index.html only
-thread.js                            the line through the three slides, index.html only
-node-scene.js                        the 3D node map — see above
+nav.js                              the "Menu" button and the cursor, on every page
+landing.js                          gentle scrolling between slides, index.html only
+paper.js                            the wash, the bending grid, the static, index.html only
+thread.js                           the line through the three slides, index.html only
+node-scene.js                       the 3D node map — see above
+extras.js                           the chromatogram trace along the foot, index.html only
 contact.html                        the contact page
 
 categories/
@@ -263,7 +276,14 @@ works/
   test-node-a.html / test-node-b.html   sandbox pages, see above
 
 images/                             put your photos here
+
+tests/                              automated checks — see "Checking your changes"
+package.json / playwright.config.js  settings for those checks only
 ```
+
+Everything above `tests/` is the site itself. The last two entries are
+only used for testing; the published site doesn't need them and doesn't
+load them.
 
 ## Adding a new piece of work
 
@@ -282,6 +302,37 @@ images/                             put your photos here
    `nav.js` — the only place the menu is defined.
 3. Optional: add a matching entry to `REAL_NODES` in `node-scene.js`
    so it appears in the 3D map too.
+
+## Checking your changes
+
+There's a set of automated checks that open the site in a real browser
+and make sure the important things still work: every page loads, the
+menu is right on every page, no link points at a missing file, the map
+draws and its preview window opens and closes, and the site still does
+something sensible if the 3D library can't be reached.
+
+The first time, install what they need:
+
+```
+npm install
+```
+
+Then, any time you've changed something:
+
+```
+npm test
+```
+
+It prints a line per check with a tick or a cross, and a summary at the
+end. If something fails it will tell you which check and why, and save a
+screenshot of the moment it went wrong into `test-results/`.
+
+This is worth running before you upload changes — it catches the kind of
+mistake that's easy to make and hard to spot, like a new page whose menu
+links all quietly point at the wrong folder.
+
+You don't need any of this to work on the site or to publish it. It's
+just a safety net.
 
 ## Publishing changes
 
