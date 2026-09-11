@@ -201,3 +201,54 @@ test("a line draws itself from the centre up to the top of the screen", async ({
 
   await page.evaluate(() => { window.__exit = 0; window.__reform = 0; });
 });
+
+// The line that draws itself out of the collapsing map has to stop
+// where the sentence on the slide above starts, not run across it. Going
+// the other way the thread leaves exactly the same gap below the words,
+// so the two meet at the same point and it reads as connecting to them.
+test("the line that reforms stops at the sentence rather than crossing it", async ({ page }) => {
+  await page.goto("/index.html");
+  await jumpToSlide(page, "slide-3");
+  await waitForMapSettled(page);
+  await page.waitForTimeout(400);
+
+  // Watched frame by frame right through the collapse, the line drawing
+  // itself, and the scroll that follows — the crossing only showed up
+  // once the page was on the move.
+  await page.evaluate(() => {
+    window.__reformWatch = [];
+    const container = document.getElementById("scroll-container");
+    const line = document.querySelector(".thread-reform");
+    const intro = document.querySelector(".intro-lede");
+    const tick = () => {
+      requestAnimationFrame(tick);
+      const base = container.getBoundingClientRect();
+      const words = intro.getBoundingClientRect();
+      window.__reformWatch.push({
+        y2: parseFloat(line.getAttribute("y2") || "0"),
+        opacity: parseFloat(line.style.strokeOpacity || "0"),
+        wordsFoot: words.bottom - base.top + container.scrollTop,
+      });
+    };
+    requestAnimationFrame(tick);
+  });
+
+  await page.keyboard.press("ArrowUp");
+  await page.waitForTimeout(4200);
+
+  const seen = await page.evaluate(() => {
+    const live = window.__reformWatch.filter((f) => f.opacity > 0.02);
+    let highest = null; // the nearest the line's top end ever got to the words
+    live.forEach((f) => {
+      const over = f.wordsFoot - f.y2; // above zero means it reached past their foot
+      if (!highest || over > highest.over) highest = Object.assign({ over: over }, f);
+    });
+    return { frames: live.length, highest: highest };
+  });
+
+  expect(seen.frames, "the line should have been drawn at some point").toBeGreaterThan(10);
+  expect(
+    seen.highest.over,
+    "the line must stop below the sentence, never reach up past its foot"
+  ).toBeLessThanOrEqual(0);
+});

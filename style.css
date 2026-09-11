@@ -213,191 +213,21 @@ body.menu-open .menu-trigger:hover { color: var(--brass); }
 .menu-list a:hover, .menu-list a:focus-visible { color: var(--brass); }
 .menu-list .menu-current { color: var(--brass); }
 
-/* ==================================================================
-   HOW THE MENU OPENS, PER SLIDE (landing page only)
-   menu-modes.js puts one of these three classes on the overlay
-   depending on which slide you are looking at. Everywhere else on
-   the site none of them is set and the plain fade above is used.
-   ================================================================== */
-
-/* --- slide 1: a line climbs out of the title, then the whole page is
-   drawn downwards past it — the panel following the page down from
-   above — and at the top the line frays into one strand per item.
-   The delays are what hold the page still until the line has had a
-   moment to climb on its own; that order is the whole sequence. */
-.menu-overlay.mode-title {
-  transform: translateY(-100%);
-  transition: transform 0.5s var(--menu-ease), opacity 0.35s var(--menu-ease);
-}
-.menu-overlay.mode-title.open {
-  transform: translateY(0);
-  transition: transform 0.62s var(--menu-ease) 0.17s, opacity 0.4s var(--menu-ease) 0.17s;
-}
-/* The panel is faster than the page it is chasing, so it closes over
-   the title rather than the two sliding down together. */
-.title-content, .title-block, .scroll-cue {
-  transition: transform 0.5s var(--menu-ease), opacity 0.4s var(--menu-ease);
-}
-.title-content.title-sinking, .title-block.title-sinking, .scroll-cue.title-sinking {
-  transition: transform 0.62s var(--menu-ease) 0.17s, opacity 0.5s var(--menu-ease) 0.17s;
-}
-/* Set by menu-modes.js once the arrival animation below has played. An
-   animation outranks a plain declaration for as long as it is attached,
-   so it has to be let go of before the sink can move anything — and
-   well beforehand, since dropping it in the same breath as setting the
-   sink leaves nothing to move from and the page jumps instead. */
-.title-content.rise-done, .title-block.rise-done { animation: none; }
-.title-content.title-sinking { transform: translateY(38vh); opacity: 0; }
-/* The two corner marks sit lower to begin with, so they need to travel
-   further to leave the bottom of the screen with the rest of it. */
-.title-block.title-sinking { transform: translateY(46vh); opacity: 0; }
-.scroll-cue.title-sinking { transform: translateY(46vh); opacity: 0; }
-
-/* The words wait for their own strand to reach them. */
-.menu-overlay.mode-title .menu-list li {
-  transition: opacity 0.4s var(--menu-ease), transform 0.45s var(--menu-ease);
-}
-.menu-overlay.mode-title.open .menu-list li:nth-child(1) { transition-delay: 0.52s; }
-.menu-overlay.mode-title.open .menu-list li:nth-child(2) { transition-delay: 0.55s; }
-.menu-overlay.mode-title.open .menu-list li:nth-child(3) { transition-delay: 0.58s; }
-.menu-overlay.mode-title.open .menu-list li:nth-child(4) { transition-delay: 0.61s; }
-.menu-overlay.mode-title.open .menu-list li:nth-child(5) { transition-delay: 0.64s; }
-.menu-overlay.mode-title.open .menu-list li:nth-child(6) { transition-delay: 0.67s; }
-.menu-overlay.mode-title.open .menu-list li:nth-child(n + 7) { transition-delay: 0.70s; }
-
-/* The line out of the title and the strands it frays into. Drawn by
-   menu-modes.js, and fixed to the window rather than sitting inside the
-   panel — the panel is still above the top of the screen while the line
-   is supposed to be climbing, so anything inside it would be too.
-
-   Difference blending is what lets one line read against both grounds
-   at once: for most of the sequence its top is over the black panel
-   while its foot is still over the white page. */
-.menu-fan {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 26;
-  pointer-events: none;
-  overflow: visible;
-  opacity: 0;
-  transition: opacity 0.3s var(--menu-ease);
-}
-/* Blending only while it is actually on screen: a full-window blended
-   layer is something the browser has to keep compositing for, and this
-   one spends nearly all its life invisible over a 3D scene. */
-.menu-fan.lit { opacity: 1; mix-blend-mode: difference; }
-.menu-fan-trunk, .menu-fan-line {
-  fill: none;
-  stroke: #ffffff;
-  stroke-width: 1;
-  stroke-opacity: 0.55;
-}
-.menu-fan-line { stroke-opacity: 0.42; }
-
-/* --- slide 2: in from the side. The panel slides across and the
-   words follow it in one after another, from the same edge — and the
-   line already on the slide is pushed across ahead of it. */
-.menu-overlay.mode-side {
-  transform: translateX(-100%);
-  transition: transform 0.8s var(--menu-ease), opacity 0.4s var(--menu-ease);
-}
-/* Held back a moment, as on the title slide, so the line has visibly
-   started moving before the panel arrives over the top of it. */
-.menu-overlay.mode-side.open {
-  transform: translateX(0);
-  transition: transform 0.8s var(--menu-ease) 0.14s, opacity 0.4s var(--menu-ease) 0.14s;
-}
-.menu-overlay.mode-side .menu-list li { transform: translateX(-40px); }
-.menu-overlay.mode-side.open .menu-list li { transform: translateX(0); }
-/* The slide's own line goes the way the panel is travelling, as though
-   it were being swept aside by it rather than covered over. */
-.intro-content {
-  transition: transform 0.7s var(--menu-ease), opacity 0.5s var(--menu-ease);
-}
-.intro-content.intro-shifting { transform: translateX(24vw); opacity: 0; }
-
-/* --- slide 3: the panel itself stays out of the way and lets the
-   map turn inside out behind it. The words wait for the collapse. */
-.menu-overlay.mode-map {
-  background: transparent;
-  transition: opacity 0.5s var(--menu-ease);
-}
-.menu-overlay.mode-map .menu-list li { transition-delay: 0s; }
-.menu-overlay.mode-map.open .menu-list li:nth-child(1) { transition-delay: 0.42s; }
-.menu-overlay.mode-map.open .menu-list li:nth-child(2) { transition-delay: 0.48s; }
-.menu-overlay.mode-map.open .menu-list li:nth-child(3) { transition-delay: 0.54s; }
-.menu-overlay.mode-map.open .menu-list li:nth-child(4) { transition-delay: 0.60s; }
-.menu-overlay.mode-map.open .menu-list li:nth-child(5) { transition-delay: 0.66s; }
-.menu-overlay.mode-map.open .menu-list li:nth-child(6) { transition-delay: 0.72s; }
-.menu-overlay.mode-map.open .menu-list li:nth-child(7) { transition-delay: 0.78s; }
-
-/* Held for a single frame by menu-modes.js while it switches which of
-   the three modes is in force. Each mode gives the panel a different
-   closed position, and that is a change to transform like any other —
-   so without this the browser spends the whole transition travelling to
-   the closed position rather than away from it, and the panel appears
-   where it should have arrived instead of arriving. !important because
-   this has to outrank every transition on the panel and on the words
-   inside it, whatever their specificity, for that one frame. */
-.menu-overlay.no-anim, .menu-overlay.no-anim * { transition: none !important; }
-
-/* The page turned inside out behind it: black ground, and the map
-   above it switched to light by node-scene.js at the same time. */
-body.menu-invert::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background: #0a0a0a;
-  pointer-events: none;
-  animation: menu-invert-in 0.55s var(--menu-ease) both;
-}
-@keyframes menu-invert-in { from { opacity: 0; } to { opacity: 1; } }
-/* The paper has nothing to say while the page is inverted. */
-body.menu-invert .paper { opacity: 0; transition: opacity 0.5s var(--menu-ease); }
-
-/* The lines reaching back out of the centre, one per item. */
-.menu-rays {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-.menu-ray {
-  stroke: #f0efe8;
-  stroke-opacity: 0;
-  stroke-width: 1;
-}
-
 /* The rest of the page gently dims while the menu is open, so the
    overlay reads as coming forward rather than just appearing.
    The transition sits on the base selector, not on .menu-open — when
    it lived on the open state only, closing the menu snapped the page
    back to full brightness with no fade at all. */
-body > *:not(.menu-trigger):not(.menu-overlay):not(.menu-fan):not(.cursor-ring):not(.cursor-dot) {
+body > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
   transition: opacity 0.85s var(--menu-ease);
 }
-body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.menu-fan):not(.cursor-ring):not(.cursor-dot) {
+body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
   opacity: 0.1;
 }
-/* Except on the map slide, where the map is not something the menu is
-   covering up — it IS the menu, collapsed into its centre with the
-   items reaching back out of it. Dimming it to a tenth left the sphere
-   reading as dark grey on black instead of the white it turns. */
-body.menu-open.menu-invert > #scroll-container { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .menu-list li { transform: none; }
-  .menu-overlay, body > *:not(.menu-trigger):not(.menu-overlay):not(.menu-fan) {
-    transition-duration: 0.01s;
-  }
-  /* These move when the menu opens, and are nested rather than direct
-     children of body, so the rule above does not reach them. */
-  .intro-content, .title-content, .title-block, .scroll-cue {
+  .menu-overlay, body > *:not(.menu-trigger):not(.menu-overlay) {
     transition-duration: 0.01s;
   }
   /* :nth-child(n) matches everything — it's here only to outweigh the

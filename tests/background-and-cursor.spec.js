@@ -78,6 +78,35 @@ test.describe("the paper background", () => {
     expect(reach.middle, "and the middle should be behind them").toBeLessThan(reach.sides);
   });
 
+  // Regression test: the mask is dropped altogether once the paper has
+  // arrived. If it is still feathering anywhere at that moment, dropping
+  // it fills that part of the page in one frame — which is exactly the
+  // sudden flash the wipe is supposed to avoid. So the sweep has to
+  // reach past the bottom of the page well before the mask comes off.
+  test("the page is completely covered before the mask is taken off", async ({ page }) => {
+    await page.goto("/index.html");
+
+    let lastMasked = null;
+    for (let f = 0.5; f <= 1.0001; f += 0.02) {
+      await jumpToSlide(page, "slide-3", f);
+      await page.waitForTimeout(90);
+      const state = await page.evaluate(() => {
+        const mask = getComputedStyle(document.querySelector(".paper")).maskImage;
+        if (!mask || mask === "none") return null;
+        // The sweep's first stop is how far down the page is solid.
+        const solid = /linear-gradient\(rgb\([^)]*\)\s*([-\d.]+)%/.exec(mask);
+        return solid ? +solid[1] : null;
+      });
+      if (state !== null) lastMasked = state;
+    }
+
+    expect(lastMasked, "the mask should still have been on part-way through").not.toBeNull();
+    expect(
+      lastMasked,
+      "the last masked frame must already cover the whole page, top to bottom"
+    ).toBeGreaterThanOrEqual(100);
+  });
+
   test("is fully revealed by the time the map has arrived", async ({ page }) => {
     await page.goto("/index.html");
     await jumpToSlide(page, "slide-3");

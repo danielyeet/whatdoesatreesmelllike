@@ -8,6 +8,13 @@
 // you're currently hovering (or have focused) grows taller still,
 // so the trace visibly answers back.
 //
+// Behind that one line stand several more of it, each a little
+// higher, a little smaller and a little fainter than the one in
+// front, so they read as the same reading receding into the page
+// like hills behind one another. They are not separate traces:
+// every one is the same line, so they all answer to exactly the
+// same thing at exactly the same moment.
+//
 // Nothing in here is load-bearing: set SHOW_CHROMATOGRAM to false,
 // or delete this file and its <script> tag from index.html, and
 // the site is unchanged.
@@ -38,6 +45,22 @@ const SHOW_CHROMATOGRAM = true;
   // which used to jump to its full height in a single frame.
   const CHROMA_EASE = 0.1;
 
+  // The ranks standing behind the front line. Each step up the page is
+  // a fixed fraction of the one before it (FALLOFF below 1), so they
+  // crowd together as they go rather than marching away evenly — which
+  // is what makes them read as running back to a horizon rather than as
+  // a stack of evenly spaced copies.
+  const RIDGE_COUNT = 6;
+  const RIDGE_SPAN = 54;      // how far above the front line the furthest sits
+  const RIDGE_FALLOFF = 0.72; // below 1: each rank sits closer to the last
+  const RIDGE_SHRINK = 0.96;  // each rank's peaks, against the one in front
+  const RIDGE_NARROW = 0.986; // and how much it draws in towards the centre
+  const RIDGE_FADE = 0.7;     // and how much of its ink is left
+  // The front line is drawn wider than the screen so that the ranks
+  // behind, being narrower, still reach both edges rather than stopping
+  // short of them.
+  const RIDGE_OVERDRAW = 0.14;
+
   function el(name, attrs) {
     const node = document.createElementNS(NS, name);
     for (const key in attrs) node.setAttribute(key, attrs[key]);
@@ -55,9 +78,6 @@ const SHOW_CHROMATOGRAM = true;
   svg.style.opacity = "0";
   document.body.appendChild(svg);
 
-  const gChroma = el("g", {});
-  svg.appendChild(gChroma);
-
   function clear(group) { while (group.firstChild) group.removeChild(group.firstChild); }
 
   function line(x1, y1, x2, y2, alpha, width) {
@@ -66,6 +86,39 @@ const SHOW_CHROMATOGRAM = true;
       stroke: INK + alpha + ")", "stroke-width": width || 1,
     });
   }
+
+  // Everything is built once here and only updated afterwards. The ranks
+  // behind the front line are <use> copies of the one path rather than
+  // paths of their own, so the shape is worked out once a frame however
+  // many of them there are, and none of them can fall out of step with
+  // it. Furthest first, so the nearer ones draw over them.
+  const ridgeLayer = el("g", {});
+  svg.appendChild(ridgeLayer);
+
+  const trace = el("path", {
+    id: "chroma-trace-line",
+    fill: "none",
+    stroke: INK + "0.3)",
+    "stroke-width": 1,
+    // Without this each copy's transform would squeeze its stroke as
+    // well as its shape, and the ranks further back would be drawn in a
+    // progressively thinner line instead of the same hairline.
+    "vector-effect": "non-scaling-stroke",
+  });
+
+  const ridges = [];
+  for (let rank = RIDGE_COUNT; rank >= 1; rank--) {
+    const copy = el("use", {
+      href: "#chroma-trace-line",
+      opacity: Math.pow(RIDGE_FADE, rank).toFixed(4),
+    });
+    ridgeLayer.appendChild(copy);
+    ridges.push({ rank: rank, node: copy });
+  }
+
+  svg.appendChild(trace);
+  const baseLayer = el("g", {});
+  svg.appendChild(baseLayer);
 
   // ============================================================
   // CHROMATOGRAM
@@ -79,6 +132,7 @@ const SHOW_CHROMATOGRAM = true;
   // makes hovering one grow its peak smoothly rather than in a jump.
   // ============================================================
   const peaks = []; // one per node: where it is and how tall, smoothed
+  let laidOutW = 0, laidOutH = 0;
 
   function updatePeaks(nodes, activeIndex) {
     for (let i = 0; i < nodes.length; i++) {
@@ -102,11 +156,45 @@ const SHOW_CHROMATOGRAM = true;
     peaks.length = nodes.length;
   }
 
-  function drawChromatogram(W, H) {
+  // Where each rank stands, and the baseline the front one runs along.
+  // Only the size of the window changes any of this, so it is worked out
+  // when that changes rather than every frame.
+  function layout(W, H) {
     const baseY = H - CHROMA_BASE;
-    // Edge to edge: the trace is a reading of the whole width of the
-    // page, so it shouldn't stop short of either side.
-    const left = 0, right = W;
+    const centreX = W / 2;
+
+    ridges.forEach((ridge) => {
+      const lift = RIDGE_SPAN * (1 - Math.pow(RIDGE_FALLOFF, ridge.rank));
+      const shorter = Math.pow(RIDGE_SHRINK, ridge.rank);
+      const narrower = Math.pow(RIDGE_NARROW, ridge.rank);
+      // Shrunk about the baseline and the middle of the page, then
+      // lifted: so a rank keeps its own feet on its own baseline and
+      // only its peaks come down, and it draws in towards the centre of
+      // the page rather than towards the left edge of it.
+      ridge.node.setAttribute(
+        "transform",
+        "translate(" + centreX.toFixed(1) + " " + (baseY - lift).toFixed(1) + ")" +
+        " scale(" + narrower.toFixed(4) + " " + shorter.toFixed(4) + ")" +
+        " translate(" + (-centreX).toFixed(1) + " " + (-baseY).toFixed(1) + ")"
+      );
+    });
+
+    // The baseline and its ticks belong to the front line alone — the
+    // ranks behind are the reading receding, not seven instruments.
+    clear(baseLayer);
+    baseLayer.appendChild(line(0, baseY, W, baseY, 0.12));
+    for (let x = 64; x <= W - 32; x += 64) {
+      baseLayer.appendChild(line(x, baseY, x, baseY + 4, 0.12));
+    }
+  }
+
+  function drawTrace(W, H) {
+    const baseY = H - CHROMA_BASE;
+    // Edge to edge, and then some: the trace is a reading of the whole
+    // width of the page, and it is drawn past both sides so the narrower
+    // ranks behind it still reach them.
+    const left = -W * RIDGE_OVERDRAW;
+    const right = W * (1 + RIDGE_OVERDRAW);
     let d = "";
     for (let x = left; x <= right; x += CHROMA_STEP) {
       let y = baseY;
@@ -119,13 +207,7 @@ const SHOW_CHROMATOGRAM = true;
       y -= Math.sin(x * 0.21) * 0.7 + Math.sin(x * 0.07) * 0.5; // instrument noise
       d += (d ? " L " : "M ") + x.toFixed(1) + " " + y.toFixed(1);
     }
-    gChroma.appendChild(el("path", {
-      d: d, fill: "none", stroke: INK + "0.3)", "stroke-width": 1,
-    }));
-    gChroma.appendChild(line(left, baseY, right, baseY, 0.12));
-    for (let x = left + 64; x <= right - 32; x += 64) {
-      gChroma.appendChild(line(x, baseY, x, baseY + 4, 0.12));
-    }
+    trace.setAttribute("d", d);
   }
 
   // ============================================================
@@ -155,10 +237,14 @@ const SHOW_CHROMATOGRAM = true;
 
     const W = window.innerWidth, H = window.innerHeight;
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    if (W !== laidOutW || H !== laidOutH) {
+      laidOutW = W;
+      laidOutH = H;
+      layout(W, H);
+    }
 
     updatePeaks(readout.nodes, readout.activeIndex);
-    clear(gChroma);
-    drawChromatogram(W, H);
+    drawTrace(W, H);
   }
   requestAnimationFrame(frame);
 })();

@@ -227,10 +227,19 @@ const TRANSITION = "dissolve";
     const hubY = readout.hubY - base.top + container.scrollTop;
     const topY = container.scrollTop; // the top edge of what's on screen
 
+    // It draws to the top of the screen while the page is still held on
+    // the map — that is the whole point of it, the way out drawn before
+    // the page takes it. But the page then scrolls up to the sentence,
+    // and the line must not carry on past that: `top0` is where the leg
+    // going the other way starts, just below the sentence, so stopping
+    // there lands it on the same point and it reads as connecting to the
+    // words rather than running across them.
+    const endY = Math.max(top0, topY);
+
     reformLine.setAttribute("x1", hubX.toFixed(1));
     reformLine.setAttribute("x2", hubX.toFixed(1));
     reformLine.setAttribute("y1", hubY.toFixed(1));
-    reformLine.setAttribute("y2", (hubY + (topY - hubY) * reform).toFixed(1));
+    reformLine.setAttribute("y2", (hubY + (endY - hubY) * reform).toFixed(1));
     reformLine.style.strokeOpacity = (0.5 * Math.min(1, reform * 3)).toFixed(3);
   }
 

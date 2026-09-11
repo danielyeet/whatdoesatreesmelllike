@@ -132,10 +132,6 @@ const REAL_NODES = [
 
   const COL_INK = new THREE.Color(0x22221a);
   const COL_BRANCH = new THREE.Color(0x807c73);
-  // Where the map goes while the menu has the page inverted: the ground
-  // behind it turns black, so the sphere and its branches have to come
-  // up light or there would be nothing to see.
-  const COL_INVERTED = new THREE.Color(0xf0efe8);
   const COL_SPECK = new THREE.Color(0x999590);
   const COL_CENTRE = new THREE.Color(0x1c1c14);
   const COL_CENTRE_HALO = new THREE.Color(0x8d8a80);
@@ -1003,15 +999,9 @@ const REAL_NODES = [
     // together without any of them needing to know this is happening.
     // The core is the exception — it has to stay put and stay solid, so
     // its own scale is divided by the rig's to cancel it out.
-    // Two different things ask the map to fall into its centre: leaving
-    // the page upwards (__exit) and opening the menu on this slide
-    // (__menuCollapse). They never run at once, and both want exactly
-    // the same movement, so whichever is further along wins.
-    const menuCollapse = Math.min(1, Math.max(0, window.__menuCollapse || 0));
-    const collapse = Math.max(
-      Math.min(1, Math.max(0, window.__exit || 0)),
-      menuCollapse
-    );
+    // One thing asks the map to fall into its centre: leaving the page
+    // upwards (__exit).
+    const collapse = Math.min(1, Math.max(0, window.__exit || 0));
     // Eased so it starts slowly and accelerates inwards, which reads as
     // being pulled rather than simply shrinking.
     const pull = collapse * collapse * (3 - 2 * collapse);
@@ -1212,9 +1202,6 @@ const REAL_NODES = [
       // The root collar fades and darkens exactly like the resting tube
       // it hands off to, and grows in with the same emerge as the rest
       // of the branch rather than sitting there at full size early.
-      if (menuCollapse > 0.001) {
-        branch.resting.material.color.lerp(COL_INVERTED, menuCollapse);
-      }
       branch.rootFlare.material.opacity = branch.resting.material.opacity;
       branch.rootFlare.material.color.copy(branch.resting.material.color);
       branch.rootFlare.scale.setScalar(penWeight * branch.emerge);
@@ -1241,7 +1228,7 @@ const REAL_NODES = [
     // shrink with the rig and fade away, so what's left at the end of
     // the collapse is a plain solid sphere.
     core.scale.setScalar((coreIn * (1 + launch * 0.5) * (1 + pull * 0.3)) / rigScale);
-    core.material.color.copy(COL_CENTRE).lerp(COL_INVERTED, menuCollapse);
+    core.material.color.copy(COL_CENTRE);
     shellInner.scale.setScalar(coreIn * (breathe + launch * 0.8));
     shellOuter.scale.setScalar(coreIn * (1 + (breathe - 1) * 1.8 + launch * 1.3));
     shellInner.material.opacity = shellInner.userData.baseOpacity * (1 - pull);

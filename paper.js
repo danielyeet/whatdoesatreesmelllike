@@ -55,7 +55,15 @@
   const CURTAIN_FEATHER = 15;    // how soft the leading edge is, in % of the page
   const CURTAIN_START = 0;       // where in the scroll it starts
   const CURTAIN_SIDE_LEAD = 120; // how far down the edges run ahead, in %
-  const CURTAIN_MID_LAG = 1.25;  // >1 holds the middle back behind them
+  const CURTAIN_MID_LAG = 1.15;  // >1 holds the middle back behind them
+  // How far past the bottom of the page the sweep runs by the end. This
+  // has to be generous enough that the mask is completely solid well
+  // before it is taken off altogether (at c >= 0.995 below): taking off
+  // a mask that is still feathering anywhere shows as the paper
+  // suddenly arriving in that part of the page. With these numbers the
+  // page is fully covered by about four fifths of the way through, and
+  // everything after that is opacity alone.
+  const CURTAIN_REACH = 170;
   const BEND = 1.0;             // how hard the map refracts the grid
   const MOLTEN = 46;            // how far the grid is still running when it arrives
   const MOLTEN_SETTLE = 1.6;    // >1 means it firms up early and holds still
@@ -243,7 +251,13 @@
     }
   }
 
-  function drawGrid(withMicro) {
+  // `micro` is 0 to 1 rather than on or off. The finest tier is skipped
+  // while the grid is still molten — four times the line count for
+  // something you can't see through the warp anyway, and that is where
+  // the frame budget is tightest — but switching it on at a threshold
+  // put a whole tier of lines on screen in one frame, which read as the
+  // grid flashing. It fades up instead.
+  function drawGrid(micro) {
     gridCtx.clearRect(0, 0, W, H);
     gridCtx.lineWidth = 1;
 
@@ -253,8 +267,8 @@
     const originY = (H / 2) % BLOCK;
 
     // Finest tier first, so the two heavier ones draw over it.
-    if (withMicro) {
-      gridCtx.strokeStyle = "rgba(23,23,15," + MICRO_ALPHA + ")";
+    if (micro > 0.01) {
+      gridCtx.strokeStyle = "rgba(23,23,15," + (MICRO_ALPHA * micro).toFixed(5) + ")";
       gridCtx.beginPath();
       let index = 0;
       for (let x = originX - BLOCK; x < W + MICRO; x += MICRO, index++) {
@@ -345,7 +359,7 @@
     const feather = Math.max(3, CURTAIN_FEATHER * (1.5 - c * 0.8));
     // Starts just above the top of the page and finishes just below the
     // bottom, so neither end of the sweep shows as an edge on screen.
-    const mid = -14 + 118 * Math.pow(c, CURTAIN_MID_LAG);
+    const mid = -14 + CURTAIN_REACH * Math.pow(c, CURTAIN_MID_LAG);
     const lobe = Math.max(0.5, CURTAIN_SIDE_LEAD * Math.pow(c, 0.8));
 
     const sweep =
@@ -466,7 +480,12 @@
     // end. What holds it back from the middle of the screen is the
     // curtain, not its opacity.
     window.__p23 = smooth(raw);
-    const paperIn = Math.pow(clamp(raw / 0.95), 0.7);
+    // Flat at both ends: the paper has to come up out of nothing and
+    // settle into place without either end of it being a moment you can
+    // point at. An exponent below 1 was quicker off the mark but started
+    // with a step, which is exactly what reads as the paper appearing
+    // rather than gathering.
+    const paperIn = smoother(clamp(raw / 0.97));
     const curtain = smoother(clamp((raw - CURTAIN_START) / (0.94 - CURTAIN_START)));
     molten = MOLTEN * Math.pow(1 - paperIn, MOLTEN_SETTLE);
     moltenClock = now / 1000;
@@ -499,11 +518,7 @@
     if (paperIn > 0.004 && now - lastGrid >= gridInterval) {
       lastGrid = now;
       buildField(BEND * paperIn);
-      // The finest tier is skipped while the grid is still molten: it
-      // is four times the line count for something you can't see
-      // through the warp anyway, and that is where the frame budget
-      // is tightest.
-      drawGrid(molten < 1.5);
+      drawGrid(clamp((2.6 - molten) / 1.6));
     }
   }
 

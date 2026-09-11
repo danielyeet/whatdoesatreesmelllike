@@ -6,7 +6,7 @@
 // page you're on, and that its links are actually wired up.
 // ============================================================
 const { test, expect } = require("@playwright/test");
-const { serveDependenciesLocally } = require("./helpers");
+const { serveDependenciesLocally, jumpToSlide, waitForMapSettled } = require("./helpers");
 
 test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
@@ -88,4 +88,46 @@ test("menu links from a nested page resolve correctly, not relative to the folde
   expect(hrefs).toContain("../index.html");
   expect(hrefs).toContain("../categories/favorites.html");
   expect(hrefs).toContain("../contact.html");
+});
+
+// The landing page once opened this menu three different ways, one per
+// slide. It doesn't any more: there is one menu and it behaves the same
+// everywhere, which is what these check has not crept back.
+test("the menu opens the same way on every slide of the landing page", async ({ page }) => {
+  await page.goto("/index.html");
+  await page.waitForTimeout(400);
+
+  for (const slide of ["slide-1", "slide-2", "slide-3"]) {
+    if (slide !== "slide-1") {
+      await jumpToSlide(page, slide);
+      if (slide === "slide-3") await waitForMapSettled(page);
+      await page.waitForTimeout(300);
+    }
+
+    await page.locator(".menu-trigger").click();
+    await page.waitForTimeout(900);
+
+    const state = await page.evaluate(() => {
+      const overlay = document.getElementById("site-menu-overlay");
+      return {
+        classes: overlay.className,
+        transform: getComputedStyle(overlay).transform,
+        background: getComputedStyle(overlay).backgroundColor,
+        extraLayers: overlay.querySelectorAll("svg").length,
+        loose: document.querySelectorAll("body > svg.menu-fan").length,
+        bodyClasses: document.body.className,
+      };
+    });
+
+    expect(state.classes, `${slide}: no per-slide mode`).not.toMatch(/mode-/);
+    expect(state.classes).toContain("open");
+    expect(state.transform, `${slide}: the panel simply fades in`).toBe("none");
+    expect(state.background, `${slide}: the same dark panel`).toBe("rgb(10, 10, 10)");
+    expect(state.extraLayers, `${slide}: nothing drawn over the menu`).toBe(0);
+    expect(state.loose).toBe(0);
+    expect(state.bodyClasses, `${slide}: the page is not inverted`).not.toMatch(/menu-invert/);
+
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(600);
+  }
 });

@@ -163,3 +163,60 @@ test("falls back to a plain list of links when the 3D library is unavailable", a
   expect(labels).toEqual(EXPECTED_LABELS);
   expect(errors).toEqual([]);
 });
+
+// The trace along the foot of the slide is one line with several ranks
+// of itself standing behind it, each higher, smaller and fainter, so it
+// reads as receding into the page. They are copies of the one path
+// rather than traces of their own, which is what keeps them exactly in
+// step with it.
+test("the trace has ranks of itself receding behind it", async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/index.html");
+  await jumpToSlide(page, "slide-3");
+  await waitForMapSettled(page);
+  await page.waitForTimeout(600);
+
+  const ranks = await page.evaluate(() => {
+    const svg = document.querySelector(".chroma-trace");
+    const front = svg.querySelector("path#chroma-trace-line");
+    const copies = Array.from(svg.querySelectorAll("use"));
+    return {
+      hasFront: !!front && (front.getAttribute("d") || "").length > 100,
+      count: copies.length,
+      // Read back in the order they were drawn: furthest first.
+      ranks: copies.map((use) => {
+        const m = /translate\([-\d.]+ ([-\d.]+)\)\s*scale\(([\d.]+) ([\d.]+)\)/.exec(
+          use.getAttribute("transform") || ""
+        );
+        return {
+          references: use.getAttribute("href"),
+          y: m ? +m[1] : null,
+          narrower: m ? +m[2] : null,
+          shorter: m ? +m[3] : null,
+          opacity: +use.getAttribute("opacity"),
+        };
+      }),
+    };
+  });
+
+  expect(ranks.hasFront, "the front line is still drawn").toBe(true);
+  expect(ranks.count).toBeGreaterThan(2);
+
+  // Drawn furthest first, so read in order each one should be lower on
+  // the page, taller, wider and stronger than the one before it — that
+  // is, each is nearer than the last, ending at the front line.
+  ranks.ranks.forEach((rank, i) => {
+    expect(rank.references, "the ranks are copies of the one line").toBe("#chroma-trace-line");
+    if (i === 0) return;
+    const behind = ranks.ranks[i - 1];
+    expect(rank.y, `rank ${i} should sit below the one behind it`).toBeGreaterThan(behind.y);
+    expect(rank.shorter, `rank ${i} should stand taller`).toBeGreaterThan(behind.shorter);
+    expect(rank.narrower, `rank ${i} should run wider`).toBeGreaterThan(behind.narrower);
+    expect(rank.opacity, `rank ${i} should be the stronger`).toBeGreaterThan(behind.opacity);
+  });
+
+  // And the nearest rank still stands clear of the front line itself.
+  const nearest = ranks.ranks[ranks.ranks.length - 1];
+  expect(nearest.opacity, "even the nearest is fainter than the front line").toBeLessThan(1);
+  expect(nearest.shorter).toBeLessThan(1);
+});
