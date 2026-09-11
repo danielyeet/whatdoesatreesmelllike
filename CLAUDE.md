@@ -139,10 +139,13 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
   what previously looked broken. It also **conducts the exit sequence** when leaving the
   map upwards: `__exit` 0→1, then `__reform` 0→1, then the scroll, then both back to 0.
   Nothing scrolls until the first two have finished — that ordering is the whole effect,
-  and `tests/leaving-the-map.spec.js` guards it. It also fades the title block ("A
-  portfolio / 2026 edition") out and back in with the scroll position between slides 1
-  and 2 — which means first clearing the `rise` keyframe animation that otherwise
-  outranks it, once that animation has finished playing.
+  and `tests/leaving-the-map.spec.js` guards it. It also fades both corners of the title
+  slide — the block bottom right ("A portfolio / 2026 edition") and the "Scroll" button
+  bottom left — out and back in with the scroll position between slides 1 and 2, through
+  one shared `fadeOnLeavingSlideOne()`. For the block that means first clearing the
+  `rise` keyframe animation that otherwise outranks it, once that animation has finished
+  playing; the button has no such animation. Whichever is faded out also stops taking
+  pointer events, so nothing invisible is still clickable.
 - **`paper.js`** — the wash, the bending squared-paper grid, and the static, drawn on
   canvases at throttled rates (`GRID_MS`, `NOISE_MS`) rather than every frame.
 
@@ -323,7 +326,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **slide** | One of the three full-screen sections of `index.html` (`#slide-1` title, `#slide-2` the italic line, `#slide-3` the node map). |
 | **the paper** | The three decorative layers behind the landing page, drawn by `paper.js`: the black **wash**, the squared **grid**, and the **static** (grain). |
 | **curtain** | The mask that reveals the wash and the grid going 2 → 3 — a wipe from the top of the page downwards whose left and right edges run ahead of its middle, so the sides fill in first and the middle of the page last. Three mask layers **added** (not intersected): one sweep down the page, and a lobe growing out of each top corner. `CURTAIN_*` in `paper.js`, `setCurtain()`. It is set on those two layers directly, not on `.paper`: the grain, the map and the thread are never masked — they come up on their own opacity ramps. |
-| **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (a shockwave crosses, the map falls into its centre, everything clears to **white**), then `__reform` 0→1 (an ink line draws from the sphere to the top), and only then scrolls. The reforming line stops below the slide-2 sentence, landing on the same point the downward leg leaves from. |
+| **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (a shockwave crosses, the map falls into its centre, everything clears to **white**), then `__reform` 0→1 (an ink line draws from the sphere to the top), and only then scrolls. The reforming line stops below the slide-2 sentence, landing on the same point the downward leg leaves from. The sphere left at the end of it does not fade: `node-scene.js` holds `arrival` while `__exit` is set, so it stays solid black and rides the page off the bottom of the screen, and what fades afterwards does so off screen. |
 | **the wake** | Only the specks along a branch now — see **wake / wake speck** below. The paper's arrival going 2 → 3 used to be shaped as a duck's wake (a V trailing back from the middle of the page, `WAKE_HALF_ANGLE`); that was replaced by the top-down wipe described under **curtain**, and neither the V nor `WAKE_HALF_ANGLE` exists in `paper.js` any more. |
 | **the shockwave** | The narrow ring that closes on the centre ahead of the collapse, on its own faster clock (`WAVE_*` in `paper.js`). Distinct from the suction, which pulls everywhere at once. A second ring (`OUTWARD_*`) runs the other way at the same time, shoving the grid outward while everything else pulls in; `OUTWARD_STRENGTH = 0` removes it. |
 | **the menu** | One menu for the whole site, built by `nav.js`: the same dark overlay, fading in the same way, on every page and on all three slides of the landing page. It briefly opened three different ways on the landing page (`mode-title` / `mode-side` / `mode-map`, in a `menu-modes.js` since deleted); "uniform" is the state the owner asked for and none of that is in the code any more. |
@@ -340,7 +343,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **cloud** | The separate drifting background speck system. Currently off (`CLOUD_COUNT = 0`) but still wired up. |
 | **registration mark** | The hollow square marker used for node labels, reused for the preview's dock and the scroll cue — not a plain dot. |
 | **emerge** | A branch's 0→1 growth out from the centre on arrival, staggered per branch (`EMERGE_STAGGER`). |
-| **arrival** | The eased follow of `window.__p23`; drives the scene's opacity and every branch's `emerge`. |
+| **arrival** | The eased follow of `window.__p23`; drives the scene's opacity and every branch's `emerge`. Held where it is for as long as `__exit` is set — see the sphere riding out under **the collapse**. |
 | **corrugation** | The sharp zigzag the cursor drags across a nearby branch (`CORR_*`), re-rolled several times a second so it reads as jitter, not a travelling wave. |
 | **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
 | **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. |

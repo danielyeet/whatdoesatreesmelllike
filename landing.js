@@ -171,20 +171,24 @@
   if (scrollCue) scrollCue.addEventListener("click", () => goTo(1));
 
   // ============================================================
-  // THE TITLE BLOCK ("A portfolio / 2026 edition")
+  // THE CORNERS OF THE TITLE SLIDE
   //
-  // It fades out on its own as you leave the first slide and back in
+  //   the title block ("A portfolio / 2026 edition"), bottom right
+  //   the "Scroll" button, bottom left
+  //
+  // Each fades out on its own as you leave the first slide and back in
   // as you return, tied to how far down the page actually is rather
   // than to any animation — so it tracks a slow drag or a flicked
   // wheel equally, and reverses the moment you turn around.
   //
-  // Driven from the scroll event rather than a frame loop: it has
+  // Driven from the scroll event rather than a frame loop: they have
   // nothing to say while the page is still, and a listener that only
   // runs when something moved costs nothing the rest of the time.
   // ============================================================
-  const titleBlock = document.querySelector(".title-block");
-  if (titleBlock) {
-    const updateTitleBlock = () => {
+  function fadeOnLeavingSlideOne(element) {
+    if (!element) return;
+
+    const update = () => {
       const from = slides[0].offsetTop;
       const to = slides[1].offsetTop;
       const leg = to - from || 1;
@@ -192,27 +196,36 @@
       // Gone by a third of the way down, so it leaves early and isn't
       // still hanging about over the second slide.
       const shown = Math.max(0, 1 - progress * 3);
-      titleBlock.style.opacity = shown.toFixed(3);
+      element.style.opacity = shown.toFixed(3);
       // Lifted very slightly as it goes, so it reads as leaving rather
       // than simply dimming in place.
-      titleBlock.style.transform = "translateY(" + (progress * -18).toFixed(1) + "px)";
+      element.style.transform = "translateY(" + (progress * -18).toFixed(1) + "px)";
+      // Nothing invisible should still be clickable — the Scroll button
+      // is a button, and this is the whole of what stops it catching a
+      // click it can no longer be seen to deserve.
+      element.style.pointerEvents = shown < 0.02 ? "none" : "";
     };
-    // The block arrives with a "rise" keyframe animation whose fill is
-    // "both", which keeps hold of opacity and transform for the life of
-    // the element — and an animation outranks the plain styles set
-    // above, so until it is cleared nothing here has any effect. Handing
-    // over once it has finished playing keeps the entrance and lets the
-    // scroll take it from there. (Under reduced motion there is no
-    // animation to wait for, so the fallback below covers that.)
+
+    // The title block arrives with a "rise" keyframe animation whose
+    // fill is "both", which keeps hold of opacity and transform for the
+    // life of the element — and an animation outranks the plain styles
+    // set above, so until it is cleared nothing here has any effect.
+    // Handing over once it has finished playing keeps the entrance and
+    // lets the scroll take it from there. (The Scroll button has no
+    // such animation and simply works from the start; under reduced
+    // motion neither does, so the timer below covers that too.)
     const takeOver = () => {
-      titleBlock.style.animation = "none";
-      updateTitleBlock();
+      element.style.animation = "none";
+      update();
     };
-    titleBlock.addEventListener("animationend", takeOver, { once: true });
+    element.addEventListener("animationend", takeOver, { once: true });
     setTimeout(takeOver, 1400);
 
-    container.addEventListener("scroll", updateTitleBlock, { passive: true });
-    window.addEventListener("resize", updateTitleBlock);
-    updateTitleBlock();
+    container.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
   }
+
+  fadeOnLeavingSlideOne(document.querySelector(".title-block"));
+  fadeOnLeavingSlideOne(document.querySelector(".scroll-cue"));
 })();

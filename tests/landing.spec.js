@@ -69,41 +69,65 @@ test("arrow keys do nothing while the menu is open, and work again once it close
   await expect.poll(() => scrollTop(page), { timeout: 8000 }).toBe(await slideTop(page, "slide-2"));
 });
 
-// The "A portfolio / 2026 edition" block leaves on its own as you go
-// down and comes back as you return, tracking the scroll rather than
-// playing a fixed animation — so it reverses the moment you turn round.
-test("the title block fades out on the way down and back in on the way up", async ({ page }) => {
+// Both corners of the title slide — the block bottom right and the
+// Scroll button bottom left — leave on their own as you go down and
+// come back as you return, tracking the scroll rather than playing a
+// fixed animation, so they reverse the moment you turn round.
+for (const [what, selector] of [
+  ["title block", ".title-block"],
+  ["Scroll button", ".scroll-cue"],
+]) {
+  test(`the ${what} fades out on the way down and back in on the way up`, async ({ page }) => {
+    await page.goto("/index.html");
+
+    const shown = () =>
+      page.locator(selector).evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+    // The block arrives with an animation of its own, which holds on to
+    // opacity until it has finished playing; the scroll takes over after.
+    await page.waitForTimeout(1600);
+    expect(await shown(), "should be there to begin with").toBeGreaterThan(0.9);
+
+    // Park the page partway down by hand, rather than waiting out the
+    // site's own long scroll, and check it responds to where the page is.
+    const park = (fraction) =>
+      page.evaluate((f) => {
+        const container = document.getElementById("scroll-container");
+        container.style.scrollSnapType = "none";
+        container.scrollTop = document.getElementById("slide-2").offsetTop * f;
+      }, fraction);
+
+    await park(0.2);
+    await page.waitForTimeout(150);
+    const partway = await shown();
+    expect(partway, "should already be going").toBeLessThan(0.7);
+    expect(partway, "but not gone yet").toBeGreaterThan(0);
+
+    await park(0.5);
+    await page.waitForTimeout(150);
+    expect(await shown(), "gone well before the second slide").toBeLessThan(0.05);
+
+    await park(0);
+    await page.waitForTimeout(150);
+    expect(await shown(), "and back again on the way up").toBeGreaterThan(0.9);
+  });
+}
+
+// Nothing you cannot see should still be clickable.
+test("the Scroll button stops taking clicks once it has faded", async ({ page }) => {
   await page.goto("/index.html");
-
-  const shown = () =>
-    page.locator(".title-block").evaluate((el) => parseFloat(getComputedStyle(el).opacity));
-  // It arrives with an animation of its own, which holds on to opacity
-  // until it has finished playing; the scroll only takes over after that.
   await page.waitForTimeout(1600);
-  expect(await shown(), "should be there to begin with").toBeGreaterThan(0.9);
 
-  // Park the page partway down by hand, rather than waiting out the
-  // site's own long scroll, and check it responds to where the page is.
-  const park = (fraction) =>
-    page.evaluate((f) => {
-      const container = document.getElementById("scroll-container");
-      container.style.scrollSnapType = "none";
-      container.scrollTop = document.getElementById("slide-2").offsetTop * f;
-    }, fraction);
+  const clickable = () =>
+    page.locator(".scroll-cue").evaluate((el) => getComputedStyle(el).pointerEvents);
+  expect(await clickable(), "should work where it can be seen").not.toBe("none");
 
-  await park(0.2);
+  await page.evaluate(() => {
+    const container = document.getElementById("scroll-container");
+    container.style.scrollSnapType = "none";
+    container.scrollTop = document.getElementById("slide-2").offsetTop;
+  });
   await page.waitForTimeout(150);
-  const partway = await shown();
-  expect(partway, "should already be going").toBeLessThan(0.7);
-  expect(partway, "but not gone yet").toBeGreaterThan(0);
-
-  await park(0.5);
-  await page.waitForTimeout(150);
-  expect(await shown(), "gone well before the second slide").toBeLessThan(0.05);
-
-  await park(0);
-  await page.waitForTimeout(150);
-  expect(await shown(), "and back again on the way up").toBeGreaterThan(0.9);
+  expect(await clickable()).toBe("none");
 });
 
 test("the page still works with animations turned off in the operating system", async ({ page }) => {
