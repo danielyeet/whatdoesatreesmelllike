@@ -12,5 +12,11 @@ out/
 .env.*
 !.env.example
 
+# Test output (regenerated every run — never worth committing)
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
 # npm logs
 npm-debug.log*
