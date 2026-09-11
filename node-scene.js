@@ -40,14 +40,6 @@ const REAL_NODES = [
   { label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html", pos: [-0.4, -2.62, 1.52] },
 ];
 
-// PLACEHOLDERS — replace or empty this list. The faint grey words
-// floating in the map: not links, not clickable, just things the map
-// is "about". They sit on fixed points of their own and ride out of
-// the centre with everything else.
-const ATMOSPHERE_LABELS = [
-  "SLOW", "ROOTS", "AFTER RAIN", "MARGINALIA", "SMOKE", "REPETITION",
-];
-
 (function () {
   const wrap = document.getElementById("node-scene");
   const canvas = document.getElementById("node-canvas");
@@ -121,7 +113,6 @@ const ATMOSPHERE_LABELS = [
   const CLOUD_OUTER = 7.4;      // and runs well past the edges of the screen
   const CLOUD_DEPTH = 1.45;     // extra spread along z, out of the diagram's plane
   const CLOUD_LIFE = [11, 27];  // seconds for one fade-in, hold, fade-out
-  const GHOST_RADIUS = 2.95;
   const CONVERGE_REACH = 1.7;   // how far a cloud particle will travel to join a hovered branch
 
   const SPECK_SIZE = 0.072;
@@ -135,8 +126,8 @@ const ATMOSPHERE_LABELS = [
   // from the tube's own thin radius out to something the core and its
   // halo can absorb — without it a branch reads as a wire poked into a
   // ball rather than something growing out of it.
-  const ROOT_FLARE_RADIUS = 0.062; // how wide it gets at the hub end
-  const ROOT_FLARE_LENGTH = 0.17;  // how far out it reaches before handing off to the plain tube
+  const ROOT_FLARE_RADIUS = 0.085; // how wide it gets at the hub end
+  const ROOT_FLARE_LENGTH = 0.24;  // how far out it reaches before handing off to the plain tube
 
   const COL_INK = new THREE.Color(0x22221a);
   const COL_BRANCH = new THREE.Color(0x807c73);
@@ -154,13 +145,16 @@ const ATMOSPHERE_LABELS = [
 
   const hub = new THREE.Vector3(0, 0, 0);
   const branches = [];
-  const ghosts = [];
 
   // ============================================================
   // THE CENTRE
   // ============================================================
+  // CORE_RADIUS is the solid dark sphere at the middle; the two shells
+  // are the soft halo around it. Change the first number and the others
+  // follow — they're written as multiples of it on purpose.
+  const CORE_RADIUS = 0.16;     // was 0.097 — a more present centre
   const core = new THREE.Mesh(
-    new THREE.SphereGeometry(0.097, 32, 32),
+    new THREE.SphereGeometry(CORE_RADIUS, 32, 32),
     new THREE.MeshBasicMaterial({ color: COL_CENTRE.clone() })
   );
   rig.add(core);
@@ -174,8 +168,8 @@ const ATMOSPHERE_LABELS = [
     rig.add(mesh);
     return mesh;
   }
-  const shellInner = shell(0.23, 0.24);
-  const shellOuter = shell(0.5, 0.09);
+  const shellInner = shell(CORE_RADIUS * 2.37, 0.24);
+  const shellOuter = shell(CORE_RADIUS * 5.15, 0.09);
 
   // ============================================================
   // SPECK RENDERING
@@ -329,15 +323,29 @@ const ATMOSPHERE_LABELS = [
       rig.add(dot.mesh);
     });
 
-    // The wake: specks strung along the branch itself, crowded toward
-    // the centre and drifting further off-line as they go out. Their
-    // positions come from the branch, so they can't be lopsided, and
-    // they ride the sway with it.
+    // The wake: specks scattered around the branch, crowded toward the
+    // centre and drifting further off it as they go out. Their positions
+    // come from the branch, so they can't be lopsided, and they ride the
+    // sway with it.
+    //
+    // They sit at a random angle all the way around the branch rather
+    // than being nudged to one side of it: perp and perp2 are the two
+    // directions across the branch, so a sine and cosine of one random
+    // angle places a speck anywhere on the ring around it. Offsetting
+    // along perp alone — which is what this used to do — left every
+    // speck on a single flat plane through the branch, and the map
+    // gave that away the moment it turned.
     for (let k = 1; k <= WAKE_PER_BRANCH; k++) {
-      const t = WAKE_FROM + (WAKE_TO - WAKE_FROM) * Math.pow(k / (WAKE_PER_BRANCH + 1), WAKE_BIAS);
+      const even = WAKE_FROM + (WAKE_TO - WAKE_FROM) * Math.pow(k / (WAKE_PER_BRANCH + 1), WAKE_BIAS);
+      // A little scatter along the branch too, so they don't read as
+      // evenly spaced rings once they're no longer in a line.
+      const t = Math.min(0.99, Math.max(0.05, even + (Math.random() - 0.5) * 0.06));
       const onCurve = curve.getPoint(t);
-      const side = k % 2 === 0 ? 1 : -1;
-      const on = onCurve.clone().addScaledVector(perp, WAKE_OFFSET * side * (0.35 + t * 1.1));
+      const angle = Math.random() * Math.PI * 2;
+      const spread = WAKE_OFFSET * (0.35 + t * 1.1) * (0.5 + Math.random() * 0.95);
+      const on = onCurve.clone()
+        .addScaledVector(perp, Math.cos(angle) * spread)
+        .addScaledVector(perp2, Math.sin(angle) * spread);
 
       const directions = [];
       for (let q = 0; q < PARTICLES_PER_SPECK; q++) {
@@ -424,26 +432,6 @@ const ATMOSPHERE_LABELS = [
     particle.nx = particle.x; particle.ny = particle.y; particle.nz = particle.z;
     cloudParticles.push(particle);
   }
-
-  // ============================================================
-  // THE GREY WORDS — on fixed points, so they hold still
-  // ============================================================
-  const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-  ATMOSPHERE_LABELS.forEach((word, i) => {
-    const count = Math.max(1, ATMOSPHERE_LABELS.length);
-    const u = 1 - ((i + 0.5) / count) * 2;
-    const ring = Math.sqrt(Math.max(0, 1 - u * u));
-    const theta = i * GOLDEN_ANGLE * 2.5;
-    const p = new THREE.Vector3(Math.cos(theta) * ring, u, Math.sin(theta) * ring).multiplyScalar(GHOST_RADIUS);
-    const anchorObj = new THREE.Object3D();
-    anchorObj.position.copy(p);
-    rig.add(anchorObj);
-    const el = document.createElement("div");
-    el.className = "node3d-ghost";
-    el.textContent = word;
-    labelLayer.appendChild(el);
-    ghosts.push({ el: el, anchor: anchorObj, base: p.clone() });
-  });
 
   // ============================================================
   // POINTER
@@ -883,7 +871,6 @@ const ATMOSPHERE_LABELS = [
 
   let clock = 0;
   let arrival = 0;
-  let ghostEmerge = 0;
   const readout = {};
   const readoutNodes = [];
   const mapRadius = REAL_NODES.reduce(function (m, n) {
@@ -1051,7 +1038,6 @@ const ATMOSPHERE_LABELS = [
     branches.forEach((branch, i) => {
       branch.emerge = emergeEase((arrival - i * stagger) / (1 - EMERGE_STAGGER));
     });
-    ghostEmerge = emergeEase((arrival - EMERGE_STAGGER * 0.5) / (1 - EMERGE_STAGGER));
 
     branches.forEach((branch) => {
       // Nothing can be moving this tube: it's done emerging, sway is
@@ -1242,17 +1228,6 @@ const ATMOSPHERE_LABELS = [
       rn.x = x; rn.y = y; rn.depth = depth; rn.label = n.label;
       rn.wx = worldPos.x; rn.wy = worldPos.y; rn.wz = worldPos.z;
       rn.px = n._end.x; rn.py = n._end.y; rn.pz = n._end.z;
-    });
-
-    ghosts.forEach((ghost) => {
-      ghost.anchor.position.copy(ghost.base).multiplyScalar(ghostEmerge);
-      ghost.anchor.getWorldPosition(worldPos);
-      projected.copy(worldPos).project(camera);
-      const depth = viewDepth(worldPos);
-      ghost.el.style.transform =
-        "translate(" + ((projected.x * 0.5 + 0.5) * w) + "px," + ((-projected.y * 0.5 + 0.5) * h) + "px)" +
-        " translate(14px, -50%)";
-      ghost.el.style.opacity = String((0.34 + (1 - depth) * 0.4) * (1 - 0.55 * strongest));
     });
 
     core.getWorldPosition(worldPos);

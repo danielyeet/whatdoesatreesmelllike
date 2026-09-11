@@ -392,23 +392,6 @@ body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.
 .node3d-label.flip { flex-direction: row-reverse; }
 .node3d-label.flip .node3d-sub { left: auto; right: 29px; text-align: right; }
 
-/* The second tier: words the map is about, floating in it. Not
-   links, not clickable, and deliberately quiet. */
-.node3d-ghost {
-  position: absolute;
-  left: 0;
-  top: 0;
-  font-family: var(--sans);
-  font-weight: 400;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--muted);
-  white-space: nowrap;
-  pointer-events: none;
-  text-shadow: 0 0 6px var(--paper-tone);
-}
-
 /* ==================================================================
    NODE CLICK PREVIEW (trial: Scent descriptions)
    The rest of the page defocuses behind it — same dark tone the
