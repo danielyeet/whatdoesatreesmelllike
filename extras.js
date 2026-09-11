@@ -33,7 +33,7 @@ const SHOW_CHROMATOGRAM = true;
   const INK = "rgba(23,23,15,";
 
   const CHROMA_BASE = 52;        // height of the baseline above the foot
-  const CHROMA_PEAK = 77;        // how tall the tallest peak can run (was 96)
+  const CHROMA_PEAK = 54;        // how tall the tallest peak can run (was 77, and 96 before)
   const CHROMA_WIDTH = 42;       // peak width in pixels
   const CHROMA_STEP = 4;         // sampling along the trace
   const CHROMA_HOVER_BOOST = 1.45; // how much taller the hovered node's own peak grows
