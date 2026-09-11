@@ -129,12 +129,30 @@ const REAL_NODES = [
   const TUBE_SIDES = 8;
   const REF_PX_PER_UNIT = 94;
 
-  // A short tapered collar at the hub end of every branch, widening
-  // from the tube's own thin radius out to something the core and its
-  // halo can absorb — without it a branch reads as a wire poked into a
-  // ball rather than something growing out of it.
-  const ROOT_FLARE_RADIUS = 0.085; // how wide it gets at the hub end
-  const ROOT_FLARE_LENGTH = 0.24;  // how far out it reaches before handing off to the plain tube
+  // The collar at the hub end of every branch: what bridges a hair-thin
+  // tube and a sphere twenty-odd times its width, so a branch reads as
+  // growing out of the centre rather than as a wire poked into a ball.
+  //
+  // Two things make that join disappear, and it needs both. Its profile
+  // is a curve, not a cone — wide where it leaves the sphere and
+  // falling away quickly to the tube's own width, the shape a branch
+  // makes where it meets a trunk. And it takes the centre's colour
+  // where it leaves the centre, coming up to the branch's own grey over
+  // the next fraction of a unit, so there is no line to see at the
+  // surface of the sphere at all.
+  //
+  // Everything below is measured from the sphere's surface, which is
+  // the only part of it anyone sees. It wants to be a swelling, not a
+  // spike: made too wide or too short it stops reading as the branch
+  // thickening into the sphere and starts reading as a thorn stuck on
+  // the outside of it. The far end must also stay inside the straight
+  // run the branch begins with (0.13 of the branch's length, about
+  // 0.45 from the middle) — the collar is straight, and past that the
+  // curve it belongs to has started to bend away.
+  const ROOT_FLARE_RADIUS = 0.021; // how wide it is where it leaves the sphere (the tube is 0.0075)
+  const ROOT_FLARE_LENGTH = 0.19;  // how far past the sphere before it is the tube's own width
+  const ROOT_FLARE_CURVE = 2.2;    // above 1: most of the narrowing happens close in
+  const ROOT_FLARE_BLEND = 0.13;   // how far past the sphere it finishes taking the branch's colour
 
   const COL_INK = new THREE.Color(0x22221a);
   const COL_BRANCH = new THREE.Color(0x807c73);
@@ -274,6 +292,50 @@ const REAL_NODES = [
   // BRANCHES
   // ============================================================
   const waypointGeometry = new THREE.SphereGeometry(0.032, 14, 14);
+
+  // The collar, revolved from a profile rather than built as a cone so
+  // the taper can be a curve. Every branch has the same one — only the
+  // direction it points differs — so it is made once here.
+  const rootFlareGeometry = (function () {
+    const STEPS = 18;
+    const INSET = 0.05;   // starts a little inside the sphere, where it cannot be seen
+    const profile = [];
+    for (let i = 0; i <= STEPS; i++) {
+      const y = CORE_RADIUS - INSET + (i / STEPS) * (ROOT_FLARE_LENGTH + INSET);
+      // How far out of the sphere this ring is, as a fraction of the
+      // collar's reach. Rings still inside it all sit at the full width.
+      const out = Math.max(0, (y - CORE_RADIUS) / ROOT_FLARE_LENGTH);
+      profile.push(new THREE.Vector2(
+        BRANCH_RADIUS + (ROOT_FLARE_RADIUS - BRANCH_RADIUS) * Math.pow(1 - out, ROOT_FLARE_CURVE),
+        y
+      ));
+    }
+    const geometry = new THREE.LatheGeometry(profile, 16);
+
+    // The colour ramp, stored per vertex. It is a multiplier rather than
+    // a colour of its own, because the material's colour is already kept
+    // in step with the tube it hands off to (including the darkening on
+    // hover) — so this says how much of that colour to keep, and the
+    // fraction at the hub end is exactly the one that turns the branch's
+    // grey into the centre's near-black.
+    const keep = [
+      COL_CENTRE.r / COL_BRANCH.r,
+      COL_CENTRE.g / COL_BRANCH.g,
+      COL_CENTRE.b / COL_BRANCH.b,
+    ];
+    const position = geometry.attributes.position;
+    const colours = new Float32Array(position.count * 3);
+    for (let i = 0; i < position.count; i++) {
+      // Measured out from the sphere's surface, so the blend is where it
+      // can be seen rather than partly buried inside the sphere.
+      let tone = (position.getY(i) - CORE_RADIUS) / ROOT_FLARE_BLEND;
+      tone = Math.max(0, Math.min(1, tone));
+      tone = tone * tone * (3 - 2 * tone);
+      for (let c = 0; c < 3; c++) colours[i * 3 + c] = keep[c] + (1 - keep[c]) * tone;
+    }
+    geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
+    return geometry;
+  })();
   const wakeSpecks = [];
 
   REAL_NODES.forEach((n, i) => {
@@ -313,15 +375,15 @@ const REAL_NODES = [
     const resting = tube(BRANCH_RADIUS, COL_BRANCH, 0.78);
     const emphasised = tube(BRANCH_RADIUS_EMPH, COL_INK, 0);
 
-    // A short tapered collar at the hub end, widening from the tube's
-    // own thin radius out to something the core's halo can absorb —
-    // otherwise a branch reads as a wire poked into a ball rather than
-    // something growing out of it. Open-ended: both its ends are meant
-    // to disappear, one into the core, one into the tube.
+    // The collar, pointed along the direction the branch leaves in.
+    // Open at both ends: one is meant to disappear into the sphere, the
+    // other into the tube.
     const rootFlare = new THREE.Mesh(
-      new THREE.CylinderGeometry(BRANCH_RADIUS, ROOT_FLARE_RADIUS, ROOT_FLARE_LENGTH, 12, 1, true)
-        .translate(0, ROOT_FLARE_LENGTH / 2, 0),
-      new THREE.MeshBasicMaterial({ color: COL_BRANCH.clone(), transparent: true, opacity: 0.78, depthWrite: false })
+      rootFlareGeometry,
+      new THREE.MeshBasicMaterial({
+        color: COL_BRANCH.clone(), transparent: true, opacity: 0.78,
+        depthWrite: false, vertexColors: true,
+      })
     );
     rootFlare.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curve.getTangent(0));
     rig.add(rootFlare);
@@ -1224,7 +1286,13 @@ const REAL_NODES = [
       // of the branch rather than sitting there at full size early.
       branch.rootFlare.material.opacity = branch.resting.material.opacity;
       branch.rootFlare.material.color.copy(branch.resting.material.color);
-      branch.rootFlare.scale.setScalar(penWeight * branch.emerge);
+      // Across the collar, not along it: the pen gets heavier on a small
+      // screen to keep the lines readable, and thickening the collar to
+      // match is right, but stretching it further out of the sphere is
+      // not — that is a fixed piece of the diagram's geometry.
+      branch.rootFlare.scale.set(
+        penWeight * branch.emerge, branch.emerge, penWeight * branch.emerge
+      );
       branch.dots.forEach((dot) => {
         // On hover they shrink away into the curve they already sit on,
         // so a hovered branch reads as one unbroken line rather than a

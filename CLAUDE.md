@@ -267,15 +267,24 @@ Other things that will bite you:
   links. Keep that fallback working when editing the top of the file.
 - The `TUNING` block near the top holds every magic number (`IDLE_SPEED`, `FRAME_V` /
   `FRAME_H` — larger values draw the map *smaller* — `BRANCH_RADIUS`, `SPECK_SIZE`,
-  `REF_PX_PER_UNIT`, `ROOT_FLARE_RADIUS`/`ROOT_FLARE_LENGTH`, and the wake / cloud /
+  `REF_PX_PER_UNIT`, the `ROOT_FLARE_*` group, and the wake / cloud /
   corrugation groups). Tune there, not inline. Several systems are dialled to zero but
   left wired up (`SWAY = 0`, `CLOUD_COUNT = 0`); bring them back by raising the number
   rather than rebuilding the machinery.
-- Each branch has a short tapered `rootFlare` mesh bridging its thin tube radius up to
-  something the core's halo can absorb, so it reads as growing out of the centre rather
-  than as a wire poked into a ball. It's derived from the branch's curve (built off
-  `curve.getTangent(0)`) and kept in sync with the tube's own emerge/weight/opacity every
-  frame — don't hand-place or hand-animate it separately.
+- Each branch has a `rootFlare` collar at its hub end, bridging a hair-thin tube and a
+  sphere twenty-odd times its width so a branch reads as growing out of the centre
+  rather than as a wire poked into a ball. Two things make that join disappear and it
+  needs both: a **curved** profile (a `LatheGeometry` revolved from a fillet-shaped
+  profile, not a cone — made too wide or too short it stops reading as a swelling and
+  starts reading as a thorn), and a **colour ramp** stored per vertex, carrying the
+  centre's own near-black at the sphere's surface up to the branch's grey over the next
+  `ROOT_FLARE_BLEND`. That ramp is a *multiplier*, because the material's colour is
+  already kept in step with the tube's, hover darkening included. The collar is straight,
+  so `ROOT_FLARE_LENGTH` must stay inside the straight run each branch begins with
+  (0.13 of its length, about 0.45 from the middle). It is pointed by
+  `curve.getTangent(0)` and kept in sync with the tube's own emerge/weight/opacity every
+  frame — don't hand-place or hand-animate it separately. One geometry is shared by all
+  seven; only the material and the direction differ.
 - `viewDepth(worldPos)` is the real per-node depth (0 near, 1 far), used for label
   opacity, z-index stacking, and the chromatogram's peak heights. Raw NDC
   `projected.z` looked plausible but was useless here — every node landed within 0.01 of
@@ -338,7 +347,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **link node** / **real node** | A clickable endpoint from `REAL_NODES`. A branch *stops* at one; nothing continues past it. |
 | **branch** | The tube from hub to a link node — a `CatmullRomCurve3` that leaves the hub radially, then bows through two waypoints. Tubes, not lines, so they can thicken on hover. |
 | **waypoint** | The two small dots along a branch (at t ≈ 0.32 and 0.69), derived from the node's position, not placed by hand. |
-| **root flare** / **collar** | The short tapered mesh at a branch's hub end, blending its thin tube radius into the core's halo instead of poking into it as a wire. |
+| **root flare** / **collar** | The short curved swelling at a branch's hub end (`ROOT_FLARE_*`), widening the tube where it meets the sphere and taking the sphere's own colour there, so the branch grows out of the centre instead of being poked into it. |
 | **wake** / **wake speck** | The specks strung along a branch, sampled off its own curve. Each speck is 9 stacked particles that spray apart when pointed at. |
 | **cloud** | The separate drifting background speck system. Currently off (`CLOUD_COUNT = 0`) but still wired up. |
 | **registration mark** | The hollow square marker used for node labels, reused for the preview's dock and the scroll cue — not a plain dot. |
