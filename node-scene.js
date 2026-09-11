@@ -73,8 +73,13 @@ const REAL_NODES = [
   // TUNING
   // ============================================================
   const IDLE_SPEED = REDUCE_MOTION ? 0 : 0.00024; // was 0.00018 — a slightly quicker drift
-  const DRAG_SENSITIVITY = 0.0026;
-  const MAX_SPIN = 0.04;
+  // How far the map turns for a given movement of the mouse, and the
+  // fastest it will spin however hard that movement is. Both were
+  // raised (from 0.0026 and 0.04): a drag right across the screen used
+  // to turn it well under a quarter turn, which made getting round to
+  // the back of the diagram a matter of several goes at it.
+  const DRAG_SENSITIVITY = 0.0052;
+  const MAX_SPIN = 0.07;
   // No tilt limit any more: the map turns freely in every direction.
   const EMERGE_STAGGER = 0.35;  // how much later the last branch leaves than the first
   const EMERGE_OVERSHOOT = 1.15;// >0 gives them a slight sail past their mark

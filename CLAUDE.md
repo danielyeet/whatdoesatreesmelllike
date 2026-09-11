@@ -265,7 +265,9 @@ Other things that will bite you:
   that node's *own* branch traced out to the window, not a second curve drawn alongside.
 - If `THREE` is undefined the scene replaces itself with a plain list of `REAL_NODES`
   links. Keep that fallback working when editing the top of the file.
-- The `TUNING` block near the top holds every magic number (`IDLE_SPEED`, `FRAME_V` /
+- The `TUNING` block near the top holds every magic number (`IDLE_SPEED`,
+  `DRAG_SENSITIVITY` / `MAX_SPIN` — how far the map turns for a given movement of the
+  hand, and the fastest it will spin however hard that movement is — `FRAME_V` /
   `FRAME_H` — larger values draw the map *smaller* — `BRANCH_RADIUS`, `SPECK_SIZE`,
   `REF_PX_PER_UNIT`, the `ROOT_FLARE_*` group, and the wake / cloud /
   corrugation groups). Tune there, not inline. Several systems are dialled to zero but

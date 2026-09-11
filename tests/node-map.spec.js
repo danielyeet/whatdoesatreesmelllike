@@ -70,6 +70,61 @@ test.describe("the map itself", () => {
   // number — so "how far away is this node" was effectively unknown,
   // and everything that leans on it (label fading, which label sits in
   // front, the trace along the bottom) was working off nothing.
+  // How far the map turns for a given movement of the hand. This was
+  // raised deliberately — it used to take several goes at it to get
+  // round to the back of the diagram — so the number below is a floor,
+  // not a description of how it feels.
+  //
+  // What is measured is the fastest the map turns at any one moment of
+  // the drag, in pixels of node movement per frame, rather than where
+  // it ends up: turning is going round in a circle, so a map that
+  // turned further can easily end up looking less moved than one that
+  // turned less, and how many frames each movement of the mouse gets
+  // to act over depends on the machine. The peak rate depends on
+  // neither.
+  test("a drag across the window turns the map a good way round", async ({ page }) => {
+    await page.goto("/index.html");
+    await jumpToSlide(page, "slide-3");
+    await waitForMapSettled(page);
+
+    await page.evaluate(() => {
+      window.__spin = 0;
+      let last = null;
+      const tick = () => {
+        const nodes = (window.__mapReadout || {}).nodes;
+        if (nodes) {
+          if (last) {
+            let sum = 0;
+            for (let i = 0; i < nodes.length; i++) {
+              sum += Math.hypot(nodes[i].x - last[i].x, nodes[i].y - last[i].y);
+            }
+            window.__spin = Math.max(window.__spin, sum / nodes.length);
+          }
+          last = nodes.map((n) => ({ x: n.x, y: n.y }));
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+
+    // A steady drag across a quarter of the window, the way a hand does
+    // it, rather than one jump — the map follows the movement itself,
+    // so how it is delivered is part of what is being measured.
+    await page.mouse.move(500, 400);
+    await page.mouse.down();
+    for (let i = 1; i <= 12; i++) {
+      await page.mouse.move(500 + i * 25, 400);
+      await page.waitForTimeout(16);
+    }
+    const spin = await page.evaluate(() => window.__spin);
+    await page.mouse.up();
+
+    // Measured: about 11 px/frame as it stands, and about 6.5 before
+    // this was raised. The floor sits between the two with room on
+    // either side.
+    expect(spin, "a drag like that should turn it briskly").toBeGreaterThan(9);
+  });
+
   test("nodes report meaningfully different distances from the camera", async ({ page }) => {
     await page.goto("/index.html");
     await jumpToSlide(page, "slide-3");
