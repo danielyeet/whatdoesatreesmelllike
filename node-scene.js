@@ -995,8 +995,19 @@ const REAL_NODES = [
     lastFrame = now;
     clock += dt;
 
+    // Arriving, the scene follows the scroll between slides 2 and 3.
+    // Leaving, it does not: __p23 falls back through zero across that
+    // whole scroll, and following it down dims the map while it is
+    // still on screen — so the sphere left at the end of the collapse
+    // faded out in front of you instead of simply riding the page out
+    // of view, which is the one thing it is supposed to do. Holding
+    // the opacity for as long as __exit is set (landing.js keeps it at
+    // 1 until the page has arrived) means the sphere stays solid black
+    // right up to the moment it leaves the bottom of the screen, and
+    // what fades afterwards is off screen where it cannot be seen.
+    const leaving = (window.__exit || 0) > 0;
     const target = window.__p23 === undefined ? 1 : window.__p23;
-    arrival += (target - arrival) * 0.18;
+    if (!leaving) arrival += (target - arrival) * 0.18;
     wrap.style.opacity = arrival.toFixed(3);
 
     // THE COLLAPSE, on the way back up to slide 2. landing.js runs this

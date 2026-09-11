@@ -91,6 +91,59 @@ test("the page holds still through the collapse and the line, then scrolls", asy
   expect(errors).toEqual([]);
 });
 
+// The sphere left at the end of the collapse is meant to ride the page
+// out of view, not dim where it stands: the scene's opacity follows the
+// scroll between slides 2 and 3, and that same number falls back
+// through zero across the whole way out, which used to fade the sphere
+// to about four fifths before it had even reached the bottom edge.
+test("the black dot does not fade while it is still on screen", async ({ page }) => {
+  await page.goto("/index.html");
+  await jumpToSlide(page, "slide-3");
+  await waitForMapSettled(page);
+  await page.keyboard.press("ArrowDown"); // put the page's own idea of where it is back in step
+  await page.waitForTimeout(300);
+
+  await page.evaluate(() => {
+    window.__dot = [];
+    const scene = document.getElementById("node-scene");
+    const tick = () => {
+      const readout = window.__mapReadout || {};
+      window.__dot.push({
+        opacity: parseFloat(scene.style.opacity || "1"),
+        // where the centre of the sphere is down the window
+        y: readout.hubY === undefined ? null : readout.hubY,
+        height: window.innerHeight,
+      });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+
+  await page.keyboard.press("ArrowUp");
+  await expect
+    .poll(() => scrollTop(page), { timeout: 15000 })
+    .toBe(await slideTop(page, "slide-2"));
+
+  const frames = await page.evaluate(() => window.__dot);
+  // Every frame where any part of the sphere was still on screen. Its
+  // own radius is well under 40px, so this is generous about where the
+  // bottom edge is rather than relying on the exact size.
+  const onScreen = frames.filter((f) => f.y !== null && f.y < f.height - 40);
+  expect(onScreen.length, "should have been watched on its way out").toBeGreaterThan(10);
+
+  const dimmest = Math.min(...onScreen.map((f) => f.opacity));
+  expect(dimmest, "the map must not dim while it can still be seen").toBeGreaterThan(0.99);
+
+  // ...but it does let go once it is gone, rather than being pinned on
+  // for good — the next arrival has to be able to fade up from nothing.
+  await expect
+    .poll(
+      () => page.evaluate(() => parseFloat(document.getElementById("node-scene").style.opacity || "1")),
+      { timeout: 5000 }
+    )
+    .toBeLessThan(0.02);
+});
+
 test("going down to the map is a plain scroll, with no collapse", async ({ page }) => {
   await page.goto("/index.html");
 
