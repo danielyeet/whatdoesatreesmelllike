@@ -18,6 +18,11 @@
 
   let activeIndex = 0;
   let animating = false;
+
+  // Which slide is showing, published for menu-modes.js — the menu opens
+  // differently on each one, and this is how it knows which.
+  function publishSlide() { window.__slide = activeIndex; }
+  publishSlide();
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
@@ -69,6 +74,7 @@
 
     if (distance === 0) {
       activeIndex = index;
+      publishSlide();
       onDone();
       return;
     }
@@ -91,6 +97,7 @@
       (t) => { container.scrollTop = startY + distance * ease(t); },
       () => {
         activeIndex = index;
+        publishSlide();
         container.style.scrollSnapType = "y mandatory";
         onDone();
       }
@@ -104,6 +111,7 @@
     if (REDUCE_MOTION) {
       container.scrollTop = endY;
       activeIndex = index;
+      publishSlide();
       return;
     }
     if (container.scrollTop === endY) return;
@@ -134,7 +142,10 @@
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && !animating) activeIndex = slides.indexOf(entry.target);
+        if (entry.isIntersecting && !animating) {
+          activeIndex = slides.indexOf(entry.target);
+          publishSlide();
+        }
       });
     },
     { threshold: 0.6 }

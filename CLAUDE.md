@@ -111,9 +111,9 @@ why it loads on every page, not just the landing page.
 
 ### The landing page's layers
 
-`index.html` is three scroll-snapped slides with six scripts over them, loaded in
+`index.html` is three scroll-snapped slides with seven scripts over them, loaded in
 dependency order: `nav.js`, `landing.js`, `node-scene.js`, `paper.js`, `thread.js`,
-`extras.js`. Each owns one visual system, and they communicate *only* through these
+`extras.js`, `menu-modes.js`. Each owns one visual system, and they communicate *only* through these
 globals on `window`:
 
 | global | written by | read by |
@@ -123,6 +123,8 @@ globals on `window`:
 | `__mapReadout` | `node-scene.js`, per frame (node positions/depth, `hubX`/`hubY` in viewport coords, `activeIndex`, `previewOpen`, `collapse`) | `extras.js` (the trace), `paper.js` (freezing grain behind a preview; aiming the collapse) |
 | `__exit` | `landing.js`, 0→1, only while leaving the map upwards | `node-scene.js`, `paper.js`, `extras.js`, `thread.js` |
 | `__reform` | `landing.js`, 0→1, straight after `__exit` completes | `thread.js` |
+| `__slide` | `landing.js`, which slide is showing (0/1/2) | `menu-modes.js`, to pick how the menu opens |
+| `__menuCollapse` | `menu-modes.js`, 0→1 while the menu is open on slide 3 | `node-scene.js` (same inward pull as `__exit`, plus inverting the map's colours) |
 
 That table is the whole contract; these files deliberately never touch each other's DOM
 or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` does.)
@@ -150,6 +152,14 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
   and plan/elevation boxes in the corners — were removed outright rather than left
   toggled off. Nothing depends on this file; it and its `<script>` tag can be deleted
   with no other change.
+
+- **`menu-modes.js`** — how the menu opens, which differs per slide (title: a line
+  rises and splits one strand per item while the title sinks; intro: in from the side;
+  map: the page inverts, the map falls into its centre and the items reach back out of
+  it). `nav.js` builds one menu for the whole site and fires `menu:open` / `menu:close`;
+  this listens and puts `mode-title` / `mode-side` / `mode-map` on the overlay, with
+  `style.css` doing the movement. Landing page only — delete it and the menu falls back
+  to the plain overlay everywhere.
 
 ### `node-scene.js` — the 3D map
 
@@ -252,8 +262,11 @@ obvious from the code, ask rather than guessing — then add it to this list.
 |---|---|
 | **slide** | One of the three full-screen sections of `index.html` (`#slide-1` title, `#slide-2` the italic line, `#slide-3` the node map). |
 | **the paper** | The three decorative layers behind the landing page, drawn by `paper.js`: the black **wash**, the squared **grid**, and the **static** (grain). |
-| **curtain** | How the paper arrives going 2 → 3: a soft mask centred high on the page (`at 50% 18%`) so its lower edge sweeps down the screen — it reads as spreading downwards (`CURTAIN_*` in `paper.js`, `setCurtain()`). Applies only to `.paper` (wash/grid/grain) — the map and thread fade in on their own via `arrival`/opacity. |
-| **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (the map falls into its centre, the page goes black), then `__reform` 0→1 (a pale line draws from the sphere to the top), and only then scrolls. |
+| **curtain** | The mask that reveals `.paper` (wash/grid/grain) going 2 → 3 — now shaped as **the wake**, below. `CURTAIN_*` in `paper.js`, `setCurtain()`. The map and thread fade in on their own via `arrival`/opacity and are never masked. |
+| **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (a shockwave crosses, the map falls into its centre, everything clears to **white**), then `__reform` 0→1 (an ink line draws from the sphere to the top), and only then scrolls. The same inward pull is reused by the slide-3 menu via `__menuCollapse`. |
+| **the wake** | How the paper arrives going 2 → 3: a V trailing back from the middle of the page, vertex where the bird would be, arms at `WAKE_HALF_ANGLE` either side of straight down. Three masks intersected (one growing, one arm each side). |
+| **the shockwave** | The narrow ring that closes on the centre ahead of the collapse, on its own faster clock (`WAVE_*` in `paper.js`). Distinct from the suction, which pulls everywhere at once. |
+| **menu modes** | `mode-title` / `mode-side` / `mode-map` — the three ways the menu opens on the landing page, one per slide. |
 | **suction** | The even, proportional inward pull `paper.js` applies to the whole grid during the collapse, on top of the per-node dimples — what makes the grid implode rather than just dimple near the middle. |
 | **the thread** | The single line running down all three slides, drawn by `thread.js`. |
 | **the map** / **node map** | The 3D scene on slide 3 (`node-scene.js`). |

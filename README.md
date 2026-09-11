@@ -203,6 +203,22 @@ knowing the order in case you ever want to change its timing:
 The two numbers controlling how long each part takes are `EXIT_MS` and
 `REFORM_MS` at the top of `landing.js`.
 
+### The menu opens differently on each slide
+
+On the landing page the menu has three different entrances, one per
+slide, all handled by `menu-modes.js`:
+
+- **Title slide** — a line rises out of the title and splits into one
+  strand per menu item, while the title itself sinks away below, as
+  though the page were being pulled up past it.
+- **Middle slide** — it simply arrives from the side.
+- **Node map** — the page turns inside out (black ground, white sphere),
+  the map falls into its centre, and the menu items reach back out of it.
+
+Everywhere else on the site the menu is the plain panel it has always
+been. Delete `menu-modes.js` and its `<script>` tag and the landing page
+goes back to that too.
+
 ### How things react
 
 - **Loose specks spray apart.** Each speck is nine particles stacked on

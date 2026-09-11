@@ -81,6 +81,13 @@ const SITE_LINKS = [
     document.body.classList.toggle("menu-open", open);
     setLabel(open ? "Close" : "Menu");
     trigger.setAttribute("aria-expanded", String(open));
+    // Announced so a page can present the menu its own way. The landing
+    // page listens for this (menu-modes.js) and opens it differently
+    // depending on which slide you are on; everywhere else nothing is
+    // listening and the plain overlay above is the whole of it.
+    window.dispatchEvent(new CustomEvent(open ? "menu:open" : "menu:close", {
+      detail: { overlay: overlay, list: list },
+    }));
   }
 
   trigger.addEventListener("click", () => setOpen(!overlay.classList.contains("open")));

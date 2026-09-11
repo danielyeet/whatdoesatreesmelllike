@@ -213,6 +213,111 @@ body.menu-open .menu-trigger:hover { color: var(--brass); }
 .menu-list a:hover, .menu-list a:focus-visible { color: var(--brass); }
 .menu-list .menu-current { color: var(--brass); }
 
+/* ==================================================================
+   HOW THE MENU OPENS, PER SLIDE (landing page only)
+   menu-modes.js puts one of these three classes on the overlay
+   depending on which slide you are looking at. Everywhere else on
+   the site none of them is set and the plain fade above is used.
+   ================================================================== */
+
+/* --- slide 1: the panel comes down from above, as though the page
+   were being pulled up past it, while the title sinks away below. */
+.menu-overlay.mode-title {
+  transform: translateY(-100%);
+  /* Slower than the other two, and its opacity lags further behind, so
+     there is a real window where the panel is still coming down and
+     still see-through — that window is the whole illusion, the title
+     sinking away below as the page is apparently pulled up past it. */
+  transition: transform 1.15s var(--menu-ease), opacity 0.75s var(--menu-ease);
+}
+.menu-overlay.mode-title.open { transform: translateY(0); }
+.title-content {
+  transition: transform 1.15s var(--menu-ease), opacity 1s var(--menu-ease);
+}
+/* animation:none matters here. The title arrives with a "rise" keyframe
+   animation whose fill is "both", which keeps hold of transform for the
+   life of the element — an animation outranks a plain declaration, so
+   without dropping it first this rule would simply never take effect. */
+.title-content.title-sinking {
+  animation: none;
+  transform: translateY(38vh);
+  opacity: 0;
+}
+
+/* The line out of the title, splitting once per menu item. Drawn by
+   menu-modes.js; each strand slides its own dash into place, which is
+   what makes it look like it is being drawn on. */
+.menu-fan {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.menu-fan-line {
+  fill: none;
+  stroke: #f0efe8;
+  stroke-opacity: 0.34;
+  stroke-width: 1;
+  transition: stroke-dashoffset 0.8s var(--menu-ease);
+}
+
+/* --- slide 2: in from the side. The panel slides across and the
+   words follow it in one after another, from the same edge. */
+.menu-overlay.mode-side {
+  transform: translateX(-100%);
+  transition: transform 0.8s var(--menu-ease), opacity 0.4s var(--menu-ease);
+}
+.menu-overlay.mode-side.open { transform: translateX(0); }
+.menu-overlay.mode-side .menu-list li { transform: translateX(-40px); }
+.menu-overlay.mode-side.open .menu-list li { transform: translateX(0); }
+
+/* --- slide 3: the panel itself stays out of the way and lets the
+   map turn inside out behind it. The words wait for the collapse. */
+.menu-overlay.mode-map {
+  background: transparent;
+  transition: opacity 0.5s var(--menu-ease);
+}
+.menu-overlay.mode-map .menu-list li { transition-delay: 0s; }
+.menu-overlay.mode-map.open .menu-list li:nth-child(1) { transition-delay: 0.42s; }
+.menu-overlay.mode-map.open .menu-list li:nth-child(2) { transition-delay: 0.48s; }
+.menu-overlay.mode-map.open .menu-list li:nth-child(3) { transition-delay: 0.54s; }
+.menu-overlay.mode-map.open .menu-list li:nth-child(4) { transition-delay: 0.60s; }
+.menu-overlay.mode-map.open .menu-list li:nth-child(5) { transition-delay: 0.66s; }
+.menu-overlay.mode-map.open .menu-list li:nth-child(6) { transition-delay: 0.72s; }
+.menu-overlay.mode-map.open .menu-list li:nth-child(7) { transition-delay: 0.78s; }
+
+/* The page turned inside out behind it: black ground, and the map
+   above it switched to light by node-scene.js at the same time. */
+body.menu-invert::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #0a0a0a;
+  pointer-events: none;
+  animation: menu-invert-in 0.55s var(--menu-ease) both;
+}
+@keyframes menu-invert-in { from { opacity: 0; } to { opacity: 1; } }
+/* The paper has nothing to say while the page is inverted. */
+body.menu-invert .paper { opacity: 0; transition: opacity 0.5s var(--menu-ease); }
+
+/* The lines reaching back out of the centre, one per item. */
+.menu-rays {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.menu-ray {
+  stroke: #f0efe8;
+  stroke-opacity: 0;
+  stroke-width: 1;
+}
+
 /* The rest of the page gently dims while the menu is open, so the
    overlay reads as coming forward rather than just appearing.
    The transition sits on the base selector, not on .menu-open — when
@@ -224,6 +329,11 @@ body > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot
 body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
   opacity: 0.1;
 }
+/* Except on the map slide, where the map is not something the menu is
+   covering up — it IS the menu, collapsed into its centre with the
+   items reaching back out of it. Dimming it to a tenth left the sphere
+   reading as dark grey on black instead of the white it turns. */
+body.menu-open.menu-invert > #scroll-container { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .menu-list li { transform: none; }
