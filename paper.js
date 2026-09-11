@@ -300,16 +300,22 @@
       paper.style.maskImage = "none";
       return;
     }
-    // Sized in % of distance-to-farthest-corner (radial-gradient's
-    // default), so radius 100 always just covers the viewport whatever
-    // its aspect ratio, and the hand-off to "no mask" above is seamless.
-    const radius = 100 * c;
+    // Biased downward: the shape starts high on the page and is taller
+    // than it is wide, so its lower edge sweeps down the screen much
+    // further and faster than its upper edge climbs. It reads as the
+    // paper spreading downwards rather than opening evenly in all
+    // directions, while still being a soft shape rather than a wipe.
+    //
+    // Sized in % of the page's own width and height, generously enough
+    // that by the time the mask is dropped altogether (just above) it
+    // has covered the corners — otherwise the last of it would pop.
+    const rx = 105 * c;
+    const ry = 150 * c;
     const feather = Math.max(2, CURTAIN_FEATHER * (1.4 - c * 0.9));
     const gradient =
-      "radial-gradient(circle at 50% 50%," +
+      "radial-gradient(ellipse " + rx.toFixed(2) + "% " + ry.toFixed(2) + "% at 50% 18%," +
       " #000 0%," +
-      " #000 " + radius.toFixed(2) + "%," +
-      " rgba(0,0,0,0) " + (radius + feather).toFixed(2) + "%," +
+      " #000 " + (100 - feather).toFixed(2) + "%," +
       " rgba(0,0,0,0) 100%)";
     paper.style.webkitMaskImage = gradient;
     paper.style.maskImage = gradient;
@@ -339,7 +345,14 @@
     gridCanvas.style.opacity = paperIn.toFixed(3);
     noiseCanvas.style.opacity = (NOISE_FLOOR + (NOISE_PEAK - NOISE_FLOOR) * paperIn).toFixed(4);
 
-    if (now - lastNoise >= NOISE_MS) {
+    // The grain holds still while a preview window is open. Blurring it
+    // (in style.css) softens it, but grain that keeps churning behind
+    // the defocus still catches the eye and reads as the page shaking —
+    // the only way to stop that is to stop redrawing it.
+    const readout = window.__mapReadout;
+    const previewOpen = !!(readout && readout.previewOpen);
+
+    if (!previewOpen && now - lastNoise >= NOISE_MS) {
       lastNoise = now;
       if (!REDUCE_MOTION || !paintedOnce) { paintStatic(); paintedOnce = true; }
     }

@@ -403,6 +403,17 @@ body.preview-open .paper {
   transition: filter 1.4s var(--menu-ease);
 }
 body.preview-open #scroll-container { opacity: 0.85; pointer-events: none; transition: filter 1.4s var(--menu-ease), opacity 1.4s var(--menu-ease); }
+/* The grain gets a much heavier blur than everything else behind the
+   window, and paper.js stops repainting it at the same time. Both are
+   for the same reason: grain that is still churning away frame by
+   frame keeps catching the eye through the defocus, and it reads as
+   the page shaking rather than as depth of field. Blurred this far and
+   held still, it becomes a texture instead of a movement. The blur is
+   on top of the one .paper already carries. */
+body.preview-open .paper-noise {
+  filter: blur(6px);
+  transition: filter 1.4s var(--menu-ease);
+}
 body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transition: opacity 1.4s var(--menu-ease); }
 
 .node-preview-backdrop { position: fixed; inset: 0; z-index: 50; background: transparent; cursor: pointer; }
