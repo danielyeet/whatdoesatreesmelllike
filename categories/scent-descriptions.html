@@ -13,17 +13,18 @@
 <!--
   This page is one full "body of work" — a category — laid out as a
   CONTACT SHEET: the page opens white with one square window in the
-  middle, every picture below flicks through it, it settles on the
-  first one, and lines then grow downwards to the rest.
+  middle, every picture below flicks through it, it lands on the first
+  one, and lines then reach out across the page to the rest, each
+  carrying a date.
 
   TO ADD A PIECE: copy one whole <a class="sheet-frame"> block below,
   point its href at the piece's page in /works/, uncomment the <img>
   and point it at your picture, and write the caption. Nothing else
-  needs changing — the flick, the grid and the lines all come from
+  needs changing — the flick, the scatter and the lines all come from
   however many of these blocks are here.
 
   TO FEATURE A DIFFERENT PICTURE: move its block to the front. The
-  sheet always settles on the first one.
+  sheet always lands on the first one.
 
   The pictures are square (1:1). A picture that isn't square is
   cropped to fit rather than squashed.
@@ -36,12 +37,31 @@
 -->
 <body class="sheet-page">
 
+<!-- Search. It matches what a picture is called and dims the rest —
+     a placeholder for a real search over real work. -->
+<div class="sheet-search">
+  <input class="sheet-search-field" type="search" placeholder="Search" aria-label="Search this sheet">
+  <button class="sheet-search-trigger" type="button" aria-label="Search">
+    <span class="sheet-search-mark" aria-hidden="true"></span>
+    <span class="sheet-search-word">Search</span>
+  </button>
+</div>
+
 <div class="sheet-head">
   <h1>Scent descriptions</h1>
   <p class="category-lede">
     Attempts at putting smell into words — some are quick notes, some
     turned into much longer pieces.
   </p>
+
+  <!-- These three appear once the sheet has landed. They show which one
+       is chosen and nothing more yet. They are inside this block rather
+       than loose in the page on purpose — see the note in style.css. -->
+  <nav class="sheet-filters" aria-label="Sort the sheet">
+    <button class="sheet-filter chosen" type="button">Houses</button>
+    <button class="sheet-filter" type="button">Perfumes</button>
+    <button class="sheet-filter" type="button">My favorites</button>
+  </nav>
 </div>
 
 <div class="sheet" id="sheet">
@@ -58,14 +78,26 @@
 
   <!--
     The blocks below are empty frames, here so the sheet has something
-    to flick through and route lines to while the work is being made.
-    Give one an href and a picture as each piece is finished, and
+    to flick through and to send lines out to while the work is being
+    made. Give one an href and a picture as each piece is finished, and
     delete any you don't want.
   -->
   <a class="sheet-frame" href="../works/example-gallery-work.html">
     <span class="sheet-caption">Untitled</span>
   </a>
 
+  <a class="sheet-frame" href="../works/example-article-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-gallery-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-article-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
   <a class="sheet-frame" href="../works/example-gallery-work.html">
     <span class="sheet-caption">Untitled</span>
   </a>
@@ -79,6 +111,18 @@
   </a>
 
   <a class="sheet-frame" href="../works/example-article-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-gallery-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-article-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-gallery-work.html">
     <span class="sheet-caption">Untitled</span>
   </a>
 

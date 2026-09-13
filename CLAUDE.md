@@ -73,9 +73,10 @@ middle, completely covering the page before its mask comes off, and the grain ne
 by that mask — and the cursor; the exit sequence's ordering, the collapse drawing every
 node into the centre, and the reforming line stopping at the sentence and handing over
 to the thread without a seam; plus browserless file checks (no link points at a missing
-file, no credentials committed); and the contact sheet — the flick settling on the first
-picture and leaving it where it was, the name arriving after it, every line landing on
-the top edge of its own picture, and no line crossing a picture it is not pointing at.
+file, no credentials committed); and the contact sheet — the flick ending on the first
+picture and leaving it where it was, the name and the three buttons arriving after it,
+the search matching a picture by name, every line stopping just off the two pictures it
+joins, and no line crossing a picture it is not pointing at.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -308,30 +309,48 @@ sheet** rather than as a list of rows, and this file is the whole of that. It lo
 that page only.
 
 The page opens white with one square window in the middle; every picture in the category
-flicks through it on hard cuts, fast at first and slowing to a stop; it settles on the
-first one, which stays exactly where it is; then lines grow downwards out of it, turning
-along a grid, and each of the other pictures appears as its line arrives. The name of the
-category arrives above the sheet once it has settled, the same way a node's name arrives
-above its preview window.
+flicks through it on hard cuts, fast at first and slowing to a stop; it lands on the
+first one, which stays exactly where it is; the three buttons above it and the category's
+name arrive; then lines reach out across the page at whatever angle they need, each
+carrying a date, and each of the other pictures appears as its line lands on it.
 
 - **The pictures are the `<a class="sheet-frame">` blocks in the page.** Adding one is an
-  HTML edit; nothing in the script changes. The first block is the one it settles on.
+  HTML edit; nothing in the script changes. The first block is the one it lands on.
 - **Without JavaScript the page is a plain CSS grid of those same frames**, captions and
   all — a working page. The script puts `.scripted` on the sheet and takes over, and
   every rule that hides something is written under that class so the fallback can't
   inherit it.
-- **The layout is worked out in the script, not by the browser**, because the lines have
-  to land on the pictures exactly: the same numbers place a picture and route the line
-  that reaches it.
-- **It reads down the page in bands** — a band of horizontal runs, then the row of
-  pictures they drop onto, then the next band below that row. That is what stops a line
-  being drawn across a picture on the way to another one, and
-  `tests/contact-sheet.spec.js` checks it directly, segment against rectangle.
-- The number of columns is forced **even** so the trunk down the middle falls on a
-  boundary between columns rather than through one.
+- **The flick is set up to END on the first picture** rather than cutting to it when the
+  flicking is over. It counts its own cuts before it starts and begins at whichever
+  picture makes the last one land there. Cutting at the end is one blink too many: the
+  run has to simply stop.
+- **The scatter never overlaps.** Each picture is given a square of its own on a grid
+  with far more squares than there are pictures, and wanders only inside that square, so
+  the arrangement is irregular but nothing can ever land on anything else.
+- **A line is only drawn where nothing is in the way.** Lines go at any angle now, so the
+  layout no longer keeps them clear of anything — instead a link that would cut across
+  another picture, or across any caption (including the captions of the two pictures it
+  joins), is not made at all, and the picture it would have reached is left unlinked. A
+  caption is printed on white, so a line behind one is knocked out where it crosses and
+  pokes out beside the word as a stray stroke, which reads as a mistake in the lettering.
+  `tests/contact-sheet.spec.js` checks both, segment against rectangle.
+- **Not everything is joined up.** Each picture links to one of its nearer neighbours,
+  some links are dropped on purpose, and a few extra ones are added across the map so it
+  closes loops — a network rather than a family tree.
+- **Links are planned once**, on the first layout, and later layouts (a resize, the fonts
+  arriving) only move the lines that already exist. Rebuilding them throws away the
+  elements that are mid-draw, which is what stopped any line at all from appearing the
+  first time this was written.
 - The scattered look comes from a **seeded** generator (`SEED`), reset at the top of
   every layout — so the arrangement is the same on every visit and doesn't rearrange
   itself when the window is resized, which would read as a fault rather than a design.
+- **The three buttons live inside `.sheet-head`, and have to.** Every direct child of
+  `<body>` is given an opacity transition by the rule that dims the page behind the menu,
+  and that rule outranks anything written for them — so a `<nav>` loose in the page could
+  not be hidden without being seen fading away first.
+- The **search** at the top right is a placeholder, but a working one: it matches what a
+  picture is called and dims everything that doesn't. The **dates** on the lines are
+  random, generated from the same seed.
 
 ### Styling
 
@@ -404,8 +423,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | The frame the sheet settles on and keeps at the top — the first one in the page. |
-| **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. `FLIP_*` in `contact-sheet.js`. |
-| **band** / **run** | The strip of horizontal lines under a row of pictures, and one line in it. Every band sits under the row before it, which is what keeps a line from crossing a picture. |
+| **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. `FLIP_*` in `contact-sheet.js`. |
+| **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Not every picture has one. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 

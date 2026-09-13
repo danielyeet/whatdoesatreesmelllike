@@ -90,12 +90,13 @@ test("the picture it settles on stays exactly where it was", async ({ page }) =>
   expect(Math.abs(after.width - before.width), "and should not resize").toBeLessThan(1);
 });
 
-// Regression test: the first version of this ran every line off one
+// Regression test: an early version of this page ran every line off one
 // band of horizontals under the top picture, so a line reaching a
 // picture in the second row was drawn straight across a picture in the
-// first. The layout now works down the page in bands, one under each
-// row, which is what keeps the lines clear of everything they are not
-// pointing at.
+// first. The lines now go at whatever angle they like, so nothing about
+// the layout keeps them clear — instead a link that would cut through
+// another picture is not made at all, and the picture it would have
+// reached is left unlinked.
 test("no line is drawn across a picture", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
@@ -103,36 +104,43 @@ test("no line is drawn across a picture", async ({ page }) => {
   const crossings = await page.evaluate(() => {
     const sheet = document.getElementById("sheet");
     const base = sheet.getBoundingClientRect();
-    const frames = [...document.querySelectorAll(".sheet-frame")];
-    const boxes = frames.map((f) => {
+    const boxes = [...document.querySelectorAll(".sheet-frame")].map((f) => {
       const r = f.getBoundingClientRect();
-      // Pulled in a little: a line is supposed to stop ON the top edge
-      // of the picture it belongs to, and that must not count as
-      // crossing it.
+      // Pulled in a little, so a line stopping just off a picture's
+      // edge is never counted as going through it.
       return {
         left: r.left - base.left + 2, right: r.right - base.left - 2,
         top: r.top - base.top + 2, bottom: r.bottom - base.top - 2,
       };
     });
 
-    const found = [];
-    [...document.querySelectorAll(".sheet-route")].forEach((route, routeIndex) => {
-      const points = route.getAttribute("points").trim().split(/\s+/)
-        .map((pair) => pair.split(",").map(Number));
-      for (let p = 0; p < points.length - 1; p++) {
-        const [x1, y1] = points[p];
-        const [x2, y2] = points[p + 1];
-        const loX = Math.min(x1, x2), hiX = Math.max(x1, x2);
-        const loY = Math.min(y1, y2), hiY = Math.max(y1, y2);
-        boxes.forEach((box, frameIndex) => {
-          // Its own picture is at the end of it; the top picture is
-          // where every line starts.
-          if (frameIndex === 0 || frameIndex === routeIndex + 1) return;
-          if (hiX > box.left && loX < box.right && hiY > box.top && loY < box.bottom) {
-            found.push({ route: routeIndex + 1, frame: frameIndex + 1 });
-          }
-        });
+    // The same clipping test the page itself uses to decide this.
+    const cuts = (from, to, box) => {
+      const dx = to.x - from.x, dy = to.y - from.y;
+      const edges = [
+        [-dx, from.x - box.left], [dx, box.right - from.x],
+        [-dy, from.y - box.top], [dy, box.bottom - from.y],
+      ];
+      let near = 0, far = 1;
+      for (const [along, room] of edges) {
+        if (along === 0) { if (room < 0) return false; continue; }
+        const at = room / along;
+        if (along < 0) near = Math.max(near, at);
+        else far = Math.min(far, at);
+        if (near > far) return false;
       }
+      return true;
+    };
+
+    const found = [];
+    [...document.querySelectorAll(".sheet-route")].forEach((route) => {
+      const from = { x: +route.getAttribute("x1"), y: +route.getAttribute("y1") };
+      const to = { x: +route.getAttribute("x2"), y: +route.getAttribute("y2") };
+      const ends = [Number(route.dataset.from), Number(route.dataset.to)];
+      boxes.forEach((box, i) => {
+        if (ends.indexOf(i) >= 0) return;  // the two it belongs to
+        if (cuts(from, to, box)) found.push({ line: ends.join("-"), through: i + 1 });
+      });
     });
     return found;
   });
@@ -140,29 +148,36 @@ test("no line is drawn across a picture", async ({ page }) => {
   expect(crossings, `lines crossing pictures: ${JSON.stringify(crossings)}`).toEqual([]);
 });
 
-test("every line lands on the top edge of its own picture", async ({ page }) => {
+test("every line stops just off the pictures it joins", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
 
-  const landings = await page.evaluate(() => {
+  const gaps = await page.evaluate(() => {
     const sheet = document.getElementById("sheet");
     const base = sheet.getBoundingClientRect();
     const frames = [...document.querySelectorAll(".sheet-frame")];
-    return [...document.querySelectorAll(".sheet-route")].map((route, i) => {
-      const points = route.getAttribute("points").trim().split(/\s+/)
-        .map((pair) => pair.split(",").map(Number));
-      const end = points[points.length - 1];
-      const r = frames[i + 1].getBoundingClientRect();
-      return {
-        offX: end[0] - (r.left - base.left + r.width / 2),
-        offY: end[1] - (r.top - base.top),
-      };
+    const out = [];
+    [...document.querySelectorAll(".sheet-route")].forEach((route) => {
+      [["x1", "y1", "from"], ["x2", "y2", "to"]].forEach(([xa, ya, which]) => {
+        const x = +route.getAttribute(xa), y = +route.getAttribute(ya);
+        const r = frames[Number(route.dataset[which])].getBoundingClientRect();
+        const left = r.left - base.left, top = r.top - base.top;
+        // How far the end of the line is from the picture it belongs to.
+        const dx = Math.max(left - x, 0, x - (left + r.width));
+        const dy = Math.max(top - y, 0, y - (top + r.height));
+        out.push({ line: route.dataset.from + "-" + route.dataset.to, gap: Math.hypot(dx, dy) });
+      });
     });
+    return out;
   });
 
-  landings.forEach((landing, i) => {
-    expect(Math.abs(landing.offX), `line ${i + 1} should meet the middle of its picture`).toBeLessThan(2);
-    expect(Math.abs(landing.offY), `line ${i + 1} should stop on its top edge`).toBeLessThan(2);
+  expect(gaps.length, "there should be lines to check").toBeGreaterThan(4);
+  gaps.forEach((end) => {
+    // It has to reach its picture without touching it: the same clear
+    // space at both ends, so the lines read as joining rather than
+    // being pinned on.
+    expect(end.gap, `line ${end.line} should stop just off its picture`).toBeGreaterThan(3);
+    expect(end.gap, `line ${end.line} should not stop short of it`).toBeLessThan(16);
   });
 });
 
@@ -192,6 +207,93 @@ test("every picture is still a link to a piece", async ({ page }) => {
   const hrefs = await page.$$eval(".sheet-frame", (frames) => frames.map((f) => f.getAttribute("href")));
   expect(hrefs.length).toBeGreaterThan(2);
   hrefs.forEach((href) => expect(href, "a frame with nowhere to go is not a piece").toBeTruthy());
+});
+
+// Regression test: the flick used to run to wherever it happened to get
+// to and then cut to the first picture once it was over, which was one
+// blink too many — the run now ENDS on that picture. Nothing may change
+// in the window between the last cut of the flick and the settled page.
+test("the flick ends on the picture it keeps, with no last blink", async ({ page }) => {
+  await page.goto(SHEET);
+
+  await page.evaluate(() => {
+    window.__run = [];
+    const sheet = document.getElementById("sheet");
+    const tick = () => {
+      const frames = [...document.querySelectorAll(".sheet-frame")];
+      window.__run.push({
+        showing: frames.findIndex((f) => getComputedStyle(f).visibility === "visible"),
+        settled: sheet.classList.contains("settled"),
+      });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+
+  await waitForSheet(page);
+  const run = await page.evaluate(() => window.__run);
+
+  const lastOfFlick = [...run].reverse().find((f) => !f.settled && f.showing >= 0);
+  const firstSettled = run.find((f) => f.settled && f.showing >= 0);
+  expect(lastOfFlick, "the flick should have been caught running").toBeTruthy();
+  expect(firstSettled, "it should have settled").toBeTruthy();
+  expect(
+    firstSettled.showing,
+    `the flick ended on picture ${lastOfFlick.showing + 1} and the page kept ${firstSettled.showing + 1}`
+  ).toBe(lastOfFlick.showing);
+});
+
+test("the three buttons arrive with the name, and one is chosen at a time", async ({ page }) => {
+  await page.goto(SHEET);
+
+  const filters = page.locator(".sheet-filter");
+  await expect(filters).toHaveCount(3);
+  await expect(filters).toHaveText(["Houses", "Perfumes", "My favorites"]);
+
+  // Not there while the pictures are still flicking through.
+  expect(
+    await page.evaluate(() =>
+      parseFloat(getComputedStyle(document.querySelector(".sheet-filters")).opacity))
+  ).toBeLessThan(0.05);
+
+  await waitForSheet(page);
+  await expect
+    .poll(
+      () => page.evaluate(() =>
+        parseFloat(getComputedStyle(document.querySelector(".sheet-filters")).opacity)),
+      { timeout: 5000 }
+    )
+    .toBeGreaterThan(0.9);
+
+  await filters.nth(1).click();
+  await expect(filters.nth(1)).toHaveClass(/chosen/);
+  await expect(filters.nth(0)).not.toHaveClass(/chosen/);
+  await expect(filters.nth(2)).not.toHaveClass(/chosen/);
+});
+
+test("the search finds a picture by what it is called", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  const field = page.locator(".sheet-search-field");
+  await expect(field).toBeHidden(); // a button until it is asked for
+
+  await page.locator(".sheet-search-trigger").click();
+  await expect(field).toBeVisible();
+
+  await field.fill("history");
+  // One picture is called that; everything else steps back.
+  const dimmed = await page.$$eval(".sheet-frame.dimmed", (els) => els.length);
+  const frames = await page.$$eval(".sheet-frame", (els) => els.length);
+  expect(dimmed, "everything that doesn't match should step back").toBe(frames - 1);
+  await expect(page.locator(".sheet-frame:not(.dimmed) .sheet-caption")).toHaveText(
+    "A short history of vetiver"
+  );
+
+  // Escape clears it and puts the sheet back.
+  await field.press("Escape");
+  expect(await page.$$eval(".sheet-frame.dimmed", (els) => els.length)).toBe(0);
+  await expect(field).toBeHidden();
 });
 
 test("with animation turned off it goes straight to the finished sheet", async ({ page }) => {
