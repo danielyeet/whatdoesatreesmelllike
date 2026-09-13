@@ -265,11 +265,12 @@ Other things that will bite you:
   keep drifting under the pointer.
 - A node's `preview` intercepts the click and opens a dark modal whose connector arm is
   that node's *own* branch traced out to the window, not a second curve drawn alongside.
-  `TITLE_LIFT_MS` after that window opens — a clear beat after it has finished flying in
-  — the node's **name** is set above it, and the node's own label in the map gives its
-  copy up at the same moment (the registration mark stays; only the lettering moves). The
-  name is a child of the modal so it travels with it, positioned outside its top edge on
-  the paper. One name, one place: if you ever make both visible at once, that is the bug.
+  The node's **name** moves with the click: the map's copy of it goes instantly, and the
+  copy above the window comes up gradually from that same moment (the registration mark
+  stays; only the lettering moves). The name is a child of the modal so it travels with
+  it, positioned outside its top edge on the paper. One name, one place: if you ever make
+  both visible at once, that is the bug. It eases back into the map on close — instant
+  out, eased in.
 - If `THREE` is undefined the scene replaces itself with a plain list of `REAL_NODES`
   links. Keep that fallback working when editing the top of the file.
 - The `TUNING` block near the top holds every magic number (`IDLE_SPEED`,
