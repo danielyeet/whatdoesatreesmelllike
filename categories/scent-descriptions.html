@@ -11,53 +11,81 @@
 <link rel="stylesheet" href="../style.css">
 </head>
 <!--
-  This page is one full "body of work" — a category. It's a normal
-  scrolling page (no snap-page class), listing every individual piece
-  that belongs to it.
+  This page is one full "body of work" — a category — laid out as a
+  CONTACT SHEET: the page opens white with one square window in the
+  middle, every picture below flicks through it, it settles on the
+  first one, and lines then grow downwards to the rest.
 
-  TO ADD A NEW PIECE TO THIS CATEGORY: copy one whole
-  <a class="work-row">...</a> block below and point its href at
-  the new page you've made in /works/.
+  TO ADD A PIECE: copy one whole <a class="sheet-frame"> block below,
+  point its href at the piece's page in /works/, uncomment the <img>
+  and point it at your picture, and write the caption. Nothing else
+  needs changing — the flick, the grid and the lines all come from
+  however many of these blocks are here.
+
+  TO FEATURE A DIFFERENT PICTURE: move its block to the front. The
+  sheet always settles on the first one.
+
+  The pictures are square (1:1). A picture that isn't square is
+  cropped to fit rather than squashed.
 
   TO ADD A NEW CATEGORY ENTIRELY: duplicate this whole file, rename
   it inside /categories/, update the <h1> and the lede, and add a
-  line for it in the SITE_LINKS list near the top of nav.js.
+  line for it in the SITE_LINKS list near the top of nav.js. A
+  category that wants a plain list instead of a sheet can copy any
+  of the other pages in this folder.
 -->
-<body>
+<body class="sheet-page">
 
-<div class="page-content">
+<div class="sheet-head">
   <h1>Scent descriptions</h1>
   <p class="category-lede">
     Attempts at putting smell into words — some are quick notes, some
     turned into much longer pieces.
   </p>
+</div>
 
-  <div class="work-list">
+<div class="sheet" id="sheet">
 
-    <a class="work-row" href="../works/example-gallery-work.html">
-      <div class="work-thumb">
-        <!-- <img src="../images/your-thumb.jpg" alt=""> -->
-      </div>
-      <div>
-        <div class="work-row-title">Vetiver, in fifty-two parts</div>
-        <div class="work-row-meta">A long-form piece · 52 entries</div>
-      </div>
-    </a>
+  <a class="sheet-frame" href="../works/example-gallery-work.html">
+    <!-- <img src="../images/your-picture.jpg" alt=""> -->
+    <span class="sheet-caption">Vetiver, in fifty-two parts</span>
+  </a>
 
-    <a class="work-row" href="../works/example-article-work.html">
-      <div class="work-thumb">
-        <!-- <img src="../images/your-thumb.jpg" alt=""> -->
-      </div>
-      <div>
-        <div class="work-row-title">A short history of vetiver</div>
-        <div class="work-row-meta">Reference piece</div>
-      </div>
-    </a>
+  <a class="sheet-frame" href="../works/example-article-work.html">
+    <!-- <img src="../images/your-picture.jpg" alt=""> -->
+    <span class="sheet-caption">A short history of vetiver</span>
+  </a>
 
-  </div>
+  <!--
+    The blocks below are empty frames, here so the sheet has something
+    to flick through and route lines to while the work is being made.
+    Give one an href and a picture as each piece is finished, and
+    delete any you don't want.
+  -->
+  <a class="sheet-frame" href="../works/example-gallery-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-gallery-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-article-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-gallery-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
+  <a class="sheet-frame" href="../works/example-article-work.html">
+    <span class="sheet-caption">Untitled</span>
+  </a>
+
 </div>
 
 <script>window.SITE_ROOT = "../";</script>
 <script src="../nav.js"></script>
+<script src="../contact-sheet.js"></script>
 </body>
 </html>

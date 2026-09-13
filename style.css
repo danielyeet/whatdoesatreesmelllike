@@ -645,6 +645,171 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
 .work-row-meta { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
 
 /* ==================================================================
+   CONTACT SHEET CATEGORY PAGE
+   A category laid out as a sheet of frames. Without JavaScript it is
+   a plain grid of square pictures with their captions — a working
+   page. contact-sheet.js puts .scripted on the sheet and takes over:
+   one window in the middle, every picture flicking through it, then
+   lines growing down to the rest. Everything below is how it looks;
+   the timing and the arithmetic are in that file.
+   ================================================================== */
+.sheet-page { background: #fff; }
+
+.sheet-head {
+  width: min(1040px, calc(100% - 80px));
+  margin: 0 auto;
+  padding: clamp(64px, 12vh, 130px) 0 26px;
+}
+/* Set like a node's label rather than like a headline: this page is a
+   sheet of pictures, and the name is a caption on it. */
+.sheet-head h1 {
+  position: relative;
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.sheet-head h1::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -9px;
+  height: 1px;
+  width: 100%;
+  background: var(--ink);
+  opacity: 0.45;
+}
+.sheet-head .category-lede {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 44ch;
+  margin: 26px 0 0;
+}
+
+/* With the script running the page opens white, so the name is not
+   there to begin with — and it must not be seen leaving either, hence
+   transition: none on the way out. It arrives once the sheet has
+   settled, the same way a node's name arrives above its window on the
+   landing page: wide letters closing up, a hairline drawing out. */
+body.sheet-scripted .sheet-head h1 {
+  opacity: 0;
+  letter-spacing: 0.36em;
+  transform: translateY(7px);
+  transition: none;
+}
+body.sheet-scripted .sheet-head h1::after { width: 0; transition: none; }
+body.sheet-scripted .sheet-head .category-lede { opacity: 0; transition: none; }
+
+body.sheet-named .sheet-head h1 {
+  opacity: 1;
+  letter-spacing: 0.11em;
+  transform: translateY(0);
+  transition: opacity 0.9s var(--menu-ease), letter-spacing 1.2s var(--menu-ease),
+              transform 0.9s var(--menu-ease);
+}
+body.sheet-named .sheet-head h1::after {
+  width: 100%;
+  transition: width 1.2s var(--menu-ease) 0.2s;
+}
+body.sheet-named .sheet-head .category-lede {
+  opacity: 1;
+  transition: opacity 1.1s var(--menu-ease) 0.3s;
+}
+
+.sheet {
+  position: relative;
+  width: min(1040px, calc(100% - 80px));
+  margin: 0 auto;
+  padding-bottom: 90px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 46px 24px;
+}
+/* Taken over by the script: every frame is placed by hand, so the
+   sheet is given its height rather than deriving one. */
+.sheet.scripted { display: block; }
+
+.sheet-lines { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.sheet-route {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-opacity: 0.5;
+  shape-rendering: crispEdges;
+}
+
+.sheet-frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  /* Hatching, as everywhere else on this site that a picture is still
+     to come. The angle and spacing are set per frame by the script so
+     that flicking through them reads as different pictures going past
+     rather than as one still image. */
+  background-image: repeating-linear-gradient(
+    var(--hatch-angle, -45deg),
+    var(--line) 0px, var(--line) 1px,
+    transparent 1px, transparent var(--hatch-gap, 12px)
+  );
+  text-decoration: none;
+  color: var(--ink);
+}
+.sheet.scripted .sheet-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  aspect-ratio: auto;
+  visibility: hidden;
+}
+.sheet-frame:has(img) { background-image: none; background-color: transparent; }
+.sheet-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sheet-frame .sheet-number {
+  position: absolute;
+  top: 7px;
+  left: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: #fff;
+  padding: 1px 4px;
+}
+.sheet-frame .sheet-caption {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 9px);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+  width: 132%;
+}
+/* While the pictures are still stacked in the middle window they have
+   no captions — a caption belongs to a picture in the grid, not to the
+   flick. They appear with the picture, on the same hard cut. */
+.sheet.scripted .sheet-frame .sheet-caption { opacity: 0; }
+.sheet.scripted .sheet-frame.landed .sheet-caption { opacity: 1; }
+.sheet-frame:hover { border-color: var(--ink); }
+.sheet-frame:hover .sheet-caption { color: var(--ink); }
+/* Whatever is in the middle window carries the window's own edge, so
+   flicking through the pictures doesn't flicker the border along with
+   them. Once a picture has landed in the grid it goes back to the
+   hairline every other frame on the site is drawn with. */
+.sheet.scripted .sheet-frame:not(.landed) { border-color: var(--ink); }
+.sheet-frame.is-plate { border-color: var(--ink); }
+/* The settled picture's own caption goes above it — below it is where
+   the lines leave from. */
+.sheet.scripted .sheet-frame.is-plate .sheet-caption {
+  top: auto;
+  bottom: calc(100% + 10px);
+  width: 100%;
+}
+
+/* ==================================================================
    GALLERY WORK PAGE
    ================================================================== */
 .work-header { max-width: 640px; margin: 0 auto; padding: 140px 64px 80px; }

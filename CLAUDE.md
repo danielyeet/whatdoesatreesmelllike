@@ -73,7 +73,9 @@ middle, completely covering the page before its mask comes off, and the grain ne
 by that mask — and the cursor; the exit sequence's ordering, the collapse drawing every
 node into the centre, and the reforming line stopping at the sentence and handing over
 to the thread without a seam; plus browserless file checks (no link points at a missing
-file, no credentials committed).
+file, no credentials committed); and the contact sheet — the flick settling on the first
+picture and leaving it where it was, the name arriving after it, every line landing on
+the top edge of its own picture, and no line crossing a picture it is not pointing at.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -298,6 +300,38 @@ Other things that will bite you:
   the far end of its range for a scene this small this far from the camera's near/far
   planes — so don't reach for `projected.z` as a stand-in for depth anywhere in this file.
 
+### The contact sheet (`contact-sheet.js`)
+
+One category page — `categories/scent-descriptions.html` — is laid out as a **contact
+sheet** rather than as a list of rows, and this file is the whole of that. It loads on
+that page only.
+
+The page opens white with one square window in the middle; every picture in the category
+flicks through it on hard cuts, fast at first and slowing to a stop; it settles on the
+first one, which stays exactly where it is; then lines grow downwards out of it, turning
+along a grid, and each of the other pictures appears as its line arrives. The name of the
+category arrives above the sheet once it has settled, the same way a node's name arrives
+above its preview window.
+
+- **The pictures are the `<a class="sheet-frame">` blocks in the page.** Adding one is an
+  HTML edit; nothing in the script changes. The first block is the one it settles on.
+- **Without JavaScript the page is a plain CSS grid of those same frames**, captions and
+  all — a working page. The script puts `.scripted` on the sheet and takes over, and
+  every rule that hides something is written under that class so the fallback can't
+  inherit it.
+- **The layout is worked out in the script, not by the browser**, because the lines have
+  to land on the pictures exactly: the same numbers place a picture and route the line
+  that reaches it.
+- **It reads down the page in bands** — a band of horizontal runs, then the row of
+  pictures they drop onto, then the next band below that row. That is what stops a line
+  being drawn across a picture on the way to another one, and
+  `tests/contact-sheet.spec.js` checks it directly, segment against rectangle.
+- The number of columns is forced **even** so the trunk down the middle falls on a
+  boundary between columns rather than through one.
+- The scattered look comes from a **seeded** generator (`SEED`), reset at the top of
+  every layout — so the arrangement is the same on every visit and doesn't rearrange
+  itself when the window is resized, which would read as a fault rather than a design.
+
 ### Styling
 
 `style.css` is the only stylesheet, in commented sections mirroring the page types. Six
@@ -315,8 +349,11 @@ background luminance, but the class is the reliable path.
 
 - **New piece of work**: duplicate a template in `works/` — `example-gallery-work.html`
   for image-and-paragraph sequences, `example-article-work.html` for reference pieces —
-  then add an `<a class="work-row">` block to the relevant `categories/` page, copying
-  the pattern in `categories/scent-descriptions.html` (the only filled-in category).
+  then add it to the relevant `categories/` page. There are two kinds of category page,
+  and they take a new piece differently: the **row list** (`theories`, `favorites`, the
+  two `other` pages) takes another `<a class="work-row">` block, and the **contact
+  sheet** (`scent-descriptions`) takes another `<a class="sheet-frame">` block. Each page
+  says which in the comment at the top of it.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map.
@@ -363,6 +400,11 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **corrugation** | The sharp zigzag the cursor drags across a nearby branch (`CORR_*`): evenly spaced teeth of one size travelling steadily outward along it, so it reads as a regular wave excited in a wire. Only its height answers the cursor. It used to re-roll its height and spacing several times a second, which read as jitter — that was replaced, deliberately, by the pattern described here. |
 | **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
 | **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. A beat after it opens, the node's **name** is lifted out of the map and set above it. |
+| **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
+| **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
+| **plate** | The frame the sheet settles on and keeps at the top — the first one in the page. |
+| **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. `FLIP_*` in `contact-sheet.js`. |
+| **band** / **run** | The strip of horizontal lines under a row of pictures, and one line in it. Every band sits under the row before it, which is what keeps a line from crossing a picture. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 
