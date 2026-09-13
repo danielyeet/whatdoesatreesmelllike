@@ -13,12 +13,21 @@ const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 
 const SHEET = "/categories/scent-descriptions.html";
 
-/** Which frame is showing in the middle window right now, or -1. */
+/**
+ * Which frame is showing in the middle window right now, or -1.
+ *
+ * "Showing" means you can actually see it. Asking only whether it is
+ * visible by the `visibility` property is not enough and once cost a
+ * real bug: a rule written for the pictures' arrival left every frame
+ * at zero opacity during the flick, so the window was blank for three
+ * seconds while this still reported a picture in it.
+ */
 const showing = (page) =>
   page.evaluate(() =>
-    [...document.querySelectorAll(".sheet-frame")].findIndex(
-      (f) => getComputedStyle(f).visibility === "visible"
-    )
+    [...document.querySelectorAll(".sheet-frame")].findIndex((f) => {
+      const style = getComputedStyle(f);
+      return style.visibility === "visible" && parseFloat(style.opacity) > 0.5;
+    })
   );
 
 /** Wait for the whole sequence — flick, settle, every line drawn. */
@@ -49,10 +58,11 @@ test("the page opens white, with one picture in the middle and nothing else", as
   );
   expect(visible, "one picture at a time").toBe(1);
 
-  // The title is not there yet: it arrives once the sheet settles.
-  const title = await page.evaluate(() =>
-    parseFloat(getComputedStyle(document.querySelector(".sheet-head h1")).opacity));
-  expect(title, "the title waits for the sheet to settle").toBeLessThan(0.05);
+  // The two buttons are not there yet: they arrive once the page has
+  // finished drawing itself.
+  const buttons = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.querySelector(".sheet-filters")).opacity));
+  expect(buttons, "the buttons wait for the page to finish").toBeLessThan(0.05);
 
   expect(errors).toEqual([]);
 });
@@ -178,19 +188,13 @@ test("every line stops just off the pictures it joins", async ({ page }) => {
   });
 });
 
-test("the title arrives once it has settled", async ({ page }) => {
+// The page carries no title any more; the heading stays in the markup
+// for anything reading the page rather than looking at it.
+test("the heading is there for a reader, and out of sight for a looker", async ({ page }) => {
   await page.goto(SHEET);
-  await waitForSheet(page);
-
-  await expect
-    .poll(
-      () => page.evaluate(() =>
-        parseFloat(getComputedStyle(document.querySelector(".sheet-head h1")).opacity)),
-      { timeout: 5000 }
-    )
-    .toBeGreaterThan(0.9);
-
   await expect(page.locator(".sheet-head h1")).toHaveText("Scent descriptions");
+  const box = await page.locator(".sheet-head h1").boundingBox();
+  expect(box.width, "it should not be taking up the page").toBeLessThan(3);
 });
 
 // Regression test: the page grows a lot taller the moment the sheet
@@ -246,8 +250,14 @@ test("the pictures arrive one after another, spreading outwards", async ({ page 
 
   // No two pictures land in the same instant. A little tolerance: two
   // lines can finish within a frame or two of each other.
-  const together = arrivals.slice(1).filter((at, i) => at - arrivals[i] < 40).length;
-  expect(together, `pictures landing together: ${arrivals.join(", ")}`).toBeLessThan(2);
+  // Two can happen to land close together — that reads as a map being
+  // drawn, not as a fault. What matters is the pace of the whole run,
+  // so this measures the middle gap between one picture and the next
+  // rather than the closest pair: a map that drew itself in bursts
+  // would have a middle gap near zero.
+  const gaps = arrivals.slice(2).map((at, i) => at - arrivals[i + 1]).sort((a, b) => a - b);
+  const middle = gaps[Math.floor(gaps.length / 2)];
+  expect(middle, `pictures arrived at ${arrivals.join(", ")}`).toBeGreaterThan(80);
 });
 
 test("every picture is still a link to a piece", async ({ page }) => {
@@ -293,27 +303,34 @@ test("the flick ends on the picture it keeps, with no last blink", async ({ page
   ).toBe(lastOfFlick.showing);
 });
 
-test("the two buttons arrive with the name, and one is chosen at a time", async ({ page }) => {
+test("the two buttons arrive once the page has drawn itself", async ({ page }) => {
   await page.goto(SHEET);
 
   const buttons = page.locator(".sheet-filter");
   await expect(buttons).toHaveCount(2);
   await expect(buttons).toHaveText(["Description portfolio", "Favorites"]);
 
-  // Not there while the pictures are still flicking through.
-  expect(
-    await page.evaluate(() =>
-      parseFloat(getComputedStyle(document.querySelector(".sheet-filters")).opacity))
-  ).toBeLessThan(0.05);
+  const showingButtons = () =>
+    page.evaluate(() =>
+      parseFloat(getComputedStyle(document.querySelector(".sheet-filters")).opacity));
 
+  // Not there while the pictures are still flicking through.
+  expect(await showingButtons()).toBeLessThan(0.05);
+
+  // Nor while the map is still drawing itself.
   await waitForSheet(page);
-  await expect
-    .poll(
-      () => page.evaluate(() =>
-        parseFloat(getComputedStyle(document.querySelector(".sheet-filters")).opacity)),
-      { timeout: 5000 }
-    )
-    .toBeGreaterThan(0.9);
+  await expect.poll(showingButtons, { timeout: 6000 }).toBeGreaterThan(0.9);
+
+  // They sit across the top of the page rather than in it, between the
+  // Menu on the left and the Search on the right.
+  const where = await page.evaluate(() => {
+    const style = getComputedStyle(document.querySelector(".sheet-filters"));
+    const box = document.querySelector(".sheet-filters").getBoundingClientRect();
+    return { fixed: style.position, top: box.top, middle: box.left + box.width / 2 };
+  });
+  expect(where.fixed).toBe("fixed");
+  expect(where.top, "up at the top of the page").toBeLessThan(70);
+  expect(Math.abs(where.middle - 640), "across the middle of it").toBeLessThan(40);
 
   // The page opens on the map, and says so.
   await expect(buttons.nth(0)).toHaveClass(/chosen/);

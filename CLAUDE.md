@@ -78,11 +78,11 @@ picture and leaving it where it was, the name and the three buttons arriving aft
 the search matching a picture by name, every line stopping just off the two pictures it
 joins, no line crossing a picture it is not pointing at, no picture left with nothing
 joined to it, the pictures arriving one after another rather than together, nothing
-shifting sideways when the page grows, and a frame keeping its number once a real picture
-is put in it; and favorites — switching views taking one away before the other arrives,
+shifting sideways when the page grows, the two buttons arriving only once it has finished
+drawing itself, and a frame keeping its number once a real picture is put in it; and favorites — switching views taking one away before the other arrives,
 the flick ending on the first, the ring standing its pictures front to back, dragging
 turning it, picking one fading rather than cutting, the whole view fitting on one screen,
-and pointing at a picture bringing up its name.
+and pointing at the big square bringing up the name of what is in it.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -333,6 +333,17 @@ carrying a date, and each of the other pictures appears as its line lands on it.
 
 - **The pictures are the `<a class="sheet-frame">` blocks in the page.** Adding one is an
   HTML edit; nothing in the script changes. The first block is the one it lands on.
+- **The page carries no title.** The two buttons are the whole of its chrome: fixed
+  across the top between the Menu on the left and the Search on the right, and they
+  arrive only once the page has finished drawing itself — the page puts itself together,
+  and then hands you the controls. The `<h1>` stays in the markup, out of sight, because
+  a page with no heading at all is a page nothing can announce.
+- **Anything that hides an un-landed picture must be written under `.settled`.** Every
+  picture takes its turn in the middle window during the flick, so a rule aimed at the
+  pictures' arrival (`opacity: 0` until `.landed`) hides the flick itself — the window
+  goes blank for three seconds. That is a bug this page has actually had. The test that
+  should have caught it was asking whether the frame was `visibility: visible`, which it
+  was; it now asks whether you could actually see it.
 - **The number in the corner is not part of the placeholder.** It is the frame's number
   on the sheet, printed on its own white chip, and it stays once a real picture is in the
   frame — only the hatching goes. `tests/contact-sheet.spec.js` puts a picture into a
@@ -352,7 +363,11 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   run has to simply stop.
 - **The scatter never overlaps.** Each picture is given a square of its own on a grid
   with far more squares than there are pictures, and wanders only inside that square, so
-  the arrangement is irregular but nothing can ever land on anything else.
+  the arrangement is irregular but nothing can ever land on anything else. The room a
+  picture's caption needs is part of its square, so nothing is printed over anything
+  either. Each row is given a little more room than the one above it (`ROW_OPEN`), so the
+  sheet opens out as it goes down rather than bunching up — gently: at 0.16 a third of
+  the map was empty space.
 - **A line is only drawn where nothing is in the way.** Lines go at any angle now, so the
   layout no longer keeps them clear of anything — instead a link that would cut across
   another picture, or across any caption (including the captions of the two pictures it
@@ -416,11 +431,12 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   picture paints the one underneath and fades it up. The flick asks for cuts instead and
   gets them by turning that fade off (`.no-fade`). A cut is the film going past; a fade
   is you choosing something; they must not look the same.
-- **Pointing at a picture in the ring darkens its bottom corner and brings up its name**
-  there. That is the only place a name is written in this view: the description under the
-  ring was taken out so the whole thing fits on one screen without scrolling, which is
-  also why the big square and the ring are sized against the window's *height* as well as
-  its width.
+- **Pointing at the big square darkens its bottom corner and brings up the name of what
+  is showing in it.** That is the only place a name is written in this view: the
+  description under the ring was taken out so the whole thing fits on one screen without
+  scrolling, which is also why the square and the ring are sized against the window's
+  *height* as well as its width. The pictures in the ring stay plain — a name on each of
+  them at once was noise, and they are chosen by pointing at them anyway.
 
 ### Styling
 

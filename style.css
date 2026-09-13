@@ -665,41 +665,26 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
 html:has(.sheet-page) { scrollbar-gutter: stable; }
 .sheet-page { background: #fff; }
 
-.sheet-head {
-  width: min(1240px, calc(100% - 80px));
-  margin: 0 auto;
-  padding: clamp(30px, 5vh, 58px) 0 6px;
-}
-/* The page's title, not a caption on it. Still under a hairline, which
-   is the same mark the rest of the site uses to head a block. */
+/* There is no title on this page any more. The heading stays in the
+   markup for anything reading the page rather than looking at it — a
+   page with no heading at all is a page nothing can announce. */
 .sheet-head h1 {
-  position: relative;
-  display: inline-block;
-  font-size: clamp(27px, 3.4vw, 42px);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  padding-bottom: 2px;
-}
-.sheet-head h1::after {
-  content: "";
   position: absolute;
-  left: 0;
-  bottom: 0;
+  width: 1px;
   height: 1px;
-  width: 100%;
-  background: var(--ink);
-  opacity: 0.45;
-}
-.sheet-head .category-lede {
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--muted);
-  max-width: 44ch;
-  margin: 24px 0 0;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-/* The three above the window. They arrive with the name, once the
-   flicking has stopped.
+/* The two ways of looking at the category, and the whole of this
+   page's chrome now that the title has gone: fixed across the top
+   between the Menu on the left and the Search on the right, so they
+   sit where they sit whatever the view below them is doing. They
+   arrive once the page has finished drawing itself.
+
    They sit INSIDE .sheet-head rather than loose in the page, and have
    to: every direct child of <body> is given an opacity transition by
    the rule that dims the page behind the menu, and that rule outranks
@@ -707,9 +692,12 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
    hidden without being seen fading away first. Inside the head block
    it is no longer a child of body, and this works as written. */
 .sheet-filters {
-  margin: 18px 0 0;
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
   display: flex;
-  justify-content: center;
   gap: 8px;
 }
 .sheet-filter {
@@ -878,10 +866,16 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
 }
 /* A picture comes up as its line reaches it, over a moment rather than
    in one frame: the map draws itself rather than switching itself on.
-   The flick is the exception and keeps its hard cuts — that is the film
-   going past, not the map being drawn. */
-.sheet.scripted .sheet-frame:not(.is-plate) { opacity: 0; transition: opacity 0.45s var(--menu-ease); }
-.sheet.scripted .sheet-frame.landed { opacity: 1; }
+   ONLY once the sheet has settled, though. Every picture takes its turn
+   in the middle window during the flick, and hiding the ones that have
+   not landed yet hides the flick itself — which is exactly what this
+   rule did when it was written without .settled on the front of it. */
+.sheet.scripted.settled .sheet-frame:not(.landed) {
+  opacity: 0;
+}
+.sheet.scripted.settled .sheet-frame {
+  transition: opacity 0.45s var(--menu-ease);
+}
 /* While the pictures are still stacked in the middle window they have
    no captions — a caption belongs to a picture on the map, not to the
    flick. */
@@ -964,7 +958,7 @@ body.sheet-named .sheet-filters {
    by the rule that dims the page behind the menu, and that rule
    outranks anything written here — the fades below would be that
    rule's, not these. Inside a wrapper they are these. */
-.views { position: relative; }
+.views { position: relative; padding-top: clamp(64px, 9vh, 96px); }
 .sheet, .gallery { transition: opacity 0.5s var(--menu-ease); }
 body.view-switching .sheet,
 body.view-switching .gallery,
@@ -989,7 +983,7 @@ body:not(.sheet-scripted) .gallery { display: block; }
    screen, without scrolling. */
 .gallery-plate {
   position: relative;
-  width: min(470px, 42vw, 40vh, calc(100% - 24px));
+  width: min(560px, 46vw, 52vh, calc(100% - 24px));
   aspect-ratio: 1 / 1;
   margin: 0 auto;
   border: 1px solid var(--ink);
@@ -1046,10 +1040,12 @@ body:not(.sheet-scripted) .gallery { display: block; }
 .gallery-frame.chosen { border-color: var(--ink); }
 .gallery-frame:hover { border-color: var(--ink); }
 
-/* Pointing at a picture in the ring darkens its bottom corner and
-   brings up its name there — the only place a name is written in this
-   view now that the description under the ring has gone. */
-.gallery-frame::after {
+/* Pointing at the big square darkens its bottom corner and brings up
+   the name of whatever is showing there — the only place a name is
+   written in this view now that the description under the ring has
+   gone. The ring's own pictures stay plain: a name on each of them at
+   once was noise, and they are chosen by pointing at them anyway. */
+.gallery-plate::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1064,19 +1060,18 @@ body:not(.sheet-scripted) .gallery { display: block; }
   pointer-events: none;
   z-index: 1;
 }
-.gallery-frame:hover::after,
-.gallery-frame:focus-visible::after { opacity: 1; }
+.gallery-plate:hover::after { opacity: 1; }
 .gallery-hover-name {
   position: absolute;
-  right: 9px;
-  bottom: 8px;
+  right: 12px;
+  bottom: 11px;
   /* Above the shade, or the shade is drawn over it — a pseudo-element
      is the last thing in the box and paints over everything in it. */
   z-index: 2;
   max-width: calc(100% - 18px);
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   color: #f0efe8;
   text-align: right;
   white-space: nowrap;
@@ -1084,8 +1079,7 @@ body:not(.sheet-scripted) .gallery { display: block; }
   transition: opacity 0.4s var(--menu-ease);
   pointer-events: none;
 }
-.gallery-frame:hover .gallery-hover-name,
-.gallery-frame:focus-visible .gallery-hover-name { opacity: 1; }
+.gallery-plate:hover .gallery-hover-name { opacity: 1; }
 
 /* ==================================================================
    GALLERY WORK PAGE

@@ -50,12 +50,16 @@
 
   // The map. Sizes are shares of the sheet's own width, so the whole
   // arrangement scales rather than being pinned to one screen.
-  const PLATE_SHARE = 0.42, PLATE_MIN = 260, PLATE_MAX = 470;
+  const PLATE_SHARE = 0.5, PLATE_MIN = 280, PLATE_MAX = 580;
   const CHILD_SHARE = 0.125, CHILD_MIN = 92, CHILD_MAX = 152;
-  const CELL_SPREAD = 1.58;   // how much room each picture is given, as a multiple of itself
+  const CELL_SPREAD = 1.6;    // how much room each picture is given, as a multiple of itself
+  // ...and a little more of it the further down the page it is, so the
+  // sheet opens out as it goes rather than bunching up towards the
+  // bottom. Gently: at 0.16 the map became a third empty.
+  const ROW_OPEN = 0.07;      // each row this much roomier than the one above
   const CELL_JITTER = 0.85;   // how much of the room left over it may wander in
   const SIZE_VARY = 0.34;     // how much the pictures differ in size
-  const PLATE_CLEAR = 30;     // space kept clear around the middle window
+  const PLATE_CLEAR = 34;     // space kept clear around the middle window
 
   // How the pictures are joined up. Not everything reaches back to the
   // middle: each picture links to one of its nearer neighbours, some
@@ -73,11 +77,12 @@
   // watched doing it: a line travels to a picture, the picture comes
   // up, and only then do its own lines set off. These four numbers are
   // the whole of that pace — raise them and it spreads more slowly.
-  const NAME_AFTER_MS = 380;    // pause between it settling and the name arriving
+  const NAME_AFTER_MS = 420;    // pause between the page finishing and the buttons arriving
   const ROUTE_AFTER_MS = 760;   // and before the first lines set off
-  const ROUTE_MS_PER_PX = 1.6;  // how long a line takes per pixel of its own length
-  const LINK_DELAY_MS = 180;    // the pause at a picture before its own lines carry on
-  const OUT_STAGGER_MS = 280;   // and between one line leaving a picture and the next
+  const ROUTE_MS_PER_PX = 1.35; // how long a line takes per pixel of its own length
+  const LINK_DELAY_MS = 150;    // the pause at a picture before its own lines carry on
+  const OUT_STAGGER_MS = 240;   // and between one line leaving a picture and the next
+  const TIE_SPREAD_MS = 340;    // a little unevenness, so no two land in the same instant
   const SEED = 7;               // change for a different arrangement of the map
 
   // A seeded random number generator, so the map is scattered but comes
@@ -299,6 +304,11 @@
       const year = 2016 + Math.floor(random() * 10);
       link.date =
         String(day).padStart(2, "0") + "." + String(month).padStart(2, "0") + "." + year;
+      // Lines leaving different pictures can still happen to finish at
+      // the same moment, and two pictures landing together is the one
+      // thing the spread is meant not to do. A fixed nudge each, rolled
+      // once, is enough to keep them apart.
+      link.jitter = random() * TIE_SPREAD_MS;
     });
   }
 
@@ -320,21 +330,33 @@
     const cell = childBase * CELL_SPREAD;
     const cols = Math.max(2, Math.round(width / cell));
     const cellW = width / cols;
-    const cellH = cell;
+
+    // Each row is given more room than the one above it, so the sheet
+    // opens out as it goes down instead of bunching up towards the
+    // bottom — which means where a row starts has to be counted rather
+    // than multiplied out. The room a picture's caption needs is part
+    // of the row, so nothing is ever printed over anything.
+    const rows = Math.ceil((rest.length * 1.75) / cols) + 1;
+    const rowTop = [];
+    const rowHeight = [];
+    let down = 0;
+    for (let r = 0; r < rows; r++) {
+      rowTop.push(down);
+      rowHeight.push(cell * (1 + r * ROW_OPEN) + CAPTION_ROOM);
+      down += rowHeight[r];
+    }
 
     // Every place on the grid, minus the ones the middle window is
     // standing on, shuffled. Having more places than pictures is what
     // leaves the gaps that make this a scatter rather than a table.
-    const rows = Math.ceil((rest.length * 1.9) / cols) + 1;
     const open = [];
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const x = c * cellW;
-        const y = r * cellH;
         const clashes =
           x < plateX + plateSize + PLATE_CLEAR && x + cellW > plateX - PLATE_CLEAR &&
-          y < plateSize + PLATE_CLEAR;
-        if (!clashes) open.push({ x: x, y: y, key: random() });
+          rowTop[r] < plateSize + PLATE_CLEAR;
+        if (!clashes) open.push({ x: x, y: rowTop[r], h: rowHeight[r], key: random() });
       }
     }
     open.sort((a, b) => a.key - b.key);
@@ -345,7 +367,8 @@
     }];
 
     rest.forEach((frame, i) => {
-      const spot = open[i] || { x: 0, y: 0 };
+      const spot = open[i] || { x: 0, y: 0, h: cell + CAPTION_ROOM };
+      const cellH = spot.h;
       // Pictures differ a little in size, and none of them sits dead
       // centre in its own square — both are what keep the scatter from
       // resolving back into the grid it was built on.
@@ -355,9 +378,13 @@
       // two pictures can never end up on top of each other however far
       // the scatter throws them.
       const roomX = Math.max(0, (cellW - size) / 2) * CELL_JITTER;
-      const roomY = Math.max(0, (cellH - size) / 2) * CELL_JITTER;
+      // Its caption is printed underneath it, so the room it may wander
+      // down into is what is left once that is allowed for.
+      const roomY = Math.max(0, (cellH - CAPTION_ROOM - size) / 2) * CELL_JITTER;
       const x = Math.round(spot.x + (cellW - size) / 2 + (random() - 0.5) * 2 * roomX);
-      const y = Math.round(spot.y + (cellH - size) / 2 + (random() - 0.5) * 2 * roomY);
+      const y = Math.round(
+        spot.y + (cellH - CAPTION_ROOM - size) / 2 + (random() - 0.5) * 2 * roomY
+      );
       nodes.push({ x: x, y: y, size: size, cx: x + size / 2, cy: y + size / 2 });
 
       frame.style.width = (placed ? size : plateSize) + "px";
@@ -433,7 +460,8 @@
       let moved = false;
       links.forEach((link) => {
         if (!link.tree || arriveAt[link.a] === null) return;
-        const start = arriveAt[link.a] + LINK_DELAY_MS + link.order * OUT_STAGGER_MS;
+        const start =
+          arriveAt[link.a] + LINK_DELAY_MS + link.order * OUT_STAGGER_MS + (link.jitter || 0);
         if (link.start === start && arriveAt[link.b] !== null) return;
         link.start = start;
         arriveAt[link.b] = start + link.draw;
@@ -486,9 +514,13 @@
     layout();
     sheet.classList.add("settled");
 
+    // The two buttons above the page arrive once it has finished
+    // drawing itself, not when the flick stops: the page puts itself
+    // together, and then hands you the controls.
+    const drawnAt = nodes.reduce((m, n) => Math.max(m, n.arriveAt || 0), 0);
     setTimeout(
       () => document.body.classList.add("sheet-named"),
-      REDUCE_MOTION ? 0 : NAME_AFTER_MS
+      REDUCE_MOTION ? 0 : ROUTE_AFTER_MS + drawnAt + NAME_AFTER_MS
     );
 
     if (REDUCE_MOTION) {

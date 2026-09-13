@@ -78,14 +78,12 @@
   frames.forEach((frame, i) => {
     frame.style.setProperty("--hatch-angle", (-55 + ((i * 41) % 130)) + "deg");
     frame.style.setProperty("--hatch-gap", (9 + ((i * 7) % 10)) + "px");
-    // The name that comes up in the corner when you point at it. A
-    // placeholder name for a placeholder picture; the real one will be
-    // whatever the piece is called.
-    const name = document.createElement("span");
-    name.className = "gallery-hover-name";
-    name.textContent = "Placeholder " + (i + 1);
-    frame.appendChild(name);
   });
+
+  // What a picture is called. Placeholder names for placeholder
+  // pictures; the real one will be whatever each piece is called, and
+  // would be read off the frame in the page rather than counted here.
+  const titleOf = (index) => "Placeholder " + (index + 1);
 
   const nameOf = (frame) => {
     const mark = frame.querySelector(".sheet-number");
@@ -108,6 +106,11 @@
   const plateName = document.createElement("span");
   plateName.className = "sheet-number";
   plate.appendChild(plateName);
+  // Pointing at the big square darkens its bottom corner and brings up
+  // the name of whatever is showing in it.
+  const hoverName = document.createElement("span");
+  hoverName.className = "gallery-hover-name";
+  plate.appendChild(hoverName);
   let front = 0;
   let showingIndex = -1;
 
@@ -134,6 +137,7 @@
     layers[front].classList.remove("shown");
     front = back;
     plateName.textContent = nameOf(frames[index]);
+    hoverName.textContent = titleOf(index);
     if (chosenName) chosenName.textContent = nameOf(frames[index]);
     frames.forEach((frame, i) => frame.classList.toggle("chosen", i === index));
   }

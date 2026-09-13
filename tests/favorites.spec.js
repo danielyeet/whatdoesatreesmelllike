@@ -182,28 +182,36 @@ test("the whole view fits on one screen, with nothing to scroll to", async ({ pa
     .toBeLessThanOrEqual(fit.window + 2);
 });
 
-test("pointing at a picture in the ring brings up its name", async ({ page }) => {
+test("pointing at the big square brings up the name of what is in it", async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
 
-  const name = page.locator(".gallery-frame").nth(0).locator(".gallery-hover-name");
+  const name = page.locator(".gallery-plate .gallery-hover-name");
   await expect(name).toHaveText("Placeholder 1");
   expect(
     await name.evaluate((el) => parseFloat(getComputedStyle(el).opacity)),
     "not there until it is pointed at"
   ).toBeLessThan(0.05);
 
-  const box = await page.locator(".gallery-frame").nth(0).boundingBox();
+  const box = await page.locator(".gallery-plate").boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 
   await expect
     .poll(() => name.evaluate((el) => parseFloat(getComputedStyle(el).opacity)), { timeout: 3000 })
     .toBeGreaterThan(0.9);
   // ...on a darkened corner, so it can be read over the picture.
-  const shade = await page.locator(".gallery-frame").nth(0).evaluate((el) =>
+  const shade = await page.locator(".gallery-plate").evaluate((el) =>
     parseFloat(getComputedStyle(el, "::after").opacity));
   expect(shade, "the corner should darken under it").toBeGreaterThan(0.9);
+
+  // The pictures in the ring carry no such name: one on each of them at
+  // once was noise.
+  expect(await page.locator(".gallery-frame .gallery-hover-name").count()).toBe(0);
+
+  // And it follows whatever is showing in the square.
+  await page.locator(".gallery-frame").nth(4).dispatchEvent("click");
+  await expect(name).toHaveText("Placeholder 5");
 });
 
 test("with animation turned off, favorites arrives finished", async ({ page }) => {
