@@ -263,6 +263,11 @@ Other things that will bite you:
   keep drifting under the pointer.
 - A node's `preview` intercepts the click and opens a dark modal whose connector arm is
   that node's *own* branch traced out to the window, not a second curve drawn alongside.
+  `TITLE_LIFT_MS` after that window opens — a clear beat after it has finished flying in
+  — the node's **name** is set above it, and the node's own label in the map gives its
+  copy up at the same moment (the registration mark stays; only the lettering moves). The
+  name is a child of the modal so it travels with it, positioned outside its top edge on
+  the paper. One name, one place: if you ever make both visible at once, that is the bug.
 - If `THREE` is undefined the scene replaces itself with a plain list of `REAL_NODES`
   links. Keep that fallback working when editing the top of the file.
 - The `TUNING` block near the top holds every magic number (`IDLE_SPEED`,
@@ -357,7 +362,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **arrival** | The eased follow of `window.__p23`; drives the scene's opacity and every branch's `emerge`. Held where it is for as long as `__exit` is set — see the sphere riding out under **the collapse**. |
 | **corrugation** | The sharp zigzag the cursor drags across a nearby branch (`CORR_*`): evenly spaced teeth of one size travelling steadily outward along it, so it reads as a regular wave excited in a wire. Only its height answers the cursor. It used to re-roll its height and spacing several times a second, which read as jitter — that was replaced, deliberately, by the pattern described here. |
 | **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
-| **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. |
+| **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. A beat after it opens, the node's **name** is lifted out of the map and set above it. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 

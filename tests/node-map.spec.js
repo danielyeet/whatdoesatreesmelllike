@@ -165,6 +165,33 @@ test.describe("the preview window", () => {
     );
   });
 
+  // The node's name is lifted out of the map and set above the window a
+  // beat after the window lands, and the map gives its copy up at the
+  // same moment — the name is only ever in one place.
+  test("the node's name moves out of the map and onto its window", async ({ page }) => {
+    const label = page.locator(".node3d-label", { hasText: "Scent descriptions" });
+    const inTheMap = () =>
+      label.locator(".node3d-text").evaluate((el) => parseFloat(el.style.opacity || "1"));
+    const onTheWindow = () =>
+      page.locator(".node-preview-title").evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+
+    await label.click({ force: true });
+    await expect(page.locator(".node-preview-title")).toHaveText("Scent descriptions");
+
+    // Half a second in, the window has landed but the name has not
+    // followed it yet: that pause is the whole point of the move.
+    await page.waitForTimeout(500);
+    expect(await onTheWindow(), "the name should arrive after the window").toBeLessThan(0.1);
+    expect(await inTheMap(), "and the map still has it at that point").toBeGreaterThan(0.9);
+
+    await expect.poll(onTheWindow, { timeout: 6000 }).toBeGreaterThan(0.9);
+    await expect.poll(inTheMap, { timeout: 4000 }).toBeLessThan(0.1);
+
+    // Closing the window gives it back.
+    await page.locator(".node-preview-close").click();
+    await expect.poll(inTheMap, { timeout: 5000 }).toBeGreaterThan(0.9);
+  });
+
   // Regression test for the bug that made the connecting line vanish.
   // Everything about it was drawn correctly, but the sheet it was drawn
   // on had collapsed to a 300x150 box in the corner, so all of it was

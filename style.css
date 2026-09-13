@@ -474,6 +474,44 @@ body.preview-open .menu-trigger { opacity: 0.15; pointer-events: none; transitio
   margin-bottom: 22px;
 }
 .node-preview-desc { font-family: var(--sans); font-size: 14px; line-height: 1.6; color: #c9c6bb; margin: 0 0 26px; }
+/* The node's own name, lifted out of the map and set above its window a
+   beat after the window lands. It sits outside the dark panel, on the
+   paper, in the map's own lettering — so it reads as the label having
+   moved rather than as a heading the window came with. It arrives by
+   settling: wide letter-spacing closing to the spacing the labels in
+   the map are set at, and a hairline drawing out under it. */
+.node-preview-title {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin: 0 0 18px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(7px);
+  /* the paper behind it carries grid and grain, as under the map's labels */
+  text-shadow: 0 0 7px var(--paper-tone), 0 0 14px var(--paper-tone), 0 1px 0 var(--paper-tone);
+  transition: opacity 0.9s var(--menu-ease), letter-spacing 1.2s var(--menu-ease),
+              transform 0.9s var(--menu-ease);
+}
+.node-preview-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -9px;
+  height: 1px;
+  width: 0;
+  background: var(--ink);
+  opacity: 0.45;
+  transition: width 1.2s var(--menu-ease);
+}
+.node-preview-title.lifted { opacity: 1; letter-spacing: 0.11em; transform: translateY(0); }
+.node-preview-title.lifted::after { width: 100%; }
 /* Was a bare word in the corner. It's the same registration mark the
    nodes use, with the word beside it, so the way out of the window is
    built from the same vocabulary as the way in. */

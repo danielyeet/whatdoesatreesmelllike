@@ -464,6 +464,11 @@ const REAL_NODES = [
     labelLayer.appendChild(a);
 
     n._el = a;
+    // The name on its own, separate from the mark beside it: when this
+    // node's window is open its name is lifted to the top of that
+    // window, and it gives it up here while that lasts.
+    n._text = textEl;
+    n._nameFade = 1;
     n._anchor = anchorObj;
     n._end = end.clone();
     n._index = i;
@@ -665,8 +670,14 @@ const REAL_NODES = [
   const ARM_MARK_GAP = 13;      // how far off the window the end mark stands
   const DOCK_BAR = 34;          // the notch it lands in, on the window's edge
 
+  // How long after the window lands before its name arrives above it.
+  // The window itself takes 0.6s to fly in and settle, so this is a
+  // clear beat after that rather than part of the same movement.
+  const TITLE_LIFT_MS = 1000;
+
   let previewOpen = false;
   let previewNodeIndex = -1;
+  let titleLifted = false;
   let activePreview = null;
   let armIndex = -1;            // the branch currently standing in as the arm
   let armMix = 0;               // 0 = drawn as its 3D tube, 1 = drawn as the ribbon
@@ -711,7 +722,17 @@ const REAL_NODES = [
     enter.href = node.href;
     enter.textContent = "Enter";
 
-    modal.append(desc, enter);
+    // The node's own name, set above the window. It belongs to the
+    // window rather than the page, so it is a child of it and travels
+    // with it — but positioned outside its top edge, on the paper,
+    // where it is still the map's own lettering rather than the dark
+    // window's. It arrives a beat late, and the map gives its copy up
+    // at the same moment, so the name is only ever in one place.
+    const title = document.createElement("h2");
+    title.className = "node-preview-title";
+    title.textContent = node.label;
+
+    modal.append(desc, enter, title);
     modal.style.left = originX + "px";
     modal.style.top = originY + "px";
     modal.style.transform = "translate(-50%, -50%) scale(0.06)";
@@ -784,9 +805,14 @@ const REAL_NODES = [
       modal.style.opacity = "1";
     });
 
+    const lift = setTimeout(() => {
+      title.classList.add("lifted");
+      titleLifted = true;
+    }, TITLE_LIFT_MS);
+
     modal.querySelector(".node-preview-close").addEventListener("click", closePreview);
     activePreview = {
-      modal: modal, svg: svg, ribbon: ribbon, gradient: gradient,
+      modal: modal, svg: svg, ribbon: ribbon, gradient: gradient, lift: lift,
       dockStub: dockStub, dockLine: dockLine, dockMark: dockMark, dockDot: dockDot,
       maskShow: maskShow, maskCut: maskCut,
       backdrop: backdrop, originX: originX, originY: originY,
@@ -797,6 +823,10 @@ const REAL_NODES = [
   function closePreview() {
     if (!previewOpen || !activePreview) return;
     const preview = activePreview;
+    // Whether or not the name got as far as being lifted, the map takes
+    // it back from here.
+    clearTimeout(preview.lift);
+    titleLifted = false;
     preview.modal.style.left = preview.originX + "px";
     preview.modal.style.top = preview.originY + "px";
     preview.modal.style.transform = "translate(-50%, -50%) scale(0.06)";
@@ -1357,6 +1387,13 @@ const REAL_NODES = [
       n._el.style.opacity = String(
         Math.max(0.5, 1 - depth * 0.45) * (1 - 0.55 * back) * labelFade
       );
+      // One name, one place: while this node's name is being shown above
+      // its own window, the copy of it out here fades away. The mark
+      // stays — the node is still there, it is only the lettering that
+      // has moved.
+      const keepsName = titleLifted && i === previewNodeIndex ? 0 : 1;
+      n._nameFade += (keepsName - n._nameFade) * 0.1;
+      n._text.style.opacity = n._nameFade.toFixed(3);
       n._el.style.zIndex = String(Math.round((1 - depth) * 100));
       // Each node dimples the paper behind it. During the collapse the
       // sign of that is flipped, so instead of pushing the grid away
