@@ -243,12 +243,12 @@ test("the flick ends on the picture it keeps, with no last blink", async ({ page
   ).toBe(lastOfFlick.showing);
 });
 
-test("the three buttons arrive with the name, and one is chosen at a time", async ({ page }) => {
+test("the two buttons arrive with the name, and one is chosen at a time", async ({ page }) => {
   await page.goto(SHEET);
 
-  const filters = page.locator(".sheet-filter");
-  await expect(filters).toHaveCount(3);
-  await expect(filters).toHaveText(["Houses", "Perfumes", "My favorites"]);
+  const buttons = page.locator(".sheet-filter");
+  await expect(buttons).toHaveCount(2);
+  await expect(buttons).toHaveText(["Description portfolio", "Favorites"]);
 
   // Not there while the pictures are still flicking through.
   expect(
@@ -265,10 +265,61 @@ test("the three buttons arrive with the name, and one is chosen at a time", asyn
     )
     .toBeGreaterThan(0.9);
 
-  await filters.nth(1).click();
-  await expect(filters.nth(1)).toHaveClass(/chosen/);
-  await expect(filters.nth(0)).not.toHaveClass(/chosen/);
-  await expect(filters.nth(2)).not.toHaveClass(/chosen/);
+  // The page opens on the map, and says so.
+  await expect(buttons.nth(0)).toHaveClass(/chosen/);
+  await expect(buttons.nth(1)).not.toHaveClass(/chosen/);
+});
+
+// The number in the corner belongs to the frame, not to the placeholder
+// drawn inside it: putting a real picture in takes the hatching away and
+// must leave the number where it is.
+test("a frame keeps its number once it has a picture in it", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  const numbered = await page.evaluate(() => {
+    const frame = document.querySelectorAll(".sheet-frame")[2];
+    const picture = document.createElement("img");
+    // A one-pixel picture, so nothing has to be fetched for this.
+    picture.src =
+      "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
+    frame.insertBefore(picture, frame.firstChild);
+    const mark = frame.querySelector(".sheet-number");
+    const style = getComputedStyle(frame);
+    return {
+      text: mark.textContent,
+      showing: getComputedStyle(mark).visibility !== "hidden" &&
+               parseFloat(getComputedStyle(mark).opacity) > 0.5,
+      hatchingGone: style.backgroundImage === "none",
+    };
+  });
+
+  expect(numbered.text, "the number should still say which frame this is").toBe("03");
+  expect(numbered.showing, "and should still be visible over the picture").toBe(true);
+  expect(numbered.hatchingGone, "the placeholder hatching should be gone").toBe(true);
+});
+
+// Every picture is joined to something. Dropping links is what keeps the
+// map from being one tidy fan out of the middle, but a picture with no
+// line at all reads as forgotten rather than as loosely joined.
+test("no picture is left with nothing joined to it", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  const lonely = await page.evaluate(() => {
+    const ends = new Set();
+    document.querySelectorAll(".sheet-route").forEach((route) => {
+      ends.add(route.dataset.from);
+      ends.add(route.dataset.to);
+    });
+    const out = [];
+    document.querySelectorAll(".sheet-frame").forEach((frame, i) => {
+      if (!ends.has(String(i))) out.push(i + 1);
+    });
+    return out;
+  });
+
+  expect(lonely, `pictures with no line at all: ${lonely.join(", ")}`).toEqual([]);
 });
 
 test("the search finds a picture by what it is called", async ({ page }) => {

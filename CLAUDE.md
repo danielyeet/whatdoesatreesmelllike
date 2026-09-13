@@ -76,7 +76,11 @@ to the thread without a seam; plus browserless file checks (no link points at a 
 file, no credentials committed); and the contact sheet — the flick ending on the first
 picture and leaving it where it was, the name and the three buttons arriving after it,
 the search matching a picture by name, every line stopping just off the two pictures it
-joins, and no line crossing a picture it is not pointing at.
+joins, no line crossing a picture it is not pointing at, no picture left with nothing
+joined to it, and a frame keeping its number once a real picture is put in it; and
+favorites — switching views taking one away before the other arrives, the flick ending on
+the first, the ring standing its pictures front to back, dragging turning it, and picking
+one fading rather than cutting.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -302,11 +306,22 @@ Other things that will bite you:
   the far end of its range for a scene this small this far from the camera's near/far
   planes — so don't reach for `projected.z` as a stand-in for depth anywhere in this file.
 
-### The contact sheet (`contact-sheet.js`)
+### The contact sheet (`contact-sheet.js`), and favorites (`favorites.js`)
 
 One category page — `categories/scent-descriptions.html` — is laid out as a **contact
-sheet** rather than as a list of rows, and this file is the whole of that. It loads on
-that page only.
+sheet** rather than as a list of rows. It carries **two views of the same category**, and
+the two buttons above the middle window switch between them:
+
+| button | view | file |
+|---|---|---|
+| Description portfolio | the map — every picture scattered, joined by dated lines | `contact-sheet.js` |
+| Favorites | one big square, a draggable ring of pictures under it, a description | `favorites.js` |
+
+Neither file touches the other's elements. All they share is a class on `<body>`
+(`view-favorites`), which `style.css` reads to take one view out of the page and put the
+other in — and the switching itself lives in `favorites.js`, because it owns the buttons.
+Only one view is ever on the page: the one being left fades away *first*, and the other
+arrives after it, so the page never shows two different things at once.
 
 The page opens white with one square window in the middle; every picture in the category
 flicks through it on hard cuts, fast at first and slowing to a stop; it lands on the
@@ -354,13 +369,36 @@ carrying a date, and each of the other pictures appears as its line lands on it.
 - The scattered look comes from a **seeded** generator (`SEED`), reset at the top of
   every layout — so the arrangement is the same on every visit and doesn't rearrange
   itself when the window is resized, which would read as a fault rather than a design.
-- **The three buttons live inside `.sheet-head`, and have to.** Every direct child of
-  `<body>` is given an opacity transition by the rule that dims the page behind the menu,
-  and that rule outranks anything written for them — so a `<nav>` loose in the page could
-  not be hidden without being seen fading away first.
+- **The buttons live inside `.sheet-head`, and the two views inside `.views`, and they
+  have to.** Every direct child of `<body>` is given an opacity transition by the rule
+  that dims the page behind the menu, and that rule outranks anything written for a new
+  element — so anything loose in the page cannot be hidden without being seen fading
+  away first, and its fades would be that rule's rather than its own. Wrapped, they are
+  their own. This has now caught two features; expect it to catch the next one.
 - The **search** at the top right is a placeholder, but a working one: it matches what a
   picture is called and dims everything that doesn't. The **dates** on the lines are
   random, generated from the same seed.
+
+**Favorites** (`favorites.js`) is the other view, built out of the same pieces:
+
+- **The pictures are the `<button class="gallery-frame">` blocks in the page**, named
+  `f1`, `f2`… in the same corner chip the sheet's frames use.
+- Arriving, the big square **flicks** through them exactly as the sheet does — the same
+  accelerating-hold run, arranged to *end* on the first rather than cut to it — and the
+  rest then take their places in the ring.
+- **The ring is a circle lying almost flat.** Three cues make it read that way and it
+  needs all three: the pictures at the back sit higher up the page, are drawn smaller
+  (`RING_BACK`) and are fainter (`RING_FADE`). Weaken any one and it goes back to being
+  a row of squares overlapping each other.
+- Dragging turns it; letting go leaves it turning and running down, the way the map on
+  the landing page behaves. It keeps a slow drift when nothing is touching it, holds
+  still under the pointer, and each picture bobs a little on its own clock.
+- **Picking one fades it into the big square** — the square is two layers, and showing a
+  picture paints the one underneath and fades it up. The flick asks for cuts instead and
+  gets them by turning that fade off (`.no-fade`). A cut is the film going past; a fade
+  is you choosing something; they must not look the same.
+- The description under the ring is filler for now, and the line above it follows
+  whichever picture is chosen.
 
 ### Styling
 
@@ -382,8 +420,9 @@ background luminance, but the class is the reliable path.
   then add it to the relevant `categories/` page. There are two kinds of category page,
   and they take a new piece differently: the **row list** (`theories`, `favorites`, the
   two `other` pages) takes another `<a class="work-row">` block, and the **contact
-  sheet** (`scent-descriptions`) takes another `<a class="sheet-frame">` block. Each page
-  says which in the comment at the top of it.
+  sheet** (`scent-descriptions`) takes another `<a class="sheet-frame">` block for the
+  map, or a `<button class="gallery-frame">` block for its Favorites view. Each page says
+  which in the comment at the top of it.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map.
@@ -435,6 +474,9 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **plate** | The frame the sheet settles on and keeps at the top — the first one in the page. |
 | **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. `FLIP_*` in `contact-sheet.js`. |
 | **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
+| **view** | One of the two ways the contact sheet page shows a category: the **map** (Description portfolio) or **Favorites**. One at a time; `favorites.js` switches them. |
+| **the ring** | The circle of pictures under the big square in Favorites, lying almost flat, draggable. `RING_*` in `favorites.js`. |
+| **favourite** / **f(n)** | One picture in Favorites (`<button class="gallery-frame">`), named f1, f2… in its corner. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 

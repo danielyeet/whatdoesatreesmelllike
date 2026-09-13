@@ -933,6 +933,122 @@ body.sheet-named .sheet-filters {
 }
 
 /* ==================================================================
+   FAVORITES — the other half of a contact sheet page
+   One big square, a ring of pictures under it that can be dragged
+   round, and a description underneath. favorites.js does the flick,
+   the ring's arithmetic and the switching; this is how it looks.
+   ================================================================== */
+/* Only one of the two views is on the page at a time. The one being
+   left fades away first and the other arrives after it — favorites.js
+   holds the swap until the fade is over, so they are never both up.
+   The one not showing is taken out of the layout altogether, or the
+   page would keep the height of whichever is taller.
+
+   They are wrapped in .views rather than sitting loose in the page,
+   and have to be: every direct child of <body> is given a transition
+   by the rule that dims the page behind the menu, and that rule
+   outranks anything written here — the fades below would be that
+   rule's, not these. Inside a wrapper they are these. */
+.views { position: relative; }
+.sheet, .gallery { transition: opacity 0.5s var(--menu-ease); }
+body.view-switching .sheet,
+body.view-switching .gallery,
+body.view-switching .sheet-head .category-lede { opacity: 0; }
+
+.gallery {
+  position: relative;
+  width: min(1240px, calc(100% - 80px));
+  margin: 0 auto;
+  padding-bottom: 90px;
+  display: none;
+}
+body.view-favorites .gallery { display: block; }
+body.view-favorites .sheet { display: none; }
+body.view-favorites .sheet-head .category-lede { opacity: 0; }
+/* Without the script the page shows both, one under the other, which
+   is the right fallback: everything is reachable. */
+body:not(.sheet-scripted) .gallery { display: block; }
+
+.gallery-plate {
+  position: relative;
+  width: min(470px, 42vw, calc(100% - 24px));
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  border: 1px solid var(--ink);
+  background: var(--bg-2);
+}
+/* The two layers the big square is made of: painting one and fading it
+   up over the other is what turns one picture into another. */
+.gallery-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(
+    var(--hatch-angle, -45deg),
+    var(--line) 0px, var(--line) 1px,
+    transparent 1px, transparent var(--hatch-gap, 12px)
+  );
+  transition: opacity 0.55s var(--menu-ease);
+}
+.gallery-layer.has-picture { background-image: none; }
+.gallery-layer img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-layer.shown { opacity: 1; }
+/* The flick wants cuts, not fades — one picture going past another. */
+.gallery-layer.no-fade { transition: none; }
+.gallery-plate > .sheet-number { z-index: 2; }
+
+.gallery-ring {
+  position: relative;
+  margin: 34px auto 0;
+  touch-action: pan-y;   /* a drag turns the ring; a swipe still scrolls the page */
+  cursor: grab;
+}
+.gallery-ring.grabbing { cursor: grabbing; }
+.gallery-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(
+    var(--hatch-angle, -45deg),
+    var(--line) 0px, var(--line) 1px,
+    transparent 1px, transparent var(--hatch-gap, 12px)
+  );
+  cursor: pointer;
+  /* They take their places one after another once the flick has
+     landed; before that there is nothing under the big square. */
+  visibility: hidden;
+}
+.gallery-frame.in-ring { visibility: visible; }
+.gallery-frame:has(img) { background-image: none; background-color: transparent; }
+.gallery-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-frame.chosen { border-color: var(--ink); }
+.gallery-frame:hover { border-color: var(--ink); }
+
+.gallery-text {
+  max-width: 62ch;
+  margin: 46px auto 0;
+  text-align: center;
+}
+.gallery-chosen-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+.gallery-note {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ==================================================================
    GALLERY WORK PAGE
    ================================================================== */
 .work-header { max-width: 640px; margin: 0 auto; padding: 140px 64px 80px; }

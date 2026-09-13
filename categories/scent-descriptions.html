@@ -54,15 +54,20 @@
     turned into much longer pieces.
   </p>
 
-  <!-- These three appear once the sheet has landed. They show which one
-       is chosen and nothing more yet. They are inside this block rather
-       than loose in the page on purpose — see the note in style.css. -->
-  <nav class="sheet-filters" aria-label="Sort the sheet">
-    <button class="sheet-filter chosen" type="button">Houses</button>
-    <button class="sheet-filter" type="button">Perfumes</button>
-    <button class="sheet-filter" type="button">My favorites</button>
+  <!-- The two ways of looking at this category. They appear once the
+       sheet has landed, and switching between them fades one away and
+       brings the other up — see favorites.js. They are inside this
+       block rather than loose in the page on purpose: the note in
+       style.css says why. -->
+  <nav class="sheet-filters" aria-label="How to look at this category">
+    <button class="sheet-filter chosen" type="button" data-view="sheet">Description portfolio</button>
+    <button class="sheet-filter" type="button" data-view="favorites">Favorites</button>
   </nav>
 </div>
+
+<!-- The two views of this category, one at a time. Wrapped
+     together on purpose: see the note in style.css. -->
+<div class="views">
 
 <div class="sheet" id="sheet">
 
@@ -128,8 +133,83 @@
 
 </div>
 
+
+<!--
+  FAVORITES — the other way of looking at this category, and the other
+  half of this page. It is hidden until the Favorites button is
+  pressed; favorites.js then flicks the big square through every
+  picture below, lands on the first, and lays the rest out in a ring
+  underneath that can be dragged round. Clicking one fades it into the
+  big square.
+
+  TO ADD A FAVOURITE: copy one whole <button class="gallery-frame">
+  block, give it the next name, and uncomment its <img>. The ring, the
+  flick and the order all come from however many of these are here.
+-->
+<div class="gallery" id="gallery">
+
+  <div class="gallery-plate" id="gallery-plate" aria-live="polite"></div>
+
+  <div class="gallery-ring" id="gallery-ring">
+    <button class="gallery-frame" type="button" aria-label="Show f1">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f1</span>
+    </button>
+    <button class="gallery-frame" type="button" aria-label="Show f2">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f2</span>
+    </button>
+    <button class="gallery-frame" type="button" aria-label="Show f3">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f3</span>
+    </button>
+    <button class="gallery-frame" type="button" aria-label="Show f4">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f4</span>
+    </button>
+    <button class="gallery-frame" type="button" aria-label="Show f5">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f5</span>
+    </button>
+    <button class="gallery-frame" type="button" aria-label="Show f6">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f6</span>
+    </button>
+    <button class="gallery-frame" type="button" aria-label="Show f7">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f7</span>
+    </button>
+    <button class="gallery-frame" type="button" aria-label="Show f8">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f8</span>
+    </button>
+    <button class="gallery-frame" type="button" aria-label="Show f9">
+      <!-- <img src="../images/your-picture.jpg" alt=""> -->
+      <span class="sheet-number">f9</span>
+    </button>
+  </div>
+
+  <div class="gallery-text">
+    <p class="gallery-chosen-name" id="gallery-chosen-name">f1</p>
+    <!-- Filler until the real descriptions are written. One paragraph
+         for now; each picture will want its own. -->
+    <p class="gallery-note">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+      enim ad minim veniam, quis nostrud exercitation ullamco laboris
+      nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+      reprehenderit in voluptate velit esse cillum dolore eu fugiat
+      nulla pariatur.
+    </p>
+  </div>
+
+</div>
+
+</div>
+
 <script>window.SITE_ROOT = "../";</script>
 <script src="../nav.js"></script>
 <script src="../contact-sheet.js"></script>
+<script src="../favorites.js"></script>
 </body>
 </html>
