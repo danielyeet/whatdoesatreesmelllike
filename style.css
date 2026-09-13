@@ -654,28 +654,37 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
    the page. Everything below is how it looks; the timing and the
    arithmetic are in that file.
    ================================================================== */
+/* The page grows a lot taller the moment the sheet lands, and on a
+   browser with ordinary scrollbars that makes one appear — which takes
+   15px off the width and shifts everything centred on the page sideways
+   at exactly the moment the flick stops, so the whole thing looks like
+   it twitched. Keeping room for the scrollbar from the start means
+   nothing moves. :has() so it only applies to pages like this one; the
+   landing page scrolls inside its own element and must not get a gutter
+   it would never use. */
+html:has(.sheet-page) { scrollbar-gutter: stable; }
 .sheet-page { background: #fff; }
 
 .sheet-head {
   width: min(1240px, calc(100% - 80px));
   margin: 0 auto;
-  padding: clamp(58px, 10vh, 110px) 0 22px;
+  padding: clamp(30px, 5vh, 58px) 0 6px;
 }
-/* Set like a node's label rather than like a headline: this page is a
-   sheet of pictures, and the name is a caption on it. */
+/* The page's title, not a caption on it. Still under a hairline, which
+   is the same mark the rest of the site uses to head a block. */
 .sheet-head h1 {
   position: relative;
   display: inline-block;
-  font-size: 15px;
+  font-size: clamp(27px, 3.4vw, 42px);
   font-weight: 600;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  padding-bottom: 2px;
 }
 .sheet-head h1::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -9px;
+  bottom: 0;
   height: 1px;
   width: 100%;
   background: var(--ink);
@@ -698,7 +707,7 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
    hidden without being seen fading away first. Inside the head block
    it is no longer a child of body, and this works as written. */
 .sheet-filters {
-  margin: 30px 0 0;
+  margin: 18px 0 0;
   display: flex;
   justify-content: center;
   gap: 8px;
@@ -841,7 +850,7 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
 }
 .sheet-frame:has(img) { background-image: none; background-color: transparent; }
 .sheet-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.sheet-frame .sheet-number {
+.sheet-number {
   position: absolute;
   top: 7px;
   left: 8px;
@@ -867,10 +876,16 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
   background: #fff;
   padding: 2px 5px 2px 0;
 }
+/* A picture comes up as its line reaches it, over a moment rather than
+   in one frame: the map draws itself rather than switching itself on.
+   The flick is the exception and keeps its hard cuts — that is the film
+   going past, not the map being drawn. */
+.sheet.scripted .sheet-frame:not(.is-plate) { opacity: 0; transition: opacity 0.45s var(--menu-ease); }
+.sheet.scripted .sheet-frame.landed { opacity: 1; }
 /* While the pictures are still stacked in the middle window they have
    no captions — a caption belongs to a picture on the map, not to the
-   flick. They appear with the picture, on the same hard cut. */
-.sheet.scripted .sheet-frame .sheet-caption { opacity: 0; }
+   flick. */
+.sheet.scripted .sheet-frame .sheet-caption { opacity: 0; transition: opacity 0.5s var(--menu-ease) 0.15s; }
 .sheet.scripted .sheet-frame.landed .sheet-caption { opacity: 1; }
 .sheet-frame:hover { border-color: var(--ink); }
 .sheet-frame:hover .sheet-caption { color: var(--ink); }
@@ -903,7 +918,7 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
    closing up, a hairline drawing out. */
 body.sheet-scripted .sheet-head h1 {
   opacity: 0;
-  letter-spacing: 0.36em;
+  letter-spacing: 0.08em;
   transform: translateY(7px);
   transition: none;
 }
@@ -913,7 +928,7 @@ body.sheet-scripted .sheet-filters { opacity: 0; transition: none; pointer-event
 
 body.sheet-named .sheet-head h1 {
   opacity: 1;
-  letter-spacing: 0.11em;
+  letter-spacing: -0.01em;
   transform: translateY(0);
   transition: opacity 0.9s var(--menu-ease), letter-spacing 1.2s var(--menu-ease),
               transform 0.9s var(--menu-ease);

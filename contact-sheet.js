@@ -69,10 +69,15 @@
   const LABEL_MIN = 96;       // a line shorter than this carries no date
   const CAPTION_ROOM = 30;    // the strip under a picture its caption is printed on
 
+  // The map draws itself outwards from the middle, and is meant to be
+  // watched doing it: a line travels to a picture, the picture comes
+  // up, and only then do its own lines set off. These four numbers are
+  // the whole of that pace — raise them and it spreads more slowly.
   const NAME_AFTER_MS = 380;    // pause between it settling and the name arriving
-  const ROUTE_AFTER_MS = 720;   // and before the lines start reaching out
-  const ROUTE_MS_PER_PX = 0.9;  // how fast a line draws itself
-  const LINK_DELAY_MS = 110;    // pause at a picture before its own lines carry on
+  const ROUTE_AFTER_MS = 760;   // and before the first lines set off
+  const ROUTE_MS_PER_PX = 1.6;  // how long a line takes per pixel of its own length
+  const LINK_DELAY_MS = 180;    // the pause at a picture before its own lines carry on
+  const OUT_STAGGER_MS = 280;   // and between one line leaving a picture and the next
   const SEED = 7;               // change for a different arrangement of the map
 
   // A seeded random number generator, so the map is scattered but comes
@@ -364,12 +369,7 @@
 
     planLinks();
 
-    // When each line sets out, and how long it takes. A picture is only
-    // reached once the line to it has arrived, and its own lines leave
-    // shortly after that, so the map spreads outwards from the middle
-    // rather than everything happening at once.
-    const arriveAt = new Array(nodes.length).fill(null);
-    arriveAt[0] = 0;
+    // Where each line runs, and how long it is.
     links.forEach((link) => {
       const from = nodes[link.a], to = nodes[link.b];
       const a = edgePoint(from, to), b = edgePoint(to, from);
@@ -379,9 +379,8 @@
       link.line.setAttribute("x2", b.x.toFixed(1));
       link.line.setAttribute("y2", b.y.toFixed(1));
       link.length = length;
-      link.draw = Math.max(220, length * ROUTE_MS_PER_PX);
-      link.start = (arriveAt[link.a] || 0) + LINK_DELAY_MS;
-      if (link.tree && arriveAt[link.b] === null) arriveAt[link.b] = link.start + link.draw;
+      link.draw = Math.max(260, length * ROUTE_MS_PER_PX);
+      link.start = 0;
 
       link.line.style.strokeDasharray = length + " " + length;
       link.line.style.strokeDashoffset =
@@ -413,14 +412,46 @@
       link.label = label;
     });
 
-    // Anything left unlinked still has to arrive. It does so as though a
-    // line had travelled out to it, so it keeps step with the rest.
+    // When each one sets off. A picture is only reached once the line to
+    // it has arrived, and its own lines leave after a pause, so the map
+    // spreads outwards from the middle — a wipe rather than a switch.
+    //
+    // Worked out by going over the links until nothing changes rather
+    // than in one pass: a link's start depends on when the picture it
+    // leaves from was reached, and the links are not necessarily in an
+    // order where that is already known.
+    // Lines leaving the same picture set off one after another rather
+    // than together. Without this the five that leave the middle all go
+    // at once and five pictures appear in the same instant, which is
+    // the one thing the spread is meant not to do.
+    const leaving = new Array(nodes.length).fill(0);
+    links.forEach((link) => { if (link.tree) link.order = leaving[link.a]++; });
+
+    const arriveAt = new Array(nodes.length).fill(null);
+    arriveAt[0] = 0;
+    for (let pass = 0; pass < nodes.length; pass++) {
+      let moved = false;
+      links.forEach((link) => {
+        if (!link.tree || arriveAt[link.a] === null) return;
+        const start = arriveAt[link.a] + LINK_DELAY_MS + link.order * OUT_STAGGER_MS;
+        if (link.start === start && arriveAt[link.b] !== null) return;
+        link.start = start;
+        arriveAt[link.b] = start + link.draw;
+        moved = true;
+      });
+      if (!moved) break;
+    }
+
+    // Anything still unreached arrives as though a line had travelled
+    // out to it, so it keeps step with the rest of the spread.
     nodes.forEach((node, i) => {
       if (arriveAt[i] === null) {
         arriveAt[i] = LINK_DELAY_MS + distance(node, nodes[0]) * ROUTE_MS_PER_PX;
       }
       node.arriveAt = arriveAt[i];
     });
+    // A line that only closes a loop waits for both of its ends to be
+    // there before it is drawn.
     links.forEach((link) => {
       if (!link.tree) link.start = Math.max(arriveAt[link.a], arriveAt[link.b]) + LINK_DELAY_MS;
     });

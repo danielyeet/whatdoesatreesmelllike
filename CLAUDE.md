@@ -77,10 +77,11 @@ file, no credentials committed); and the contact sheet — the flick ending on t
 picture and leaving it where it was, the name and the three buttons arriving after it,
 the search matching a picture by name, every line stopping just off the two pictures it
 joins, no line crossing a picture it is not pointing at, no picture left with nothing
-joined to it, and a frame keeping its number once a real picture is put in it; and
-favorites — switching views taking one away before the other arrives, the flick ending on
-the first, the ring standing its pictures front to back, dragging turning it, and picking
-one fading rather than cutting.
+joined to it, the pictures arriving one after another rather than together, nothing
+shifting sideways when the page grows, and a frame keeping its number once a real picture
+is put in it; and favorites — switching views taking one away before the other arrives,
+the flick ending on the first, the ring standing its pictures front to back, dragging
+turning it, and picking one fading rather than cutting.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -339,6 +340,11 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   all — a working page. The script puts `.scripted` on the sheet and takes over, and
   every rule that hides something is written under that class so the fallback can't
   inherit it.
+- **Room is kept for the scrollbar from the start** (`scrollbar-gutter: stable`, on pages
+  carrying a sheet only). The page grows a lot taller the moment the sheet lands, and on
+  a browser with ordinary scrollbars that made one appear — which took 15px off the width
+  and shifted everything centred on the page sideways at exactly the moment the flick
+  stopped, so the whole thing looked like it twitched.
 - **The flick is set up to END on the first picture** rather than cutting to it when the
   flicking is over. It counts its own cuts before it starts and begins at whichever
   picture makes the last one land there. Cutting at the end is one blink too many: the
@@ -362,6 +368,18 @@ carrying a date, and each of the other pictures appears as its line lands on it.
 - Dates sit at a different fraction along each line rather than always at the halfway
   point, because two lines crossing near their middles would otherwise print their dates
   on top of each other.
+- **The map draws itself outwards and is meant to be watched doing it.** A line travels
+  to a picture, the picture comes up *over a moment* rather than in one frame, and only
+  after a pause do that picture's own lines set off — and they set off one at a time
+  (`OUT_STAGGER_MS`), or the five leaving the middle would all go at once and five
+  pictures would appear in the same instant, which is the one thing the spread must not
+  do. `ROUTE_AFTER_MS`, `ROUTE_MS_PER_PX`, `LINK_DELAY_MS` and `OUT_STAGGER_MS` are the
+  whole of its pace; it takes about four seconds to reach the bottom of the page. The
+  flick is the exception and keeps its hard cuts: that is the film going past, not the
+  map being drawn.
+- **When each line sets off is worked out by going over the links until nothing changes**,
+  not in one pass — a link's start depends on when the picture it leaves from was
+  reached, and the links are not necessarily in an order where that is already known.
 - **Links are planned once**, on the first layout, and later layouts (a resize, the fonts
   arriving) only move the lines that already exist. Rebuilding them throws away the
   elements that are mid-draw, which is what stopped any line at all from appearing the

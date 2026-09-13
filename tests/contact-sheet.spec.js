@@ -49,13 +49,10 @@ test("the page opens white, with one picture in the middle and nothing else", as
   );
   expect(visible, "one picture at a time").toBe(1);
 
-  // The name and the lede are not there yet: they arrive once it settles.
-  const head = await page.evaluate(() => ({
-    name: parseFloat(getComputedStyle(document.querySelector(".sheet-head h1")).opacity),
-    lede: parseFloat(getComputedStyle(document.querySelector(".category-lede")).opacity),
-  }));
-  expect(head.name, "the name waits for the sheet to settle").toBeLessThan(0.05);
-  expect(head.lede).toBeLessThan(0.05);
+  // The title is not there yet: it arrives once the sheet settles.
+  const title = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.querySelector(".sheet-head h1")).opacity));
+  expect(title, "the title waits for the sheet to settle").toBeLessThan(0.05);
 
   expect(errors).toEqual([]);
 });
@@ -181,7 +178,7 @@ test("every line stops just off the pictures it joins", async ({ page }) => {
   });
 });
 
-test("the name and the lede arrive once it has settled", async ({ page }) => {
+test("the title arrives once it has settled", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
 
@@ -194,10 +191,63 @@ test("the name and the lede arrive once it has settled", async ({ page }) => {
     .toBeGreaterThan(0.9);
 
   await expect(page.locator(".sheet-head h1")).toHaveText("Scent descriptions");
-  expect(
-    await page.evaluate(() =>
-      parseFloat(getComputedStyle(document.querySelector(".category-lede")).opacity))
-  ).toBeGreaterThan(0.9);
+});
+
+// Regression test: the page grows a lot taller the moment the sheet
+// lands. On a browser with ordinary scrollbars that made one appear,
+// which took 15px off the width and shifted everything centred on the
+// page sideways at exactly the moment the flick stopped — the whole
+// thing looked like it twitched. Room is kept for the scrollbar from
+// the start, so nothing moves.
+test("nothing shifts sideways when the page grows", async ({ page }) => {
+  await page.goto(SHEET);
+  await page.waitForTimeout(400);
+
+  const buttonsAt = () =>
+    page.locator(".sheet-filters").evaluate((el) => el.getBoundingClientRect().left);
+  const before = await buttonsAt();
+
+  await waitForSheet(page);
+  expect(Math.abs((await buttonsAt()) - before), "the buttons should not move").toBeLessThan(1);
+
+  const gutter = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).scrollbarGutter);
+  expect(gutter, "the room for the scrollbar is what keeps them still").toContain("stable");
+});
+
+// The map is meant to be watched drawing itself: a line travels to a
+// picture, the picture comes up, and only then do its own lines set
+// off. Everything arriving together is the one thing it must not do.
+test("the pictures arrive one after another, spreading outwards", async ({ page }) => {
+  await page.goto(SHEET);
+
+  await page.evaluate(() => {
+    window.__arrivals = [];
+    const seen = new Set();
+    const started = performance.now();
+    const tick = () => {
+      document.querySelectorAll(".sheet-frame.landed").forEach((frame) => {
+        const name = frame.querySelector(".sheet-number").textContent;
+        if (seen.has(name)) return;
+        seen.add(name);
+        window.__arrivals.push(Math.round(performance.now() - started));
+      });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+
+  await waitForSheet(page);
+  const arrivals = await page.evaluate(() => window.__arrivals);
+
+  expect(arrivals.length).toBeGreaterThan(8);
+  const spread = arrivals[arrivals.length - 1] - arrivals[1];
+  expect(spread, "the map should take its time about it").toBeGreaterThan(1800);
+
+  // No two pictures land in the same instant. A little tolerance: two
+  // lines can finish within a frame or two of each other.
+  const together = arrivals.slice(1).filter((at, i) => at - arrivals[i] < 40).length;
+  expect(together, `pictures landing together: ${arrivals.join(", ")}`).toBeLessThan(2);
 });
 
 test("every picture is still a link to a piece", async ({ page }) => {
