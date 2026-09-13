@@ -12,7 +12,7 @@
 //   3. it LANDS on the first picture and simply stops there. The run
 //      is set up to end on that picture rather than cutting to it
 //      once the flicking is over, which was one blink too many
-//   4. the three buttons above it appear, and the name arrives
+//   4. the buttons above it appear, and the name arrives
 //   5. lines then reach out across the page at whatever angle they
 //      need — some picture to picture rather than all back to the
 //      middle, each carrying a date — and each of the other pictures
@@ -91,6 +91,11 @@
   // way every other placeholder on this site is. Each gets its own
   // angle and spacing so that flicking through them reads as different
   // pictures going past rather than as one still image.
+  // The number in the corner is NOT part of the placeholder: it is the
+  // frame's number on the sheet and stays there once a real picture is
+  // in the frame, printed on its own white chip so it reads over
+  // whatever is behind it. Only the hatching goes when a picture
+  // arrives.
   frames.forEach((frame, i) => {
     frame.style.setProperty("--hatch-angle", (-62 + ((i * 37) % 120)) + "deg");
     frame.style.setProperty("--hatch-gap", (9 + ((i * 5) % 9)) + "px");
@@ -256,6 +261,22 @@
       links.push({ a: a, b: near[Math.floor(random() * near.length)].j, tree: false });
     }
 
+    // Nothing is left floating. Dropping links above is what keeps the
+    // map from being one tidy fan out of the middle, but a picture with
+    // no line at all reads as forgotten rather than as loosely joined —
+    // so anything still on its own is joined to the nearest picture it
+    // has a clear run to, wherever that is on the sheet. The result is
+    // the same sparse, looping network, with no island in it.
+    nodes.forEach((node, i) => {
+      if (i === 0) return;
+      if (links.some((l) => l.a === i || l.b === i)) return;
+      const reachable = nodes
+        .map((other, j) => ({ j: j, d: distance(other, node) }))
+        .filter((entry) => entry.j !== i && clearBetween(entry.j, i))
+        .sort((a, b) => a.d - b.d);
+      if (reachable.length) links.push({ a: reachable[0].j, b: i, tree: true });
+    });
+
     links.forEach((link) => {
       link.line = document.createElementNS(NS, "line");
       link.line.setAttribute("class", "sheet-route");
@@ -376,9 +397,15 @@
       label.setAttribute("class", "sheet-date");
       label.setAttribute("text-anchor", "middle");
       label.setAttribute("dy", "-5");
+      // Not always at the halfway point: two lines crossing near their
+      // middles would print their dates on top of each other. Sliding
+      // each one along its own line by a different amount is enough to
+      // keep them apart without having to work out where they all are.
+      const along = 0.38 + random() * 0.26;
       label.setAttribute(
         "transform",
-        "translate(" + ((a.x + b.x) / 2).toFixed(1) + "," + ((a.y + b.y) / 2).toFixed(1) + ") " +
+        "translate(" + (a.x + (b.x - a.x) * along).toFixed(1) + "," +
+        (a.y + (b.y - a.y) * along).toFixed(1) + ") " +
         "rotate(" + angle.toFixed(1) + ")"
       );
       label.textContent = link.date;
@@ -521,16 +548,6 @@
       trigger.focus();
     });
   }
-
-  // The three above the window pick nothing yet — they show which one
-  // is chosen and no more. Whatever they are eventually to do, it will
-  // read the chosen one off this class.
-  const filters = Array.from(document.querySelectorAll(".sheet-filter"));
-  filters.forEach((button) => {
-    button.addEventListener("click", () => {
-      filters.forEach((other) => other.classList.toggle("chosen", other === button));
-    });
-  });
 
   layout();
   window.addEventListener("resize", layout);

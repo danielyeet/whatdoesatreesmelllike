@@ -316,6 +316,10 @@ carrying a date, and each of the other pictures appears as its line lands on it.
 
 - **The pictures are the `<a class="sheet-frame">` blocks in the page.** Adding one is an
   HTML edit; nothing in the script changes. The first block is the one it lands on.
+- **The number in the corner is not part of the placeholder.** It is the frame's number
+  on the sheet, printed on its own white chip, and it stays once a real picture is in the
+  frame — only the hatching goes. `tests/contact-sheet.spec.js` puts a picture into a
+  frame and checks the number survives it.
 - **Without JavaScript the page is a plain CSS grid of those same frames**, captions and
   all — a working page. The script puts `.scripted` on the sheet and takes over, and
   every rule that hides something is written under that class so the fallback can't
@@ -334,9 +338,15 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   caption is printed on white, so a line behind one is knocked out where it crosses and
   pokes out beside the word as a stray stroke, which reads as a mistake in the lettering.
   `tests/contact-sheet.spec.js` checks both, segment against rectangle.
-- **Not everything is joined up.** Each picture links to one of its nearer neighbours,
-  some links are dropped on purpose, and a few extra ones are added across the map so it
-  closes loops — a network rather than a family tree.
+- **Not everything is joined up — but nothing is left out.** Each picture links to one of
+  its nearer neighbours, some links are dropped on purpose, and a few extra ones are
+  added across the map so it closes loops: a network rather than a family tree. Anything
+  still on its own after all that is then joined to the nearest picture it has a clear
+  run to, wherever that is. A picture with no line at all reads as forgotten rather than
+  as loosely joined, and a test checks there are none.
+- Dates sit at a different fraction along each line rather than always at the halfway
+  point, because two lines crossing near their middles would otherwise print their dates
+  on top of each other.
 - **Links are planned once**, on the first layout, and later layouts (a resize, the fonts
   arriving) only move the lines that already exist. Rebuilding them throws away the
   elements that are mid-draw, which is what stopped any line at all from appearing the
@@ -424,7 +434,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | The frame the sheet settles on and keeps at the top — the first one in the page. |
 | **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. `FLIP_*` in `contact-sheet.js`. |
-| **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Not every picture has one. |
+| **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 
