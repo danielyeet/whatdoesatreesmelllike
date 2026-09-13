@@ -53,7 +53,8 @@
   const RING_WIDE = 0.36;      // how far across the page the ring reaches
   const RING_DEEP = 74;        // and how far up and down — a ring seen almost edge on
   const RING_SIZE = 0.105;     // a picture in the ring, as a share of the width
-  const RING_SIZE_MIN = 84, RING_SIZE_MAX = 124;
+  const RING_SIZE_MIN = 78, RING_SIZE_MAX = 124;
+  const RING_SIZE_TALL = 0.13; // and never more than this share of the window's height
   // The three cues that make a flat circle read as a ring lying away
   // from you: the ones at the back sit higher, are drawn smaller, and
   // are fainter. Weaken any of them and it goes back to being a row of
@@ -77,6 +78,13 @@
   frames.forEach((frame, i) => {
     frame.style.setProperty("--hatch-angle", (-55 + ((i * 41) % 130)) + "deg");
     frame.style.setProperty("--hatch-gap", (9 + ((i * 7) % 10)) + "px");
+    // The name that comes up in the corner when you point at it. A
+    // placeholder name for a placeholder picture; the real one will be
+    // whatever the piece is called.
+    const name = document.createElement("span");
+    name.className = "gallery-hover-name";
+    name.textContent = "Placeholder " + (i + 1);
+    frame.appendChild(name);
   });
 
   const nameOf = (frame) => {
@@ -150,11 +158,17 @@
   function placeRing() {
     const width = ring.clientWidth;
     if (!width) return;
-    const size = Math.max(RING_SIZE_MIN, Math.min(RING_SIZE_MAX, width * RING_SIZE));
+    // Against the height as well as the width: the ring has to fit
+    // under the big square on one screen, without scrolling.
+    const size = Math.max(
+      RING_SIZE_MIN,
+      Math.min(RING_SIZE_MAX, width * RING_SIZE, window.innerHeight * RING_SIZE_TALL)
+    );
     const wide = width * RING_WIDE;
     const middle = width / 2;
-    ring.style.height = Math.round(size * 1.35 + RING_DEEP * 2) + "px";
-    const floor = RING_DEEP + size * 0.18;
+    const deep = Math.min(RING_DEEP, size * 0.55);
+    ring.style.height = Math.round(size * 1.2 + deep * 2) + "px";
+    const floor = deep + size * 0.1;
 
     frames.forEach((frame, i) => {
       const angle = turn + (i / frames.length) * Math.PI * 2;
@@ -162,7 +176,7 @@
       const scale = RING_BACK + front * (1 - RING_BACK);
       const bob = REDUCE_MOTION ? 0 : Math.sin(clock * 0.9 + i * 1.7) * BOB;
       const x = middle + Math.sin(angle) * wide - size / 2;
-      const y = floor + Math.cos(angle) * RING_DEEP + bob;
+      const y = floor + Math.cos(angle) * deep + bob;
       frame.style.width = size + "px";
       frame.style.height = size + "px";
       frame.style.transform =

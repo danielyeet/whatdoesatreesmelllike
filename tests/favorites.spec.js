@@ -138,7 +138,6 @@ test("picking one from the ring fades it into the big square", async ({ page }) 
   expect(between.length, `one should be coming up as the other goes: ${layers}`).toBe(2);
 
   await expect.poll(() => plateName(page), { timeout: 4000 }).toBe("f5");
-  await expect(page.locator(".gallery-chosen-name")).toHaveText("f5");
   await expect(page.locator(".gallery-frame").nth(4)).toHaveClass(/chosen/);
 });
 
@@ -170,14 +169,41 @@ test("the ring can be dragged round", async ({ page }) => {
   expect(Math.abs(after - before), "the ring should have turned").toBeGreaterThan(60);
 });
 
-test("there is a description under the ring", async ({ page }) => {
+test("the whole view fits on one screen, with nothing to scroll to", async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
 
-  await expect(page.locator(".gallery-note")).toBeVisible();
-  const words = await page.locator(".gallery-note").textContent();
-  expect(words.trim().length, "it should actually say something").toBeGreaterThan(80);
+  const fit = await page.evaluate(() => ({
+    page: document.documentElement.scrollHeight,
+    window: window.innerHeight,
+  }));
+  expect(fit.page, `page is ${fit.page}px in a ${fit.window}px window`)
+    .toBeLessThanOrEqual(fit.window + 2);
+});
+
+test("pointing at a picture in the ring brings up its name", async ({ page }) => {
+  await page.goto(PAGE);
+  await page.waitForTimeout(600);
+  await openFavorites(page);
+
+  const name = page.locator(".gallery-frame").nth(0).locator(".gallery-hover-name");
+  await expect(name).toHaveText("Placeholder 1");
+  expect(
+    await name.evaluate((el) => parseFloat(getComputedStyle(el).opacity)),
+    "not there until it is pointed at"
+  ).toBeLessThan(0.05);
+
+  const box = await page.locator(".gallery-frame").nth(0).boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+
+  await expect
+    .poll(() => name.evaluate((el) => parseFloat(getComputedStyle(el).opacity)), { timeout: 3000 })
+    .toBeGreaterThan(0.9);
+  // ...on a darkened corner, so it can be read over the picture.
+  const shade = await page.locator(".gallery-frame").nth(0).evaluate((el) =>
+    parseFloat(getComputedStyle(el, "::after").opacity));
+  expect(shade, "the corner should darken under it").toBeGreaterThan(0.9);
 });
 
 test("with animation turned off, favorites arrives finished", async ({ page }) => {

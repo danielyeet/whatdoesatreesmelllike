@@ -974,7 +974,7 @@ body.view-switching .sheet-head .category-lede { opacity: 0; }
   position: relative;
   width: min(1240px, calc(100% - 80px));
   margin: 0 auto;
-  padding-bottom: 90px;
+  padding-bottom: 14px;
   display: none;
 }
 body.view-favorites .gallery { display: block; }
@@ -984,9 +984,12 @@ body.view-favorites .sheet-head .category-lede { opacity: 0; }
    is the right fallback: everything is reachable. */
 body:not(.sheet-scripted) .gallery { display: block; }
 
+/* Sized against the height of the window as well as its width: the
+   ring has to fit under it and the whole view has to fit on one
+   screen, without scrolling. */
 .gallery-plate {
   position: relative;
-  width: min(470px, 42vw, calc(100% - 24px));
+  width: min(470px, 42vw, 40vh, calc(100% - 24px));
   aspect-ratio: 1 / 1;
   margin: 0 auto;
   border: 1px solid var(--ink);
@@ -1015,7 +1018,7 @@ body:not(.sheet-scripted) .gallery { display: block; }
 
 .gallery-ring {
   position: relative;
-  margin: 34px auto 0;
+  margin: 14px auto 0;
   touch-action: pan-y;   /* a drag turns the ring; a swipe still scrolls the page */
   cursor: grab;
 }
@@ -1043,25 +1046,46 @@ body:not(.sheet-scripted) .gallery { display: block; }
 .gallery-frame.chosen { border-color: var(--ink); }
 .gallery-frame:hover { border-color: var(--ink); }
 
-.gallery-text {
-  max-width: 62ch;
-  margin: 46px auto 0;
-  text-align: center;
+/* Pointing at a picture in the ring darkens its bottom corner and
+   brings up its name there — the only place a name is written in this
+   view now that the description under the ring has gone. */
+.gallery-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Reaching in from the bottom right corner and gone by halfway: the
+     name has to be readable, the picture still has to be the picture. */
+  background: linear-gradient(
+    to top left,
+    rgba(16, 16, 11, 0.8), rgba(16, 16, 11, 0.3) 26%, rgba(16, 16, 11, 0) 52%
+  );
+  opacity: 0;
+  transition: opacity 0.4s var(--menu-ease);
+  pointer-events: none;
+  z-index: 1;
 }
-.gallery-chosen-name {
+.gallery-frame:hover::after,
+.gallery-frame:focus-visible::after { opacity: 1; }
+.gallery-hover-name {
+  position: absolute;
+  right: 9px;
+  bottom: 8px;
+  /* Above the shade, or the shade is drawn over it — a pseudo-element
+     is the last thing in the box and paints over everything in it. */
+  z-index: 2;
+  max-width: calc(100% - 18px);
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink);
-  margin: 0 0 14px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #f0efe8;
+  text-align: right;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.4s var(--menu-ease);
+  pointer-events: none;
 }
-.gallery-note {
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--muted);
-  margin: 0;
-}
+.gallery-frame:hover .gallery-hover-name,
+.gallery-frame:focus-visible .gallery-hover-name { opacity: 1; }
 
 /* ==================================================================
    GALLERY WORK PAGE

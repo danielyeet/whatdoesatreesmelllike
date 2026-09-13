@@ -81,7 +81,8 @@ joined to it, the pictures arriving one after another rather than together, noth
 shifting sideways when the page grows, and a frame keeping its number once a real picture
 is put in it; and favorites — switching views taking one away before the other arrives,
 the flick ending on the first, the ring standing its pictures front to back, dragging
-turning it, and picking one fading rather than cutting.
+turning it, picking one fading rather than cutting, the whole view fitting on one screen,
+and pointing at a picture bringing up its name.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -415,8 +416,11 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   picture paints the one underneath and fades it up. The flick asks for cuts instead and
   gets them by turning that fade off (`.no-fade`). A cut is the film going past; a fade
   is you choosing something; they must not look the same.
-- The description under the ring is filler for now, and the line above it follows
-  whichever picture is chosen.
+- **Pointing at a picture in the ring darkens its bottom corner and brings up its name**
+  there. That is the only place a name is written in this view: the description under the
+  ring was taken out so the whole thing fits on one screen without scrolling, which is
+  also why the big square and the ring are sized against the window's *height* as well as
+  its width.
 
 ### Styling
 
