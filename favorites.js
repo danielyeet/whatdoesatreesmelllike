@@ -61,8 +61,13 @@
   // big and how strong it is drawn. It is wide and the pictures on it
   // are small: they are there to be picked from, and the big square is
   // the thing you are looking at.
-  const RING_SIZE = 0.17;      // a picture on the ring, as a share of the square
+  const RING_SIZE = 0.17;      // how tall a picture on the ring is, as a share of the square
   const RING_SIZE_MIN = 30, RING_SIZE_MAX = 96;
+  const RING_WIDE = 1.25;      // and how much wider than that it is drawn. The pictures
+                               // on the site are square; these are the one place they
+                               // are not, because a picture on the ring is nearly always
+                               // seen at an angle and squared up it reads as narrower
+                               // than it is
   const RING_REACH = 0.95;     // the closest in it will ever stand, as a share of the
                                // square — it normally stands as wide as the page lets it
   const SCROLL_TURN = 0.00022; // how far a notch of scroll turns it — anticlockwise
@@ -189,7 +194,15 @@
       face.className = "gallery-face";
       // A hair of thickness between the two. Left in the same plane
       // they fight over which is in front and the card flickers.
-      face.style.transform = "rotateY(" + side + "deg) translateZ(0.6px)";
+      //
+      // The scale at the end is how a picture answers the pointer. It
+      // is written here, on the face, rather than on the card: the
+      // card's own transform is rewritten every frame by placeRing, so
+      // anything added to it would be replaced before it could ease
+      // into place. Nothing rewrites this one, so the stylesheet can
+      // change --pick and have the browser ease it.
+      face.style.transform =
+        "rotateY(" + side + "deg) translateZ(0.6px) scale(var(--pick, 1))";
       face.style.setProperty("--hatch-angle", (-55 + ((index * 41) % 130)) + "deg");
       face.style.setProperty("--hatch-gap", (9 + ((index * 7) % 10)) + "px");
       if (picture) face.appendChild(picture.cloneNode());
@@ -211,10 +224,11 @@
     // to clear the square. On anything desktop-sized the first of these
     // is what decides it: the ring reaches from one side of the screen
     // to the other.
+    const wide = size * RING_WIDE;
     const radius = Math.max(
-      width / 2 - size * 1.6,
+      width / 2 - wide * 1.3,
       plateSize * RING_REACH,
-      plateSize / 2 + size * 1.1
+      plateSize / 2 + wide
     );
 
     frames.forEach((frame, i) => {
@@ -226,9 +240,9 @@
       // which way round the ring they are standing, now that they are
       // all on the same line and none of them is higher than another.
       frame.style.setProperty("--dim", (((1 - along) / 2) * DIM_FAR).toFixed(3));
-      frame.style.width = size + "px";
+      frame.style.width = wide + "px";
       frame.style.height = size + "px";
-      frame.style.marginLeft = -size / 2 + "px";
+      frame.style.marginLeft = -wide / 2 + "px";
       frame.style.marginTop = -size / 2 + "px";
       // No height at all, and that is exact rather than nearly: a
       // picture standing even slightly above or below the eye is drawn

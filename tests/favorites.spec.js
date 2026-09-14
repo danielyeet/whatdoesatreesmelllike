@@ -113,6 +113,11 @@ test("the ring stands the pictures on one level line round the square", async ({
           x: r.left + r.width / 2,
           y: r.top + r.height / 2,
           size: r.width,
+          // Its own shape, not the shape it is drawn as: a card turned
+          // away from you is drawn narrower than it is, so the rendered
+          // box says nothing about how it was cut.
+          wide: f.offsetWidth,
+          tall: f.offsetHeight,
           dim: parseFloat(f.style.getPropertyValue("--dim")),
         };
       }),
@@ -139,9 +144,14 @@ test("the ring stands the pictures on one level line round the square", async ({
   expect(Math.max(...xs), "and one near the right")
     .toBeGreaterThan(window * 0.86);
 
-  // They are small — the big square is the thing being looked at.
+  // They are small — the big square is the thing being looked at — and
+  // wider than they are tall, which the square never is.
   expect(Math.max(...ring.cards.map((c) => c.size)))
-    .toBeLessThan(ring.plate.width * 0.33);
+    .toBeLessThan(ring.plate.width * 0.4);
+  ring.cards.forEach((card) => {
+    expect(card.wide / card.tall, "a picture on the ring is cut wider than it is tall")
+      .toBeGreaterThan(1.1);
+  });
 
   // Which way round the ring a picture has come is said by how big and
   // how strong it is drawn, since none of them is higher than another.
@@ -359,4 +369,82 @@ test("nothing on the big square answers the pointer until the flick lands", asyn
       parseFloat(getComputedStyle(document.querySelector(".gallery-hover-name")).opacity)),
       { timeout: 3000 })
     .toBeGreaterThan(0.9);
+});
+
+test("pointing at a picture on the ring brings it forward", async ({ page }) => {
+  await page.goto(PAGE);
+  await page.waitForTimeout(600);
+  await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
+
+  /** Where the widest picture on the ring, other than the front one, is. */
+  const pickable = () =>
+    page.evaluate(() => {
+      const cards = [...document.querySelectorAll(".gallery-frame")];
+      let best = null;
+      cards.forEach((card, i) => {
+        const r = card.getBoundingClientRect();
+        if (i > 0 && (!best || r.width > best.width)) {
+          best = { at: i, x: r.left + r.width / 2, y: r.top + r.height / 2, width: r.width };
+        }
+      });
+      return best;
+    });
+  const look = (at) =>
+    page.evaluate((i) => {
+      const card = document.querySelectorAll(".gallery-frame")[i];
+      const face = card.querySelector(".gallery-face");
+      return {
+        grown: getComputedStyle(face).transform,
+        edge: getComputedStyle(face).borderTopColor,
+        wash: parseFloat(getComputedStyle(face, "::before").opacity),
+      };
+    }, at);
+
+  // Nothing answers while the flick is still running.
+  await page.waitForSelector(".gallery-frame", { state: "attached" });
+  await page.waitForFunction(
+    () => document.querySelectorAll(".gallery-frame.in-ring").length > 2,
+    null,
+    { timeout: 20000 }
+  );
+  const mid = await pickable();
+  await page.mouse.move(mid.x, mid.y);
+  await page.waitForTimeout(400);
+  if (!(await page.evaluate(() => document.getElementById("gallery").classList.contains("landed")))) {
+    expect(
+      await page.evaluate(() =>
+        getComputedStyle(document.querySelector(".gallery-frame")).getPropertyValue("--pick").trim()),
+      "nothing picked out while it is still flicking"
+    ).toBe("");
+  }
+
+  await openFavorites(page);
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(500);
+
+  const card = await pickable();
+  const resting = await look(card.at);
+  await page.mouse.move(card.x, card.y);
+  await page.waitForTimeout(600);
+  const held = await look(card.at);
+
+  // It grows, it comes out from under the wash that places it in the
+  // ring, and it takes the darker edge.
+  expect(held.grown, "it should be drawn larger").not.toBe(resting.grown);
+  expect(held.grown).toMatch(/^matrix3d\(1\.1/);
+  expect(held.wash, "and come out from under the wash").toBeLessThan(0.02);
+  expect(held.edge, "and take the darker edge").not.toBe(resting.edge);
+
+  // And no shade drawn across it, and no name written on it. The shade
+  // is asked about by whether it is drawn at all rather than by how
+  // faint it is: a pseudo-element with no content of its own is not
+  // there, and reports an opacity of 1 while drawing nothing.
+  expect(await page.locator(".gallery-frame .gallery-hover-name").count()).toBe(0);
+  expect(
+    await page.evaluate((i) =>
+      getComputedStyle(
+        document.querySelectorAll(".gallery-frame")[i].querySelector(".gallery-face"),
+        "::after").content, card.at),
+    "no shade over a picture on the ring"
+  ).toBe("none");
 });

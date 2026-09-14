@@ -1114,6 +1114,7 @@ body:not(.sheet-scripted) .gallery { display: none; }
   inset: 0;
   overflow: hidden;
   backface-visibility: hidden;
+  transition: transform 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
   border: 1px solid var(--line);
   background-color: var(--bg-2);
   background-image: repeating-linear-gradient(
@@ -1133,15 +1134,32 @@ body:not(.sheet-scripted) .gallery { display: none; }
    page. It is a veil laid over the picture rather than the picture's
    own opacity on purpose: anything transparent in this chain would
    flatten the card and take the far face's hiding with it.
-   favorites.js sets --dim from how far round the ring each one is. */
+   favorites.js sets --dim from how far round the ring each one is;
+   --veil is the stylesheet's own hold over it, and is how pointing at
+   a picture clears it. The two are separate because --dim is written
+   on the element every frame, and anything written on an element
+   outranks a rule in here. */
 .gallery-face::before {
   content: "";
   position: absolute;
   inset: 0;
   background: var(--bg);
-  opacity: var(--dim, 0);
+  opacity: calc(var(--dim, 0) * var(--veil, 1));
+  transition: opacity 0.3s var(--menu-ease);
   pointer-events: none;
 }
+
+/* Pointing at a picture on the ring brings it forward: it grows a
+   little, comes out from under the wash that places it in the ring,
+   and takes the darker edge the chosen one carries. That is the whole
+   of it — no shade drawn across it and no name written on it. They are
+   small, there are a lot of them and they go past, and anything more
+   than this made the ring twitch rather than read.
+
+   Nothing answers until the flick has landed: during it every picture
+   in turn is the one in the big square. */
+.gallery.landed .gallery-frame:hover { --pick: 1.12; --veil: 0; }
+.gallery.landed .gallery-frame:hover .gallery-face { border-color: var(--ink); }
 
 
 /* Pointing at the big square darkens its bottom right corner and

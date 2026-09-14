@@ -87,8 +87,9 @@ landing on a picture, and a date being written along its line rather than switch
 and favorites —
 switching views taking one away before the other arrives, the flick ending on the first,
 the ring standing its pictures on one level line through the middle of the square and
-reaching to both edges of the window, every picture having a face on both sides, the
-wheel being the only thing
+reaching to both edges of the window, every picture having a face on both sides and being
+wider than it is tall, pointing at one bringing it forward, the wheel being the only
+thing
 that turns it (the pointer and a drag both leaving it alone, and no drift of its own),
 picking one fading rather than cutting, the whole view fitting on one screen, pointing at
 the big square bringing up the name of what is in it, and nothing on it answering the
@@ -524,6 +525,19 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   (`buildFaces`). A picture faces outwards from the middle, so the far half of the ring
   is showing you its back; one-sided panels leave that half blank. The two faces are held
   a fraction apart in depth, or they fight over which is in front and the card flickers.
+- **A card is wider than it is tall** (`RING_WIDE`). It is the one place on the site where
+  a picture is not square: a card on the ring is nearly always seen at an angle, and
+  squared up it reads as narrower than it is.
+- **Pointing at one brings it forward**: it grows a little, comes out from under the wash
+  that places it in the ring, and takes the darker edge the chosen one carries. No shade
+  drawn across it and no name written on it — they are small, there are a lot of them and
+  they go past, and anything heavier made the ring twitch rather than read. The growing
+  is written on the **face**, not on the card: the card's own transform is rewritten every
+  frame by `placeRing`, so anything added to it would be replaced before it could ease
+  into place. Nothing rewrites the face's, so `--pick` can be changed from the stylesheet
+  and eased. The wash needs a second variable for the same reason — `--dim` is written on
+  the element every frame and outranks any rule, so `--veil` is the stylesheet's own hold
+  over it and `opacity` is `calc(var(--dim) * var(--veil))`.
 - **The far side is washed out** towards the colour of the page (`--dim`, `DIM_FAR`), on
   top of perspective already drawing it smaller. It is a veil laid *over* the picture
   rather than the picture's own `opacity`, because anything transparent in that chain
@@ -544,11 +558,9 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   rather than as the picture being darkened. That is the only place a name is written in
   this view: the description under the ring was taken out so the whole thing fits on one
   screen without scrolling, which is also why the square and the ring are sized against
-  the window's *height* as well as its width. **The pictures on the ring answer the
-  pointer in no way at all** — they are small, there are a lot of them and they go past;
-  anything that lit up as the cursor crossed them made the ring twitch rather than read.
-  And as on the sheet, none of it is live until the flick has landed: every rule is
-  written under `.gallery.landed`.
+  the window's *height* as well as its width. And as on the sheet, none of it is live
+  until the flick has landed — the square's name and the ring's own answer to the pointer
+  alike: every rule is written under `.gallery.landed`.
 
 ### Styling
 
@@ -626,7 +638,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
 | **view** | One of the two ways the contact sheet page shows a category: the **map** (Description portfolio) or **Favorites**. One at a time; `favorites.js` switches them. |
 | **the ring** / **the orbit** | The circle of pictures going round the big square in Favorites, standing level in three dimensions so all of them sit on one horizontal line, the near side passing in front of the square and the far side behind. Turned by the scroll wheel and by nothing else. `RING_*` in `favorites.js`. |
-| **face** | One side of a picture on the ring (`.gallery-face`). Each has two, carrying the same picture, so it is there from either side. |
+| **face** | One side of a picture on the ring (`.gallery-face`). Each has two, carrying the same picture, so it is there from either side — and the face, not the card, is what answers the pointer. |
 | **favourite** / **f(n)** | One picture in Favorites (`<button class="gallery-frame">`), named f1, f2… in its corner. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
