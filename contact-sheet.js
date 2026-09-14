@@ -50,7 +50,7 @@
 
   // The map. Sizes are shares of the sheet's own width, so the whole
   // arrangement scales rather than being pinned to one screen.
-  const PLATE_SHARE = 0.5, PLATE_MIN = 280, PLATE_MAX = 580;
+  const PLATE_SHARE = 0.44, PLATE_MIN = 270, PLATE_MAX = 500;
   const CHILD_SHARE = 0.125, CHILD_MIN = 92, CHILD_MAX = 152;
   const CELL_SPREAD = 1.6;    // how much room each picture is given, as a multiple of itself
   // ...and a little more of it the further down the page it is, so the
@@ -325,7 +325,12 @@
 
     plate.style.width = plateSize + "px";
     plate.style.height = plateSize + "px";
-    plate.style.transform = "translate(" + plateX + "px,0px)";
+    // Where a picture sits is kept in its own properties rather than
+    // written straight into a transform, so that pointing at one can
+    // add a tilt to it in the stylesheet without needing to know where
+    // on the sheet it is.
+    plate.style.setProperty("--x", plateX + "px");
+    plate.style.setProperty("--y", "0px");
 
     const cell = childBase * CELL_SPREAD;
     const cols = Math.max(2, Math.round(width / cell));
@@ -389,9 +394,8 @@
 
       frame.style.width = (placed ? size : plateSize) + "px";
       frame.style.height = (placed ? size : plateSize) + "px";
-      frame.style.transform = placed
-        ? "translate(" + x + "px," + y + "px)"
-        : "translate(" + plateX + "px,0px)";
+      frame.style.setProperty("--x", (placed ? x : plateX) + "px");
+      frame.style.setProperty("--y", (placed ? y : 0) + "px");
     });
 
     planLinks();
@@ -415,28 +419,38 @@
 
       // The date rides along its own line, kept upright, and is knocked
       // out of it rather than printed over it.
-      if (length < LABEL_MIN) return;
+      if (length < LABEL_MIN) {
+        if (link.label) { link.label.remove(); link.label = null; }
+        return;
+      }
       let angle = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
       if (angle > 90) angle -= 180;
       if (angle < -90) angle += 180;
-      const label = document.createElementNS(NS, "text");
-      label.setAttribute("class", "sheet-date");
-      label.setAttribute("text-anchor", "middle");
-      label.setAttribute("dy", "-5");
       // Not always at the halfway point: two lines crossing near their
       // middles would print their dates on top of each other. Sliding
       // each one along its own line by a different amount is enough to
       // keep them apart without having to work out where they all are.
       const along = 0.38 + random() * 0.26;
+      // The one this link already has, moved — not a new one. A fresh
+      // element on every layout leaves the old one behind in the
+      // drawing, still covered over and never written, and starts the
+      // writing again from nothing when the window is only resized.
+      let label = link.label;
+      if (!label) {
+        label = document.createElementNS(NS, "text");
+        label.setAttribute("class", "sheet-date");
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("dy", "-5");
+        label.textContent = link.date;
+        lines.appendChild(label);
+        link.label = label;
+      }
       label.setAttribute(
         "transform",
         "translate(" + (a.x + (b.x - a.x) * along).toFixed(1) + "," +
         (a.y + (b.y - a.y) * along).toFixed(1) + ") " +
         "rotate(" + angle.toFixed(1) + ")"
       );
-      label.textContent = link.date;
-      lines.appendChild(label);
-      link.label = label;
     });
 
     // When each one sets off. A picture is only reached once the line to
@@ -539,7 +553,11 @@
     links.forEach((link) => {
       setTimeout(() => {
         link.line.classList.add("drawn");
-        link.line.style.transition = "stroke-dashoffset " + Math.round(link.draw) + "ms linear";
+        // Eased rather than at a constant rate: a line that sets off
+        // and settles reads as being drawn, one at a steady speed as
+        // being played back.
+        link.line.style.transition =
+          "stroke-dashoffset " + Math.round(link.draw) + "ms cubic-bezier(0.22, 0.61, 0.36, 1)";
         link.line.style.strokeDashoffset = "0";
         setTimeout(() => { if (link.label) link.label.classList.add("shown"); }, link.draw);
       }, ROUTE_AFTER_MS + link.start);
@@ -573,6 +591,44 @@
     };
     setTimeout(step, Math.round(hold));
   }
+
+  // ============================================================
+  // POINTING AT A PICTURE
+  //
+  // The rest of the sheet steps back and the one under the pointer
+  // leaves the flat plane of the page: it turns to face wherever the
+  // cursor is, as though it were lying under glass and being tipped.
+  // Its middle stays exactly where the picture was — it is turning,
+  // not moving — so nothing else on the map has to shift around it.
+  // ============================================================
+  const TIP = 15;          // degrees at the far corner of a picture
+  const LIFT = 1.06;       // and how much bigger it is drawn while tipped
+
+  function tip(frame, event) {
+    const box = frame.getBoundingClientRect();
+    const acrossX = (event.clientX - (box.left + box.width / 2)) / (box.width / 2);
+    const acrossY = (event.clientY - (box.top + box.height / 2)) / (box.height / 2);
+    const hold = Math.max(-1, Math.min(1, acrossX));
+    const rise = Math.max(-1, Math.min(1, acrossY));
+    frame.style.setProperty("--turn-y", (hold * TIP).toFixed(2) + "deg");
+    frame.style.setProperty("--turn-x", (-rise * TIP).toFixed(2) + "deg");
+    frame.style.setProperty("--lift", String(LIFT));
+  }
+
+  function untip(frame) {
+    frame.style.setProperty("--turn-y", "0deg");
+    frame.style.setProperty("--turn-x", "0deg");
+    frame.style.setProperty("--lift", "1");
+  }
+
+  frames.forEach((frame) => {
+    frame.addEventListener("pointerenter", () => sheet.classList.add("peeking"));
+    frame.addEventListener("pointermove", (e) => tip(frame, e));
+    frame.addEventListener("pointerleave", () => {
+      sheet.classList.remove("peeking");
+      untip(frame);
+    });
+  });
 
   // ============================================================
   // SEARCH

@@ -424,3 +424,118 @@ test("with animation turned off it goes straight to the finished sheet", async (
   const frames = await page.$$eval(".sheet-frame", (els) => els.length);
   expect(landed, "every picture should already be in place").toBe(frames);
 });
+
+test("pointing at a picture lifts it out of the page without moving it", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  const frame = page.locator(".sheet-frame").nth(3);
+  await frame.scrollIntoViewIfNeeded();
+  const box = await frame.boundingBox();
+  const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+
+  const look = () =>
+    frame.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return {
+        centre: [r.left + r.width / 2, r.top + r.height / 2],
+        turn: getComputedStyle(el).transform,
+      };
+    });
+
+  const resting = await look();
+
+  // Pointed at near one corner...
+  await page.mouse.move(box.x + box.width * 0.15, box.y + box.height * 0.15);
+  await page.waitForTimeout(500);
+  const tipped = await look();
+
+  expect(tipped.turn, "it should leave its plane").toMatch(/^matrix3d/);
+  expect(tipped.turn).not.toBe(resting.turn);
+
+  // ...but turned about its own middle, which stays where the picture
+  // was laid out. The exact statement of that is that the moving part
+  // of its transform — the last two numbers, where on the sheet it
+  // has been put — is untouched by the pointer.
+  const where = (matrix) => matrix.slice(9, -1).split(",").slice(12, 14).map(Number);
+  expect(where(tipped.turn), "it should not be moved, only turned")
+    .toEqual(where(resting.turn));
+  // Which leaves the picture drawn all but exactly where it was: a
+  // turned square seen in perspective is a little wider on the near
+  // side, so its outline shifts by a pixel or two even though what it
+  // is turning about has not moved at all.
+  expect(
+    Math.hypot(tipped.centre[0] - resting.centre[0], tipped.centre[1] - resting.centre[1]),
+    "and should stay where it was drawn"
+  ).toBeLessThan(4);
+
+  // The rest of the page steps back while it is held.
+  const others = await page.evaluate(() =>
+    [...document.querySelectorAll(".sheet-frame")]
+      .filter((f) => !f.matches(":hover"))
+      .map((f) => parseFloat(getComputedStyle(f).opacity))
+  );
+  expect(Math.max(...others), "everything else should dim").toBeLessThan(0.5);
+
+  // It follows the cursor rather than striking one pose.
+  await page.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.85);
+  await page.waitForTimeout(500);
+  const other = await look();
+  expect(other.turn, "it should follow the pointer").not.toBe(tipped.turn);
+
+  // And everything comes back when the pointer leaves.
+  await page.mouse.move(middle.x, box.y - 80);
+  await page.waitForTimeout(600);
+  const back = await page.evaluate(() =>
+    [...document.querySelectorAll(".sheet-frame")].map((f) =>
+      parseFloat(getComputedStyle(f).opacity))
+  );
+  expect(Math.min(...back), "and come back afterwards").toBeGreaterThan(0.9);
+});
+
+test("a date is written along its line rather than switched on", async ({ page }) => {
+  await page.goto(SHEET);
+
+  // Watch the dates arrive. Written on, in this page, means the
+  // lettering is uncovered from its left end rather than faded up
+  // whole — so there have to be moments where a date is half written.
+  // A date that simply appeared would go from covered to uncovered
+  // with nothing in between, and none of these samples would catch it.
+  const run = await page.evaluate(
+    () =>
+      new Promise((done) => {
+        const seen = [];
+        const until = performance.now() + 12000;
+        const look = () => {
+          const dates = [...document.querySelectorAll(".sheet-date")];
+          for (const date of dates) {
+            const clip = getComputedStyle(date).clipPath;
+            // Part written: a width the browser is still working out,
+            // rather than either end of the journey.
+            if (clip.includes("calc(") && !/calc\(\s*0%/.test(clip) && !clip.includes("100%")) {
+              seen.push(clip);
+            }
+          }
+          const finished =
+            dates.length > 0 && dates.every((d) => d.classList.contains("shown"));
+          if ((finished && performance.now() > 2000) || performance.now() > until) {
+            done({ seen, count: dates.length });
+            return;
+          }
+          requestAnimationFrame(look);
+        };
+        look();
+      })
+  );
+
+  expect(run.count, "there should be dates on the lines").toBeGreaterThan(2);
+  expect(run.seen.length, "one should be caught half written").toBeGreaterThan(3);
+
+  // And every one ends up written in full.
+  await waitForSheet(page);
+  await page.waitForTimeout(900);
+  const ends = await page.$$eval(".sheet-date", (els) =>
+    els.map((el) => getComputedStyle(el).clipPath));
+  expect(ends.every((clip) => /calc\(\s*0%|(^|\s)-2px/.test(clip)),
+    `all written in full: ${ends.join(" | ")}`).toBe(true);
+});
