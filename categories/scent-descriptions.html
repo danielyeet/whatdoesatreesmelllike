@@ -135,63 +135,81 @@
   FAVORITES — the other way of looking at this category, and the other
   half of this page. It is hidden until the Favorites button is
   pressed; favorites.js then flicks the big square through every
-  picture below, lands on the first, and lays the rest out in a ring
-  underneath that can be dragged round. Clicking one fades it into the
-  big square.
+  picture below, lands on the first, and stands the rest on a ring
+  going round it in three dimensions — the near side of the ring
+  passing in front of the square, the far side behind. Scrolling turns
+  it; clicking one fades that picture into the big square.
 
   TO ADD A FAVOURITE: copy one whole <button class="gallery-frame">
   block, give it the next name, and uncomment its <img>. The ring, the
   flick and the order all come from however many of these are here.
+  Each one is given a second face by the script so the same picture is
+  there when you are looking at the back of the ring.
 
-  There is no description under the ring at the moment — it was taken
-  out so the whole view fits on one screen without scrolling. The name
-  of whichever picture you are pointing at shows in its own corner
+  There is no description under the ring — it was taken out so the
+  whole view fits on one screen without scrolling. The name of
+  whichever picture you are pointing at shows in its own corner
   instead.
 -->
 <div class="gallery" id="gallery">
 
-  <div class="gallery-plate" id="gallery-plate" aria-live="polite"></div>
+  <!-- One scene in three dimensions: the big square at the middle of
+       it, and the rest of the pictures on a ring around it. Only the
+       pictures are placed and turned; the square simply sits at the
+       middle, which is why it is the one thing here that never
+       moves. -->
+  <div class="gallery-scene" id="gallery-scene">
+    <div class="gallery-space" id="gallery-space">
 
-  <div class="gallery-ring" id="gallery-ring">
-    <button class="gallery-frame" type="button" aria-label="Show f1">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f1</span>
-    </button>
-    <button class="gallery-frame" type="button" aria-label="Show f2">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f2</span>
-    </button>
-    <button class="gallery-frame" type="button" aria-label="Show f3">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f3</span>
-    </button>
-    <button class="gallery-frame" type="button" aria-label="Show f4">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f4</span>
-    </button>
-    <button class="gallery-frame" type="button" aria-label="Show f5">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f5</span>
-    </button>
-    <button class="gallery-frame" type="button" aria-label="Show f6">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f6</span>
-    </button>
-    <button class="gallery-frame" type="button" aria-label="Show f7">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f7</span>
-    </button>
-    <button class="gallery-frame" type="button" aria-label="Show f8">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f8</span>
-    </button>
-    <button class="gallery-frame" type="button" aria-label="Show f9">
-      <!-- <img src="../images/your-picture.jpg" alt=""> -->
-      <span class="sheet-number">f9</span>
-    </button>
+      <div class="gallery-plate" id="gallery-plate" aria-live="polite"></div>
+
+      <button class="gallery-frame" type="button" aria-label="Show f1">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f1</span>
+      </button>
+
+      <button class="gallery-frame" type="button" aria-label="Show f2">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f2</span>
+      </button>
+
+      <button class="gallery-frame" type="button" aria-label="Show f3">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f3</span>
+      </button>
+
+      <button class="gallery-frame" type="button" aria-label="Show f4">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f4</span>
+      </button>
+
+      <button class="gallery-frame" type="button" aria-label="Show f5">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f5</span>
+      </button>
+
+      <button class="gallery-frame" type="button" aria-label="Show f6">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f6</span>
+      </button>
+
+      <button class="gallery-frame" type="button" aria-label="Show f7">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f7</span>
+      </button>
+
+      <button class="gallery-frame" type="button" aria-label="Show f8">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f8</span>
+      </button>
+
+      <button class="gallery-frame" type="button" aria-label="Show f9">
+        <!-- <img src="../images/your-picture.jpg" alt=""> -->
+        <span class="sheet-number">f9</span>
+      </button>
+
+    </div>
   </div>
-
-</div>
 
 </div>
 

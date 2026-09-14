@@ -988,9 +988,16 @@ body.view-switching .gallery,
 body.view-switching .sheet-head .category-lede { opacity: 0; }
 
 .gallery {
+  /* The big square, and everything else in this view measured off it.
+     Smaller than it was: the pictures now go round it in three
+     dimensions rather than sitting in a row underneath, so it has to
+     leave room beside it as well as below. */
+  --plate: min(380px, 44vw, 40vh);
   position: relative;
   width: min(1240px, calc(100% - 80px));
   margin: 0 auto;
+  /* A little further down the page than the map is — asked for. */
+  padding-top: clamp(26px, 6vh, 64px);
   padding-bottom: 14px;
   display: none;
 }
@@ -1001,14 +1008,46 @@ body.view-favorites .sheet-head .category-lede { opacity: 0; }
    is the right fallback: everything is reachable. */
 body:not(.sheet-scripted) .gallery { display: block; }
 
-/* Sized against the height of the window as well as its width: the
-   ring has to fit under it and the whole view has to fit on one
-   screen, without scrolling. */
-.gallery-plate {
+/* ------------------------------------------------------------------
+   THE SCENE
+
+   One space in three dimensions with the big square at the middle of
+   it and the pictures on a ring going round it, so they pass in front
+   of the square and behind it. The browser works out what is in front
+   of what on its own, which it can only do while everything stays in
+   the same 3D space — so nothing between .gallery-space and a picture
+   may flatten it (no overflow, no opacity, no filter on the way down).
+
+   The perspective is set here, on the parent of the thing that turns.
+   Set on the turning element itself it turns with it, and then the
+   ring is drawn as if you were looking straight at every picture at
+   once, which is no perspective at all.
+   ------------------------------------------------------------------ */
+.gallery-scene {
   position: relative;
-  width: min(560px, 46vw, 52vh, calc(100% - 24px));
+  height: calc(var(--plate) + 200px);
+  perspective: 1150px;
+  touch-action: pan-y;   /* a drag turns the ring; a swipe still scrolls the page */
+  cursor: grab;
+}
+.gallery-scene.grabbing { cursor: grabbing; }
+.gallery-space {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+/* The big square, dead centre of the scene. favorites.js writes its
+   transform: the exact opposite of the space's own, so it is the one
+   thing here that stays square to you and never moves however far the
+   ring has gone round. */
+.gallery-plate {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--plate);
   aspect-ratio: 1 / 1;
-  margin: 0 auto;
+  transform: translate(-50%, -50%);
   border: 1px solid var(--ink);
   background: var(--bg-2);
 }
@@ -1033,18 +1072,35 @@ body:not(.sheet-scripted) .gallery { display: block; }
 .gallery-layer.no-fade { transition: none; }
 .gallery-plate > .sheet-number { z-index: 2; }
 
-.gallery-ring {
-  position: relative;
-  margin: 14px auto 0;
-  touch-action: pan-y;   /* a drag turns the ring; a swipe still scrolls the page */
-  cursor: grab;
-}
-.gallery-ring.grabbing { cursor: grabbing; }
+/* ------------------------------------------------------------------
+   A PICTURE ON THE RING
+
+   Each one is turned to face outwards from the middle and then pushed
+   out along its own new direction, so the ring stands in space rather
+   than being drawn as a circle. That means the far side of the ring is
+   showing you its back — which is why every picture is built as a card
+   with a face on each side, the same picture on both, rather than as a
+   single one-sided panel.
+   ------------------------------------------------------------------ */
 .gallery-frame {
   position: absolute;
-  left: 0;
-  top: 0;
+  left: 50%;
+  top: 50%;
   padding: 0;
+  border: 0;
+  background: none;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  /* They take their places one after another once the flick has
+     landed; before that there is nothing but the big square. */
+  visibility: hidden;
+}
+.gallery-frame.in-ring { visibility: visible; }
+.gallery-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
   border: 1px solid var(--line);
   background-color: var(--bg-2);
   background-image: repeating-linear-gradient(
@@ -1052,23 +1108,33 @@ body:not(.sheet-scripted) .gallery { display: block; }
     var(--line) 0px, var(--line) 1px,
     transparent 1px, transparent var(--hatch-gap, 12px)
   );
-  cursor: pointer;
-  /* They take their places one after another once the flick has
-     landed; before that there is nothing under the big square. */
-  visibility: hidden;
 }
-.gallery-frame.in-ring { visibility: visible; }
-.gallery-frame:has(img) { background-image: none; background-color: transparent; }
-.gallery-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.gallery-frame.chosen { border-color: var(--ink); }
-.gallery-frame:hover { border-color: var(--ink); }
+.gallery-face:has(img) { background-image: none; background-color: transparent; }
+.gallery-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-frame.chosen .gallery-face { border-color: var(--ink); }
+.gallery-frame:hover .gallery-face { border-color: var(--ink); }
+/* The far side of the ring is washed out towards the colour of the
+   page. It is a veil laid over the picture rather than the picture's
+   own opacity on purpose: anything transparent in this chain would
+   flatten the card and take the far face's hiding with it.
+   favorites.js sets --dim from how far round the ring each one is. */
+.gallery-face::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  opacity: var(--dim, 0);
+  pointer-events: none;
+}
 
-/* Pointing at the big square darkens its bottom corner and brings up
-   the name of whatever is showing there — the only place a name is
-   written in this view now that the description under the ring has
-   gone. The ring's own pictures stay plain: a name on each of them at
-   once was noise, and they are chosen by pointing at them anyway. */
-.gallery-plate::after {
+
+/* Pointing at a picture — the big square or any one on the ring —
+   darkens its bottom right corner and brings up what it is called
+   there. It is the only place a name is written in this view now that
+   the description underneath has gone, and it is one at a time: a name
+   on every picture at once was noise. */
+.gallery-plate::after,
+.gallery-face::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1083,7 +1149,19 @@ body:not(.sheet-scripted) .gallery { display: block; }
   pointer-events: none;
   z-index: 1;
 }
-.gallery-plate:hover::after { opacity: 1; }
+.gallery-plate:hover::after,
+.gallery-frame:hover .gallery-face::after { opacity: 1; }
+/* On the ring's pictures the name is nearly as wide as the picture
+   itself, so the corner wedge the big square uses would leave the
+   first half of the word written in white on white. They get a band
+   along the foot instead — the same idea at the size it has to work
+   at. */
+.gallery-face::after {
+  background: linear-gradient(
+    to top,
+    rgba(16, 16, 11, 0.86), rgba(16, 16, 11, 0.52) 28%, rgba(16, 16, 11, 0) 60%
+  );
+}
 .gallery-hover-name {
   position: absolute;
   right: 12px;
@@ -1102,7 +1180,17 @@ body:not(.sheet-scripted) .gallery { display: block; }
   transition: opacity 0.4s var(--menu-ease);
   pointer-events: none;
 }
-.gallery-plate:hover .gallery-hover-name { opacity: 1; }
+.gallery-plate:hover .gallery-hover-name,
+.gallery-frame:hover .gallery-hover-name { opacity: 1; }
+/* Smaller lettering on the ring's pictures — they are a third of the
+   size of the big square, and the name has to sit in the corner of one
+   rather than across it. */
+.gallery-face .gallery-hover-name {
+  right: 7px;
+  bottom: 6px;
+  font-size: 10px;
+  max-width: calc(100% - 12px);
+}
 
 /* ==================================================================
    GALLERY WORK PAGE
@@ -1169,4 +1257,7 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   .infobox { float: none; width: 100%; margin: 0 0 32px; }
   .node3d-text { font-size: 14px; }
   .node3d-sub { width: 160px; }
+  /* 80px of margin is a quarter of a phone's screen: the ring needs
+     the room more than the page needs the gutter. */
+  .gallery { width: calc(100% - 24px); }
 }

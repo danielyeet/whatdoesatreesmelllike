@@ -74,15 +74,20 @@ by that mask — and the cursor; the exit sequence's ordering, the collapse draw
 node into the centre, and the reforming line stopping at the sentence and handing over
 to the thread without a seam; plus browserless file checks (no link points at a missing
 file, no credentials committed); and the contact sheet — the flick ending on the first
-picture and leaving it where it was, the name and the three buttons arriving after it,
-the search matching a picture by name, every line stopping just off the two pictures it
-joins, no line crossing a picture it is not pointing at, no picture left with nothing
-joined to it, the pictures arriving one after another rather than together, nothing
-shifting sideways when the page grows, the two buttons arriving only once it has finished
-drawing itself, and a frame keeping its number once a real picture is put in it; and favorites — switching views taking one away before the other arrives,
-the flick ending on the first, the ring standing its pictures front to back, dragging
-turning it, picking one fading rather than cutting, the whole view fitting on one screen,
-and pointing at the big square bringing up the name of what is in it.
+picture and leaving it where it was, the search matching a picture by name, every line
+stopping just off the two pictures it joins, no line crossing a picture it is not
+pointing at, no picture left with nothing joined to it, the pictures arriving one after
+another rather than together, nothing shifting sideways when the page grows, the two
+buttons arriving only once it has finished drawing itself, a frame keeping its number
+once a real picture is put in it, pointing at a picture turning it in three dimensions
+without moving where it was laid out, and a date being written along its line rather
+than switched on; and favorites — switching views
+taking one away before the other arrives, the flick ending on the first, the ring
+standing its pictures round the square front to back with the near side in front of it
+and the far side behind, every picture having a face on both sides, scrolling turning it
+anticlockwise and nothing turning on its own, the pointer moving everything except the
+big square, dragging turning it, picking one fading rather than cutting, the whole view
+fitting on one screen, and pointing at a picture bringing up the name of what is in it.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -317,7 +322,7 @@ the two buttons above the middle window switch between them:
 | button | view | file |
 |---|---|---|
 | Description portfolio | the map — every picture scattered, joined by dated lines | `contact-sheet.js` |
-| Favorites | one big square, a draggable ring of pictures under it, a description | `favorites.js` |
+| Favorites | one big square with the rest of the pictures on a ring around it in three dimensions | `favorites.js` |
 
 Neither file touches the other's elements. All they share is a class on `<body>`
 (`view-favorites`), which `style.css` reads to take one view out of the page and put the
@@ -383,7 +388,20 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   as loosely joined, and a test checks there are none.
 - Dates sit at a different fraction along each line rather than always at the halfway
   point, because two lines crossing near their middles would otherwise print their dates
-  on top of each other.
+  on top of each other. Each one is **written** rather than switched on: the lettering is
+  uncovered from its left end by a `clip-path` that opens as the line lands (`clip-path`
+  does clip SVG text, which is what makes this possible without drawing the word twice).
+- **A date label is moved on a later layout, never made again.** Every layout used to
+  append a fresh `<text>`, which left the old one in the drawing — covered over by its
+  own clip-path and so invisible, but piling up one per link on every resize, and
+  restarting the writing from nothing when the window was only resized.
+- **Pointing at a picture takes it out of the page.** The rest of the sheet dims
+  (`.peeking` on the sheet), and the one under the pointer tips in three dimensions
+  towards it — `perspective()` and a pair of rotations written as custom properties
+  (`--turn-x` / `--turn-y` / `--lift`), which is why the frame's *position* is a
+  `translate()` of `--x` / `--y` in the same transform rather than `left` / `top`: the
+  two have to live in one declaration. It turns about its own middle, so the picture
+  stays exactly where the layout put it.
 - **The map draws itself outwards and is meant to be watched doing it.** A line travels
   to a picture, the picture comes up *over a moment* rather than in one frame, and only
   after a pause do that picture's own lines set off — and they set off one at a time
@@ -419,24 +437,48 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   `f1`, `f2`… in the same corner chip the sheet's frames use.
 - Arriving, the big square **flicks** through them exactly as the sheet does — the same
   accelerating-hold run, arranged to *end* on the first rather than cut to it — and the
-  rest then take their places in the ring.
-- **The ring is a circle lying almost flat.** Three cues make it read that way and it
-  needs all three: the pictures at the back sit higher up the page, are drawn smaller
-  (`RING_BACK`) and are fainter (`RING_FADE`). Weaken any one and it goes back to being
-  a row of squares overlapping each other.
-- Dragging turns it; letting go leaves it turning and running down, the way the map on
-  the landing page behaves. It keeps a slow drift when nothing is touching it, holds
-  still under the pointer, and each picture bobs a little on its own clock.
+  rest then take their places on the ring.
+- **The ring goes round the big square in three dimensions**, so its near side passes in
+  front of the square and its far side behind it. One `perspective` on `.gallery-scene`,
+  one `transform-style: preserve-3d` on `.gallery-space` inside it, and the browser sorts
+  out what is in front of what. Nothing between the space and a picture may flatten that
+  — an `overflow`, an `opacity` or a `filter` anywhere down the chain ends the 3D space
+  and the ring goes back to being a circle drawn on the page.
+- **Nothing turns the space itself; each picture is placed.** It is moved to its own
+  point on the ring and then turned about the upright only —
+  `translate3d(x, y, z) rotateY(its angle)` — so every picture stands upright however far
+  the ring is tipped. Tipping the space instead leans them all over with it, and a leaning
+  square is drawn as a sheared parallelogram: it reads as a mistake rather than as a
+  photograph standing in space. The tip is in the arithmetic instead — it is only the
+  ring's near side being lower than its far side (`BASE_TILT`).
+- **Every picture is a card with a face on each side**, both carrying the same picture
+  (`buildFaces`). A picture faces outwards from the middle, so the far half of the ring
+  is showing you its back; one-sided panels leave that half blank. The two faces are held
+  a fraction apart in depth, or they fight over which is in front and the card flickers.
+- **The far side is washed out** towards the colour of the page (`--dim`, `DIM_FAR`), on
+  top of perspective already drawing it smaller. It is a veil laid *over* the picture
+  rather than the picture's own `opacity`, because anything transparent in that chain
+  would flatten the card and take its far face's hiding with it.
+- **It does not turn on its own.** Scrolling turns it, anticlockwise seen from above —
+  which is the near side of the ring travelling to the right (`SCROLL_TURN`; positive
+  `rotateY` carries the near side to `+x`). Dragging swings it round for anything without
+  a wheel, and a push runs itself down (`SPIN_DRAG`). Clicking one turns the ring the
+  short way round until that picture is at the front.
+- **Moving the pointer moves your eye, not the ring** — it shifts the scene's
+  `perspective-origin` (`LEAN_SHIFT`). Everything with any depth to it slides against
+  everything else, and the big square, flat on at no depth at all, does not move by a
+  pixel: a point at `z = 0` projects to itself whatever the perspective origin is.
 - **Picking one fades it into the big square** — the square is two layers, and showing a
   picture paints the one underneath and fades it up. The flick asks for cuts instead and
   gets them by turning that fade off (`.no-fade`). A cut is the film going past; a fade
   is you choosing something; they must not look the same.
-- **Pointing at the big square darkens its bottom corner and brings up the name of what
-  is showing in it.** That is the only place a name is written in this view: the
-  description under the ring was taken out so the whole thing fits on one screen without
-  scrolling, which is also why the square and the ring are sized against the window's
-  *height* as well as its width. The pictures in the ring stay plain — a name on each of
-  them at once was noise, and they are chosen by pointing at them anyway.
+- **Pointing at a picture darkens its bottom corner and brings up what it is called.**
+  That is the only place a name is written in this view: the description under the ring
+  was taken out so the whole thing fits on one screen without scrolling, which is also
+  why the square and the ring are sized against the window's *height* as well as its
+  width. The big square gets a corner wedge; the ring's pictures get a band along the
+  foot instead, because at their size the name is nearly as wide as the picture and a
+  wedge leaves the first half of the word written in white on white.
 
 ### Styling
 
@@ -513,7 +555,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. `FLIP_*` in `contact-sheet.js`. |
 | **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
 | **view** | One of the two ways the contact sheet page shows a category: the **map** (Description portfolio) or **Favorites**. One at a time; `favorites.js` switches them. |
-| **the ring** | The circle of pictures under the big square in Favorites, lying almost flat, draggable. `RING_*` in `favorites.js`. |
+| **the ring** / **the orbit** | The circle of pictures going round the big square in Favorites, standing in three dimensions so its near side passes in front of the square and its far side behind. Turned by scrolling or dragging, never on its own. `RING_*` in `favorites.js`. |
+| **face** | One side of a picture on the ring (`.gallery-face`). Each has two, carrying the same picture, so it is there from either side. |
 | **favourite** / **f(n)** | One picture in Favorites (`<button class="gallery-frame">`), named f1, f2… in its corner. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
