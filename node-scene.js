@@ -32,7 +32,11 @@ const REAL_NODES = [
     href: "categories/scent-descriptions.html", pos: [1.57, 2.62, 0.0],
     preview: { description: "Here I describe things, from scents to houses to notes to anything else." },
   },
-  { label: "Theories", sub: "half-formed ideas I keep coming back to", href: "categories/theories.html", pos: [-2.09, 1.97, 1.91] },
+  {
+    label: "Theories", sub: "half-formed ideas I keep coming back to",
+    href: "categories/theories.html", pos: [-2.09, 1.97, 1.91],
+    preview: { description: "Half-formed ideas, written down before I lose them." },
+  },
   { label: "Favorites", sub: "things I like, no other reason needed", href: "categories/favorites.html", pos: [0.27, 0.93, -3.1] },
   { label: "Other", sub: "whatever doesn't fit anywhere else", href: "categories/other-1.html", pos: [1.78, 1.0, 2.33] },
   { label: "Other", sub: "the other other pile", href: "categories/other-2.html", pos: [-3.25, -0.99, -0.57] },

@@ -61,15 +61,12 @@
   // big and how strong it is drawn. It is wide and the pictures on it
   // are small: they are there to be picked from, and the big square is
   // the thing you are looking at.
-  const RING_SIZE = 0.17;      // how tall a picture on the ring is, as a share of the square
-  const RING_SIZE_MIN = 30, RING_SIZE_MAX = 96;
-  const RING_WIDE = 1.25;      // and how much wider than that it is drawn. The pictures
-                               // on the site are square; these are the one place they
-                               // are not, because a picture on the ring is nearly always
-                               // seen at an angle and squared up it reads as narrower
-                               // than it is
-  const RING_REACH = 0.95;     // the closest in it will ever stand, as a share of the
-                               // square — it normally stands as wide as the page lets it
+  // A picture on the ring is a ninth of the big square: a third of its
+  // height and a third of its width, so nine of them would tile it.
+  const RING_SIZE = 1 / 3;
+  const RING_SIZE_MIN = 44, RING_SIZE_MAX = 190;
+  const RING_WIDE = 1;         // square, the same as every other picture on the site
+  const RING_REACH = 1.0;      // how far out the ring stands, as a share of the square
   const SCROLL_TURN = 0.00022; // how far a notch of scroll turns it — anticlockwise
   const SPIN_MAX = 0.06;       // the fastest it will turn however hard it is pushed
   const SPIN_DRAG = 0.93;      // how quickly a push runs down
@@ -220,15 +217,16 @@
     if (!width) return;
     const plateSize = plate.getBoundingClientRect().width || width * 0.32;
     const size = Math.max(RING_SIZE_MIN, Math.min(RING_SIZE_MAX, plateSize * RING_SIZE));
-    // As wide as the page will take, and never narrower than it takes
-    // to clear the square. On anything desktop-sized the first of these
-    // is what decides it: the ring reaches from one side of the screen
-    // to the other.
+    // Close in around the square — far enough out that a picture at the
+    // side of the ring clears its edge, and no further — but never so
+    // far out that the ring runs off the page on a narrow window.
+    // Measured against the square rather than against the window:
+    // standing it as wide as the page allowed left a gulf between the
+    // big picture and the ones going round it, with nothing in between.
     const wide = size * RING_WIDE;
-    const radius = Math.max(
-      width / 2 - wide * 1.3,
-      plateSize * RING_REACH,
-      plateSize / 2 + wide
+    const radius = Math.min(
+      Math.max(plateSize * RING_REACH, plateSize / 2 + wide * 0.56),
+      width / 2 - wide * 0.62
     );
 
     frames.forEach((frame, i) => {

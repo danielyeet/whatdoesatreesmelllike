@@ -946,6 +946,29 @@ body.sheet-scripted .sheet-head h1::after { width: 0; transition: none; }
 body.sheet-scripted .sheet-head .category-lede { opacity: 0; transition: none; }
 body.sheet-scripted .sheet-filters { opacity: 0; transition: none; pointer-events: none; }
 
+/* What this page is, written small beside the Menu: a rule, then the
+   name of the category in the same mono the rest of the chrome is set
+   in. On the contact sheet it is the only place the category is named
+   now that the title has gone, and it is meant to be read second —
+   after the Menu, and only if you are looking for it. */
+.page-where,
+.sheet-where {
+  position: fixed;
+  top: 22px;
+  left: 76px;
+  z-index: 30;
+  margin: 0;
+  padding: 4px 0 4px 15px;
+  border-left: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 15px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  pointer-events: none;
+}
+body.sheet-scripted .sheet-where { opacity: 0; transition: none; }
+
 body.sheet-named .sheet-head h1 {
   opacity: 1;
   letter-spacing: -0.01em;
@@ -965,6 +988,10 @@ body.sheet-named .sheet-filters {
   opacity: 1;
   pointer-events: auto;
   transition: opacity 0.9s var(--menu-ease);
+}
+body.sheet-named .sheet-where {
+  opacity: 1;
+  transition: opacity 1.1s var(--menu-ease) 0.15s;
 }
 
 /* ==================================================================
@@ -992,7 +1019,7 @@ body.view-switching .sheet-head .category-lede { opacity: 0; }
 
 .gallery {
   /* The big square, and everything else in this view measured off it. */
-  --plate: min(480px, 38vw, 56vh);
+  --plate: min(440px, 35vw, 52vh);
   position: relative;
   /* The whole width of the page and the whole of what is left of its
      height: this view is not a panel sitting in the middle of a page,
@@ -1206,159 +1233,217 @@ body:not(.sheet-scripted) .gallery { display: none; }
 .gallery.landed .gallery-plate:hover .gallery-hover-name { opacity: 1; }
 
 /* ==================================================================
-   THE SURVEY — categories/theories.html
-   A whole page of country in three dimensions, drawn on a canvas by
-   topo-map.js. Dark: the country is nearly black and the contours on
-   it are light, which is the one place on the site the palette is
-   turned over. Everything here is written under `body.surveyed`,
-   which that script adds — without it the page is the plain list of
-   rows every other category uses, and stays that way.
+   THE CONSOLE — categories/theories.html
+   A category read the way an instrument is read: the theories sorted
+   into channels down the left, the open one on the right, and a
+   reading along the foot with one peak per channel. Everything here
+   is written under `body.consoled`, which console.js adds — without
+   it the page is the plain list of rows every other category uses,
+   and stays that way.
    ================================================================== */
-body.surveyed { overflow: hidden; background: #0b0b0a; }
-body.surveyed .page-content { padding: 0; margin: 0; max-width: none; }
+body.consoled { overflow: hidden; }
+body.consoled .page-content { padding: 0; margin: 0; max-width: none; }
 /* The list is still in the page for anything reading rather than
-   looking — it is the survey's own index — but it is not drawn. */
-body.surveyed .work-list,
-body.surveyed .page-content > h1,
-body.surveyed .page-content > .category-lede {
+   looking — it is the console's own index — but it is not drawn. The
+   margins go with it: taken out of sight but left with the margins it
+   was laid out with, the lede alone put twenty-five pixels below the
+   fold and gave a one-screen page something to scroll. */
+body.consoled .work-list,
+body.consoled .page-content > h1,
+body.consoled .page-content > .category-lede {
   position: absolute;
+  /* Pinned to the corner rather than left where they were laid out:
+     below a full-height console, a one-pixel box is still a pixel
+     past the fold and gives the page something to scroll. */
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
-  /* The margins go with them. Taken out of sight but left with the
-     margins they were laid out with, the lede alone put twenty-five
-     pixels below the fold and gave the page something to scroll. */
   margin: 0;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
 }
-/* The Menu is written on the country now, so it has to be light. */
-body.surveyed .menu-trigger { color: #e4e2d7; }
 
-.survey {
+.console { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+/* The squared paper and the reading are drawn on this; everything
+   else on the page is laid over it. */
+.console-paper { position: absolute; inset: 0; display: block; }
+
+.console-readout {
+  position: absolute;
+  top: 22px;
+  right: 26px;
+  margin: 0;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 15px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+/* The two columns: the channels, and whichever one is open. Sized off
+   the window's height as well as its width, because the reading along
+   the foot has to keep its own room. */
+.console-frame {
   position: relative;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  background: #0b0b0a;
-  cursor: grab;
-  touch-action: none;    /* a drag turns the country rather than scrolling the page */
-  outline: none;
+  display: grid;
+  grid-template-columns: minmax(230px, 27%) 1fr;
+  gap: clamp(32px, 6vw, 96px);
+  align-items: start;
+  width: min(1180px, calc(100% - 120px));
+  margin: 0 auto;
+  height: 100%;
+  /* Set in the optical middle of what is left over: clear of the Menu
+     and the readout above, clear of the reading along the foot below,
+     and centred in the space between them rather than hung from the
+     top of it. */
+  align-content: center;
+  padding: 92px 0 196px;
 }
-.survey.turning { cursor: grabbing; }
-.survey:focus-visible { outline: 1px solid var(--brass); outline-offset: -3px; }
-.survey-ground { display: block; }
 
-/* A theory is a MARK on the country, not a caption written across it:
-   the same hollow square with a dot in it that the site's own cursor
-   is drawn as. What it is called is not written until you point at it
-   — topo-map.js moves each mark onto its own summit every frame, so
-   nothing here may give one a transform of its own. */
-.survey-marks { position: absolute; inset: 0; pointer-events: none; }
-.survey-peak {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 0;
-  height: 0;
-  pointer-events: auto;
-  text-decoration: none;
-  transition: opacity 0.25s ease;
+/* ---- the channels ---- */
+.console-rail { display: flex; flex-direction: column; }
+.console-tab {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px 26px 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 13px 2px;
+  border: none;
+  border-top: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.3s var(--menu-ease);
 }
-.survey-peak.gone { display: none; }
-.survey-reg {
-  position: absolute;
-  left: -7px;
-  top: -7px;
-  width: 13px;
-  height: 13px;
-  border: 1px solid rgba(228, 226, 215, 0.92);
-  transition: border-color 0.18s ease, transform 0.18s ease;
-}
-.survey-reg::after {
+.console-rail .console-tab:last-child { border-bottom: 1px solid var(--line); }
+.console-tab:hover { color: var(--ink); }
+.console-tab.open { color: var(--ink); }
+/* The open channel is marked by a rule running out of it towards the
+   panel it has opened, rather than by a block of colour. */
+.console-tab::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 3px;
-  height: 3px;
-  margin: -1.5px 0 0 -1.5px;
-  background: rgba(228, 226, 215, 0.92);
-  transition: background 0.18s ease;
+  right: -1px;
+  bottom: -1px;
+  width: 0;
+  height: 1px;
+  background: var(--brass);
+  transition: width 0.45s var(--menu-ease);
 }
-.survey-peak:hover .survey-reg,
-.survey-peak:focus-visible .survey-reg {
-  border-color: #c49248;
-  transform: scale(1.35);
-}
-.survey-peak:hover .survey-reg::after,
-.survey-peak:focus-visible .survey-reg::after { background: #c49248; }
+.console-tab.open::after { width: 100%; }
 
-/* What it is called, and only while it is being pointed at. */
-.survey-say {
-  position: absolute;
-  left: 13px;
-  top: -8px;
-  display: block;
-  white-space: nowrap;
-  opacity: 0;
-  transform: translateX(-3px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  pointer-events: none;
+/* The same hollow square the node map marks a point with. */
+.console-reg {
+  width: 9px;
+  height: 9px;
+  border: 1px solid currentColor;
+  align-self: center;
+  transition: background 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
 }
-.survey-peak:hover .survey-say,
-.survey-peak:focus-visible .survey-say { opacity: 1; transform: none; }
-.survey-name {
+.console-tab.open .console-reg { background: var(--brass); border-color: var(--brass); }
+.console-no {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.console-name {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+.console-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  align-self: center;
+}
+
+/* ---- the open channel ---- */
+.console-panels { position: relative; }
+.console-panel[hidden] { display: none; }
+.console-panel {
+  animation: console-open 0.5s var(--menu-ease) both;
+}
+@keyframes console-open {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.console-head { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.console-kicker {
+  margin: 0 0 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--brass);
+}
+.console-head h2 {
+  margin: 0;
+  font-size: clamp(28px, 3.6vw, 44px);
+  letter-spacing: -0.02em;
+}
+
+.console-entries { display: flex; flex-direction: column; }
+.console-entry {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 2px;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--ink);
+  transition: padding-left 0.3s var(--menu-ease);
+}
+.console-entry:hover { padding-left: 10px; }
+.console-entry:hover .console-reg { background: var(--brass); border-color: var(--brass); }
+.console-entry-name {
   display: block;
   font-family: var(--sans);
   font-weight: 500;
-  font-size: 13px;
-  line-height: 1.15;
-  color: #e4e2d7;
+  font-size: 16px;
 }
-.survey-height {
+.console-entry-meta {
   display: block;
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  color: #c49248;
-  margin-top: 2px;
-}
-
-/* The title block, in the corner a map keeps it, ruled off from the
-   drawing the way a cartouche is. */
-.survey-block {
-  position: absolute;
-  left: 26px;
-  bottom: 24px;
-  max-width: 300px;
-  padding: 16px 18px;
-  border: 1px solid rgba(228, 226, 215, 0.18);
-  background: rgba(11, 11, 10, 0.72);
-  pointer-events: none;
-}
-.survey-block h2 { font-size: 19px; margin: 0 0 6px; color: #e4e2d7; }
-.survey-block p {
-  font-size: 13px;
-  color: rgba(228, 226, 215, 0.55);
-  margin: 0 0 12px;
-  max-width: 34ch;
-}
-.survey-block dl {
-  margin: 0;
-  padding-top: 10px;
-  border-top: 1px solid rgba(228, 226, 215, 0.18);
-  font-family: var(--mono);
   font-size: 11px;
-  color: #e4e2d7;
+  color: var(--muted);
+  margin-top: 4px;
 }
-.survey-block dl > div { display: flex; gap: 10px; padding: 2px 0; }
-.survey-block dt { color: rgba(228, 226, 215, 0.45); min-width: 62px; }
-.survey-block dd { margin: 0; }
+.console-go {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
+}
+.console-entry:hover .console-go,
+.console-entry:focus-visible .console-go { opacity: 1; transform: none; color: var(--brass); }
 
 @media (max-width: 860px) {
-  .survey-block { left: 14px; right: 14px; bottom: 14px; max-width: none; }
-  .survey-block p { display: none; }
+  body.consoled { overflow: auto; }
+  .console { height: auto; min-height: 100vh; }
+  .console-frame {
+    grid-template-columns: 1fr;
+    gap: 34px;
+    width: calc(100% - 48px);
+    padding-top: 86px;
+    padding-bottom: 150px;
+    height: auto;
+  }
+  .console-readout { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .console-panel { animation-duration: 0.01s; }
 }
 
 /* ==================================================================

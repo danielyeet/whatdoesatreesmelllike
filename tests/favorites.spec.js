@@ -134,23 +134,23 @@ test("the ring stands the pictures on one level line round the square", async ({
   expect(Math.max(...ys) - Math.min(...ys), `they should share one line: ${ys}`)
     .toBeLessThan(2);
 
-  // It goes round the big square, and it is as wide as the page: there
-  // are pictures out near both edges of the window, not just in a band
-  // around the square.
+  // It goes round the big square and stands close in to it: out past
+  // both of its sides, but not away across the page with a gulf in
+  // between where there is nothing at all.
   const xs = ring.cards.map((c) => c.x);
-  const window = await page.evaluate(() => document.documentElement.clientWidth);
-  expect(Math.min(...xs), "one should stand out near the left edge")
-    .toBeLessThan(window * 0.14);
-  expect(Math.max(...xs), "and one near the right")
-    .toBeGreaterThan(window * 0.86);
+  const out = Math.max(...xs.map((x) => Math.abs(x - ring.plate.x)));
+  expect(out, "some should stand out past the square's edge")
+    .toBeGreaterThan(ring.plate.width * 0.5);
+  expect(out, "and not away across the page from it")
+    .toBeLessThan(ring.plate.width * 1.15);
 
-  // They are small — the big square is the thing being looked at — and
-  // wider than they are tall, which the square never is.
-  expect(Math.max(...ring.cards.map((c) => c.size)))
-    .toBeLessThan(ring.plate.width * 0.4);
+  // A picture on the ring is a ninth of the big square: a third of its
+  // height and a third of its width, so nine of them would tile it.
   ring.cards.forEach((card) => {
-    expect(card.wide / card.tall, "a picture on the ring is cut wider than it is tall")
-      .toBeGreaterThan(1.1);
+    expect(card.wide / ring.plate.width, "a third of the square across")
+      .toBeCloseTo(1 / 3, 1);
+    expect(card.tall / ring.plate.width, "and a third of it down")
+      .toBeCloseTo(1 / 3, 1);
   });
 
   // Which way round the ring a picture has come is said by how big and
@@ -376,18 +376,30 @@ test("pointing at a picture on the ring brings it forward", async ({ page }) => 
   await page.waitForTimeout(600);
   await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
 
-  /** Where the widest picture on the ring, other than the front one, is. */
+  /**
+   * A picture on the ring the pointer can actually reach, other than
+   * the one at the front. Taken in order of how near the front of the
+   * ring each one has come, and each one checked against what is
+   * actually under that point: the far half of the ring is behind the
+   * big square, so the widest one on the screen is quite often one you
+   * could not point at if you tried.
+   */
   const pickable = () =>
     page.evaluate(() => {
       const cards = [...document.querySelectorAll(".gallery-frame")];
-      let best = null;
-      cards.forEach((card, i) => {
-        const r = card.getBoundingClientRect();
-        if (i > 0 && (!best || r.width > best.width)) {
-          best = { at: i, x: r.left + r.width / 2, y: r.top + r.height / 2, width: r.width };
+      const nearest = cards
+        .map((card, i) => ({ card: card, at: i, dim: parseFloat(card.style.getPropertyValue("--dim")) }))
+        .filter((one) => one.at > 0)
+        .sort((a, b) => a.dim - b.dim);
+      for (const one of nearest) {
+        const r = one.card.getBoundingClientRect();
+        const x = r.left + r.width / 2, y = r.top + r.height / 2;
+        const under = document.elementFromPoint(x, y);
+        if (under && one.card.contains(under)) {
+          return { at: one.at, x: x, y: y, width: r.width };
         }
-      });
-      return best;
+      }
+      return null;
     });
   const look = (at) =>
     page.evaluate((i) => {
