@@ -94,18 +94,22 @@ open and rising under the entry you point at, and the whole view fitting one scr
 and the structure — it being grown from the page's own rows with one station per theory,
 the travel being the page's own scroll down a road several screens long, going further in
 bringing new stations up and leaving the ones behind you off the page, travelling *back*
-filling the air again as many times as you like, the spine working as a wheel both dragged
-and pressed, a station being the thing you click and the only thing on the drawing that
-is one, it being drawn mostly white on near-black with the cool accent kept for the marks
-that say a station can be opened, it saying `dark-surface` to the cursor, it not creeping
-on its own under `prefers-reduced-motion`, and the plain list coming back when the script
-is blocked.
+filling the air again as many times as you like, travelling back also coming all the way
+back to the beginning after the page has been left alone, the spine working as a wheel
+both dragged and pressed, a station being the thing you click and the only thing on the
+drawing that is one, clicking one setting it out on the window and writing its card while
+pointing at one does nothing, the click after that being the one that opens the theory,
+and escape or travelling putting it back, it being drawn mostly white on near-black with
+the cool accent kept for the marks that say a station can be opened, it saying
+`dark-surface` to the cursor, it not creeping on its own under `prefers-reduced-motion`,
+and the plain list coming back when the script is blocked.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
-mask being dropped while still feathering, grain arriving along a moving edge, and the
+mask being dropped while still feathering, grain arriving along a moving edge, the
 reforming line both running across the slide-2 sentence and being visibly swapped out
-for the thread. Keep them passing rather than adjusting them to match new behaviour,
+for the thread, and the structure's travel creeping away from the scrollbar so that the
+beginning of the road could not be got back to. Keep them passing rather than adjusting them to match new behaviour,
 unless the behaviour change is deliberate.
 
 Visual/aesthetic judgement is still manual — the suite checks that things work, not that
@@ -305,20 +309,26 @@ Other things that will bite you:
   corrugation groups). Tune there, not inline. Several systems are dialled to zero but
   left wired up (`SWAY = 0`, `CLOUD_COUNT = 0`); bring them back by raising the number
   rather than rebuilding the machinery.
-- Each branch has a `rootFlare` collar at its hub end, bridging a hair-thin tube and a
-  sphere twenty-odd times its width so a branch reads as growing out of the centre
-  rather than as a wire poked into a ball. Two things make that join disappear and it
-  needs both: a **curved** profile (a `LatheGeometry` revolved from a fillet-shaped
-  profile, not a cone — made too wide or too short it stops reading as a swelling and
-  starts reading as a thorn), and a **colour ramp** stored per vertex, carrying the
-  centre's own near-black at the sphere's surface up to the branch's grey over the next
-  `ROOT_FLARE_BLEND`. That ramp is a *multiplier*, because the material's colour is
-  already kept in step with the tube's, hover darkening included. The collar is straight,
-  so `ROOT_FLARE_LENGTH` must stay inside the straight run each branch begins with
-  (0.13 of its length, about 0.45 from the middle). It is pointed by
-  `curve.getTangent(0)` and kept in sync with the tube's own emerge/weight/opacity every
-  frame — don't hand-place or hand-animate it separately. One geometry is shared by all
-  seven; only the material and the direction differ.
+- **A branch is one object from the centre to its node.** Where it meets the sphere it
+  swells out to `ROOT_FLARE_RADIUS`, bridging a hair-thin tube and a sphere twenty-odd
+  times its width so a branch reads as growing out of the centre rather than as a wire
+  poked into a ball — but that swelling is the *tube being drawn wider there*, made in
+  `branchGeometry()`, not a collar laid over the end of it. It used to be a separate
+  `LatheGeometry` mesh, and a separate piece was visibly a separate piece however
+  carefully it was matched: it was straight where the branch had already begun to bend,
+  and being transparent over the tube it also came out darker — so the middle of the map
+  read as seven stubs with seven thin lines starting where they stopped. That was a
+  reported bug; don't reintroduce a second mesh at the hub end.
+  `branchGeometry()` takes a `TubeGeometry` and pushes each ring outward from its own
+  middle (the average of the ring's vertices, the repeated seam vertex left out), by how
+  far that middle is from the sphere's surface — so the swelling follows whatever the
+  curve is doing rather than assuming it is straight. The same pass writes a **colour
+  ramp** per vertex, carrying the centre's own near-black at the sphere's surface up to
+  the tube's own colour over the next `ROOT_FLARE_BLEND`, so there is no line to see
+  where a branch enters the sphere. That ramp is a *multiplier*, because the material's
+  colour is already kept in step with hover's darkening. Both tubes — resting and
+  emphasised — are built this way, each with its own ramp; `repen()` rebuilds them at
+  the new pen weight, and `mesh.userData` carries the radius and colour it needs to.
 - `viewDepth(worldPos)` is the real per-node depth (0 near, 1 far), used for label
   opacity, z-index stacking, and the chromatogram's peak heights. Raw NDC
   `projected.z` looked plausible but was useless here — every node landed within 0.01 of
@@ -345,6 +355,13 @@ Two kinds of assembly stand in that frame, and the difference is the point:
   (`.structure-road`) gives the page a height, so the scrollbar, the trackpad, the arrow
   keys, Page Down and a finger on a phone all drive it without a line of code. Catching
   the wheel and turning it into movement breaks every one of those.
+- **Every bit of the travel is reversible.** The page is never quite still — it creeps —
+  but that creep is a **breath** in and out of a fixed place (`CREEP`, `CREEP_EVERY`),
+  written from the clock rather than added up. It used to be added up frame after frame,
+  so where you were was the scroll *plus* however long the page had been open: leave it a
+  minute and the start of the road was a minute behind you, and scrolling back to the top
+  of the page no longer got you to the beginning of it. That was a reported bug. Anything
+  new that moves the eye has to be something a scroll can undo.
 - **The swarm wraps in BOTH directions.** A speck keeps no position along the road at all:
   its depth is taken modulo `DEEP` each frame and *which lap* it is on decides where it
   stands across the frame, so it is somewhere new each time round and the air is full
@@ -372,6 +389,31 @@ Two kinds of assembly stand in that frame, and the difference is the point:
   about half the window and taken off the page once it is carried clear of the window: a
   station you are nearly inside would otherwise be an invisible link the size of the
   screen, where clicking anywhere at all goes somewhere.
+- **Clicking one sets it out; the click after that opens the theory.** The first click
+  takes the station out of the frame: it comes forward, turns as it comes, and its parts
+  go out to arm's length on a **ring** — the same figure with the same lines between the
+  same parts, opened out and squared up the way a drawing of a part is set out to be
+  read, with a scale ruled under it. The rest of the frame goes back behind one wash
+  (`OPEN_VEIL`), and a **card** writes itself in beside it once the figure has landed.
+  Five things about it:
+  - It is a **click**, not a hover. Travelling past nine stations should not keep taking
+    the page apart, so nothing here answers the pointer merely passing over one.
+  - The card lives **inside the station's own `<a>`**, which is what keeps "a station is
+    the only thing on this drawing you can click" true: the card is more of the station
+    rather than a second thing to aim at, and clicking either follows the link. It also
+    means the same two steps work from the keyboard, where Enter is a click.
+  - Which place each part takes on the ring is worked out **once, at load** (`order`),
+    read off round the figure as it already stands — so opening it is the parts moving
+    out to arm's length, and nothing crosses anything.
+  - Where the parts go is worked out in **screen** space, so an opened station stands
+    perfectly still even though the drawing behind it does not.
+  - Escape, a click anywhere else, and **travelling** all put it back. Going further in
+    is the whole of this page's gesture and is never the thing that is blocked, so the
+    travel is not held, locked or frozen while one is open.
+  - The card carries the station's name, so the copy under the figure goes while it is
+    open — one name, one place, the same rule the node map's preview follows. An
+    optional `data-note` on the row is shown as a line of the owner's own; without one
+    the card carries what the page already says plus the readings the drawing has.
 - **A station behind you or still out in the dark is `display: none`**, not faded to
   nothing — faded, it would still catch the pointer where there is nothing to point at.
   The window one is shown for (`SHOW_FROM`…`SHOW_TO`) is deliberately wider than
@@ -591,7 +633,19 @@ switching between the two — it owns the buttons, so it owns the switch.
   chapter large and then a small spec list under it (entries, first, last); the menu on the
   right is wide, with the tabs above and generous numbered rows below. The page is read
   from the top down and there is nothing above either of them, so neither is set low.
-- **The field is a lattice over the whole page, and two things disturb it.**
+- **The field is a lattice over the whole page, and two things disturb it.** It is fine
+  and close-set (`PITCH`, `MARK`) rather than large and far apart — it is a ruled ground
+  for the writing to stand on, and the reading it carries is its top edge, which a coarse
+  lattice can only step through. Every fifth mark each way (`EVERY`) is the site's own
+  hollow registration square instead of a tick, so the grid counts itself the way a
+  drawing's does.
+  - **The writing keeps its own room.** The field is not drawn where the plate or the
+    menu stands: both boxes are *measured* off the page (`clearing()`, re-read whenever a
+    chapter is opened, since both change size with it) and marks inside them are dropped,
+    fading back in over `CLEAR_SOFT` so the field thins towards the words rather than
+    stopping at a line. It is read off where a mark actually *is*, so one shoved towards
+    the words by the cursor is taken out too. A ground printed through the words on top
+    of it is neither a ground nor words.
   - **The cursor**, which shoves the marks near it out of place and draws them larger; they
     find their way back when it goes. Make the lattice itself uneven and there is nothing
     left for the cursor to disturb.
@@ -610,11 +664,13 @@ switching between the two — it owns the buttons, so it owns the switch.
   between them to measure. Letting the mounds under the plate instead, each cut off at the
   writing above it, made every one of them the same capped height: a step across the page
   rather than a reading, and identical for every chapter.
-- **`hotItem` and `drawing` are declared above the part of the file that opens a chapter,
-  not with the rest of the field's state.** A chapter is opened while the page is still
-  being built, and opening one touches both; left where they belong they do not exist yet
-  at that moment and the whole view falls over before it has drawn anything. This has now
-  bitten twice in this repository.
+- **`hotItem`, `drawing` and `remeasure` are declared above the part of the file that
+  opens a chapter, not with the rest of the field's state.** A chapter is opened while the
+  page is still being built, and opening one touches all three; left where they belong
+  they do not exist yet at that moment and the whole view falls over before it has drawn
+  anything. This has now bitten three times in this repository — most recently reaching
+  for `width` from `show()` to re-measure the room the writing keeps, which is why that
+  is a flag the next frame acts on rather than work done on the spot.
 - **Without the script both views are simply on the page**, one under the other, and the
   entries are a plain list of links — everything reachable.
 
@@ -641,8 +697,9 @@ background luminance, but the class is the reliable path.
   (`scent-descriptions`) takes another `<a class="sheet-frame">` block for the map, or a
   `<a class="gallery-entry">` block with a `data-chapter` and a `data-date` for its
   Favorites view; and the **structure** (`theories`) takes another `<a class="work-row">`
-  block, which becomes a station of its own and lengthens the road. Each page says
-  which in the comment at the top of it.
+  block, which becomes a station of its own and lengthens the road — optionally with a
+  `data-note`, a line about the piece that the station's card shows when it is clicked.
+  Each page says which in the comment at the top of it.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map.
@@ -680,7 +737,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **link node** / **real node** | A clickable endpoint from `REAL_NODES`. A branch *stops* at one; nothing continues past it. |
 | **branch** | The tube from hub to a link node — a `CatmullRomCurve3` that leaves the hub radially, then bows through two waypoints. Tubes, not lines, so they can thicken on hover. |
 | **waypoint** | The two small dots along a branch (at t ≈ 0.32 and 0.69), derived from the node's position, not placed by hand. |
-| **root flare** / **collar** | The short curved swelling at a branch's hub end (`ROOT_FLARE_*`), widening the tube where it meets the sphere and taking the sphere's own colour there, so the branch grows out of the centre instead of being poked into it. |
+| **root flare** | The swelling at a branch's hub end (`ROOT_FLARE_*`): the tube drawn wider where it meets the sphere, and taking the sphere's own colour there, so the branch grows out of the centre instead of being poked into it. It is part of the branch's own geometry, not a separate collar — there is no second object at the hub. (If the owner says **collar**, they mean this.) |
 | **wake** / **wake speck** | The specks strung along a branch, sampled off its own curve. Each speck is 9 stacked particles that spray apart when pointed at. |
 | **cloud** | The separate drifting background speck system. Currently off (`CLOUD_COUNT = 0`) but still wired up. |
 | **registration mark** | The hollow square marker used for node labels, reused for the preview's dock and the scroll cue — not a plain dot. |
@@ -690,12 +747,15 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
 | **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. A beat after it opens, the node's **name** is lifted out of the map and set above it. |
 | **the structure** | The way `categories/theories.html` is laid out: a technical drawing in three dimensions — ribs, rails, a ruled spine and a swarm of particles — that you scroll *into*. `structure.js`. It replaced an earlier night-sky treatment ("the starfield"), and none of that is in the code any more. |
-| **station** / **stop** | One theory in the structure — an assembly of particles with lines drawn between them, standing at its own depth, bracketed and named. The assembly is the click target. |
+| **station** / **stop** / **constellation** | One theory in the structure — an assembly of particles with lines drawn between them, standing at its own depth, bracketed and named. The assembly is the click target. The owner calls these **constellations**; they are `stops` in `structure.js`. |
+| **the set-out** | What clicking a station does: it comes out of the frame, turns as it comes, and its parts open out onto a ring on the window, with a scale ruled under it and the frame washed back behind. `OPEN_*` in `structure.js`. |
+| **the card** | The preview written beside a set-out station (`.structure-card`) — its number, name, the page's own line about it, an optional `data-note`, the readings, and `OPEN →`. It lives inside the station's own link, so clicking it opens the theory. |
 | **fixture** | An assembly that is only structure: unnamed, unbracketed, fainter, and deliberately not clickable. There to fill the frame and to make being bracketed mean something. |
 | **the road** | The depth the stations are laid along, and the page height that scrolls down it (`.structure-road`). The swarm is endless; the road is not. |
 | **the swarm** | The particles that are not part of any assembly. Their depth is wrapped both ways each frame, so the air is full going forward *and* going back. |
 | **rib** / **rail** | The frame you travel through: ribs across the way at fixed depths, rails running the length of it between their corners. |
 | **the spine** | The ruler drawn along the floor of the frame to the vanishing point, ticked at every whole depth. It is also the **wheel**: dragging it writes the page's own scroll, and pressing it goes on to the next station. |
+| **the breath** | The structure's own slow creep: the eye drifts a little way in and back out again on a fixed cycle (`CREEP`, `CREEP_EVERY`), so the page is never quite still but the scroll is always the whole of where you are. |
 | **carriage** | The gantry that runs down the frame towards you on its own clock, lighting each rib as it passes. |
 | **traverse** | One of the streaks that run across the frame — the mechanical version of a falling star. |
 | **chapter** | One grouping in Favorites — whatever an entry's `data-chapter` says. The chapters, their names and their order all come from the page. |

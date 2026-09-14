@@ -1084,8 +1084,8 @@ body.sheet-scripted .gallery-entry { display: none; }
 .chapters-plate {
   position: absolute;
   left: clamp(24px, 5vw, 72px);
-  top: clamp(18px, 3.5vh, 54px);
-  width: min(430px, 26vw);
+  top: clamp(20px, 4vh, 60px);
+  width: min(380px, 23vw);
 }
 .chapters-kicker {
   margin: 0 0 12px;
@@ -1096,9 +1096,13 @@ body.sheet-scripted .gallery-entry { display: none; }
 }
 .chapters-plate h2 {
   margin: 0;
-  font-size: clamp(30px, 5.2vw, 72px);
+  /* Set to the column it stands in rather than to the window: the
+     plate is narrower than it was, so that the clear room between the
+     two columns of writing is wider, and a name that breaks in the
+     middle is the first thing that gives that away. */
+  font-size: clamp(28px, 4.4vw, 62px);
   letter-spacing: -0.02em;
-  line-height: 1.0;
+  line-height: 1.04;
 }
 /* Label, rule, figure — the way the rest of the site sets out a
    reading. */
@@ -1118,21 +1122,23 @@ body.sheet-scripted .gallery-entry { display: none; }
 .chapters-spec dt { color: var(--muted); text-transform: uppercase; }
 .chapters-spec dd { margin: 0; color: var(--ink); }
 
-/* The menu, on the right. */
+/* The menu, on the right. Kept narrower than the room it has: the
+   column of daylight between it and the plate is where the field's
+   reading stands, and the page is easier to read for the space. */
 .chapters-menu {
   position: absolute;
   right: clamp(24px, 5vw, 72px);
-  top: clamp(18px, 3.5vh, 54px);
-  width: min(720px, 40vw);
+  top: clamp(20px, 4vh, 60px);
+  width: min(620px, 36vw);
 }
-.chapters-rail { display: flex; flex-direction: column; margin-bottom: clamp(22px, 4vh, 44px); }
+.chapters-rail { display: flex; flex-direction: column; margin-bottom: clamp(26px, 4.6vh, 52px); }
 .chapters-tab {
   position: relative;
   display: grid;
   grid-template-columns: 11px 1fr auto;
   align-items: center;
   gap: 14px;
-  padding: clamp(14px, 2.4vh, 28px) 2px;
+  padding: clamp(15px, 2.8vh, 30px) 2px;
   border: none;
   border-top: 1px solid var(--line);
   background: none;
@@ -1175,8 +1181,8 @@ body.sheet-scripted .gallery-entry { display: none; }
   display: grid;
   grid-template-columns: 28px 86px 1fr auto;
   align-items: baseline;
-  gap: 16px;
-  padding: clamp(17px, 3.1vh, 38px) 2px;
+  gap: 18px;
+  padding: clamp(18px, 3.6vh, 42px) 2px;
   border-bottom: 1px solid var(--line);
   text-decoration: none;
   color: var(--ink);
@@ -1215,8 +1221,8 @@ body.sheet-scripted .gallery-entry { display: none; }
    between them is where the field's reading stands, and favorites.js
    measures that room rather than assuming it. */
 @media (max-width: 1100px) {
-  .chapters-plate { width: min(320px, 27vw); }
-  .chapters-menu { width: min(460px, 43vw); }
+  .chapters-plate { width: min(300px, 25vw); }
+  .chapters-menu { width: min(430px, 40vw); }
 }
 
 @media (max-width: 860px) {
@@ -1409,10 +1415,140 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
 .structure-stop:hover .structure-name,
 .structure-stop:focus-visible .structure-name { color: #9ecbff; }
 
+/* THE CARD. Clicking a station lays it out on the window and writes
+   this beside it — the preview of the theory. It is INSIDE the
+   station's own link, so the card is more of the station rather than a
+   second thing to aim at, and the click that follows opens the piece.
+
+   It waits for the figure to finish coming forward before it writes
+   itself in: the station is set out first, and only then is there
+   something beside it to read. */
+.structure-card {
+  position: absolute;
+  left: calc(100% + 54px);
+  top: 50%;
+  width: min(360px, 30vw);
+  padding: 18px 20px 0;
+  border-left: 1px solid rgba(142, 180, 226, 0.55);
+  background: rgba(10, 11, 14, 0.66);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-50%) translateX(-12px);
+  transition: opacity 0.35s var(--menu-ease), transform 0.35s var(--menu-ease),
+              visibility 0s linear 0.35s;
+}
+/* The leader from the figure to the card, the way the drawing joins
+   anything to the note about it. */
+.structure-card::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 30px;
+  width: 54px;
+  height: 1px;
+  background: rgba(142, 180, 226, 0.4);
+}
+.structure-stop.open .structure-card {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+  transition: opacity 0.5s var(--menu-ease) 0.3s, transform 0.5s var(--menu-ease) 0.3s,
+              visibility 0s;
+}
+.structure-card > span { display: block; }
+.structure-card-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: rgba(142, 180, 226, 0.9);
+}
+.structure-card-name {
+  margin-top: 10px;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(21px, 2.1vw, 30px);
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  color: #eef1f6;
+  white-space: normal;
+}
+.structure-card-meta {
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: rgba(226, 232, 242, 0.5);
+  white-space: normal;
+}
+.structure-card-note {
+  margin-top: 12px;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(226, 232, 242, 0.75);
+  white-space: normal;
+}
+.structure-card-spec {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(226, 232, 242, 0.14);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(150, 160, 176, 0.8);
+}
+.structure-card-open {
+  margin-top: 14px;
+  padding-bottom: 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(142, 180, 226, 0.9);
+}
+.structure-stop.open:hover .structure-card-open,
+.structure-stop.open:focus-visible .structure-card-open { color: #9ecbff; }
+
+/* One name, one place: the station's name is in the card while it is
+   open, so the copy under the figure goes — and the names of the
+   stations it is standing in front of go with it. */
+.structure-stop.open .structure-say { opacity: 0; }
+.structure-marks.holding .structure-stop:not(.open) .structure-say { opacity: 0; }
+.structure-say { transition: opacity 0.35s var(--menu-ease); }
+
 @media (max-width: 860px) {
   /* The two numbers stay: they are how you know where you are. */
   .structure-readout { top: 16px; right: 16px; font-size: 10px; letter-spacing: 0.08em; }
   .structure-spine { width: min(260px, 60vw); }
+}
+
+/* Where there is no room beside the figure the card goes under it, and
+   structure.js lays the figure higher up the window to make that room.
+   The two have to agree: this is the same condition. */
+@media (max-width: 860px), (max-aspect-ratio: 95/100) {
+  .structure-card {
+    left: 50%;
+    top: calc(100% + 44px);
+    width: min(420px, 84vw);
+    padding: 16px 18px 0;
+    transform: translate(-50%, 10px);
+  }
+  .structure-stop.open .structure-card { transform: translate(-50%, 0); }
+  .structure-card::before {
+    right: auto;
+    left: -1px;
+    top: -44px;
+    width: 1px;
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Held still rather than switched off, like the rest of the drawing:
+     the card is simply there as soon as the station is open. */
+  .structure-card,
+  .structure-stop.open .structure-card { transition-duration: 0.01s; transition-delay: 0s; }
+  .structure-say { transition-duration: 0.01s; }
 }
 
 /* ==================================================================

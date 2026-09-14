@@ -102,9 +102,32 @@
   const SHOW_TO = 2;           // and where it has gone past
 
   // --- movement
-  const DRIFT = 0.25;          // how fast the travel creeps on its own
+  //
+  // The travel is never quite still, but it always comes back: the
+  // creep is a slow BREATH in and out of a fixed place, not a drift
+  // that keeps going. It used to be added up frame after frame, so
+  // where you were was the scroll plus however long the page had been
+  // open — leave it a minute and the start of the road was a minute
+  // behind you, and scrolling all the way back to the top of the page
+  // no longer got you to the beginning of it. Anything here that
+  // decides where the eye is has to be something a scroll can undo.
+  const CREEP = 0.5;           // how far the travel breathes, in units of the road
+  const CREEP_EVERY = 24;      // and how many seconds one breath takes
   const EASE = 0.12;           // how quickly it catches up with the scroll
   const SCREENS = 1.25;        // how many screens of scrolling a station is worth
+
+  // --- opening one
+  //
+  // Clicking a station does not go to it: it takes it out of the
+  // frame, lays it out for reading, and writes a card beside it. The
+  // theory is one click further on, from the card or the figure.
+  const OPEN_EASE = 0.09;      // how quickly it comes forward and squares up
+  const OPEN_TURN = 0.8;       // how far the figure turns as it comes, in radians
+  const OPEN_RING = 0.15;      // how wide it is laid out, against the smaller side
+  const OPEN_PART = 3.6;       // every part of it drawn the same size, being a set-out
+  const OPEN_VEIL = 0.82;      // how far the rest of the frame is taken back behind it
+  const OPEN_AT = [0.32, 0.5]; // where on the window it is laid out, side on
+  const OPEN_OVER = [0.5, 0.3]; // and where when the card has to go under it
 
   // --- the moving parts
   const CARRIAGE_FROM = 58;    // where the travelling gantry starts back
@@ -229,12 +252,25 @@
       z: FIRST_STOP + i * STOP_EVERY,
     };
     const built = assemble(at, NODES, NODE_SPREAD, 1.1, 3.1);
+
+    // Which place on the ring each part takes when the station is
+    // opened out. They are read off round the figure as it already
+    // stands, so opening it is the parts moving out to arm's length
+    // rather than the figure being shuffled: nothing crosses anything.
+    const round = built.nodes
+      .map((node, n) => ({ n: n, a: Math.atan2(node.y - at.y, node.x - at.x) }))
+      .sort((one, two) => one.a - two.a);
+    const order = new Array(built.nodes.length);
+    round.forEach((one, place) => { order[one.n] = place; });
+
     return Object.assign(built, {
       name: title ? title.textContent.trim() : "Untitled",
       meta: meta ? meta.textContent.trim() : "",
+      note: (row.dataset.note || "").trim(),
       href: row.getAttribute("href"),
       number: String(i + 1).padStart(2, "0"),
       ring: random() * 6.283,
+      order: order,
     });
   });
 
@@ -289,6 +325,15 @@
     "scroll to travel — or drag the rule";
   shell.appendChild(cue);
 
+  // Said only while a station is open, in the same place and the same
+  // voice as the cue above: the one click further on, and the way back.
+  const hint = document.createElement("p");
+  hint.className = "structure-cue structure-hint gone";
+  hint.innerHTML =
+    '<span class="structure-cue-mark" aria-hidden="true"></span>' +
+    "click again to open — esc to go back";
+  shell.appendChild(hint);
+
   // The wheel. The rule itself is drawn on the canvas; this is the
   // part of the screen that answers the hand, laid over the near end
   // of it where the rule is widest and easiest to catch.
@@ -312,12 +357,41 @@
     const mark = document.createElement("a");
     mark.className = "structure-stop";
     mark.href = stop.href;
+    // The card is INSIDE the link on purpose. A station is the only
+    // thing on this drawing you can click, and putting the card in the
+    // same element keeps that true: the card is more of the station
+    // rather than a second thing to aim at, and clicking either of
+    // them is the one click that opens the theory.
     mark.innerHTML =
       '<span class="structure-say"><span class="structure-no"></span>' +
-      '<span class="structure-name"></span><span class="structure-meta"></span></span>';
+      '<span class="structure-name"></span><span class="structure-meta"></span></span>' +
+      '<span class="structure-card">' +
+      '<span class="structure-card-kicker" aria-hidden="true"></span>' +
+      // The name and the line under it are said once: they are already
+      // in the mark's own lettering above, which stays in the page when
+      // the card takes over the showing of them.
+      '<span class="structure-card-name" aria-hidden="true"></span>' +
+      '<span class="structure-card-meta" aria-hidden="true"></span>' +
+      '<span class="structure-card-note"></span>' +
+      '<span class="structure-card-spec" aria-hidden="true"></span>' +
+      '<span class="structure-card-open">Open<span aria-hidden="true"> \u2192</span></span>' +
+      "</span>";
     mark.querySelector(".structure-no").textContent = stop.number;
     mark.querySelector(".structure-name").textContent = stop.name;
     mark.querySelector(".structure-meta").textContent = stop.meta;
+    mark.querySelector(".structure-card-kicker").textContent =
+      "STATION " + stop.number + " / " + String(stops.length).padStart(2, "0");
+    mark.querySelector(".structure-card-name").textContent = stop.name;
+    mark.querySelector(".structure-card-meta").textContent = stop.meta;
+    // An optional line of the owner's own on the row (data-note) is a
+    // proper preview of the piece; without one the card carries what
+    // the page already says about it and the readings below.
+    const note = mark.querySelector(".structure-card-note");
+    note.textContent = stop.note;
+    if (!stop.note) note.hidden = true;
+    mark.querySelector(".structure-card-spec").textContent =
+      "DEPTH " + String(Math.round(stop.at.z)).padStart(3, "0") + "   \u00b7   " +
+      String(Math.round((stop.at.z / ROAD) * 100)).padStart(3, "0") + "% ALONG";
     marks.appendChild(mark);
     stop.mark = mark;
   });
@@ -591,10 +665,16 @@
   // ASSEMBLIES — stations and fixtures
   // ============================================================
   /** Puts every node of an assembly on the screen and draws its
-      figure. Returns the bounding box, or null if none of it landed. */
-  function drawAssembly(thing, strength, accent) {
+      figure. Returns the bounding box, or null if none of it landed.
+
+      `lay` is how an opened station is set out: it carries how far
+      open it is and where on the window it is being laid out, and
+      every part is drawn that far between where it stands in the
+      frame and its own place on the ring. The figure is unchanged —
+      the same lines between the same parts — so what you watch is one
+      thing being opened out, not one thing being swapped for another. */
+  function drawAssembly(thing, strength, accent, lay) {
     const put = [];
-    let left = Infinity, right = -Infinity, top = Infinity, foot = -Infinity;
     for (const node of thing.nodes) {
       const wob = REDUCE_MOTION ? 0 : WOBBLE * 1.6;
       const p = to(
@@ -602,12 +682,33 @@
         node.y + Math.cos(clock * node.rate * 0.7 + node.phase) * wob,
         node.z
       );
-      if (!p) { put.push(null); continue; }
-      put.push({ x: p.x, y: p.y, size: node.size * p.k * 0.03 });
-      if (p.x < left) left = p.x;
-      if (p.x > right) right = p.x;
-      if (p.y < top) top = p.y;
-      if (p.y > foot) foot = p.y;
+      put.push(p ? { x: p.x, y: p.y, size: node.size * p.k * 0.03 } : null);
+    }
+
+    if (lay) {
+      const count = put.length;
+      for (let n = 0; n < count; n++) {
+        const turn = (lay.order[n] / count) * Math.PI * 2 - Math.PI / 2 +
+                     (1 - lay.mix) * OPEN_TURN;
+        const wantX = lay.x + Math.cos(turn) * lay.r;
+        const wantY = lay.y + Math.sin(turn) * lay.r;
+        // A part that is behind you as it opens comes out of the middle
+        // of the set-out rather than not being drawn at all.
+        const at = put[n] || { x: lay.x, y: lay.y, size: 0 };
+        at.x += (wantX - at.x) * lay.mix;
+        at.y += (wantY - at.y) * lay.mix;
+        at.size += (OPEN_PART - at.size) * lay.mix;
+        put[n] = at;
+      }
+    }
+
+    let left = Infinity, right = -Infinity, top = Infinity, foot = -Infinity;
+    for (const at of put) {
+      if (!at) continue;
+      if (at.x < left) left = at.x;
+      if (at.x > right) right = at.x;
+      if (at.y < top) top = at.y;
+      if (at.y > foot) foot = at.y;
     }
     if (left === Infinity) return null;
 
@@ -718,75 +819,136 @@
     }
   }
 
+  /** One station: its figure, the marks that say it can be opened, and
+      the link laid over it. `lay` is only passed for the one that has
+      been opened — see THE SET-OUT below. */
+  function drawStop(stop, strength, ranged, lay) {
+    const box = drawAssembly(stop, strength, true, lay);
+    if (!box) { stop.mark.classList.add("gone"); return; }
+
+    // Bracketed, crosshaired and numbered: the marks that say this
+    // one is a thing you can open.
+    //
+    // The bracket is kept to a size, about the middle of the
+    // assembly. A station you are nearly inside covers the whole
+    // window, and an invisible link the size of the window is a
+    // page where clicking anywhere at all goes somewhere — as well
+    // as brackets you can no longer see the corners of.
+    const pad = 26;
+    const cx = (box.left + box.right) / 2, cy = (box.top + box.foot) / 2;
+    const wide = Math.min(box.right - box.left + pad * 2, width * 0.52) / 2;
+    const tall = Math.min(box.foot - box.top + pad * 2, height * 0.52) / 2;
+    const left = cx - wide, right = cx + wide;
+    const top = cy - tall, foot = cy + tall;
+    if (strength > 0.18) {
+      const arm = Math.max(7, Math.min(34, (right - left) * 0.16));
+      paint.lineWidth = 1.4;
+      paint.strokeStyle = rgba(ACCENT, strength * 0.75);
+      paint.beginPath();
+      [[left, top, 1, 1], [right, top, -1, 1], [right, foot, -1, -1], [left, foot, 1, -1]]
+        .forEach((c) => {
+          paint.moveTo(c[0] + c[2] * arm, c[1]);
+          paint.lineTo(c[0], c[1]);
+          paint.lineTo(c[0], c[1] + c[3] * arm);
+        });
+      paint.stroke();
+
+      paint.lineWidth = 1;
+      paint.strokeStyle = rgba(ACCENT, strength * 0.3);
+      paint.beginPath();
+      paint.moveTo(cx - 7, cy); paint.lineTo(cx + 7, cy);
+      paint.moveTo(cx, cy - 7); paint.lineTo(cx, cy + 7);
+      paint.stroke();
+    }
+
+    // The one you are among is ranged: squares opening outward from
+    // the middle of it, on the site's own registration mark. An
+    // opened one is not — it is being read rather than found, and it
+    // has a scale under it instead.
+    if (!REDUCE_MOTION && ranged) {
+      for (let r = 0; r < 2; r++) {
+        const beat = ((clock * 0.42 + stop.ring + r * 0.5) % 1);
+        const grow = 0.5 + beat * 1.4;
+        const w = (right - left) * grow, h = (foot - top) * grow;
+        paint.strokeStyle = rgba(ACCENT, strength * 0.3 * (1 - beat) * (1 - beat));
+        paint.strokeRect(cx - w / 2, cy - h / 2, w, h);
+      }
+    }
+
+    // The scale under an opened one: it has been taken out of the
+    // frame and set out to be read, and a set-out carries a rule.
+    if (lay && lay.mix > 0.15) {
+      const ruleY = foot + 16;
+      const step = Math.max(9, (right - left) / 24);
+      paint.lineWidth = 1;
+      paint.strokeStyle = rgba(WHITE, lay.mix * 0.3);
+      paint.beginPath();
+      paint.moveTo(left, ruleY);
+      paint.lineTo(left + (right - left) * lay.mix, ruleY);
+      for (let x = left, n = 0; x <= right; x += step, n++) {
+        if (x > left + (right - left) * lay.mix) break;
+        const len = n % 5 === 0 ? 7 : 3;
+        paint.moveTo(x, ruleY);
+        paint.lineTo(x, ruleY - len);
+      }
+      paint.stroke();
+    }
+
+    // Carried right off the window as you pass through it: taken
+    // out of the page rather than left there invisible.
+    if (right < 0 || left > width || foot < 0 || top > height) {
+      stop.mark.classList.add("gone");
+      return;
+    }
+    stop.mark.classList.remove("gone");
+    stop.mark.style.left = left.toFixed(1) + "px";
+    stop.mark.style.top = top.toFixed(1) + "px";
+    stop.mark.style.width = (right - left).toFixed(1) + "px";
+    stop.mark.style.height = (foot - top).toFixed(1) + "px";
+    stop.mark.style.opacity = (0.28 + strength * 0.72).toFixed(3);
+    stop.mark.classList.toggle("close", strength > 0.55);
+  }
+
   function drawStops(nearest) {
     for (const stop of stops) {
-      const ahead = stop.at.z - eye;
-      const strength = carry(ahead);
+      // The opened one is drawn after the veil that takes the rest of
+      // the frame back, not with them.
+      if (stop === shown) continue;
+      const strength = carry(stop.at.z - eye) * (1 - opened * OPEN_VEIL);
       if (strength <= 0.004) { stop.mark.classList.add("gone"); continue; }
-      const box = drawAssembly(stop, strength, true);
-      if (!box) { stop.mark.classList.add("gone"); continue; }
-
-      // Bracketed, crosshaired and numbered: the marks that say this
-      // one is a thing you can open.
-      //
-      // The bracket is kept to a size, about the middle of the
-      // assembly. A station you are nearly inside covers the whole
-      // window, and an invisible link the size of the window is a
-      // page where clicking anywhere at all goes somewhere — as well
-      // as brackets you can no longer see the corners of.
-      const pad = 26;
-      const cx = (box.left + box.right) / 2, cy = (box.top + box.foot) / 2;
-      const wide = Math.min(box.right - box.left + pad * 2, width * 0.52) / 2;
-      const tall = Math.min(box.foot - box.top + pad * 2, height * 0.52) / 2;
-      const left = cx - wide, right = cx + wide;
-      const top = cy - tall, foot = cy + tall;
-      if (strength > 0.18) {
-        const arm = Math.max(7, Math.min(34, (right - left) * 0.16));
-        paint.lineWidth = 1.4;
-        paint.strokeStyle = rgba(ACCENT, strength * 0.75);
-        paint.beginPath();
-        [[left, top, 1, 1], [right, top, -1, 1], [right, foot, -1, -1], [left, foot, 1, -1]]
-          .forEach((c) => {
-            paint.moveTo(c[0] + c[2] * arm, c[1]);
-            paint.lineTo(c[0], c[1]);
-            paint.lineTo(c[0], c[1] + c[3] * arm);
-          });
-        paint.stroke();
-
-        paint.lineWidth = 1;
-        paint.strokeStyle = rgba(ACCENT, strength * 0.3);
-        paint.beginPath();
-        paint.moveTo(cx - 7, cy); paint.lineTo(cx + 7, cy);
-        paint.moveTo(cx, cy - 7); paint.lineTo(cx, cy + 7);
-        paint.stroke();
-      }
-
-      // The one you are among is ranged: squares opening outward from
-      // the middle of it, on the site's own registration mark.
-      if (!REDUCE_MOTION && stop === nearest) {
-        for (let r = 0; r < 2; r++) {
-          const beat = ((clock * 0.42 + stop.ring + r * 0.5) % 1);
-          const grow = 0.5 + beat * 1.4;
-          const w = (right - left) * grow, h = (foot - top) * grow;
-          paint.strokeStyle = rgba(ACCENT, strength * 0.3 * (1 - beat) * (1 - beat));
-          paint.strokeRect(cx - w / 2, cy - h / 2, w, h);
-        }
-      }
-
-      // Carried right off the window as you pass through it: taken
-      // out of the page rather than left there invisible.
-      if (right < 0 || left > width || foot < 0 || top > height) {
-        stop.mark.classList.add("gone");
-        continue;
-      }
-      stop.mark.classList.remove("gone");
-      stop.mark.style.left = left.toFixed(1) + "px";
-      stop.mark.style.top = top.toFixed(1) + "px";
-      stop.mark.style.width = (right - left).toFixed(1) + "px";
-      stop.mark.style.height = (foot - top).toFixed(1) + "px";
-      stop.mark.style.opacity = (0.28 + strength * 0.72).toFixed(3);
-      stop.mark.classList.toggle("close", strength > 0.55);
+      drawStop(stop, strength, stop === nearest && !shown, null);
     }
+  }
+
+  // ============================================================
+  // THE SET-OUT
+  //
+  // Clicking a station takes it out of the frame: it comes forward,
+  // turns as it comes, and its parts go out to arm's length on a ring
+  // — the same figure, the same lines, opened out and squared up the
+  // way a drawing of a part is set out to be read. The frame behind it
+  // goes back, and a card writes itself in beside it. The theory
+  // itself is one click further on, from the card or from the figure.
+  //
+  // It is a CLICK. Nothing here answers the pointer simply passing
+  // over a station: travelling past nine of them should not keep
+  // taking the page apart.
+  // ============================================================
+  let opening = null;   // the station that has been clicked, if any
+  let shown = null;     // the one being drawn open, which lingers as it closes
+  let opened = 0;       // 0 in the frame, 1 laid out
+
+  function setOut() {
+    if (!shown) return;
+    const side = width > 860 && width > height * 0.95;
+    const at = side ? OPEN_AT : OPEN_OVER;
+    drawStop(shown, Math.max(carry(shown.at.z - eye), opened), false, {
+      mix: opened,
+      x: width * at[0],
+      y: height * at[1],
+      r: Math.min(width, height) * OPEN_RING,
+      order: shown.order,
+    });
   }
 
   // ============================================================
@@ -934,6 +1096,15 @@
     drawCarriage(on);
     drawTraverses(on);
 
+    // The frame goes back behind an opened station — the whole of it,
+    // in one wash, so that what is left lit is the one thing being
+    // read. Then that one is drawn over the top of it.
+    if (opened > 0.002) {
+      paint.fillStyle = "rgba(10,11,14," + (opened * OPEN_VEIL).toFixed(3) + ")";
+      paint.fillRect(0, 0, width, height);
+      setOut();
+    }
+
     paint.fillStyle = vignette;
     paint.fillRect(0, 0, width, height);
     if (grain) {
@@ -945,9 +1116,11 @@
 
     const along = Math.min(1, eye / ROAD);
     readout.textContent =
-      (nearest ? nearest.number : "--") + " / " + String(stops.length).padStart(2, "0") +
+      (shown ? shown.number : nearest ? nearest.number : "--") +
+      " / " + String(stops.length).padStart(2, "0") +
       "   ·   " + String(Math.round(along * 100)).padStart(3, "0") + "%";
-    cue.classList.toggle("gone", along > 0.02);
+    cue.classList.toggle("gone", along > 0.02 || opened > 0.02);
+    hint.classList.toggle("gone", opened < 0.6);
   }
 
   function frame(now) {
@@ -956,12 +1129,24 @@
     last = now;
     if (!REDUCE_MOTION) {
       clock += on / 60;
-      // The travel creeps on by itself, so the page is never quite
-      // still even when nothing is being done to it.
-      drifted += (DRIFT * on) / 60;
+      // The page is never quite still even when nothing is being done
+      // to it — but the creep is a breath rather than a drift: it
+      // leaves and comes back, so it can never carry the road out from
+      // under the scrollbar. Written from the clock rather than added
+      // up, so there is nothing for it to accumulate in.
+      drifted = (1 - Math.cos((clock * Math.PI * 2) / CREEP_EVERY)) / 2 * CREEP;
     }
     travel += (wantTravel - travel) * Math.min(1, EASE * on);
     spineHot += (spineWant - spineHot) * Math.min(1, 0.16 * on);
+
+    const wantOpen = opening ? 1 : 0;
+    if (REDUCE_MOTION) opened = wantOpen;
+    else opened += (wantOpen - opened) * Math.min(1, OPEN_EASE * on);
+    // Kept until it has finished going back into the frame, so closing
+    // one is the same movement run the other way rather than the card
+    // and the figure simply disappearing.
+    if (!opening && opened < 0.004) { opened = 0; shown = null; }
+
     draw(REDUCE_MOTION ? 0 : on);
   }
 
@@ -1023,7 +1208,66 @@
     travelTo(want.at.z - SHOW_BEST - drifted);
   });
 
-  window.addEventListener("scroll", fromScroll, { passive: true });
+  // ============================================================
+  // OPENING A STATION
+  //
+  // The first click lays it out; the second one — on the figure or on
+  // the card, which is part of the same link — goes to the theory.
+  // That holds for the keyboard too: the mark is a link, so Enter is a
+  // click, and pressing it twice is the same two steps.
+  // ============================================================
+  let heldScroll = 0;
+
+  function openStation(stop) {
+    if (opening === stop) return;
+    // Going straight from one to another: the new one comes forward
+    // from where it stands in the frame, rather than arriving already
+    // laid out because the one before it had got that far.
+    if (shown && shown !== stop) opened = 0;
+    opening = stop;
+    shown = stop;
+    heldScroll = window.scrollY;
+    stops.forEach((one) => one.mark.classList.toggle("open", one === stop));
+    marks.classList.add("holding");
+  }
+
+  function closeStation() {
+    if (!opening) return;
+    opening = null;
+    stops.forEach((one) => one.mark.classList.remove("open"));
+    marks.classList.remove("holding");
+  }
+
+  stops.forEach((stop) => {
+    stop.mark.addEventListener("click", (e) => {
+      // Already open: this click is the one that opens the theory, so
+      // the link is left to do what a link does.
+      if (opening === stop) return;
+      e.preventDefault();
+      openStation(stop);
+    });
+  });
+
+  // Anywhere else on the page puts it back: the drawing, the spine,
+  // another station. Travelling does too — going further in is what
+  // this page is, and it should never be the thing that is blocked.
+  document.addEventListener("pointerdown", (e) => {
+    if (!opening) return;
+    if (e.target.closest && e.target.closest(".structure-stop.open")) return;
+    closeStation();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && opening) {
+      const back = opening.mark;
+      closeStation();
+      back.focus();
+    }
+  });
+
+  window.addEventListener("scroll", () => {
+    if (opening && Math.abs(window.scrollY - heldScroll) > 12) closeStation();
+    fromScroll();
+  }, { passive: true });
   window.addEventListener("resize", () => { resize(); fromScroll(); });
 
   resize();

@@ -279,14 +279,23 @@ test("and it rises under the entry you point at", async ({ page }) => {
   await page.waitForTimeout(1100);
   const after = await skyline(page);
 
-  expect(Math.min(...after), `before ${before}, after ${after}`)
-    .toBeLessThan(Math.min(...before) - 10);
+  // WHERE it rises is the point, not how high the field gets overall:
+  // a mound is as tall as the day in its own entry's date, so pointing
+  // at an entry filed early in the month raises a mound that is still
+  // shorter than the one beside it. What has to be true is that the
+  // field goes up over that entry's own place along the page — so that
+  // is what is measured, rather than the top of the whole skyline.
+  const risen = before.map((top, n) => top - after[n]);
+  const most = Math.max(...risen);
+  expect(most, `before ${before}, after ${after}`).toBeGreaterThan(10);
+  const where = risen.indexOf(most);
 
   // And it settles back when the pointer goes elsewhere.
   await page.locator(".chapters-plate h2").hover();
   await page.waitForTimeout(1200);
-  expect(Math.min(...(await skyline(page))),
-    "the reading should come back down").toBeGreaterThan(Math.min(...after) + 6);
+  const back = await skyline(page);
+  expect(back[where], `the reading should come back down: ${back}`)
+    .toBeGreaterThan(after[where] + 6);
 });
 
 test("the whole view fits on one screen, with nothing to scroll to", async ({ page }) => {

@@ -174,6 +174,130 @@ test("travelling back fills the air again, as many times as you like",
   });
 });
 
+test("travelling back comes all the way back to the beginning", async ({ page }) => {
+  // A REGRESSION TEST. The travel used to creep forward on its own and
+  // add that up frame after frame, so where you were was the scroll
+  // plus however long the page had been open: leave it a minute and
+  // the start of the road was a minute behind you, and scrolling back
+  // to the top of the page no longer got you back to the beginning of
+  // it. The page is still never quite still — the creep is a breath in
+  // and out of a fixed place now — but every bit of the travel is
+  // something the scrollbar can undo.
+  await page.goto(PAGE);
+  await waitForStructure(page);
+  await page.waitForTimeout(700);
+
+  const reading = () => page.locator(".structure-readout").textContent();
+  const first = Object.keys(await drawnNow(page))[0];
+  const was = (await drawnNow(page))[first];
+  expect(await reading(), "at the top of the road").toMatch(/000%/);
+
+  // Left alone: the page moves in itself, but it does not travel.
+  await page.waitForTimeout(7000);
+  expect(await reading(), "standing still should stay at the start").toMatch(/000%/);
+  const idled = (await drawnNow(page))[first];
+  expect(
+    Math.hypot(idled.x - was.x, idled.y - was.y),
+    "and the station in front of you should still be where it was"
+  ).toBeLessThan(14);
+
+  // Down the road and back again: the beginning is still the beginning.
+  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 4));
+  await page.waitForTimeout(1300);
+  expect(await reading(), "further in").not.toMatch(/000%/);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(1600);
+
+  expect(await reading(), "back at the top of the page").toMatch(/000%/);
+  const back = (await drawnNow(page))[first];
+  expect(back, "the first station should be in front of you again").toBeTruthy();
+  expect(
+    Math.hypot(back.x - was.x, back.y - was.y),
+    `it should be back where it started: was ${JSON.stringify(was)}, now ${JSON.stringify(back)}`
+  ).toBeLessThan(30);
+});
+
+test("clicking a station lays it out and writes a card beside it", async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForStructure(page);
+  await page.waitForTimeout(700);
+
+  const station = page.locator(".structure-stop:not(.gone)").first();
+  const name = await station.locator(".structure-name").textContent();
+  const inFrame = await station.boundingBox();
+  // The drawing never stands quite still, so the pointer is put at a
+  // place on the screen rather than at an element: waiting for a
+  // station to stop moving would wait for ever.
+  const middle = (box) => [box.x + box.width / 2, box.y + box.height / 2];
+
+  // It is a CLICK, not a hover: travelling past nine of them should
+  // not keep taking the page apart.
+  await page.mouse.move(...middle(inFrame));
+  await page.waitForTimeout(700);
+  expect(await page.locator(".structure-stop.open").count(),
+    "pointing at one should do nothing").toBe(0);
+
+  await page.mouse.click(...middle(inFrame));
+  await page.waitForTimeout(900);
+
+  expect(page.url(), "the first click opens it, it does not follow it")
+    .toContain("theories.html");
+  await expect(page.locator(".structure-stop.open")).toHaveCount(1);
+
+  // The figure has come out of the frame and been set out on the
+  // window, and the card carries the theory.
+  const laid = await page.locator(".structure-stop.open").boundingBox();
+  expect(Math.hypot(laid.x - inFrame.x, laid.y - inFrame.y),
+    "the station should have moved out of the frame").toBeGreaterThan(40);
+  const card = page.locator(".structure-stop.open .structure-card");
+  await expect(card).toBeVisible();
+  expect(await card.locator(".structure-card-name").textContent()).toBe(name);
+  expect(await card.locator(".structure-card-kicker").textContent()).toMatch(/STATION \d\d \/ \d\d/);
+
+  // One name, one place: the copy under the figure is gone while the
+  // card is carrying it.
+  expect(
+    await page.evaluate(() =>
+      getComputedStyle(document.querySelector(".structure-stop.open .structure-say")).opacity)
+  ).toBe("0");
+
+  // And the next click is the one that opens the theory.
+  await page.mouse.click(...middle(laid));
+  await page.waitForTimeout(900);
+  expect(page.url(), "the second click follows it").toMatch(/works\//);
+  expect(errors).toEqual([]);
+});
+
+test("a set-out station goes back: on escape, and on travelling", async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForStructure(page);
+  await page.waitForTimeout(700);
+
+  const open = async () => {
+    const box = await page.locator(".structure-stop:not(.gone)").first().boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(800);
+    await expect(page.locator(".structure-stop.open")).toHaveCount(1);
+  };
+
+  await open();
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(700);
+  expect(await page.locator(".structure-stop.open").count(), "escape puts it back").toBe(0);
+  expect(await page.evaluate(() => document.activeElement.className),
+    "and leaves you on the station you were reading").toContain("structure-stop");
+
+  // Going further in is what this page is, so it is never the thing
+  // that is blocked: travelling puts the station back by itself.
+  await open();
+  await page.evaluate(() => window.scrollBy(0, 500));
+  await page.waitForTimeout(700);
+  expect(await page.locator(".structure-stop.open").count(),
+    "travelling puts it back").toBe(0);
+  expect(page.url(), "and does not follow the link").toContain("theories.html");
+});
+
 test("the spine is the wheel: it can be dragged, and pressed", async ({ page }) => {
   await page.goto(PAGE);
   await waitForStructure(page);

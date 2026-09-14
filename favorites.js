@@ -40,14 +40,30 @@
   // The field of marks. Geometric rather than organic: a lattice on a
   // fixed pitch, every mark the same, and the only two things that are
   // not regular about it are the cursor and the chapter you have open.
-  const PITCH = 28;            // how far apart the marks stand
-  const MARK = 3.4;            // and how big one is at rest
+  //
+  // Fine and close-set rather than large and far apart: it is a ruled
+  // ground for the writing to stand on, and the reading it carries is
+  // its top edge, which a coarse lattice can only step through. Every
+  // fifth mark across and down is the site's own hollow registration
+  // square instead of a tick, so the grid counts itself the way a
+  // drawing's does.
+  const PITCH = 18;            // how far apart the marks stand
+  const MARK = 1.7;            // and how big one is at rest
+  const EVERY = 5;             // one mark in this many, each way, is a registration square
+  const NODE_MARK = 2.6;       // which is drawn this much larger, and hollow
   const FIELD_DEEP = 0.44;     // how much of the page the field lies over at rest
-  const REACH = 190;           // how far from the cursor a mark still answers
-  const SHOVE = 16;            // how far it is pushed out of the lattice
-  const SWELL = 2.6;           // and how much larger it is drawn
+  const REACH = 170;           // how far from the cursor a mark still answers
+  const SHOVE = 13;            // how far it is pushed out of the lattice
+  const SWELL = 3.2;           // and how much larger it is drawn
   const EASE = 0.14;           // how quickly a mark goes where it is going
   const FADE_IN = 0.55;        // the field is faintest at the top and strongest low
+
+  // THE WRITING KEEPS ITS OWN ROOM. The field is a ground, and a ground
+  // printed through the words on top of it is neither: the marks are
+  // taken out of the room the two columns of writing actually occupy,
+  // measured off the page, and fade out rather than stopping at a line.
+  const CLEAR_PAD = 14;        // how far past the writing the room reaches
+  const CLEAR_SOFT = 34;       // and how far outside that the field comes back
 
   // The reading. The open chapter stands one mound in the field for
   // each of its entries, and the field is lifted into them — so the
@@ -197,6 +213,13 @@
   // whole view falls over before it has drawn anything.
   let hotItem = -1;
   let drawing = true;
+  // Same reason: opening a chapter changes the size of both columns of
+  // writing, and the room they keep has to be read again afterwards.
+  // It is asked for here and done by the next frame, rather than done
+  // on the spot, because the browser has not laid the new chapter out
+  // yet when this is set — and because at the moment the first chapter
+  // is opened the field does not have a size at all.
+  let remeasure = true;
 
   function show(next, andFocus) {
     open = (next + chapters.length) % chapters.length;
@@ -222,6 +245,7 @@
     // the other half of what moves on this page.
     hotItem = -1;
     drawing = true;
+    remeasure = true;
     if (andFocus) chapters[open].tab.focus();
   }
 
@@ -265,6 +289,12 @@
   let midFrom = 0, midTo = 0, midUp = 1;
   let marks = [];
   let mounds = [];
+  let taken = [];
+  // What the reading comes to in each column of the lattice, emptied
+  // and worked out afresh every frame: the mounds move, and the one
+  // being pointed at moves most.
+  let lifts = [];
+  let heats = [];
   let handX = -9999, handY = -9999, hasHand = false;
 
   function lattice() {
@@ -279,9 +309,58 @@
       for (let i = 0; i < across; i++) {
         const x = i * PITCH + (j % 2 ? PITCH / 2 : 0);
         const y = foot - j * PITCH;
-        marks.push({ x: x, y: y, ox: x, oy: y, size: MARK, show: 0, warm: 0 });
+        marks.push({
+          x: x, y: y, ox: x, oy: y, size: MARK, show: 0, warm: 0,
+          // Counted from the foot, so the registration squares stand in
+          // the same places however tall the window is.
+          node: i % EVERY === 0 && j % EVERY === 0,
+          // Which column of the lattice it stands in — two per step
+          // across, since every other row is offset by half a pitch.
+          // How high the reading stands depends only on that, so it is
+          // worked out once a column a frame rather than once a mark.
+          col: i * 2 + (j % 2),
+        });
       }
     }
+  }
+
+  /** The room the writing takes up, read off the page. Anything the
+      field would print through is measured rather than guessed at —
+      the plate grows and shrinks with the chapter that is open, and
+      the strip and its entries with the chapter's own length.
+
+      It is the WRITING that is measured, not the blocks around it: on
+      a narrow window the menu carries a deep skirt of padding under
+      the last entry, and taking the menu's own box would knock the
+      field out of the one piece of the page that is still clear. */
+  function clearing() {
+    const box = view.getBoundingClientRect();
+    taken = [plate, rail, chapters[open].panel].map((one) => {
+      const it = one.getBoundingClientRect();
+      return {
+        left: it.left - box.left - CLEAR_PAD,
+        top: it.top - box.top - CLEAR_PAD,
+        right: it.right - box.left + CLEAR_PAD,
+        foot: it.bottom - box.top + CLEAR_PAD,
+      };
+    });
+  }
+
+  /** How much of the field belongs at this place: 1 out in the clear,
+      0 where the writing is, and eased between the two so the field
+      thins out towards the words rather than stopping at a line. */
+  function roomAt(x, y) {
+    let room = 1;
+    for (let n = 0; n < taken.length; n++) {
+      const box = taken[n];
+      const dx = Math.max(box.left - x, 0, x - box.right);
+      const dy = Math.max(box.top - y, 0, y - box.foot);
+      const off = Math.sqrt(dx * dx + dy * dy);
+      if (off >= CLEAR_SOFT) continue;
+      const here = off / CLEAR_SOFT;
+      if (here < room) room = here;
+    }
+    return room;
   }
 
   /** Where the open chapter's mounds stand, and how high.
@@ -372,6 +451,7 @@
     field.style.height = height + "px";
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
     lattice();
+    clearing();
     setMounds();
     drawing = true;
   }
@@ -383,6 +463,9 @@
     const step = REDUCE_MOTION ? 1 : EASE;
     setMounds();
 
+    lifts.length = 0;
+    heats.length = 0;
+
     for (let n = 0; n < marks.length; n++) {
       const mark = marks[n];
       let wantX = mark.ox, wantY = mark.oy, wantSize = MARK;
@@ -392,7 +475,18 @@
       // so the field's top edge is the reading and everything under it
       // is simply field. Marks are not slid about by it, which leaves
       // being slid about to the cursor alone.
-      liftAt(mark.ox);
+      // The reading is the same the whole way down a column of the
+      // lattice, so it is worked out once a column rather than once a
+      // mark: there are a couple of hundred columns on the page and
+      // several thousand marks.
+      if (lifts[mark.col] === undefined) {
+        liftAt(mark.ox);
+        lifts[mark.col] = liftHere;
+        heats[mark.col] = heatHere;
+      } else {
+        liftHere = lifts[mark.col];
+        heatHere = heats[mark.col];
+      }
       const under = (mark.oy - (rest - liftHere)) / edge;
       const want = Math.max(0, Math.min(1, under));
       // How much of a mound this mark stands in. A mound is drawn
@@ -436,9 +530,16 @@
 
   function draw() {
     paint.clearRect(0, 0, width, height);
+    paint.lineWidth = 1;
     for (let n = 0; n < marks.length; n++) {
       const mark = marks[n];
       if (mark.show < 0.01) continue;
+      // Where the writing stands, the field is not drawn at all. Read
+      // off where the mark actually IS rather than where the lattice
+      // put it, so one shoved towards the words by the cursor is taken
+      // out too.
+      const room = roomAt(mark.x, mark.y);
+      if (room <= 0.01) continue;
       const lit = Math.min(1, (mark.size - MARK) / (MARK * (SWELL - 1)));
       // Brass for what the hand is doing, and for the mound belonging
       // to the entry it is pointing at; ink for the reading itself,
@@ -449,20 +550,37 @@
       // that fades out is a skyline you have to look for.
       const crest = mark.show * (1 - mark.show) * 4;
       const alpha =
-        (0.1 + mark.fade * 0.26 + (mark.rise || 0) * 0.16 +
-         lit * 0.5 + mark.warm * 0.3) * mark.show +
-        crest * 0.14;
-      paint.fillStyle = "rgba(" + ink + "," + alpha.toFixed(3) + ")";
+        ((0.1 + mark.fade * 0.26 + (mark.rise || 0) * 0.16 +
+          lit * 0.5 + mark.warm * 0.3) * mark.show +
+         crest * 0.14) * room;
+      const tone = "rgba(" + ink + "," + alpha.toFixed(3) + ")";
       // Squares, not dots: the same shape every other mark on the site
-      // is made of.
+      // is made of — and every fifth one each way is the hollow
+      // registration square the site marks a point with, so the grid
+      // counts itself rather than being an even wash of ticks.
       const size = mark.size * (1 + mark.warm * 0.35);
-      const half = size / 2;
-      paint.fillRect(mark.x - half, mark.y - half, size, size);
+      if (mark.node) {
+        const wide = size * NODE_MARK;
+        paint.strokeStyle = tone;
+        paint.strokeRect(
+          Math.round(mark.x - wide / 2) + 0.5, Math.round(mark.y - wide / 2) + 0.5,
+          Math.round(wide), Math.round(wide)
+        );
+      } else {
+        paint.fillStyle = tone;
+        const half = size / 2;
+        paint.fillRect(mark.x - half, mark.y - half, size, size);
+      }
     }
   }
 
   function tick() {
     requestAnimationFrame(tick);
+    if (remeasure && width) {
+      remeasure = false;
+      clearing();
+      drawing = true;
+    }
     const moving = settle();
     if (moving || drawing) {
       draw();
