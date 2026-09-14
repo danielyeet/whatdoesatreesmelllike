@@ -1206,6 +1206,158 @@ body:not(.sheet-scripted) .gallery { display: none; }
 .gallery.landed .gallery-plate:hover .gallery-hover-name { opacity: 1; }
 
 /* ==================================================================
+   THE SURVEY — categories/theories.html
+   A piece of country in three dimensions with one hill per theory,
+   drawn on a canvas by topo-map.js. Everything here is written under
+   `body.surveyed`, which that script adds: without it the page is the
+   plain list of rows every other category uses, and stays that way.
+   ================================================================== */
+body.surveyed .page-content { padding: 0; margin: 0; max-width: none; }
+/* The list is still in the page for anything reading rather than
+   looking — it is the survey's own index — but it is not drawn. */
+body.surveyed .work-list,
+body.surveyed .page-content > h1,
+body.surveyed .page-content > .category-lede {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  /* The margins go with them. Taken out of sight but left with the
+     margins they were laid out with, the lede alone put twenty-five
+     pixels below the fold and gave the page something to scroll. */
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+body.surveyed { overflow: hidden; }
+
+.survey {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;    /* a drag turns the country rather than scrolling the page */
+  outline: none;
+}
+.survey.turning { cursor: grabbing; }
+.survey:focus-visible { outline: 1px solid var(--brass); outline-offset: -3px; }
+.survey-ground { display: block; }
+
+/* The names ride on the drawing rather than being drawn into it: real
+   links, so they can be tabbed to, read out and followed like anything
+   else on the site. topo-map.js moves each one onto its own summit
+   every frame, so nothing here may set a transform of its own. */
+.survey-marks { position: absolute; inset: 0; pointer-events: none; }
+.survey-peak {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: auto;
+  display: block;
+  padding: 0 0 0 13px;
+  margin: -7px 0 0 -5px;
+  text-decoration: none;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+/* The hollow square the rest of the site marks a point with, not a
+   dot: the same registration mark the node map and the scroll cue use. */
+.survey-reg {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ink);
+  background: var(--bg);
+}
+.survey-peak:hover .survey-reg,
+.survey-peak:focus-visible .survey-reg { border-color: var(--brass); background: var(--brass); }
+.survey-name {
+  display: block;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.1;
+}
+.survey-height {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.survey-peak:hover .survey-name,
+.survey-peak:focus-visible .survey-name { color: var(--brass); }
+/* A name lifted up the sheet to clear another one keeps a thread back
+   down to the summit it belongs to, the way a map leads a label away
+   from a crowded spot. */
+.survey-peak::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 9px;
+  width: 1px;
+  height: var(--stalk, 0px);
+  background: var(--line);
+}
+/* Far up the country the names are stepped back to the height alone,
+   so the far side of the island doesn't read as a wall of writing. */
+.survey-peak.far .survey-name { font-size: 11px; color: var(--muted); }
+.survey-peak.far .survey-height { display: none; }
+
+/* The title block, in the corner a map keeps it, ruled off from the
+   drawing the way a cartouche is. */
+.survey-block {
+  position: absolute;
+  left: 26px;
+  bottom: 24px;
+  max-width: 300px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  background: rgba(250, 250, 249, 0.92);
+  pointer-events: none;
+}
+.survey-block h2 { font-size: 19px; margin: 0 0 6px; }
+.survey-block p { font-size: 13px; color: var(--muted); margin: 0 0 12px; max-width: 34ch; }
+.survey-block dl {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.survey-block dl > div { display: flex; gap: 10px; padding: 2px 0; }
+.survey-block dt { color: var(--muted); min-width: 62px; }
+.survey-block dd { margin: 0; }
+
+/* What the pointer is over, written beside it. Empty most of the
+   time, and nothing is drawn for it then. */
+.survey-reading {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.survey-reading:empty { display: none; }
+
+@media (max-width: 860px) {
+  .survey-block { left: 14px; right: 14px; bottom: 14px; max-width: none; }
+  .survey-block p { display: none; }
+}
+
+/* ==================================================================
    GALLERY WORK PAGE
    ================================================================== */
 .work-header { max-width: 640px; margin: 0 auto; padding: 140px 64px 80px; }

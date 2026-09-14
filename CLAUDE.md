@@ -93,7 +93,12 @@ thing
 that turns it (the pointer and a drag both leaving it alone, and no drift of its own),
 picking one fading rather than cutting, the whole view fitting on one screen, pointing at
 the big square bringing up the name of what is in it, and nothing on it answering the
-pointer until the flick has landed.
+pointer until the flick has landed; and the survey — the country being grown from the
+page's own rows with one named hill per theory, each hill still a link to its piece and
+reachable from the keyboard, the list left in the page for a reader and out of sight for
+a looker, turning it by hand and by the arrow keys, scrolling bringing it closer, the
+whole of it fitting one screen, it standing still under `prefers-reduced-motion` while
+still turning when asked, and the plain list coming back when the script is blocked.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -318,6 +323,60 @@ Other things that will bite you:
   `projected.z` looked plausible but was useless here — every node landed within 0.01 of
   the far end of its range for a scene this small this far from the camera's near/far
   planes — so don't reach for `projected.z` as a stand-in for depth anywhere in this file.
+
+### The survey (`topo-map.js`) — categories/theories.html
+
+That category is not a list of rows. It is a piece of country: an island, contoured, seen
+from the air at an angle, with one hill for every theory and its name written on the
+summit. Turning it, tilting it and coming down closer to it is how you read it.
+
+Nothing about the ground is drawn by hand — it is **grown**, and that is the property to
+keep:
+
+1. a seeded noise field gives rolling country (`ground`)
+2. every `.work-row` in the page adds its own hill to it, placed on a golden-angle spiral
+3. the whole thing is pulled down to sea level at the rim, so what is left is an island
+4. the ground is sampled onto a grid once (`SAMPLES`)
+5. contours are traced through that grid, once, **in map coordinates**
+6. every frame, those contours are put through a camera
+
+Only step 6 happens more than once. The map is worked out at load and thereafter only
+re-photographed, which is what makes it cheap enough to turn at sixty frames a second —
+about eight thousand pieces of line, projected and stroked each frame.
+
+Things worth knowing before changing it:
+
+- **Add a theory and the country changes shape around it.** A new hill rises, the
+  contours re-form round it, the coastline moves and the interval in the title block is
+  recalculated. Nothing is hand-placed; there is no list of positions to keep in step.
+- **Contours are traced by marching squares, and left as loose pieces of line** rather
+  than joined into loops. Drawn one after another they read as the continuous contour
+  they are, and never having to join them is what makes twenty-odd heights affordable.
+  Each square's two saddle cases (5 and 10, where the corners alternate above and below)
+  give back two separate pieces, not one.
+- **Every z handed to the camera is scaled by `RELIEF`**, the water included (`WATER`).
+  Hand the camera a bare height and that thing floats above its own sea.
+- **`project()` hands back one shared object.** Two points in a row means copying the
+  first one's numbers out before asking for the second — the scale bar's far end was read
+  back four projections later once, and pointed somewhere else entirely.
+- **The ground is dished a little where each hill's skirts run out.** Without that dish
+  the hills merge into one ridge and the country loses the shape that says how many
+  theories are standing in it. The falloff at the rim is steep and late for the same
+  reason: a gentle one pulls the whole interior into a single dome and the contours come
+  out as onion rings.
+- **The names are real links standing over the drawing**, not lettering inside it, so
+  they can be tabbed to, read out and followed like anything else on the site. `placeNames`
+  moves each one onto its own summit every frame, so nothing in the stylesheet may give
+  `.survey-peak` a transform of its own.
+- **A name that would be written on top of a nearer one is lifted up the sheet**, with a
+  thread back down to its summit, rather than hidden. A name that disappeared would take
+  its hill with it: there would be nothing on the page saying that theory is there.
+- **Anything visually hidden must have its margins taken off too.** The lede is taken out
+  of sight with `clip-path`, and left with its own `margin-bottom` it put twenty-five
+  pixels below the fold and gave a one-screen page something to scroll.
+- The camera is eased towards where it has been asked to go rather than moved there, or
+  the map reads as a slideshow of views instead of one place being walked round. Under
+  `prefers-reduced-motion` the idle drift is off, but every other way of moving it works.
 
 ### The contact sheet (`contact-sheet.js`), and favorites (`favorites.js`)
 
@@ -579,12 +638,13 @@ background luminance, but the class is the reliable path.
 
 - **New piece of work**: duplicate a template in `works/` — `example-gallery-work.html`
   for image-and-paragraph sequences, `example-article-work.html` for reference pieces —
-  then add it to the relevant `categories/` page. There are two kinds of category page,
-  and they take a new piece differently: the **row list** (`theories`, `favorites`, the
-  two `other` pages) takes another `<a class="work-row">` block, and the **contact
-  sheet** (`scent-descriptions`) takes another `<a class="sheet-frame">` block for the
-  map, or a `<button class="gallery-frame">` block for its Favorites view. Each page says
-  which in the comment at the top of it.
+  then add it to the relevant `categories/` page. There are three kinds of category page,
+  and they take a new piece differently: the **row list** (`favorites`, the two `other`
+  pages) takes another `<a class="work-row">` block; the **contact sheet**
+  (`scent-descriptions`) takes another `<a class="sheet-frame">` block for the map, or a
+  `<button class="gallery-frame">` block for its Favorites view; and the **survey**
+  (`theories`) takes another `<a class="work-row">` block, which raises a hill of its own
+  in the country. Each page says which in the comment at the top of it.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map.
@@ -631,6 +691,12 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **corrugation** | The sharp zigzag the cursor drags across a nearby branch (`CORR_*`): evenly spaced teeth of one size travelling steadily outward along it, so it reads as a regular wave excited in a wire. Only its height answers the cursor. It used to re-roll its height and spacing several times a second, which read as jitter — that was replaced, deliberately, by the pattern described here. |
 | **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
 | **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. A beat after it opens, the node's **name** is lifted out of the map and set above it. |
+| **the survey** / **the country** | The way `categories/theories.html` is laid out: an island in three dimensions, contoured, one hill per theory. `topo-map.js`. |
+| **hill** | One theory on the survey — a rise in the ground grown from its row in the page, with its name and its height written on the summit. |
+| **contour** / **index contour** | A line of constant height on the survey. Every fifth one is an index contour: drawn heavier and numbered along its length. |
+| **spot height** | A loose reading printed on the open ground between contours, away from the lines that were drawn from them. |
+| **footprint** | The shore contour drawn again flat on the water, so the country has a shape on the sheet to stand on. |
+| **title block** | The ruled-off corner of the survey carrying what the sheet is, how many hills are on it, the contour interval and how to read it — a map's cartouche. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | The frame the sheet settles on and keeps at the top — the first one in the page. |
