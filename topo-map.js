@@ -1,30 +1,34 @@
 // ============================================================
 // THE SURVEY (categories/theories.html only)
 //
-// The theories are not a list on this page. They are a piece of
-// country: an island, contoured, seen from the air at an angle,
-// with one hill for every theory and its name written on the
-// summit. Turning it, tilting it and coming down closer to it is
-// how you read it.
+// The theories are not a list on this page, and they are not an
+// object standing in the middle of it either. The page *is*
+// country: you are in it, a little above it, and it runs out to a
+// haze in every direction. Turning, tilting and coming down
+// closer is how you read it.
 //
-// Nothing about the ground is drawn by hand. It is grown:
+// Nothing about the ground is drawn by hand. It is grown, and the
+// order of it matters:
 //
-//   1. a seeded noise field gives rolling country                (ground)
-//   2. every theory in the page adds its own hill to it          (hills)
-//   3. the whole thing is pulled down to sea level at the edge, so
-//      what is left is an island rather than a square of terrain
-//   4. the ground is sampled onto a grid once                    (SAMPLES)
-//   5. contours are traced through that grid, once, in map
-//      coordinates — they do not depend on where you are standing
-//   6. every frame, those contours are put through a camera
+//   1. the sampling point is pushed about by a slow noise field
+//      before anything else — the DOMAIN WARP. This one step is
+//      most of what makes the lines read as country rather than as
+//      blobs: it bends whole regions sideways, so ridges run and
+//      valleys curve instead of every rise being a round lump.
+//   2. octaves of noise are summed at wherever the point ended up,
+//      each one damped where the ground is already steep — a
+//      standing-in for EROSION, which is what puts clean crests on
+//      ridges and leaves the flats broad and open.
+//   3. every theory in the page lifts a region into high country.
+//      It does not lay a cone on top: it raises the ground *and*
+//      scales the detail already on it, so a theory reads as a
+//      massif with its own texture rather than as a bump.
+//   4. that is sampled onto a grid once, and contoured once, in
+//      map coordinates
+//   5. every frame, those contours are put through a camera
 //
-// Only the last of those happens more than once, which is what
-// makes this cheap enough to turn smoothly: the map is worked out
-// at load and only ever re-photographed.
-//
-// Add a theory to the page and the country changes shape around
-// it — a new hill rises, the contours re-form round it and the
-// coastline moves. There is nothing to hand-place.
+// Only the last of those happens more than once. The country is
+// worked out at load and thereafter only re-photographed.
 //
 // WITHOUT THIS FILE the page is the plain list of rows every other
 // category uses. The script puts `surveyed` on <body> and takes
@@ -43,51 +47,55 @@
 
   // ============================================================
   // TUNING
-  // Everything that can be dialled lives here. The two that change
-  // the character of the country most are RELIEF (how tall the land
-  // is against how wide) and LEVELS (how finely it is contoured).
   // ============================================================
   const SEED = 11;             // the same country on every visit
 
-  const GRID = 150;            // how finely the ground is sampled, per side
-  const LEVELS = 18;           // contour lines between the shore and the summit
-  const INDEX_EVERY = 5;       // every fifth one is drawn heavier and numbered
-  const SHORE = 0.17;          // the height the water comes up to, 0–1
-  const SUMMIT_M = 1480;       // what the highest ground is called, in metres
+  // How much country there is and how finely it is read. REACH is a
+  // radius in map units; the haze is set to run out well inside it, so
+  // there is never an edge of the world on the screen.
+  const REACH = 3.7;
+  const GRID = 430;            // samples across the whole of that
+  const LEVELS = 28;           // contour lines from the lowest ground to the highest
+  const INDEX_EVERY = 5;       // every fifth is heavier, numbered, and drawn far out
+  const SUMMIT_M = 2240;       // what the highest ground is called, in metres
 
-  const RELIEF = 0.62;         // height against width — how steep the country reads
-  const HILL_HEIGHT = 0.55;    // how much of that a theory's own hill accounts for
-  const HILL_SPREAD = 0.39;    // and how far its skirts reach
+  const WARP = 1.15;           // how far the sampling point is pushed about
+  const WARP_SCALE = 0.42;     // and how broadly — low is whole regions, high is fuzz
+  const OCTAVES = 7;
+  const ROUGH = 0.52;          // how much of each octave the next one keeps
+  const EROSION = 0.85;        // how hard steep ground damps the detail on top of it
+  const RELIEF = 0.34;         // height against width — how steep the country reads
 
-  // Where you are standing. TILT is the angle above the ground: 90°
-  // would be straight down onto a plan, 0° would be sea level.
-  const TILT = 33, TILT_MIN = 12, TILT_MAX = 76;
-  const AWAY = 3.1, AWAY_MIN = 1.75, AWAY_MAX = 5.6;
-  const TURN_BY = 0.0062;      // radians per pixel of hand movement
-  const TILT_BY = 0.0042;
-  const ZOOM_BY = 0.0016;
-  const DRIFT = 0.028;         // radians a second when nothing is touching it
-  const EASE = 0.11;           // how quickly the camera catches up with where it is going
+  const MASSIF_LIFT = 0.62;    // how far a theory raises the ground under it
+  const MASSIF_SPREAD = 0.52;  // and how wide that country is
+  const MASSIF_OUT = 2.15;     // how far out from the middle they are scattered
 
-  const FRAME_MS = 16;         // it is redrawn at most this often
-  const SPOT_HEIGHTS = 26;     // scattered heights printed on the open ground
+  // Where you are standing. TILT is the angle above the ground.
+  const TILT = 21, TILT_MIN = 7, TILT_MAX = 62;
+  const AWAY = 2.2, AWAY_MIN = 1.1, AWAY_MAX = 4.2;
+  const TURN_BY = 0.0042;      // radians per pixel of hand movement
+  const TILT_BY = 0.0026;
+  const ZOOM_BY = 0.0013;
+  const DRIFT = 0.021;         // radians a second when nothing is touching it
+  const EASE = 0.1;            // how quickly the camera catches up
 
-  // The shore as a height in the drawing rather than in the country:
-  // every z handed to the camera is scaled by RELIEF, and the water
-  // has to be scaled with it or the island floats above its own sea.
-  const WATER = SHORE * RELIEF;
+  const NEAR = 0.42;           // nothing nearer than this is drawn at all
+  const HAZE_FROM = 1.9;       // where the country starts going into the haze
+  const HAZE_TO = 4.7;         // and where it has gone
+  const FINE_TO = 2.2;         // past here only the heavier contours are drawn
 
-  const INK = "23,23,15";
-  const MUTED = "109,108,98";
-  const BRASS = "156,111,53";
+  const FRAME_MS = 16;
+  const SPOT_HEIGHTS = 70;
+
+  // The country is dark and the lines on it are light: a survey read
+  // off a screen rather than off paper.
+  const GROUND = "11,11,10";
+  const LINE = "228,226,215";
+  const FAINT = "138,136,124";
+  const MARK = "196,146,72";
 
   // ============================================================
   // A SEEDED COUNTRY
-  //
-  // Both the noise and the scatter come from the seed, so the
-  // island is the same island every time the page is opened — a map
-  // that redrew itself on each visit would read as a fault rather
-  // than as a place.
   // ============================================================
   let seed = SEED;
   const random = () => {
@@ -102,78 +110,90 @@
     return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
   }
 
-  const soften = (t) => t * t * (3 - 2 * t);
-
-  /** Value noise: the lattice, softened between its corners. */
-  function noise(x, y) {
+  /**
+   * Value noise, and the slope of it at the same point.
+   *
+   * The slope is what the erosion is built on: an octave is added in
+   * proportion to how flat the ground under it already is, so detail
+   * collects in the bottoms and the crests stay clean. Working it out
+   * here is nearly free, because everything it needs has already been
+   * fetched to work out the height.
+   */
+  const slope = { v: 0, dx: 0, dy: 0 };
+  function noised(x, y) {
     const ix = Math.floor(x), iy = Math.floor(y);
-    const fx = soften(x - ix), fy = soften(y - iy);
+    const tx = x - ix, ty = y - iy;
+    const ux = tx * tx * (3 - 2 * tx), uy = ty * ty * (3 - 2 * ty);
+    const gx = 6 * tx * (1 - tx), gy = 6 * ty * (1 - ty);
     const a = corner(ix, iy), b = corner(ix + 1, iy);
     const c = corner(ix, iy + 1), d = corner(ix + 1, iy + 1);
-    return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
+    const k1 = b - a, k2 = c - a, k3 = a - b - c + d;
+    slope.v = a + k1 * ux + k2 * uy + k3 * ux * uy;
+    slope.dx = (k1 + k3 * uy) * gx;
+    slope.dy = (k2 + k3 * ux) * gy;
+    return slope;
   }
 
-  // Where each theory's hill stands. A golden-angle spiral, so they
-  // spread evenly however many there are rather than bunching into a
-  // ring, nudged off it so the arrangement doesn't read as a formula.
+  const flat = (x, y) => noised(x, y).v;
+
+  // Where each theory's high country stands. A golden-angle spiral so
+  // they spread evenly however many there are, nudged off it so the
+  // arrangement doesn't read as a formula.
   const hills = rows.map((row, i) => {
     const title = row.querySelector(".work-row-title");
     const meta = row.querySelector(".work-row-meta");
-    const turn = i * 2.399963;                       // the golden angle, in radians
-    const out = 0.22 + 0.52 * Math.sqrt((i + 0.6) / rows.length);
+    const around = i * 2.399963;                  // the golden angle, in radians
+    const out = MASSIF_OUT * (0.28 + 0.72 * Math.sqrt((i + 0.5) / rows.length));
     return {
       row: row,
       name: title ? title.textContent.trim() : "Untitled",
       meta: meta ? meta.textContent.trim() : "",
       href: row.getAttribute("href"),
-      x: Math.cos(turn) * out + (random() - 0.5) * 0.1,
-      y: Math.sin(turn) * out + (random() - 0.5) * 0.1,
-      // Not all the same size: a country of identical hills reads as
-      // a pattern, and the point of a survey is that the ground is
-      // uneven.
-      height: HILL_HEIGHT * (0.62 + random() * 0.62),
-      spread: HILL_SPREAD * (0.72 + random() * 0.5),
+      x: Math.cos(around) * out + (random() - 0.5) * 0.5,
+      y: Math.sin(around) * out + (random() - 0.5) * 0.5,
+      lift: MASSIF_LIFT * (0.6 + random() * 0.7),
+      spread: MASSIF_SPREAD * (0.7 + random() * 0.7),
     };
   });
 
-  /** The height of the ground at a point, before it is normalised. */
+  /**
+   * The height of the ground at a point, before it is normalised.
+   *
+   * The three steps go in this order and not another. Lifting the
+   * theories before the warp smears them; warping each octave on its
+   * own gives fuzz instead of country; laying the massifs on top as
+   * smooth cones gives something that looks like noise with hills in
+   * it rather than like ground.
+   */
   function ground(x, y) {
-    let height = 0, amp = 1, freq = 1.55, total = 0;
-    for (let octave = 0; octave < 5; octave++) {
-      height += noise(x * freq + octave * 31.7, y * freq - octave * 17.3) * amp;
+    // 1. the warp.
+    const wx = flat(x * WARP_SCALE + 11.3, y * WARP_SCALE - 4.7) - 0.5;
+    const wy = flat(x * WARP_SCALE - 7.1, y * WARP_SCALE + 19.4) - 0.5;
+    const px = x + wx * WARP, py = y + wy * WARP;
+
+    // 2. the country, each octave damped by how steep the ones under
+    //    it have already made the ground.
+    let height = 0, amp = 1, freq = 0.62, total = 0, dx = 0, dy = 0;
+    for (let octave = 0; octave < OCTAVES; octave++) {
+      const n = noised(px * freq + octave * 37.1, py * freq - octave * 23.9);
+      dx += n.dx * freq;
+      dy += n.dy * freq;
+      height += (amp * n.v) / (1 + EROSION * (dx * dx + dy * dy));
       total += amp;
-      // Each octave is a little over half the one before rather than
-      // exactly half, so the fine detail is not quite swamped by the
-      // broad shape: it is the fine detail that makes a contour wander
-      // rather than run as a smooth oval.
-      amp *= 0.57;
-      freq *= 2.03;
+      amp *= ROUGH;
+      freq *= 2.04;
     }
     height /= total;
 
-    // Pulled down to the water at the edge, so what is left is an
-    // island with a shore rather than a square cut out of a country.
-    // Steeply, and only near the rim: a gentler falloff pulls the
-    // whole interior into one dome, and the contours come out as a set
-    // of onion rings with the country's own shape lost inside them.
-    const out = Math.hypot(x, y);
-    height *= Math.max(0, 1 - Math.pow(Math.min(1, out / 1.1), 4.2));
-
-    // And every theory is a hill standing on it, with the ground
-    // dished a little where its skirts run out. The dish is what puts
-    // saddles and hollows between one hill and the next: without it
-    // they merge into a single ridge and the country loses the shape
-    // that says how many theories are standing in it.
+    // 3. high country where the theories are.
+    let lift = 0;
     for (let i = 0; i < hills.length; i++) {
       const hill = hills[i];
-      const dx = x - hill.x, dy = y - hill.y;
+      const ax = x - hill.x, ay = y - hill.y;
       const reach = hill.spread;
-      const off = Math.sqrt(dx * dx + dy * dy);
-      height += hill.height * Math.exp(-(off * off) / (reach * reach));
-      const ring = (off - reach * 1.55) / (reach * 0.62);
-      height -= hill.height * 0.24 * Math.exp(-ring * ring);
+      lift += hill.lift * Math.exp(-(ax * ax + ay * ay) / (reach * reach));
     }
-    return Math.max(0, height);
+    return height * (0.72 + lift * 1.5) + lift * 0.5;
   }
 
   // ============================================================
@@ -181,54 +201,67 @@
   // ============================================================
   const SAMPLES = new Float32Array(GRID * GRID);
   const at = (i, j) => SAMPLES[j * GRID + i];
-  const place = (i) => (i / (GRID - 1)) * 2 - 1;   // grid column to map coordinate
+  const place = (i) => (i / (GRID - 1)) * 2 * REACH - REACH;
 
-  let tallest = 0;
+  let lowest = Infinity, tallest = -Infinity;
   for (let j = 0; j < GRID; j++) {
+    const y = place(j);
     for (let i = 0; i < GRID; i++) {
-      const h = ground(place(i), place(j));
+      const h = ground(place(i), y);
       SAMPLES[j * GRID + i] = h;
       if (h > tallest) tallest = h;
+      if (h < lowest) lowest = h;
     }
   }
-  for (let n = 0; n < SAMPLES.length; n++) SAMPLES[n] /= tallest || 1;
+  const span = tallest - lowest || 1;
+  for (let n = 0; n < SAMPLES.length; n++) SAMPLES[n] = (SAMPLES[n] - lowest) / span;
+
+  const asHeight = (raw) => Math.max(0, Math.min(1, (raw - lowest) / span));
+  const metresOf = (h) => Math.round((h * SUMMIT_M) / 10) * 10;
   for (const hill of hills) {
-    hill.top = Math.min(1, ground(hill.x, hill.y) / (tallest || 1));
-    hill.metres = Math.round((hill.top * SUMMIT_M) / 5) * 5;
+    hill.top = asHeight(ground(hill.x, hill.y));
+    hill.metres = metresOf(hill.top);
   }
 
   // ============================================================
   // CONTOURS
   //
-  // Marching squares: every square of the grid is looked at on its
-  // own, and where the line for this height crosses the square is
-  // worked out from which of its four corners are above it. Each
-  // square gives back at most two short pieces of line; drawn one
-  // after another they read as the continuous contour they are, and
-  // never having to be joined up into loops is what keeps this fast
-  // enough to do for twenty-odd heights at once.
+  // Marching squares, turned inside out: the squares are walked once
+  // and each is asked which heights cross it, rather than every height
+  // being walked across the whole grid. A square of gentle ground is
+  // crossed by one contour or none, so this does a couple of tests
+  // where the other way round does twenty-eight — the difference
+  // between a page that opens and one that hangs while it thinks.
   //
-  // Held in map coordinates, so turning the country costs nothing
-  // but a projection.
+  // The pieces of line are left loose rather than joined into loops.
+  // Drawn one after another they read as the continuous contour they
+  // are, and not having to join them is most of why this is cheap.
   // ============================================================
-  function trace(level) {
-    const out = [];
-    const step = 2 / (GRID - 1);
-    for (let j = 0; j < GRID - 1; j++) {
-      const y0 = place(j), y1 = y0 + step;
-      for (let i = 0; i < GRID - 1; i++) {
-        const x0 = place(i), x1 = x0 + step;
-        const v0 = at(i, j), v1 = at(i + 1, j);
-        const v2 = at(i + 1, j + 1), v3 = at(i, j + 1);
+  const step = (2 * REACH) / (GRID - 1);
+  const gap = 1 / LEVELS;
+  const heaped = [];
+  for (let n = 0; n <= LEVELS; n++) heaped.push([]);
+
+  for (let j = 0; j < GRID - 1; j++) {
+    const y0 = place(j), y1 = y0 + step;
+    for (let i = 0; i < GRID - 1; i++) {
+      const v0 = at(i, j), v1 = at(i + 1, j);
+      const v2 = at(i + 1, j + 1), v3 = at(i, j + 1);
+      const low = Math.min(v0, v1, v2, v3);
+      const high = Math.max(v0, v1, v2, v3);
+      let from = Math.ceil(low / gap), to = Math.floor(high / gap);
+      if (from > to) continue;
+      if (from < 0) from = 0;
+      if (to > LEVELS) to = LEVELS;
+      const x0 = place(i), x1 = x0 + step;
+
+      for (let n = from; n <= to; n++) {
+        const level = n * gap;
         const code =
           (v0 > level ? 1 : 0) | (v1 > level ? 2 : 0) |
           (v2 > level ? 4 : 0) | (v3 > level ? 8 : 0);
         if (code === 0 || code === 15) continue;
-
-        // Where the line cuts each of the four sides. Worked out in
-        // place rather than through four little functions: this runs
-        // twenty thousand times per contour, and twenty-odd contours
-        // are traced at load.
+        const out = heaped[n];
         const topX = x0 + ((level - v0) / (v1 - v0)) * step;
         const rightY = y0 + ((level - v1) / (v2 - v1)) * step;
         const bottomX = x0 + ((level - v3) / (v2 - v3)) * step;
@@ -254,41 +287,41 @@
         }
       }
     }
-    return { level: level, line: Float32Array.from(out) };
   }
 
   const contours = [];
   for (let n = 0; n <= LEVELS; n++) {
-    const level = SHORE + ((1 - SHORE) * n) / LEVELS;
-    const drawn = trace(level);
-    drawn.index = n % INDEX_EVERY === 0;
-    drawn.shore = n === 0;
-    drawn.metres = Math.round((level * SUMMIT_M) / 5) * 5;
-    if (drawn.line.length) contours.push(drawn);
+    if (!heaped[n] || !heaped[n].length) continue;
+    contours.push({
+      level: n * gap,
+      line: Float32Array.from(heaped[n]),
+      index: n % INDEX_EVERY === 0,
+      metres: metresOf(n * gap),
+      marks: [],
+    });
+    heaped[n] = null;
   }
 
-  // A handful of places along each heavier contour to write its
-  // height, chosen once and spread evenly through the line so the
-  // numbers end up scattered over the country rather than clustered.
+  // A few places along each heavier contour to write its height,
+  // chosen once and spread evenly through the line so the numbers end
+  // up scattered over the country rather than clustered.
   contours.forEach((contour) => {
-    contour.marks = [];
     if (!contour.index) return;
     const pieces = contour.line.length / 4;
-    const wanted = Math.min(6, Math.max(2, Math.round(pieces / 90)));
+    const wanted = Math.min(16, Math.max(2, Math.round(pieces / 240)));
     for (let k = 0; k < wanted; k++) {
-      const piece = Math.floor(((k + 0.5) / wanted) * pieces);
-      contour.marks.push(piece * 4);
+      contour.marks.push(Math.floor(((k + 0.5) / wanted) * pieces) * 4);
     }
   });
 
-  // Scattered spot heights on the open ground — the survey's own
-  // readings, away from the contours that were drawn from them.
+  // Loose readings on the open ground, away from the lines that were
+  // drawn from them.
   const spots = [];
   while (spots.length < SPOT_HEIGHTS) {
-    const x = (random() - 0.5) * 1.8, y = (random() - 0.5) * 1.8;
-    const h = ground(x, y) / (tallest || 1);
-    if (h < SHORE + 0.04) continue;
-    spots.push({ x: x, y: y, h: h, metres: Math.round((h * SUMMIT_M) / 5) * 5 });
+    const x = (random() - 0.5) * 2 * REACH * 0.9;
+    const y = (random() - 0.5) * 2 * REACH * 0.9;
+    const h = asHeight(ground(x, y));
+    spots.push({ x: x, y: y, h: h, metres: metresOf(h) });
   }
 
   // ============================================================
@@ -296,57 +329,56 @@
   // ============================================================
   document.body.classList.add("surveyed");
 
+  // `dark-surface` is how the rest of the site says "the cursor has to
+  // go light over this" — nav.js reads it on every move.
   const survey = document.createElement("div");
-  survey.className = "survey";
+  survey.className = "survey dark-surface";
   const canvas = document.createElement("canvas");
   canvas.className = "survey-ground";
   canvas.setAttribute("aria-hidden", "true");
   survey.appendChild(canvas);
 
-  // The names are real links standing over the drawing rather than
-  // lettering inside it: that way they can be tabbed to, read out and
-  // followed like anything else on the site, and the canvas is left
-  // to be a picture.
   const marks = document.createElement("div");
   marks.className = "survey-marks";
   survey.appendChild(marks);
 
+  let moving = true;
+
+  // A theory is a mark on the country, not a caption written across
+  // it: the same hollow square with a dot in it that the cursor is
+  // drawn as, and nothing else until you point at one.
   hills.forEach((hill) => {
     const mark = document.createElement("a");
     mark.className = "survey-peak";
     mark.href = hill.href;
     mark.innerHTML =
       '<span class="survey-reg" aria-hidden="true"></span>' +
-      '<span class="survey-name"></span>' +
-      '<span class="survey-height"></span>';
+      '<span class="survey-say"><span class="survey-name"></span>' +
+      '<span class="survey-height"></span></span>';
     mark.querySelector(".survey-name").textContent = hill.name;
     mark.querySelector(".survey-height").textContent = hill.metres + " m";
-    mark.title = hill.meta;
     marks.appendChild(mark);
     hill.mark = mark;
-    mark.addEventListener("pointerenter", () => { hill.held = true; });
-    mark.addEventListener("pointerleave", () => { hill.held = false; });
-    mark.addEventListener("focus", () => { hill.held = true; });
-    mark.addEventListener("blur", () => { hill.held = false; });
+    const hold = (held) => () => { hill.held = held; moving = true; };
+    mark.addEventListener("pointerenter", hold(true));
+    mark.addEventListener("pointerleave", hold(false));
+    mark.addEventListener("focus", hold(true));
+    mark.addEventListener("blur", hold(false));
   });
 
-  // The title block, where a map keeps it: its own corner, ruled off,
-  // with what the sheet is and how to read it.
   const block = document.createElement("div");
   block.className = "survey-block";
   block.innerHTML =
-    '<h2>Theories</h2>' +
-    '<p>Half-formed ideas, written down before I lose them.</p>' +
-    '<dl>' +
-    '<div><dt>Sheet</dt><dd>' + rows.length + " hills</dd></div>" +
-    '<div><dt>Interval</dt><dd>' +
-    Math.round(((1 - SHORE) * SUMMIT_M) / LEVELS / 5) * 5 + " m</dd></div>" +
-    '<div><dt>Reading</dt><dd>drag to turn · scroll to close in</dd></div>' +
+    "<h2>Theories</h2>" +
+    "<p>Half-formed ideas, written down before I lose them.</p>" +
+    "<dl>" +
+    "<div><dt>Marks</dt><dd>" + rows.length + "</dd></div>" +
+    "<div><dt>Interval</dt><dd>" + Math.round(SUMMIT_M / LEVELS / 10) * 10 + " m</dd></div>" +
+    "<div><dt>Reading</dt><dd>drag to turn · scroll to close in</dd></div>" +
     "</dl>";
   survey.appendChild(block);
 
   page.insertBefore(survey, page.firstChild);
-
   const paint = canvas.getContext("2d");
 
   // ============================================================
@@ -355,8 +387,8 @@
   let turn = -0.5, wantTurn = -0.5;
   let tilt = (TILT * Math.PI) / 180, wantTilt = tilt;
   let away = AWAY, wantAway = AWAY;
-  let width = 0, height = 0, reach = 0;
-  let dragging = false, dragFrom = null, dragged = 0;
+  let width = 0, height = 0, scale = 0;
+  let dragging = false, dragFrom = null;
   let last = 0;
 
   function resize() {
@@ -369,118 +401,101 @@
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
-    // How large the country is drawn. Set so that the island fills
-    // about two thirds of whichever way the window is tighter, at the
-    // distance the camera starts at — coming closer then makes it
-    // larger of its own accord, because the camera is nearer and not
-    // because anything here changed.
-    reach = Math.min(width * 0.36, height * 0.42) * AWAY;
+    // Long rather than wide: a short focal length throws the horizon
+    // off the top of the page and spreads the far country so thin that
+    // the haze is all that is left of it.
+    scale = Math.max(width, height) * 0.78;
+  }
+
+  const seen = { x: 0, y: 0, depth: 1 };
+  let spun = { c: 1, s: 0 }, leaned = { c: 1, s: 0 };
+  function refresh() {
+    spun = { c: Math.cos(turn), s: Math.sin(turn) };
+    leaned = { c: Math.cos(tilt), s: Math.sin(tilt) };
   }
 
   /**
    * A point of the country, photographed.
    *
-   * The camera stands `away` from the middle at `tilt` above the
-   * ground and looks at the middle, and the country turns under it
-   * rather than the camera walking round — which is the same picture
-   * and a great deal less arithmetic.
+   * The camera stands `away` back from the middle at `tilt` above the
+   * ground and looks at it, and the country turns under the camera
+   * rather than the camera walking round it — the same picture, and a
+   * great deal less arithmetic.
+   *
+   * It hands back one shared object. Two points in a row means copying
+   * the first one's numbers out before asking for the second.
    */
-  const seen = { x: 0, y: 0, depth: 1 };
-  let spun = 0, leaned = 0;
-  function refresh() {
-    spun = { c: Math.cos(turn), s: Math.sin(turn) };
-    leaned = { c: Math.cos(tilt), s: Math.sin(tilt) };
-  }
   function project(x, y, z) {
     const rx = x * spun.c - y * spun.s;
     const ry = x * spun.s + y * spun.c;
     const depth = away + ry * leaned.c - z * leaned.s;
     const up = ry * leaned.s + z * leaned.c;
-    const near = reach / Math.max(0.2, depth);
+    const near = scale / (depth > 0.02 ? depth : 0.02);
     seen.x = width / 2 + rx * near;
-    seen.y = height / 2 - up * near;
+    seen.y = height * 0.56 - up * near;
     seen.depth = depth;
     return seen;
   }
 
-  /** How strongly a thing at this depth is drawn: near is dark, far is faint. */
+  /** How much of a thing survives the haze at this distance: 1 near, 0 gone. */
   function carry(depth) {
-    const across = (depth - (away - 1.2)) / 2.6;
-    return Math.max(0.16, Math.min(1, 1.12 - across * 0.86));
+    if (depth <= HAZE_FROM) return 1;
+    if (depth >= HAZE_TO) return 0;
+    const across = (depth - HAZE_FROM) / (HAZE_TO - HAZE_FROM);
+    return (1 - across) * (1 - across);
   }
+
+  // The bands of distance the contours are drawn in. A stroke can only
+  // carry one colour, and setting a colour is the expensive part — so
+  // the haze is done a band at a time rather than a piece of line at a
+  // time. Near bands are narrow, because that is where it changes
+  // quickest.
+  const BANDS = [];
+  (function bandUp() {
+    let edge = NEAR;
+    while (edge < HAZE_TO) {
+      const wide = 0.2 + (edge - NEAR) * 0.42;
+      BANDS.push([edge, Math.min(HAZE_TO, edge + wide)]);
+      edge += wide;
+    }
+  })();
 
   // ============================================================
   // DRAWING
   // ============================================================
-  function drawWater() {
-    // The sheet the island sits on: the survey's own grid, ruled at
-    // sea level. It is what gives the country a floor to stand on —
-    // without it the contours hang in the air.
-    const lines = 16;
-    paint.lineWidth = 1;
-    for (let n = 0; n <= lines; n++) {
-      const t = (n / lines) * 2 - 1;
-      const heavy = n % 4 === 0;
-      paint.strokeStyle = "rgba(" + MUTED + "," + (heavy ? 0.2 : 0.09) + ")";
-      paint.beginPath();
-      for (let k = 0; k <= 24; k++) {
-        const u = (k / 24) * 2 - 1;
-        const p = project(t, u, WATER);
-        if (k === 0) paint.moveTo(p.x, p.y); else paint.lineTo(p.x, p.y);
-      }
-      paint.stroke();
-      paint.beginPath();
-      for (let k = 0; k <= 24; k++) {
-        const u = (k / 24) * 2 - 1;
-        const p = project(u, t, WATER);
-        if (k === 0) paint.moveTo(p.x, p.y); else paint.lineTo(p.x, p.y);
-      }
-      paint.stroke();
-    }
-  }
-
-  function drawFootprint() {
-    // The island's own outline, laid flat on the water under it. It is
-    // the shore contour again with every height taken out of it, and it
-    // is what stops the country reading as a drawing hanging in the air
-    // over a grid: there is a shape on the sheet that it stands on.
-    const shore = contours[0];
-    if (!shore) return;
-    const line = shore.line;
-    paint.lineWidth = 1;
-    paint.strokeStyle = "rgba(" + INK + ",0.16)";
-    paint.beginPath();
-    for (let n = 0; n < line.length; n += 4) {
-      const a = project(line[n], line[n + 1], WATER);
-      const ax = a.x, ay = a.y;
-      const b = project(line[n + 2], line[n + 3], WATER);
-      paint.moveTo(ax, ay);
-      paint.lineTo(b.x, b.y);
-    }
-    paint.stroke();
-  }
-
   function drawContours() {
-    // Lowest first, so the summits are drawn over the ground they
-    // stand on rather than under it.
+    // Lowest first, so high country is drawn over the ground it stands
+    // on rather than under it.
     for (let c = 0; c < contours.length; c++) {
       const contour = contours[c];
       const line = contour.line;
-      const up = (contour.level - SHORE) / (1 - SHORE);
-      // Higher ground is drawn darker, which is what makes a page of
+      const z = contour.level * RELIEF;
+      // Higher ground is drawn brighter, which is what makes a page of
       // lines read as something with height in it.
-      const ink = contour.shore ? 0.62 : (contour.index ? 0.34 : 0.2) + up * 0.34;
-      paint.lineWidth = contour.shore ? 1.5 : contour.index ? 1.1 : 0.75;
-      paint.strokeStyle = "rgba(" + INK + "," + ink.toFixed(3) + ")";
-      paint.beginPath();
-      for (let n = 0; n < line.length; n += 4) {
-        const a = project(line[n], line[n + 1], contour.level * RELIEF);
-        const ax = a.x, ay = a.y;
-        const b = project(line[n + 2], line[n + 3], contour.level * RELIEF);
-        paint.moveTo(ax, ay);
-        paint.lineTo(b.x, b.y);
+      const ink = (contour.index ? 0.66 : 0.34) + contour.level * 0.34;
+      paint.lineWidth = contour.index ? 1.1 : 0.7;
+      for (let band = 0; band < BANDS.length; band++) {
+        const from = BANDS[band][0], to = BANDS[band][1];
+        // The far country is drawn in heavier contours only. Every one
+        // of them out there would be a grey wash, which is what
+        // distance does to a map anyway.
+        if (!contour.index && from >= FINE_TO) break;
+        const fade = carry((from + to) / 2);
+        if (fade <= 0.02) break;
+        paint.strokeStyle = "rgba(" + LINE + "," + (ink * fade).toFixed(3) + ")";
+        paint.beginPath();
+        let drew = false;
+        for (let n = 0; n < line.length; n += 4) {
+          const a = project(line[n], line[n + 1], z);
+          if (a.depth < from || a.depth >= to) continue;
+          const ax = a.x, ay = a.y;
+          const b = project(line[n + 2], line[n + 3], z);
+          paint.moveTo(ax, ay);
+          paint.lineTo(b.x, b.y);
+          drew = true;
+        }
+        if (drew) paint.stroke();
       }
-      paint.stroke();
     }
   }
 
@@ -489,87 +504,69 @@
     paint.textAlign = "center";
     paint.textBaseline = "middle";
 
-    // The numbers written along the heavier contours, each turned to
-    // lie along the line it belongs to, the way a contour is
-    // numbered on a real sheet.
     for (const contour of contours) {
       if (!contour.marks.length) continue;
+      const z = contour.level * RELIEF;
       for (const n of contour.marks) {
         const line = contour.line;
-        const a = project(line[n], line[n + 1], contour.level * RELIEF);
-        const ax = a.x, ay = a.y, depth = a.depth;
-        const b = project(line[n + 2], line[n + 3], contour.level * RELIEF);
+        const a = project(line[n], line[n + 1], z);
+        const ax = a.x, ay = a.y, fade = carry(a.depth);
+        if (fade < 0.35 || a.depth < NEAR) continue;
+        const b = project(line[n + 2], line[n + 3], z);
         let angle = Math.atan2(b.y - ay, b.x - ax);
         if (angle > Math.PI / 2) angle -= Math.PI;
         if (angle < -Math.PI / 2) angle += Math.PI;
-        const fade = carry(depth);
-        if (fade < 0.3) continue;
         paint.save();
         paint.translate(ax, ay);
         paint.rotate(angle);
         // Knocked out of its own line rather than printed over it.
-        paint.strokeStyle = "rgba(250,250,249,0.92)";
+        paint.strokeStyle = "rgba(" + GROUND + ",0.95)";
         paint.lineWidth = 3.5;
         paint.lineJoin = "round";
         paint.strokeText(String(contour.metres), 0, 0);
-        paint.fillStyle = "rgba(" + MUTED + "," + (fade * 0.9).toFixed(3) + ")";
+        paint.fillStyle = "rgba(" + FAINT + "," + (fade * 0.95).toFixed(3) + ")";
         paint.fillText(String(contour.metres), 0, 0);
         paint.restore();
       }
     }
 
-    // And the loose readings between them.
     paint.textAlign = "left";
     for (const spot of spots) {
       const p = project(spot.x, spot.y, spot.h * RELIEF);
       const fade = carry(p.depth);
-      if (fade < 0.3) continue;
-      paint.fillStyle = "rgba(" + MUTED + "," + (fade * 0.75).toFixed(3) + ")";
+      if (fade < 0.35 || p.depth < NEAR) continue;
+      paint.fillStyle = "rgba(" + FAINT + "," + (fade * 0.7).toFixed(3) + ")";
       paint.fillRect(p.x - 1, p.y - 1, 2, 2);
       paint.fillText(String(spot.metres), p.x + 5, p.y + 1);
     }
   }
 
   function drawHeld() {
-    // The hill you are pointing at is ringed on the ground, so the
-    // name above it has something to belong to.
+    // The country a theory stands on, ringed, so the mark above it has
+    // something to belong to.
     for (const hill of hills) {
       if (!hill.held) continue;
-      paint.strokeStyle = "rgba(" + BRASS + ",0.75)";
-      paint.lineWidth = 1.2;
+      paint.strokeStyle = "rgba(" + MARK + ",0.85)";
+      paint.lineWidth = 1.1;
       paint.beginPath();
-      for (let k = 0; k <= 72; k++) {
-        const a = (k / 72) * Math.PI * 2;
-        const x = hill.x + Math.cos(a) * hill.spread * 0.66;
-        const y = hill.y + Math.sin(a) * hill.spread * 0.66;
-        const z = Math.min(1, ground(x, y) / (tallest || 1)) * RELIEF;
-        const p = project(x, y, z);
-        if (k === 0) paint.moveTo(p.x, p.y); else paint.lineTo(p.x, p.y);
+      let started = false;
+      for (let k = 0; k <= 96; k++) {
+        const a = (k / 96) * Math.PI * 2;
+        const x = hill.x + Math.cos(a) * hill.spread * 0.8;
+        const y = hill.y + Math.sin(a) * hill.spread * 0.8;
+        const p = project(x, y, asHeight(ground(x, y)) * RELIEF);
+        if (p.depth < NEAR) { started = false; continue; }
+        if (!started) { paint.moveTo(p.x, p.y); started = true; }
+        else paint.lineTo(p.x, p.y);
       }
       paint.stroke();
-
-      // and a plumb line from the summit down to the water, which is
-      // what says how high it actually stands.
-      const top = project(hill.x, hill.y, hill.top * RELIEF);
-      const topX = top.x, topY = top.y;
-      const foot = project(hill.x, hill.y, WATER);
-      paint.setLineDash([2, 3]);
-      paint.beginPath();
-      paint.moveTo(topX, topY);
-      paint.lineTo(foot.x, foot.y);
-      paint.stroke();
-      paint.setLineDash([]);
     }
   }
 
   function drawCompass() {
-    // North turns with the country, the way the needle would.
-    const x = width - 54, y = 54, r = 20;
-    paint.strokeStyle = "rgba(" + MUTED + ",0.45)";
+    const x = width - 56, y = 56, r = 19;
+    paint.strokeStyle = "rgba(" + FAINT + ",0.5)";
     paint.lineWidth = 1;
-    paint.beginPath();
-    paint.arc(x, y, r, 0, Math.PI * 2);
-    paint.stroke();
     for (let k = 0; k < 8; k++) {
       const a = (k / 8) * Math.PI * 2;
       paint.beginPath();
@@ -578,115 +575,74 @@
       paint.stroke();
     }
     const north = -Math.PI / 2 - turn;
-    paint.strokeStyle = "rgba(" + INK + ",0.8)";
-    paint.lineWidth = 1.4;
+    paint.strokeStyle = "rgba(" + LINE + ",0.85)";
+    paint.lineWidth = 1.3;
     paint.beginPath();
     paint.moveTo(x - Math.cos(north) * (r - 6), y - Math.sin(north) * (r - 6));
-    paint.lineTo(x + Math.cos(north) * (r - 3), y + Math.sin(north) * (r - 3));
+    paint.lineTo(x + Math.cos(north) * (r - 2), y + Math.sin(north) * (r - 2));
     paint.stroke();
-    paint.fillStyle = "rgba(" + INK + ",0.8)";
     paint.font = '9px ui-monospace, "IBM Plex Mono", monospace';
     paint.textAlign = "center";
     paint.textBaseline = "middle";
+    paint.fillStyle = "rgba(" + LINE + ",0.85)";
     paint.fillText("N", x + Math.cos(north) * (r + 9), y + Math.sin(north) * (r + 9));
 
-    // What the camera is doing, in the words a map would use.
     const bearing = Math.round((((turn * 180) / Math.PI) % 360 + 360) % 360);
     paint.textAlign = "right";
-    paint.fillStyle = "rgba(" + MUTED + ",0.8)";
+    paint.fillStyle = "rgba(" + FAINT + ",0.85)";
     paint.fillText(
-      "BEARING " + String(bearing).padStart(3, "0") + "°   " +
-      "ELEVATION " + Math.round((tilt * 180) / Math.PI) + "°",
-      width - 26, 96
+      "BEARING " + String(bearing).padStart(3, "0") + "°   ELEVATION " +
+      Math.round((tilt * 180) / Math.PI) + "°",
+      width - 28, 96
     );
   }
 
-  function drawScale() {
-    // A bar measured on the ground itself rather than on the page, so
-    // it lengthens and shortens as the country comes and goes.
-    const a = project(-0.5, 1.06, WATER);
-    const ax = a.x, ay = a.y;
-    const b = project(0.5, 1.06, WATER);
-    const bx = b.x, by = b.y;
-    paint.strokeStyle = "rgba(" + MUTED + ",0.6)";
-    paint.lineWidth = 1;
-    paint.beginPath();
-    paint.moveTo(ax, ay);
-    paint.lineTo(bx, by);
-    paint.stroke();
-    for (let k = 0; k <= 4; k++) {
-      const p = project(-0.5 + k / 4, 1.06, WATER);
-      paint.beginPath();
-      paint.moveTo(p.x, p.y - 3);
-      paint.lineTo(p.x, p.y + 3);
-      paint.stroke();
-    }
-    paint.font = '9px ui-monospace, "IBM Plex Mono", monospace';
-    paint.textAlign = "center";
-    paint.textBaseline = "top";
-    paint.fillStyle = "rgba(" + MUTED + ",0.8)";
-    paint.fillText("2 km", (ax + bx) / 2, (ay + by) / 2 + 7);
-  }
-
   function placeNames() {
-    // The names ride on their own summits. Whichever is nearest is
-    // drawn over the others, and the far ones step back — the same
-    // depth the contours under them are drawn with.
-    const seenAt = hills.map((hill) => {
-      const p = project(hill.x, hill.y, hill.top * RELIEF);
-      return { hill: hill, x: p.x, y: p.y, depth: p.depth };
-    });
+    const order = hills
+      .map((hill) => {
+        const p = project(hill.x, hill.y, hill.top * RELIEF);
+        return { hill: hill, x: p.x, y: p.y, depth: p.depth };
+      })
+      .sort((a, b) => b.depth - a.depth);
 
-    // Nearest first, so that where two names would be written on top
-    // of each other it is the far one that gives way.
-    const order = seenAt.slice().sort((a, b) => a.depth - b.depth);
-    const taken = [];
     order.forEach((spotted, rank) => {
       const mark = spotted.hill.mark;
       const fade = carry(spotted.depth);
-      const wide = mark.offsetWidth || 120;
-      const tall = mark.offsetHeight || 28;
-
-      // Lifted clear of anything already written rather than hidden
-      // behind it. A name that simply disappeared would take its hill
-      // with it — there would be nothing on the page saying that
-      // theory is there — so the map does what a map does and stacks
-      // them up the sheet instead.
-      let lift = 0;
-      for (let attempt = 0; attempt < 6; attempt++) {
-        const top = spotted.y - 7 - lift;
-        const clash = taken.some((box) =>
-          spotted.x < box.right && spotted.x + wide > box.left &&
-          top < box.bottom && top + tall > box.top);
-        if (!clash) break;
-        lift += tall + 3;
-      }
-      taken.push({
-        left: spotted.x, right: spotted.x + wide,
-        top: spotted.y - 7 - lift, bottom: spotted.y - 7 - lift + tall,
-      });
-
+      // A mark behind you, or gone into the haze, is not on the page at
+      // all — not faded to nothing and still catching the pointer.
+      const there = spotted.depth > NEAR && fade > 0.08;
+      mark.classList.toggle("gone", !there);
+      if (!there) return;
       mark.style.transform =
-        "translate(" + spotted.x.toFixed(1) + "px," +
-        (spotted.y - lift).toFixed(1) + "px)";
-      mark.style.opacity = Math.max(0.22, fade).toFixed(3);
-      mark.style.zIndex = String(hills.length - rank);
-      mark.classList.toggle("far", fade < 0.55);
-      // The stalk back down to the summit, for a name that has had to
-      // move up the sheet to be read.
-      mark.style.setProperty("--stalk", lift > 0 ? lift + "px" : "0px");
+        "translate(" + spotted.x.toFixed(1) + "px," + spotted.y.toFixed(1) + "px)";
+      mark.style.opacity = Math.max(0.3, fade).toFixed(3);
+      mark.style.zIndex = String(rank + 1);
     });
+  }
+
+  function drawHaze() {
+    // The far country is eaten by the haze before it ever reaches the
+    // true horizon, which leaves a band of nothing across the top of
+    // the page. This is what the haze itself looks like: a thin lift
+    // in the dark where the ground has gone, so the emptiness up there
+    // reads as distance rather than as the drawing stopping.
+    const line = height * 0.56 - scale * Math.tan(tilt);
+    const wash = paint.createLinearGradient(0, line - height * 0.34, 0, line + height * 0.3);
+    wash.addColorStop(0, "rgba(" + LINE + ",0)");
+    wash.addColorStop(0.62, "rgba(" + LINE + ",0.055)");
+    wash.addColorStop(1, "rgba(" + LINE + ",0)");
+    paint.fillStyle = wash;
+    paint.fillRect(0, 0, width, height);
   }
 
   function draw() {
     refresh();
-    paint.clearRect(0, 0, width, height);
-    drawWater();
-    drawFootprint();
+    paint.fillStyle = "rgb(" + GROUND + ")";
+    paint.fillRect(0, 0, width, height);
+    drawHaze();
     drawContours();
     drawHeld();
     drawHeights();
-    drawScale();
     drawCompass();
     placeNames();
   }
@@ -696,20 +652,19 @@
   //
   // The camera is never moved straight to where it has been asked to
   // go: it catches up with it. A map that snapped to each new bearing
-  // read as a slideshow of views rather than as one place being
-  // walked round.
+  // read as a slideshow of views rather than as one place being walked
+  // round.
   // ============================================================
-  let moving = true;
   function frame(now) {
     requestAnimationFrame(frame);
     if (now - last < FRAME_MS) return;
-    const step = Math.min(3, (now - last) / 16.7) || 1;
+    const on = Math.min(3, (now - last) / 16.7) || 1;
     last = now;
 
     if (!dragging && !REDUCE_MOTION && !hills.some((hill) => hill.held)) {
-      wantTurn += (DRIFT * step) / 60;
+      wantTurn += (DRIFT * on) / 60;
     }
-    const ease = Math.min(1, EASE * step);
+    const ease = Math.min(1, EASE * on);
     const before = turn + tilt + away;
     turn += (wantTurn - turn) * ease;
     tilt += (wantTilt - tilt) * ease;
@@ -728,16 +683,13 @@
   survey.addEventListener("pointerdown", (e) => {
     if (e.target.closest(".survey-peak")) return;   // that is a link, not the ground
     dragging = true;
-    dragged = 0;
     dragFrom = { x: e.clientX, y: e.clientY };
     survey.classList.add("turning");
-    survey.setPointerCapture && survey.setPointerCapture(e.pointerId);
   });
   window.addEventListener("pointermove", (e) => {
     if (!dragging || !dragFrom) return;
     const dx = e.clientX - dragFrom.x, dy = e.clientY - dragFrom.y;
     dragFrom = { x: e.clientX, y: e.clientY };
-    dragged += Math.abs(dx) + Math.abs(dy);
     wantTurn -= dx * TURN_BY;
     wantTilt = Math.max(
       (TILT_MIN * Math.PI) / 180,
@@ -759,55 +711,25 @@
     moving = true;
   }, { passive: false });
 
-  // The same movements from the keyboard, so the country can be
-  // walked round without a mouse.
   survey.tabIndex = 0;
   survey.setAttribute("aria-label",
     "A survey of this category. Use the arrow keys to turn and tilt it, " +
     "plus and minus to come closer and go back.");
   survey.addEventListener("keydown", (e) => {
-    const step = e.shiftKey ? 0.28 : 0.09;
+    const by = e.shiftKey ? 0.28 : 0.09;
     let used = true;
-    if (e.key === "ArrowLeft") wantTurn -= step;
-    else if (e.key === "ArrowRight") wantTurn += step;
+    if (e.key === "ArrowLeft") wantTurn -= by;
+    else if (e.key === "ArrowRight") wantTurn += by;
     else if (e.key === "ArrowUp") {
-      wantTilt = Math.min((TILT_MAX * Math.PI) / 180, wantTilt + step * 0.6);
+      wantTilt = Math.min((TILT_MAX * Math.PI) / 180, wantTilt + by * 0.6);
     } else if (e.key === "ArrowDown") {
-      wantTilt = Math.max((TILT_MIN * Math.PI) / 180, wantTilt - step * 0.6);
+      wantTilt = Math.max((TILT_MIN * Math.PI) / 180, wantTilt - by * 0.6);
     } else if (e.key === "+" || e.key === "=") {
-      wantAway = Math.max(AWAY_MIN, wantAway - 0.35);
+      wantAway = Math.max(AWAY_MIN, wantAway - 0.3);
     } else if (e.key === "-" || e.key === "_") {
-      wantAway = Math.min(AWAY_MAX, wantAway + 0.35);
+      wantAway = Math.min(AWAY_MAX, wantAway + 0.3);
     } else used = false;
     if (used) { e.preventDefault(); moving = true; }
-  });
-
-  // Pointing at the ground says how high it is there, the way a
-  // finger on a map does.
-  const reading = document.createElement("p");
-  reading.className = "survey-reading";
-  reading.setAttribute("aria-hidden", "true");
-  survey.appendChild(reading);
-  survey.addEventListener("pointermove", (e) => {
-    const box = survey.getBoundingClientRect();
-    reading.style.transform =
-      "translate(" + (e.clientX - box.left + 16) + "px," +
-      (e.clientY - box.top + 16) + "px)";
-  });
-  survey.addEventListener("pointerleave", () => survey.classList.remove("pointing"));
-  survey.addEventListener("pointerenter", () => survey.classList.add("pointing"));
-
-  // The hills answer to the pointer being over their name, and the
-  // reading follows whichever one that is.
-  hills.forEach((hill) => {
-    hill.mark.addEventListener("pointerenter", () => {
-      reading.textContent = hill.metres + " m   ·   " + hill.name;
-      moving = true;
-    });
-    hill.mark.addEventListener("pointerleave", () => {
-      reading.textContent = "";
-      moving = true;
-    });
   });
 
   window.addEventListener("resize", () => { resize(); moving = true; });

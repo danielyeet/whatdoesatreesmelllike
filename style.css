@@ -1207,11 +1207,14 @@ body:not(.sheet-scripted) .gallery { display: none; }
 
 /* ==================================================================
    THE SURVEY — categories/theories.html
-   A piece of country in three dimensions with one hill per theory,
-   drawn on a canvas by topo-map.js. Everything here is written under
-   `body.surveyed`, which that script adds: without it the page is the
-   plain list of rows every other category uses, and stays that way.
+   A whole page of country in three dimensions, drawn on a canvas by
+   topo-map.js. Dark: the country is nearly black and the contours on
+   it are light, which is the one place on the site the palette is
+   turned over. Everything here is written under `body.surveyed`,
+   which that script adds — without it the page is the plain list of
+   rows every other category uses, and stays that way.
    ================================================================== */
+body.surveyed { overflow: hidden; background: #0b0b0a; }
 body.surveyed .page-content { padding: 0; margin: 0; max-width: none; }
 /* The list is still in the page for anything reading rather than
    looking — it is the survey's own index — but it is not drawn. */
@@ -1229,13 +1232,15 @@ body.surveyed .page-content > .category-lede {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-body.surveyed { overflow: hidden; }
+/* The Menu is written on the country now, so it has to be light. */
+body.surveyed .menu-trigger { color: #e4e2d7; }
 
 .survey {
   position: relative;
   width: 100%;
   height: 100vh;
   overflow: hidden;
+  background: #0b0b0a;
   cursor: grab;
   touch-action: none;    /* a drag turns the country rather than scrolling the page */
   outline: none;
@@ -1244,70 +1249,81 @@ body.surveyed { overflow: hidden; }
 .survey:focus-visible { outline: 1px solid var(--brass); outline-offset: -3px; }
 .survey-ground { display: block; }
 
-/* The names ride on the drawing rather than being drawn into it: real
-   links, so they can be tabbed to, read out and followed like anything
-   else on the site. topo-map.js moves each one onto its own summit
-   every frame, so nothing here may set a transform of its own. */
+/* A theory is a MARK on the country, not a caption written across it:
+   the same hollow square with a dot in it that the site's own cursor
+   is drawn as. What it is called is not written until you point at it
+   — topo-map.js moves each mark onto its own summit every frame, so
+   nothing here may give one a transform of its own. */
 .survey-marks { position: absolute; inset: 0; pointer-events: none; }
 .survey-peak {
   position: absolute;
   left: 0;
   top: 0;
+  width: 0;
+  height: 0;
   pointer-events: auto;
-  display: block;
-  padding: 0 0 0 13px;
-  margin: -7px 0 0 -5px;
   text-decoration: none;
-  color: var(--ink);
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
 }
-/* The hollow square the rest of the site marks a point with, not a
-   dot: the same registration mark the node map and the scroll cue use. */
+.survey-peak.gone { display: none; }
 .survey-reg {
   position: absolute;
-  left: 0;
-  top: 2px;
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--ink);
-  background: var(--bg);
+  left: -7px;
+  top: -7px;
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgba(228, 226, 215, 0.92);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.survey-reg::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  background: rgba(228, 226, 215, 0.92);
+  transition: background 0.18s ease;
 }
 .survey-peak:hover .survey-reg,
-.survey-peak:focus-visible .survey-reg { border-color: var(--brass); background: var(--brass); }
+.survey-peak:focus-visible .survey-reg {
+  border-color: #c49248;
+  transform: scale(1.35);
+}
+.survey-peak:hover .survey-reg::after,
+.survey-peak:focus-visible .survey-reg::after { background: #c49248; }
+
+/* What it is called, and only while it is being pointed at. */
+.survey-say {
+  position: absolute;
+  left: 13px;
+  top: -8px;
+  display: block;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.survey-peak:hover .survey-say,
+.survey-peak:focus-visible .survey-say { opacity: 1; transform: none; }
 .survey-name {
   display: block;
   font-family: var(--sans);
   font-weight: 500;
   font-size: 13px;
-  line-height: 1.1;
+  line-height: 1.15;
+  color: #e4e2d7;
 }
 .survey-height {
   display: block;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.06em;
-  color: var(--muted);
+  color: #c49248;
   margin-top: 2px;
 }
-.survey-peak:hover .survey-name,
-.survey-peak:focus-visible .survey-name { color: var(--brass); }
-/* A name lifted up the sheet to clear another one keeps a thread back
-   down to the summit it belongs to, the way a map leads a label away
-   from a crowded spot. */
-.survey-peak::before {
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 9px;
-  width: 1px;
-  height: var(--stalk, 0px);
-  background: var(--line);
-}
-/* Far up the country the names are stepped back to the height alone,
-   so the far side of the island doesn't read as a wall of writing. */
-.survey-peak.far .survey-name { font-size: 11px; color: var(--muted); }
-.survey-peak.far .survey-height { display: none; }
 
 /* The title block, in the corner a map keeps it, ruled off from the
    drawing the way a cartouche is. */
@@ -1317,40 +1333,28 @@ body.surveyed { overflow: hidden; }
   bottom: 24px;
   max-width: 300px;
   padding: 16px 18px;
-  border: 1px solid var(--line);
-  background: rgba(250, 250, 249, 0.92);
+  border: 1px solid rgba(228, 226, 215, 0.18);
+  background: rgba(11, 11, 10, 0.72);
   pointer-events: none;
 }
-.survey-block h2 { font-size: 19px; margin: 0 0 6px; }
-.survey-block p { font-size: 13px; color: var(--muted); margin: 0 0 12px; max-width: 34ch; }
+.survey-block h2 { font-size: 19px; margin: 0 0 6px; color: #e4e2d7; }
+.survey-block p {
+  font-size: 13px;
+  color: rgba(228, 226, 215, 0.55);
+  margin: 0 0 12px;
+  max-width: 34ch;
+}
 .survey-block dl {
   margin: 0;
   padding-top: 10px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid rgba(228, 226, 215, 0.18);
   font-family: var(--mono);
   font-size: 11px;
+  color: #e4e2d7;
 }
 .survey-block dl > div { display: flex; gap: 10px; padding: 2px 0; }
-.survey-block dt { color: var(--muted); min-width: 62px; }
+.survey-block dt { color: rgba(228, 226, 215, 0.45); min-width: 62px; }
 .survey-block dd { margin: 0; }
-
-/* What the pointer is over, written beside it. Empty most of the
-   time, and nothing is drawn for it then. */
-.survey-reading {
-  position: absolute;
-  left: 0;
-  top: 0;
-  margin: 0;
-  padding: 3px 7px;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--ink);
-  white-space: nowrap;
-  pointer-events: none;
-}
-.survey-reading:empty { display: none; }
 
 @media (max-width: 860px) {
   .survey-block { left: 14px; right: 14px; bottom: 14px; max-width: none; }

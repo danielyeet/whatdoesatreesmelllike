@@ -94,11 +94,13 @@ that turns it (the pointer and a drag both leaving it alone, and no drift of its
 picking one fading rather than cutting, the whole view fitting on one screen, pointing at
 the big square bringing up the name of what is in it, and nothing on it answering the
 pointer until the flick has landed; and the survey — the country being grown from the
-page's own rows with one named hill per theory, each hill still a link to its piece and
-reachable from the keyboard, the list left in the page for a reader and out of sight for
-a looker, turning it by hand and by the arrow keys, scrolling bringing it closer, the
-whole of it fitting one screen, it standing still under `prefers-reduced-motion` while
-still turning when asked, and the plain list coming back when the script is blocked.
+page's own rows with one mark per theory, each mark still a link to its piece and
+reachable from the keyboard, a theory being a mark until it is pointed at and a name only
+then, the ground being dark and saying so to the cursor, the list left in the page for a
+reader and out of sight for a looker, turning it by hand and by the arrow keys, scrolling
+bringing it closer, the whole of it fitting one screen, it standing still under
+`prefers-reduced-motion` while still turning when asked, and the plain list coming back
+when the script is blocked.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -326,51 +328,70 @@ Other things that will bite you:
 
 ### The survey (`topo-map.js`) — categories/theories.html
 
-That category is not a list of rows. It is a piece of country: an island, contoured, seen
-from the air at an angle, with one hill for every theory and its name written on the
-summit. Turning it, tilting it and coming down closer to it is how you read it.
+That category is not a list of rows, and it is not an object standing in the middle of a
+page either: the whole page **is** country. You are in it, a little above it, and it runs
+out to a haze in every direction. The palette is turned over here and nowhere else — the
+ground is nearly black and the contours on it are light.
 
-Nothing about the ground is drawn by hand — it is **grown**, and that is the property to
-keep:
+Nothing about the ground is drawn by hand — it is **grown**, and the order of it is the
+property to keep:
 
-1. a seeded noise field gives rolling country (`ground`)
-2. every `.work-row` in the page adds its own hill to it, placed on a golden-angle spiral
-3. the whole thing is pulled down to sea level at the rim, so what is left is an island
-4. the ground is sampled onto a grid once (`SAMPLES`)
-5. contours are traced through that grid, once, **in map coordinates**
-6. every frame, those contours are put through a camera
+1. the sampling point is pushed about by a slow noise field first — the **domain warp**.
+   This one step is most of what makes the lines read as country rather than as blobs: it
+   bends whole regions sideways, so ridges run and valleys curve instead of every rise
+   being a round lump.
+2. octaves of noise are summed at wherever the point ended up, each one damped where the
+   ground is already steep — a standing-in for **erosion**, which puts clean crests on the
+   ridges and leaves the flats broad. `noised()` hands back the slope along with the
+   height for exactly this, and it is nearly free because everything it needs has already
+   been fetched.
+3. every `.work-row` lifts a region into **high country**. It does not lay a cone on top:
+   it raises the ground *and* scales the detail already on it, so a theory reads as a
+   massif with its own texture rather than as a bump.
+4. that is sampled onto a grid once (`SAMPLES`) and contoured once, **in map coordinates**
+5. every frame, those contours are put through a camera
 
-Only step 6 happens more than once. The map is worked out at load and thereafter only
-re-photographed, which is what makes it cheap enough to turn at sixty frames a second —
-about eight thousand pieces of line, projected and stroked each frame.
+Swap that order and it stops being country: lifting the theories before the warp smears
+them, warping each octave separately gives fuzz, and smooth cones on top give something
+that reads as noise with hills in it.
+
+Only step 5 happens more than once. The country is worked out at load and thereafter only
+re-photographed, which is what makes a page this size turn at sixty frames a second.
 
 Things worth knowing before changing it:
 
-- **Add a theory and the country changes shape around it.** A new hill rises, the
-  contours re-form round it, the coastline moves and the interval in the title block is
-  recalculated. Nothing is hand-placed; there is no list of positions to keep in step.
-- **Contours are traced by marching squares, and left as loose pieces of line** rather
-  than joined into loops. Drawn one after another they read as the continuous contour
-  they are, and never having to join them is what makes twenty-odd heights affordable.
-  Each square's two saddle cases (5 and 10, where the corners alternate above and below)
-  give back two separate pieces, not one.
-- **Every z handed to the camera is scaled by `RELIEF`**, the water included (`WATER`).
-  Hand the camera a bare height and that thing floats above its own sea.
+- **Add a theory and the country changes shape around it.** A new massif rises, the
+  contours re-form round it and the interval in the title block is recalculated. Nothing
+  is hand-placed; there is no list of positions to keep in step.
+- **Marching squares is turned inside out here.** The squares are walked once and each is
+  asked which heights cross it, rather than every height being walked across the whole
+  grid. A square of gentle ground is crossed by one contour or none, so this does a
+  couple of tests where the other way round does twenty-eight — the difference between a
+  page that opens and one that hangs while it thinks.
+- **The pieces of line are left loose** rather than joined into loops. Drawn one after
+  another they read as the continuous contour they are. Each square's two saddle cases
+  (5 and 10, where the corners alternate above and below) give back two pieces, not one.
+- **The haze is drawn in bands of distance, not segment by segment.** A stroke can only
+  carry one colour and setting a colour is the expensive part, so each contour is stroked
+  once per band (`BANDS`) with the whole band's fade. Past `FINE_TO` only the index
+  contours are drawn at all: every one of them out there is a grey wash, which is what
+  distance does to a map anyway.
+- **There is never an edge of the world on the screen.** `REACH` is generous and the haze
+  is set to run out well inside it. If you push `HAZE_TO` out, push `REACH` with it.
+- **Every z handed to the camera is scaled by `RELIEF`.**
 - **`project()` hands back one shared object.** Two points in a row means copying the
-  first one's numbers out before asking for the second — the scale bar's far end was read
-  back four projections later once, and pointed somewhere else entirely.
-- **The ground is dished a little where each hill's skirts run out.** Without that dish
-  the hills merge into one ridge and the country loses the shape that says how many
-  theories are standing in it. The falloff at the rim is steep and late for the same
-  reason: a gentle one pulls the whole interior into a single dome and the contours come
-  out as onion rings.
-- **The names are real links standing over the drawing**, not lettering inside it, so
-  they can be tabbed to, read out and followed like anything else on the site. `placeNames`
-  moves each one onto its own summit every frame, so nothing in the stylesheet may give
-  `.survey-peak` a transform of its own.
-- **A name that would be written on top of a nearer one is lifted up the sheet**, with a
-  thread back down to its summit, rather than hidden. A name that disappeared would take
-  its hill with it: there would be nothing on the page saying that theory is there.
+  first one's numbers out before asking for the second.
+- **A theory is a mark, not a caption.** It is drawn as the same hollow square with a dot
+  in it that the site's cursor is, and what it is called is not written until you point at
+  it. The marks are real links standing over the drawing, so they can be tabbed to and
+  read out; `placeNames` moves each onto its own summit every frame, so nothing in the
+  stylesheet may give `.survey-peak` a transform of its own.
+- **A mark behind you or gone into the haze is taken off the page** (`.gone`,
+  `display: none`) rather than faded to nothing — faded, it would still catch the pointer
+  where there is nothing to point at.
+- **The survey carries `dark-surface`**, which is how the rest of the site says "the
+  cursor has to go light over this". Without it `nav.js` leaves a dark cursor on a dark
+  page and it cannot be seen.
 - **Anything visually hidden must have its margins taken off too.** The lede is taken out
   of sight with `clip-path`, and left with its own `margin-bottom` it put twenty-five
   pixels below the fold and gave a one-screen page something to scroll.
@@ -691,11 +712,12 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **corrugation** | The sharp zigzag the cursor drags across a nearby branch (`CORR_*`): evenly spaced teeth of one size travelling steadily outward along it, so it reads as a regular wave excited in a wire. Only its height answers the cursor. It used to re-roll its height and spacing several times a second, which read as jitter — that was replaced, deliberately, by the pattern described here. |
 | **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
 | **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. A beat after it opens, the node's **name** is lifted out of the map and set above it. |
-| **the survey** / **the country** | The way `categories/theories.html` is laid out: an island in three dimensions, contoured, one hill per theory. `topo-map.js`. |
-| **hill** | One theory on the survey — a rise in the ground grown from its row in the page, with its name and its height written on the summit. |
+| **the survey** / **the country** | The way `categories/theories.html` is laid out: a whole page of contoured ground in three dimensions, dark, running out to a haze, with one mark on it per theory. `topo-map.js`. |
+| **mark** | One theory on the survey — a hollow square with a dot in it, standing on the high country grown from that theory's row. It says what it is only while you point at it. |
+| **massif** | The high country a theory raises: the ground lifted *and* roughened around its point, rather than a smooth cone laid on top of it. |
+| **the haze** | The distance fading the country out before it ever reaches the horizon, so there is never an edge of the world on the screen. `HAZE_FROM` / `HAZE_TO`, drawn a band at a time. |
 | **contour** / **index contour** | A line of constant height on the survey. Every fifth one is an index contour: drawn heavier and numbered along its length. |
 | **spot height** | A loose reading printed on the open ground between contours, away from the lines that were drawn from them. |
-| **footprint** | The shore contour drawn again flat on the water, so the country has a shape on the sheet to stand on. |
 | **title block** | The ruled-off corner of the survey carrying what the sheet is, how many hills are on it, the contour interval and how to read it — a map's cartouche. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |

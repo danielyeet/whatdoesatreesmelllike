@@ -2,39 +2,62 @@
 // THE SURVEY (categories/theories.html)
 //
 // That category is drawn as a piece of country rather than as a
-// list: an island, contoured, with one hill for every theory.
-// These check that the country is actually grown from the page's
-// own rows, that every hill is still a link to its piece, that it
-// can be turned and closed in on with the hand and with the
-// keyboard, that it is one screen with nothing to scroll to, and
-// that switching the script off leaves the plain list behind.
+// list: the whole page is contoured ground running out to a haze,
+// with one mark on it for every theory. These check that the
+// country is grown from the page's own rows, that every mark is
+// still a link to its piece and can be tabbed to, that a theory is
+// a mark until it is pointed at and a name only then, that it can
+// be turned and closed in on with the hand and with the keyboard,
+// that the ground is dark and says so to the cursor, that it is
+// one screen with nothing to scroll to, and that switching the
+// script off leaves the plain list behind.
 // ============================================================
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 
 const PAGE = "/categories/theories.html";
 
-/** Where every name on the map is, and how far apart they are spread. */
-const namesAt = (page) =>
-  page.evaluate(() =>
-    [...document.querySelectorAll(".survey-peak")].map((peak) => {
+/**
+ * Where each mark that is actually on the country is standing, keyed
+ * by which theory it is. A mark behind you or gone into the haze is
+ * taken off the page altogether, so this is a handful of them rather
+ * than all of them, and which handful changes as it turns.
+ */
+const marksAt = (page) =>
+  page.evaluate(() => {
+    const out = {};
+    [...document.querySelectorAll(".survey-peak")].forEach((peak, i) => {
+      if (peak.classList.contains("gone")) return;
       const r = peak.getBoundingClientRect();
-      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-    })
-  );
+      out[i] = [r.left, r.top];
+    });
+    return out;
+  });
 
-const spread = (places) => {
-  const xs = places.map((p) => p.x);
-  return Math.max(...xs) - Math.min(...xs);
+/** How far the two furthest apart of a set of marks are. */
+const widest = (places, only) => {
+  const keys = only || Object.keys(places);
+  let most = 0;
+  for (const a of keys) {
+    for (const b of keys) {
+      most = Math.max(most, Math.hypot(places[a][0] - places[b][0], places[a][1] - places[b][1]));
+    }
+  }
+  return most;
 };
+
+/** How far each mark travelled, for the ones on the page both times. */
+const travelled = (before, after) =>
+  Object.keys(before)
+    .filter((k) => after[k])
+    .map((k) => Math.hypot(after[k][0] - before[k][0], after[k][1] - before[k][1]));
 
 async function waitForSurvey(page) {
   await page.waitForSelector(".survey-ground", { timeout: 15000 });
   await page.waitForFunction(
-    () => {
-      const peak = document.querySelector(".survey-peak");
-      return peak && peak.style.transform !== "";
-    },
+    () =>
+      [...document.querySelectorAll(".survey-peak")]
+        .some((peak) => !peak.classList.contains("gone") && peak.style.transform !== ""),
     null,
     { timeout: 15000 }
   );
@@ -98,7 +121,7 @@ test("the country can be turned with the hand", async ({ page }) => {
   await page.goto(PAGE);
   await waitForSurvey(page);
 
-  const before = await namesAt(page);
+  const before = await marksAt(page);
   const box = await page.locator(".survey").boundingBox();
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.55);
   await page.mouse.down();
@@ -108,11 +131,12 @@ test("the country can be turned with the hand", async ({ page }) => {
   }
   await page.mouse.up();
   await page.waitForTimeout(700);
-  const after = await namesAt(page);
+  const after = await marksAt(page);
 
-  // Turning moves every name, because the country has turned under
-  // all of them — not one of them has been moved on its own.
-  const moved = after.map((p, i) => Math.hypot(p.x - before[i].x, p.y - before[i].y));
+  // Turning moves every mark, because the country has turned under all
+  // of them — not one of them has been moved on its own.
+  const moved = travelled(before, after);
+  expect(moved.length, "some marks should be on the page both times").toBeGreaterThan(0);
   expect(Math.min(...moved), "all of them should have travelled").toBeGreaterThan(20);
 });
 
@@ -122,16 +146,25 @@ test("scrolling brings the country closer", async ({ page }) => {
 
   const box = await page.locator(".survey").boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  const before = spread(await namesAt(page));
+  const before = await marksAt(page);
   await page.mouse.wheel(0, -700);
   await page.waitForTimeout(900);
-  const closer = spread(await namesAt(page));
-  expect(closer, "the hills should stand further apart").toBeGreaterThan(before * 1.15);
+  const closer = await marksAt(page);
+
+  // Measured over the marks that are on the page both times: coming
+  // closer spreads the country, so any two of them stand further
+  // apart than they did.
+  const both = Object.keys(before).filter((k) => closer[k]);
+  expect(both.length, "some marks should be there both times").toBeGreaterThan(1);
+  expect(widest(closer, both), "the country should have opened out")
+    .toBeGreaterThan(widest(before, both) * 1.15);
 
   await page.mouse.wheel(0, 1400);
   await page.waitForTimeout(900);
-  const further = spread(await namesAt(page));
-  expect(further, "and back together again").toBeLessThan(closer);
+  const back = await marksAt(page);
+  const still = both.filter((k) => back[k]);
+  expect(widest(back, still), "and closed up again")
+    .toBeLessThan(widest(closer, still));
 });
 
 test("it can be walked round from the keyboard", async ({ page }) => {
@@ -139,14 +172,14 @@ test("it can be walked round from the keyboard", async ({ page }) => {
   await waitForSurvey(page);
 
   await page.locator(".survey").focus();
-  const before = await namesAt(page);
+  const before = await marksAt(page);
   for (let i = 0; i < 6; i++) {
     await page.keyboard.press("ArrowRight");
     await page.waitForTimeout(60);
   }
   await page.waitForTimeout(700);
-  const after = await namesAt(page);
-  const moved = after.map((p, i) => Math.hypot(p.x - before[i].x, p.y - before[i].y));
+  const after = await marksAt(page);
+  const moved = travelled(before, after);
   expect(Math.max(...moved), "the arrow keys should turn it").toBeGreaterThan(20);
 });
 
@@ -154,12 +187,12 @@ test("a hill is a link to its piece, and can be tabbed to", async ({ page }) => 
   await page.goto(PAGE);
   await waitForSurvey(page);
 
-  const first = page.locator(".survey-peak").first();
-  await expect(first).toHaveAttribute("href", /works\//);
-  await first.focus();
+  const there = page.locator(".survey-peak:not(.gone)").first();
+  await expect(there).toHaveAttribute("href", /works\//);
+  await there.focus();
   expect(
     await page.evaluate(() => document.activeElement.className),
-    "a name should take focus"
+    "a mark should take focus"
   ).toContain("survey-peak");
 });
 
@@ -194,19 +227,57 @@ test("with animation turned off it does not drift on its own", async ({ page }) 
   await page.goto(PAGE);
   await waitForSurvey(page);
 
-  const before = await namesAt(page);
+  const before = await marksAt(page);
   await page.waitForTimeout(1200);
-  const after = await namesAt(page);
-  const moved = after.map((p, i) => Math.hypot(p.x - before[i].x, p.y - before[i].y));
-  expect(Math.max(...moved), "it should stand still until it is moved").toBeLessThan(2);
+  const after = await marksAt(page);
+  expect(Math.max(...travelled(before, after)), "it should stand still until it is moved")
+    .toBeLessThan(2);
 
   // Still fully readable, though: it is held still, not switched off.
   await page.locator(".survey").focus();
   await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(600);
-  const turned = await namesAt(page);
+  const turned = await marksAt(page);
   expect(
-    Math.max(...turned.map((p, i) => Math.hypot(p.x - after[i].x, p.y - after[i].y))),
+    Math.max(...travelled(after, turned)),
     "and still turn when it is asked to"
   ).toBeGreaterThan(2);
+});
+
+test("a theory is a mark until it is pointed at, and then it is a name", async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForSurvey(page);
+
+  const mark = page.locator(".survey-peak:not(.gone)").first();
+  const says = mark.locator(".survey-say");
+
+  // The name is in the page — it has to be, for anything reading
+  // rather than looking — but it is not written on the country.
+  await expect(says).toHaveCount(1);
+  expect(
+    await says.evaluate((el) => parseFloat(getComputedStyle(el).opacity)),
+    "nothing written until it is pointed at"
+  ).toBeLessThan(0.05);
+
+  const box = await mark.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await expect
+    .poll(() => says.evaluate((el) => parseFloat(getComputedStyle(el).opacity)), { timeout: 3000 })
+    .toBeGreaterThan(0.9);
+  await expect(mark.locator(".survey-name")).not.toHaveText("");
+});
+
+test("the country is dark, and says so to the cursor", async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForSurvey(page);
+
+  // A full-bleed dark region has to carry `dark-surface`, or nav.js's
+  // cursor stays dark over it and is invisible.
+  await expect(page.locator(".survey")).toHaveClass(/dark-surface/);
+  const tone = await page.evaluate(() => {
+    const paint = getComputedStyle(document.querySelector(".survey")).backgroundColor;
+    const [r, g, b] = paint.match(/\d+/g).map(Number);
+    return (r + g + b) / 3;
+  });
+  expect(tone, "the ground should be nearly black").toBeLessThan(40);
 });
