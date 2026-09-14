@@ -1,35 +1,35 @@
 // ============================================================
 // FAVORITES (the other half of categories/scent-descriptions.html)
 //
-// The second of the two views on that page: one big square in the
-// middle with the rest of the pictures on a wide level ring going
-// round it in three dimensions. These check the switch between the two
-// views, the ring standing its pictures on one horizontal line with the
-// near side in front of the square and the far side behind it, that the
-// pictures are there from both sides, that the wheel is the only thing
-// that turns them, that nothing is named until the flick has landed,
-// and that picking a picture fades rather than cuts — a cut is the film
-// going past, a fade is you choosing something.
+// The second of the two views on that page: the screen flickers
+// once, a menu of chapters comes up on the right, and a field of
+// marks settles along the foot that answers the cursor. These check
+// the switch between the two views, that the chapters and their
+// dates are read off the page's own entries rather than written
+// into the script, that one chapter is open at a time and the strip
+// works from the keyboard, that the field answers the cursor and is
+// regular when nothing is touching it, and that the whole view fits
+// one screen.
 // ============================================================
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 
 const PAGE = "/categories/scent-descriptions.html";
 
-const plateName = (page) =>
-  page.locator(".gallery-plate > .sheet-number").textContent();
+const openTab = (page) => page.locator(".chapters-tab.open");
 
-/** Open Favorites and wait for its ring to fill. */
+/** Open Favorites and wait for it to have finished coming up. */
 async function openFavorites(page) {
   await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
   await page.waitForFunction(
     () => {
-      const frames = [...document.querySelectorAll(".gallery-frame")];
-      return frames.length > 0 && frames.every((f) => f.classList.contains("in-ring"));
+      const view = document.querySelector(".chapters");
+      return view && view.classList.contains("lit");
     },
     null,
     { timeout: 20000 }
   );
+  await page.waitForTimeout(400);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -47,232 +47,166 @@ test("the page opens on the map, with favorites out of the way", async ({ page }
   expect(errors).toEqual([]);
 });
 
-test("choosing favorites takes the map away and brings the ring up", async ({ page }) => {
+test("choosing favorites takes the map away and flickers the chapters up",
+  async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
 
+  await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
+  // It does not simply appear: the screen catches and drops once
+  // before it settles, the way a panel does when it is switched on.
+  await page.waitForSelector(".chapters.flicker", { timeout: 8000 });
   await openFavorites(page);
 
   // One view at a time: the map is gone from the page, not merely faded.
   expect(
     await page.evaluate(() => getComputedStyle(document.getElementById("sheet")).display)
   ).toBe("none");
-  await expect(page.locator(".gallery-frame").first()).toBeVisible();
+  await expect(page.locator(".chapters-menu")).toBeVisible();
   await expect(page.locator(".sheet-filter", { hasText: "Favorites" })).toHaveClass(/chosen/);
 
-  // And back again.
+  // And the flicker is the thing being switched on, so it happens
+  // once: going away and coming back does not do it again.
   await page.locator(".sheet-filter", { hasText: "Description portfolio" }).click();
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.getElementById("gallery")).display),
       { timeout: 6000 })
     .toBe("none");
-  expect(
-    await page.evaluate(() => getComputedStyle(document.getElementById("sheet")).display)
-  ).not.toBe("none");
-});
-
-test("the big square flicks through the favourites and ends on the first", async ({ page }) => {
-  await page.goto(PAGE);
-  await page.waitForTimeout(600);
   await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
-
-  // Sample what the big square is showing, often enough to catch the
-  // fast part of the run.
-  const seen = [];
-  for (let i = 0; i < 40; i++) {
-    seen.push(await page.evaluate(() => {
-      const mark = document.querySelector(".gallery-plate > .sheet-number");
-      return mark ? mark.textContent : "";
-    }));
-    await page.waitForTimeout(70);
-  }
-  const distinct = new Set(seen.filter(Boolean));
-  expect(distinct.size, `should flick through several, saw ${[...distinct]}`).toBeGreaterThan(2);
-
-  await openFavorites(page);
-  expect(await plateName(page), "it lands on the first").toBe("f1");
+  await page.waitForTimeout(700);
+  expect(
+    await page.evaluate(() => document.querySelector(".chapters").classList.contains("flicker")),
+    "it is only switched on once"
+  ).toBe(false);
 });
 
-test("the ring stands the pictures on one level line round the square", async ({ page }) => {
+test("the chapters and their dates are read off the page's own entries",
+  async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
 
-  const ring = await page.evaluate(() => {
-    const plate = document.getElementById("gallery-plate").getBoundingClientRect();
+  const read = await page.evaluate(() => {
+    const entries = [...document.querySelectorAll(".gallery-entry")];
+    const named = [];
+    entries.forEach((entry) => {
+      const on = (entry.dataset.chapter || "Unsorted").trim();
+      if (named.indexOf(on) < 0) named.push(on);
+    });
     return {
-      plate: {
-        x: plate.left + plate.width / 2,
-        y: plate.top + plate.height / 2,
-        bottom: plate.bottom,
-        width: plate.width,
-      },
-      cards: [...document.querySelectorAll(".gallery-frame")].map((f) => {
-        const r = f.getBoundingClientRect();
-        return {
-          x: r.left + r.width / 2,
-          y: r.top + r.height / 2,
-          size: r.width,
-          // Its own shape, not the shape it is drawn as: a card turned
-          // away from you is drawn narrower than it is, so the rendered
-          // box says nothing about how it was cut.
-          wide: f.offsetWidth,
-          tall: f.offsetHeight,
-          dim: parseFloat(f.style.getPropertyValue("--dim")),
-        };
-      }),
+      named: named,
+      tabs: [...document.querySelectorAll(".chapters-tab .chapters-name")]
+        .map((el) => el.textContent.trim()),
+      counts: [...document.querySelectorAll(".chapters-tab .chapters-count-small")]
+        .map((el) => Number(el.textContent)),
+      perChapter: named.map(
+        (on) => entries.filter((e) => (e.dataset.chapter || "Unsorted").trim() === on).length
+      ),
+      items: document.querySelectorAll(".chapters-item").length,
+      entries: entries.length,
+      dates: [...document.querySelectorAll(".chapters-date")].map((el) => el.textContent.trim()),
     };
   });
 
-  expect(ring.cards.length).toBeGreaterThan(4);
-
-  // One line, and a level one. A picture standing even slightly off eye
-  // height is thrown further from the middle of the page the nearer it
-  // is, and the line bows instead of running straight — so this is a
-  // pixel or two, not "roughly".
-  const ys = ring.cards.map((c) => c.y);
-  expect(Math.max(...ys) - Math.min(...ys), `they should share one line: ${ys}`)
-    .toBeLessThan(2);
-
-  // It goes round the big square and stands close in to it: out past
-  // both of its sides, but not away across the page with a gulf in
-  // between where there is nothing at all.
-  const xs = ring.cards.map((c) => c.x);
-  const out = Math.max(...xs.map((x) => Math.abs(x - ring.plate.x)));
-  expect(out, "some should stand out past the square's edge")
-    .toBeGreaterThan(ring.plate.width * 0.5);
-  expect(out, "and not away across the page from it")
-    .toBeLessThan(ring.plate.width * 1.15);
-
-  // A picture on the ring is a ninth of the big square: a third of its
-  // height and a third of its width, so nine of them would tile it.
-  ring.cards.forEach((card) => {
-    expect(card.wide / ring.plate.width, "a third of the square across")
-      .toBeCloseTo(1 / 3, 1);
-    expect(card.tall / ring.plate.width, "and a third of it down")
-      .toBeCloseTo(1 / 3, 1);
-  });
-
-  // Which way round the ring a picture has come is said by how big and
-  // how strong it is drawn, since none of them is higher than another.
-  const nearest = ring.cards.reduce((a, b) => (a.dim < b.dim ? a : b));
-  const furthest = ring.cards.reduce((a, b) => (a.dim > b.dim ? a : b));
-  expect(furthest.dim, "the furthest should be washed out").toBeGreaterThan(0.4);
-  expect(nearest.dim, "the nearest should not be").toBeLessThan(0.1);
-  expect(nearest.size / furthest.size, "the nearest drawn larger").toBeGreaterThan(1.4);
-
-  // The ring and the square share a centre: the line runs straight
-  // through the middle of the picture, and the near side of the ring
-  // passes in front of it.
-  expect(Math.abs(nearest.y - ring.plate.y), "level with the middle of the square")
-    .toBeLessThan(2);
+  expect(read.named.length, "the page should name a few chapters").toBeGreaterThan(1);
+  expect(read.tabs, "a tab for each, in the order the page names them").toEqual(read.named);
+  expect(read.counts, "and each carrying its own count").toEqual(read.perChapter);
+  // Every favourite ends up in exactly one chapter.
+  expect(read.items).toBe(read.entries);
+  // And every one carries a date, which is what it is filed under.
+  expect(read.dates.length).toBe(read.entries);
+  read.dates.forEach((date) => expect(date).toMatch(/^\d{2}\.\d{2}\.\d{4}$/));
 });
 
-test("every picture on the ring has a face on both sides", async ({ page }) => {
+test("one chapter is open at a time, and the strip works from the keyboard",
+  async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
 
-  const cards = await page.evaluate(() =>
-    [...document.querySelectorAll(".gallery-frame")].map((f) => ({
-      faces: [...f.querySelectorAll(".gallery-face")].map((s) => s.style.transform),
-      // The same picture on both, not a blank back.
-      same: new Set([...f.querySelectorAll(".gallery-face")].map((s) =>
-        s.style.getPropertyValue("--hatch-angle") + "|" + (s.querySelector("img") || {}).src
-      )).size,
-      hidden: [...f.querySelectorAll(".gallery-face")].map((s) =>
-        getComputedStyle(s).backfaceVisibility),
+  expect(await page.locator(".chapters-tab.open").count(), "one open").toBe(1);
+  expect(await page.locator(".chapters-panel.open").count(), "one panel").toBe(1);
+  expect(
+    await page.evaluate(() =>
+      [...document.querySelectorAll(".chapters-panel:not(.open)")].every((p) => p.hidden)),
+    "the chapters you are not reading are not on the page"
+  ).toBe(true);
+
+  // Only the open one is in the tab order: the strip is one control.
+  const stops = await page.$$eval(".chapters-tab", (tabs) => tabs.map((t) => t.tabIndex));
+  expect(stops.filter((n) => n === 0).length, "one stop for the whole strip").toBe(1);
+
+  const first = await openTab(page).locator(".chapters-name").textContent();
+  await page.locator(".chapters-tab.open").focus();
+  await page.keyboard.press("ArrowDown");
+  await page.waitForTimeout(400);
+  expect(await openTab(page).locator(".chapters-name").textContent(),
+    "the arrow keys should move along the strip").not.toBe(first);
+  expect(await page.evaluate(() => document.activeElement.className))
+    .toContain("chapters-tab");
+
+  // The plate on the left follows whichever is open.
+  expect(await page.locator(".chapters-plate h2").textContent())
+    .toBe(await openTab(page).locator(".chapters-name").textContent());
+});
+
+test("every favourite is a link to its piece", async ({ page }) => {
+  await page.goto(PAGE);
+  await page.waitForTimeout(600);
+  await openFavorites(page);
+
+  const links = await page.$$eval(".chapters-item", (all) =>
+    all.map((a) => ({
+      href: a.getAttribute("href"),
+      name: a.querySelector(".chapters-item-name").textContent.trim(),
     }))
   );
-
-  for (const card of cards) {
-    expect(card.faces.length, "two faces").toBe(2);
-    expect(card.faces.some((t) => /rotateY\(0deg\)/.test(t)), "one facing out").toBe(true);
-    expect(card.faces.some((t) => /rotateY\(180deg\)/.test(t)), "one facing back").toBe(true);
-    expect(card.same, "the same picture on both").toBe(1);
-    // Without this you see through the near face to the far one.
-    expect(new Set(card.hidden)).toEqual(new Set(["hidden"]));
-  }
+  expect(links.length).toBeGreaterThan(1);
+  links.forEach((link) => {
+    expect(link.href, `${link.name} should point at a piece`).toMatch(/works\//);
+    expect(link.name.length).toBeGreaterThan(0);
+  });
 });
 
-test("the wheel is the only thing that turns the ring", async ({ page }) => {
+test("the field along the foot is a lattice until the cursor disturbs it",
+  async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
 
-  // Where the picture at the front of the ring is.
-  const front = () =>
-    page.evaluate(() => {
-      const r = document.querySelectorAll(".gallery-frame")[0].getBoundingClientRect();
-      return r.left + r.width / 2;
-    });
-  const places = () =>
-    page.evaluate(() =>
-      [...document.querySelectorAll(".gallery-frame")].map((f) => {
-        const r = f.getBoundingClientRect();
-        return [r.left + r.width / 2, r.top + r.height / 2];
-      })
-    );
+  /** What is drawn in one square of the field. */
+  const inkAt = (x, y) =>
+    page.evaluate(([px, py]) => {
+      const canvas = document.querySelector(".chapters-field");
+      const paint = canvas.getContext("2d");
+      const ratio = canvas.width / canvas.clientWidth;
+      const strip = paint.getImageData(
+        Math.round(px * ratio), Math.round(py * ratio),
+        Math.round(90 * ratio), Math.round(90 * ratio)
+      ).data;
+      let ink = 0;
+      for (let n = 3; n < strip.length; n += 4) ink += strip[n];
+      return ink;
+    }, [x, y]);
 
-  // Left alone it stands still: this ring only moves when it is moved.
-  const settled = await front();
-  await page.waitForTimeout(900);
-  expect(Math.abs((await front()) - settled), "it should not drift").toBeLessThan(3);
+  const box = await page.locator(".chapters").boundingBox();
+  const low = box.height - 150;
+  const away = await inkAt(120, low);
+  expect(away, "there should be marks along the foot").toBeGreaterThan(0);
 
-  // Moving the pointer across it does nothing at all — not a lean, not
-  // a turn, not a shift of where you are looking from.
-  const scene = await page.locator("#gallery-scene").boundingBox();
-  const before = await places();
-  await page.mouse.move(scene.x + scene.width * 0.9, scene.y + scene.height * 0.85);
+  // Put the cursor in the middle of a square of it: the marks near it
+  // are shoved out of the lattice and drawn larger, so there is more
+  // ink there than there was.
+  await page.mouse.move(box.x + 165, box.y + low + 45);
   await page.waitForTimeout(700);
-  const after = await places();
-  const moved = after.map((c, i) => Math.hypot(c[0] - before[i][0], c[1] - before[i][1]));
-  expect(Math.max(...moved), "the pointer should leave the ring alone").toBeLessThan(1.5);
+  const under = await inkAt(120, low);
+  expect(under, "the field should answer the cursor").toBeGreaterThan(away * 1.15);
 
-  // Dragging is not a way of turning it either.
-  await page.mouse.down();
-  for (let i = 1; i <= 6; i++) {
-    await page.mouse.move(scene.x + scene.width * 0.9 - i * 26, scene.y + scene.height * 0.85);
-    await page.waitForTimeout(16);
-  }
-  await page.mouse.up();
-  await page.waitForTimeout(400);
-  expect(Math.abs((await front()) - settled), "dragging should not turn it")
-    .toBeLessThan(3);
-
-  // The wheel does. Anticlockwise seen from above is the near side of
-  // the ring travelling to the right.
-  const plate = await page.locator(".gallery-plate").boundingBox();
-  await page.mouse.move(plate.x + plate.width / 2, plate.y + plate.height / 2);
-  const stood = await front();
-  await page.mouse.wheel(0, 400);
-  await page.waitForTimeout(600);
-  expect((await front()) - stood, "scrolling down should carry the front to the right")
-    .toBeGreaterThan(40);
-});
-
-test("picking one from the ring fades it into the big square", async ({ page }) => {
-  await page.goto(PAGE);
-  await page.waitForTimeout(600);
-  await openFavorites(page);
-  expect(await plateName(page)).toBe("f1");
-
-  // Dispatched rather than clicked at a point: the pictures overlap in
-  // the ring, so a click at a place could land on the one in front.
-  await page.locator(".gallery-frame").nth(4).dispatchEvent("click");
-
-  // Mid-change, both layers are on screen — that is what makes it a
-  // fade. A cut would have one at 1 and the other at 0 throughout.
-  await page.waitForTimeout(220);
-  const layers = await page.evaluate(() =>
-    [...document.querySelectorAll(".gallery-layer")].map((l) =>
-      parseFloat(getComputedStyle(l).opacity))
-  );
-  const between = layers.filter((o) => o > 0.05 && o < 0.95);
-  expect(between.length, `one should be coming up as the other goes: ${layers}`).toBe(2);
-
-  await expect.poll(() => plateName(page), { timeout: 4000 }).toBe("f5");
-  await expect(page.locator(".gallery-frame").nth(4)).toHaveClass(/chosen/);
+  // And find its way back when the cursor goes.
+  await page.mouse.move(box.x + box.width - 40, box.y + 30);
+  await page.waitForTimeout(900);
+  expect(await inkAt(120, low), "and settle again afterwards")
+    .toBeLessThan(under);
 });
 
 test("the whole view fits on one screen, with nothing to scroll to", async ({ page }) => {
@@ -288,175 +222,15 @@ test("the whole view fits on one screen, with nothing to scroll to", async ({ pa
     .toBeLessThanOrEqual(fit.window + 2);
 });
 
-test("pointing at the big square brings up the name of what is in it", async ({ page }) => {
-  await page.goto(PAGE);
-  await page.waitForTimeout(600);
-  await openFavorites(page);
-
-  const name = page.locator(".gallery-plate .gallery-hover-name");
-  await expect(name).toHaveText("Placeholder 1");
-  expect(
-    await name.evaluate((el) => parseFloat(getComputedStyle(el).opacity)),
-    "not there until it is pointed at"
-  ).toBeLessThan(0.05);
-
-  // Pointed at towards the corner the name is written in. Not dead
-  // centre: the picture at the front of the ring stands there, and it
-  // is a thing in its own right — the pointer is on it, not on the
-  // square behind it.
-  const box = await page.locator(".gallery-plate").boundingBox();
-  await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.78);
-
-  await expect
-    .poll(() => name.evaluate((el) => parseFloat(getComputedStyle(el).opacity)), { timeout: 3000 })
-    .toBeGreaterThan(0.9);
-  // ...on a darkened corner, so it can be read over the picture.
-  const shade = await page.locator(".gallery-plate").evaluate((el) =>
-    parseFloat(getComputedStyle(el, "::after").opacity));
-  expect(shade, "the corner should darken under it").toBeGreaterThan(0.9);
-
-  // The pictures on the ring carry no name of their own: they are small
-  // and they go past, and anything that lit up as the cursor crossed
-  // them made the ring twitch rather than read.
-  expect(await page.locator(".gallery-frame .gallery-hover-name").count()).toBe(0);
-
-  // And the big square's name follows whatever is showing in it.
-  await page.locator(".gallery-frame").nth(4).dispatchEvent("click");
-  await expect(name).toHaveText("Placeholder 5");
-});
-
-test("with animation turned off, favorites arrives finished", async ({ page }) => {
+test("with animation turned off it arrives without the flicker", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(PAGE);
   await page.waitForTimeout(400);
   await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
-  await page.waitForTimeout(400);
-
-  const inRing = await page.$$eval(".gallery-frame.in-ring", (els) => els.length);
-  const frames = await page.$$eval(".gallery-frame", (els) => els.length);
-  expect(inRing, "no flick to sit through").toBe(frames);
-  expect(await plateName(page)).toBe("f1");
-});
-
-test("nothing on the big square answers the pointer until the flick lands", async ({ page }) => {
-  await page.goto(PAGE);
-  await page.waitForTimeout(600);
-  await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
-
-  // Mid-flick every picture is taking its turn in the square, so naming
-  // whichever one the cursor happens to catch is nonsense.
-  await page.waitForSelector(".gallery-plate", { state: "visible" });
-  const box = await page.locator(".gallery-plate").boundingBox();
-  await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.78);
   await page.waitForTimeout(500);
 
-  const flicking = await page.evaluate(() => ({
-    landed: document.getElementById("gallery").classList.contains("landed"),
-    shade: parseFloat(
-      getComputedStyle(document.querySelector(".gallery-plate"), "::after").opacity),
-    name: parseFloat(
-      getComputedStyle(document.querySelector(".gallery-hover-name")).opacity),
-  }));
-  expect(flicking.landed, "the flick should still be running").toBe(false);
-  expect(flicking.shade, "no shade while it is still flicking").toBeLessThan(0.05);
-  expect(flicking.name, "and no name").toBeLessThan(0.05);
-
-  // Once it has landed, with the pointer still where it was.
-  await openFavorites(page);
-  await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.78 + 1);
-  await expect
-    .poll(() => page.evaluate(() =>
-      parseFloat(getComputedStyle(document.querySelector(".gallery-hover-name")).opacity)),
-      { timeout: 3000 })
-    .toBeGreaterThan(0.9);
-});
-
-test("pointing at a picture on the ring brings it forward", async ({ page }) => {
-  await page.goto(PAGE);
-  await page.waitForTimeout(600);
-  await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
-
-  /**
-   * A picture on the ring the pointer can actually reach, other than
-   * the one at the front. Taken in order of how near the front of the
-   * ring each one has come, and each one checked against what is
-   * actually under that point: the far half of the ring is behind the
-   * big square, so the widest one on the screen is quite often one you
-   * could not point at if you tried.
-   */
-  const pickable = () =>
-    page.evaluate(() => {
-      const cards = [...document.querySelectorAll(".gallery-frame")];
-      const nearest = cards
-        .map((card, i) => ({ card: card, at: i, dim: parseFloat(card.style.getPropertyValue("--dim")) }))
-        .filter((one) => one.at > 0)
-        .sort((a, b) => a.dim - b.dim);
-      for (const one of nearest) {
-        const r = one.card.getBoundingClientRect();
-        const x = r.left + r.width / 2, y = r.top + r.height / 2;
-        const under = document.elementFromPoint(x, y);
-        if (under && one.card.contains(under)) {
-          return { at: one.at, x: x, y: y, width: r.width };
-        }
-      }
-      return null;
-    });
-  const look = (at) =>
-    page.evaluate((i) => {
-      const card = document.querySelectorAll(".gallery-frame")[i];
-      const face = card.querySelector(".gallery-face");
-      return {
-        grown: getComputedStyle(face).transform,
-        edge: getComputedStyle(face).borderTopColor,
-        wash: parseFloat(getComputedStyle(face, "::before").opacity),
-      };
-    }, at);
-
-  // Nothing answers while the flick is still running.
-  await page.waitForSelector(".gallery-frame", { state: "attached" });
-  await page.waitForFunction(
-    () => document.querySelectorAll(".gallery-frame.in-ring").length > 2,
-    null,
-    { timeout: 20000 }
-  );
-  const mid = await pickable();
-  await page.mouse.move(mid.x, mid.y);
-  await page.waitForTimeout(400);
-  if (!(await page.evaluate(() => document.getElementById("gallery").classList.contains("landed")))) {
-    expect(
-      await page.evaluate(() =>
-        getComputedStyle(document.querySelector(".gallery-frame")).getPropertyValue("--pick").trim()),
-      "nothing picked out while it is still flicking"
-    ).toBe("");
-  }
-
-  await openFavorites(page);
-  await page.mouse.move(0, 0);
-  await page.waitForTimeout(500);
-
-  const card = await pickable();
-  const resting = await look(card.at);
-  await page.mouse.move(card.x, card.y);
-  await page.waitForTimeout(600);
-  const held = await look(card.at);
-
-  // It grows, it comes out from under the wash that places it in the
-  // ring, and it takes the darker edge.
-  expect(held.grown, "it should be drawn larger").not.toBe(resting.grown);
-  expect(held.grown).toMatch(/^matrix3d\(1\.1/);
-  expect(held.wash, "and come out from under the wash").toBeLessThan(0.02);
-  expect(held.edge, "and take the darker edge").not.toBe(resting.edge);
-
-  // And no shade drawn across it, and no name written on it. The shade
-  // is asked about by whether it is drawn at all rather than by how
-  // faint it is: a pseudo-element with no content of its own is not
-  // there, and reports an opacity of 1 while drawing nothing.
-  expect(await page.locator(".gallery-frame .gallery-hover-name").count()).toBe(0);
-  expect(
-    await page.evaluate((i) =>
-      getComputedStyle(
-        document.querySelectorAll(".gallery-frame")[i].querySelector(".gallery-face"),
-        "::after").content, card.at),
-    "no shade over a picture on the ring"
-  ).toBe("none");
+  const view = page.locator(".chapters");
+  await expect(view).toHaveClass(/lit/);
+  await expect(view).not.toHaveClass(/flicker/);
+  await expect(page.locator(".chapters-tab.open")).toHaveCount(1);
 });

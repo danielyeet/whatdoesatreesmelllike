@@ -140,82 +140,50 @@
 <!--
   FAVORITES — the other way of looking at this category, and the other
   half of this page. It is hidden until the Favorites button is
-  pressed; favorites.js then flicks the big square through every
-  picture below, lands on the first, and stands the rest on a ring
-  going round it in three dimensions — the near side of the ring
-  passing in front of the square, the far side behind. Scrolling turns
-  it; clicking one fades that picture into the big square.
+  pressed; the screen then flickers once, a menu of chapters comes up
+  on the right, and a field of marks settles along the foot that
+  answers the cursor. favorites.js is the whole of it.
 
-  TO ADD A FAVOURITE: copy one whole <button class="gallery-frame">
-  block, give it the next name, and uncomment its <img>. The ring, the
-  flick and the order all come from however many of these are here.
-  Each one is given a second face by the script so the same picture is
-  there when you are looking at the back of the ring.
+  TO ADD A FAVOURITE: copy one whole <a class="gallery-entry"> block
+  below, give it a title, a date and a chapter, and point its href at
+  the piece. Nothing in the script changes — the chapters are read off
+  however many different data-chapter values are here, in the order
+  they first appear, so adding a new chapter is the same edit.
 
-  There is no description under the ring — it was taken out so the
-  whole view fits on one screen without scrolling. The name of
-  whichever picture you are pointing at shows in its own corner
-  instead.
+  WITHOUT JAVASCRIPT both views are simply on the page one under the
+  other, which is the right fallback: everything is reachable.
+
+  THE TITLES, THE DATES AND THE CHAPTER NAMES ARE ALL PLACEHOLDERS,
+  like the "Untitled" captions on the sheet above.
 -->
 <div class="gallery" id="gallery">
 
-  <!-- One scene in three dimensions: the big square at the middle of
-       it, and the rest of the pictures on a ring around it. Only the
-       pictures are placed and turned; the square simply sits at the
-       middle, which is why it is the one thing here that never
-       moves. -->
-  <div class="gallery-scene" id="gallery-scene">
-    <div class="gallery-space" id="gallery-space">
+  <a class="gallery-entry" data-chapter="Chapter 1" data-date="14.03.2024"
+     href="../works/example-gallery-work.html">First favourite</a>
 
-      <div class="gallery-plate" id="gallery-plate" aria-live="polite"></div>
+  <a class="gallery-entry" data-chapter="Chapter 1" data-date="02.11.2023"
+     href="../works/example-article-work.html">Second favourite</a>
 
-      <button class="gallery-frame" type="button" aria-label="Show f1">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f1</span>
-      </button>
+  <a class="gallery-entry" data-chapter="Chapter 1" data-date="27.06.2023"
+     href="../works/example-gallery-work.html">Third favourite</a>
 
-      <button class="gallery-frame" type="button" aria-label="Show f2">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f2</span>
-      </button>
+  <a class="gallery-entry" data-chapter="Chapter 2" data-date="09.01.2024"
+     href="../works/example-article-work.html">Fourth favourite</a>
 
-      <button class="gallery-frame" type="button" aria-label="Show f3">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f3</span>
-      </button>
+  <a class="gallery-entry" data-chapter="Chapter 2" data-date="18.08.2022"
+     href="../works/example-gallery-work.html">Fifth favourite</a>
 
-      <button class="gallery-frame" type="button" aria-label="Show f4">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f4</span>
-      </button>
+  <a class="gallery-entry" data-chapter="Chapter 2" data-date="30.04.2025"
+     href="../works/example-article-work.html">Sixth favourite</a>
 
-      <button class="gallery-frame" type="button" aria-label="Show f5">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f5</span>
-      </button>
+  <a class="gallery-entry" data-chapter="Chapter 3" data-date="05.12.2021"
+     href="../works/example-gallery-work.html">Seventh favourite</a>
 
-      <button class="gallery-frame" type="button" aria-label="Show f6">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f6</span>
-      </button>
+  <a class="gallery-entry" data-chapter="Chapter 3" data-date="22.09.2024"
+     href="../works/example-article-work.html">Eighth favourite</a>
 
-      <button class="gallery-frame" type="button" aria-label="Show f7">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f7</span>
-      </button>
-
-      <button class="gallery-frame" type="button" aria-label="Show f8">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f8</span>
-      </button>
-
-      <button class="gallery-frame" type="button" aria-label="Show f9">
-        <!-- <img src="../images/your-picture.jpg" alt=""> -->
-        <span class="sheet-number">f9</span>
-      </button>
-
-    </div>
-  </div>
+  <a class="gallery-entry" data-chapter="Chapter 3" data-date="11.05.2020"
+     href="../works/example-gallery-work.html">Ninth favourite</a>
 
 </div>
 

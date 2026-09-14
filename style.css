@@ -996,9 +996,10 @@ body.sheet-named .sheet-where {
 
 /* ==================================================================
    FAVORITES — the other half of a contact sheet page
-   One big square, a ring of pictures under it that can be dragged
-   round, and a description underneath. favorites.js does the flick,
-   the ring's arithmetic and the switching; this is how it looks.
+   The screen flickers once, a menu of chapters comes up on the right,
+   and a field of marks settles along the foot that answers the
+   cursor. favorites.js does the reading and the switching; this is
+   how it looks.
    ================================================================== */
 /* Only one of the two views is on the page at a time. The one being
    left fades away first and the other arrives after it — favorites.js
@@ -1017,244 +1018,210 @@ body.view-switching .sheet,
 body.view-switching .gallery,
 body.view-switching .sheet-head .category-lede { opacity: 0; }
 
-.gallery {
-  /* The big square, and everything else in this view measured off it. */
-  --plate: min(440px, 35vw, 52vh);
-  position: relative;
-  /* The whole width of the page and the whole of what is left of its
-     height: this view is not a panel sitting in the middle of a page,
-     it is the page. The ring is as wide as the screen because there is
-     nothing else on the screen for it to keep out of the way of. */
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  display: none;
-}
+.gallery { position: relative; width: 100%; margin: 0; padding: 0; display: none; }
 body.view-favorites .gallery { display: block; }
 body.view-favorites .sheet { display: none; }
 body.view-favorites .sheet-head .category-lede { opacity: 0; }
-/* Without the script there is no Favorites view to show: its pictures
-   are placed in three dimensions by favorites.js and its buttons do
-   nothing on their own, so all it would put on the page is a screen's
-   worth of empty space under the sheet. The sheet itself falls back to
-   a plain grid of every picture in the category, captions and all, so
-   nothing is unreachable. */
-body:not(.sheet-scripted) .gallery { display: none; }
+/* Without the script both views are simply on the page, one under the
+   other, which is the right fallback: everything is reachable. The
+   entries are a plain list of links until then. */
+body:not(.sheet-scripted) .gallery { display: block; }
+.gallery-entry {
+  display: block;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--sans);
+  color: var(--ink);
+  text-decoration: none;
+}
+body.sheet-scripted .gallery-entry { display: none; }
 
-/* ------------------------------------------------------------------
-   THE SCENE
-
-   One space in three dimensions with the big square at the middle of
-   it and the pictures on a ring going round it, so they pass in front
-   of the square and behind it. The browser works out what is in front
-   of what on its own, which it can only do while everything stays in
-   the same 3D space — so nothing between .gallery-space and a picture
-   may flatten it (no overflow, no opacity, no filter on the way down).
-
-   The perspective is set here, on the parent of the thing that turns.
-   Set on the turning element itself it turns with it, and then the
-   ring is drawn as if you were looking straight at every picture at
-   once, which is no perspective at all.
-   ------------------------------------------------------------------ */
-.gallery-scene {
+.chapters {
   position: relative;
-  /* Everything the page has left under the row of buttons — the same
-     figure .views reserves for them above. */
+  width: 100%;
   height: calc(100vh - clamp(64px, 9vh, 96px));
-  /* Long, because the ring is wide: at a shorter focal length the
-     picture nearest you is drawn twice the size of the one behind the
-     square, which reads as two different sets of pictures rather than
-     as one ring turning. */
-  perspective: 1800px;
-}
-.gallery-space {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-}
-
-/* The big square, dead centre of the scene. favorites.js writes its
-   transform: the exact opposite of the space's own, so it is the one
-   thing here that stays square to you and never moves however far the
-   ring has gone round. */
-.gallery-plate {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--plate);
-  aspect-ratio: 1 / 1;
-  /* Dead centre of the scene, which is also where the ring's own centre
-     is: the two are concentric, so the ring's level line runs across
-     the middle of the picture and the pictures on it are the same
-     distance out on every side of it. */
-  transform: translate(-50%, -50%);
-  border: 1px solid var(--ink);
-  background: var(--bg-2);
-}
-/* The two layers the big square is made of: painting one and fading it
-   up over the other is what turns one picture into another. */
-.gallery-layer {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  background-color: var(--bg-2);
-  background-image: repeating-linear-gradient(
-    var(--hatch-angle, -45deg),
-    var(--line) 0px, var(--line) 1px,
-    transparent 1px, transparent var(--hatch-gap, 12px)
-  );
-  transition: opacity 0.55s var(--menu-ease);
-}
-.gallery-layer.has-picture { background-image: none; }
-.gallery-layer img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.gallery-layer.shown { opacity: 1; }
-/* The flick wants cuts, not fades — one picture going past another. */
-.gallery-layer.no-fade { transition: none; }
-.gallery-plate > .sheet-number { z-index: 2; }
-
-/* ------------------------------------------------------------------
-   A PICTURE ON THE RING
-
-   Each one is turned to face outwards from the middle and then pushed
-   out along its own new direction, so the ring stands in space rather
-   than being drawn as a circle. That means the far side of the ring is
-   showing you its back — which is why every picture is built as a card
-   with a face on each side, the same picture on both, rather than as a
-   single one-sided panel.
-   ------------------------------------------------------------------ */
-.gallery-frame {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  padding: 0;
-  border: 0;
-  background: none;
-  transform-style: preserve-3d;
-  cursor: pointer;
-  /* They take their places one after another once the flick has
-     landed; before that there is nothing but the big square. */
-  visibility: hidden;
-}
-.gallery-frame.in-ring { visibility: visible; }
-.gallery-face {
-  position: absolute;
-  inset: 0;
   overflow: hidden;
-  backface-visibility: hidden;
-  transition: transform 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
-  border: 1px solid var(--line);
-  background-color: var(--bg-2);
-  background-image: repeating-linear-gradient(
-    var(--hatch-angle, -45deg),
-    var(--line) 0px, var(--line) 1px,
-    transparent 1px, transparent var(--hatch-gap, 12px)
-  );
 }
-.gallery-face:has(img) { background-image: none; background-color: transparent; }
-.gallery-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* The one showing in the big square is marked; nothing else about a
-   picture on the ring answers the pointer. They are small, there are a
-   lot of them and they are moving past — anything that lit up as the
-   cursor crossed them made the ring twitch rather than read. */
-.gallery-frame.chosen .gallery-face { border-color: var(--ink); }
-/* The far side of the ring is washed out towards the colour of the
-   page. It is a veil laid over the picture rather than the picture's
-   own opacity on purpose: anything transparent in this chain would
-   flatten the card and take the far face's hiding with it.
-   favorites.js sets --dim from how far round the ring each one is;
-   --veil is the stylesheet's own hold over it, and is how pointing at
-   a picture clears it. The two are separate because --dim is written
-   on the element every frame, and anything written on an element
-   outranks a rule in here. */
-.gallery-face::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--bg);
-  opacity: calc(var(--dim, 0) * var(--veil, 1));
-  transition: opacity 0.3s var(--menu-ease);
-  pointer-events: none;
+/* The field of marks along the foot is drawn on this; the menu and
+   the plate are laid over it. */
+.chapters-field { position: absolute; inset: 0; display: block; }
+
+/* Coming up. A panel being switched on does not simply appear: it
+   catches, drops, and settles. Two flickers is enough to read as one
+   — any more and it reads as a fault rather than as a switch. */
+@keyframes chapters-flicker {
+  0% { opacity: 0; }
+  12% { opacity: 0.85; }
+  18% { opacity: 0.1; }
+  32% { opacity: 1; }
+  38% { opacity: 0.35; }
+  55% { opacity: 1; }
+  62% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+.chapters-plate, .chapters-menu { opacity: 0; }
+.chapters.flicker .chapters-plate,
+.chapters.flicker .chapters-menu {
+  animation: chapters-flicker 0.46s steps(1, end) both;
+}
+.chapters.lit .chapters-plate,
+.chapters.lit .chapters-menu {
+  opacity: 1;
+  transition: opacity 0.5s var(--menu-ease);
 }
 
-/* Pointing at a picture on the ring brings it forward: it grows a
-   little, comes out from under the wash that places it in the ring,
-   and takes the darker edge the chosen one carries. That is the whole
-   of it — no shade drawn across it and no name written on it. They are
-   small, there are a lot of them and they go past, and anything more
-   than this made the ring twitch rather than read.
-
-   Nothing answers until the flick has landed: during it every picture
-   in turn is the one in the big square. */
-.gallery.landed .gallery-frame:hover { --pick: 1.12; --veil: 0; }
-.gallery.landed .gallery-frame:hover .gallery-face { border-color: var(--ink); }
-
-
-/* Pointing at the big square darkens its bottom right corner and
-   brings up what it is called there — the only place a name is written
-   in this view now that the description underneath has gone. It waits
-   until the flick has landed: during the flick every picture in turn is
-   the one in the square, and naming whichever one the cursor happened
-   to catch is nonsense. */
-.gallery-plate::after {
-  content: "";
+/* The open chapter, written large on the left. */
+.chapters-plate {
   position: absolute;
-  inset: 0;
-  /* Kept to the corner it is written in: strong where the lettering is
-     and gone a short way in from it, so it reads as a shadow under the
-     name rather than as the picture being darkened. */
-  background: linear-gradient(
-    to top left,
-    rgba(16, 16, 11, 0.82), rgba(16, 16, 11, 0.34) 12%, rgba(16, 16, 11, 0) 27%
-  );
-  opacity: 0;
-  transition: opacity 0.4s var(--menu-ease);
-  pointer-events: none;
-  z-index: 1;
+  left: clamp(24px, 5vw, 76px);
+  top: clamp(40px, 10vh, 104px);
+  max-width: min(420px, 42vw);
 }
-.gallery.landed .gallery-plate:hover::after { opacity: 1; }
-.gallery-hover-name {
-  position: absolute;
-  right: 12px;
-  bottom: 11px;
-  /* Above the shade, or the shade is drawn over it — a pseudo-element
-     is the last thing in the box and paints over everything in it. */
-  z-index: 2;
-  max-width: calc(100% - 18px);
+.chapters-kicker {
+  margin: 0 0 12px;
   font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  color: #f0efe8;
-  text-align: right;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.4s var(--menu-ease);
-  pointer-events: none;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--brass);
 }
-.gallery.landed .gallery-plate:hover .gallery-hover-name { opacity: 1; }
+.chapters-plate h2 {
+  margin: 0;
+  font-size: clamp(30px, 4.4vw, 56px);
+  letter-spacing: -0.02em;
+}
+.chapters-count {
+  margin: 14px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* The menu, on the right. */
+.chapters-menu {
+  position: absolute;
+  right: clamp(24px, 5vw, 76px);
+  top: clamp(40px, 10vh, 104px);
+  width: min(400px, 44vw);
+}
+.chapters-rail { display: flex; flex-direction: column; margin-bottom: 26px; }
+.chapters-tab {
+  position: relative;
+  display: grid;
+  grid-template-columns: 11px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 2px;
+  border: none;
+  border-top: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.3s var(--menu-ease);
+}
+.chapters-rail .chapters-tab:last-child { border-bottom: 1px solid var(--line); }
+.chapters-tab:hover, .chapters-tab.open { color: var(--ink); }
+.chapters-tab::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  bottom: -1px;
+  width: 0;
+  height: 1px;
+  background: var(--brass);
+  transition: width 0.45s var(--menu-ease);
+}
+.chapters-tab.open::after { width: 100%; }
+/* The same hollow square the rest of the site marks a point with. */
+.chapters-reg { width: 9px; height: 9px; border: 1px solid currentColor; }
+.chapters-tab.open .chapters-reg { background: var(--brass); border-color: var(--brass); }
+.chapters-name {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 15px;
+  color: inherit;
+}
+.chapters-count-small { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+.chapters-panel[hidden] { display: none; }
+.chapters-panel { animation: chapters-open 0.45s var(--menu-ease) both; }
+@keyframes chapters-open {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: none; }
+}
+.chapters-item {
+  display: grid;
+  grid-template-columns: 82px 1fr auto;
+  align-items: baseline;
+  gap: 14px;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--ink);
+  transition: padding-left 0.3s var(--menu-ease);
+}
+.chapters-item:hover { padding-left: 8px; }
+/* The date is what a favourite is filed under, so it is set first and
+   in the mono the rest of the site keeps for readings. */
+.chapters-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.chapters-item:hover .chapters-date { color: var(--brass); }
+.chapters-item-name { font-family: var(--sans); font-size: 15px; }
+.chapters-go {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
+}
+.chapters-item:hover .chapters-go,
+.chapters-item:focus-visible .chapters-go { opacity: 1; transform: none; color: var(--brass); }
+
+@media (max-width: 860px) {
+  .chapters { height: auto; min-height: calc(100vh - 64px); }
+  .chapters-plate {
+    position: static;
+    padding: 18px 24px 0;
+    max-width: none;
+  }
+  .chapters-menu {
+    position: static;
+    width: auto;
+    padding: 26px 24px 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapters-panel { animation-duration: 0.01s; }
+  .chapters.flicker .chapters-plate,
+  .chapters.flicker .chapters-menu { animation-duration: 0.01s; }
+}
 
 /* ==================================================================
-   THE CONSOLE — categories/theories.html
-   A category read the way an instrument is read: the theories sorted
-   into channels down the left, the open one on the right, and a
-   reading along the foot with one peak per channel. Everything here
-   is written under `body.consoled`, which console.js adds — without
-   it the page is the plain list of rows every other category uses,
-   and stays that way.
+   THE STARFIELD — categories/theories.html
+   A night sky in three dimensions that you scroll *into*. The field
+   is drawn on a fixed canvas; the page itself is made tall enough to
+   hold the road, and the scroll position is the travel. Everything
+   here is written under `body.starred`, which starfield.js adds —
+   without it the page is the plain list of rows every other category
+   uses, and stays that way.
    ================================================================== */
-body.consoled { overflow: hidden; }
-body.consoled .page-content { padding: 0; margin: 0; max-width: none; }
+body.starred { background: #05070d; }
+body.starred .page-content { padding: 0; margin: 0; max-width: none; }
 /* The list is still in the page for anything reading rather than
-   looking — it is the console's own index — but it is not drawn. The
-   margins go with it: taken out of sight but left with the margins it
-   was laid out with, the lede alone put twenty-five pixels below the
-   fold and gave a one-screen page something to scroll. */
-body.consoled .work-list,
-body.consoled .page-content > h1,
-body.consoled .page-content > .category-lede {
+   looking — it is the sky's own index — but it is not drawn. Pinned
+   to the corner with its margins taken off: left where it was laid
+   out it adds to the height of a page whose height is the road. */
+body.starred .work-list,
+body.starred .page-content > h1,
+body.starred .page-content > .category-lede {
   position: absolute;
-  /* Pinned to the corner rather than left where they were laid out:
-     below a full-height console, a one-pixel box is still a pixel
-     past the fold and gives the page something to scroll. */
   top: 0;
   left: 0;
   width: 1px;
@@ -1264,14 +1231,25 @@ body.consoled .page-content > .category-lede {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+/* The Menu is written on the sky now, so it has to be light. */
+body.starred .menu-trigger { color: #dce6f7; }
 
-.console { position: relative; width: 100%; height: 100vh; overflow: hidden; }
-/* The squared paper and the reading are drawn on this; everything
-   else on the page is laid over it. */
-.console-paper { position: absolute; inset: 0; display: block; }
+/* What you scroll down. It has no content of its own: it is there to
+   give the page a height, so that the scrollbar, the arrow keys, Page
+   Down and a finger on a phone all drive the travel without a line of
+   code catching them. */
+.sky-road { width: 100%; }
 
-.console-readout {
-  position: absolute;
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #05070d;
+}
+.sky-field { display: block; width: 100%; height: 100%; }
+
+.sky-readout {
+  position: fixed;
   top: 22px;
   right: 26px;
   margin: 0;
@@ -1279,171 +1257,92 @@ body.consoled .page-content > .category-lede {
   font-family: var(--mono);
   font-size: 11px;
   line-height: 15px;
-  letter-spacing: 0.1em;
-  color: var(--muted);
+  letter-spacing: 0.12em;
+  color: rgba(220, 230, 247, 0.55);
 }
+body.starred .page-where { color: rgba(220, 230, 247, 0.55); border-left-color: rgba(220, 230, 247, 0.2); }
 
-/* The two columns: the channels, and whichever one is open. Sized off
-   the window's height as well as its width, because the reading along
-   the foot has to keep its own room. */
-.console-frame {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(230px, 27%) 1fr;
-  gap: clamp(32px, 6vw, 96px);
-  align-items: start;
-  width: min(1180px, calc(100% - 120px));
-  margin: 0 auto;
-  height: 100%;
-  /* Set in the optical middle of what is left over: clear of the Menu
-     and the readout above, clear of the reading along the foot below,
-     and centred in the space between them rather than hung from the
-     top of it. */
-  align-content: center;
-  padding: 92px 0 196px;
+/* Said once, at the top of the road, and gone as soon as you have
+   started down it. */
+.sky-cue {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: rgba(220, 230, 247, 0.4);
+  transition: opacity 0.7s var(--menu-ease);
+  pointer-events: none;
 }
-
-/* ---- the channels ---- */
-.console-rail { display: flex; flex-direction: column; }
-.console-tab {
-  position: relative;
-  display: grid;
-  grid-template-columns: 14px 26px 1fr auto;
-  align-items: baseline;
-  gap: 12px;
-  padding: 13px 2px;
-  border: none;
-  border-top: 1px solid var(--line);
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  color: var(--muted);
-  transition: color 0.3s var(--menu-ease);
-}
-.console-rail .console-tab:last-child { border-bottom: 1px solid var(--line); }
-.console-tab:hover { color: var(--ink); }
-.console-tab.open { color: var(--ink); }
-/* The open channel is marked by a rule running out of it towards the
-   panel it has opened, rather than by a block of colour. */
-.console-tab::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 0;
-  height: 1px;
-  background: var(--brass);
-  transition: width 0.45s var(--menu-ease);
-}
-.console-tab.open::after { width: 100%; }
-
-/* The same hollow square the node map marks a point with. */
-.console-reg {
+.sky-cue.gone { opacity: 0; }
+.sky-cue-mark {
   width: 9px;
   height: 9px;
-  border: 1px solid currentColor;
-  align-self: center;
-  transition: background 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
-}
-.console-tab.open .console-reg { background: var(--brass); border-color: var(--brass); }
-.console-no {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-}
-.console-name {
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: 17px;
-  letter-spacing: -0.01em;
-  color: inherit;
-}
-.console-count {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  align-self: center;
+  border: 1px solid rgba(220, 230, 247, 0.4);
 }
 
-/* ---- the open channel ---- */
-.console-panels { position: relative; }
-.console-panel[hidden] { display: none; }
-.console-panel {
-  animation: console-open 0.5s var(--menu-ease) both;
-}
-@keyframes console-open {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
-}
-.console-head { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
-.console-kicker {
-  margin: 0 0 10px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--brass);
-}
-.console-head h2 {
-  margin: 0;
-  font-size: clamp(28px, 3.6vw, 44px);
-  letter-spacing: -0.02em;
-}
-
-.console-entries { display: flex; flex-direction: column; }
-.console-entry {
-  display: grid;
-  grid-template-columns: 14px 1fr auto;
-  align-items: center;
-  gap: 16px;
-  padding: 15px 2px;
-  border-bottom: 1px solid var(--line);
-  text-decoration: none;
-  color: var(--ink);
-  transition: padding-left 0.3s var(--menu-ease);
-}
-.console-entry:hover { padding-left: 10px; }
-.console-entry:hover .console-reg { background: var(--brass); border-color: var(--brass); }
-.console-entry-name {
+/* A constellation is the thing you click: the link is laid over the
+   cluster rather than beside it, and starfield.js sizes it to
+   whatever the cluster is doing on the screen this frame — so nothing
+   here may give one a size or a transform of its own. */
+.sky-marks { position: fixed; inset: 0; pointer-events: none; }
+.sky-stop {
+  position: absolute;
   display: block;
+  text-decoration: none;
+  pointer-events: auto;
+  border: 1px solid transparent;
+  transition: border-color 0.3s var(--menu-ease);
+}
+.sky-stop.gone { display: none; }
+.sky-stop:hover, .sky-stop:focus-visible { border-color: rgba(104, 178, 255, 0.45); }
+.sky-say {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 8px;
+  display: block;
+  white-space: nowrap;
+}
+.sky-no {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: rgba(104, 178, 255, 0.85);
+}
+.sky-name {
+  display: block;
+  margin-top: 3px;
   font-family: var(--sans);
   font-weight: 500;
   font-size: 16px;
+  letter-spacing: -0.01em;
+  color: #eaf1ff;
 }
-.console-entry-meta {
+.sky-meta {
   display: block;
+  margin-top: 3px;
   font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 4px;
-}
-.console-go {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--muted);
+  font-size: 10px;
+  color: rgba(220, 230, 247, 0.4);
   opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
+  transition: opacity 0.3s var(--menu-ease);
 }
-.console-entry:hover .console-go,
-.console-entry:focus-visible .console-go { opacity: 1; transform: none; color: var(--brass); }
+/* The line under the name is only worth reading once you are among
+   it, so it waits until you are close and until you point at it. */
+.sky-stop.close:hover .sky-meta,
+.sky-stop.close:focus-visible .sky-meta { opacity: 1; }
+.sky-stop:hover .sky-name, .sky-stop:focus-visible .sky-name { color: #9ecbff; }
 
 @media (max-width: 860px) {
-  body.consoled { overflow: auto; }
-  .console { height: auto; min-height: 100vh; }
-  .console-frame {
-    grid-template-columns: 1fr;
-    gap: 34px;
-    width: calc(100% - 48px);
-    padding-top: 86px;
-    padding-bottom: 150px;
-    height: auto;
-  }
-  .console-readout { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .console-panel { animation-duration: 0.01s; }
+  .sky-readout { display: none; }
 }
 
 /* ==================================================================

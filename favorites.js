@@ -2,364 +2,340 @@
 // FAVORITES — the other half of a contact sheet page
 //
 // The page carries two ways of looking at one category, and the two
-// buttons above the middle window switch between them:
+// buttons above switch between them:
 //
 //   Description portfolio   the map, drawn by contact-sheet.js
-//   Favorites               this: one big square in the middle of the
-//                           page with the rest of the pictures on a
-//                           wide level ring going round it in three
-//                           dimensions, turned by the wheel
+//   Favorites               this: the screen flickers once, a menu of
+//                           chapters comes up on the right, and a
+//                           field of marks settles along the foot
+//                           that answers the cursor
 //
-// Switching fades the one you are leaving away before the other
-// arrives. Coming into Favorites the big square flicks through every
-// picture the way the sheet does — the same accelerating-hold run,
-// ending on the first rather than cutting to it — and then the rest
-// take their places on the ring.
+// Everything in the menu is read off the page itself: the chapters
+// are the different data-chapter values on the entries, in the order
+// they first appear, and each entry carries its own date. So adding
+// a favourite, or a whole new chapter, is one HTML edit.
 //
-// Picking one fades it into the big square. Fades, not the hard cuts
-// the flick is made of: a cut is the film going past, a fade is you
-// choosing something, and they should not look the same.
-//
-// The pictures are the <button class="gallery-frame"> blocks in the
-// page. This file never touches the map's own elements, and the map
-// never touches these — the only thing they share is a class on
-// <body>, which style.css reads to fade one out and the other in.
+// This file also owns the switching between the two views, because
+// it owns the buttons. It never touches the map's elements and the
+// map never touches these: all they share is a class on <body>,
+// which style.css reads to take one view out of the page and put the
+// other in.
 // ============================================================
 (function () {
   const gallery = document.getElementById("gallery");
-  const scene = document.getElementById("gallery-scene");
-  const space = document.getElementById("gallery-space");
-  const plate = document.getElementById("gallery-plate");
-  if (!gallery || !scene || !space || !plate) return; // not a favorites page
+  if (!gallery) return;   // not a page with favorites on it
 
-  const frames = Array.from(space.querySelectorAll(".gallery-frame"));
-  if (!frames.length) return;
-
+  const entries = Array.from(gallery.querySelectorAll(".gallery-entry"));
   const buttons = Array.from(document.querySelectorAll(".sheet-filter"));
+  if (!entries.length) return;
+
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ============================================================
   // TUNING
   // ============================================================
-  // The flick, on the same footing as the contact sheet's — see the
-  // note there for why it is set up to END on the first picture.
-  const FLIP_FIRST_MS = 42;
-  const FLIP_SLOW = 1.14;
-  const FLIP_LAST_MS = 430;
-
   const SWITCH_MS = 520;       // how long the view being left takes to go
-  const RING_AFTER_MS = 260;   // pause between the flick landing and the ring arriving
-  const RING_STAGGER_MS = 70;  // one picture into the ring after another
+  const FLICKER_MS = 460;      // and how long the screen takes to settle after it
 
-  // The ring in space. Nothing here is in pixels across the page: the
-  // ring is measured against the big square it goes round, so the whole
-  // scene scales together.
-  //
-  // The ring lies flat and level — every picture on it sits at the same
-  // height, on one horizontal line through the middle of the square,
-  // and the only thing that tells you where each one is standing is how
-  // big and how strong it is drawn. It is wide and the pictures on it
-  // are small: they are there to be picked from, and the big square is
-  // the thing you are looking at.
-  // A picture on the ring is a ninth of the big square: a third of its
-  // height and a third of its width, so nine of them would tile it.
-  const RING_SIZE = 1 / 3;
-  const RING_SIZE_MIN = 44, RING_SIZE_MAX = 190;
-  const RING_WIDE = 1;         // square, the same as every other picture on the site
-  const RING_REACH = 1.0;      // how far out the ring stands, as a share of the square
-  const SCROLL_TURN = 0.00022; // how far a notch of scroll turns it — anticlockwise
-  const SPIN_MAX = 0.06;       // the fastest it will turn however hard it is pushed
-  const SPIN_DRAG = 0.93;      // how quickly a push runs down
-  const DIM_FAR = 0.58;        // how far the back of the ring washes out
+  // The field of marks along the foot. Geometric rather than organic:
+  // a lattice on a fixed pitch, every mark the same, and what the
+  // cursor does to it is the only thing that is not regular.
+  const PITCH = 30;            // how far apart the marks stand
+  const MARK = 3.4;            // and how big one is at rest
+  const FIELD_DEEP = 0.46;     // how much of the page's height the field takes
+  const REACH = 190;           // how far from the cursor a mark still answers
+  const SHOVE = 16;            // how far it is pushed out of the lattice
+  const SWELL = 2.6;           // and how much larger it is drawn
+  const EASE = 0.14;           // how quickly a mark goes where it is going
+  const FADE_IN = 0.55;        // the field is faintest at the top and strongest low
+
+  const INK = "23,23,15";
+  const BRASS = "156,111,53";
+
+  const numbered = (i) => String(i + 1).padStart(2, "0");
 
   // ============================================================
-  // THE PICTURES
+  // WHAT IS ON THE PAGE
   // ============================================================
-  // The same hatching every other placeholder on this site is drawn
-  // with, one angle per picture so that flicking through them reads as
-  // different pictures going past. The name in the corner is not part
-  // of the placeholder: it stays once a real picture is in the frame.
-  // What a picture is called. Placeholder names for placeholder
-  // pictures; the real one will be whatever each piece is called, and
-  // would be read off the frame in the page rather than counted here.
-  const titleOf = (index) => "Placeholder " + (index + 1);
-
-  const nameOf = (frame) => {
-    const mark = frame.querySelector(".sheet-number");
-    return mark ? mark.textContent.trim() : "";
-  };
-
-  // ============================================================
-  // THE BIG SQUARE
-  //
-  // Two layers, one on top of the other. Showing a picture paints it
-  // onto whichever layer is underneath and then fades that one up, so
-  // one picture becomes another rather than replacing it. The flick
-  // asks for cuts instead, and gets them by turning the fade off.
-  // ============================================================
-  const layers = [document.createElement("div"), document.createElement("div")];
-  layers.forEach((layer) => {
-    layer.className = "gallery-layer";
-    plate.appendChild(layer);
-  });
-  const plateName = document.createElement("span");
-  plateName.className = "sheet-number";
-  plate.appendChild(plateName);
-  // Pointing at the big square darkens its bottom corner and brings up
-  // the name of whatever is showing in it.
-  const hoverName = document.createElement("span");
-  hoverName.className = "gallery-hover-name";
-  plate.appendChild(hoverName);
-  let front = 0;
-  let showingIndex = -1;
-
-  function paint(layer, index) {
-    const frame = frames[index];
-    layer.style.setProperty("--hatch-angle", frame.style.getPropertyValue("--hatch-angle"));
-    layer.style.setProperty("--hatch-gap", frame.style.getPropertyValue("--hatch-gap"));
-    // A real picture, once there is one, is copied across rather than
-    // re-pointed at: the frame in the ring keeps its own.
-    layer.textContent = "";
-    const picture = frame.querySelector("img");
-    if (picture) layer.appendChild(picture.cloneNode());
-    layer.classList.toggle("has-picture", !!picture);
-  }
-
-  function show(index, cut) {
-    if (index === showingIndex && !cut) return;
-    showingIndex = index;
-    const back = 1 - front;
-    paint(layers[back], index);
-    layers[back].classList.toggle("no-fade", !!cut);
-    layers[front].classList.toggle("no-fade", !!cut);
-    layers[back].classList.add("shown");
-    layers[front].classList.remove("shown");
-    front = back;
-    plateName.textContent = nameOf(frames[index]);
-    hoverName.textContent = titleOf(index);
-    frames.forEach((frame, i) => frame.classList.toggle("chosen", i === index));
-  }
-
-  // ============================================================
-  // THE ORBIT
-  //
-  // The pictures stand on a ring in three dimensions with the big
-  // square at the middle of it, so they pass in front of the square and
-  // behind it. Everything is in one 3D space, which is what lets the
-  // browser work out for itself what is in front of what.
-  //
-  // Nothing here turns the space itself. Each picture is *placed* —
-  // moved to its own point on the ring and then turned about the
-  // upright only, so it faces out from the middle:
-  //
-  //     translate3d(x, 0, z) rotateY(its angle round the ring)
-  //
-  // which is what keeps every one of them standing upright. Turning
-  // the space instead leans them all over with it, and a leaning
-  // picture is drawn as a sheared parallelogram — it reads as a mistake
-  // rather than as a photograph standing in space.
-  //
-  // The y is zero for every one of them: the ring is level and at eye
-  // height, so all of them land on one horizontal line across the
-  // middle of the square — the ring and the square share a centre.
-  // Which way round the ring a picture has come is then said entirely
-  // by how big and how strong it is drawn.
-  //
-  // A picture faces outwards, so the far side of the ring shows you its
-  // back — which is why each is built as a card with a face on both
-  // sides carrying the same picture.
-  //
-  // The big square sits at the middle at z = 0, and needs no undoing of
-  // anything: it is the one thing in the scene that is not turned.
-  //
-  // The scroll wheel is the only thing that turns it. It does not drift
-  // on its own and it does not answer the pointer: moving the mouse
-  // across the page leaves the ring exactly where it is, so where a
-  // picture is standing is something you set rather than something that
-  // keeps changing under your hand.
-  // ============================================================
-  let turn = 0;           // where the ring has been turned to
-  let spin = 0;           // and how fast it is turning
-  let homing = false;
-
-  /** Two faces, so the same picture is there from either side. */
-  function buildFaces(frame, index) {
-    const picture = frame.querySelector("img");
-    const number = frame.querySelector(".sheet-number");
-    [0, 180].forEach((side) => {
-      const face = document.createElement("span");
-      face.className = "gallery-face";
-      // A hair of thickness between the two. Left in the same plane
-      // they fight over which is in front and the card flickers.
-      //
-      // The scale at the end is how a picture answers the pointer. It
-      // is written here, on the face, rather than on the card: the
-      // card's own transform is rewritten every frame by placeRing, so
-      // anything added to it would be replaced before it could ease
-      // into place. Nothing rewrites this one, so the stylesheet can
-      // change --pick and have the browser ease it.
-      face.style.transform =
-        "rotateY(" + side + "deg) translateZ(0.6px) scale(var(--pick, 1))";
-      face.style.setProperty("--hatch-angle", (-55 + ((index * 41) % 130)) + "deg");
-      face.style.setProperty("--hatch-gap", (9 + ((index * 7) % 10)) + "px");
-      if (picture) face.appendChild(picture.cloneNode());
-      if (number) face.appendChild(number.cloneNode(true));
-      frame.appendChild(face);
-    });
-    if (picture) picture.remove();
-    if (number) number.remove();
-  }
-
-  frames.forEach(buildFaces);
-
-  function placeRing() {
-    const width = scene.clientWidth;
-    if (!width) return;
-    const plateSize = plate.getBoundingClientRect().width || width * 0.32;
-    const size = Math.max(RING_SIZE_MIN, Math.min(RING_SIZE_MAX, plateSize * RING_SIZE));
-    // Close in around the square — far enough out that a picture at the
-    // side of the ring clears its edge, and no further — but never so
-    // far out that the ring runs off the page on a narrow window.
-    // Measured against the square rather than against the window:
-    // standing it as wide as the page allowed left a gulf between the
-    // big picture and the ones going round it, with nothing in between.
-    const wide = size * RING_WIDE;
-    const radius = Math.min(
-      Math.max(plateSize * RING_REACH, plateSize / 2 + wide * 0.56),
-      width / 2 - wide * 0.62
-    );
-
-    frames.forEach((frame, i) => {
-      const angle = turn + (i / frames.length) * Math.PI * 2;
-      const across = Math.sin(angle), along = Math.cos(angle);
-      // How near the front of the ring this one has come round to,
-      // 1 at the front and 0 at the back. Perspective already draws
-      // the far ones smaller; washing them out as well is what says
-      // which way round the ring they are standing, now that they are
-      // all on the same line and none of them is higher than another.
-      frame.style.setProperty("--dim", (((1 - along) / 2) * DIM_FAR).toFixed(3));
-      frame.style.width = wide + "px";
-      frame.style.height = size + "px";
-      frame.style.marginLeft = -wide / 2 + "px";
-      frame.style.marginTop = -size / 2 + "px";
-      // No height at all, and that is exact rather than nearly: a
-      // picture standing even slightly above or below the eye is drawn
-      // further from the middle of the page the nearer it is, so the
-      // ring would bow instead of running straight. At zero they all
-      // land on one horizontal line however far round they are, through
-      // the middle of the big square.
-      frame.style.transform =
-        "translate3d(" + (across * radius).toFixed(1) + "px, 0px, " +
-        (along * radius).toFixed(1) + "px) " +
-        "rotateY(" + ((angle * 180) / Math.PI).toFixed(2) + "deg)";
-    });
-  }
-
-  let turning = 0;
-  function turnOrbit(now) {
-    turning = requestAnimationFrame(turnOrbit);
-    const step = Math.min(3, (now - (turnOrbit.last || now)) / 16.7) || 1;
-    turnOrbit.last = now;
-
-    if (!homing) {
-      // What is left of the last turn of the wheel, running itself
-      // down. There is no drift underneath it: this ring only moves
-      // when it is turned.
-      spin *= Math.pow(SPIN_DRAG, step);
-      if (Math.abs(spin) < 0.00002) spin = 0;
-      turn += spin * step;
+  const chapters = [];
+  entries.forEach((entry) => {
+    const name = (entry.dataset.chapter || "Unsorted").trim();
+    let chapter = chapters.find((one) => one.name === name);
+    if (!chapter) {
+      chapter = { name: name, items: [] };
+      chapters.push(chapter);
     }
-    placeRing();
-  }
-
-  // --- the wheel turns it, and nothing else does
-  scene.addEventListener("wheel", (e) => {
-    const by = (e.deltaY || 0) * SCROLL_TURN;
-    spin += by;
-    spin = Math.max(-SPIN_MAX, Math.min(SPIN_MAX, spin));
-    homing = false;
-  }, { passive: true });
-
-  frames.forEach((frame, i) => {
-    frame.addEventListener("click", () => {
-      show(i);
-      bringToFront(i);
+    chapter.items.push({
+      name: entry.textContent.trim(),
+      date: (entry.dataset.date || "").trim(),
+      href: entry.getAttribute("href"),
     });
   });
 
-  /** Turn the ring the short way round until this picture is at the front. */
-  function bringToFront(index) {
-    const want = -(index / frames.length) * Math.PI * 2;
-    const full = Math.PI * 2;
-    let delta = (want - turn) % full;
-    if (delta > Math.PI) delta -= full;
-    if (delta < -Math.PI) delta += full;
-    const from = turn, started = performance.now(), span = 620;
-    const ease = (t) => 1 - Math.pow(1 - t, 3);
-    if (REDUCE_MOTION) { turn = want; return; }
-    spin = 0;
-    homing = true;
-    const step = (now) => {
-      const t = Math.min(1, (now - started) / span);
-      turn = from + delta * ease(t);
-      if (t < 1) requestAnimationFrame(step);
-      else homing = false;
-    };
-    requestAnimationFrame(step);
+  // ============================================================
+  // THE VIEW
+  // ============================================================
+  const view = document.createElement("div");
+  view.className = "chapters";
+
+  const field = document.createElement("canvas");
+  field.className = "chapters-field";
+  field.setAttribute("aria-hidden", "true");
+  view.appendChild(field);
+
+  // The chapter that is open, written large on the left, so the page
+  // is not all menu.
+  const plate = document.createElement("div");
+  plate.className = "chapters-plate";
+  plate.innerHTML = '<p class="chapters-kicker"></p><h2></h2><p class="chapters-count"></p>';
+  view.appendChild(plate);
+
+  // --- the menu, on the right
+  const menu = document.createElement("div");
+  menu.className = "chapters-menu";
+  view.appendChild(menu);
+
+  const rail = document.createElement("div");
+  rail.className = "chapters-rail";
+  rail.setAttribute("role", "tablist");
+  rail.setAttribute("aria-label", "Chapters");
+  menu.appendChild(rail);
+
+  chapters.forEach((chapter, i) => {
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = "chapters-tab";
+    tab.setAttribute("role", "tab");
+    tab.id = "chapter-tab-" + i;
+    tab.setAttribute("aria-controls", "chapter-panel-" + i);
+    tab.innerHTML =
+      '<span class="chapters-reg" aria-hidden="true"></span>' +
+      '<span class="chapters-name"></span>' +
+      '<span class="chapters-count-small"></span>';
+    tab.querySelector(".chapters-name").textContent = chapter.name;
+    tab.querySelector(".chapters-count-small").textContent = String(chapter.items.length);
+    rail.appendChild(tab);
+    chapter.tab = tab;
+  });
+
+  const panels = document.createElement("div");
+  panels.className = "chapters-panels";
+  menu.appendChild(panels);
+
+  chapters.forEach((chapter, i) => {
+    const panel = document.createElement("section");
+    panel.className = "chapters-panel";
+    panel.id = "chapter-panel-" + i;
+    panel.setAttribute("role", "tabpanel");
+    panel.setAttribute("aria-labelledby", "chapter-tab-" + i);
+    chapter.items.forEach((item) => {
+      const link = document.createElement("a");
+      link.className = "chapters-item";
+      link.href = item.href;
+      // The date stands where the rest of the site would put a number:
+      // it is what one favourite is filed under, and the only thing
+      // said about it other than its name.
+      link.innerHTML =
+        '<span class="chapters-date"></span>' +
+        '<span class="chapters-item-name"></span>' +
+        '<span class="chapters-go" aria-hidden="true">→</span>';
+      link.querySelector(".chapters-date").textContent = item.date;
+      link.querySelector(".chapters-item-name").textContent = item.name;
+      panel.appendChild(link);
+    });
+    panels.appendChild(panel);
+    chapter.panel = panel;
+  });
+
+  gallery.appendChild(view);
+
+  const paint = field.getContext("2d");
+
+  // ============================================================
+  // OPENING ONE
+  // ============================================================
+  let open = 0;
+
+  function show(next, andFocus) {
+    open = (next + chapters.length) % chapters.length;
+    chapters.forEach((chapter, i) => {
+      const on = i === open;
+      chapter.tab.classList.toggle("open", on);
+      chapter.tab.setAttribute("aria-selected", on ? "true" : "false");
+      // Only the open chapter's tab is in the tab order: the rail is
+      // one control, and the arrow keys move within it.
+      chapter.tab.tabIndex = on ? 0 : -1;
+      chapter.panel.classList.toggle("open", on);
+      chapter.panel.hidden = !on;
+    });
+    const chapter = chapters[open];
+    plate.querySelector(".chapters-kicker").textContent =
+      "CHAPTER " + numbered(open) + "  ·  " + chapter.items.length +
+      (chapter.items.length === 1 ? " ENTRY" : " ENTRIES");
+    plate.querySelector("h2").textContent = chapter.name;
+    plate.querySelector(".chapters-count").textContent =
+      chapter.items.length ? chapter.items[0].date + " — " +
+        chapter.items[chapter.items.length - 1].date : "";
+    if (andFocus) chapters[open].tab.focus();
   }
+
+  chapters.forEach((chapter, i) => {
+    chapter.tab.addEventListener("click", () => show(i));
+  });
+
+  rail.addEventListener("keydown", (e) => {
+    let used = true;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") show(open + 1, true);
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") show(open - 1, true);
+    else if (e.key === "Home") show(0, true);
+    else if (e.key === "End") show(chapters.length - 1, true);
+    else used = false;
+    if (used) e.preventDefault();
+  });
+
+  show(0);
+
+  // ============================================================
+  // THE FIELD
+  //
+  // A lattice of marks along the foot of the page. Everything about
+  // it is regular — one pitch, one size, one colour — and the cursor
+  // is the only thing that is not: near it the marks are shoved out
+  // of the lattice and drawn larger, and they find their way back
+  // when it goes. Regular on its own and irregular under the hand is
+  // the whole of the effect; make the lattice itself uneven and there
+  // is nothing left for the cursor to disturb.
+  // ============================================================
+  let width = 0, height = 0, deep = 0;
+  let marks = [];
+  let handX = -9999, handY = -9999, hasHand = false;
+  let drawing = true;
+
+  function lattice() {
+    marks = [];
+    const top = height - deep;
+    const across = Math.ceil(width / PITCH) + 1;
+    const down = Math.ceil(deep / PITCH) + 1;
+    for (let j = 0; j < down; j++) {
+      for (let i = 0; i < across; i++) {
+        const x = i * PITCH + (j % 2 ? PITCH / 2 : 0);
+        const y = top + j * PITCH;
+        marks.push({ x: x, y: y, ox: x, oy: y, size: MARK, wantSize: MARK });
+      }
+    }
+  }
+
+  function resize() {
+    const box = view.getBoundingClientRect();
+    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    width = Math.max(1, Math.round(box.width));
+    height = Math.max(1, Math.round(box.height));
+    deep = Math.round(height * FIELD_DEEP);
+    field.width = Math.round(width * ratio);
+    field.height = Math.round(height * ratio);
+    field.style.width = width + "px";
+    field.style.height = height + "px";
+    paint.setTransform(ratio, 0, 0, ratio, 0, 0);
+    lattice();
+    drawing = true;
+  }
+
+  function settle() {
+    let moving = false;
+    const top = height - deep;
+    for (let n = 0; n < marks.length; n++) {
+      const mark = marks[n];
+      let wantX = mark.ox, wantY = mark.oy, wantSize = MARK;
+      if (hasHand) {
+        const dx = mark.ox - handX, dy = mark.oy - handY;
+        const off = Math.sqrt(dx * dx + dy * dy);
+        if (off < REACH) {
+          // Falls away smoothly to nothing at the edge of its reach,
+          // so there is no ring where the effect stops.
+          const near = 1 - off / REACH;
+          const push = near * near * SHOVE;
+          const away = off < 0.001 ? 0 : 1 / off;
+          wantX += dx * away * push;
+          wantY += dy * away * push;
+          wantSize = MARK * (1 + near * near * (SWELL - 1));
+        }
+      }
+      const step = REDUCE_MOTION ? 1 : EASE;
+      mark.x += (wantX - mark.x) * step;
+      mark.y += (wantY - mark.y) * step;
+      mark.size += (wantSize - mark.size) * step;
+      if (Math.abs(mark.x - wantX) > 0.05 || Math.abs(mark.size - wantSize) > 0.01) {
+        moving = true;
+      }
+      mark.fade = Math.min(1, (mark.oy - top) / deep + FADE_IN * 0.5);
+    }
+    return moving;
+  }
+
+  function draw() {
+    paint.clearRect(0, 0, width, height);
+    for (let n = 0; n < marks.length; n++) {
+      const mark = marks[n];
+      const lit = Math.min(1, (mark.size - MARK) / (MARK * (SWELL - 1)));
+      const ink = lit > 0.08 ? BRASS : INK;
+      paint.fillStyle =
+        "rgba(" + ink + "," + (0.1 + mark.fade * 0.26 + lit * 0.5).toFixed(3) + ")";
+      // Squares, not dots: the same shape every other mark on the site
+      // is made of.
+      const half = mark.size / 2;
+      paint.fillRect(mark.x - half, mark.y - half, mark.size, mark.size);
+    }
+  }
+
+  function tick() {
+    requestAnimationFrame(tick);
+    const moving = settle();
+    if (moving || drawing) {
+      draw();
+      drawing = moving;
+    }
+  }
+
+  view.addEventListener("pointermove", (e) => {
+    const box = view.getBoundingClientRect();
+    handX = e.clientX - box.left;
+    handY = e.clientY - box.top;
+    hasHand = true;
+    drawing = true;
+  });
+  view.addEventListener("pointerleave", () => { hasHand = false; drawing = true; });
 
   // ============================================================
   // ARRIVING AND LEAVING
+  //
+  // The first time Favorites is opened the screen takes a moment to
+  // come up: it flickers once, the way a panel does when it is
+  // switched on, and only then does the menu arrive. After that it is
+  // simply there — the flicker is the thing being turned on, and it is
+  // only turned on once.
   // ============================================================
-  function flick(onDone) {
-    // The same arithmetic the contact sheet's flick uses: count the
-    // cuts first, then start at whichever picture makes the last one
-    // land on the first. It has to stop, not cut one last time.
-    let steps = 0;
-    for (let held = FLIP_FIRST_MS; held <= FLIP_LAST_MS; held *= FLIP_SLOW) steps++;
-    let index = ((-steps % frames.length) + frames.length) % frames.length;
-    let hold = FLIP_FIRST_MS;
-    show(index, true);
-
-    const step = () => {
-      index = (index + 1) % frames.length;
-      show(index, true);
-      hold *= FLIP_SLOW;
-      if (hold > FLIP_LAST_MS) { setTimeout(onDone, Math.round(hold)); return; }
-      setTimeout(step, Math.round(hold));
-    };
-    setTimeout(step, Math.round(hold));
-  }
-
   let arrived = false;
   function arrive() {
     if (arrived) return;
     arrived = true;
-    placeRing();
-    turning = requestAnimationFrame(turnOrbit);
-
-    const land = () => {
-      gallery.classList.add("landed");
-      frames.forEach((frame, i) => {
-        setTimeout(
-          () => frame.classList.add("in-ring"),
-          REDUCE_MOTION ? 0 : RING_AFTER_MS + i * RING_STAGGER_MS
-        );
-      });
-    };
-
-    // It lands on the first picture, so the ring starts with that one
-    // at the front rather than wherever the circle happened to begin.
-    turn = 0;
-    if (REDUCE_MOTION) { show(0, true); land(); return; }
-    flick(land);
+    resize();
+    requestAnimationFrame(tick);
+    if (REDUCE_MOTION) {
+      view.classList.add("lit");
+      return;
+    }
+    view.classList.add("flicker");
+    setTimeout(() => {
+      view.classList.remove("flicker");
+      view.classList.add("lit");
+    }, FLICKER_MS);
   }
 
-  function choose(view) {
-    const wanted = view === "favorites";
+  function choose(what) {
+    const wanted = what === "favorites";
     if (document.body.classList.contains("view-favorites") === wanted) return;
     buttons.forEach((button) => {
-      button.classList.toggle("chosen", button.dataset.view === view);
+      button.classList.toggle("chosen", button.dataset.view === what);
     });
 
     const swap = () => {
@@ -367,9 +343,10 @@
       if (wanted) arrive();
       // Two frames after the swap: the view arriving has only just been
       // given a size, and something with no size yet has nothing to
-      // fade up from.
+      // draw itself into.
       requestAnimationFrame(() => requestAnimationFrame(() => {
         document.body.classList.remove("view-switching");
+        if (wanted) { resize(); drawing = true; }
       }));
     };
 
@@ -384,6 +361,5 @@
     button.addEventListener("click", () => choose(button.dataset.view || "sheet"));
   });
 
-  window.addEventListener("resize", placeRing);
-  placeRing();
+  window.addEventListener("resize", () => { if (arrived) resize(); });
 })();

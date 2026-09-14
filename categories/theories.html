@@ -10,26 +10,27 @@
 <link rel="stylesheet" href="../style.css">
 </head>
 <!--
-  This category is laid out as a CONSOLE: the theories are sorted into
-  a few channels down the left, and opening one brings its own entries
-  up on the right. A reading runs along the foot with one peak per
-  channel, the open one standing tallest — the same instrument the
-  third slide of the home page carries. console.js is the whole of it.
+  This category is a NIGHT SKY you travel through. A field of
+  particles stands in three dimensions on black; scrolling carries you
+  into the screen, the near ones sweeping past and new ones coming up
+  out of the dark. Every theory is a constellation standing at its own
+  depth along the road: one comes up, brightens as you close on it,
+  carries its name, and goes past behind you. starfield.js is the
+  whole of it.
 
-  TO ADD A THEORY: copy one whole <a class="work-row"> block below,
-  give it a title, a line of meta and an href, and put it on a channel
-  with data-channel. Nothing in the script changes — the channels are
-  read off however many different data-channel values are here, in the
-  order they first appear, so adding a new one is the same edit.
+  TO ADD A THEORY: copy one whole <a class="work-row"> block below and
+  give it a title, a line of meta and an href. Nothing in the script
+  changes — a constellation is made for each of these, the road is
+  made as long as it needs to be, and the page is made tall enough to
+  scroll down the whole of it.
 
   WITHOUT JAVASCRIPT this page is the same plain list of rows every
   other category uses, which is the right fallback: every theory is
   there and every one is reachable.
 
-  THE TITLES AND THE CHANNEL NAMES BELOW ARE PLACEHOLDERS, like the
-  "Untitled" captions on the scent-descriptions sheet — they are here
-  so the console has something to sort while the pieces are being
-  written. Rename the channels by editing data-channel.
+  THE TITLES BELOW ARE PLACEHOLDERS, like the "Untitled" captions on
+  the scent-descriptions sheet — they are here so the sky has
+  something to be made of while the pieces are being written.
 -->
 <body class="theories-page">
 
@@ -39,7 +40,7 @@
 
   <div class="work-list">
 
-    <a class="work-row" data-channel="Method" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">First theory</span>
@@ -47,7 +48,7 @@
       </span>
     </a>
 
-    <a class="work-row" data-channel="Observations" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">Second theory</span>
@@ -55,7 +56,7 @@
       </span>
     </a>
 
-    <a class="work-row" data-channel="Speculation" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">Third theory</span>
@@ -63,7 +64,7 @@
       </span>
     </a>
 
-    <a class="work-row" data-channel="Method" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">Fourth theory</span>
@@ -71,7 +72,7 @@
       </span>
     </a>
 
-    <a class="work-row" data-channel="Observations" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">Fifth theory</span>
@@ -79,7 +80,7 @@
       </span>
     </a>
 
-    <a class="work-row" data-channel="Speculation" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">Sixth theory</span>
@@ -87,7 +88,7 @@
       </span>
     </a>
 
-    <a class="work-row" data-channel="Method" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">Seventh theory</span>
@@ -95,7 +96,7 @@
       </span>
     </a>
 
-    <a class="work-row" data-channel="Observations" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">Eighth theory</span>
@@ -103,7 +104,7 @@
       </span>
     </a>
 
-    <a class="work-row" data-channel="Speculation" href="../works/example-article-work.html">
+    <a class="work-row" href="../works/example-article-work.html">
       <span class="work-thumb"></span>
       <span>
         <span class="work-row-title">Ninth theory</span>
@@ -116,6 +117,6 @@
 
 <script>window.SITE_ROOT = "../";</script>
 <script src="../nav.js"></script>
-<script src="../console.js"></script>
+<script src="../starfield.js"></script>
 </body>
 </html>

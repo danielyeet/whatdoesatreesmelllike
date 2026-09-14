@@ -84,22 +84,18 @@ island left out of it and no picture on the end of a single line, pointing at a 
 turning it in three dimensions without moving where it was laid out, nothing answering
 the pointer until the sheet has settled, every line carrying a date with none of them
 landing on a picture, and a date being written along its line rather than switched on;
-and favorites —
-switching views taking one away before the other arrives, the flick ending on the first,
-the ring standing its pictures on one level line through the middle of the square and
-reaching to both edges of the window, every picture having a face on both sides and being
-wider than it is tall, pointing at one bringing it forward, the wheel being the only
-thing
-that turns it (the pointer and a drag both leaving it alone, and no drift of its own),
-picking one fading rather than cutting, the whole view fitting on one screen, pointing at
-the big square bringing up the name of what is in it, and nothing on it answering the
-pointer until the flick has landed; and the console — the channels being read off the
-page's own rows rather than written into the script, one channel open at a time with the
-rest out of the page, the strip of them working from the keyboard as a strip of tabs
-should, the reading along the foot answering whichever is open (measured off the canvas,
-because the peak is drawn rather than written), every entry still a link to its piece, the
-page naming itself small beside the Menu, the whole of it fitting one screen, and the
-plain list coming back when the script is blocked.
+and favorites — switching views taking one away before the other arrives, the
+screen flickering once and only once as the chapters come up, the chapters and their dates
+being read off the page's own entries, one chapter open at a time with the strip working
+from the keyboard, every favourite still a link to its piece, the field along the foot
+answering the cursor and settling again afterwards, and the whole view fitting one screen;
+and the starfield — the sky being grown from the page's own rows with one constellation per
+theory, the travel being the page's own scroll down a road several screens long, going
+further in bringing new constellations up and leaving the ones behind you off the page, a
+constellation being the thing you click and something that can be tabbed to, the sky being
+dark and saying so to the cursor with white and blue particles drawn on it, it not creeping
+on its own under `prefers-reduced-motion`, and the plain list coming back when the script
+is blocked.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -325,36 +321,36 @@ Other things that will bite you:
   the far end of its range for a scene this small this far from the camera's near/far
   planes — so don't reach for `projected.z` as a stand-in for depth anywhere in this file.
 
-### The console (`console.js`) — categories/theories.html
+### The starfield (`starfield.js`) — categories/theories.html
 
-That category is read the way an instrument is read. The theories are sorted into a few
-**channels** down the left; opening one brings its own entries up on the right. Along the
-foot runs a **reading** with one peak per channel, the open one standing tallest — the
-same gas-chromatograph trace the landing page's third slide carries, so the two pages are
-recognisably the same instrument. Behind it all is the squared paper the landing page is
-drawn on, ruled very faintly.
+That category is a night sky you travel through. A field of particles stands in three
+dimensions on black; scrolling carries you *into* the screen, the near ones sweeping past
+and new ones coming up out of the dark. You cannot turn it or drag it — going further in is
+the whole of the gesture. Every theory is a **constellation**: a cluster of brighter
+particles with lines drawn between them, standing at its own depth along a road. One comes
+up out of the dark, brightens as you close on it, carries its name, and goes past behind
+you.
 
-Everything on the page is read off the page itself: the channels are the different
-`data-channel` values on the rows, **in the order they first appear**; the entries are the
-rows; the counts are however many of each there are. So adding a theory, or a whole new
-channel, is one HTML edit and nothing in the script changes — the author names the
-channels and sets their order by writing them into the page.
-
-- **Only the open channel is in the tab order** (`tabIndex`), and the arrow keys, Home and
-  End move along the strip. A strip of tabs is one control, not one control per tab; a
-  keyboard user should reach it once and then steer inside it.
-- **The channels you are not reading are `hidden`**, not faded — otherwise they are still
-  in the page for a screen reader to walk through and for the tab key to land in.
-- **The reading is eased, not set.** Every peak keeps its own height and catches up with
-  where it has been asked to go, which is what makes opening a channel look like a needle
-  answering rather than a number changing. Pointing at a channel lifts its peak part of
-  the way, so the instrument replies before you have committed to anything.
-- **Anything visually hidden must have its margins taken off and be pinned to the
-  corner.** The list stays in the page as the console's index, out of sight; left where it
-  was laid out, a one-pixel box below a full-height console is still past the fold and
-  gives a one-screen page something to scroll.
-- `drawing` is declared before the page is built, because opening the first channel asks
-  for a redraw while the elements are still being made.
+- **The travel is the page's own scroll.** The canvas is `position: fixed` and a spacer
+  (`.sky-road`) gives the page a height, so the scrollbar, the trackpad, the arrow keys,
+  Page Down and a finger on a phone all drive it without a line of code. Catching the wheel
+  and turning it into movement breaks every one of those.
+- **The field is endless but the road is not.** A particle that goes behind you is put back
+  out at the far end in a new place, so there is always sky; the constellations are laid
+  along a road with a beginning and an end, so there is always somewhere to have got to.
+- **A constellation's figure is nearest-neighbour**, not a shape written by hand: each
+  particle is joined to the few nearest it and each line drawn once. That way it is always
+  a figure and never a drawing of something.
+- **The constellation is what you click.** The link is sized to the cluster's own box on the
+  screen every frame and laid over it, with the name below — so nothing in the stylesheet
+  may give `.sky-stop` a size or a transform of its own.
+- **A constellation behind you or still out in the dark is `display: none`**, not faded to
+  nothing — faded, it would still catch the pointer where there is nothing to point at.
+- **The sky carries `dark-surface`**, which is how the rest of the site says "the cursor has
+  to go light over this". Without it `nav.js` leaves a dark cursor on a dark page.
+- The glows are the expensive part, so only the constellations and about a tenth of the dust
+  get one. That is also what makes a constellation read as brighter country rather than as
+  more dust.
 
 ### The contact sheet (`contact-sheet.js`), and favorites (`favorites.js`)
 
@@ -525,85 +521,27 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   carries no title any more: a hairline rule and then the name, in the same mono as the
   rest of the chrome, arriving with it. The console page carries the same mark.
 
-**Favorites** (`favorites.js`) is the other view, built out of the same pieces:
+**Favorites** (`favorites.js`) is the other view, and the other half of that file's job is
+switching between the two — it owns the buttons, so it owns the switch.
 
-- **The pictures are the `<button class="gallery-frame">` blocks in the page**, named
-  `f1`, `f2`… in the same corner chip the sheet's frames use.
-- Arriving, the big square **flicks** through them exactly as the sheet does — the same
-  accelerating-hold run, arranged to *end* on the first rather than cut to it — and the
-  rest then take their places on the ring.
-- **The ring goes round the big square in three dimensions**, so its near side passes in
-  front of the square and its far side behind it. One `perspective` on `.gallery-scene`,
-  one `transform-style: preserve-3d` on `.gallery-space` inside it, and the browser sorts
-  out what is in front of what. Nothing between the space and a picture may flatten that
-  — an `overflow`, an `opacity` or a `filter` anywhere down the chain ends the 3D space
-  and the ring goes back to being a circle drawn on the page.
-- **Nothing turns the space itself; each picture is placed.** It is moved to its own
-  point on the ring and then turned about the upright only —
-  `translate3d(x, 0, z) rotateY(its angle)` — so every picture stands upright. Turning
-  the space instead leans them all over with it, and a leaning square is drawn as a
-  sheared parallelogram: it reads as a mistake rather than as a photograph standing in
-  space.
-- **The ring is level, and the y in that transform is exactly zero.** Every picture then
-  lands on one horizontal line across the page however far round it has come. Nearly zero
-  is not the same thing: a picture standing even slightly off eye height is thrown further
-  from the middle of the page the nearer it is, so the line bows.
-- **The ring and the square are concentric**, so that line runs through the middle of the
-  picture and the ring reaches the same distance out on either side of it. One
-  consequence to know about: the picture at the front of the ring stands over the middle
-  of the big square and takes the pointer there, so pointing at the very centre of the
-  square is pointing at that picture, not at the square.
-- **The view is the whole screen, not a panel on a page.** `.gallery` is full width with
-  no gutters and `.gallery-scene` is `100vh` less the strip `.views` reserves for the
-  buttons, so the page is exactly one screen tall with nothing to scroll to.
-- **A picture on the ring is a ninth of the big square** — a third of its height and a
-  third of its width, so nine of them would tile it (`RING_SIZE`) — and the ring stands
-  just far enough out for one at the side of it to clear the square's edge (`RING_REACH`),
-  clamped so it never runs off a narrow page. It is measured against the square and not
-  against the window: standing it as wide as the page allowed left a gulf between the big
-  picture and the ones going round it, with nothing in between. The perspective is long
-  (1800px) to match: at a shorter focal length the nearest picture is drawn at twice the
-  size of the far ones, which reads as two sets of pictures rather than one ring turning.
-- **Every picture is a card with a face on each side**, both carrying the same picture
-  (`buildFaces`). A picture faces outwards from the middle, so the far half of the ring
-  is showing you its back; one-sided panels leave that half blank. The two faces are held
-  a fraction apart in depth, or they fight over which is in front and the card flickers.
-- **A card is wider than it is tall** (`RING_WIDE`). It is the one place on the site where
-  a picture is not square: a card on the ring is nearly always seen at an angle, and
-  squared up it reads as narrower than it is.
-- **Pointing at one brings it forward**: it grows a little, comes out from under the wash
-  that places it in the ring, and takes the darker edge the chosen one carries. No shade
-  drawn across it and no name written on it — they are small, there are a lot of them and
-  they go past, and anything heavier made the ring twitch rather than read. The growing
-  is written on the **face**, not on the card: the card's own transform is rewritten every
-  frame by `placeRing`, so anything added to it would be replaced before it could ease
-  into place. Nothing rewrites the face's, so `--pick` can be changed from the stylesheet
-  and eased. The wash needs a second variable for the same reason — `--dim` is written on
-  the element every frame and outranks any rule, so `--veil` is the stylesheet's own hold
-  over it and `opacity` is `calc(var(--dim) * var(--veil))`.
-- **The far side is washed out** towards the colour of the page (`--dim`, `DIM_FAR`), on
-  top of perspective already drawing it smaller. It is a veil laid *over* the picture
-  rather than the picture's own `opacity`, because anything transparent in that chain
-  would flatten the card and take its far face's hiding with it.
-- **The wheel is the only thing that turns it.** Anticlockwise seen from above — which is
-  the near side of the ring travelling to the right (`SCROLL_TURN`; positive `rotateY`
-  carries the near side to `+x`) — and what is left of a turn runs itself down
-  (`SPIN_DRAG`). It has no drift of its own, it does not lean towards the pointer, and
-  dragging does nothing: where a picture is standing is something you set, not something
-  that keeps changing under your hand. Clicking one turns the ring the short way round
-  until that picture is at the front.
-- **Picking one fades it into the big square** — the square is two layers, and showing a
-  picture paints the one underneath and fades it up. The flick asks for cuts instead and
-  gets them by turning that fade off (`.no-fade`). A cut is the film going past; a fade
-  is you choosing something; they must not look the same.
-- **Pointing at the big square darkens its bottom right corner and brings up what it is
-  called** — a wedge kept tight to that corner, so it reads as a shadow under the name
-  rather than as the picture being darkened. That is the only place a name is written in
-  this view: the description under the ring was taken out so the whole thing fits on one
-  screen without scrolling, which is also why the square and the ring are sized against
-  the window's *height* as well as its width. And as on the sheet, none of it is live
-  until the flick has landed — the square's name and the ring's own answer to the pointer
-  alike: every rule is written under `.gallery.landed`.
+- **The pictures are gone; it is a menu now.** The entries are the
+  `<a class="gallery-entry">` blocks in the page, each carrying a `data-chapter` and a
+  `data-date`. The chapters are the different `data-chapter` values **in the order they
+  first appear**, so naming them and ordering them is an HTML edit.
+- **The screen flickers once, and only once.** A panel being switched on catches, drops and
+  settles; it is not the view arriving, it is the thing being turned on, so going away and
+  coming back does not do it again. Two flickers is enough to read as one — more reads as a
+  fault.
+- **The date is what a favourite is filed under**, so it is set first in each row and in the
+  mono the rest of the site keeps for readings.
+- **Only the open chapter's tab is in the tab order**, and the arrow keys, Home and End move
+  along the strip. The chapters you are not reading are `hidden`, not faded.
+- **The field along the foot is a lattice, and the cursor is the only thing that is not
+  regular about it.** One pitch, one size, one colour; near the cursor the marks are shoved
+  out of place and drawn larger, and they find their way back when it goes. Make the lattice
+  itself uneven and there is nothing left for the cursor to disturb.
+- **Without the script both views are simply on the page**, one under the other, and the
+  entries are a plain list of links — everything reachable.
 
 ### Styling
 
@@ -626,10 +564,10 @@ background luminance, but the class is the reliable path.
   and they take a new piece differently: the **row list** (`favorites`, the two `other`
   pages) takes another `<a class="work-row">` block; the **contact sheet**
   (`scent-descriptions`) takes another `<a class="sheet-frame">` block for the map, or a
-  `<button class="gallery-frame">` block for its Favorites view; and the **console**
-  (`theories`) takes another `<a class="work-row">` block with a `data-channel` on it,
-  which files it under that channel — and names a new channel if that value is new. Each
-  page says which in the comment at the top of it.
+  `<a class="gallery-entry">` block with a `data-chapter` and a `data-date` for its
+  Favorites view; and the **starfield** (`theories`) takes another `<a class="work-row">`
+  block, which becomes a constellation of its own and lengthens the road. Each page says
+  which in the comment at the top of it.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map.
@@ -676,9 +614,12 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **corrugation** | The sharp zigzag the cursor drags across a nearby branch (`CORR_*`): evenly spaced teeth of one size travelling steadily outward along it, so it reads as a regular wave excited in a wire. Only its height answers the cursor. It used to re-roll its height and spacing several times a second, which read as jitter — that was replaced, deliberately, by the pattern described here. |
 | **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
 | **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. A beat after it opens, the node's **name** is lifted out of the map and set above it. |
-| **the console** | The way `categories/theories.html` is laid out: the theories sorted into channels down the left, the open one on the right, a reading along the foot. `console.js`. |
-| **channel** | One grouping on the console — whatever a row's `data-channel` says. The channels, their names and their order all come from the page. |
-| **the reading** | The trace along the foot of the console, one peak per channel, the open one standing tallest. The same instrument the landing page's third slide carries. |
+| **the starfield** / **the sky** | The way `categories/theories.html` is laid out: a field of particles in three dimensions on black that you scroll *into*. `starfield.js`. |
+| **constellation** / **stop** | One theory in the sky — a cluster of brighter particles with lines drawn between them, standing at its own depth. The cluster is the click target. |
+| **the road** | The depth the constellations are laid along, and the page height that scrolls down it (`.sky-road`). The sky is endless; the road is not. |
+| **dust** | The particles that are not part of any constellation. They are recycled from behind you back out to the far end, so the sky never runs out. |
+| **chapter** | One grouping in Favorites — whatever an entry's `data-chapter` says. The chapters, their names and their order all come from the page. |
+| **the field** | The lattice of marks along the foot of the Favorites view. Regular on its own, disturbed only by the cursor. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | The frame the sheet settles on and keeps at the top — the first one in the page. |
