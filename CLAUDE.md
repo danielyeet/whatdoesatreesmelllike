@@ -73,8 +73,9 @@ middle, completely covering the page before its mask comes off, and the grain ne
 by that mask — and the cursor; the exit sequence's ordering, the collapse drawing every
 node into the centre, and the reforming line stopping at the sentence and handing over
 to the thread without a seam; plus browserless file checks (no link points at a missing
-file, no credentials committed); and the contact sheet — the flick ending on the first
-picture and leaving it where it was, the search matching a picture by name, every line
+file, no credentials committed, and the site still needs no build step to publish); and
+the contact sheet — the flick ending on the first picture and leaving it where it was,
+the search matching a picture by name, every line
 stopping just off the two pictures it joins, no line crossing a picture it is not
 pointing at, no picture left with nothing joined to it, the pictures arriving one after
 another rather than together, nothing shifting sideways when the page grows, the two
@@ -113,9 +114,9 @@ they look right.
 Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
-  `node-scene.js`, and `style.css`, each degrading to a still version. `nav.js` (the
-  cursor) and `extras.js` do *not* currently check it; if you add motion there, add the
-  guard too.
+  `node-scene.js`, `contact-sheet.js`, `favorites.js`, `structure.js` and `style.css`,
+  each degrading to a still version. `nav.js` (the cursor) and `extras.js` do *not*
+  currently check it; if you add motion there, add the guard too.
 - **Portrait / narrow viewport** — `resize()` in `node-scene.js` uses a larger `frameH`
   when `aspect < 1`, deliberately drawing the map smaller so the left and right link
   nodes stay on screen and tappable. Vertical swipes must keep scrolling the page;
@@ -388,7 +389,9 @@ Two kinds of assembly stand in that frame, and the difference is the point:
   own places, provisional lines come and go, beads run along the lines of whatever station
   you are among, a **carriage** runs down the frame at you and lights each rib as it
   passes, **traverses** streak across it, and a faint scan passes down the window every
-  nine seconds. All of it is off under `prefers-reduced-motion`.
+  nine seconds. Under `prefers-reduced-motion` none of it moves: the clock stops, so the
+  wobble, the beads, the ranging squares, the traverses and the scan are all gone and the
+  carriage simply stands where it is — held still rather than switched off.
 - **Glows are stamped, not generated.** One radial gradient is drawn once into a small
   offscreen canvas per colour and then `drawImage`d wherever a glow is needed. Asking for
   a fresh `createRadialGradient` per speck per frame is the one thing that will not hold
@@ -406,7 +409,7 @@ the two buttons above the middle window switch between them:
 | button | view | file |
 |---|---|---|
 | Description portfolio | the map — every picture scattered, joined by dated lines | `contact-sheet.js` |
-| Favorites | one big square with the rest of the pictures on a ring around it in three dimensions | `favorites.js` |
+| Favorites | a menu of chapters, over a field of marks that reads the chapter you have open | `favorites.js` |
 
 Neither file touches the other's elements. All they share is a class on `<body>`
 (`view-favorites`), which `style.css` reads to take one view out of the page and put the
@@ -416,7 +419,7 @@ arrives after it, so the page never shows two different things at once.
 
 The page opens white with one square window in the middle; every picture in the category
 flicks through it on hard cuts, fast at first and slowing to a stop; it lands on the
-first one, which stays exactly where it is; the three buttons above it and the category's
+first one, which stays exactly where it is; the two buttons above it and the category's
 name arrive; then lines reach out across the page at whatever angle they need, each
 carrying a date, and each of the other pictures appears as its line lands on it.
 
@@ -440,10 +443,10 @@ carrying a date, and each of the other pictures appears as its line lands on it.
 - **Without JavaScript the page is a plain CSS grid of those same frames**, captions and
   all — a working page. The script puts `.scripted` on the sheet and takes over, and
   every rule that hides something is written under that class so the fallback can't
-  inherit it. The Favorites view is left out of that fallback altogether
-  (`body:not(.sheet-scripted) .gallery { display: none }`): its pictures are placed in
-  three dimensions by `favorites.js` and its buttons do nothing on their own, so all it
-  would add is a screen's worth of empty space under the sheet.
+  inherit it. Favorites is in that fallback too (`body:not(.sheet-scripted) .gallery
+  { display: block }`): it is a list of links now rather than pictures placed in three
+  dimensions, so it is worth having on the page without the script — both views end up
+  one under the other, and everything is reachable.
 - **Room is kept for the scrollbar from the start** (`scrollbar-gutter: stable`, on pages
   carrying a sheet only). The page grows a lot taller the moment the sheet lands, and on
   a browser with ordinary scrollbars that made one appear — which took 15px off the width
@@ -564,7 +567,9 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   random, generated from the same seed.
 - **The category names itself small beside the Menu** (`.page-where`), since the page
   carries no title any more: a hairline rule and then the name, in the same mono as the
-  rest of the chrome, arriving with it. The console page carries the same mark.
+  rest of the chrome, arriving with it. The theories page carries the same mark
+  (`.page-where`, written by `structure.js`). Both are hidden below 720px, where the
+  buttons in the middle of the chrome reach back far enough to print over them.
 
 **Favorites** (`favorites.js`) is the other view, and the other half of that file's job is
 switching between the two — it owns the buttons, so it owns the switch.
@@ -698,13 +703,12 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **mound** | One entry's share of the field's skyline — a soft rise in the field's top edge, as tall as the day in that entry's date. Pointing at the entry raises its mound. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
-| **plate** | The frame the sheet settles on and keeps at the top — the first one in the page. |
+| **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. In Favorites it is also the name of the block on the left carrying the open chapter (`.chapters-plate`). Which one is meant follows from the view being talked about. |
 | **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. `FLIP_*` in `contact-sheet.js`. |
 | **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
 | **view** | One of the two ways the contact sheet page shows a category: the **map** (Description portfolio) or **Favorites**. One at a time; `favorites.js` switches them. |
-| **the ring** / **the orbit** | The circle of pictures going round the big square in Favorites, standing level in three dimensions so all of them sit on one horizontal line, the near side passing in front of the square and the far side behind. Turned by the scroll wheel and by nothing else. `RING_*` in `favorites.js`. |
-| **face** | One side of a picture on the ring (`.gallery-face`). Each has two, carrying the same picture, so it is there from either side — and the face, not the card, is what answers the pointer. |
-| **favourite** / **f(n)** | One picture in Favorites (`<button class="gallery-frame">`), named f1, f2… in its corner. |
+| **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
+| **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter` and a `data-date`. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 
