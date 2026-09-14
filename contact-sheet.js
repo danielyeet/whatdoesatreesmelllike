@@ -70,7 +70,8 @@
   const LINK_DROP = 0.24;     // share of pictures left unlinked
   const LINK_EXTRA = 3;       // cross links added back
   const LINE_GAP = 8;         // clear space between a line and the pictures it joins
-  const LABEL_MIN = 96;       // a line shorter than this carries no date
+  const DATE_SIZE = 10;       // how big a date is set on a line with room for it
+  const LABEL_MIN = 34;       // and the shortest line that can carry one at all
   const CAPTION_ROOM = 30;    // the strip under a picture its caption is printed on
 
   // The map draws itself outwards from the middle, and is meant to be
@@ -317,6 +318,27 @@
       sew(pair.i, pair.j);
     });
 
+    // And nothing is left hanging off the end of a single line either.
+    // A picture with one line is a dead end — the map stops there
+    // rather than carrying on — and with four of the thirteen like that
+    // it read as a handful of stubs rather than as a route you could
+    // follow. So a picture with only one line is given a second, to the
+    // nearest picture it has a clear run to and is not already joined
+    // to. It is not a tree link: both ends are already on the map by
+    // then, so it closes a loop rather than carrying the spread, which
+    // is what keeps the map arriving outwards in order.
+    nodes.forEach((node, i) => {
+      const joined = links.filter((link) => link.a === i || link.b === i);
+      if (joined.length !== 1) return;
+      const already = joined.map((link) => (link.a === i ? link.b : link.a));
+      const reachable = nodes
+        .map((other, j) => ({ j: j, d: distance(other, node) }))
+        .filter((entry) =>
+          entry.j !== i && already.indexOf(entry.j) < 0 && clearBetween(entry.j, i))
+        .sort((a, b) => a.d - b.d);
+      if (reachable.length) links.push({ a: reachable[0].j, b: i, tree: false });
+    });
+
     // Which way round a line is written decides which end of it the map
     // grows from: the spread travels outwards from the middle along the
     // tree links, and each of them has to name the end nearer the
@@ -494,7 +516,9 @@
         link.line.classList.contains("drawn") ? "0" : String(length);
 
       // The date rides along its own line, kept upright, and is knocked
-      // out of it rather than printed over it.
+      // out of it rather than printed over it. Every line carries one:
+      // a line without a date reads as unfinished beside the ones that
+      // have them.
       if (length < LABEL_MIN) {
         if (link.label) { link.label.remove(); link.label = null; }
         return;
@@ -502,11 +526,7 @@
       let angle = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
       if (angle > 90) angle -= 180;
       if (angle < -90) angle += 180;
-      // Not always at the halfway point: two lines crossing near their
-      // middles would print their dates on top of each other. Sliding
-      // each one along its own line by a different amount is enough to
-      // keep them apart without having to work out where they all are.
-      const along = 0.38 + random() * 0.26;
+
       // The one this link already has, moved — not a new one. A fresh
       // element on every layout leaves the old one behind in the
       // drawing, still covered over and never written, and starts the
@@ -521,12 +541,42 @@
         lines.appendChild(label);
         link.label = label;
       }
+
+      // Set to fit the run it rides on. A date is about ten characters,
+      // and ten characters of the ordinary size do not fit on a short
+      // line — the lettering would reach past the end of its own line
+      // and land on the picture there. So a short line is written
+      // smaller rather than left bare, and how wide the words actually
+      // come out is measured rather than guessed at: that depends on
+      // the font, and the font is not ours to predict.
+      let size = Math.min(DATE_SIZE, length / 6.9);
+      label.style.fontSize = size.toFixed(1) + "px";
+      const room = length * 0.84;
+      const written = label.getComputedTextLength ? label.getComputedTextLength() : 0;
+      if (written > room && written > 0) {
+        size = Math.max(6.5, size * (room / written));
+        label.style.fontSize = size.toFixed(1) + "px";
+      }
+      const words = Math.min(written || room, room);
+
+      // Not always at the halfway point: two lines crossing near their
+      // middles would print their dates on top of each other. Sliding
+      // each one along its own line by a different amount is enough to
+      // keep them apart without having to work out where they all are.
+      // A line with barely room for its date is the exception — there
+      // is nowhere to slide it to, so it goes in the middle.
+      const slid = 0.38 + random() * 0.26;
+      const along = length > words * 2.4 ? slid : 0.5;
       label.setAttribute(
         "transform",
         "translate(" + (a.x + (b.x - a.x) * along).toFixed(1) + "," +
         (a.y + (b.y - a.y) * along).toFixed(1) + ") " +
         "rotate(" + angle.toFixed(1) + ")"
       );
+      // The white halo that knocks the line out behind the lettering is
+      // scaled with it, or a small date sits in a patch cut for a
+      // large one.
+      label.style.strokeWidth = (size * 0.4).toFixed(1) + "px";
     });
 
     // When each one sets off. A picture is only reached once the line to

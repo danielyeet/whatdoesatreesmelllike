@@ -385,17 +385,26 @@ test("the whole map is one network, with no picture and no island left out",
     joins.forEach(([a, b]) => { part[partOf(a)] = partOf(b); });
     const parts = {};
     for (let i = 0; i < count; i++) (parts[partOf(i)] = parts[partOf(i)] || []).push(i + 1);
-    const joined = new Set(joins.flat());
+    const lines = new Array(count).fill(0);
+    joins.forEach(([a, b]) => { lines[a]++; lines[b]++; });
     return {
       count: count,
       parts: Object.values(parts),
-      alone: [...Array(count).keys()].filter((i) => !joined.has(i)).map((i) => i + 1),
+      alone: lines.map((n, i) => (n === 0 ? i + 1 : 0)).filter(Boolean),
+      ends: lines.map((n, i) => (n === 1 ? i + 1 : 0)).filter(Boolean),
     };
   });
 
   expect(map.count, "there should be pictures on the sheet").toBeGreaterThan(4);
   // A picture with no line at all reads as forgotten...
   expect(map.alone, `pictures with nothing joined to them: ${map.alone}`).toEqual([]);
+  // ...and one on the end of a single line is a dead end: the map stops
+  // there rather than carrying on. Every picture is a place the route
+  // goes through, not a stub.
+  expect(
+    map.ends,
+    `pictures with only one line: ${JSON.stringify(map.ends)}`
+  ).toEqual([]);
   // ...and two joined only to each other, with no way back to the rest,
   // read the same way. The whole sheet has to be one network.
   expect(
@@ -594,4 +603,99 @@ test("nothing on the sheet answers the pointer until it has settled", async ({ p
     .poll(() => frame.evaluate((el) => el.style.getPropertyValue("--turn-y")),
       { timeout: 3000 })
     .not.toBe("");
+});
+
+test("every line carries a date, and no date lands on a picture", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  // The last lines drawn are the ones that close loops: they only set
+  // off once both of the pictures they join have arrived, so the sheet
+  // can be finished while a couple of dates are still being written.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            document.querySelectorAll(".sheet-date.shown").length -
+            document.querySelectorAll(".sheet-route").length
+        ),
+      { timeout: 12000 }
+    )
+    .toBe(0);
+
+  const read = await page.evaluate(() => {
+    const sheet = document.getElementById("sheet");
+    const base = sheet.getBoundingClientRect();
+    const rel = (el, pad) => {
+      const r = el.getBoundingClientRect();
+      return {
+        left: r.left - base.left + pad, right: r.right - base.left - pad,
+        top: r.top - base.top + pad, bottom: r.bottom - base.top - pad,
+      };
+    };
+    const frames = [...document.querySelectorAll(".sheet-frame")];
+    const dates = [...document.querySelectorAll(".sheet-date")];
+
+    // A date's own turned rectangle, not the upright box around it: a
+    // date written along a diagonal fills a fraction of that box, and
+    // testing the box calls a perfectly clear date a collision.
+    const quadOf = (text) => {
+      const b = text.getBBox();
+      const m = /translate\(([-\d.]+),([-\d.]+)\)\s*rotate\(([-\d.]+)\)/
+        .exec(text.getAttribute("transform"));
+      const turn = (+m[3]) * Math.PI / 180, cx = +m[1], cy = +m[2];
+      const co = Math.cos(turn), si = Math.sin(turn);
+      return [[b.x, b.y], [b.x + b.width, b.y], [b.x + b.width, b.y + b.height],
+              [b.x, b.y + b.height]]
+        .map(([x, y]) => [cx + x * co - y * si, cy + x * si + y * co]);
+    };
+    // Two shapes are clear of each other if some line can be drawn
+    // between them; it is enough to try the ones along their own edges.
+    const overlaps = (quad, box) => {
+      const other = [[box.left, box.top], [box.right, box.top],
+                     [box.right, box.bottom], [box.left, box.bottom]];
+      const edges = (poly) => poly.map((p, i) => {
+        const q = poly[(i + 1) % poly.length];
+        return [-(q[1] - p[1]), q[0] - p[0]];
+      });
+      for (const axis of [...edges(quad), ...edges(other)]) {
+        const span = (poly) => poly.reduce((acc, p) => {
+          const at = p[0] * axis[0] + p[1] * axis[1];
+          return [Math.min(acc[0], at), Math.max(acc[1], at)];
+        }, [Infinity, -Infinity]);
+        const one = span(quad), two = span(other);
+        if (one[1] < two[0] || two[1] < one[0]) return false;
+      }
+      return true;
+    };
+
+    const over = [];
+    dates.forEach((date) => {
+      const quad = quadOf(date);
+      frames.forEach((frame, i) => {
+        if (overlaps(quad, rel(frame, 2))) over.push(`${date.textContent} on picture ${i + 1}`);
+        const caption = frame.querySelector(".sheet-caption");
+        if (caption && i > 0 && overlaps(quad, rel(caption, 1))) {
+          over.push(`${date.textContent} on caption ${i + 1}`);
+        }
+      });
+    });
+
+    return {
+      lines: document.querySelectorAll(".sheet-route").length,
+      dates: dates.length,
+      written: dates.filter((d) => d.classList.contains("shown")).length,
+      over: over,
+    };
+  });
+
+  expect(read.lines, "there should be lines to check").toBeGreaterThan(4);
+  // A line without a date reads as unfinished beside the ones that have
+  // them, so every one of them carries one...
+  expect(read.dates, "every line should carry a date").toBe(read.lines);
+  expect(read.written, "and every date should have been written").toBe(read.dates);
+  // ...and a short line is written smaller rather than left bare, so no
+  // date reaches past the end of its own line onto what it joins.
+  expect(read.over, `dates landing on the pictures: ${read.over.join(", ")}`).toEqual([]);
 });

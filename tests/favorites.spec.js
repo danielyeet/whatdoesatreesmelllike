@@ -129,17 +129,19 @@ test("the ring stands the pictures on one level line round the square", async ({
   expect(Math.max(...ys) - Math.min(...ys), `they should share one line: ${ys}`)
     .toBeLessThan(2);
 
-  // It goes round the big square, and wide: pictures out well past both
-  // of its sides.
+  // It goes round the big square, and it is as wide as the page: there
+  // are pictures out near both edges of the window, not just in a band
+  // around the square.
   const xs = ring.cards.map((c) => c.x);
-  expect(Math.min(...xs), "some should stand left of the square")
-    .toBeLessThan(ring.plate.x - ring.plate.width * 0.6);
-  expect(Math.max(...xs), "and some to the right")
-    .toBeGreaterThan(ring.plate.x + ring.plate.width * 0.6);
+  const window = await page.evaluate(() => document.documentElement.clientWidth);
+  expect(Math.min(...xs), "one should stand out near the left edge")
+    .toBeLessThan(window * 0.14);
+  expect(Math.max(...xs), "and one near the right")
+    .toBeGreaterThan(window * 0.86);
 
   // They are small — the big square is the thing being looked at.
   expect(Math.max(...ring.cards.map((c) => c.size)))
-    .toBeLessThan(ring.plate.width * 0.25);
+    .toBeLessThan(ring.plate.width * 0.33);
 
   // Which way round the ring a picture has come is said by how big and
   // how strong it is drawn, since none of them is higher than another.
@@ -149,11 +151,11 @@ test("the ring stands the pictures on one level line round the square", async ({
   expect(nearest.dim, "the nearest should not be").toBeLessThan(0.1);
   expect(nearest.size / furthest.size, "the nearest drawn larger").toBeGreaterThan(1.4);
 
-  // The line runs across the lower part of the square, not through the
-  // middle of it — and the near side of the ring passes in front.
-  expect(nearest.y, "below the middle of the square").toBeGreaterThan(ring.plate.y);
-  expect(nearest.y, "and not below the square altogether")
-    .toBeLessThan(ring.plate.bottom);
+  // The ring and the square share a centre: the line runs straight
+  // through the middle of the picture, and the near side of the ring
+  // passes in front of it.
+  expect(Math.abs(nearest.y - ring.plate.y), "level with the middle of the square")
+    .toBeLessThan(2);
 });
 
 test("every picture on the ring has a face on both sides", async ({ page }) => {
@@ -288,8 +290,12 @@ test("pointing at the big square brings up the name of what is in it", async ({ 
     "not there until it is pointed at"
   ).toBeLessThan(0.05);
 
+  // Pointed at towards the corner the name is written in. Not dead
+  // centre: the picture at the front of the ring stands there, and it
+  // is a thing in its own right — the pointer is on it, not on the
+  // square behind it.
   const box = await page.locator(".gallery-plate").boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.78);
 
   await expect
     .poll(() => name.evaluate((el) => parseFloat(getComputedStyle(el).opacity)), { timeout: 3000 })
@@ -331,7 +337,7 @@ test("nothing on the big square answers the pointer until the flick lands", asyn
   // whichever one the cursor happens to catch is nonsense.
   await page.waitForSelector(".gallery-plate", { state: "visible" });
   const box = await page.locator(".gallery-plate").boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.78);
   await page.waitForTimeout(500);
 
   const flicking = await page.evaluate(() => ({
@@ -347,7 +353,7 @@ test("nothing on the big square answers the pointer until the flick lands", asyn
 
   // Once it has landed, with the pointer still where it was.
   await openFavorites(page);
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 1);
+  await page.mouse.move(box.x + box.width * 0.78, box.y + box.height * 0.78 + 1);
   await expect
     .poll(() => page.evaluate(() =>
       parseFloat(getComputedStyle(document.querySelector(".gallery-hover-name")).opacity)),

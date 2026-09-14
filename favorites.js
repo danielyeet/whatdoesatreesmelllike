@@ -61,9 +61,10 @@
   // big and how strong it is drawn. It is wide and the pictures on it
   // are small: they are there to be picked from, and the big square is
   // the thing you are looking at.
-  const RING_SIZE = 0.135;     // a picture on the ring, as a share of the square
-  const RING_SIZE_MIN = 30, RING_SIZE_MAX = 70;
-  const RING_REACH = 1.55;     // how far out the ring stands, as a share of the square
+  const RING_SIZE = 0.17;      // a picture on the ring, as a share of the square
+  const RING_SIZE_MIN = 30, RING_SIZE_MAX = 96;
+  const RING_REACH = 0.95;     // the closest in it will ever stand, as a share of the
+                               // square — it normally stands as wide as the page lets it
   const SCROLL_TURN = 0.00022; // how far a notch of scroll turns it — anticlockwise
   const SPIN_MAX = 0.06;       // the fastest it will turn however hard it is pushed
   const SPIN_DRAG = 0.93;      // how quickly a push runs down
@@ -158,8 +159,9 @@
   //
   // The y is zero for every one of them: the ring is level and at eye
   // height, so all of them land on one horizontal line across the
-  // square. Which way round the ring a picture has come is then said
-  // entirely by how big and how strong it is drawn.
+  // middle of the square — the ring and the square share a centre.
+  // Which way round the ring a picture has come is then said entirely
+  // by how big and how strong it is drawn.
   //
   // A picture faces outwards, so the far side of the ring shows you its
   // back — which is why each is built as a card with a face on both
@@ -205,12 +207,14 @@
     if (!width) return;
     const plateSize = plate.getBoundingClientRect().width || width * 0.32;
     const size = Math.max(RING_SIZE_MIN, Math.min(RING_SIZE_MAX, plateSize * RING_SIZE));
-    // Far enough out to clear the square, but never so far that the
-    // ring runs off the sides of the page — on a narrow screen the
-    // second of these is the one that decides it.
-    const radius = Math.min(
-      Math.max(plateSize * RING_REACH, plateSize / 2 + size * 1.1),
-      width / 2 - size * 1.6
+    // As wide as the page will take, and never narrower than it takes
+    // to clear the square. On anything desktop-sized the first of these
+    // is what decides it: the ring reaches from one side of the screen
+    // to the other.
+    const radius = Math.max(
+      width / 2 - size * 1.6,
+      plateSize * RING_REACH,
+      plateSize / 2 + size * 1.1
     );
 
     frames.forEach((frame, i) => {
@@ -230,10 +234,8 @@
       // picture standing even slightly above or below the eye is drawn
       // further from the middle of the page the nearer it is, so the
       // ring would bow instead of running straight. At zero they all
-      // land on one horizontal line however far round they are. What
-      // keeps that line clear of the middle of the big square is the
-      // square being set higher up the scene, not the ring being
-      // dropped down it — see --plate-lift in style.css.
+      // land on one horizontal line however far round they are, through
+      // the middle of the big square.
       frame.style.transform =
         "translate3d(" + (across * radius).toFixed(1) + "px, 0px, " +
         (along * radius).toFixed(1) + "px) " +

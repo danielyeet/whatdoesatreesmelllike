@@ -991,27 +991,28 @@ body.view-switching .gallery,
 body.view-switching .sheet-head .category-lede { opacity: 0; }
 
 .gallery {
-  /* The big square, and everything else in this view measured off it.
-     Smaller than it was: the pictures now go round it in three
-     dimensions rather than sitting in a row underneath, so it has to
-     leave room beside it as well as below. */
-  --plate: min(380px, 44vw, 40vh);
+  /* The big square, and everything else in this view measured off it. */
+  --plate: min(480px, 38vw, 56vh);
   position: relative;
-  width: min(1240px, calc(100% - 80px));
-  margin: 0 auto;
-  /* A little further down the page than the map is — asked for — and
-     enough of it to take account of the square being set above the
-     middle of its own scene. */
-  padding-top: clamp(50px, 10vh, 96px);
-  padding-bottom: 14px;
+  /* The whole width of the page and the whole of what is left of its
+     height: this view is not a panel sitting in the middle of a page,
+     it is the page. The ring is as wide as the screen because there is
+     nothing else on the screen for it to keep out of the way of. */
+  width: 100%;
+  margin: 0;
+  padding: 0;
   display: none;
 }
 body.view-favorites .gallery { display: block; }
 body.view-favorites .sheet { display: none; }
 body.view-favorites .sheet-head .category-lede { opacity: 0; }
-/* Without the script the page shows both, one under the other, which
-   is the right fallback: everything is reachable. */
-body:not(.sheet-scripted) .gallery { display: block; }
+/* Without the script there is no Favorites view to show: its pictures
+   are placed in three dimensions by favorites.js and its buttons do
+   nothing on their own, so all it would put on the page is a screen's
+   worth of empty space under the sheet. The sheet itself falls back to
+   a plain grid of every picture in the category, captions and all, so
+   nothing is unreachable. */
+body:not(.sheet-scripted) .gallery { display: none; }
 
 /* ------------------------------------------------------------------
    THE SCENE
@@ -1030,8 +1031,14 @@ body:not(.sheet-scripted) .gallery { display: block; }
    ------------------------------------------------------------------ */
 .gallery-scene {
   position: relative;
-  height: calc(var(--plate) + 200px);
-  perspective: 1150px;
+  /* Everything the page has left under the row of buttons — the same
+     figure .views reserves for them above. */
+  height: calc(100vh - clamp(64px, 9vh, 96px));
+  /* Long, because the ring is wide: at a shorter focal length the
+     picture nearest you is drawn twice the size of the one behind the
+     square, which reads as two different sets of pictures rather than
+     as one ring turning. */
+  perspective: 1800px;
 }
 .gallery-space {
   position: absolute;
@@ -1049,13 +1056,11 @@ body:not(.sheet-scripted) .gallery { display: block; }
   top: 50%;
   width: var(--plate);
   aspect-ratio: 1 / 1;
-  /* Set a little above the middle of the scene, so the ring's one level
-     line runs across the lower part of the picture rather than through
-     the middle of it. It is the square that moves, not the ring: a ring
-     lifted or dropped off eye height stops being a straight line on the
-     page, because how far it is from the middle depends on how near it
-     is to you. */
-  transform: translate(-50%, calc(-50% - var(--plate) * 0.17));
+  /* Dead centre of the scene, which is also where the ring's own centre
+     is: the two are concentric, so the ring's level line runs across
+     the middle of the picture and the pictures on it are the same
+     distance out on every side of it. */
+  transform: translate(-50%, -50%);
   border: 1px solid var(--ink);
   background: var(--bg-2);
 }

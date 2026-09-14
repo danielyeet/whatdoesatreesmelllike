@@ -80,12 +80,15 @@ pointing at, no picture left with nothing joined to it, the pictures arriving on
 another rather than together, nothing shifting sideways when the page grows, the two
 buttons arriving only once it has finished drawing itself, a frame keeping its number
 once a real picture is put in it, the whole map being one network with no picture and no
-island left out of it, pointing at a picture turning it in three dimensions without
-moving where it was laid out, nothing answering the pointer until the sheet has settled,
-and a date being written along its line rather than switched on; and favorites —
+island left out of it and no picture on the end of a single line, pointing at a picture
+turning it in three dimensions without moving where it was laid out, nothing answering
+the pointer until the sheet has settled, every line carrying a date with none of them
+landing on a picture, and a date being written along its line rather than switched on;
+and favorites —
 switching views taking one away before the other arrives, the flick ending on the first,
-the ring standing its pictures on one level line round the square with the near side in
-front of it, every picture having a face on both sides, the wheel being the only thing
+the ring standing its pictures on one level line through the middle of the square and
+reaching to both edges of the window, every picture having a face on both sides, the
+wheel being the only thing
 that turns it (the pointer and a drag both leaving it alone, and no drift of its own),
 picking one fading rather than cutting, the whole view fitting on one screen, pointing at
 the big square bringing up the name of what is in it, and nothing on it answering the
@@ -358,7 +361,10 @@ carrying a date, and each of the other pictures appears as its line lands on it.
 - **Without JavaScript the page is a plain CSS grid of those same frames**, captions and
   all — a working page. The script puts `.scripted` on the sheet and takes over, and
   every rule that hides something is written under that class so the fallback can't
-  inherit it.
+  inherit it. The Favorites view is left out of that fallback altogether
+  (`body:not(.sheet-scripted) .gallery { display: none }`): its pictures are placed in
+  three dimensions by `favorites.js` and its buttons do nothing on their own, so all it
+  would add is a screen's worth of empty space under the sheet.
 - **Room is kept for the scrollbar from the start** (`scrollbar-gutter: stable`, on pages
   carrying a sheet only). The page grows a lot taller the moment the sheet lands, and on
   a browser with ordinary scrollbars that made one appear — which took 15px off the width
@@ -392,6 +398,13 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   reach which) and then sewn together: every possible line is tried shortest first, and
   any that joins two parts that could not reach each other and has a clear run is taken.
   A test checks the sheet comes out as one network.
+- **And no picture is left on the end of a single line.** One line is a dead end — the
+  map stops there rather than carrying on — and with four of the thirteen like that it
+  read as a handful of stubs rather than as a route you could follow. A picture with only
+  one line is given a second, to the nearest picture it has a clear run to and is not
+  already joined to. Those are not tree links: both ends are already on the map by then,
+  so they close loops rather than carrying the spread, and the map still arrives outwards
+  in order.
 - **A line that has been sewn on has to be turned to face outwards.** The spread travels
   from the middle along the tree links and each has to name the end nearer the middle
   first, so after the sewing the links are walked out from the middle and any that was
@@ -407,11 +420,24 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   islands. On a very narrow window the pictures end up in a column and there may be no
   clear run left between two parts of the map; a line through a picture is worse than an
   island, so there it stays in parts.
+- **Every line carries a date.** A line without one reads as unfinished beside the ones
+  that have them. A short line cannot hold ten characters at the ordinary size without
+  the lettering reaching past the end of its own line and onto the picture there, so a
+  short line is written *smaller* rather than left bare — and how wide the words actually
+  come out is measured with `getComputedTextLength()` rather than guessed at, because
+  that depends on the font and the font is not ours to predict. The white halo that
+  knocks the line out behind the lettering is scaled with the size.
 - Dates sit at a different fraction along each line rather than always at the halfway
   point, because two lines crossing near their middles would otherwise print their dates
-  on top of each other. Each one is **written** rather than switched on: the lettering is
-  uncovered from its left end by a `clip-path` that opens as the line lands (`clip-path`
-  does clip SVG text, which is what makes this possible without drawing the word twice).
+  on top of each other; a line with barely room for its date is the exception, since
+  there is nowhere to slide it to. Each one is **written** rather than switched on: the
+  lettering is uncovered from its left end by a `clip-path` that opens as the line lands
+  (`clip-path` does clip SVG text, which is what makes this possible without drawing the
+  word twice).
+- **Testing whether a date is clear of a picture means testing its own turned rectangle**,
+  not the upright box around it. A date written along a diagonal fills a fraction of that
+  box, and testing the box calls a perfectly clear date a collision — which is what the
+  first version of that check did.
 - **A date label is moved on a later layout, never made again.** Every layout used to
   append a fresh `<text>`, which left the old one in the drawing — covered over by its
   own clip-path and so invisible, but piling up one per link on every resize, and
@@ -480,13 +506,20 @@ carrying a date, and each of the other pictures appears as its line lands on it.
 - **The ring is level, and the y in that transform is exactly zero.** Every picture then
   lands on one horizontal line across the page however far round it has come. Nearly zero
   is not the same thing: a picture standing even slightly off eye height is thrown further
-  from the middle of the page the nearer it is, so the line bows. What keeps the line
-  clear of the middle of the big square is **the square being set higher in the scene**
-  (`transform: translate(-50%, calc(-50% - var(--plate) * 0.17))`), not the ring being
-  dropped down it.
-- **The pictures on it are small and it stands well out to the sides** (`RING_SIZE`,
-  `RING_REACH`, clamped so it never runs off the page). They are there to be picked from;
-  the big square is the thing being looked at.
+  from the middle of the page the nearer it is, so the line bows.
+- **The ring and the square are concentric**, so that line runs through the middle of the
+  picture and the ring reaches the same distance out on either side of it. One
+  consequence to know about: the picture at the front of the ring stands over the middle
+  of the big square and takes the pointer there, so pointing at the very centre of the
+  square is pointing at that picture, not at the square.
+- **The view is the whole screen, not a panel on a page.** `.gallery` is full width with
+  no gutters and `.gallery-scene` is `100vh` less the strip `.views` reserves for the
+  buttons, so the page is exactly one screen tall with nothing to scroll to. The ring is
+  then as wide as the page will take (`width / 2` less room for the widest picture), and
+  only falls back to a fixed share of the square (`RING_REACH`) when that would put it
+  inside the square. The perspective is long (1800px) to match: at a shorter focal length
+  a ring this wide draws the nearest picture at twice the size of the far ones, which
+  reads as two different sets of pictures rather than as one ring turning.
 - **Every picture is a card with a face on each side**, both carrying the same picture
   (`buildFaces`). A picture faces outwards from the middle, so the far half of the ring
   is showing you its back; one-sided panels leave that half blank. The two faces are held
