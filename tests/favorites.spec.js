@@ -2,14 +2,14 @@
 // FAVORITES (the other half of categories/scent-descriptions.html)
 //
 // The second of the two views on that page: one big square in the
-// middle with the rest of the pictures on a ring going round it in
-// three dimensions. These check the switch between the two views, the
-// ring's arithmetic and the depth cues that make it read as a ring
-// rather than as a circle drawn on the page, that the pictures are
-// there from both sides, which way scrolling turns them, that moving
-// the pointer moves everything except the big square, and that picking
-// a picture fades rather than cuts — a cut is the film going past, a
-// fade is you choosing something.
+// middle with the rest of the pictures on a wide level ring going
+// round it in three dimensions. These check the switch between the two
+// views, the ring standing its pictures on one horizontal line with the
+// near side in front of the square and the far side behind it, that the
+// pictures are there from both sides, that the wheel is the only thing
+// that turns them, that nothing is named until the flick has landed,
+// and that picking a picture fades rather than cuts — a cut is the film
+// going past, a fade is you choosing something.
 // ============================================================
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
@@ -93,7 +93,7 @@ test("the big square flicks through the favourites and ends on the first", async
   expect(await plateName(page), "it lands on the first").toBe("f1");
 });
 
-test("the ring stands the pictures round the square, front to back", async ({ page }) => {
+test("the ring stands the pictures on one level line round the square", async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
@@ -101,7 +101,12 @@ test("the ring stands the pictures round the square, front to back", async ({ pa
   const ring = await page.evaluate(() => {
     const plate = document.getElementById("gallery-plate").getBoundingClientRect();
     return {
-      plate: { x: plate.left + plate.width / 2, y: plate.top + plate.height / 2 },
+      plate: {
+        x: plate.left + plate.width / 2,
+        y: plate.top + plate.height / 2,
+        bottom: plate.bottom,
+        width: plate.width,
+      },
       cards: [...document.querySelectorAll(".gallery-frame")].map((f) => {
         const r = f.getBoundingClientRect();
         return {
@@ -115,30 +120,40 @@ test("the ring stands the pictures round the square, front to back", async ({ pa
   });
 
   expect(ring.cards.length).toBeGreaterThan(4);
-  // It goes round the big square: pictures out past both of its sides.
-  const xs = ring.cards.map((c) => c.x);
-  expect(Math.min(...xs), "some should stand left of the square").toBeLessThan(ring.plate.x - 100);
-  expect(Math.max(...xs), "and some to the right").toBeGreaterThan(ring.plate.x + 100);
 
-  // The three cues that make a circle read as a ring lying away from
-  // you: the near ones are drawn larger, lower down the page, and the
-  // far ones are washed out towards the colour of the paper.
-  //
-  // Which is nearest is taken from how far round the ring each one has
-  // come, not from how wide it is drawn: a picture at the side of the
-  // ring is turned edge-on to you and is the narrowest thing on the
-  // page while being no further away than the square itself.
+  // One line, and a level one. A picture standing even slightly off eye
+  // height is thrown further from the middle of the page the nearer it
+  // is, and the line bows instead of running straight — so this is a
+  // pixel or two, not "roughly".
+  const ys = ring.cards.map((c) => c.y);
+  expect(Math.max(...ys) - Math.min(...ys), `they should share one line: ${ys}`)
+    .toBeLessThan(2);
+
+  // It goes round the big square, and wide: pictures out well past both
+  // of its sides.
+  const xs = ring.cards.map((c) => c.x);
+  expect(Math.min(...xs), "some should stand left of the square")
+    .toBeLessThan(ring.plate.x - ring.plate.width * 0.6);
+  expect(Math.max(...xs), "and some to the right")
+    .toBeGreaterThan(ring.plate.x + ring.plate.width * 0.6);
+
+  // They are small — the big square is the thing being looked at.
+  expect(Math.max(...ring.cards.map((c) => c.size)))
+    .toBeLessThan(ring.plate.width * 0.25);
+
+  // Which way round the ring a picture has come is said by how big and
+  // how strong it is drawn, since none of them is higher than another.
   const nearest = ring.cards.reduce((a, b) => (a.dim < b.dim ? a : b));
   const furthest = ring.cards.reduce((a, b) => (a.dim > b.dim ? a : b));
   expect(furthest.dim, "the furthest should be washed out").toBeGreaterThan(0.4);
   expect(nearest.dim, "the nearest should not be").toBeLessThan(0.1);
   expect(nearest.size / furthest.size, "the nearest drawn larger").toBeGreaterThan(1.4);
-  expect(nearest.y, "the nearest should sit lowest").toBeGreaterThan(furthest.y);
 
-  // The near side passes in front of the square and the far side
-  // behind it — which is the whole point of putting them in one space.
-  expect(nearest.y, "the near side passes below the middle").toBeGreaterThan(ring.plate.y);
-  expect(furthest.y, "the far side above it").toBeLessThan(ring.plate.y);
+  // The line runs across the lower part of the square, not through the
+  // middle of it — and the near side of the ring passes in front.
+  expect(nearest.y, "below the middle of the square").toBeGreaterThan(ring.plate.y);
+  expect(nearest.y, "and not below the square altogether")
+    .toBeLessThan(ring.plate.bottom);
 });
 
 test("every picture on the ring has a face on both sides", async ({ page }) => {
@@ -168,7 +183,7 @@ test("every picture on the ring has a face on both sides", async ({ page }) => {
   }
 });
 
-test("scrolling turns the ring anticlockwise, and nothing turns on its own", async ({ page }) => {
+test("the wheel is the only thing that turns the ring", async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
@@ -179,57 +194,49 @@ test("scrolling turns the ring anticlockwise, and nothing turns on its own", asy
       const r = document.querySelectorAll(".gallery-frame")[0].getBoundingClientRect();
       return r.left + r.width / 2;
     });
+  const places = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll(".gallery-frame")].map((f) => {
+        const r = f.getBoundingClientRect();
+        return [r.left + r.width / 2, r.top + r.height / 2];
+      })
+    );
 
   // Left alone it stands still: this ring only moves when it is moved.
   const settled = await front();
   await page.waitForTimeout(900);
   expect(Math.abs((await front()) - settled), "it should not drift").toBeLessThan(3);
 
+  // Moving the pointer across it does nothing at all — not a lean, not
+  // a turn, not a shift of where you are looking from.
+  const scene = await page.locator("#gallery-scene").boundingBox();
+  const before = await places();
+  await page.mouse.move(scene.x + scene.width * 0.9, scene.y + scene.height * 0.85);
+  await page.waitForTimeout(700);
+  const after = await places();
+  const moved = after.map((c, i) => Math.hypot(c[0] - before[i][0], c[1] - before[i][1]));
+  expect(Math.max(...moved), "the pointer should leave the ring alone").toBeLessThan(1.5);
+
+  // Dragging is not a way of turning it either.
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i++) {
+    await page.mouse.move(scene.x + scene.width * 0.9 - i * 26, scene.y + scene.height * 0.85);
+    await page.waitForTimeout(16);
+  }
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+  expect(Math.abs((await front()) - settled), "dragging should not turn it")
+    .toBeLessThan(3);
+
+  // The wheel does. Anticlockwise seen from above is the near side of
+  // the ring travelling to the right.
   const plate = await page.locator(".gallery-plate").boundingBox();
   await page.mouse.move(plate.x + plate.width / 2, plate.y + plate.height / 2);
-  const before = await front();
+  const stood = await front();
   await page.mouse.wheel(0, 400);
   await page.waitForTimeout(600);
-  const after = await front();
-
-  // Anticlockwise seen from above is the near side of the ring
-  // travelling to the right.
-  expect(after - before, "scrolling down should carry the front to the right")
+  expect((await front()) - stood, "scrolling down should carry the front to the right")
     .toBeGreaterThan(40);
-});
-
-test("moving the pointer moves everything but the big square", async ({ page }) => {
-  await page.goto(PAGE);
-  await page.waitForTimeout(600);
-  await openFavorites(page);
-
-  const scene = await page.locator("#gallery-scene").boundingBox();
-  const look = () =>
-    page.evaluate(() => {
-      const box = (el) => {
-        const r = el.getBoundingClientRect();
-        return [r.left + r.width / 2, r.top + r.height / 2];
-      };
-      return {
-        plate: box(document.getElementById("gallery-plate")),
-        cards: [...document.querySelectorAll(".gallery-frame")].map(box),
-      };
-    });
-
-  await page.mouse.move(scene.x + scene.width / 2, scene.y + scene.height / 2);
-  await page.waitForTimeout(500);
-  const still = await look();
-  await page.mouse.move(scene.x + scene.width * 0.9, scene.y + scene.height * 0.8);
-  await page.waitForTimeout(700);
-  const leaning = await look();
-
-  const moved = leaning.cards.map((c, i) =>
-    Math.hypot(c[0] - still.cards[i][0], c[1] - still.cards[i][1]));
-  expect(Math.max(...moved), "the ring should answer the pointer").toBeGreaterThan(20);
-  expect(
-    Math.hypot(leaning.plate[0] - still.plate[0], leaning.plate[1] - still.plate[1]),
-    "the big square should not move at all"
-  ).toBeLessThan(1.5);
 });
 
 test("picking one from the ring fades it into the big square", async ({ page }) => {
@@ -254,33 +261,6 @@ test("picking one from the ring fades it into the big square", async ({ page }) 
 
   await expect.poll(() => plateName(page), { timeout: 4000 }).toBe("f5");
   await expect(page.locator(".gallery-frame").nth(4)).toHaveClass(/chosen/);
-});
-
-test("the ring can be dragged round", async ({ page }) => {
-  await page.goto(PAGE);
-  await page.waitForTimeout(600);
-  await openFavorites(page);
-
-  const where = () =>
-    page.evaluate(() => {
-      const f = document.querySelectorAll(".gallery-frame")[0].getBoundingClientRect();
-      return f.left + f.width / 2;
-    });
-
-  const before = await where();
-  // A press at a point outside the window is not delivered at all.
-  await page.locator("#gallery-scene").scrollIntoViewIfNeeded();
-  const box = await page.locator("#gallery-scene").boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.12);
-  await page.mouse.down();
-  for (let i = 1; i <= 8; i++) {
-    await page.mouse.move(box.x + box.width / 2 - i * 22, box.y + box.height * 0.12);
-    await page.waitForTimeout(16);
-  }
-  await page.mouse.up();
-
-  const after = await where();
-  expect(Math.abs(after - before), "the ring should have turned").toBeGreaterThan(60);
 });
 
 test("the whole view fits on one screen, with nothing to scroll to", async ({ page }) => {
@@ -319,17 +299,12 @@ test("pointing at the big square brings up the name of what is in it", async ({ 
     parseFloat(getComputedStyle(el, "::after").opacity));
   expect(shade, "the corner should darken under it").toBeGreaterThan(0.9);
 
-  // The pictures on the ring each carry one of their own, one at a
-  // time — they are not all written at once.
-  const onRing = page.locator(".gallery-frame .gallery-hover-name");
-  expect(await onRing.count()).toBeGreaterThan(0);
-  expect(
-    await onRing.evaluateAll((els) =>
-      els.filter((el) => parseFloat(getComputedStyle(el).opacity) > 0.05).length),
-    "none of the ring's names until one is pointed at"
-  ).toBe(0);
+  // The pictures on the ring carry no name of their own: they are small
+  // and they go past, and anything that lit up as the cursor crossed
+  // them made the ring twitch rather than read.
+  expect(await page.locator(".gallery-frame .gallery-hover-name").count()).toBe(0);
 
-  // And the big square's follows whatever is showing in it.
+  // And the big square's name follows whatever is showing in it.
   await page.locator(".gallery-frame").nth(4).dispatchEvent("click");
   await expect(name).toHaveText("Placeholder 5");
 });
@@ -345,4 +320,37 @@ test("with animation turned off, favorites arrives finished", async ({ page }) =
   const frames = await page.$$eval(".gallery-frame", (els) => els.length);
   expect(inRing, "no flick to sit through").toBe(frames);
   expect(await plateName(page)).toBe("f1");
+});
+
+test("nothing on the big square answers the pointer until the flick lands", async ({ page }) => {
+  await page.goto(PAGE);
+  await page.waitForTimeout(600);
+  await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
+
+  // Mid-flick every picture is taking its turn in the square, so naming
+  // whichever one the cursor happens to catch is nonsense.
+  await page.waitForSelector(".gallery-plate", { state: "visible" });
+  const box = await page.locator(".gallery-plate").boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.waitForTimeout(500);
+
+  const flicking = await page.evaluate(() => ({
+    landed: document.getElementById("gallery").classList.contains("landed"),
+    shade: parseFloat(
+      getComputedStyle(document.querySelector(".gallery-plate"), "::after").opacity),
+    name: parseFloat(
+      getComputedStyle(document.querySelector(".gallery-hover-name")).opacity),
+  }));
+  expect(flicking.landed, "the flick should still be running").toBe(false);
+  expect(flicking.shade, "no shade while it is still flicking").toBeLessThan(0.05);
+  expect(flicking.name, "and no name").toBeLessThan(0.05);
+
+  // Once it has landed, with the pointer still where it was.
+  await openFavorites(page);
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 1);
+  await expect
+    .poll(() => page.evaluate(() =>
+      parseFloat(getComputedStyle(document.querySelector(".gallery-hover-name")).opacity)),
+      { timeout: 3000 })
+    .toBeGreaterThan(0.9);
 });

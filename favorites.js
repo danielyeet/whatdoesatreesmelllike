@@ -7,7 +7,8 @@
 //   Description portfolio   the map, drawn by contact-sheet.js
 //   Favorites               this: one big square in the middle of the
 //                           page with the rest of the pictures on a
-//                           ring going round it in three dimensions
+//                           wide level ring going round it in three
+//                           dimensions, turned by the wheel
 //
 // Switching fades the one you are leaving away before the other
 // arrives. Coming into Favorites the big square flicks through every
@@ -53,22 +54,20 @@
   // The ring in space. Nothing here is in pixels across the page: the
   // ring is measured against the big square it goes round, so the whole
   // scene scales together.
-  const RING_SIZE = 0.34;      // a picture on the ring, as a share of the square
-  const RING_SIZE_MIN = 64, RING_SIZE_MAX = 170;
-  const RING_REACH = 1.02;     // how far out the ring stands, as a share of the square
-  const BASE_TILT = 26;        // how far the ring is tipped, in degrees: you look
-                               // down on it a little, so its near side passes below
-                               // the middle of the square and its far side above
-  const LEAN_TILT = 8;         // and how much further the pointer can tip it
-  const LEAN_TURN = 0.14;      // how far the pointer swings it round, in radians
-  const LEAN_SHIFT = 80;       // how far the pointer moves your eye, in pixels
+  //
+  // The ring lies flat and level — every picture on it sits at the same
+  // height, on one horizontal line through the middle of the square,
+  // and the only thing that tells you where each one is standing is how
+  // big and how strong it is drawn. It is wide and the pictures on it
+  // are small: they are there to be picked from, and the big square is
+  // the thing you are looking at.
+  const RING_SIZE = 0.135;     // a picture on the ring, as a share of the square
+  const RING_SIZE_MIN = 30, RING_SIZE_MAX = 70;
+  const RING_REACH = 1.55;     // how far out the ring stands, as a share of the square
   const SCROLL_TURN = 0.00022; // how far a notch of scroll turns it — anticlockwise
-  const DRAG_TURN = 0.0052;    // how far it turns for a movement of the hand
   const SPIN_MAX = 0.06;       // the fastest it will turn however hard it is pushed
   const SPIN_DRAG = 0.93;      // how quickly a push runs down
-  const BOB = 4;               // how far a picture rises and falls where it floats
   const DIM_FAR = 0.58;        // how far the back of the ring washes out
-  const CLICK_SLOP = 6;        // movement past which a drag is not also a click
 
   // ============================================================
   // THE PICTURES
@@ -150,14 +149,17 @@
   // moved to its own point on the ring and then turned about the
   // upright only, so it faces out from the middle:
   //
-  //     translate3d(x, y, z) rotateY(its angle round the ring)
+  //     translate3d(x, 0, z) rotateY(its angle round the ring)
   //
-  // which is why they stand upright however far the ring is tipped.
-  // Tipping the space instead leans every picture over with it, and a
-  // leaning picture is drawn as a sheared parallelogram — it reads as a
-  // mistake rather than as a photograph standing in space. So the tip
-  // is in the arithmetic: it is the ring's near side being *lower* than
-  // its far side, nothing more.
+  // which is what keeps every one of them standing upright. Turning
+  // the space instead leans them all over with it, and a leaning
+  // picture is drawn as a sheared parallelogram — it reads as a mistake
+  // rather than as a photograph standing in space.
+  //
+  // The y is zero for every one of them: the ring is level and at eye
+  // height, so all of them land on one horizontal line across the
+  // square. Which way round the ring a picture has come is then said
+  // entirely by how big and how strong it is drawn.
   //
   // A picture faces outwards, so the far side of the ring shows you its
   // back — which is why each is built as a card with a face on both
@@ -166,20 +168,14 @@
   // The big square sits at the middle at z = 0, and needs no undoing of
   // anything: it is the one thing in the scene that is not turned.
   //
-  // It does not turn on its own. Scrolling turns it, dragging swings it
-  // round, and moving the pointer moves your eye — the scene's
-  // perspective-origin — so everything with any depth to it shifts and
-  // the square, being flat on at zero depth, does not.
+  // The scroll wheel is the only thing that turns it. It does not drift
+  // on its own and it does not answer the pointer: moving the mouse
+  // across the page leaves the ring exactly where it is, so where a
+  // picture is standing is something you set rather than something that
+  // keeps changing under your hand.
   // ============================================================
   let turn = 0;           // where the ring has been turned to
   let spin = 0;           // and how fast it is turning
-  let leanX = 0, leanY = 0;       // where the pointer has it leaning
-  let wantLeanX = 0, wantLeanY = 0;
-  let leanShiftX = 0, leanShiftY = 0;   // and where it has moved your eye to
-  let wantShiftX = 0, wantShiftY = 0;
-  let dragging = false;
-  let dragFrom = 0, dragMoved = 0;
-  let clock = 0;
   let homing = false;
 
   /** Two faces, so the same picture is there from either side. */
@@ -196,12 +192,6 @@
       face.style.setProperty("--hatch-gap", (9 + ((index * 7) % 10)) + "px");
       if (picture) face.appendChild(picture.cloneNode());
       if (number) face.appendChild(number.cloneNode(true));
-      // What it is called, in its own corner, for when it is pointed
-      // at — the same as the big square's, in miniature.
-      const says = document.createElement("span");
-      says.className = "gallery-hover-name";
-      says.textContent = titleOf(index);
-      face.appendChild(says);
       frame.appendChild(face);
     });
     if (picture) picture.remove();
@@ -220,38 +210,32 @@
     // second of these is the one that decides it.
     const radius = Math.min(
       Math.max(plateSize * RING_REACH, plateSize / 2 + size * 1.1),
-      width / 2 - size * 0.8
+      width / 2 - size * 1.6
     );
-    const drop = Math.sin(((BASE_TILT + leanY) * Math.PI) / 180) * radius;
-
-    // Where you are looking from. The pointer moves your eye rather
-    // than the ring, so everything with depth shifts against everything
-    // else — and the big square, flat on at no depth at all, does not
-    // move by so much as a pixel whatever the pointer does.
-    scene.style.perspectiveOrigin =
-      "calc(50% + " + (-leanShiftX).toFixed(1) + "px) " +
-      "calc(50% + " + (-leanShiftY).toFixed(1) + "px)";
 
     frames.forEach((frame, i) => {
-      const angle = turn + leanX + (i / frames.length) * Math.PI * 2;
-      // A little unevenness up and down, so the ring reads as a ring in
-      // space rather than as a row of pictures on a wire.
-      const rise = Math.sin(i * 2.3) * size * 0.14;
-      const bob = REDUCE_MOTION ? 0 : Math.sin(clock * 0.8 + i * 1.7) * BOB;
+      const angle = turn + (i / frames.length) * Math.PI * 2;
       const across = Math.sin(angle), along = Math.cos(angle);
       // How near the front of the ring this one has come round to,
       // 1 at the front and 0 at the back. Perspective already draws
-      // the far ones smaller; washing them out as well is what makes
-      // the ring read as lying away from you rather than as a circle
-      // drawn on the page.
+      // the far ones smaller; washing them out as well is what says
+      // which way round the ring they are standing, now that they are
+      // all on the same line and none of them is higher than another.
       frame.style.setProperty("--dim", (((1 - along) / 2) * DIM_FAR).toFixed(3));
       frame.style.width = size + "px";
       frame.style.height = size + "px";
       frame.style.marginLeft = -size / 2 + "px";
       frame.style.marginTop = -size / 2 + "px";
+      // No height at all, and that is exact rather than nearly: a
+      // picture standing even slightly above or below the eye is drawn
+      // further from the middle of the page the nearer it is, so the
+      // ring would bow instead of running straight. At zero they all
+      // land on one horizontal line however far round they are. What
+      // keeps that line clear of the middle of the big square is the
+      // square being set higher up the scene, not the ring being
+      // dropped down it — see --plate-lift in style.css.
       frame.style.transform =
-        "translate3d(" + (across * radius).toFixed(1) + "px, " +
-        (along * drop + rise + bob).toFixed(1) + "px, " +
+        "translate3d(" + (across * radius).toFixed(1) + "px, 0px, " +
         (along * radius).toFixed(1) + "px) " +
         "rotateY(" + ((angle * 180) / Math.PI).toFixed(2) + "deg)";
     });
@@ -262,41 +246,19 @@
     turning = requestAnimationFrame(turnOrbit);
     const step = Math.min(3, (now - (turnOrbit.last || now)) / 16.7) || 1;
     turnOrbit.last = now;
-    clock += step / 60;
 
-    if (!dragging && !homing) {
-      // What is left of a scroll or a throw, running itself down. There
-      // is no drift underneath it: this ring only moves when it is
-      // moved.
+    if (!homing) {
+      // What is left of the last turn of the wheel, running itself
+      // down. There is no drift underneath it: this ring only moves
+      // when it is turned.
       spin *= Math.pow(SPIN_DRAG, step);
       if (Math.abs(spin) < 0.00002) spin = 0;
       turn += spin * step;
     }
-    const ease = Math.min(1, 0.08 * step);
-    leanX += (wantLeanX - leanX) * ease;
-    leanY += (wantLeanY - leanY) * ease;
-    leanShiftX += (wantShiftX - leanShiftX) * ease;
-    leanShiftY += (wantShiftY - leanShiftY) * ease;
     placeRing();
   }
 
-  // --- the pointer leans it
-  scene.addEventListener("pointermove", (e) => {
-    const box = scene.getBoundingClientRect();
-    const acrossX = (e.clientX - (box.left + box.width / 2)) / (box.width / 2);
-    const acrossY = (e.clientY - (box.top + box.height / 2)) / (box.height / 2);
-    const hold = Math.max(-1, Math.min(1, acrossX));
-    const rise = Math.max(-1, Math.min(1, acrossY));
-    wantLeanX = hold * LEAN_TURN;
-    wantLeanY = rise * LEAN_TILT;
-    wantShiftX = hold * LEAN_SHIFT;
-    wantShiftY = rise * LEAN_SHIFT * 0.5;
-  });
-  scene.addEventListener("pointerleave", () => {
-    wantLeanX = 0; wantLeanY = 0; wantShiftX = 0; wantShiftY = 0;
-  });
-
-  // --- scrolling turns it, the same way every time
+  // --- the wheel turns it, and nothing else does
   scene.addEventListener("wheel", (e) => {
     const by = (e.deltaY || 0) * SCROLL_TURN;
     spin += by;
@@ -304,32 +266,8 @@
     homing = false;
   }, { passive: true });
 
-  // --- and dragging, for anything without a wheel
-  scene.addEventListener("pointerdown", (e) => {
-    dragging = true;
-    dragMoved = 0;
-    dragFrom = e.clientX;
-    scene.classList.add("grabbing");
-  });
-  window.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - dragFrom;
-    dragFrom = e.clientX;
-    dragMoved += Math.abs(dx);
-    spin = Math.max(-SPIN_MAX, Math.min(SPIN_MAX, dx * DRAG_TURN));
-    turn += spin;
-  });
-  function endDrag() {
-    dragging = false;
-    scene.classList.remove("grabbing");
-  }
-  window.addEventListener("pointerup", endDrag);
-  window.addEventListener("pointercancel", endDrag);
-
   frames.forEach((frame, i) => {
-    frame.addEventListener("click", (e) => {
-      // A drag that ends on a picture is still a drag.
-      if (e.detail !== 0 && dragMoved > CLICK_SLOP) return;
+    frame.addEventListener("click", () => {
       show(i);
       bringToFront(i);
     });
@@ -350,7 +288,7 @@
     const step = (now) => {
       const t = Math.min(1, (now - started) / span);
       turn = from + delta * ease(t);
-      if (t < 1 && !dragging) requestAnimationFrame(step);
+      if (t < 1) requestAnimationFrame(step);
       else homing = false;
     };
     requestAnimationFrame(step);

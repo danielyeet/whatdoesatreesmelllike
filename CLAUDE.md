@@ -79,15 +79,17 @@ stopping just off the two pictures it joins, no line crossing a picture it is no
 pointing at, no picture left with nothing joined to it, the pictures arriving one after
 another rather than together, nothing shifting sideways when the page grows, the two
 buttons arriving only once it has finished drawing itself, a frame keeping its number
-once a real picture is put in it, pointing at a picture turning it in three dimensions
-without moving where it was laid out, and a date being written along its line rather
-than switched on; and favorites — switching views
-taking one away before the other arrives, the flick ending on the first, the ring
-standing its pictures round the square front to back with the near side in front of it
-and the far side behind, every picture having a face on both sides, scrolling turning it
-anticlockwise and nothing turning on its own, the pointer moving everything except the
-big square, dragging turning it, picking one fading rather than cutting, the whole view
-fitting on one screen, and pointing at a picture bringing up the name of what is in it.
+once a real picture is put in it, the whole map being one network with no picture and no
+island left out of it, pointing at a picture turning it in three dimensions without
+moving where it was laid out, nothing answering the pointer until the sheet has settled,
+and a date being written along its line rather than switched on; and favorites —
+switching views taking one away before the other arrives, the flick ending on the first,
+the ring standing its pictures on one level line round the square with the near side in
+front of it, every picture having a face on both sides, the wheel being the only thing
+that turns it (the pointer and a drag both leaving it alone, and no drift of its own),
+picking one fading rather than cutting, the whole view fitting on one screen, pointing at
+the big square bringing up the name of what is in it, and nothing on it answering the
+pointer until the flick has landed.
 
 Several are regression tests for specific fixed bugs — the clipped connector SVG, the
 flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
@@ -380,12 +382,31 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   caption is printed on white, so a line behind one is knocked out where it crosses and
   pokes out beside the word as a stray stroke, which reads as a mistake in the lettering.
   `tests/contact-sheet.spec.js` checks both, segment against rectangle.
-- **Not everything is joined up — but nothing is left out.** Each picture links to one of
-  its nearer neighbours, some links are dropped on purpose, and a few extra ones are
-  added across the map so it closes loops: a network rather than a family tree. Anything
-  still on its own after all that is then joined to the nearest picture it has a clear
-  run to, wherever that is. A picture with no line at all reads as forgotten rather than
-  as loosely joined, and a test checks there are none.
+- **Not everything is joined up — but nothing is left out, and there are no islands.**
+  Each picture links to one of its nearer neighbours, some links are dropped on purpose,
+  and a few extra ones are added across the map so it closes loops: a network rather than
+  a family tree. Dropping links leaves two kinds of orphan behind, though, and both read
+  as forgotten rather than as loosely joined: a picture with no line at all, and — less
+  obvious and just as wrong — a pair or a huddle joined only to each other with no way
+  back to the rest of the sheet. So the parts are counted (which picture can already
+  reach which) and then sewn together: every possible line is tried shortest first, and
+  any that joins two parts that could not reach each other and has a clear run is taken.
+  A test checks the sheet comes out as one network.
+- **A line that has been sewn on has to be turned to face outwards.** The spread travels
+  from the middle along the tree links and each has to name the end nearer the middle
+  first, so after the sewing the links are walked out from the middle and any that was
+  made the other way round is swapped. Miss this and a whole limb of the map never
+  arrives.
+- **How much room a caption takes up is measured, not guessed** — and measured *after*
+  the frame has been given its width. A frame with no width yet shrinks to nothing, its
+  caption's `max-width: 150%` with it, and every caption on the page then measures five
+  pixels across; links are planned on the first layout, so reading it a moment too early
+  plans the whole map against captions that are not there. Guessing instead had to allow
+  for the longest caption there might be, and "Untitled" prints a third of that — on a
+  crowded page that is the difference between a map that joins up and one that falls into
+  islands. On a very narrow window the pictures end up in a column and there may be no
+  clear run left between two parts of the map; a line through a picture is worse than an
+  island, so there it stays in parts.
 - Dates sit at a different fraction along each line rather than always at the halfway
   point, because two lines crossing near their middles would otherwise print their dates
   on top of each other. Each one is **written** rather than switched on: the lettering is
@@ -395,13 +416,19 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   append a fresh `<text>`, which left the old one in the drawing — covered over by its
   own clip-path and so invisible, but piling up one per link on every resize, and
   restarting the writing from nothing when the window was only resized.
-- **Pointing at a picture takes it out of the page.** The rest of the sheet dims
-  (`.peeking` on the sheet), and the one under the pointer tips in three dimensions
-  towards it — `perspective()` and a pair of rotations written as custom properties
-  (`--turn-x` / `--turn-y` / `--lift`), which is why the frame's *position* is a
-  `translate()` of `--x` / `--y` in the same transform rather than `left` / `top`: the
+- **Pointing at a picture takes it out of the page, barely.** The rest of the sheet dims
+  a little (`.peeking` on the sheet), and the one under the pointer tips in three
+  dimensions towards it — `perspective()` and a pair of rotations written as custom
+  properties (`--turn-x` / `--turn-y` / `--lift`), which is why the frame's *position* is
+  a `translate()` of `--x` / `--y` in the same transform rather than `left` / `top`: the
   two have to live in one declaration. It turns about its own middle, so the picture
-  stays exactly where the layout put it.
+  stays exactly where the layout put it. `TIP` and `LIFT` are deliberately small — it is
+  a picture answering the hand, not a picture jumping.
+- **None of that is live until the sheet has settled.** Both the script (`ready()`) and
+  the stylesheet (every peeking rule is written under `.settled`) refuse it while the
+  page is still drawing itself, and a frame only answers once it has `landed`. During the
+  flick every picture in turn is the one in the middle window, so tipping whatever the
+  cursor happens to be over is nonsense. The same rule holds in Favorites.
 - **The map draws itself outwards and is meant to be watched doing it.** A line travels
   to a picture, the picture comes up *over a moment* rather than in one frame, and only
   after a pause do that picture's own lines set off — and they set off one at a time
@@ -446,11 +473,20 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   and the ring goes back to being a circle drawn on the page.
 - **Nothing turns the space itself; each picture is placed.** It is moved to its own
   point on the ring and then turned about the upright only —
-  `translate3d(x, y, z) rotateY(its angle)` — so every picture stands upright however far
-  the ring is tipped. Tipping the space instead leans them all over with it, and a leaning
-  square is drawn as a sheared parallelogram: it reads as a mistake rather than as a
-  photograph standing in space. The tip is in the arithmetic instead — it is only the
-  ring's near side being lower than its far side (`BASE_TILT`).
+  `translate3d(x, 0, z) rotateY(its angle)` — so every picture stands upright. Turning
+  the space instead leans them all over with it, and a leaning square is drawn as a
+  sheared parallelogram: it reads as a mistake rather than as a photograph standing in
+  space.
+- **The ring is level, and the y in that transform is exactly zero.** Every picture then
+  lands on one horizontal line across the page however far round it has come. Nearly zero
+  is not the same thing: a picture standing even slightly off eye height is thrown further
+  from the middle of the page the nearer it is, so the line bows. What keeps the line
+  clear of the middle of the big square is **the square being set higher in the scene**
+  (`transform: translate(-50%, calc(-50% - var(--plate) * 0.17))`), not the ring being
+  dropped down it.
+- **The pictures on it are small and it stands well out to the sides** (`RING_SIZE`,
+  `RING_REACH`, clamped so it never runs off the page). They are there to be picked from;
+  the big square is the thing being looked at.
 - **Every picture is a card with a face on each side**, both carrying the same picture
   (`buildFaces`). A picture faces outwards from the middle, so the far half of the ring
   is showing you its back; one-sided panels leave that half blank. The two faces are held
@@ -459,26 +495,27 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   top of perspective already drawing it smaller. It is a veil laid *over* the picture
   rather than the picture's own `opacity`, because anything transparent in that chain
   would flatten the card and take its far face's hiding with it.
-- **It does not turn on its own.** Scrolling turns it, anticlockwise seen from above —
-  which is the near side of the ring travelling to the right (`SCROLL_TURN`; positive
-  `rotateY` carries the near side to `+x`). Dragging swings it round for anything without
-  a wheel, and a push runs itself down (`SPIN_DRAG`). Clicking one turns the ring the
-  short way round until that picture is at the front.
-- **Moving the pointer moves your eye, not the ring** — it shifts the scene's
-  `perspective-origin` (`LEAN_SHIFT`). Everything with any depth to it slides against
-  everything else, and the big square, flat on at no depth at all, does not move by a
-  pixel: a point at `z = 0` projects to itself whatever the perspective origin is.
+- **The wheel is the only thing that turns it.** Anticlockwise seen from above — which is
+  the near side of the ring travelling to the right (`SCROLL_TURN`; positive `rotateY`
+  carries the near side to `+x`) — and what is left of a turn runs itself down
+  (`SPIN_DRAG`). It has no drift of its own, it does not lean towards the pointer, and
+  dragging does nothing: where a picture is standing is something you set, not something
+  that keeps changing under your hand. Clicking one turns the ring the short way round
+  until that picture is at the front.
 - **Picking one fades it into the big square** — the square is two layers, and showing a
   picture paints the one underneath and fades it up. The flick asks for cuts instead and
   gets them by turning that fade off (`.no-fade`). A cut is the film going past; a fade
   is you choosing something; they must not look the same.
-- **Pointing at a picture darkens its bottom corner and brings up what it is called.**
-  That is the only place a name is written in this view: the description under the ring
-  was taken out so the whole thing fits on one screen without scrolling, which is also
-  why the square and the ring are sized against the window's *height* as well as its
-  width. The big square gets a corner wedge; the ring's pictures get a band along the
-  foot instead, because at their size the name is nearly as wide as the picture and a
-  wedge leaves the first half of the word written in white on white.
+- **Pointing at the big square darkens its bottom right corner and brings up what it is
+  called** — a wedge kept tight to that corner, so it reads as a shadow under the name
+  rather than as the picture being darkened. That is the only place a name is written in
+  this view: the description under the ring was taken out so the whole thing fits on one
+  screen without scrolling, which is also why the square and the ring are sized against
+  the window's *height* as well as its width. **The pictures on the ring answer the
+  pointer in no way at all** — they are small, there are a lot of them and they go past;
+  anything that lit up as the cursor crossed them made the ring twitch rather than read.
+  And as on the sheet, none of it is live until the flick has landed: every rule is
+  written under `.gallery.landed`.
 
 ### Styling
 
@@ -555,7 +592,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. `FLIP_*` in `contact-sheet.js`. |
 | **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
 | **view** | One of the two ways the contact sheet page shows a category: the **map** (Description portfolio) or **Favorites**. One at a time; `favorites.js` switches them. |
-| **the ring** / **the orbit** | The circle of pictures going round the big square in Favorites, standing in three dimensions so its near side passes in front of the square and its far side behind. Turned by scrolling or dragging, never on its own. `RING_*` in `favorites.js`. |
+| **the ring** / **the orbit** | The circle of pictures going round the big square in Favorites, standing level in three dimensions so all of them sit on one horizontal line, the near side passing in front of the square and the far side behind. Turned by the scroll wheel and by nothing else. `RING_*` in `favorites.js`. |
 | **face** | One side of a picture on the ring (`.gallery-face`). Each has two, carrying the same picture, so it is there from either side. |
 | **favourite** / **f(n)** | One picture in Favorites (`<button class="gallery-frame">`), named f1, f2… in its corner. |
 | **work** | An individual piece, one page in `works/`. |

@@ -202,6 +202,16 @@
    * the captions of the two pictures being joined: those are exactly
    * the ones a line leaving the bottom of a picture runs into.
    */
+  /** The white patch a picture's caption prints on, under its frame. */
+  function captionBox(n) {
+    return {
+      left: n.x,
+      top: n.y + n.size + 2,
+      right: n.x + (n.captionW || Math.min(n.size * 1.5, 168)),
+      bottom: n.y + n.size + 2 + (n.captionH || CAPTION_ROOM),
+    };
+  }
+
   function clearBetween(a, b) {
     const from = edgePoint(nodes[a], nodes[b]);
     const to = edgePoint(nodes[b], nodes[a]);
@@ -216,11 +226,7 @@
       }
       // The middle window's caption is printed inside it, not under it.
       if (i === 0) continue;
-      const caption = {
-        left: n.x, top: n.y + n.size + 2,
-        right: n.x + Math.min(n.size * 1.5, 168), bottom: n.y + n.size + CAPTION_ROOM,
-      };
-      if (crosses(from, to, caption)) return false;
+      if (crosses(from, to, captionBox(n))) return false;
     }
     return true;
   }
@@ -271,21 +277,65 @@
       links.push({ a: a, b: near[Math.floor(random() * near.length)].j, tree: false });
     }
 
-    // Nothing is left floating. Dropping links above is what keeps the
-    // map from being one tidy fan out of the middle, but a picture with
-    // no line at all reads as forgotten rather than as loosely joined —
-    // so anything still on its own is joined to the nearest picture it
-    // has a clear run to, wherever that is on the sheet. The result is
-    // the same sparse, looping network, with no island in it.
-    nodes.forEach((node, i) => {
-      if (i === 0) return;
-      if (links.some((l) => l.a === i || l.b === i)) return;
-      const reachable = nodes
-        .map((other, j) => ({ j: j, d: distance(other, node) }))
-        .filter((entry) => entry.j !== i && clearBetween(entry.j, i))
-        .sort((a, b) => a.d - b.d);
-      if (reachable.length) links.push({ a: reachable[0].j, b: i, tree: true });
+    // Nothing is left floating, and nothing is left on an island.
+    // Dropping links above is what keeps the map from being one tidy
+    // fan out of the middle, but it leaves two kinds of orphan behind:
+    // a picture with no line at all, and — less obvious and just as
+    // wrong — a pair or a huddle joined only to each other, off on
+    // their own with no way back to the rest of the sheet. Both read as
+    // forgotten rather than as loosely joined.
+    //
+    // So the parts are counted and then sewn together: keep track of
+    // which pictures can already reach which, and go through every
+    // possible line shortest first, taking any that joins two parts
+    // that could not reach each other and has a clear run. What is left
+    // is one network — still sparse, still looping, but all of a piece.
+    const part = nodes.map((unused, i) => i);
+    const partOf = (i) => {
+      while (part[i] !== i) { part[i] = part[part[i]]; i = part[i]; }
+      return i;
+    };
+    const sew = (i, j) => {
+      const one = partOf(i), other = partOf(j);
+      if (one === other) return false;
+      part[one] = other;
+      return true;
+    };
+    links.forEach((link) => sew(link.a, link.b));
+
+    const pairs = [];
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        pairs.push({ i: i, j: j, d: distance(nodes[i], nodes[j]) });
+      }
+    }
+    pairs.sort((a, b) => a.d - b.d);
+    pairs.forEach((pair) => {
+      if (partOf(pair.i) === partOf(pair.j)) return;
+      if (!clearBetween(pair.i, pair.j)) return;
+      links.push({ a: pair.i, b: pair.j, tree: true });
+      sew(pair.i, pair.j);
     });
+
+    // Which way round a line is written decides which end of it the map
+    // grows from: the spread travels outwards from the middle along the
+    // tree links, and each of them has to name the end nearer the
+    // middle first. A line sewn on above can easily have been made the
+    // other way round, so they are turned to face outwards here.
+    const reached = new Set([0]);
+    for (let pass = 0; pass < nodes.length; pass++) {
+      let grew = false;
+      links.forEach((link) => {
+        if (!link.tree) return;
+        if (reached.has(link.a) === reached.has(link.b)) return;
+        if (!reached.has(link.a)) {
+          const swap = link.a; link.a = link.b; link.b = swap;
+        }
+        reached.add(link.b);
+        grew = true;
+      });
+      if (!grew) break;
+    }
 
     links.forEach((link) => {
       link.line = document.createElementNS(NS, "line");
@@ -390,12 +440,38 @@
       const y = Math.round(
         spot.y + (cellH - CAPTION_ROOM - size) / 2 + (random() - 0.5) * 2 * roomY
       );
-      nodes.push({ x: x, y: y, size: size, cx: x + size / 2, cy: y + size / 2 });
-
       frame.style.width = (placed ? size : plateSize) + "px";
       frame.style.height = (placed ? size : plateSize) + "px";
       frame.style.setProperty("--x", (placed ? x : plateX) + "px");
       frame.style.setProperty("--y", (placed ? y : 0) + "px");
+
+      // How much room its caption actually takes up, measured off the
+      // page rather than guessed at. A guess had to allow for the
+      // longest caption there might be, and "Untitled" prints a third
+      // of that — on a crowded page that is the difference between a
+      // map that joins up and one that falls into islands, since a line
+      // is refused wherever a caption is in the way.
+      //
+      // It has to be read *after* the frame has been given its width,
+      // and that is not a detail: a frame with no width yet shrinks to
+      // nothing, its caption's max-width with it, and every caption on
+      // the page measures five pixels across. Links are planned on the
+      // first layout, so measuring a moment too early plans the whole
+      // map against captions that are not there.
+      //
+      // What is read is the width of the words set on one line — the
+      // pictures are all the width of the middle window at this point,
+      // so nothing has wrapped yet — and how many lines that will come
+      // to once the picture is its own size.
+      const words = frame.querySelector(".sheet-caption");
+      const printed = words ? words.getBoundingClientRect() : null;
+      const room = size * 1.5;    // the same max-width the stylesheet gives it
+      const lines = printed ? Math.max(1, Math.ceil((printed.width + 2) / room)) : 2;
+      nodes.push({
+        x: x, y: y, size: size, cx: x + size / 2, cy: y + size / 2,
+        captionW: printed ? Math.min(printed.width + 2, room) : room,
+        captionH: printed ? lines * printed.height + 4 : CAPTION_ROOM,
+      });
     });
 
     planLinks();
@@ -595,14 +671,26 @@
   // ============================================================
   // POINTING AT A PICTURE
   //
-  // The rest of the sheet steps back and the one under the pointer
-  // leaves the flat plane of the page: it turns to face wherever the
-  // cursor is, as though it were lying under glass and being tipped.
-  // Its middle stays exactly where the picture was — it is turning,
-  // not moving — so nothing else on the map has to shift around it.
+  // The rest of the sheet steps back a little and the one under the
+  // pointer leaves the flat plane of the page: it turns to face
+  // wherever the cursor is, as though it were lying under glass and
+  // being tipped. Its middle stays exactly where the picture was — it
+  // is turning, not moving — so nothing else on the map has to shift
+  // around it. It is meant to be barely there: a picture that answers
+  // the hand, not a picture that jumps.
+  //
+  // None of it is live until the page has finished putting itself
+  // together. A picture is only answering the pointer once it has
+  // settled where it belongs — during the flick every one of them is
+  // taking its turn in the middle window, and tipping whatever the
+  // cursor happens to be over while that is going on is nonsense.
   // ============================================================
-  const TIP = 15;          // degrees at the far corner of a picture
-  const LIFT = 1.06;       // and how much bigger it is drawn while tipped
+  const TIP = 6;           // degrees at the far corner of a picture
+  const LIFT = 1.02;       // and how much bigger it is drawn while tipped
+
+  /** Has this picture finished arriving? Nothing answers before then. */
+  const ready = (frame) =>
+    sheet.classList.contains("settled") && frame.classList.contains("landed");
 
   function tip(frame, event) {
     const box = frame.getBoundingClientRect();
@@ -610,6 +698,7 @@
     const acrossY = (event.clientY - (box.top + box.height / 2)) / (box.height / 2);
     const hold = Math.max(-1, Math.min(1, acrossX));
     const rise = Math.max(-1, Math.min(1, acrossY));
+    if (!ready(frame)) return;
     frame.style.setProperty("--turn-y", (hold * TIP).toFixed(2) + "deg");
     frame.style.setProperty("--turn-x", (-rise * TIP).toFixed(2) + "deg");
     frame.style.setProperty("--lift", String(LIFT));
@@ -622,7 +711,9 @@
   }
 
   frames.forEach((frame) => {
-    frame.addEventListener("pointerenter", () => sheet.classList.add("peeking"));
+    frame.addEventListener("pointerenter", () => {
+      if (ready(frame)) sheet.classList.add("peeking");
+    });
     frame.addEventListener("pointermove", (e) => tip(frame, e));
     frame.addEventListener("pointerleave", () => {
       sheet.classList.remove("peeking");

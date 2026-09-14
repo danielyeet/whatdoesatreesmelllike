@@ -369,24 +369,39 @@ test("a frame keeps its number once it has a picture in it", async ({ page }) =>
 // Every picture is joined to something. Dropping links is what keeps the
 // map from being one tidy fan out of the middle, but a picture with no
 // line at all reads as forgotten rather than as loosely joined.
-test("no picture is left with nothing joined to it", async ({ page }) => {
+test("the whole map is one network, with no picture and no island left out",
+  async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
 
-  const lonely = await page.evaluate(() => {
-    const ends = new Set();
-    document.querySelectorAll(".sheet-route").forEach((route) => {
-      ends.add(route.dataset.from);
-      ends.add(route.dataset.to);
-    });
-    const out = [];
-    document.querySelectorAll(".sheet-frame").forEach((frame, i) => {
-      if (!ends.has(String(i))) out.push(i + 1);
-    });
-    return out;
+  const map = await page.evaluate(() => {
+    const count = document.querySelectorAll(".sheet-frame").length;
+    const joins = [...document.querySelectorAll(".sheet-route")].map((route) => [
+      Number(route.dataset.from), Number(route.dataset.to),
+    ]);
+    // Which pictures can reach which, following the lines.
+    const part = [...Array(count).keys()];
+    const partOf = (i) => { while (part[i] !== i) { part[i] = part[part[i]]; i = part[i]; } return i; };
+    joins.forEach(([a, b]) => { part[partOf(a)] = partOf(b); });
+    const parts = {};
+    for (let i = 0; i < count; i++) (parts[partOf(i)] = parts[partOf(i)] || []).push(i + 1);
+    const joined = new Set(joins.flat());
+    return {
+      count: count,
+      parts: Object.values(parts),
+      alone: [...Array(count).keys()].filter((i) => !joined.has(i)).map((i) => i + 1),
+    };
   });
 
-  expect(lonely, `pictures with no line at all: ${lonely.join(", ")}`).toEqual([]);
+  expect(map.count, "there should be pictures on the sheet").toBeGreaterThan(4);
+  // A picture with no line at all reads as forgotten...
+  expect(map.alone, `pictures with nothing joined to them: ${map.alone}`).toEqual([]);
+  // ...and two joined only to each other, with no way back to the rest,
+  // read the same way. The whole sheet has to be one network.
+  expect(
+    map.parts.length,
+    `the map falls into ${map.parts.length} parts: ${JSON.stringify(map.parts)}`
+  ).toBe(1);
 });
 
 test("the search finds a picture by what it is called", async ({ page }) => {
@@ -475,7 +490,10 @@ test("pointing at a picture lifts it out of the page without moving it", async (
       .filter((f) => !f.matches(":hover"))
       .map((f) => parseFloat(getComputedStyle(f).opacity))
   );
-  expect(Math.max(...others), "everything else should dim").toBeLessThan(0.5);
+  // Dimmed, but only just: the map has to stay readable behind the one
+  // being held.
+  expect(Math.max(...others), "everything else should dim").toBeLessThan(0.8);
+  expect(Math.max(...others), "but not go away").toBeGreaterThan(0.4);
 
   // It follows the cursor rather than striking one pose.
   await page.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.85);
@@ -538,4 +556,42 @@ test("a date is written along its line rather than switched on", async ({ page }
     els.map((el) => getComputedStyle(el).clipPath));
   expect(ends.every((clip) => /calc\(\s*0%|(^|\s)-2px/.test(clip)),
     `all written in full: ${ends.join(" | ")}`).toBe(true);
+});
+
+test("nothing on the sheet answers the pointer until it has settled", async ({ page }) => {
+  await page.goto(SHEET);
+
+  // Mid-flick: every picture takes its turn in the middle window, so
+  // tipping whatever the cursor happens to be over is nonsense.
+  await page.waitForSelector(".sheet-frame.is-plate", { state: "visible" });
+  const box = await page.locator(".sheet-frame.is-plate").boundingBox();
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3);
+  await page.waitForTimeout(400);
+
+  const flicking = await page.evaluate(() => ({
+    settled: document.getElementById("sheet").classList.contains("settled"),
+    peeking: document.getElementById("sheet").classList.contains("peeking"),
+    // Leaving a picture still resets it to nothing, which is fine —
+    // what must not happen is any of them being turned.
+    turns: [...document.querySelectorAll(".sheet-frame")]
+      .map((f) => f.style.getPropertyValue("--turn-y"))
+      .filter((turn) => turn && parseFloat(turn) !== 0),
+    faint: [...document.querySelectorAll(".sheet-frame")]
+      .filter((f) => parseFloat(getComputedStyle(f).opacity) < 0.9 &&
+                     f.classList.contains("landed")).length,
+  }));
+  expect(flicking.settled, "the flick should still be running").toBe(false);
+  expect(flicking.peeking, "nothing should be held").toBe(false);
+  expect(flicking.turns, "and nothing tipped").toEqual([]);
+
+  // Once the page has drawn itself, the same pointer does work.
+  await waitForSheet(page);
+  const frame = page.locator(".sheet-frame").nth(2);
+  await frame.scrollIntoViewIfNeeded();
+  const on = await frame.boundingBox();
+  await page.mouse.move(on.x + on.width * 0.25, on.y + on.height * 0.25);
+  await expect
+    .poll(() => frame.evaluate((el) => el.style.getPropertyValue("--turn-y")),
+      { timeout: 3000 })
+    .not.toBe("");
 });
