@@ -37,17 +37,27 @@
   const SWITCH_MS = 520;       // how long the view being left takes to go
   const FLICKER_MS = 460;      // and how long the screen takes to settle after it
 
-  // The field of marks along the foot. Geometric rather than organic:
-  // a lattice on a fixed pitch, every mark the same, and what the
-  // cursor does to it is the only thing that is not regular.
-  const PITCH = 30;            // how far apart the marks stand
+  // The field of marks. Geometric rather than organic: a lattice on a
+  // fixed pitch, every mark the same, and the only two things that are
+  // not regular about it are the cursor and the chapter you have open.
+  const PITCH = 28;            // how far apart the marks stand
   const MARK = 3.4;            // and how big one is at rest
-  const FIELD_DEEP = 0.46;     // how much of the page's height the field takes
+  const FIELD_DEEP = 0.44;     // how much of the page the field lies over at rest
   const REACH = 190;           // how far from the cursor a mark still answers
   const SHOVE = 16;            // how far it is pushed out of the lattice
   const SWELL = 2.6;           // and how much larger it is drawn
   const EASE = 0.14;           // how quickly a mark goes where it is going
   const FADE_IN = 0.55;        // the field is faintest at the top and strongest low
+
+  // The reading. The open chapter stands one mound in the field for
+  // each of its entries, and the field is lifted into them — so the
+  // middle of the page carries what you have chosen rather than being
+  // the empty space between the writing on either side of it.
+  const MOUND_CLEAR = 26;      // how far clear of the writing the mounds keep
+  const MOUND_ROOF = 0.14;     // and how near the top of the page one may reach
+  const MOUND_UP = 0.38;       // how far one lifts the field, against the page
+  const MOUND_WIDE = 0.78;     // how wide one is, against the room it is given
+  const MOUND_HOT = 1.4;       // and how much further the one you point at goes
 
   const INK = "23,23,15";
   const BRASS = "156,111,53";
@@ -65,10 +75,17 @@
       chapter = { name: name, items: [] };
       chapters.push(chapter);
     }
+    const date = (entry.dataset.date || "").trim();
     chapter.items.push({
       name: entry.textContent.trim(),
-      date: (entry.dataset.date || "").trim(),
+      date: date,
       href: entry.getAttribute("href"),
+      // How tall this one's mound stands: taken from the day in its
+      // own date, so the skyline is a reading of what the chapter is
+      // filed under rather than decoration, and so no two chapters
+      // come out the same shape. Three mounds of one height is a
+      // pattern, not a reading.
+      tall: 0.5 + (Number(date.slice(0, 2)) || 16) / 31 * 0.65,
     });
   });
 
@@ -87,7 +104,17 @@
   // is not all menu.
   const plate = document.createElement("div");
   plate.className = "chapters-plate";
-  plate.innerHTML = '<p class="chapters-kicker"></p><h2></h2><p class="chapters-count"></p>';
+  // What is open, written large — and then set out underneath it the
+  // way the rest of the site sets out a reading: a label, a rule, a
+  // figure. It is the left-hand column of the page, so it has to
+  // carry some weight of its own.
+  plate.innerHTML =
+    '<p class="chapters-kicker"></p><h2></h2>' +
+    '<dl class="chapters-spec">' +
+    '<div><dt>Entries</dt><dd class="chapters-count"></dd></div>' +
+    '<div><dt>First</dt><dd class="chapters-first"></dd></div>' +
+    '<div><dt>Last</dt><dd class="chapters-last"></dd></div>' +
+    "</dl>";
   view.appendChild(plate);
 
   // --- the menu, on the right
@@ -128,7 +155,7 @@
     panel.id = "chapter-panel-" + i;
     panel.setAttribute("role", "tabpanel");
     panel.setAttribute("aria-labelledby", "chapter-tab-" + i);
-    chapter.items.forEach((item) => {
+    chapter.items.forEach((item, n) => {
       const link = document.createElement("a");
       link.className = "chapters-item";
       link.href = item.href;
@@ -136,11 +163,19 @@
       // it is what one favourite is filed under, and the only thing
       // said about it other than its name.
       link.innerHTML =
+        '<span class="chapters-no" aria-hidden="true"></span>' +
         '<span class="chapters-date"></span>' +
         '<span class="chapters-item-name"></span>' +
         '<span class="chapters-go" aria-hidden="true">→</span>';
+      link.querySelector(".chapters-no").textContent = numbered(n);
       link.querySelector(".chapters-date").textContent = item.date;
       link.querySelector(".chapters-item-name").textContent = item.name;
+      // Pointing at one raises its own mound out of the field, so
+      // every entry has somewhere on the page that is its.
+      link.addEventListener("pointerenter", () => { hotItem = n; drawing = true; });
+      link.addEventListener("pointerleave", () => { hotItem = -1; drawing = true; });
+      link.addEventListener("focus", () => { hotItem = n; drawing = true; });
+      link.addEventListener("blur", () => { hotItem = -1; drawing = true; });
       panel.appendChild(link);
     });
     panels.appendChild(panel);
@@ -155,6 +190,13 @@
   // OPENING ONE
   // ============================================================
   let open = 0;
+  // These two belong to the field, further down, but they are declared
+  // here because opening a chapter touches both and a chapter is
+  // opened while the page is still being built. Left where the rest of
+  // the field's state is, they do not exist yet at that moment and the
+  // whole view falls over before it has drawn anything.
+  let hotItem = -1;
+  let drawing = true;
 
   function show(next, andFocus) {
     open = (next + chapters.length) % chapters.length;
@@ -169,13 +211,17 @@
       chapter.panel.hidden = !on;
     });
     const chapter = chapters[open];
-    plate.querySelector(".chapters-kicker").textContent =
-      "CHAPTER " + numbered(open) + "  ·  " + chapter.items.length +
-      (chapter.items.length === 1 ? " ENTRY" : " ENTRIES");
+    const items = chapter.items;
+    plate.querySelector(".chapters-kicker").textContent = "CHAPTER " + numbered(open);
     plate.querySelector("h2").textContent = chapter.name;
-    plate.querySelector(".chapters-count").textContent =
-      chapter.items.length ? chapter.items[0].date + " — " +
-        chapter.items[chapter.items.length - 1].date : "";
+    plate.querySelector(".chapters-count").textContent = numbered(items.length - 1);
+    plate.querySelector(".chapters-first").textContent = items.length ? items[0].date : "—";
+    plate.querySelector(".chapters-last").textContent =
+      items.length ? items[items.length - 1].date : "—";
+    // The field carries the chapter you have open, so opening one is
+    // the other half of what moves on this page.
+    hotItem = -1;
+    drawing = true;
     if (andFocus) chapters[open].tab.focus();
   }
 
@@ -199,29 +245,91 @@
   // THE FIELD
   //
   // A lattice of marks along the foot of the page. Everything about
-  // it is regular — one pitch, one size, one colour — and the cursor
-  // is the only thing that is not: near it the marks are shoved out
-  // of the lattice and drawn larger, and they find their way back
-  // when it goes. Regular on its own and irregular under the hand is
-  // the whole of the effect; make the lattice itself uneven and there
-  // is nothing left for the cursor to disturb.
+  // it is regular — one pitch, one size, one colour — and only two
+  // things disturb it:
+  //
+  //   THE CURSOR. Near it the marks are shoved out of the lattice and
+  //   drawn larger, and they find their way back when it goes.
+  //
+  //   THE OPEN CHAPTER. Each of its entries stands a mound in the
+  //   field, and the lattice is lifted into them — most at the top of
+  //   the field and not at all along its foot, so the field's own top
+  //   edge becomes the reading and its bottom stays put. Pointing at
+  //   an entry raises the mound that is its.
+  //
+  // Regular on its own and irregular under the hand is the whole of
+  // the effect; make the lattice itself uneven and there is nothing
+  // left for either of them to disturb.
   // ============================================================
   let width = 0, height = 0, deep = 0;
+  let midFrom = 0, midTo = 0, midUp = 1;
   let marks = [];
+  let mounds = [];
   let handX = -9999, handY = -9999, hasHand = false;
-  let drawing = true;
 
   function lattice() {
     marks = [];
-    const top = height - deep;
+    const foot = height + PITCH;
     const across = Math.ceil(width / PITCH) + 1;
-    const down = Math.ceil(deep / PITCH) + 1;
+    // The lattice is laid over the whole page rather than only along
+    // the foot: how much of it you can see is what the open chapter
+    // changes, so it has to be there to be uncovered.
+    const down = Math.ceil(height / PITCH) + 1;
     for (let j = 0; j < down; j++) {
       for (let i = 0; i < across; i++) {
         const x = i * PITCH + (j % 2 ? PITCH / 2 : 0);
-        const y = top + j * PITCH;
-        marks.push({ x: x, y: y, ox: x, oy: y, size: MARK, wantSize: MARK });
+        const y = foot - j * PITCH;
+        marks.push({ x: x, y: y, ox: x, oy: y, size: MARK, show: 0, warm: 0 });
       }
+    }
+  }
+
+  /** Where the open chapter's mounds stand, and how high.
+
+      They are kept to the gap the writing actually leaves — measured
+      between the plate and the menu rather than taken as a fraction of
+      the width, because that fraction is right at one window size and
+      wrong at every other: on a narrower screen the two columns close
+      in and a mound that was in the clear is suddenly rising up behind
+      the entries. Measured here once a layout, it cannot be. */
+  function setMounds() {
+    const items = chapters[open].items;
+    const room = (midTo - midFrom) / items.length;
+    const rest = height - deep;
+    // They stand in the clear column between the two pieces of
+    // writing, so the only ceiling any of them has is the top of the
+    // page. Letting them under the plate instead meant every one of
+    // them was cut off at the same height — which is a step across
+    // the page, not a reading, and no two chapters could differ.
+    const roof = height * MOUND_ROOF;
+    mounds = items.map((item, n) => ({
+      n: n,
+      x: midFrom + room * (n + 0.5),
+      wide: room * MOUND_WIDE + PITCH,
+      high: Math.max(0, Math.min(height * MOUND_UP * midUp * item.tall, rest - roof)),
+    }));
+  }
+
+  // How far the field is lifted at one place across the page, and
+  // whether that place belongs to the entry being pointed at. Written
+  // into these rather than returned, because it is asked once per mark
+  // per frame and a fresh little object each time is a thousand of
+  // them a second for nothing.
+  let liftHere = 0, heatHere = 0;
+  function liftAt(x) {
+    liftHere = 0;
+    heatHere = 0;
+    for (let m = 0; m < mounds.length; m++) {
+      const mound = mounds[m];
+      const off = (x - mound.x) / mound.wide;
+      if (off <= -1 || off >= 1) continue;
+      // A cosine bump rather than a bell: it comes to nothing at a
+      // definite place, so a mound has an edge and does not haze off
+      // across the whole page.
+      const bump = 0.5 * (1 + Math.cos(Math.PI * off));
+      const hot = mound.n === hotItem;
+      liftHere += bump * mound.high * (hot ? MOUND_HOT : 1);
+      if (hot && bump > heatHere) heatHere = bump;
     }
   }
 
@@ -231,21 +339,68 @@
     width = Math.max(1, Math.round(box.width));
     height = Math.max(1, Math.round(box.height));
     deep = Math.round(height * FIELD_DEEP);
+
+    // The room between the two columns of writing, read off the page
+    // itself. On a narrow window they stack instead of standing side
+    // by side, and then there is no gap between them — the mounds go
+    // down the middle and are kept low, so the entries above them stay
+    // readable.
+    // The clear column between the two pieces of writing, read off the
+    // page itself rather than taken as a fraction of the width: that
+    // fraction is right at one window size and wrong at every other.
+    // The stylesheet keeps the two columns narrow enough that there is
+    // always a column of daylight between them to read this out of.
+    const plateBox = plate.getBoundingClientRect();
+    const menuBox = menu.getBoundingClientRect();
+    const from = plateBox.right - box.left + MOUND_CLEAR;
+    const to = menuBox.left - box.left - MOUND_CLEAR;
+    if (to - from > PITCH * 4) {
+      midFrom = from;
+      midTo = to;
+      midUp = 1;
+    } else {
+      // Stacked, on a narrow window: there is no clear column at all,
+      // so they go down the middle and are kept low enough to read
+      // the entries over them.
+      midFrom = width * 0.12;
+      midTo = width * 0.88;
+      midUp = 0.4;
+    }
     field.width = Math.round(width * ratio);
     field.height = Math.round(height * ratio);
     field.style.width = width + "px";
     field.style.height = height + "px";
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
     lattice();
+    setMounds();
     drawing = true;
   }
 
   function settle() {
     let moving = false;
-    const top = height - deep;
+    const rest = height - deep;        // where the field lies with nothing open
+    const edge = PITCH * 1.6;          // how softly it stops at the top
+    const step = REDUCE_MOTION ? 1 : EASE;
+    setMounds();
+
     for (let n = 0; n < marks.length; n++) {
       const mark = marks[n];
       let wantX = mark.ox, wantY = mark.oy, wantSize = MARK;
+
+      // The reading. The lattice itself never moves for it — what the
+      // open chapter changes is how much of the lattice you can see,
+      // so the field's top edge is the reading and everything under it
+      // is simply field. Marks are not slid about by it, which leaves
+      // being slid about to the cursor alone.
+      liftAt(mark.ox);
+      const under = (mark.oy - (rest - liftHere)) / edge;
+      const want = Math.max(0, Math.min(1, under));
+      // How much of a mound this mark stands in. A mound is drawn
+      // harder than the flat field around it: it is the reading, and
+      // the flat field is only what the reading is drawn on.
+      mark.rise = Math.min(1, liftHere / (height * MOUND_UP));
+      const warm = heatHere * Math.max(0, Math.min(1, 1.6 - under * 0.5));
+
       if (hasHand) {
         const dx = mark.ox - handX, dy = mark.oy - handY;
         const off = Math.sqrt(dx * dx + dy * dy);
@@ -260,14 +415,21 @@
           wantSize = MARK * (1 + near * near * (SWELL - 1));
         }
       }
-      const step = REDUCE_MOTION ? 1 : EASE;
+
       mark.x += (wantX - mark.x) * step;
       mark.y += (wantY - mark.y) * step;
       mark.size += (wantSize - mark.size) * step;
-      if (Math.abs(mark.x - wantX) > 0.05 || Math.abs(mark.size - wantSize) > 0.01) {
+      mark.show += (want - mark.show) * step;
+      mark.warm += (warm - mark.warm) * step;
+      if (Math.abs(mark.x - wantX) > 0.05 ||
+          Math.abs(mark.size - wantSize) > 0.01 ||
+          Math.abs(mark.show - want) > 0.004 ||
+          Math.abs(mark.warm - warm) > 0.004) {
         moving = true;
       }
-      mark.fade = Math.min(1, (mark.oy - top) / deep + FADE_IN * 0.5);
+      // Faintest high up the page and strongest low, wherever the top
+      // edge happens to be at the time.
+      mark.fade = Math.max(0, Math.min(1, (mark.oy - height * 0.2) / (height * 0.8)));
     }
     return moving;
   }
@@ -276,14 +438,26 @@
     paint.clearRect(0, 0, width, height);
     for (let n = 0; n < marks.length; n++) {
       const mark = marks[n];
+      if (mark.show < 0.01) continue;
       const lit = Math.min(1, (mark.size - MARK) / (MARK * (SWELL - 1)));
-      const ink = lit > 0.08 ? BRASS : INK;
-      paint.fillStyle =
-        "rgba(" + ink + "," + (0.1 + mark.fade * 0.26 + lit * 0.5).toFixed(3) + ")";
+      // Brass for what the hand is doing, and for the mound belonging
+      // to the entry it is pointing at; ink for the reading itself,
+      // which is the page's own and not something being done to it.
+      const ink = lit > 0.08 || mark.warm > 0.5 ? BRASS : INK;
+      // The top edge of the field is the reading, so the marks along
+      // it are drawn a little harder than the ones under it: a skyline
+      // that fades out is a skyline you have to look for.
+      const crest = mark.show * (1 - mark.show) * 4;
+      const alpha =
+        (0.1 + mark.fade * 0.26 + (mark.rise || 0) * 0.16 +
+         lit * 0.5 + mark.warm * 0.3) * mark.show +
+        crest * 0.14;
+      paint.fillStyle = "rgba(" + ink + "," + alpha.toFixed(3) + ")";
       // Squares, not dots: the same shape every other mark on the site
       // is made of.
-      const half = mark.size / 2;
-      paint.fillRect(mark.x - half, mark.y - half, mark.size, mark.size);
+      const size = mark.size * (1 + mark.warm * 0.35);
+      const half = size / 2;
+      paint.fillRect(mark.x - half, mark.y - half, size, size);
     }
   }
 

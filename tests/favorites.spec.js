@@ -3,12 +3,13 @@
 //
 // The second of the two views on that page: the screen flickers
 // once, a menu of chapters comes up on the right, and a field of
-// marks settles along the foot that answers the cursor. These check
-// the switch between the two views, that the chapters and their
-// dates are read off the page's own entries rather than written
-// into the script, that one chapter is open at a time and the strip
-// works from the keyboard, that the field answers the cursor and is
-// regular when nothing is touching it, and that the whole view fits
+// marks settles under it. These check the switch between the two
+// views, that the chapters and their dates are read off the page's
+// own entries rather than written into the script, that one chapter
+// is open at a time and the strip works from the keyboard, that the
+// field answers the cursor and is regular when nothing is touching
+// it, that its skyline is a reading of the chapter you have OPEN and
+// rises under the entry you POINT AT, and that the whole view fits
 // one screen.
 // ============================================================
 const { test, expect } = require("@playwright/test");
@@ -207,6 +208,85 @@ test("the field along the foot is a lattice until the cursor disturbs it",
   await page.waitForTimeout(900);
   expect(await inkAt(120, low), "and settle again afterwards")
     .toBeLessThan(under);
+});
+
+/** The top edge of the field, read off the drawing: for a few
+    columns across the page, how high up the marks reach. This is the
+    reading the open chapter stands in the field, so it is the thing
+    to measure rather than how much ink there is. */
+const skyline = (page) =>
+  page.evaluate(() => {
+    const canvas = document.querySelector(".chapters-field");
+    const paint = canvas.getContext("2d");
+    const ratio = canvas.width / canvas.clientWidth;
+    const wide = canvas.clientWidth, tall = canvas.clientHeight;
+    const shot = paint.getImageData(0, 0, canvas.width, canvas.height).data;
+    const tops = [];
+    // Only the part of the page the menu does not stand over: the
+    // mounds are kept clear of the writing, so that is where they are.
+    for (let band = 0; band < 8; band++) {
+      const from = Math.round((wide * 0.06 + (wide * 0.62 * band) / 8) * ratio);
+      const to = Math.round((wide * 0.06 + (wide * 0.62 * (band + 1)) / 8) * ratio);
+      let top = tall;
+      for (let y = 0; y < canvas.height; y += 2) {
+        let found = false;
+        for (let x = from; x < to; x += 2) {
+          if (shot[(y * canvas.width + x) * 4 + 3] > 26) { found = true; break; }
+        }
+        if (found) { top = y / ratio; break; }
+      }
+      tops.push(Math.round(top));
+    }
+    return tops;
+  });
+
+test("the field is a reading of the chapter you have open", async ({ page }) => {
+  await page.goto(PAGE);
+  await page.waitForTimeout(600);
+  await openFavorites(page);
+  await page.waitForTimeout(900);
+
+  const height = (await page.locator(".chapters").boundingBox()).height;
+  const first = await skyline(page);
+  // It is not a flat band along the foot: the open chapter stands a
+  // mound in it for each of its entries, and they reach well up the
+  // page.
+  expect(Math.min(...first), "the field should rise into the page")
+    .toBeLessThan(height * 0.52);
+  expect(Math.max(...first) - Math.min(...first),
+    "and it should have a shape, not one level").toBeGreaterThan(30);
+
+  // Open a different chapter and the reading changes: the mounds are
+  // sized from the entries' own dates, so no two chapters come out
+  // the same shape.
+  await page.locator(".chapters-tab").nth(2).click();
+  await page.waitForTimeout(1400);
+  const third = await skyline(page);
+  const moved = first.filter((top, n) => Math.abs(top - third[n]) > 12).length;
+  expect(moved, `first ${first} then ${third}`).toBeGreaterThan(0);
+});
+
+test("and it rises under the entry you point at", async ({ page }) => {
+  await page.goto(PAGE);
+  await page.waitForTimeout(600);
+  await openFavorites(page);
+  await page.waitForTimeout(900);
+
+  const before = await skyline(page);
+  // The middle entry's mound stands in the clear room between the two
+  // columns of writing, so it is the one that can be seen to move.
+  await page.locator(".chapters-panel.open .chapters-item").nth(1).hover();
+  await page.waitForTimeout(1100);
+  const after = await skyline(page);
+
+  expect(Math.min(...after), `before ${before}, after ${after}`)
+    .toBeLessThan(Math.min(...before) - 10);
+
+  // And it settles back when the pointer goes elsewhere.
+  await page.locator(".chapters-plate h2").hover();
+  await page.waitForTimeout(1200);
+  expect(Math.min(...(await skyline(page))),
+    "the reading should come back down").toBeGreaterThan(Math.min(...after) + 6);
 });
 
 test("the whole view fits on one screen, with nothing to scroll to", async ({ page }) => {

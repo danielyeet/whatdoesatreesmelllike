@@ -87,13 +87,16 @@ landing on a picture, and a date being written along its line rather than switch
 and favorites — switching views taking one away before the other arrives, the
 screen flickering once and only once as the chapters come up, the chapters and their dates
 being read off the page's own entries, one chapter open at a time with the strip working
-from the keyboard, every favourite still a link to its piece, the field along the foot
-answering the cursor and settling again afterwards, and the whole view fitting one screen;
-and the starfield — the sky being grown from the page's own rows with one constellation per
-theory, the travel being the page's own scroll down a road several screens long, going
-further in bringing new constellations up and leaving the ones behind you off the page, a
-constellation being the thing you click and something that can be tabbed to, the sky being
-dark and saying so to the cursor with white and blue particles drawn on it, it not creeping
+from the keyboard, every favourite still a link to its piece, the field answering the
+cursor and settling again afterwards, its skyline being a reading of the chapter you have
+open and rising under the entry you point at, and the whole view fitting one screen;
+and the structure — it being grown from the page's own rows with one station per theory,
+the travel being the page's own scroll down a road several screens long, going further in
+bringing new stations up and leaving the ones behind you off the page, travelling *back*
+filling the air again as many times as you like, the spine working as a wheel both dragged
+and pressed, a station being the thing you click and the only thing on the drawing that
+is one, it being drawn mostly white on near-black with the cool accent kept for the marks
+that say a station can be opened, it saying `dark-surface` to the cursor, it not creeping
 on its own under `prefers-reduced-motion`, and the plain list coming back when the script
 is blocked.
 
@@ -321,36 +324,78 @@ Other things that will bite you:
   the far end of its range for a scene this small this far from the camera's near/far
   planes — so don't reach for `projected.z` as a stand-in for depth anywhere in this file.
 
-### The starfield (`starfield.js`) — categories/theories.html
+### The structure (`structure.js`) — categories/theories.html
 
-That category is a night sky you travel through. A field of particles stands in three
-dimensions on black; scrolling carries you *into* the screen, the near ones sweeping past
-and new ones coming up out of the dark. You cannot turn it or drag it — going further in is
-the whole of the gesture. Every theory is a **constellation**: a cluster of brighter
-particles with lines drawn between them, standing at its own depth along a road. One comes
-up out of the dark, brightens as you close on it, carries its name, and goes past behind
-you.
+That category is a **technical drawing in three dimensions that you travel into**, not a
+night sky — a frame of ribs and rails running away into the depth on near-black, a ruled
+**spine** along the floor of it, and a fine **swarm** of particles hanging in the air.
+Scrolling carries you *into* the screen, the near work sweeping past and new work coming
+up out of the dark. You cannot turn it or drag it sideways — going further in is the whole
+of the gesture.
+
+Two kinds of assembly stand in that frame, and the difference is the point:
+
+- a **station** is one theory: bracketed, crosshaired, numbered, named, and clickable;
+- a **fixture** is structure only: the same kind of figure, unnamed, unbracketed, fainter,
+  and **not** clickable. They are there so the frame is full of work rather than holding
+  nine lit things in an empty volume — and so that being bracketed *means* something.
 
 - **The travel is the page's own scroll.** The canvas is `position: fixed` and a spacer
-  (`.sky-road`) gives the page a height, so the scrollbar, the trackpad, the arrow keys,
-  Page Down and a finger on a phone all drive it without a line of code. Catching the wheel
-  and turning it into movement breaks every one of those.
-- **The field is endless but the road is not.** A particle that goes behind you is put back
-  out at the far end in a new place, so there is always sky; the constellations are laid
+  (`.structure-road`) gives the page a height, so the scrollbar, the trackpad, the arrow
+  keys, Page Down and a finger on a phone all drive it without a line of code. Catching
+  the wheel and turning it into movement breaks every one of those.
+- **The swarm wraps in BOTH directions.** A speck keeps no position along the road at all:
+  its depth is taken modulo `DEEP` each frame and *which lap* it is on decides where it
+  stands across the frame, so it is somewhere new each time round and the air is full
+  whichever way you are going. It used to be carried along — a speck that went behind you
+  was moved out to the far end — which is invisible going forward and empties the air
+  completely going back. That was a reported bug; it cannot come back in this shape, and
+  `tests/structure.spec.js` travels back and forth and counts what is drawn.
+- **Both wraps are hidden by a fade at each end of a lap**, near and far. Without the near
+  one a speck about to wrap is hugely magnified and pops in the middle of the screen.
+- **The frame does not wrap.** Ribs, rails, stations and fixtures stand at fixed depths
   along a road with a beginning and an end, so there is always somewhere to have got to.
-- **A constellation's figure is nearest-neighbour**, not a shape written by hand: each
-  particle is joined to the few nearest it and each line drawn once. That way it is always
-  a figure and never a drawing of something.
-- **The constellation is what you click.** The link is sized to the cluster's own box on the
+  Ribs alternate: a full rectangle, then a narrower set of corner brackets between.
+- **The spine is a second way to drive the same scroll.** It is drawn on the canvas as a
+  ruler running along the floor to the vanishing point, ticked at every whole depth and
+  numbered every ten, so the ticks stream towards you as you travel — the detents of a
+  wheel. `.structure-spine` is the piece of screen that answers the hand, and dragging it
+  **writes `window.scrollY`** rather than keeping a travel of its own, so it and the
+  scrollbar can never disagree. It is a real `<button>`: pressed rather than dragged — the
+  only way it can be used from a keyboard — it goes on to the next station.
+- **An assembly's figure is nearest-neighbour**, not a shape written by hand. Some of its
+  lines are *provisional* and come and go on their own clock; the rest are always there.
+- **The station is what you click.** The link is sized to that station's own box on the
   screen every frame and laid over it, with the name below — so nothing in the stylesheet
-  may give `.sky-stop` a size or a transform of its own.
-- **A constellation behind you or still out in the dark is `display: none`**, not faded to
+  may give `.structure-stop` a size or a transform of its own. The box is **capped** at
+  about half the window and taken off the page once it is carried clear of the window: a
+  station you are nearly inside would otherwise be an invisible link the size of the
+  screen, where clicking anywhere at all goes somewhere.
+- **A station behind you or still out in the dark is `display: none`**, not faded to
   nothing — faded, it would still catch the pointer where there is nothing to point at.
-- **The sky carries `dark-surface`**, which is how the rest of the site says "the cursor has
-  to go light over this". Without it `nav.js` leaves a dark cursor on a dark page.
-- The glows are the expensive part, so only the constellations and about a tenth of the dust
-  get one. That is also what makes a constellation read as brighter country rather than as
-  more dust.
+  The window one is shown for (`SHOW_FROM`…`SHOW_TO`) is deliberately wider than
+  `STOP_EVERY`, so the next is coming up before the last has gone.
+- **Blue means "you can open this", and nothing else.** The palette is white and near-white
+  on gray-black; the cool accent is spent only on a station's brackets, crosshair, node
+  rings and ranging squares. The figure itself, the frame, the spine and the travelling
+  carriage are all white or steel. Drawing a whole station in blue filled the screen with
+  it as you came up on one, and then blue stopped meaning anything.
+- **The drawing carries `dark-surface`**, which is how the rest of the site says "the
+  cursor has to go light over this". Without it `nav.js` leaves a dark cursor on a dark
+  page.
+- **The moving parts are on their own clocks, not on the travel**, so the page has
+  something happening in it while you are standing still: the specks wobble about their
+  own places, provisional lines come and go, beads run along the lines of whatever station
+  you are among, a **carriage** runs down the frame at you and lights each rib as it
+  passes, **traverses** streak across it, and a faint scan passes down the window every
+  nine seconds. All of it is off under `prefers-reduced-motion`.
+- **Glows are stamped, not generated.** One radial gradient is drawn once into a small
+  offscreen canvas per colour and then `drawImage`d wherever a glow is needed. Asking for
+  a fresh `createRadialGradient` per speck per frame is the one thing that will not hold
+  sixty frames a second here.
+- **A grain tile is laid over the whole drawing.** It is not texture for its own sake: a
+  wide, shallow vignette over a near-black ground comes out in visible steps, and
+  something uneven laid over it is what breaks them.
 
 ### The contact sheet (`contact-sheet.js`), and favorites (`favorites.js`)
 
@@ -532,14 +577,39 @@ switching between the two — it owns the buttons, so it owns the switch.
   settles; it is not the view arriving, it is the thing being turned on, so going away and
   coming back does not do it again. Two flickers is enough to read as one — more reads as a
   fault.
-- **The date is what a favourite is filed under**, so it is set first in each row and in the
-  mono the rest of the site keeps for readings.
+- **The date is what a favourite is filed under**, so it is set first in each row (after
+  its number) and in the mono the rest of the site keeps for readings. It is also what the
+  field's skyline is a reading of — see below.
 - **Only the open chapter's tab is in the tab order**, and the arrow keys, Home and End move
   along the strip. The chapters you are not reading are `hidden`, not faded.
-- **The field along the foot is a lattice, and the cursor is the only thing that is not
-  regular about it.** One pitch, one size, one colour; near the cursor the marks are shoved
-  out of place and drawn larger, and they find their way back when it goes. Make the lattice
-  itself uneven and there is nothing left for the cursor to disturb.
+- **The two columns are set high and given room.** The plate on the left carries the open
+  chapter large and then a small spec list under it (entries, first, last); the menu on the
+  right is wide, with the tabs above and generous numbered rows below. The page is read
+  from the top down and there is nothing above either of them, so neither is set low.
+- **The field is a lattice over the whole page, and two things disturb it.**
+  - **The cursor**, which shoves the marks near it out of place and draws them larger; they
+    find their way back when it goes. Make the lattice itself uneven and there is nothing
+    left for the cursor to disturb.
+  - **The open chapter**, which stands one **mound** in it per entry. What a mound changes
+    is not where the marks are but **how many of them you can see**: the field's top edge
+    is lifted, everything under it stays exactly where the lattice put it. Marks are not
+    slid about by the reading, which leaves being slid about to the cursor alone. Pointing
+    at an entry (or tabbing to it) raises the mound that is its and turns it brass.
+  - A mound's height comes from the **day in its entry's own date**, so the skyline is a
+    reading of what the chapter is filed under and no two chapters come out the same shape.
+    Three mounds of one height is a pattern, not a reading.
+- **The mounds stand in the clear column between the two pieces of writing**, and that
+  column is *measured* off the page (`plate.right` → `menu.left`) rather than taken as a
+  fraction of the width — that fraction is right at one window size and wrong at every
+  other. The stylesheet keeps both columns narrow enough that there is always daylight
+  between them to measure. Letting the mounds under the plate instead, each cut off at the
+  writing above it, made every one of them the same capped height: a step across the page
+  rather than a reading, and identical for every chapter.
+- **`hotItem` and `drawing` are declared above the part of the file that opens a chapter,
+  not with the rest of the field's state.** A chapter is opened while the page is still
+  being built, and opening one touches both; left where they belong they do not exist yet
+  at that moment and the whole view falls over before it has drawn anything. This has now
+  bitten twice in this repository.
 - **Without the script both views are simply on the page**, one under the other, and the
   entries are a plain list of links — everything reachable.
 
@@ -565,8 +635,8 @@ background luminance, but the class is the reliable path.
   pages) takes another `<a class="work-row">` block; the **contact sheet**
   (`scent-descriptions`) takes another `<a class="sheet-frame">` block for the map, or a
   `<a class="gallery-entry">` block with a `data-chapter` and a `data-date` for its
-  Favorites view; and the **starfield** (`theories`) takes another `<a class="work-row">`
-  block, which becomes a constellation of its own and lengthens the road. Each page says
+  Favorites view; and the **structure** (`theories`) takes another `<a class="work-row">`
+  block, which becomes a station of its own and lengthens the road. Each page says
   which in the comment at the top of it.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
@@ -614,12 +684,18 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **corrugation** | The sharp zigzag the cursor drags across a nearby branch (`CORR_*`): evenly spaced teeth of one size travelling steadily outward along it, so it reads as a regular wave excited in a wire. Only its height answers the cursor. It used to re-roll its height and spacing several times a second, which read as jitter — that was replaced, deliberately, by the pattern described here. |
 | **sway** | Per-branch independent drift. Currently disabled (`SWAY = 0`), machinery intact. |
 | **preview** | The dark modal opened by a node carrying a `preview` field, instead of navigating. Its connector **arm** is that node's own branch traced out to the window; it lands on a **dock** at the modal's edge. A beat after it opens, the node's **name** is lifted out of the map and set above it. |
-| **the starfield** / **the sky** | The way `categories/theories.html` is laid out: a field of particles in three dimensions on black that you scroll *into*. `starfield.js`. |
-| **constellation** / **stop** | One theory in the sky — a cluster of brighter particles with lines drawn between them, standing at its own depth. The cluster is the click target. |
-| **the road** | The depth the constellations are laid along, and the page height that scrolls down it (`.sky-road`). The sky is endless; the road is not. |
-| **dust** | The particles that are not part of any constellation. They are recycled from behind you back out to the far end, so the sky never runs out. |
+| **the structure** | The way `categories/theories.html` is laid out: a technical drawing in three dimensions — ribs, rails, a ruled spine and a swarm of particles — that you scroll *into*. `structure.js`. It replaced an earlier night-sky treatment ("the starfield"), and none of that is in the code any more. |
+| **station** / **stop** | One theory in the structure — an assembly of particles with lines drawn between them, standing at its own depth, bracketed and named. The assembly is the click target. |
+| **fixture** | An assembly that is only structure: unnamed, unbracketed, fainter, and deliberately not clickable. There to fill the frame and to make being bracketed mean something. |
+| **the road** | The depth the stations are laid along, and the page height that scrolls down it (`.structure-road`). The swarm is endless; the road is not. |
+| **the swarm** | The particles that are not part of any assembly. Their depth is wrapped both ways each frame, so the air is full going forward *and* going back. |
+| **rib** / **rail** | The frame you travel through: ribs across the way at fixed depths, rails running the length of it between their corners. |
+| **the spine** | The ruler drawn along the floor of the frame to the vanishing point, ticked at every whole depth. It is also the **wheel**: dragging it writes the page's own scroll, and pressing it goes on to the next station. |
+| **carriage** | The gantry that runs down the frame towards you on its own clock, lighting each rib as it passes. |
+| **traverse** | One of the streaks that run across the frame — the mechanical version of a falling star. |
 | **chapter** | One grouping in Favorites — whatever an entry's `data-chapter` says. The chapters, their names and their order all come from the page. |
-| **the field** | The lattice of marks along the foot of the Favorites view. Regular on its own, disturbed only by the cursor. |
+| **the field** | The lattice of marks behind the Favorites view. Regular on its own; disturbed by the cursor, and uncovered by the open chapter. |
+| **mound** | One entry's share of the field's skyline — a soft rise in the field's top edge, as tall as the day in that entry's date. Pointing at the entry raises its mound. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | The frame the sheet settles on and keeps at the top — the first one in the page. |

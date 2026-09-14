@@ -968,6 +968,12 @@ body.sheet-scripted .sheet-filters { opacity: 0; transition: none; pointer-event
   pointer-events: none;
 }
 body.sheet-scripted .sheet-where { opacity: 0; transition: none; }
+/* On a narrow window the buttons in the middle of the chrome reach
+   back to the Menu, and the name was printed underneath them. It is
+   the second thing on the page to read, so it is the first to go. */
+@media (max-width: 720px) {
+  .page-where, .sheet-where { display: none; }
+}
 
 body.sheet-named .sheet-head h1 {
   opacity: 1;
@@ -1070,12 +1076,16 @@ body.sheet-scripted .gallery-entry { display: none; }
   transition: opacity 0.5s var(--menu-ease);
 }
 
-/* The open chapter, written large on the left. */
+/* The open chapter, written large on the left. It is set high — the
+   page is read from the top down and there is nothing above it — and
+   given a small spec list underneath, so the left-hand column carries
+   some weight of its own rather than being one line and a lot of
+   nothing. */
 .chapters-plate {
   position: absolute;
-  left: clamp(24px, 5vw, 76px);
-  top: clamp(40px, 10vh, 104px);
-  max-width: min(420px, 42vw);
+  left: clamp(24px, 5vw, 72px);
+  top: clamp(18px, 3.5vh, 54px);
+  width: min(430px, 26vw);
 }
 .chapters-kicker {
   margin: 0 0 12px;
@@ -1086,32 +1096,43 @@ body.sheet-scripted .gallery-entry { display: none; }
 }
 .chapters-plate h2 {
   margin: 0;
-  font-size: clamp(30px, 4.4vw, 56px);
+  font-size: clamp(30px, 5.2vw, 72px);
   letter-spacing: -0.02em;
+  line-height: 1.0;
 }
-.chapters-count {
-  margin: 14px 0 0;
+/* Label, rule, figure — the way the rest of the site sets out a
+   reading. */
+.chapters-spec {
+  margin: clamp(20px, 3vh, 34px) 0 0;
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+  letter-spacing: 0.06em;
 }
+.chapters-spec > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(12px, 1.8vh, 20px) 0;
+  border-top: 1px solid var(--line);
+}
+.chapters-spec dt { color: var(--muted); text-transform: uppercase; }
+.chapters-spec dd { margin: 0; color: var(--ink); }
 
 /* The menu, on the right. */
 .chapters-menu {
   position: absolute;
-  right: clamp(24px, 5vw, 76px);
-  top: clamp(40px, 10vh, 104px);
-  width: min(400px, 44vw);
+  right: clamp(24px, 5vw, 72px);
+  top: clamp(18px, 3.5vh, 54px);
+  width: min(720px, 40vw);
 }
-.chapters-rail { display: flex; flex-direction: column; margin-bottom: 26px; }
+.chapters-rail { display: flex; flex-direction: column; margin-bottom: clamp(22px, 4vh, 44px); }
 .chapters-tab {
   position: relative;
   display: grid;
   grid-template-columns: 11px 1fr auto;
   align-items: center;
-  gap: 12px;
-  padding: 11px 2px;
+  gap: 14px;
+  padding: clamp(14px, 2.4vh, 28px) 2px;
   border: none;
   border-top: 1px solid var(--line);
   background: none;
@@ -1139,7 +1160,7 @@ body.sheet-scripted .gallery-entry { display: none; }
 .chapters-name {
   font-family: var(--sans);
   font-weight: 500;
-  font-size: 15px;
+  font-size: clamp(15px, 1.25vw, 18px);
   color: inherit;
 }
 .chapters-count-small { font-family: var(--mono); font-size: 11px; color: var(--muted); }
@@ -1152,16 +1173,23 @@ body.sheet-scripted .gallery-entry { display: none; }
 }
 .chapters-item {
   display: grid;
-  grid-template-columns: 82px 1fr auto;
+  grid-template-columns: 28px 86px 1fr auto;
   align-items: baseline;
-  gap: 14px;
-  padding: 12px 2px;
+  gap: 16px;
+  padding: clamp(17px, 3.1vh, 38px) 2px;
   border-bottom: 1px solid var(--line);
   text-decoration: none;
   color: var(--ink);
   transition: padding-left 0.3s var(--menu-ease);
 }
+.chapters-item:first-child { border-top: 1px solid var(--line); }
 .chapters-item:hover { padding-left: 8px; }
+.chapters-no {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--brass);
+}
 /* The date is what a favourite is filed under, so it is set first and
    in the mono the rest of the site keeps for readings. */
 .chapters-date {
@@ -1171,7 +1199,7 @@ body.sheet-scripted .gallery-entry { display: none; }
   color: var(--muted);
 }
 .chapters-item:hover .chapters-date { color: var(--brass); }
-.chapters-item-name { font-family: var(--sans); font-size: 15px; }
+.chapters-item-name { font-family: var(--sans); font-size: clamp(16px, 1.4vw, 20px); letter-spacing: -0.01em; }
 .chapters-go {
   font-family: var(--mono);
   font-size: 13px;
@@ -1183,18 +1211,27 @@ body.sheet-scripted .gallery-entry { display: none; }
 .chapters-item:hover .chapters-go,
 .chapters-item:focus-visible .chapters-go { opacity: 1; transform: none; color: var(--brass); }
 
+/* The two columns are kept off each other on the way down: the room
+   between them is where the field's reading stands, and favorites.js
+   measures that room rather than assuming it. */
+@media (max-width: 1100px) {
+  .chapters-plate { width: min(320px, 27vw); }
+  .chapters-menu { width: min(460px, 43vw); }
+}
+
 @media (max-width: 860px) {
   .chapters { height: auto; min-height: calc(100vh - 64px); }
   .chapters-plate {
     position: static;
     padding: 18px 24px 0;
-    max-width: none;
+    width: auto;
   }
   .chapters-menu {
     position: static;
     width: auto;
     padding: 26px 24px 120px;
   }
+  .chapters-item { grid-template-columns: 24px 78px 1fr auto; gap: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1204,23 +1241,25 @@ body.sheet-scripted .gallery-entry { display: none; }
 }
 
 /* ==================================================================
-   THE STARFIELD — categories/theories.html
-   A night sky in three dimensions that you scroll *into*. The field
-   is drawn on a fixed canvas; the page itself is made tall enough to
+   THE STRUCTURE — categories/theories.html
+   A technical drawing in three dimensions that you scroll *into*: a
+   frame of ribs and rails running away into the depth, a ruled spine
+   along the floor, and a fine swarm of particles in the air. It is
+   drawn on a fixed canvas; the page itself is made tall enough to
    hold the road, and the scroll position is the travel. Everything
-   here is written under `body.starred`, which starfield.js adds —
+   here is written under `body.structured`, which structure.js adds —
    without it the page is the plain list of rows every other category
    uses, and stays that way.
    ================================================================== */
-body.starred { background: #05070d; }
-body.starred .page-content { padding: 0; margin: 0; max-width: none; }
+body.structured { background: #0a0b0e; }
+body.structured .page-content { padding: 0; margin: 0; max-width: none; }
 /* The list is still in the page for anything reading rather than
-   looking — it is the sky's own index — but it is not drawn. Pinned
-   to the corner with its margins taken off: left where it was laid
-   out it adds to the height of a page whose height is the road. */
-body.starred .work-list,
-body.starred .page-content > h1,
-body.starred .page-content > .category-lede {
+   looking — it is the structure's own index — but it is not drawn.
+   Pinned to the corner with its margins taken off: left where it was
+   laid out it adds to the height of a page whose height is the road. */
+body.structured .work-list,
+body.structured .page-content > h1,
+body.structured .page-content > .category-lede {
   position: absolute;
   top: 0;
   left: 0;
@@ -1231,24 +1270,24 @@ body.starred .page-content > .category-lede {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-/* The Menu is written on the sky now, so it has to be light. */
-body.starred .menu-trigger { color: #dce6f7; }
+/* The Menu is written on the drawing now, so it has to be light. */
+body.structured .menu-trigger { color: #dce6f7; }
 
 /* What you scroll down. It has no content of its own: it is there to
    give the page a height, so that the scrollbar, the arrow keys, Page
    Down and a finger on a phone all drive the travel without a line of
    code catching them. */
-.sky-road { width: 100%; }
+.structure-road { width: 100%; }
 
-.sky {
+.structure {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: #05070d;
+  background: #0a0b0e;
 }
-.sky-field { display: block; width: 100%; height: 100%; }
+.structure-field { display: block; width: 100%; height: 100%; }
 
-.sky-readout {
+.structure-readout {
   position: fixed;
   top: 22px;
   right: 26px;
@@ -1258,13 +1297,13 @@ body.starred .menu-trigger { color: #dce6f7; }
   font-size: 11px;
   line-height: 15px;
   letter-spacing: 0.12em;
-  color: rgba(220, 230, 247, 0.55);
+  color: rgba(226, 232, 242, 0.6);
 }
-body.starred .page-where { color: rgba(220, 230, 247, 0.55); border-left-color: rgba(220, 230, 247, 0.2); }
+body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-color: rgba(226, 232, 242, 0.2); }
 
 /* Said once, at the top of the road, and gone as soon as you have
    started down it. */
-.sky-cue {
+.structure-cue {
   position: fixed;
   left: 50%;
   bottom: 34px;
@@ -1276,23 +1315,51 @@ body.starred .page-where { color: rgba(220, 230, 247, 0.55); border-left-color: 
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.16em;
-  color: rgba(220, 230, 247, 0.4);
+  color: rgba(226, 232, 242, 0.42);
   transition: opacity 0.7s var(--menu-ease);
   pointer-events: none;
+  z-index: 2;
 }
-.sky-cue.gone { opacity: 0; }
-.sky-cue-mark {
+.structure-cue.gone { opacity: 0; }
+.structure-cue-mark {
   width: 9px;
   height: 9px;
-  border: 1px solid rgba(220, 230, 247, 0.4);
+  border: 1px solid rgba(226, 232, 242, 0.42);
 }
 
-/* A constellation is the thing you click: the link is laid over the
-   cluster rather than beside it, and starfield.js sizes it to
-   whatever the cluster is doing on the screen this frame — so nothing
-   here may give one a size or a transform of its own. */
-.sky-marks { position: fixed; inset: 0; pointer-events: none; }
-.sky-stop {
+/* THE WHEEL. The rule down the middle is drawn on the canvas; this is
+   the piece of the screen that answers the hand, laid over the near
+   end of it where the rule is widest and easiest to catch. Dragging
+   it writes the page's own scroll position, so it and the scrollbar
+   can never disagree about where you are.
+
+   `touch-action: none` is what stops a finger dragging it from also
+   scrolling the page underneath — which would travel twice as far as
+   the hand asked for. */
+.structure-spine {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(340px, 36vw);
+  height: 42vh;
+  border: none;
+  background: linear-gradient(to top, rgba(205, 218, 235, 0.05), rgba(205, 218, 235, 0));
+  opacity: 0;
+  transition: opacity 0.4s var(--menu-ease);
+  touch-action: none;
+  pointer-events: auto;
+  z-index: 1;
+}
+.structure-spine:hover, .structure-spine.held, .structure-spine:focus-visible { opacity: 1; }
+.structure-spine:focus-visible { outline: 1px solid rgba(142, 180, 226, 0.5); outline-offset: -2px; }
+
+/* A station is the thing you click: the link is laid over the
+   assembly rather than beside it, and structure.js sizes it to
+   whatever that assembly is doing on the screen this frame — so
+   nothing here may give one a size or a transform of its own. */
+.structure-marks { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+.structure-stop {
   position: absolute;
   display: block;
   text-decoration: none;
@@ -1300,9 +1367,9 @@ body.starred .page-where { color: rgba(220, 230, 247, 0.55); border-left-color: 
   border: 1px solid transparent;
   transition: border-color 0.3s var(--menu-ease);
 }
-.sky-stop.gone { display: none; }
-.sky-stop:hover, .sky-stop:focus-visible { border-color: rgba(104, 178, 255, 0.45); }
-.sky-say {
+.structure-stop.gone { display: none; }
+.structure-stop:hover, .structure-stop:focus-visible { border-color: rgba(142, 180, 226, 0.4); }
+.structure-say {
   position: absolute;
   left: 0;
   top: 100%;
@@ -1310,39 +1377,42 @@ body.starred .page-where { color: rgba(220, 230, 247, 0.55); border-left-color: 
   display: block;
   white-space: nowrap;
 }
-.sky-no {
+.structure-no {
   display: block;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.16em;
-  color: rgba(104, 178, 255, 0.85);
+  color: rgba(142, 180, 226, 0.9);
 }
-.sky-name {
+.structure-name {
   display: block;
   margin-top: 3px;
   font-family: var(--sans);
   font-weight: 500;
   font-size: 16px;
   letter-spacing: -0.01em;
-  color: #eaf1ff;
+  color: #eef1f6;
 }
-.sky-meta {
+.structure-meta {
   display: block;
   margin-top: 3px;
   font-family: var(--mono);
   font-size: 10px;
-  color: rgba(220, 230, 247, 0.4);
+  color: rgba(226, 232, 242, 0.42);
   opacity: 0;
   transition: opacity 0.3s var(--menu-ease);
 }
 /* The line under the name is only worth reading once you are among
    it, so it waits until you are close and until you point at it. */
-.sky-stop.close:hover .sky-meta,
-.sky-stop.close:focus-visible .sky-meta { opacity: 1; }
-.sky-stop:hover .sky-name, .sky-stop:focus-visible .sky-name { color: #9ecbff; }
+.structure-stop.close:hover .structure-meta,
+.structure-stop.close:focus-visible .structure-meta { opacity: 1; }
+.structure-stop:hover .structure-name,
+.structure-stop:focus-visible .structure-name { color: #9ecbff; }
 
 @media (max-width: 860px) {
-  .sky-readout { display: none; }
+  /* The two numbers stay: they are how you know where you are. */
+  .structure-readout { top: 16px; right: 16px; font-size: 10px; letter-spacing: 0.08em; }
+  .structure-spine { width: min(260px, 60vw); }
 }
 
 /* ==================================================================
