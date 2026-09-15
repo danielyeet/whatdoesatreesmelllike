@@ -103,9 +103,11 @@ at a time, the two injectors standing at opposite corners with nothing fired fro
 other two, the orbit standing round the
 word and running on behind it unbroken with its near rim drawn over it, opening the menu
 widening that same orbit rather than replacing it and never crossing the menu, the orbit
-turning on open and closed alike, pointing at a row ranging the orbit level with it and
-calling it out, the word saying what pressing it does and saying the
-other thing once it is open, the streams answering the cursor and letting go again, it
+turning on open and closed alike, pointing at a row swelling the orbit level with it and
+calling it out and drawing that row's own rule back, the word saying what pressing it does
+and saying the
+other thing once it is open, the cursor stringing a web between the specks it is near and
+letting go again, no part of it ever being drawn in the site's accent colour, it
 standing still under `prefers-reduced-motion`, and the plain list coming back when the
 script is blocked;
 and the structure — the drawing setting itself up when the page opens without ever
@@ -500,7 +502,8 @@ corners of the window — top right and bottom left — firing a fine stream of 
 a slant across it on white. What the streams join is an **orbit** — tilted well off square to the window, so it
 reads as a lens rather than as a circle drawn on the page. It is the theories drawing's
 world turned inside out — the same particles and the same instrument marks, printed as ink
-on white instead of white on near-black.
+on white instead of white on near-black — except that this one spends no accent at all:
+it is ink on white and nothing else.
 
 Not to be confused with the **register** on the contact sheet page (`favorites.js`), which
 is a different page. The two carry the *same kind of menu* — the chapters and every
@@ -530,7 +533,7 @@ fastest and creeps at the end. The word's and the menu's own CSS transitions are
 the same length, and the menu waits out the first third of it, so the lettering has begun
 coming down before the panel appears under it.
 
-Ten things are worth knowing before changing any of it:
+Worth knowing before changing any of it (the list has outgrown being counted):
 
 - **It is a real fall, not a path.** Every particle is thrown at the orbit and pulled in
   by the middle (`PULL`, softened close in by `SOFT`); within `CATCH_MUL` times the
@@ -541,6 +544,18 @@ Ten things are worth knowing before changing any of it:
   settling and everything grinding to a halt; and it presses it flat onto the plane.
   Writing the curves by hand instead gives a pattern, and a pattern is something you can
   see repeat.
+- **How firmly it takes hold comes on over the OUTER FRACTION of the capture band**
+  (`CATCH_GRIP`), not across the whole of it, and that is what keeps particles from
+  going astray. Spread across the whole band the hold came out at about half strength
+  *on* the orbit and a fifth of it half a band out, so a particle that arrived a little
+  wide was barely pulled in at all and rode round out there for a long time — a couple
+  of dozen of them at once, which the owner reported twice. It is a fraction and not a
+  flat distance because the band is four units wide closed and nearly ten open.
+  Narrowing the band *itself* is the fix that doesn't work: the widening throws
+  particles outward hard, and with a narrow band they sail straight out of it and the
+  orbit empties. The same pass also takes *excess* going-round speed out (the turn is
+  signed now, not just added), because too much of it is an orbit that swings wide and
+  comes back — the other half of the same complaint.
 - **A stream is aimed AT THE ORBIT, not at the middle** — along the **tangent** from
   where it stands to the orbit (`entryFor`, `ENTRY_GRAZE`), carried forward along the way
   the orbit runs, and carrying most of the orbit's own direction with it as it goes. So it
@@ -636,23 +651,34 @@ Ten things are worth knowing before changing any of it:
   letter by letter, not box by box. `.chamber-front` is clipped **only while the menu is
   open**, to the panel's box, which is a panel with a border and a ground of its own, so
   the edge the particles stop at is an edge you can see.
-- **What answering you looks like is a MARK and a SWELL, and no change of colour at all**
-  (`MARK_AT`, `MARK_OFF`, `MARK_INK`, `READ_SWELL`). A particle the page is answering with
-  is **ranged** — a fine hollow square drawn round it, the mark the rest of the site makes
-  on something it is measuring — and where a whole stretch of the orbit is being read it
-  also swells outward. Nothing is tinted: the page said what it meant in colour twice (the
-  theories drawing's cool blue, which on white read as a different site, and then brass)
-  and the owner asked for it in the drawing's own language instead. So there is no `COOL`
-  and no `WARM` in the file, and a speck's colour says nothing at all. The other things a
-  reaction *could* change are still there to reach for: how big a speck is drawn, how long
-  a tail it trails, how heavily it is drawn, and how fast that stretch of the orbit runs.
-  A mark is a stroke and they all want the same weight, so they are kept out of the alpha
-  bands and drawn in one pass per canvas. The mark also **travels with the speck** while
-  it fades, so what has been read off stays marked for a moment as it carries on round.
-- **Pointing at a row READS it off against the orbit** (`READ_SPAN`). The stretch of orbit
-  level with that row is ranged and held a little wider, so the orbit swells where the row
-  is, and a leader is drawn from each end of the row out to the window with a tick where
-  it lands. Nothing leaves the orbit — it is a reading, not a reaching. (It used to
+- **What the cursor does is string a WEB between the specks it is near** (`WEB_*`). It is
+  drawn on the front canvas, over everything, and it is meant to be *slightly* wrong:
+  each link comes and goes on its own clock and is drawn a hair off the two specks it
+  joins, both worked out from the pair itself so the same two always flicker the same way
+  and the net never twitches at random. **Each speck carries at most `WEB_EACH` lines, and
+  that cap is the whole difference between a net and a scribble** — joining every pair
+  within reach is fine where the specks are loose, but the orbit's near rim is a dense
+  line of them, every one within reach of a dozen others, and what came out was a solid
+  fan of hundreds of strokes converging on a few points.
+- **Nothing on this page is ever tinted, and nothing is ever drawn heavier.** The page
+  said what it meant in colour twice (the theories drawing's cool blue, which on white
+  read as a different site, and then brass) and then in weight, and the owner asked for
+  each of them gone in turn: there is no `COOL`, no `WARM` and no `MARK_*` in the file,
+  the chamber's own block in `style.css` spends no `--brass` anywhere, and a speck's
+  colour and weight say nothing at all. `tests/chamber.spec.js` checks the accent is
+  unspent in all four states. What is left to answer with is what the drawing is made of
+  — a line drawn, a rule drawn back, an orbit swelling — plus how big a speck is drawn,
+  how long a tail it trails, and how fast a stretch of the orbit runs.
+- **Pointing at a row READS it off against the orbit** (`READ_SPAN`, `READ_SWELL`), and
+  **draws the row's own rule back**. The stretch of orbit level with that row is held a
+  little wider, so the orbit swells where the row is, and a leader is drawn from each end
+  of the row out to the window with a tick where it lands. Nothing leaves the orbit — it
+  is a reading, not a reaching. On the page's side, the rule under that row draws back
+  from the right (to `scaleX(0.3)`, and further while it is pressed); it is a layer of
+  the row's own rather than its `border-bottom`, because a border cannot be shortened
+  without making the row itself narrower. That replaced an indent, where the whole row
+  stepped sideways under the pointer — both say "this one", but a line getting shorter
+  moves nothing anybody is reading. (It used to
   **cinch**: the sides left the border and leant in towards the row, which read as the
   drawing being pulled out of shape.) The row's box is read **once a frame**, not once a
   particle: asking an element for its box is a question the browser lays the page out to
@@ -662,7 +688,18 @@ Ten things are worth knowing before changing any of it:
   never be left.
 - **The cursor is a hand in the volume, not a cursor on a picture**: it is put at each
   particle's own depth before it pushes, so what it shoves aside is a real hole in a real
-  stream, and what it is holding is ranged.
+  stream — and the web is strung across whatever is left round it.
+- **The step from the word to the menu is ONE property moving, once.** The word's
+  `font-size` is the whole of it; its letter-spacing, padding, crop marks and the gap
+  either side of its registration marks are all written in `em`, so they come down with
+  it rather than being animated in their own right. They used to be, each with its own
+  duration and several of them in pixels, and they arrived at slightly different moments
+  — the word appeared to settle in stages. The panel fades and rises a few pixels and
+  does nothing else; it used to be squashed flat and stretched out, which draws every
+  line of writing in it at the wrong height and then corrects it. The one transition to
+  watch is the crop marks': a duration on a length written in `em` is also a duration on
+  the lettering shrinking, so it is kept short (0.15s) or the brackets are still closing
+  half a second after everything else has landed.
 
 Particles used to **break up** near the middle and throw fragments outward (`FRAGILE`,
 `FRAG_AT`). The owner asked for that gone — it read as fine particles flying in all
@@ -1044,8 +1081,9 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the word** | `FAVORITES`, standing in the middle of the chamber's orbit: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the orbit so the orbit's rims cross the ends of the lettering, one in front and one behind — so its size and `RING` are one decision. Bracketed by **crop marks**, which run out towards each other as the hand comes on to it, with the **cue** under it. |
 | **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
 | **the hold** / **the frame** | What the chamber used to do when the menu was opened: every particle took a seat on the border of the window and the whole rectangle travelled round it. Removed — the orbit simply widens now. Nothing of it is in the code (no `EDGE`, no seat, no `FLOW`). |
-| **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it is **ranged** and swells outward, and a leader runs from each end of the row out to the window. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
-| **ranged** | What the chamber does to a particle it is answering with: a fine hollow square drawn round it, the mark the rest of the site makes on something it is measuring. It replaced tinting them — first the theories drawing's cool blue, then brass. |
+| **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it swells outward, a leader runs from each end of the row out to the window, and the rule under the row draws back from the right. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
+| **the web** | What the chamber's cursor does: the specks near it are joined up with fine lines, each coming and going on its own clock and drawn a hair off the two it joins, so the net is always a slightly different net. `WEB_*` in `chamber.js`. |
+| **ranged** | What the chamber briefly did to a particle it was answering with: a fine hollow square drawn round it. Removed with the rest of the reaction-by-emphasis — there is no `MARK_*` in the file. If the owner uses the word, they mean that removed treatment; what is there now is **the web**. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. (Favorites used to have one too, on the left; the register has an **index** and a **log** instead.) |

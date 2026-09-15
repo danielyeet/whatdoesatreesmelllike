@@ -6,10 +6,13 @@
 // slant across it on white. What the streams join is an ORBIT — tilted
 // well off square to the window, so it reads as a lens rather than as
 // a circle drawn on the page. It is the theories drawing's world
-// turned inside out: the same particles, the same instrument marks,
-// one accent kept for what answers you — brass here, where that
-// drawing keeps a cool blue — printed as ink on white instead of white
-// on near-black.
+// turned inside out: the same particles and the same instrument marks,
+// printed as ink on white instead of white on near-black — except that
+// this one spends no accent at all. It said what it meant in colour
+// twice (that drawing's cool blue, then brass) and then in weight, and
+// each of them was asked for gone: what it answers with now is a LINE
+// DRAWN — a web strung between whatever the cursor is near — and the
+// orbit swelling where a row is being read.
 //
 // THERE IS ONLY EVER ONE ARRANGEMENT HERE, and the whole of the
 // interaction is that one arrangement changing size:
@@ -163,6 +166,24 @@
   const CATCH_MUL = 1.9;       // how near the orbit the chamber takes hold
   const CATCH_KEEP = 0.92;     // but never nearer the injectors than this much
                                // of the way to them — see `takes` in move()
+  // HOW WIDE THE GRIP IS, as a FRACTION of the capture band: the
+  // outermost stretch of it, over which the hold comes on from nothing
+  // to full. Anything nearer the orbit than that is held at full
+  // strength.
+  //
+  // Spreading the hold across the whole band instead is what the
+  // strays were: a particle a little wide of the orbit was barely
+  // being pulled at all and rode round out there for a long time.
+  // Narrowing the band ITSELF does fix that and breaks something else
+  // — the widening throws particles outward hard, and with a narrow
+  // band they sail straight out of it and the orbit empties. So the
+  // reach stays wide and only the ramp is narrowed.
+  //
+  // A fraction of the band and not a flat distance in units, because
+  // the band is four units wide closed and nearly ten open: written
+  // flat at 5 the hold never reached full strength at all in the
+  // closed state — it was 0.84 ON the orbit, where it wants to be 1.
+  const CATCH_GRIP = 0.45;
   // THE AXIS THE CHAMBER TURNS ABOUT, and so the way the orbit is
   // tilted: the orbit lies square across it, and how much of the axis
   // points at you is exactly how squashed it comes out. Straight at
@@ -172,7 +193,7 @@
   const SWIRL = [0.2, 0.86, 0.46];
   const RING = 4.7;            // the orbit, closed
   const RING_K = 40;           // how firmly a particle is held to it
-  const SETTLE = 3.6;          // and how quickly the fall is taken out of it
+  const SETTLE = 4.6;          // and how quickly the fall is taken out of it
   // HOW THIN THE LENS IS. Holding a particle at the orbit's radius
   // alone gives a shell and not a lens — a particle caught while
   // travelling along the axis keeps that travel, and what gathers is a
@@ -219,26 +240,43 @@
   const OPEN_FILL = 0.96;      // how much of the window it is allowed to fill
   const OPEN_MOST = 22;        // and how wide it is ever allowed to grow
 
-  // --- WHAT ANSWERING YOU LOOKS LIKE: a MARK and a SWELL, and no
-  //     change of colour at all.
+  // --- THE WEB: what the cursor does.
   //
-  // A particle the page is answering with is RANGED — a fine hollow
-  // square drawn round it, the mark the rest of the site makes on
-  // something it is measuring. The colour of a speck says nothing here
-  // any more: this page is ink on white, and what it says when you
-  // point at something it says in the drawing's own language rather
-  // than by tinting things.
-  const MARK_AT = 0.28;        // how far it has to be answering before it is ranged
-  const MARK_OFF = 3.4;        // how far outside the speck the square is drawn
-  const MARK_INK = 0.55;       // and how heavily
+  // Wherever the hand is, the specks near it are JOINED UP — a small
+  // net drawn between whichever of them happen to be near each other,
+  // over and above the hole it pushes in them. It is deliberately not
+  // steady: each link comes and goes on its own clock and is drawn a
+  // hair off the specks it joins, so the net is always a slightly
+  // different net and never reads as a figure somebody drew.
+  //
+  // Each speck carries at most WEB_EACH lines, and that cap is the
+  // whole difference between a net and a scribble. Joining every pair
+  // within reach instead is fine where the specks are loose, but the
+  // near rim of the orbit is a dense line of them: every one there is
+  // within reach of a dozen others, and what came out was a solid fan
+  // of hundreds of strokes converging on a few points.
+  //
+  // Nothing is drawn heavier or tinted anywhere on this page any more.
+  // The page said what it meant by weight and by colour in turn and
+  // neither held up; this is the drawing answering in lines, which is
+  // what the drawing is made of.
+  const WEB_REACH = 165;       // how near the hand a speck joins the web, in pixels
+  const WEB_LINK = 58;         // and how near each other two of them are joined
+  const WEB_MOST = 96;         // the most that are ever taken into it
+  const WEB_EACH = 4;          // the most lines any ONE of them carries
+  const WEB_FLICK = [1.6, 5];  // how fast a link comes and goes
+  const WEB_SKEW = 2.6;        // how far off the specks a line is drawn
+  const WEB_INK = 0.4;         // and how heavily
 
   // --- and what pointing at a row does to the orbit
   //
   // It used to CINCH: the sides left the border and leant in towards
   // the row. That read as the drawing being pulled out of shape. What
   // it does now is READ the row off against the orbit — the stretch of
-  // orbit level with it is ranged and swells outward, and is called
-  // out with a leader to each side. Nothing leaves the orbit.
+  // orbit level with it swells outward, and is called out with a
+  // leader to each side. Nothing leaves the orbit. (On the page's own
+  // side of it, the rule under that row draws back from the right;
+  // that is in `style.css`.)
   const READ_SPAN = 150;       // how much of the orbit is read off, in pixels
   const READ_SWELL = 1.05;     // and how far that stretch swells, in units
 
@@ -664,7 +702,6 @@
         life: between(LIFE),
         size: 0.55 + random() * random() * 1.5,
         wait: random() * between(LIFE),
-        warm: 0,
       });
     }
   }
@@ -731,7 +768,6 @@
     speck.age = 0;
     speck.life = between(LIFE);
     speck.wait = between(HOLD);
-    speck.warm = 0;
   }
 
   specks.forEach(launch);
@@ -950,10 +986,7 @@
       if (drawTo && speck.z > NEAR) {
         const sy = midY + speck.y * (lens / speck.z);
         read = 1 - Math.min(1, Math.abs(sy - drawTo.y) / READ_SPAN);
-        if (read > 0) {
-          read *= read;
-          speck.warm = Math.max(speck.warm, read);
-        } else read = 0;
+        read = read > 0 ? read * read : 0;
       }
 
       // CAUGHT. Out in the dark a particle simply falls, which is what
@@ -968,21 +1001,35 @@
       // settling and everything grinding to a halt; and it presses it
       // flat onto the orbit's own plane.
       if (r < takes) {
-        const hold = 1 - r / takes;
+        // HOW FIRMLY IT IS HELD: nothing at the outer edge of the
+        // band, coming on to full over `CATCH_GRIP` and staying there
+        // all the way in. It used to be `1 - r / takes`, measured from
+        // the middle of the chamber, which came out at only about half
+        // strength ON the orbit and a fifth of it half a band out — so
+        // a particle that arrived a little wide was barely pulled in
+        // at all and rode round out there for a long time. That is
+        // what the strays were.
+        const grip = Math.max(0.5, (takes - orbit) * CATCH_GRIP);
+        const hold = Math.min(1, (takes - r) / grip);
         const ux = dx / (r || 1), uy = dy / (r || 1), uz = dz / (r || 1);
 
         runsAt(-ux, -uy, -uz, way);
         const tn = Math.hypot(way[0], way[1], way[2]) || 1;
         const tx = way[0] / tn, ty = way[1] / tn, tz = way[2] / tn;
 
+        // Turned the way the orbit runs, TO the speed that would carry
+        // it round — not merely up to it. Only ever adding, a particle
+        // that arrived carrying more than that kept it, and too much
+        // going-round is an orbit that swings wide and comes back: the
+        // other half of what the strays were.
         const round = Math.sqrt(PULL / Math.max(1, r));
         const going = speck.vx * tx + speck.vy * ty + speck.vz * tz;
-        if (going < round) {
-          const turn = Math.min(round - going, round * hold * dt * 3.6);
-          speck.vx += tx * turn;
-          speck.vy += ty * turn;
-          speck.vz += tz * turn;
-        }
+        const turn = going < round
+          ? Math.min(round - going, round * hold * dt * 3.6)
+          : -Math.min(going - round, round * hold * dt * 2.2);
+        speck.vx += tx * turn;
+        speck.vy += ty * turn;
+        speck.vz += tz * turn;
 
         const want = orbit + READ_SWELL * read;
         const off = (r - want) * RING_K * hold * dt;
@@ -1026,10 +1073,8 @@
           const shove = (HAND_PUSH * close * close * dt) / (off || 1);
           speck.vx += hx * shove;
           speck.vy += hy * shove;
-          speck.warm = Math.max(speck.warm, close);
         }
       }
-      speck.warm *= 1 - Math.min(1, dt * 1.6);
 
       const slow = 1 - Math.min(0.5, DRAG * dt);
       speck.vx *= slow; speck.vy *= slow; speck.vz *= slow;
@@ -1172,11 +1217,9 @@
   }
   const behind = makeBands();
   const ahead = makeBands();
-  // The ranging squares round whatever the page is answering with.
-  // They are strokes rather than fills and they all want the same
-  // weight, so they are kept out of the bands and drawn in one pass.
-  const rangedBehind = [];
-  const rangedAhead = [];
+  // Whatever is near the hand, kept as it is found so the web can be
+  // strung between them once everything has been placed.
+  const near = [];
 
   function draw() {
     paint.clearRect(0, 0, width, height);
@@ -1230,8 +1273,7 @@
       }
 
       const life = Math.min(1, speck.age / 0.9) * Math.min(1, (speck.life - speck.age) / 2.2);
-      const near = Math.min(1, 26 / speck.z);
-      const lit = life * near * (0.4 + speck.warm * 0.6);
+      const lit = life * Math.min(1, 26 / speck.z);
       if (lit < 0.02) { speck.pk = 0; continue; }
 
       // Nearer than the middle of the chamber goes on the front
@@ -1251,13 +1293,10 @@
       if (speck.pk) into.tails.push(speck.px, speck.py, p.x, p.y);
       into.dots.push(x, y, size);
 
-      // And ranged, if the page is answering with it. Half a pixel off
-      // the whole ones, which is where a one-pixel stroke comes out
-      // sharp rather than as two grey ones.
-      if (speck.warm > MARK_AT) {
-        const wide = size + MARK_OFF * 2;
-        (nearer ? rangedAhead : rangedBehind).push(
-          Math.round(x - MARK_OFF) + 0.5, Math.round(y - MARK_OFF) + 0.5, wide);
+      // And kept if the hand is near it, for the web.
+      if (hasHand && near.length < WEB_MOST * 3 &&
+          Math.abs(p.x - handX) < WEB_REACH && Math.abs(p.y - handY) < WEB_REACH) {
+        near.push(p.x, p.y, n);
       }
 
       const back = to(speck.x - speck.vx * TAIL, speck.y - speck.vy * TAIL,
@@ -1267,8 +1306,7 @@
       speck.pk = p.k;
     }
 
-    [[behind, paint, rangedBehind], [ahead, paintFront, rangedAhead]]
-      .forEach(([bands, ink, ranged]) => {
+    [[behind, paint], [ahead, paintFront]].forEach(([bands, ink]) => {
       for (let b = 0; b < bands.length; b++) {
         const band = bands[b];
         if (!band.tails.length && !band.dots.length) continue;
@@ -1293,21 +1331,61 @@
           ink.fill();
         }
       }
-
-      if (ranged.length) {
-        ink.strokeStyle = rgba(INK, MARK_INK);
-        ink.lineWidth = 1;
-        ink.beginPath();
-        for (let n = 0; n < ranged.length; n += 3) {
-          ink.rect(ranged[n], ranged[n + 1], ranged[n + 2], ranged[n + 2]);
-        }
-        ink.stroke();
-        ranged.length = 0;
-      }
     });
+
+    drawWeb();
+    near.length = 0;
 
     paint.restore();
     paintFront.restore();
+  }
+
+  /** THE WEB. Whatever the hand is near, joined up — drawn on the
+      front canvas so it lies over everything under the cursor, which
+      is where the hand is.
+
+      Each link comes and goes on its own clock and is drawn a hair off
+      the two specks it joins, both worked out from the pair itself so
+      that the same two specks always flicker the same way and the net
+      never reads as something twitching at random. The whole thing is
+      one path and one stroke. */
+  const webCount = [];
+  function drawWeb() {
+    if (!hasHand || near.length < 6) return;
+    const many = Math.min(WEB_MOST, near.length / 3);
+    webCount.length = 0;
+    for (let i = 0; i < many; i++) webCount.push(0);
+    paintFront.beginPath();
+    let drawn = 0;
+    for (let a = 0; a < many; a++) {
+      if (webCount[a] >= WEB_EACH) continue;
+      const ax = near[a * 3], ay = near[a * 3 + 1], an = near[a * 3 + 2];
+      for (let b = a + 1; b < many; b++) {
+        if (webCount[a] >= WEB_EACH) break;
+        if (webCount[b] >= WEB_EACH) continue;
+        const bx = near[b * 3], by = near[b * 3 + 1], bn = near[b * 3 + 2];
+        const dx = bx - ax, dy = by - ay;
+        const off = Math.hypot(dx, dy);
+        if (off > WEB_LINK || off < 1) continue;
+        // One number per pair, standing in for a roll of the dice that
+        // comes out the same every time it is asked.
+        const own = ((an * 73856093) ^ (bn * 19349663)) >>> 0;
+        const rate = WEB_FLICK[0] +
+          ((own % 1000) / 1000) * (WEB_FLICK[1] - WEB_FLICK[0]);
+        const flick = Math.sin(clock * rate + (own % 6283) / 1000);
+        if (flick < -0.4) continue;
+        const skew = ((own >>> 11) % 100) / 100 - 0.5;
+        const nx = (-dy / off) * WEB_SKEW * skew, ny = (dx / off) * WEB_SKEW * skew;
+        paintFront.moveTo(ax + nx, ay + ny);
+        paintFront.lineTo(bx + nx, by + ny);
+        webCount[a]++; webCount[b]++;
+        drawn++;
+      }
+    }
+    if (!drawn) return;
+    paintFront.lineWidth = 1;
+    paintFront.strokeStyle = rgba(INK, WEB_INK);
+    paintFront.stroke();
   }
 
   function frame(now) {

@@ -13,7 +13,7 @@
 // front of it and one behind, which is what gives the word a place in
 // the volume. OPEN: the orbit widens until it stands clear round the
 // menu and never stops turning; pointing at a row makes the stretch of
-// orbit level with it be ranged and swell outward.
+// orbit level with it swell outward and calls it out with a leader.
 //
 // Two injectors, at opposite corners — top right and bottom left.
 // Four, one to every corner, read as a collision rather than as an
@@ -29,8 +29,9 @@
 // behind it unbroken with its near rim drawn over it, that opening the
 // menu widens that same orbit
 // rather than replacing it, that it keeps turning either way, that
-// pointing at a row ranges the orbit level with it and calls it out,
-// that the streams answer the cursor, that it holds still when animation is turned off, and
+// pointing at a row swells the orbit level with it and calls it out,
+// that the cursor strings a web between the specks it is near, that it
+// holds still when animation is turned off, and
 // that the plain list comes back when the script is blocked.
 // ============================================================
 const { test, expect } = require("@playwright/test");
@@ -43,10 +44,10 @@ const PAGE = "/categories/favorites.html";
     the middle of the chamber, drawn under the writing) or
     ".chamber-front" (everything nearer, drawn over it).
 
-    Ink, and not colour: what this page does when it is answering you
-    is RANGE what it is answering with — a fine hollow square drawn
-    round each speck — and swell that stretch of the orbit outward.
-    Nothing is tinted, so there is nothing to count by hue. */
+    Ink, and not colour: nothing on this page is ever tinted, so there
+    is nothing to count by hue. What it does when it is answering you
+    is draw — a leader out to the window, a swell in the orbit, a web
+    strung between whatever the cursor is near. */
 const inkOn = (page, which, box) =>
   page.evaluate(([pick, x, y, w, h]) => {
     const canvas = document.querySelector(pick);
@@ -334,7 +335,37 @@ test("opening the menu widens the same orbit rather than replacing it",
   ])).ink, "nothing should be drawn over the menu").toBe(0);
 });
 
-test("pointing at a row ranges the orbit level with it, and calls it out",
+/** How far out the drawing stands in a band of the window: the
+    outermost ink on each side, as a distance from the middle of the
+    window in CSS pixels. Where the orbit swells, it reaches further.
+
+    This is the reading and not the ink in a box, because the orbit is
+    turning the whole time: how much ink stands in any one square of
+    the window goes up and down by a fifth on its own as the specks
+    carry round it, which is the same order as the swell being
+    measured. How far out the orbit REACHES is steady to a few pixels
+    whatever is passing through. */
+const reachOfOrbit = (page, top, deep) =>
+  page.evaluate(([t, d]) => {
+    let left = 1e9, right = -1e9;
+    ["chamber-field", "chamber-front"].forEach((which) => {
+      const canvas = document.querySelector("." + which);
+      const ratio = canvas.width / canvas.clientWidth;
+      const y0 = Math.round(t * ratio), h = Math.max(1, Math.round(d * ratio));
+      const shot = canvas.getContext("2d").getImageData(0, y0, canvas.width, h).data;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          if (shot[(y * canvas.width + x) * 4 + 3] < 40) continue;
+          if (x / ratio < left) left = x / ratio;
+          if (x / ratio > right) right = x / ratio;
+        }
+      }
+    });
+    const mid = window.innerWidth / 2;
+    return { left: Math.round(mid - left), right: Math.round(right - mid) };
+  }, [top, deep]);
+
+test("pointing at a row swells the orbit level with it, and calls it out",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
@@ -351,22 +382,23 @@ test("pointing at a row ranges the orbit level with it, and calls it out",
   // nothing stands here, so a leader run out to the side is the only
   // thing that can put anything in it.
   const gap = [190, mid - 22, 220, 44];
-  // And a strip hard against the left of the window, where the orbit is.
-  const border = [0, mid - 70, 120, 140];
+  // And a band just below the leader's own line, clear of it and of
+  // its tick, where the orbit's right-hand rim runs.
+  const band = [mid + 20, 50];
 
   const restGap = await inkSeen(page, gap);
-  const restBorder = await inkSeen(page, border);
+  const restReach = await reachOfOrbit(page, ...band);
 
   await page.mouse.move(row.x + row.width / 2, mid);
   await page.waitForTimeout(1400);
   const readGap = await inkSeen(page, gap);
-  const readBorder = await inkSeen(page, border);
+  const readReach = await reachOfOrbit(page, ...band);
 
   expect(readGap.ink, `it should be called out: ${restGap.ink} \u2192 ${readGap.ink}`)
     .toBeGreaterThan(restGap.ink + 8000);
-  expect(readBorder.ink,
-    `and the orbit level with it ranged and swollen: ${restBorder.ink} \u2192 ${readBorder.ink}`)
-    .toBeGreaterThan(restBorder.ink * 1.4);
+  expect(readReach.right,
+    `and the orbit level with it swollen: ${restReach.right} \u2192 ${readReach.right}`)
+    .toBeGreaterThan(restReach.right + 40);
 
   await page.mouse.move(4, 4);
   await page.waitForTimeout(2000);
@@ -400,6 +432,103 @@ test("the orbit keeps turning, open and closed alike", async ({ page }) => {
   await watch("open");
 });
 
+test("pointing at a row draws its own rule back", async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  // Off the menu first: it grows out from under the pointer, so the
+  // press that opened it leaves the hand standing on the first row.
+  await page.mouse.move(4, 4);
+  await page.waitForTimeout(800);
+
+  // The rows are ruled off from each other edge to edge, and the rule
+  // is what answers the hand: point at a row and its own rule draws
+  // back from the right. It is drawn as a layer of the row's own
+  // rather than as a border, because a border cannot be shortened
+  // without making the row narrower.
+  const rule = (row) => row.evaluate(
+    (el) => getComputedStyle(el, "::after").transform
+  );
+  // How much of its width a rule is standing at, out of the matrix the
+  // browser hands back: "none" is all of it, matrix(a, ...) is a.
+  const across = (t) => (t === "none" ? 1 : parseFloat(t.slice(t.indexOf("(") + 1)));
+
+  const row = page.locator(".chamber-level:not([hidden]) .chamber-chapter").first();
+  const rest = across(await rule(row));
+  expect(rest, "at rest it should run right across the row").toBeCloseTo(1, 2);
+
+  await row.hover();
+  await page.waitForTimeout(700);
+  const read = across(await rule(row));
+  expect(read, `and draw back under the pointer: ${rest} \u2192 ${read}`)
+    .toBeLessThan(0.5);
+
+  await page.mouse.move(4, 4);
+  await page.waitForTimeout(700);
+  expect(across(await rule(row)), "and come back when it is let go")
+    .toBeGreaterThan(0.9);
+});
+
+test("nothing on the page is drawn in the accent colour", async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+
+  // The site keeps one accent colour, and this page does not spend it.
+  // It said what it meant in colour twice — the theories drawing's
+  // cool blue, which on white read as a different site, and then the
+  // brass — and the owner asked for neither: what answers you here is
+  // a line drawn, a rule drawn back, an orbit swelling. The canvas has
+  // no colour in it at all; this is the writing over it.
+  const brass = await page.evaluate(
+    () => getComputedStyle(document.documentElement).getPropertyValue("--brass").trim()
+  );
+  expect(brass, "the site should still have an accent to not be spending").toBeTruthy();
+
+  // Read as the browser gives it back, so "#9c6f35" and "rgb(...)"
+  // cannot disagree.
+  const asRGB = await page.evaluate((hex) => {
+    const probe = document.createElement("span");
+    probe.style.color = hex;
+    document.body.appendChild(probe);
+    const said = getComputedStyle(probe).color;
+    probe.remove();
+    return said;
+  }, brass);
+
+  const spent = async (what) => page.evaluate((accent) => {
+    const found = [];
+    document.querySelectorAll(".chamber-plate, .chamber-plate *").forEach((el) => {
+      const cs = getComputedStyle(el);
+      // Not the outline: the focus ring is the whole site's and is
+      // written once for every page, not by this one.
+      ["color", "backgroundColor", "borderTopColor", "borderRightColor",
+       "borderBottomColor", "borderLeftColor"].forEach((which) => {
+        if (cs[which] === accent) found.push(el.className + " " + which);
+      });
+      ["::before", "::after"].forEach((part) => {
+        const ps = getComputedStyle(el, part);
+        if (ps.content === "none") return;
+        ["color", "backgroundColor", "borderBottomColor"].forEach((which) => {
+          if (ps[which] === accent) found.push(el.className + part + " " + which);
+        });
+      });
+    });
+    return found;
+  }, asRGB).then((found) => {
+    expect(found, `${what}: ${found.join(", ")}`).toEqual([]);
+  });
+
+  await spent("closed");
+  await page.locator(".chamber-word").hover();
+  await page.waitForTimeout(600);
+  await spent("with the hand on the word");
+  await openMenu(page);
+  await spent("open");
+  await page.locator(".chamber-level:not([hidden]) .chamber-chapter").first().hover();
+  await page.waitForTimeout(700);
+  await spent("with the hand on a row");
+});
+
 test("the word says what pressing it does, and says the other thing once it is open",
   async ({ page }) => {
   await page.goto(PAGE);
@@ -413,7 +542,26 @@ test("the word says what pressing it does, and says the other thing once it is o
   await expect(cue).toHaveText(/expand/i);
 });
 
-test("the streams answer the cursor", async ({ page }) => {
+/** How much of a square of the window the drawing has TOUCHED at all
+    — pixels with any ink in them, rather than how black they are. A
+    line strung between two specks covers ground that was empty; a
+    speck drawn heavier or tinted covers none. */
+const groundCovered = (page, box) =>
+  page.evaluate(([x, y, w, h]) => {
+    let on = 0;
+    ["chamber-field", "chamber-front"].forEach((which) => {
+      const canvas = document.querySelector("." + which);
+      const ratio = canvas.width / canvas.clientWidth;
+      const shot = canvas.getContext("2d").getImageData(
+        Math.round(x * ratio), Math.round(y * ratio),
+        Math.max(1, Math.round(w * ratio)), Math.max(1, Math.round(h * ratio))
+      ).data;
+      for (let n = 3; n < shot.length; n += 4) if (shot[n] >= 12) on++;
+    });
+    return on;
+  }, box);
+
+test("the cursor strings a web between the specks it is near", async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
   await page.mouse.move(4, 4);
@@ -424,24 +572,39 @@ test("the streams answer the cursor", async ({ page }) => {
   const at = { x: word.x + word.width / 2, y: word.y + word.height + 95 };
   const box = [at.x - 130, at.y - 130, 260, 260];
 
-  const before = await inkSeen(page, box);
+  // Measured as GROUND COVERED rather than as ink, because what the
+  // hand does here is draw LINES between the specks it is near: a line
+  // covers ground that was empty, which is the one reading that tells
+  // it apart from a speck simply being drawn heavier. The page has
+  // answered in weight and in colour in turn and the owner asked for
+  // neither; there is nothing tinted or emboldened left to count.
+  // Taken as the most of several readings a second apart rather than
+  // as one. Every link in the web comes and goes on its own clock, and
+  // the orbit is turning under the hand the whole time, so any single
+  // frame is worth a fifth either way on its own — the same order as
+  // what is being measured.
+  const most = async (span) => {
+    let best = 0;
+    for (let n = 0; n < 4; n++) {
+      best = Math.max(best, await groundCovered(page, box));
+      await page.waitForTimeout(span);
+    }
+    return best;
+  };
+
+  const before = await most(300);
   await page.mouse.move(at.x, at.y);
   await page.waitForTimeout(900);
-  const under = await inkSeen(page, box);
+  const under = await most(300);
 
-  // What the hand does is RANGE what it is holding — a fine hollow
-  // square round each speck, the mark the rest of the site makes on
-  // something it is measuring. It used to tint them instead, first the
-  // theories drawing's cool blue and then brass; the owner asked for
-  // the reaction to be in the drawing's own language rather than in a
-  // colour.
-  expect(under.ink, `before ${before.ink}, under the hand ${under.ink}`)
-    .toBeGreaterThan(before.ink * 1.6);
+  expect(under, `before ${before}, under the hand ${under}`)
+    .toBeGreaterThan(before * 1.1);
 
   await page.mouse.move(4, 4);
   await page.waitForTimeout(1600);
-  expect((await inkSeen(page, box)).ink, "and let go of them again")
-    .toBeLessThan(under.ink / 1.5);
+  const after = await most(300);
+  expect(after, `and let go of them again: ${under} \u2192 ${after}`)
+    .toBeLessThan(under * 0.9);
 });
 
 test("with animation turned off it stands still", async ({ page }) => {

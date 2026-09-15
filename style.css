@@ -1397,21 +1397,31 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   letter-spacing: 0.55em;
   text-transform: uppercase;
   color: var(--ink);
-  /* As long as the ring's own step out to the borders (OPEN_MS in
-     chamber.js), so the lettering and the particles arrive together. */
-  transition: font-size 1.5s var(--menu-ease), letter-spacing 1.5s var(--menu-ease),
-              padding 1.5s var(--menu-ease), color 0.6s var(--menu-ease);
+  /* ONE THING MOVES, AND IT MOVES ONCE. The whole step from the word
+     to the menu's heading is the lettering getting smaller, and every
+     other measurement on it is written in `em` so it simply comes with
+     — the letter-spacing, the padding, the crop marks, the gap either
+     side of the marks. Those used to be animated in their own right,
+     each with its own duration, and several of them in pixels, so they
+     arrived at slightly different moments and the word appeared to
+     settle in stages. One property, one duration, and it is smooth
+     because there is nothing left to fall out of step with.
+
+     That duration is the orbit's own step out (OPEN_MS in chamber.js),
+     so the lettering and the particles arrive together. */
+  transition: font-size 1.7s var(--menu-ease);
 }
 .chamber-word-line {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.52em;
-  transition: gap 1.5s var(--menu-ease);
 }
-.chamber-word:hover, .chamber-word:focus-visible { color: var(--brass); }
+/* Hovering it does not tint it: what the hand does to the word is
+   close the crop marks round it, which is the gesture that says it is
+   a control. Nothing on this page answers in colour any more. */
 .chamber-word:hover .chamber-reg, .chamber-word:focus-visible .chamber-reg {
-  background: var(--brass);
+  background: var(--ink);
 }
 
 /* THE CROP MARKS. Four corner brackets round the word, the way a
@@ -1424,8 +1434,15 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   width: 0.34em;
   height: 0.34em;
   border: 0 solid var(--line);
-  transition: border-color 0.35s var(--menu-ease), width 0.4s var(--menu-ease),
-              height 0.4s var(--menu-ease);
+  /* The brackets are sized in `em`, so they come down with the
+     lettering on their own. This transition is only for the growth on
+     hover, and it is kept SHORT for a reason: a transition on a length
+     written in `em` is also a transition on the lettering getting
+     smaller, and at 0.4s the brackets were still closing for most of
+     half a second after the word and the menu had both landed. That
+     tail is the one thing you could still point at in the step. */
+  transition: border-color 0.35s var(--menu-ease), width 0.15s var(--menu-ease),
+              height 0.15s var(--menu-ease);
 }
 .chamber-crop.tl { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
 .chamber-crop.tr { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
@@ -1436,7 +1453,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
    which is as near as this page comes to saying "button" without
    drawing a box permanently round the only thing on it. */
 .chamber-word:hover .chamber-crop, .chamber-word:focus-visible .chamber-crop {
-  border-color: var(--brass);
+  border-color: var(--ink);
   width: 0.9em;
   height: 0.55em;
 }
@@ -1472,38 +1489,32 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   transition: transform 0.55s var(--menu-ease);
 }
 .chamber-word:hover .chamber-cue, .chamber-word:focus-visible .chamber-cue {
-  border-color: var(--brass);
-  color: var(--brass);
-  background: rgba(156, 111, 53, 0.08);
+  border-color: var(--ink);
+  color: var(--ink);
+  background: var(--bg-2);
 }
 .chamber-word:active .chamber-cue {
-  background: var(--brass);
-  border-color: var(--brass);
+  background: var(--ink);
+  border-color: var(--ink);
   color: var(--bg);
 }
 .chamber-plate.open .chamber-cue-mark { transform: translateY(1px) rotate(225deg); }
 .chamber-reg {
   width: 0.34em;
   height: 0.34em;
-  border: 1px solid var(--brass);
+  border: 1px solid var(--ink);
   flex: none;
-  transition: background 0.35s var(--menu-ease);
+  transition: background 0.35s var(--menu-ease), border-color 1.7s var(--menu-ease);
 }
 /* The trailing letter-space would otherwise push the lettering off
    centre against the two marks. */
 .chamber-word-name { margin-right: -0.55em; }
-/* Open, the word is the menu's own heading: it comes back to the size
-   of a heading and the panel unfolds under it. */
-.chamber-plate.open .chamber-word {
-  font-size: 13px;
-  letter-spacing: 0.42em;
-  color: var(--muted);
-}
-.chamber-plate.open .chamber-word-line { gap: 12px; }
-.chamber-plate.open .chamber-reg { border-color: var(--brass); }
-/* Open, the brackets close right in on the heading rather than
-   standing off it at the size the big lettering needed. */
-.chamber-plate.open .chamber-crop { width: 5px; height: 5px; }
+/* Open, the word is the menu's own heading. Only the size is set: the
+   spacing, the padding, the marks and the brackets are all in `em` and
+   come down with it, which is what makes the step one movement rather
+   than five. */
+.chamber-plate.open .chamber-word { font-size: 13px; }
+.chamber-plate.open .chamber-reg { border-color: var(--muted); }
 
 .chamber-panel {
   width: min(460px, 100%);
@@ -1512,14 +1523,20 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   border: 1px solid var(--line);
   background: var(--bg);
   overflow: auto;
-  /* It unfolds over the same moment the ring takes to reach the
-     borders, and waits out the first third of it: the word has to have
-     begun coming down to a heading before the menu appears under it,
-     or the two read as two separate things happening at once. */
-  animation: chamber-open 1.1s var(--menu-ease) 0.42s both;
+  /* It comes up over the same moment the orbit takes to widen, and
+     waits out the first third of it: the word has to have begun coming
+     down to a heading before the menu appears under it, or the two
+     read as two separate things happening at once.
+
+     It fades and rises a few pixels, and does nothing else. It used to
+     be squashed flat and stretched out (`scaleY(0.72)`), which carries
+     every line of writing in it with it: the lettering was drawn at
+     the wrong height and then corrected, which is the opposite of
+     minimal however smoothly it is eased. */
+  animation: chamber-open 1.15s var(--menu-ease) 0.55s both;
 }
 @keyframes chamber-open {
-  from { opacity: 0; transform: scaleY(0.72) translateY(-20px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: none; }
 }
 
@@ -1541,7 +1558,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--brass);
+  color: var(--muted);
 }
 .chamber-back[hidden] { display: none; }
 .chamber-back:hover, .chamber-back:focus-visible { color: var(--ink); }
@@ -1571,15 +1588,40 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   width: 100%;
   padding: 15px 22px 15px 0;
   border: none;
-  border-bottom: 1px solid var(--line);
   background: none;
   text-align: left;
   text-decoration: none;
   color: var(--ink);
   cursor: pointer;
-  transition: padding-left 0.3s var(--menu-ease);
 }
-.chamber-row:hover, .chamber-row:focus-visible { padding-left: 9px; }
+/* THE RULE UNDER A ROW IS WHAT ANSWERS THE HAND, and it answers by
+   GETTING SHORTER. The rows are ruled off from each other edge to
+   edge; point at one and its own rule draws back from the right,
+   press it and it draws back further still. It is drawn as a layer of
+   its own rather than as the row's `border-bottom`, because a border
+   cannot be shortened without making the row itself narrower — and
+   `transform` is the one thing that can be animated here without the
+   browser laying the menu out again on every frame.
+
+   This replaced an indent, where the whole row stepped sideways under
+   the pointer. Both say "this one", but a line getting shorter is the
+   drawing's own language and moves nothing that anyone is reading. */
+.chamber-row::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--line);
+  transform-origin: left center;
+  transition: transform 0.5s var(--menu-ease), background 0.5s var(--menu-ease);
+}
+.chamber-row:hover::after, .chamber-row:focus-visible::after {
+  transform: scaleX(0.3);
+  background: var(--ink);
+}
+.chamber-row:active::after { transform: scaleX(0.13); }
 .chamber-file {
   display: flex;
   gap: 12px;
@@ -1588,7 +1630,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   letter-spacing: 0.08em;
   color: var(--muted);
 }
-.chamber-no { color: var(--brass); }
+.chamber-no { color: var(--ink); }
 .chamber-name {
   display: block;
   margin-top: 5px;
@@ -1608,7 +1650,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   transition: opacity 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
 }
 .chamber-row:hover .chamber-go,
-.chamber-row:focus-visible .chamber-go { opacity: 1; transform: none; color: var(--brass); }
+.chamber-row:focus-visible .chamber-go { opacity: 1; transform: none; color: var(--ink); }
 
 @media (max-width: 720px) {
   .chamber-plate { width: calc(100% - 44px); }
@@ -1618,7 +1660,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   .chamber-panel, .chamber-level { animation-duration: 0.01s; }
-  .chamber-word { transition-duration: 0.01s; }
+  .chamber-word, .chamber-row::after { transition-duration: 0.01s; }
 }
 
 /* ==================================================================
