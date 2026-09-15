@@ -13,7 +13,7 @@
 // front of it and one behind, which is what gives the word a place in
 // the volume. OPEN: the orbit widens until it stands clear round the
 // menu and never stops turning; pointing at a row makes the stretch of
-// orbit level with it take the brass accent and swell.
+// orbit level with it be ranged and swell outward.
 //
 // Two injectors, at opposite corners — top right and bottom left.
 // Four, one to every corner, read as a collision rather than as an
@@ -29,8 +29,8 @@
 // behind it unbroken with its near rim drawn over it, that opening the
 // menu widens that same orbit
 // rather than replacing it, that it keeps turning either way, that
-// pointing at a row reads it off against the orbit, that the streams
-// answer the cursor, that it holds still when animation is turned off, and
+// pointing at a row ranges the orbit level with it and calls it out,
+// that the streams answer the cursor, that it holds still when animation is turned off, and
 // that the plain list comes back when the script is blocked.
 // ============================================================
 const { test, expect } = require("@playwright/test");
@@ -39,11 +39,14 @@ const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 const PAGE = "/categories/favorites.html";
 
 /** How much ink one canvas of the drawing has laid down in a square of
-    the window, and how much of it is the BRASS the hand leaves behind
-    — the site's own accent, and what everything on this page turns to
-    when it is answering you. `which` is ".chamber-field" (everything
-    further than the middle of the chamber, drawn under the writing) or
-    ".chamber-front" (everything nearer, drawn over it). */
+    the window. `which` is ".chamber-field" (everything further than
+    the middle of the chamber, drawn under the writing) or
+    ".chamber-front" (everything nearer, drawn over it).
+
+    Ink, and not colour: what this page does when it is answering you
+    is RANGE what it is answering with — a fine hollow square drawn
+    round each speck — and swell that stretch of the orbit outward.
+    Nothing is tinted, so there is nothing to count by hue. */
 const inkOn = (page, which, box) =>
   page.evaluate(([pick, x, y, w, h]) => {
     const canvas = document.querySelector(pick);
@@ -53,13 +56,11 @@ const inkOn = (page, which, box) =>
       Math.round(x * ratio), Math.round(y * ratio),
       Math.max(1, Math.round(w * ratio)), Math.max(1, Math.round(h * ratio))
     ).data;
-    let ink = 0, warm = 0;
-    for (let n = 0; n < shot.length; n += 4) {
-      if (shot[n + 3] < 12) continue;
-      ink += shot[n + 3];
-      if (shot[n] > shot[n + 2] + 24) warm += shot[n + 3];
+    let ink = 0;
+    for (let n = 3; n < shot.length; n += 4) {
+      if (shot[n] >= 12) ink += shot[n];
     }
-    return { ink: ink, warm: warm };
+    return { ink: ink };
   }, [which, ...box]);
 
 const inkIn = (page, box) => inkOn(page, ".chamber-field", box);
@@ -68,7 +69,7 @@ const inkIn = (page, box) => inkOn(page, ".chamber-field", box);
 async function inkSeen(page, box) {
   const back = await inkOn(page, ".chamber-field", box);
   const ahead = await inkOn(page, ".chamber-front", box);
-  return { ink: back.ink + ahead.ink, warm: back.warm + ahead.warm };
+  return { ink: back.ink + ahead.ink };
 }
 
 /** How far out from the middle of the window the drawing stands, as
@@ -333,7 +334,7 @@ test("opening the menu widens the same orbit rather than replacing it",
   ])).ink, "nothing should be drawn over the menu").toBe(0);
 });
 
-test("pointing at a row reads it off against the frame, without pulling the frame out of shape",
+test("pointing at a row ranges the orbit level with it, and calls it out",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
@@ -346,11 +347,11 @@ test("pointing at a row reads it off against the frame, without pulling the fram
   const rows = page.locator(".chamber-level:not([hidden]) .chamber-chapter");
   const row = await rows.nth(await rows.count() - 1).boundingBox();
   const mid = row.y + row.height / 2;
-  // Open ground between the menu and the border, level with that row:
+  // Open ground between the menu and the orbit, level with that row:
   // nothing stands here, so a leader run out to the side is the only
-  // thing that can put the brass accent in it.
+  // thing that can put anything in it.
   const gap = [190, mid - 22, 220, 44];
-  // And a strip hard against the left border, where the frame is.
+  // And a strip hard against the left of the window, where the orbit is.
   const border = [0, mid - 70, 120, 140];
 
   const restGap = await inkSeen(page, gap);
@@ -361,21 +362,16 @@ test("pointing at a row reads it off against the frame, without pulling the fram
   const readGap = await inkSeen(page, gap);
   const readBorder = await inkSeen(page, border);
 
-  expect(readGap.warm, `it should be called out: ${restGap.warm} → ${readGap.warm}`)
-    .toBeGreaterThan(restGap.warm + 600);
-  expect(readBorder.warm, "and the orbit level with it should take the accent")
-    .toBeGreaterThan(restBorder.warm + 400);
-  // But it must NOT cinch: the particles stay on the border rather
-  // than leaving it and leaning in towards the writing. The ground
-  // between the two is the leader and nothing else.
-  expect(readGap.ink - readGap.warm,
-    "no particles should leave the border for the writing")
-    .toBeLessThan(restGap.ink + 2500);
+  expect(readGap.ink, `it should be called out: ${restGap.ink} \u2192 ${readGap.ink}`)
+    .toBeGreaterThan(restGap.ink + 8000);
+  expect(readBorder.ink,
+    `and the orbit level with it ranged and swollen: ${restBorder.ink} \u2192 ${readBorder.ink}`)
+    .toBeGreaterThan(restBorder.ink * 1.4);
 
   await page.mouse.move(4, 4);
-  await page.waitForTimeout(1800);
-  expect((await inkSeen(page, gap)).warm, "and let go again")
-    .toBeLessThan(readGap.warm);
+  await page.waitForTimeout(2000);
+  expect((await inkSeen(page, gap)).ink, "and let go again")
+    .toBeLessThan(readGap.ink / 2);
 });
 
 test("the orbit keeps turning, open and closed alike", async ({ page }) => {
@@ -424,27 +420,28 @@ test("the streams answer the cursor", async ({ page }) => {
   await page.waitForTimeout(12000);
 
   const word = await page.locator(".chamber-word").boundingBox();
-  // In the ring, below the lettering, where the near rim runs.
-  const at = { x: word.x + word.width / 2, y: word.y + word.height + 120 };
-  const side = 260;
-  const box = [at.x - side / 2, at.y - side / 2, side, side];
+  // On the orbit, below the lettering, where the near rim runs.
+  const at = { x: word.x + word.width / 2, y: word.y + word.height + 95 };
+  const box = [at.x - 130, at.y - 130, 260, 260];
 
   const before = await inkSeen(page, box);
   await page.mouse.move(at.x, at.y);
   await page.waitForTimeout(900);
   const under = await inkSeen(page, box);
 
-  // What the hand does is turn what it is pushing to BRASS — the
-  // site's own accent, and what everything else on the site turns to
-  // when the hand is on it. This page used to borrow the theories
-  // drawing's cool blue, which on white read as a different site.
-  expect(under.warm, `before ${before.warm}, under the hand ${under.warm}`)
-    .toBeGreaterThan(before.warm + 400);
+  // What the hand does is RANGE what it is holding — a fine hollow
+  // square round each speck, the mark the rest of the site makes on
+  // something it is measuring. It used to tint them instead, first the
+  // theories drawing's cool blue and then brass; the owner asked for
+  // the reaction to be in the drawing's own language rather than in a
+  // colour.
+  expect(under.ink, `before ${before.ink}, under the hand ${under.ink}`)
+    .toBeGreaterThan(before.ink * 1.6);
 
   await page.mouse.move(4, 4);
-  await page.waitForTimeout(1500);
-  expect((await inkSeen(page, box)).warm, "and let go of them again")
-    .toBeLessThan(under.warm);
+  await page.waitForTimeout(1600);
+  expect((await inkSeen(page, box)).ink, "and let go of them again")
+    .toBeLessThan(under.ink / 1.5);
 });
 
 test("with animation turned off it stands still", async ({ page }) => {

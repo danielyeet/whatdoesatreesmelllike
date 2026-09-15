@@ -219,15 +219,28 @@
   const OPEN_FILL = 0.96;      // how much of the window it is allowed to fill
   const OPEN_MOST = 22;        // and how wide it is ever allowed to grow
 
+  // --- WHAT ANSWERING YOU LOOKS LIKE: a MARK and a SWELL, and no
+  //     change of colour at all.
+  //
+  // A particle the page is answering with is RANGED — a fine hollow
+  // square drawn round it, the mark the rest of the site makes on
+  // something it is measuring. The colour of a speck says nothing here
+  // any more: this page is ink on white, and what it says when you
+  // point at something it says in the drawing's own language rather
+  // than by tinting things.
+  const MARK_AT = 0.28;        // how far it has to be answering before it is ranged
+  const MARK_OFF = 3.4;        // how far outside the speck the square is drawn
+  const MARK_INK = 0.55;       // and how heavily
+
   // --- and what pointing at a row does to the orbit
   //
   // It used to CINCH: the sides left the border and leant in towards
   // the row. That read as the drawing being pulled out of shape. What
   // it does now is READ the row off against the orbit — the stretch of
-  // orbit level with it takes the cool accent and swells outward, and
-  // is called out with a leader to each side. Nothing leaves the orbit.
+  // orbit level with it is ranged and swells outward, and is called
+  // out with a leader to each side. Nothing leaves the orbit.
   const READ_SPAN = 150;       // how much of the orbit is read off, in pixels
-  const READ_SWELL = 0.7;      // and how far that stretch swells, in units
+  const READ_SWELL = 1.05;     // and how far that stretch swells, in units
 
   // --- the hand
   const HAND_PX = 150;         // how near the cursor a particle answers, in pixels
@@ -242,11 +255,7 @@
 
   const INK = "23,23,15";      // --ink
   const STEEL = "109,108,98";  // --muted
-  // WHAT ANSWERS YOU IS BRASS — the site's own accent, and the colour
-  // every other page on it turns something to when the hand is on it.
-  // This page used to borrow the theories drawing's cool blue, which
-  // on white read as a different site rather than as this one.
-  const WARM = "156,111,53";   // --brass
+
   const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
   // The swirl axis as a unit vector, worked out once: everything that
@@ -1104,7 +1113,7 @@
     if (drawTo && spread > 0.4) {
       const lit = 0.55 * spread;
       paint.lineWidth = 1;
-      paint.strokeStyle = rgba(WARM, lit);
+      paint.strokeStyle = rgba(INK, lit);
       const y = Math.round(drawTo.y) + 0.5;
       [[drawTo.left - 18, 28], [drawTo.right + 18, width - 28]].forEach((run) => {
         paint.beginPath();
@@ -1158,11 +1167,16 @@
   // front of it.
   function makeBands() {
     const out = [];
-    for (let b = 0; b < BANDS * 2; b++) out.push({ tails: [], dots: [] });
+    for (let b = 0; b < BANDS; b++) out.push({ tails: [], dots: [] });
     return out;
   }
   const behind = makeBands();
   const ahead = makeBands();
+  // The ranging squares round whatever the page is answering with.
+  // They are strokes rather than fills and they all want the same
+  // weight, so they are kept out of the bands and drawn in one pass.
+  const rangedBehind = [];
+  const rangedAhead = [];
 
   function draw() {
     paint.clearRect(0, 0, width, height);
@@ -1222,12 +1236,12 @@
 
       // Nearer than the middle of the chamber goes on the front
       // canvas, over the writing; further away goes behind it.
-      const bands = speck.z < MID ? ahead : behind;
-      const warm = speck.warm > 0.12;
+      const nearer = speck.z < MID;
+      const bands = nearer ? ahead : behind;
       let band = Math.floor(lit * BANDS);
       if (band > BANDS - 1) band = BANDS - 1;
       if (band < 0) band = 0;
-      const into = bands[band + (warm ? BANDS : 0)];
+      const into = bands[band];
 
       // Squares, drawn on whole pixels so they stay squares: at this
       // size a rectangle laid across a pixel boundary comes out as a
@@ -1237,6 +1251,15 @@
       if (speck.pk) into.tails.push(speck.px, speck.py, p.x, p.y);
       into.dots.push(x, y, size);
 
+      // And ranged, if the page is answering with it. Half a pixel off
+      // the whole ones, which is where a one-pixel stroke comes out
+      // sharp rather than as two grey ones.
+      if (speck.warm > MARK_AT) {
+        const wide = size + MARK_OFF * 2;
+        (nearer ? rangedAhead : rangedBehind).push(
+          Math.round(x - MARK_OFF) + 0.5, Math.round(y - MARK_OFF) + 0.5, wide);
+      }
+
       const back = to(speck.x - speck.vx * TAIL, speck.y - speck.vy * TAIL,
                       Math.max(NEAR + 0.1, speck.z - speck.vz * TAIL));
       speck.px = back ? back.x : p.x;
@@ -1244,12 +1267,13 @@
       speck.pk = p.k;
     }
 
-    [[behind, paint], [ahead, paintFront]].forEach(([bands, ink]) => {
+    [[behind, paint, rangedBehind], [ahead, paintFront, rangedAhead]]
+      .forEach(([bands, ink, ranged]) => {
       for (let b = 0; b < bands.length; b++) {
         const band = bands[b];
         if (!band.tails.length && !band.dots.length) continue;
-        const lit = ((b % BANDS) + 0.5) / BANDS;
-        const tone = b >= BANDS ? WARM : INK;
+        const lit = (b + 0.5) / BANDS;
+        const tone = INK;
         if (band.tails.length) {
           ink.strokeStyle = rgba(tone, lit * 0.42);
           ink.lineWidth = 1;
@@ -1268,6 +1292,17 @@
           }
           ink.fill();
         }
+      }
+
+      if (ranged.length) {
+        ink.strokeStyle = rgba(INK, MARK_INK);
+        ink.lineWidth = 1;
+        ink.beginPath();
+        for (let n = 0; n < ranged.length; n += 3) {
+          ink.rect(ranged[n], ranged[n + 1], ranged[n + 2], ranged[n + 2]);
+        }
+        ink.stroke();
+        ranged.length = 0;
       }
     });
 

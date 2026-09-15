@@ -103,8 +103,8 @@ at a time, the two injectors standing at opposite corners with nothing fired fro
 other two, the orbit standing round the
 word and running on behind it unbroken with its near rim drawn over it, opening the menu
 widening that same orbit rather than replacing it and never crossing the menu, the orbit
-turning on open and closed alike, pointing at a row reading it off against the orbit
-without pulling it out of shape, the word saying what pressing it does and saying the
+turning on open and closed alike, pointing at a row ranging the orbit level with it and
+calling it out, the word saying what pressing it does and saying the
 other thing once it is open, the streams answering the cursor and letting go again, it
 standing still under `prefers-reduced-motion`, and the plain list coming back when the
 script is blocked;
@@ -499,8 +499,8 @@ The main menu's **Favorites** category is a **chamber**: two injectors, at oppos
 corners of the window — top right and bottom left — firing a fine stream of particles at
 a slant across it on white. What the streams join is an **orbit** — tilted well off square to the window, so it
 reads as a lens rather than as a circle drawn on the page. It is the theories drawing's
-world turned inside out — the same particles, the same instrument marks, the same one cool
-accent kept for what answers you — printed as ink on white instead of white on near-black.
+world turned inside out — the same particles and the same instrument marks, printed as ink
+on white instead of white on near-black.
 
 Not to be confused with the **register** on the contact sheet page (`favorites.js`), which
 is a different page. The two carry the *same kind of menu* — the chapters and every
@@ -636,27 +636,33 @@ Ten things are worth knowing before changing any of it:
   letter by letter, not box by box. `.chamber-front` is clipped **only while the menu is
   open**, to the panel's box, which is a panel with a border and a ground of its own, so
   the edge the particles stop at is an edge you can see.
-- **Pointing at a row READS it off against the orbit** (`READ_SPAN`, `READ_SWELL`). The
-  stretch of orbit level with that row takes the **brass** and is held a little wider,
-  so the orbit swells where the row is, and a leader is drawn from each end of the row out
-  to the window with a tick where it lands. Nothing leaves the orbit — it is a reading,
-  not a reaching. (It used to **cinch**: the sides left the border and leant in towards
-  the row, which read as the drawing being pulled out of shape.) The row's box is read
-  **once a frame**, not once a particle: asking an element for its box is a question the
-  browser lays the page out to answer, and there are hundreds of them. What is pointed at
-  is also settled on every pointer move rather than left to `pointerout`, because the menu
-  grows out from under the pointer when it opens — a row can arrive under a hand that
-  never moved, and would then never be left.
+- **What answering you looks like is a MARK and a SWELL, and no change of colour at all**
+  (`MARK_AT`, `MARK_OFF`, `MARK_INK`, `READ_SWELL`). A particle the page is answering with
+  is **ranged** — a fine hollow square drawn round it, the mark the rest of the site makes
+  on something it is measuring — and where a whole stretch of the orbit is being read it
+  also swells outward. Nothing is tinted: the page said what it meant in colour twice (the
+  theories drawing's cool blue, which on white read as a different site, and then brass)
+  and the owner asked for it in the drawing's own language instead. So there is no `COOL`
+  and no `WARM` in the file, and a speck's colour says nothing at all. The other things a
+  reaction *could* change are still there to reach for: how big a speck is drawn, how long
+  a tail it trails, how heavily it is drawn, and how fast that stretch of the orbit runs.
+  A mark is a stroke and they all want the same weight, so they are kept out of the alpha
+  bands and drawn in one pass per canvas. The mark also **travels with the speck** while
+  it fades, so what has been read off stays marked for a moment as it carries on round.
+- **Pointing at a row READS it off against the orbit** (`READ_SPAN`). The stretch of orbit
+  level with that row is ranged and held a little wider, so the orbit swells where the row
+  is, and a leader is drawn from each end of the row out to the window with a tick where
+  it lands. Nothing leaves the orbit — it is a reading, not a reaching. (It used to
+  **cinch**: the sides left the border and leant in towards the row, which read as the
+  drawing being pulled out of shape.) The row's box is read **once a frame**, not once a
+  particle: asking an element for its box is a question the browser lays the page out to
+  answer, and there are hundreds of them. What is pointed at is also settled on every
+  pointer move rather than left to `pointerout`, because the menu grows out from under the
+  pointer when it opens — a row can arrive under a hand that never moved, and would then
+  never be left.
 - **The cursor is a hand in the volume, not a cursor on a picture**: it is put at each
   particle's own depth before it pushes, so what it shoves aside is a real hole in a real
-  stream, and what it is holding turns to the brass.
-- **What answers you is BRASS** (`WARM`) — the site's own accent, and the colour every
-  other page on it turns something to when the hand is on it. This page used to borrow the
-  theories drawing's cool blue, which on white read as a different site rather than as
-  this one; there is no `COOL` in the file any more. The colour is only one of the things
-  a reaction *could* change, and the others are all still there to reach for: how big a
-  speck is drawn, how long a tail it trails, how heavily it is drawn, how far it swells
-  off the orbit, and how fast that stretch of orbit runs.
+  stream, and what it is holding is ranged.
 
 Particles used to **break up** near the middle and throw fragments outward (`FRAGILE`,
 `FRAG_AT`). The owner asked for that gone — it read as fine particles flying in all
@@ -1038,7 +1044,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the word** | `FAVORITES`, standing in the middle of the chamber's orbit: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the orbit so the orbit's rims cross the ends of the lettering, one in front and one behind — so its size and `RING` are one decision. Bracketed by **crop marks**, which run out towards each other as the hand comes on to it, with the **cue** under it. |
 | **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
 | **the hold** / **the frame** | What the chamber used to do when the menu was opened: every particle took a seat on the border of the window and the whole rectangle travelled round it. Removed — the orbit simply widens now. Nothing of it is in the code (no `EDGE`, no seat, no `FLOW`). |
-| **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it takes the **brass** and swells outward, and a leader runs from each end of the row out to the window. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
+| **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it is **ranged** and swells outward, and a leader runs from each end of the row out to the window. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
+| **ranged** | What the chamber does to a particle it is answering with: a fine hollow square drawn round it, the mark the rest of the site makes on something it is measuring. It replaced tinting them — first the theories drawing's cool blue, then brass. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. (Favorites used to have one too, on the left; the register has an **index** and a **log** instead.) |
