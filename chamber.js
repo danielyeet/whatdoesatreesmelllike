@@ -1,9 +1,9 @@
 // ============================================================
 // THE CHAMBER (categories/favorites.html only)
 //
-// The favourites live inside a CHAMBER: two injectors, both on the
-// left-hand side of the window, firing a fine stream of particles at a
-// slant across it on white. What the streams join is an ORBIT — tilted
+// The favourites live inside a CHAMBER: two injectors, at OPPOSITE
+// CORNERS of the window — top right and bottom left — firing a fine
+// stream of particles at a slant across it on white. What the streams join is an ORBIT — tilted
 // well off square to the window, so it reads as a lens rather than as
 // a circle drawn on the page. It is the theories drawing's world
 // turned inside out: the same particles and the same instrument marks,
@@ -101,11 +101,9 @@
   const NEAR = 3.5;            // nothing nearer than this is drawn
   const FAR = 52;              // and nothing further
 
-  // --- THE INJECTORS. Two of them, and both on the LEFT of the window.
+  // --- THE INJECTORS. Two of them, at OPPOSITE CORNERS of the window.
   // Four, one to a corner, fired at each other across the middle and
-  // the result read as a collision rather than as an orbit: two
-  // streams entering from the same side, one above and one below, go
-  // round the same way and fall in behind each other.
+  // the result read as a collision rather than as an orbit.
   // ONE AT THE TOP RIGHT, ONE AT THE BOTTOM LEFT — opposite corners,
   // which is only survivable because a stream is aimed at the ORBIT
   // rather than at the middle: both come in on a tangent and go round
@@ -1243,9 +1241,11 @@
     // either: the nearer half of the ring is meant to pass over the
     // word, and that crossing is the whole of what makes the word sit
     // inside the chamber rather than on top of a picture of it. Opened
-    // it IS clipped, to the menu's box — which is a panel with a
-    // border and a ground of its own, so the edge the particles stop
-    // at is an edge you can see.
+    // it IS clipped — to everything OUTSIDE the menu's box, which is
+    // what the whole-window rectangle plus the box under `evenodd`
+    // below comes to: the box becomes a hole, and nothing near is
+    // drawn inside it. The panel has a border and a ground of its own,
+    // so the edge the particles stop at is an edge you can see.
     paint.save();
     paintFront.save();
     if (taken && opened) {

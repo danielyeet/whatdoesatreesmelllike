@@ -31,6 +31,37 @@ stylesheet, plain browser JS. No build step, no package manager, no local depend
 Three.js r128 comes from a CDN in `index.html` alone, fonts from Google Fonts. Deployed
 via GitHub Pages from the repo root, so the default branch is the live site.
 
+## Every page, and what draws it
+
+Start here. Each page is standalone, loads `nav.js` for the shared menu and cursor, and
+then loads whatever draws *that* page — nothing else. No page script knows about any
+other, and none of them share state (the one exception is the landing page's six layers,
+which talk through five `window` globals; see the table further down).
+
+| page | what it is | scripts it loads beyond `nav.js` |
+|---|---|---|
+| `index.html` | three scroll-snapped **slides**: the title, the italic line, the 3D **node map** | `landing.js`, `node-scene.js`, `paper.js`, `thread.js`, `extras.js` (and Three.js from a CDN — the only page that uses it) |
+| `categories/scent-descriptions.html` | the **contact sheet**: pictures scattered and joined by dated lines, with a second view of the same category — the **register** — behind two buttons | `contact-sheet.js` (the map), `favorites.js` (the register, and the switch between the two) |
+| `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `structure.js` |
+| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVORITES, which opens into a menu | `chamber.js` |
+| `categories/other-1.html`, `other-2.html` | plain **row lists** of works | none |
+| `works/*.html` | individual pieces — two templates and two sandbox pages | none |
+| `contact.html` | a plain page | none |
+
+Five of those page scripts are elaborate, and there is a long section below for each
+drawing: `node-scene.js` (~1,450 lines), `chamber.js` (~1,445), `structure.js` (~1,346),
+and the contact sheet pair under one heading (`contact-sheet.js` ~829, `favorites.js`
+~880). **Read the matching section before editing one of them.** Each records decisions that were arrived at by
+trial and error and specific bugs the owner reported and that were fixed — several of
+them more than once, because the fix was later undone by someone who didn't know why it
+was there. The sections are written to stop that happening again, so a line that says
+"this used to be X and X was wrong" is load-bearing, not history.
+
+Three of the pages replace their own markup with a drawing, and all three hold that
+markup back on the way in with the **`js-coming`** class so the plain version is never
+flashed first — see the glossary entry. All three also leave that plain version working
+when the script is blocked, and there is a test for each.
+
 ## Running it
 
 Serve over HTTP rather than opening files directly — pages use relative asset paths and
@@ -38,12 +69,23 @@ pointer machinery (`document.elementFromPoint`) that misbehaves on `file://`:
 
 ```bash
 python3 -m http.server 8000    # then open http://localhost:8000/
+npm run serve                  # the same thing on port 8123
 ```
 
-There is no build or lint step. When changing `node-scene.js`, `paper.js`, or
-`thread.js`, check the browser console first — the particle systems use a custom shader,
-and a shader that fails to compile takes the whole 3D scene with it, so the map comes up
-blank rather than merely wrong.
+Pick a port that is **not 4321**: that is the one the test suite starts its own server
+on, and a stray server sitting on it makes the whole suite fail (see Tests below).
+
+There is no build or lint step, so nothing catches a mistake before the browser does —
+open the console after any change to a drawing.
+
+`node-scene.js` is the one to be most careful with, and it is the **only** file here
+that uses a WebGL shader (a small program that runs on the graphics card; both of its
+particle systems need one, because the stock Three.js points material cannot give each
+speck its own size and opacity). A shader that fails to compile takes the whole 3D scene
+with it, so the map comes up **blank rather than merely wrong** — and blank looks like a
+loading failure, not like a bug you introduced. The other drawings (`paper.js`,
+`thread.js`, `structure.js`, `chamber.js`, `contact-sheet.js`, `favorites.js`) are plain
+canvas, SVG and DOM with no shader anywhere, so they fail visibly instead.
 
 ## Tests
 
@@ -57,6 +99,21 @@ npm test -- --grep "preview"          # one topic
 Playwright drives a real browser against the repo served over HTTP (the config starts
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
+
+**A clean run is 118 passed, 0 failed, and takes six to seven minutes.** If you get a
+number wildly different from that, check the shape of the failures before believing
+them: **a hundred-odd tests all failing in about 300ms each means the web server is
+down, not that the site is broken.** The config serves on **port 4321** and reuses a
+server already sitting there, so a stray `python3 -m http.server 4321` left over from a
+killed run — or anything else holding that port — poisons every browser test while the
+four browserless `repository.spec.js` checks still pass. Clear it, confirm the port is free, and run
+again. (This has happened; don't spend the time diagnosing it twice.)
+
+Two traps when clearing it: `pkill -f http.server` **matches its own command line** and
+kills the shell running it before it kills anything else — write the pattern as
+`pkill -f "[h]ttp.server"`. And killing a Playwright run does not always take its server
+with it, which is how the stray gets there in the first place, so check with
+`pgrep -af "[h]ttp.server"` afterwards rather than assuming.
 
 The suite runs **fully offline**: `tests/helpers.js` intercepts the Three.js and Google
 Fonts requests and answers them locally, Three.js from the version pinned in
@@ -144,10 +201,14 @@ Two states are easy to forget when reviewing a change:
   `structure.js`, `chamber.js` and `style.css`,
   each degrading to a still version. `nav.js` (the cursor) and `extras.js` do *not*
   currently check it; if you add motion there, add the guard too.
-- **Portrait / narrow viewport** — `resize()` in `node-scene.js` uses a larger `frameH`
-  when `aspect < 1`, deliberately drawing the map smaller so the left and right link
-  nodes stay on screen and tappable. Vertical swipes must keep scrolling the page;
-  only horizontal drags rotate the map.
+- **Portrait / narrow viewport** — `resize()` in `node-scene.js` works the camera's
+  distance out as `Math.max(FRAME_V / halfFov, frameH / (halfFov * aspect))`. In portrait
+  `aspect` is below 1, so dividing by it makes the horizontal term much the larger of the
+  two and pulls the camera well back — which is what draws the map smaller there and
+  keeps the left and right link nodes on screen and tappable. `frameH` itself is **4.6**
+  when `aspect < 1` rather than `FRAME_H`'s 4.9, i.e. slightly *smaller*, which takes a
+  little of that back; don't read it as the thing doing the shrinking. Vertical swipes
+  must keep scrolling the page; only horizontal drags rotate the map.
 
 ## Architecture
 
@@ -179,7 +240,7 @@ globals on `window`:
 |---|---|---|
 | `__p23` | `paper.js` (0–1 scroll progress, slide 2 → 3) | `node-scene.js` (map fade-in), `thread.js` |
 | `__mapField` | `node-scene.js`, per frame (screen position + mass of centre and nodes) | `paper.js`, to bend the grid around the diagram |
-| `__mapReadout` | `node-scene.js`, per frame (node positions/depth, `hubX`/`hubY` in viewport coords, `activeIndex`, `previewOpen`, `collapse`) | `extras.js` (the trace), `paper.js` (freezing grain behind a preview; aiming the collapse) |
+| `__mapReadout` | `node-scene.js`, per frame (node positions/depth, `hubX`/`hubY` in viewport coords, `activeIndex`, `previewOpen`, `collapse`) | `extras.js` (the trace), `paper.js` (freezing grain behind a preview; aiming the collapse), `thread.js` (its `collapse`, and the hub to draw the reforming line from) |
 | `__exit` | `landing.js`, 0→1, only while leaving the map upwards | `node-scene.js`, `paper.js`, `extras.js`, `thread.js` |
 | `__reform` | `landing.js`, 0→1, straight after `__exit` completes | `thread.js` |
 
@@ -276,14 +337,17 @@ or internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.j
 
 ### `node-scene.js` — the 3D map
 
-The one genuinely complex file (~1200 lines). `REAL_NODES` at the top is the intended
-edit surface; everything below is graphics code.
+About 1,450 lines. It was for a long time the only large file here; `chamber.js` (~1,445)
+and `structure.js` (~1,346) have since caught up with it, so "the complicated one" is no
+longer a useful way to refer to it. `REAL_NODES` at the top is the intended edit surface;
+everything below is graphics code.
 
 - **`REAL_NODES`** — the clickable endpoints: `label`, `sub`, `href`, `pos: [x, y, z]`,
-  plus an optional `preview: { description }`. Positions are a Fibonacci sphere. Keep
-  `pos` roughly 3.2–3.7 from the origin, and keep `y` clear of 0 — a node near the
-  equator sweeps across the middle of the screen on every rotation, dragging its label
-  through the centre.
+  plus an optional `preview: { description }`. Positions are a Fibonacci sphere. There
+  are seven of them, standing 3.0–3.5 from the origin; keep a new one in that range, and
+  keep `y` clear of 0 — a node near the equator sweeps across the middle of the screen on
+  every rotation, dragging its label through the centre. (The closest any of the seven
+  comes is |y| = 0.93.)
 
 Everything else is derived, and that is the property to preserve. Each branch is a
 `CatmullRomCurve3` that leaves the hub straight along the line to its own node, then
@@ -649,8 +713,11 @@ Worth knowing before changing any of it (the list has outgrown being counted):
   chamber. It was never needed either. `.chamber-field` is *under* the plate in the page's
   own stacking order, so the word and the menu occlude it by being drawn on top of it —
   letter by letter, not box by box. `.chamber-front` is clipped **only while the menu is
-  open**, to the panel's box, which is a panel with a border and a ground of its own, so
-  the edge the particles stop at is an edge you can see.
+  open**, and to everything *outside* the panel's box rather than to it: the clip path is
+  the whole window plus the box, taken under the `evenodd` rule, so the box becomes a
+  hole and nothing near is drawn inside it. The panel has a border and a ground of its
+  own, so the edge the particles stop at is an edge you can see. (`CLEAR_PAD` is how far
+  past the box that hole reaches.)
 - **What the cursor does is string a WEB between the specks it is near** (`WEB_*`). It is
   drawn on the front canvas, over everything, and it is meant to be *slightly* wrong:
   each link comes and goes on its own clock and is drawn a hair off the two specks it
@@ -1031,7 +1098,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **curtain** | The mask that reveals the wash and the grid going 2 → 3 — a wipe from the top of the page downwards whose left and right edges run ahead of its middle, so the sides fill in first and the middle of the page last. Three mask layers **added** (not intersected): one sweep down the page, and a lobe growing out of each top corner. `CURTAIN_*` in `paper.js`, `setCurtain()`. It is set on those two layers directly, not on `.paper`: the grain, the map and the thread are never masked — they come up on their own opacity ramps. |
 | **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (a shockwave crosses, the map falls into its centre, everything clears to **white**), then `__reform` 0→1 (an ink line draws from the sphere to the top), and only then scrolls. The reforming line stops below the slide-2 sentence, landing on the same point the downward leg leaves from. The sphere left at the end of it does not fade: `node-scene.js` holds `arrival` while `__exit` is set, so it stays solid black and rides the page off the bottom of the screen, and what fades afterwards does so off screen. |
 | **the wake** | Only the specks along a branch now — see **wake / wake speck** below. The paper's arrival going 2 → 3 used to be shaped as a duck's wake (a V trailing back from the middle of the page, `WAKE_HALF_ANGLE`); that was replaced by the top-down wipe described under **curtain**, and neither the V nor `WAKE_HALF_ANGLE` exists in `paper.js` any more. |
-| **the shockwave** | The narrow ring that closes on the centre ahead of the collapse, on its own faster clock (`WAVE_*` in `paper.js`). Distinct from the suction, which pulls everywhere at once. A second ring (`OUTWARD_*`) runs the other way at the same time, shoving the grid outward while everything else pulls in; `OUTWARD_STRENGTH = 0` removes it. |
+| **the shockwave** | The narrow ring that closes on the centre ahead of the collapse, on its own faster clock (`WAVE_*` in `paper.js`). Distinct from the suction, which pulls everywhere at once. A second ring (`OUTWARD_*`) runs the other way at the same time, shoving the grid outward while everything else pulls in. It is **on** — `OUTWARD_STRENGTH` is 58; setting it to 0 is how you would remove it. |
 | **the menu** | One menu for the whole site, built by `nav.js`: the same dark overlay, fading in the same way, on every page and on all three slides of the landing page. It briefly opened three different ways on the landing page (`mode-title` / `mode-side` / `mode-map`, in a `menu-modes.js` since deleted); "uniform" is the state the owner asked for and none of that is in the code any more. |
 | **rank** / **ridge** | One of the copies of the chromatogram trace standing behind the front line, higher up the page and fainter, so the reading recedes like hills. `RIDGE_*` in `extras.js`. |
 | **suction** | The even, proportional inward pull `paper.js` applies to the whole grid during the collapse, on top of the per-node dimples — what makes the grid implode rather than just dimple near the middle. |
@@ -1074,7 +1141,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the field** / **the hatch** | The ruled ground of fine strokes the Favorites view carried before it became the register — its reading was which **way** it lay. Nothing of it is in the code now (no `PITCH`, no `lie`, no `layAt`, no `SWEEP_*`, no `KNOT_*`). If the owner uses the word, they mean that removed treatment. |
 | **the grain** / **the wave** / **the sweep** / **knot** | All of the hatch's answers to the hand, removed with it — see **the field / the hatch** above. |
 | **mound** / **skyline** | The reading the field carried before *that*, when it was a lattice of marks: a rise in its top edge per entry. Nothing of it is in the code either. |
-| **the chamber** | The way `categories/favorites.html` is laid out: two injectors on the left of the window firing streams of particles across it on white, which join an orbit standing round the menu of favourites. `chamber.js`. The theories drawing's world turned inside out. |
+| **the chamber** | The way `categories/favorites.html` is laid out: two injectors at opposite corners of the window — top right and bottom left — firing streams of particles across it on white, which join an orbit standing round the menu of favourites. `chamber.js`. The theories drawing's world turned inside out, and the one page here that spends no accent colour at all. |
 | **injector** | One of the chamber's two sources (`S-01`, `S-02` on the drawing), each at its own depth in the volume. They stand at opposite corners — top right and bottom left — and take turns being the quick one. |
 | **the orbit** (chamber) | What the chamber's streams join: a tilted circle of particles — a **lens**, pressed flat onto its own plane — standing round the word, with its own path drawn faintly through it. It is the only arrangement the page has: opening the menu widens it, closing the menu narrows it. Not to be confused with **the ring / the orbit** below, which is a removed Favorites treatment. |
 | **the entry** | How a stream joins the orbit: aimed not at the middle but along its own **tangent** to the orbit, carried forward along the way the orbit runs (`entryFor`, `ENTRY_GRAZE`), so it comes in at a slant already going the right way. |
@@ -1095,6 +1162,61 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter` and a `data-date`. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
+
+## Where things stand
+
+The site is finished and live in the sense that every page works and is deployed; what
+is unfinished is the *look* of the three drawn category pages, and that is what the
+owner has been iterating on. Everything below is the state of that conversation, so a
+fresh reader does not have to infer it.
+
+**How the owner works, and what they expect.** They describe an effect in their own
+words rather than in code, often with a photo, and then refine it over several rounds
+— the first version of anything is a starting point, not a spec. Two habits follow from
+that and are worth matching:
+
+- **When they ask for something gone, it comes out of the code, not switched off.**
+  `structure.js` has no `SCAN_*`, `chamber.js` no `FRAG_*`, `MARK_*` or `EDGE`, and
+  `favorites.js` no `PITCH` or `layAt`, because each was asked for and then removed
+  outright rather than left switched off. (Watch the names: `node-scene.js` has a live
+  `CORR_PITCH`, which is unrelated to the register's removed `PITCH`.) The exceptions are the few things
+  deliberately *dialled to zero with the machinery intact* and documented as such
+  (`SWAY = 0`, `CLOUD_COUNT = 0`) — those are the owner's to bring back by raising a
+  number. When something is removed, the glossary keeps an entry for the word saying it
+  is gone, because the owner still uses the word for the thing they remember.
+- **They report bugs precisely and notice small things.** "There are two different
+  objects making up the arms", "it blinks the whole page before it starts", "the
+  percentage ticks up while I'm not touching it" — all real, all fixed, all now written
+  down in the relevant section as things not to reintroduce. Take a vague-sounding
+  complaint seriously; it has been specific every time.
+
+**What the owner has settled and what they are still moving.** The landing page, the
+contact sheet map and the row lists have not been touched in several rounds and can be
+treated as settled. The three drawn category pages are live subjects: the **structure**
+(theories) most recently had its travel made fully reversible, an opening sequence, a
+click-to-set-out for each station and its scan removed; the **register** (the contact
+sheet's Favorites view) was redesigned from scratch to its present squares-and-glitch
+treatment; and the **chamber** (favorites) has had the most rounds of anything here —
+four injectors to two, a rectangle-on-the-borders open state replaced by one widening
+orbit, its reaction moved from cool blue to brass to ranging marks to the present web of
+lines, and all accent colour taken off it.
+
+**Two things left open, either of which the owner may come back to:**
+
+- **"Shrink the horizontal bars that select it"** was read as the ruled lines *between*
+  the chamber menu's rows, which now draw back from the right under the pointer. It
+  could instead have meant the **leaders** — the long horizontal lines that run out from
+  a pointed-at row across the window. The owner was told which reading was taken and
+  that the other is a small change; if they raise it again, that is what they mean.
+- **The accent is still spent on the site's shared chrome.** `nav.js`'s Menu trigger and
+  the menu overlay's links go `--brass` on hover, and the global focus ring is brass, on
+  every page including the chamber. The owner asked for "the orange accents" gone from
+  the favorites page and the chamber's own block was cleared; the shared chrome was left
+  because changing it changes the chrome on every page of the site. They know this.
+
+**What has never been asked for and should not be invented:** the placeholder content.
+`Your Name`, `you@example.com`, the lorem ipsum on slide 2 and the `contact.html` social
+links are all still placeholders on purpose — they are the author's to write.
 
 ## Maintaining this file
 
