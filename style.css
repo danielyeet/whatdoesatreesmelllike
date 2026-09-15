@@ -1317,7 +1317,19 @@ body.chambered .page-content > .category-lede {
 /* Before chamber.js has taken over — see the note in the page's head. */
 html.js-coming body.favorites-page .page-content { visibility: hidden; }
 
+/* THE STEP BETWEEN THE TWO STATES — one curve and one length, and
+   everything that moves when the menu opens is eased on them: the
+   lettering here, and the orbit itself in chamber.js, which solves
+   this same bezier rather than easing on one of its own. They used to
+   be two different curves over the same 1.7s — the drawing on a
+   symmetrical S and the writing on the site's `--menu-ease`, which
+   sets off quicker and has a longer tail — so the two arrived at
+   noticeably different moments and the step read as several things
+   happening at once rather than as one. Change either number here and
+   change OPEN_MS / STEP_EASE in chamber.js with it. */
 .chamber {
+  --chamber-step: cubic-bezier(0.45, 0, 0.45, 1);
+  --chamber-step-ms: 1.9s;
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -1407,9 +1419,11 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
      settle in stages. One property, one duration, and it is smooth
      because there is nothing left to fall out of step with.
 
-     That duration is the orbit's own step out (OPEN_MS in chamber.js),
-     so the lettering and the particles arrive together. */
-  transition: font-size 1.7s var(--menu-ease);
+     That duration and that curve are the orbit's own step out
+     (OPEN_MS and STEP_EASE in chamber.js), so the lettering and the
+     particles set off together, travel together and arrive together.
+     They used to share only the duration. */
+  transition: font-size var(--chamber-step-ms) var(--chamber-step);
 }
 .chamber-word-line {
   display: flex;
@@ -1504,7 +1518,8 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   height: 0.34em;
   border: 1px solid var(--ink);
   flex: none;
-  transition: background 0.35s var(--menu-ease), border-color 1.7s var(--menu-ease);
+  transition: background 0.35s var(--menu-ease),
+              border-color var(--chamber-step-ms) var(--chamber-step);
 }
 /* The trailing letter-space would otherwise push the lettering off
    centre against the two marks. */
@@ -1533,11 +1548,27 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
      every line of writing in it with it: the lettering was drawn at
      the wrong height and then corrected, which is the opposite of
      minimal however smoothly it is eased. */
-  animation: chamber-open 1.15s var(--menu-ease) 0.55s both;
+  animation: chamber-open 1.25s var(--chamber-step) 0.65s both;
 }
 @keyframes chamber-open {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: none; }
+}
+/* AND IT LEAVES ON THE SAME STEP IT ARRIVED ON. It used to be taken
+   off the page in the frame the word was pressed, leaving the orbit to
+   spend the next two seconds coming back in on its own — the one half
+   of this page's only movement that was a cut rather than a movement.
+   It goes back into the word instead, over the first part of the step,
+   and chamber.js takes it off the page at the end of THAT rather than
+   at the end of the step — `SHUT_MS` there is this duration, and must
+   stay it. Nothing in it answers the hand on the way out. */
+.chamber-plate.shutting .chamber-panel {
+  pointer-events: none;
+  animation: chamber-shut 1.1s var(--chamber-step) both;
+}
+@keyframes chamber-shut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-8px); }
 }
 
 .chamber-head {

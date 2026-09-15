@@ -13,7 +13,7 @@
 // front of it and one behind, which is what gives the word a place in
 // the volume. OPEN: the orbit widens until it stands clear round the
 // menu and never stops turning; pointing at a row makes the stretch of
-// orbit level with it swell outward and calls it out with a leader.
+// orbit level with it swell outward, and that is the whole of it.
 //
 // Two injectors, at opposite corners — top right and bottom left.
 // Four, one to every corner, read as a collision rather than as an
@@ -29,7 +29,9 @@
 // behind it unbroken with its near rim drawn over it, that opening the
 // menu widens that same orbit
 // rather than replacing it, that it keeps turning either way, that
-// pointing at a row swells the orbit level with it and calls it out,
+// pointing at a row swells the orbit level with it and does nothing
+// else — the leaders that used to be run out across the page are gone
+// —
 // that the cursor strings a web between the specks it is near, that it
 // holds still when animation is turned off, and
 // that the plain list comes back when the script is blocked.
@@ -46,8 +48,8 @@ const PAGE = "/categories/favorites.html";
 
     Ink, and not colour: nothing on this page is ever tinted, so there
     is nothing to count by hue. What it does when it is answering you
-    is draw — a leader out to the window, a swell in the orbit, a web
-    strung between whatever the cursor is near. */
+    is draw — a swell in the orbit, a web strung between whatever the
+    cursor is near. */
 const inkOn = (page, which, box) =>
   page.evaluate(([pick, x, y, w, h]) => {
     const canvas = document.querySelector(pick);
@@ -365,7 +367,7 @@ const reachOfOrbit = (page, top, deep) =>
     return { left: Math.round(mid - left), right: Math.round(right - mid) };
   }, [top, deep]);
 
-test("pointing at a row swells the orbit level with it, and calls it out",
+test("pointing at a row swells the orbit level with it, and nothing else",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
@@ -378,13 +380,17 @@ test("pointing at a row swells the orbit level with it, and calls it out",
   const rows = page.locator(".chamber-level:not([hidden]) .chamber-chapter");
   const row = await rows.nth(await rows.count() - 1).boundingBox();
   const mid = row.y + row.height / 2;
-  // Open ground between the menu and the orbit, level with that row:
-  // nothing stands here, so a leader run out to the side is the only
-  // thing that can put anything in it.
+  // A band level with that row, out where the orbit's right-hand rim
+  // runs: where the row is being read off, the orbit stands further
+  // out than it does anywhere else.
+  const band = [mid - 12, 46];
+  // And the open ground between the menu and the orbit, level with the
+  // row, where NOTHING may be drawn. A leader used to be run out from
+  // each end of the row to the sides of the window — a pair of
+  // full-width horizontal lines across the page every time the hand
+  // passed over a row — and the owner asked for them gone. The orbit
+  // answers, and nothing else does.
   const gap = [190, mid - 22, 220, 44];
-  // And a band just below the leader's own line, clear of it and of
-  // its tick, where the orbit's right-hand rim runs.
-  const band = [mid + 20, 50];
 
   const restGap = await inkSeen(page, gap);
   const restReach = await reachOfOrbit(page, ...band);
@@ -394,16 +400,18 @@ test("pointing at a row swells the orbit level with it, and calls it out",
   const readGap = await inkSeen(page, gap);
   const readReach = await reachOfOrbit(page, ...band);
 
-  expect(readGap.ink, `it should be called out: ${restGap.ink} \u2192 ${readGap.ink}`)
-    .toBeGreaterThan(restGap.ink + 8000);
   expect(readReach.right,
-    `and the orbit level with it swollen: ${restReach.right} \u2192 ${readReach.right}`)
-    .toBeGreaterThan(restReach.right + 40);
+    `the orbit level with it should swell: ${restReach.right} \u2192 ${readReach.right}`)
+    .toBeGreaterThan(restReach.right + 30);
+  expect(readGap.ink - restGap.ink,
+    `and nothing run out across the page: ${restGap.ink} \u2192 ${readGap.ink}`)
+    .toBeLessThan(4000);
 
   await page.mouse.move(4, 4);
-  await page.waitForTimeout(2000);
-  expect((await inkSeen(page, gap)).ink, "and let go again")
-    .toBeLessThan(readGap.ink / 2);
+  await page.waitForTimeout(2200);
+  const goneReach = await reachOfOrbit(page, ...band);
+  expect(goneReach.right, `and let go again: ${readReach.right} \u2192 ${goneReach.right}`)
+    .toBeLessThan(readReach.right - 20);
 });
 
 test("the orbit keeps turning, open and closed alike", async ({ page }) => {

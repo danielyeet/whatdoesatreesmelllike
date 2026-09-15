@@ -160,8 +160,8 @@ at a time, the two injectors standing at opposite corners with nothing fired fro
 other two, the orbit standing round the
 word and running on behind it unbroken with its near rim drawn over it, opening the menu
 widening that same orbit rather than replacing it and never crossing the menu, the orbit
-turning on open and closed alike, pointing at a row swelling the orbit level with it and
-calling it out and drawing that row's own rule back, the word saying what pressing it does
+turning on open and closed alike, pointing at a row swelling the orbit level with it with
+nothing run out across the page and drawing that row's own rule back, the word saying what pressing it does
 and saying the
 other thing once it is open, the cursor stringing a web between the specks it is near and
 letting go again, no part of it ever being drawn in the site's accent colour, it
@@ -564,7 +564,9 @@ Two kinds of assembly stand in that frame, and the difference is the point:
 The main menu's **Favorites** category is a **chamber**: two injectors, at opposite
 corners of the window — top right and bottom left — firing a fine stream of particles at
 a slant across it on white. What the streams join is an **orbit** — tilted well off square to the window, so it
-reads as a lens rather than as a circle drawn on the page. It is the theories drawing's
+reads as a lens rather than as a circle drawn on the page, and a **disc** rather than a
+ring: every particle stands a little way in or out of the orbit's own line (`DISC`), so
+what gathers is a band with a thickness to it. It is the theories drawing's
 world turned inside out — the same particles and the same instrument marks, printed as ink
 on white instead of white on near-black — except that this one spends no accent at all:
 it is ink on white and nothing else.
@@ -592,9 +594,39 @@ the borders of the window and held there as a rectangle. That put two different 
 one page with a costly step between them, and the step was the most awkward moment on it.
 One thing that grows is smooth in both directions for the same reason — there is no
 `EDGE`, no seat and no border in this file any more. The step itself is a **timed ramp**
-eased flat at both ends (`OPEN_MS`, 1.7s), not an exponential chase: a chase starts at its
-fastest and creeps at the end. The word's and the menu's own CSS transitions are set to
-the same length, and the menu waits out the first third of it, so the lettering has begun
+eased flat at both ends (`OPEN_MS`, 1.9s), not an exponential chase: a chase starts at its
+fastest and creeps at the end.
+
+Three things make that step one movement rather than several, and each of them was once
+the thing that made it read as a lurch:
+
+- **The drawing and the writing travel on ONE curve.** `--chamber-step` and
+  `--chamber-step-ms` in `style.css` are the whole of it, and `chamber.js` solves that
+  same cubic bezier itself (`easing()`, `STEP_EASE`) rather than easing on one of its
+  own. They used to share only the *length*: the orbit on a symmetrical S and the word on
+  the site's `--menu-ease`, which sets off quicker and has a longer tail, so over the same
+  1.7s the two set off at different speeds and arrived at different moments. Change either
+  number in the stylesheet and change `OPEN_MS` / `STEP_EASE` with it. The curve is
+  deliberately gentle: the steeper standard curves cover half the step in a quarter of its
+  length, which on a movement this big is a surge and then a wait.
+- **What the orbit is holding is CARRIED out with it, not dragged.** As the orbit widens,
+  every particle it has hold of is moved out by however far the orbit itself moved that
+  frame (`grew`, `carried` in `move()`), in proportion to how firmly it is held. Leaving
+  that to the radial spring instead is what the step used to be, and a spring stiff enough
+  to catch a particle arriving at speed is far too stiff to move one gently: measured, the
+  in-and-out movement of the specks standing in the orbit peaked at 22 times its resting
+  value as the menu opened, and their overall speed — which is what the length of their
+  tails is drawn from — rose by a third, so the whole ring combed outward in long streaks
+  and then fell back. Carried, the peak is about six times resting and the overall speed
+  does not change at all.
+- **The menu leaves on the same step it arrives on.** It used to be taken off the page in
+  the one frame the word was pressed, leaving the orbit to spend the next two seconds
+  coming back in after it — half of the page's only movement was a cut. It fades and rises
+  back into the word instead (`shutting` on the plate, `chamber-shut` in the stylesheet)
+  and `chamber.js` takes it off the page once the step is over; while it is going it is
+  `inert`, so there is nothing to press or tab into in something on its way out.
+
+The menu waits out the first third of the step on the way in, so the lettering has begun
 coming down before the panel appears under it.
 
 Worth knowing before changing any of it (the list has outgrown being counted):
@@ -603,11 +635,23 @@ Worth knowing before changing any of it (the list has outgrown being counted):
   by the middle (`PULL`, softened close in by `SOFT`); within `CATCH_MUL` times the
   orbit's own radius the chamber takes hold and does four things at once, and it needs all
   four. It turns it the way the orbit runs, up to the speed that would carry it round and
-  no further; it holds it to the orbit's radius; it takes the *radial* part of its travel
-  out of it and never the going-round part, which is the difference between an orbit
-  settling and everything grinding to a halt; and it presses it flat onto the plane.
-  Writing the curves by hand instead gives a pattern, and a pattern is something you can
-  see repeat.
+  no further; it holds it to **its own radius in the band**, not to one line; it takes the
+  *radial* part of its travel out of it and never the going-round part, which is the
+  difference between an orbit settling and everything grinding to a halt; and it presses
+  it flat onto its own leaf of the plane. Writing the curves by hand instead gives a
+  pattern, and a pattern is something you can see repeat.
+- **It is a DISC, not a ring** (`DISC`, `DISC_LIFT`). Every particle is given its own
+  place across the band when it is sent — a fraction of whatever radius the orbit stands
+  at, in and out, plus a little off the plane — so the orbit has a width and a thickness.
+  Held to one exact radius instead, everything the chamber caught piled onto the same
+  hairline and what gathered was too dense to read as particles at all: a drawn ellipse
+  with a crust on it, which is what the owner asked to be given some leeway from. A
+  *fraction* and not a flat distance, because the orbit is five units wide closed and a
+  dozen open and a band that reads as a band closed is a hairline again open. Each place
+  is rolled from **two** throws rather than one, so the band is crowded along the orbit's
+  own line and thins towards its edges; spread evenly it has two hard rims and reads as
+  two rings. The band is what `fitOrbit` measures with, too — its outer edge is what must
+  fit the window and its inner edge what must stand clear of the menu.
 - **How firmly it takes hold comes on over the OUTER FRACTION of the capture band**
   (`CATCH_GRIP`), not across the whole of it, and that is what keeps particles from
   going astray. Spread across the whole band the hold came out at about half strength
@@ -649,7 +693,16 @@ Worth knowing before changing any of it (the list has outgrown being counted):
   further from the middle than the orbit is, and going round out there is far slower;
   given the orbit's own sideways speed that far out, a stream was thrown off the side of
   the window and never arrived at all. Flat numbers instead had one stream drop straight
-  down the hole while the other sailed past it.
+  down the hole while the other sailed past it. **And both are kept under the speed it
+  would take to leave**, which is root-two times that same going-round speed: taken
+  together they used to come to more than it, so a particle the orbit did not catch on its
+  way past was not on a long way round — it was gone, and what that looked like was a wide
+  band of specks travelling from one corner of the window clean off the far edge of it.
+  That was reported ("particles that go sideways and into nowhere"). Under that speed
+  there is nowhere else to go: a particle the orbit misses swings round and comes back at
+  it. `LIFE` is the other half of the same reading — nearly all of a life is spent going
+  round and only the first few seconds of it travelling, so it sets how full the orbit is
+  against how much is still out in the streams.
 - **Which way the orbit runs is defined once** (`runsAt`), and both the launch and the
   catch ask it. Written out twice they came out pointing opposite ways, and a stream
   entering *against* the orbit is the whole of what "chaotic" looked like.
@@ -662,21 +715,26 @@ Worth knowing before changing any of it (the list has outgrown being counted):
 - **The swirl axis decides how the lens is tipped** (`SWIRL`). A ring turning about an
   axis pointing straight at you is a circle; about an upright one it is a smear seen
   edge-on. This is well off both — a lens with a near side and a far side.
-- **The orbit's own path is drawn**, faintly, and ticked round every thirtieth of a turn.
+- **The orbit's own path is drawn**, faintly, and ticked round every thirtieth of a turn —
+  and the ticks are ruled *across the band* rather than either side of the middle line, so
+  they say how wide the disc is as well as where it runs.
   It is what makes the drawing legible *as an orbit* in a still frame and at the moment a
   stream is arriving, which is exactly when it is hardest to see. Like everything else
   here it is split at the middle of the chamber — the near half on `.chamber-front`, over
   the writing, the far half behind — so the path itself says which way round the lens is
   tipped.
-- **The word is set wider than the orbit is, and that is the whole reason for its size**
-  — so `RING` here and the word's `font-size` in `style.css` are one decision and neither
-  moves alone. (Both came down together when the owner asked for a smaller, more pressable
-  title.)
-  The orbit is centred on the word, so no smaller word could ever be crossed by it — an
-  ellipse centred on something only crosses it if one of its semi-axes is shorter than the
-  thing is. Set a little wider, the orbit's left and right rims fall **across the ends of
-  the lettering**, and because one of those rims is nearer than the middle of the chamber
-  and the other further, one is drawn in front of the word and the other passes behind it.
+- **The word is set about as wide as the orbit is, and that is the whole reason for its
+  size** — so `RING` here and the word's `font-size` in `style.css` are one decision and
+  neither moves far alone. (Both came down together when the owner asked for a smaller,
+  more pressable title; `RING` has since gone back up a little, from 4.7 to 5.0, when the
+  owner asked for the orbit expanded, and the word was left where it was because the band
+  now straddles the ends of the lettering rather than one line crossing them.)
+  The orbit is centred on the word, so no much smaller word could ever be crossed by it —
+  an ellipse centred on something only crosses it if one of its semi-axes is shorter than
+  the thing is. Set to about the same width, the orbit's left and right rims fall **across
+  the ends of the lettering**, and because one of those rims is nearer than the middle of
+  the chamber and the other further, one is drawn in front of the word and the other
+  passes behind it.
   That is why there are **two canvases**: everything nearer than `MID` on `.chamber-front`,
   over the writing, everything further on `.chamber-field`, under it. The word is sized
   against `vmin` because the orbit is, and capped against `vw` as well, or on a phone the
@@ -738,9 +796,15 @@ Worth knowing before changing any of it (the list has outgrown being counted):
   how long a tail it trails, and how fast a stretch of the orbit runs.
 - **Pointing at a row READS it off against the orbit** (`READ_SPAN`, `READ_SWELL`), and
   **draws the row's own rule back**. The stretch of orbit level with that row is held a
-  little wider, so the orbit swells where the row is, and a leader is drawn from each end
-  of the row out to the window with a tick where it lands. Nothing leaves the orbit — it
-  is a reading, not a reaching. On the page's side, the rule under that row draws back
+  little wider, so the orbit swells where the row is, and that is the whole of what the
+  drawing does about it. Nothing leaves the orbit — it is a reading, not a reaching.
+  **There used to be a leader as well**, run from each end of the row out to the sides of
+  the window with a tick where it landed: a pair of full-width horizontal lines drawn
+  across the page every time the hand passed over a row. The owner asked for them gone
+  ("remove the selection lines … the horizontal line indicating your option") and they
+  were removed outright rather than switched off — there is no leader anywhere in this
+  file, and `readRow` now reads only the row's height off the page, since where it began
+  and ended was wanted by nothing else. On the page's side, the rule under that row draws back
   from the right (to `scaleX(0.3)`, and further while it is pressed); it is a layer of
   the row's own rather than its `border-bottom`, because a border cannot be shortened
   without making the row itself narrower. That replaced an indent, where the whole row
@@ -1148,7 +1212,9 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the word** | `FAVORITES`, standing in the middle of the chamber's orbit: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the orbit so the orbit's rims cross the ends of the lettering, one in front and one behind — so its size and `RING` are one decision. Bracketed by **crop marks**, which run out towards each other as the hand comes on to it, with the **cue** under it. |
 | **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
 | **the hold** / **the frame** | What the chamber used to do when the menu was opened: every particle took a seat on the border of the window and the whole rectangle travelled round it. Removed — the orbit simply widens now. Nothing of it is in the code (no `EDGE`, no seat, no `FLOW`). |
-| **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it swells outward, a leader runs from each end of the row out to the window, and the rule under the row draws back from the right. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
+| **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it swells outward, and the rule under the row draws back from the right. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
+| **leader** (chamber) | The line that used to be run from each end of a pointed-at row out to the side of the window, with a tick where it landed — the "selection lines" the owner asked to have taken off the menu. Gone from `chamber.js` entirely; the orbit's swell is the whole of the read now. (Not to be confused with the short leader still drawn at each **injector**, along the way its own stream leaves.) |
+| **the disc** | What the chamber's orbit is made of: a band with a width and a thickness rather than a single line of specks. Each particle stands at its own radius within `DISC` of the orbit either way, and a little off its plane (`DISC_LIFT`). |
 | **the web** | What the chamber's cursor does: the specks near it are joined up with fine lines, each coming and going on its own clock and drawn a hair off the two it joins, so the net is always a slightly different net. `WEB_*` in `chamber.js`. |
 | **ranged** | What the chamber briefly did to a particle it was answering with: a fine hollow square drawn round it. Removed with the rest of the reaction-by-emphasis — there is no `MARK_*` in the file. If the owner uses the word, they mean that removed treatment; what is there now is **the web**. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
@@ -1201,13 +1267,16 @@ four injectors to two, a rectangle-on-the-borders open state replaced by one wid
 orbit, its reaction moved from cool blue to brass to ranging marks to the present web of
 lines, and all accent colour taken off it.
 
-**Two things left open, either of which the owner may come back to:**
+**That earlier ambiguity is now settled.** "Shrink the horizontal bars that select it"
+was read at the time as the ruled lines *between* the chamber menu's rows, and the
+**leaders** — the long horizontal lines run out from a pointed-at row across the window —
+were noted as the other possible reading. The owner has since asked for "the selection
+lines … the horizontal line indicating your option" to be removed, which is the leaders,
+and they are gone. The rule under the row still draws back, which they have not
+questioned.
 
-- **"Shrink the horizontal bars that select it"** was read as the ruled lines *between*
-  the chamber menu's rows, which now draw back from the right under the pointer. It
-  could instead have meant the **leaders** — the long horizontal lines that run out from
-  a pointed-at row across the window. The owner was told which reading was taken and
-  that the other is a small change; if they raise it again, that is what they mean.
+**One thing left open, which the owner may come back to:**
+
 - **The accent is still spent on the site's shared chrome.** `nav.js`'s Menu trigger and
   the menu overlay's links go `--brass` on hover, and the global focus ring is brass, on
   every page including the chamber. The owner asked for "the orange accents" gone from

@@ -28,10 +28,11 @@
 //   OPEN     pressing the word widens the orbit until it stands clear
 //            round the menu, which opens out of the word as it goes.
 //            It never stops turning. Pointing at a row makes the
-//            stretch of orbit level with it take the cool accent and
-//            swell outward, with a leader run out to each side — a
-//            reading of that row against the orbit, not a reaching for
-//            it.
+//            stretch of orbit level with it swell outward — a reading
+//            of that row against the orbit, not a reaching for it, and
+//            the whole of what the drawing does about it. There used
+//            to be a leader run out to each side of the window as
+//            well; the owner asked for those gone.
 //
 // The open state used to be something else entirely: the particles
 // were thrown out to the borders of the window and held there as a
@@ -41,14 +42,23 @@
 // reason, and there is no `EDGE`, no seat and no border in this file
 // any more.
 //
-// Six things are worth knowing before changing any of it:
+// A few things are worth knowing before changing any of it:
 //
 //   It is a real fall, not a path. Every particle is thrown at the
 //   orbit and pulled in by the middle; the chamber takes hold of it
 //   only once it is near. Writing the curves by hand instead gives a
-//   pattern, and a pattern is something you can see repeat.
+//   pattern, and a pattern is something you can see repeat. Neither
+//   launch speed is ever enough to LEAVE, so a particle the orbit
+//   misses comes back at it instead of crossing the window and going
+//   out of it for good.
 //
-//   A stream is aimed AT THE ORBIT, not at the middle (`ENTRY_LEAD`).
+//   What it holds is a DISC and not a ring: each particle stands at
+//   its own radius within `DISC` of the orbit's own line, and a little
+//   off its plane, so the orbit has a width and a thickness. Held to
+//   one exact radius they all pile onto the same hairline, which is
+//   too dense to read as particles at all.
+//
+//   A stream is aimed AT THE ORBIT, not at the middle (`ENTRY_GRAZE`).
 //   Where the injector stands round the orbit is carried forward along
 //   the way the orbit runs, and the stream is fired at there — so it
 //   comes in at a slant and arrives already going the way the orbit
@@ -56,13 +66,15 @@
 //   had to be turned through most of a right angle to join, which is
 //   what read as chaos.
 //
-//   Both injectors are on the SAME SIDE. Four, one to a corner, fired
-//   at each other across the middle; two entering from one side, one
-//   above and one below, go round the same way and fall in behind each
-//   other. They are placed by working back from the point of the
-//   window they are meant to sit at, at their own depths, so they stay
-//   put at any window size — and they take turns being the quick one
-//   (`PACE`), so neither is always the fast one.
+//   The two injectors stand at OPPOSITE CORNERS — top right and
+//   bottom left. Four, one to every corner, fired at each other across
+//   the middle and read as a collision; two survive being opposite
+//   only because a stream is aimed at the orbit rather than at the
+//   middle, so both come in on a tangent and go round the same way and
+//   fall in behind each other. They are placed by working back from
+//   the point of the window they are meant to sit at, at their own
+//   depths, so they stay put at any window size — and they take turns
+//   being the quick one (`PACE`), so neither is always the fast one.
 //
 //   What it catches is pressed flat onto the orbit's own plane (FLAT).
 //   Holding a particle at the orbit's radius alone gives a shell and
@@ -75,6 +87,13 @@
 //
 //   The cursor is a hand in the volume, not a cursor on a picture: it
 //   is put at each particle's own depth before it pushes.
+//
+//   The step between the two states is ONE MOVEMENT. The drawing and
+//   the writing are eased on one curve of one length, written in
+//   `style.css` as `--chamber-step` and solved here (`STEP_EASE`);
+//   what the orbit is holding is CARRIED out with it rather than
+//   dragged out by the spring; and the menu goes back into the word on
+//   the same step rather than being taken off the page in one frame.
 //
 // WITHOUT THIS FILE the page is the plain list of favourites every
 // other category uses. The script puts `chambered` on <body> and takes
@@ -121,7 +140,7 @@
     { at: [0.94, 0.09], z: 30 },
     { at: [0.05, 0.93], z: 36 },
   ];
-  const PER_STREAM = 340;      // particles in the air from each of them
+  const PER_STREAM = 400;      // particles in the air from each of them
   // They take turns being the quick one rather than one always running
   // faster than the other: each injector's speed breathes on its own
   // slow clock, and the two clocks are deliberately out of step.
@@ -159,9 +178,19 @@
   // is, and going round out there is far slower; given the orbit's own
   // sideways speed that far out, a stream was simply thrown off the
   // side of the window and never arrived at all.
-  const FALL = [1.25, 1.55];   // how hard it is sent at the orbit
-  const SWING = [0.55, 0.75];  // and how much sideways it leaves with
-  const CATCH_MUL = 1.9;       // how near the orbit the chamber takes hold
+  // AND BOTH ARE KEPT UNDER THE SPEED IT WOULD TAKE TO LEAVE, which
+  // is what stops a stream sailing past the orbit and off across the
+  // window into nothing. Getting away from the middle for good takes
+  // root-two times the speed of going round at the same distance, and
+  // the two of these together used to come to more than that: a
+  // particle that was not caught on its way past was not on a long
+  // way round, it was gone, and what that looked like was a wide band
+  // of specks travelling from one corner of the window to the far
+  // edge and out of it. Under that speed there is nowhere else to go:
+  // a particle the orbit misses swings round and comes back at it.
+  const FALL = [0.95, 1.15];   // how hard it is sent at the orbit
+  const SWING = [0.45, 0.62];  // and how much sideways it leaves with
+  const CATCH_MUL = 2.2;       // how near the orbit the chamber takes hold
   const CATCH_KEEP = 0.92;     // but never nearer the injectors than this much
                                // of the way to them — see `takes` in move()
   // HOW WIDE THE GRIP IS, as a FRACTION of the capture band: the
@@ -189,8 +218,26 @@
   // both — a lens, tipped away from you, with a near side and a far
   // side.
   const SWIRL = [0.2, 0.86, 0.46];
-  const RING = 4.7;            // the orbit, closed
+  const RING = 5.0;            // the orbit, closed — where the MIDDLE of the band stands
   const RING_K = 40;           // how firmly a particle is held to it
+  // HOW MUCH LEEWAY A PARTICLE HAS FROM THE ORBIT'S OWN LINE, in and
+  // out, as a fraction of whatever radius the orbit stands at — so it
+  // is a DISC with a thickness to it and not a wire. Held to one exact
+  // radius instead, every speck the chamber caught piled onto the same
+  // hairline and what gathered was too dense to read as particles at
+  // all: a drawn ellipse with a crust on it.
+  //
+  // A fraction and not a flat distance, because the orbit is five
+  // units wide closed and a dozen open, and a band that reads as a
+  // band closed is a hairline again once the menu is open.
+  //
+  // Each particle's own place in the band is rolled when it is sent,
+  // and rolled from TWO throws rather than one, so the band is
+  // crowded along the orbit's own line and thins towards its edges —
+  // spread evenly instead, the disc has two hard rims and reads as
+  // two rings.
+  const DISC = 0.14;           // how far in and out of the orbit a particle may stand
+  const DISC_LIFT = 0.05;      // and how far off its plane, so the disc has a thickness
   const SETTLE = 4.6;          // and how quickly the fall is taken out of it
   // HOW THIN THE LENS IS. Holding a particle at the orbit's radius
   // alone gives a shell and not a lens — a particle caught while
@@ -204,7 +251,12 @@
   const FLAT_V = 3.8;          // and how quickly its drift along the axis goes
   const DRAG = 0.05;           // a little drag everywhere, so nothing runs away
   const MAX_V = 15;            // nothing travels faster than this
-  const LIFE = [9, 17];        // seconds in the air before it is sent again
+  // AND HOW LONG IT LIVES. Most of a life is spent going round and
+  // only the first few seconds of it travelling, so this is really
+  // how full the orbit is against how much is still in the streams:
+  // at nine seconds a quarter of everything the page had was in the
+  // air between a corner and the orbit at any moment.
+  const LIFE = [11, 19];       // seconds in the air before it is sent again
   // AND HOW LONG IT IS HELD AT THE INJECTOR before it sets off again,
   // which is what keeps the streams steady rather than a procession of
   // waves. Without it a particle's cycle is exactly its own life, so
@@ -233,7 +285,30 @@
   // end. Flat at both ends there is no moment you can point at where
   // it starts or where it stops, and it can simply be told how long to
   // take.
-  const OPEN_MS = 1700;        // how long the step between the two states takes
+  //
+  // THIS LENGTH AND THAT CURVE ARE ALSO THE STYLESHEET'S. The word's
+  // font-size and the menu's own arrival and leaving are written
+  // against `--chamber-step-ms` and `--chamber-step` in `style.css`,
+  // and `STEP_EASE` below is that same bezier solved here. Change one
+  // and change the other, or the drawing and the writing set off at
+  // different speeds and arrive at different moments — which is what
+  // they used to do, and no amount of tuning either on its own made
+  // that read as one movement.
+  //
+  // A little longer than it was (1.7s), because a movement this big
+  // reads as smoother taken at a walk — and because the menu now goes
+  // out on the same step rather than being taken off the page in one
+  // frame.
+  const OPEN_MS = 1900;        // how long the step between the two states takes
+  // AND HOW LONG THE MENU ITSELF TAKES TO GO, which is less: it is
+  // back inside the word well before the orbit has finished narrowing.
+  // It is taken off the page at the end of that rather than at the end
+  // of the step, and it has to be, because the room kept clear for it
+  // goes with it — left until the end, the orbit would by then have
+  // come in far enough to have specks standing inside that room, and
+  // they would all appear in the one frame it was dropped. This must
+  // stay the length of `chamber-shut` in `style.css`.
+  const SHUT_MS = 1100;
   const OPEN_CLEAR = 46;       // how far outside the writing the orbit stands
   const OPEN_FILL = 0.96;      // how much of the window it is allowed to fill
   const OPEN_MOST = 22;        // and how wide it is ever allowed to grow
@@ -271,10 +346,14 @@
   // It used to CINCH: the sides left the border and leant in towards
   // the row. That read as the drawing being pulled out of shape. What
   // it does now is READ the row off against the orbit — the stretch of
-  // orbit level with it swells outward, and is called out with a
-  // leader to each side. Nothing leaves the orbit. (On the page's own
-  // side of it, the rule under that row draws back from the right;
-  // that is in `style.css`.)
+  // orbit level with it swells outward, and nothing else happens.
+  // Nothing leaves the orbit. (On the page's own side of it, the rule
+  // under that row draws back from the right; that is in `style.css`.)
+  //
+  // It used to be called out with a LEADER as well — a line run from
+  // each end of the row out to the side of the window with a tick
+  // where it landed. The owner asked for those gone, so they are gone
+  // rather than switched off: the swell is the reading now.
   const READ_SPAN = 150;       // how much of the orbit is read off, in pixels
   const READ_SWELL = 1.05;     // and how far that stretch swells, in units
 
@@ -564,10 +643,55 @@
   // How wide the orbit grows when the menu is open. Worked out from
   // the menu's own box in clearing(), not set here.
   let openRing = RING * 1.9;
+  // And where it stood last frame, so that what it is holding can be
+  // carried out with it as it widens rather than dragged — see
+  // `carried` in move().
+  let wasOrbit = RING;
   const now = () =>
     (window.performance && window.performance.now ? window.performance.now() : Date.now());
-  /** Eased flat at both ends, the same curve the paper's arrival uses. */
-  const smoother = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  /** THE CURVE THE STEP IS EASED ON — and the very one the stylesheet
+      eases the lettering and the menu on, solved here so that the
+      particles travel on it too.
+
+      They used to be eased on two different curves of the same length:
+      the drawing on a symmetrical S and the writing on the site's own
+      `--menu-ease`, which is quicker off the mark and has a long tail.
+      Over the same 1.7 seconds that is two things setting off at
+      different speeds and arriving at different moments, and no amount
+      of tuning either one on its own could make that read as one
+      movement. So there is one curve now, written once in CSS as
+      `--chamber-step` and solved here from the same four numbers: flat
+      at both ends, with a long settle, so there is no moment you can
+      point at where the step starts or where it stops.
+
+      Cubic beziers are given as x against t, so what x is worth has to
+      be solved for. Newton from x itself gets there in a few goes
+      over a curve this gentle. */
+  function easing(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    const alongX = (t) => ((ax * t + bx) * t + cx) * t;
+    const slopeX = (t) => (3 * ax * t + 2 * bx) * t + cx;
+    return function (x) {
+      if (x <= 0) return 0;
+      if (x >= 1) return 1;
+      let t = x;
+      for (let n = 0; n < 8; n++) {
+        const off = alongX(t) - x;
+        if (Math.abs(off) < 1e-6) break;
+        const d = slopeX(t);
+        if (Math.abs(d) < 1e-6) break;
+        t -= off / d;
+      }
+      return ((ay * t + by) * t + cy) * t;
+    };
+  }
+  // Gentle on purpose. The steeper standard curves cover half the
+  // step in a quarter of its length, which on a movement this big and
+  // this slow is a surge and then a wait; this one is nearly even
+  // through the middle, with the settle a little longer than the
+  // setting off.
+  const STEP_EASE = easing(0.45, 0, 0.45, 1);   // = --chamber-step in style.css
 
   function showLevel() {
     chapterList.hidden = open >= 0;
@@ -588,22 +712,66 @@
     hotRow = null;
   }
 
+  // The menu is not taken off the page the moment it is closed — it
+  // fades back into the word first, and goes at the end of that (see
+  // `setOpen` and `SHUT_MS`). This is that wait, kept so that pressing
+  // the word again half way through simply turns the step round rather
+  // than leaving a panel to disappear on its own a moment later.
+  let shutting = 0;
+
   function setOpen(next, andFocus) {
     if (opened === next) return;
     opened = next;
     word.setAttribute("aria-expanded", String(opened));
     cue.textContent = opened ? "Collapse" : "Expand";
-    panel.hidden = !opened;
     plate.classList.toggle("open", opened);
+    if (shutting) { window.clearTimeout(shutting); shutting = 0; }
     stepFrom = spread;
     stepTo = opened ? 1 : 0;
     stepAt = now();
+    hotRow = null;
     if (!opened) {
-      open = -1;
-      hotRow = null;
-      showLevel();
+      // THE MENU LEAVES ON THE SAME STEP THE ORBIT NARROWS ON. It used
+      // to be taken off the page in the one frame the word was
+      // pressed, so the writing went instantly and the orbit then
+      // spent nearly two seconds coming back in after it — the one
+      // half of this page's only movement that was a cut. It fades and
+      // rises back into the word instead, and is taken off the page at
+      // the end of THAT (`SHUT_MS`) — while the orbit is still
+      // narrowing, and while it is still wide enough that dropping the
+      // room kept clear for the menu uncovers nothing.
+      //
+      // It answers nothing while it is going: inert to the hand and to
+      // the keyboard alike, so there is nothing to press or tab into
+      // in something that is on its way out.
+      //
+      // With animation turned off there is nothing to watch it go, so
+      // it simply goes: held on the page for a moment it would only be
+      // sitting in a room the orbit has already narrowed inside of.
+      const off = () => {
+        shutting = 0;
+        plate.classList.remove("shutting");
+        panel.hidden = true;
+        // And the column is put back to the chapters only once it is
+        // out of sight: stepping back a level is something to watch
+        // when it is asked for, not something to catch sight of in a
+        // panel that is leaving.
+        open = -1;
+        showLevel();
+      };
+      panel.inert = true;
+      panel.setAttribute("aria-hidden", "true");
+      if (REDUCE_MOTION) off();
+      else {
+        plate.classList.add("shutting");
+        shutting = window.setTimeout(off, SHUT_MS);
+      }
       if (andFocus) word.focus();
     } else {
+      plate.classList.remove("shutting");
+      panel.inert = false;
+      panel.removeAttribute("aria-hidden");
+      panel.hidden = false;
       showLevel();
       if (andFocus) {
         const first = column.querySelector(".chamber-level:not([hidden]) .chamber-row");
@@ -696,6 +864,7 @@
         from: s,
         x: 0, y: 0, z: MID, vx: 0, vy: 0, vz: 0,
         px: 0, py: 0, pk: 0,
+        band: 0, lift: 0,
         age: 0,
         life: between(LIFE),
         size: 0.55 + random() * random() * 1.5,
@@ -766,6 +935,13 @@
     speck.age = 0;
     speck.life = between(LIFE);
     speck.wait = between(HOLD);
+    // And where in the band it will stand once the chamber has hold
+    // of it — its own, so the disc is a crowd of particles each going
+    // round at its own radius rather than a queue along one line. Two
+    // throws and not one: that crowds them along the orbit's own line
+    // and thins them towards the edges of the band.
+    speck.band = random() + random() - 1;
+    speck.lift = (random() + random() - 1) * DISC_LIFT;
   }
 
   specks.forEach(launch);
@@ -818,9 +994,14 @@
       a laptop. It is only asked while the menu actually has a box: the
       panel is taken off the page the moment the menu is closed, and an
       orbit sized against a box of nothing would snap inward halfway
-      through closing. */
+      through closing. (The panel stays on the page a little longer
+      than the menu is open — it fades back into the word first — and
+      it is its box that is asked for the whole of that time.) */
   function clearing() {
-    const box = (opened ? panel : word).getBoundingClientRect();
+    // Whatever is standing in the middle: the menu while it is on the
+    // page — which is a little longer than the menu is OPEN, since it
+    // fades back into the word first — and the word itself otherwise.
+    const box = (panel.hidden ? word : panel).getBoundingClientRect();
     taken = {
       left: box.left - CLEAR_PAD,
       top: box.top - CLEAR_PAD,
@@ -888,11 +1069,13 @@
     let want = RING * 1.2;
     const from = [coreOpen[0], coreOpen[1], MID];
     for (let pass = 0; pass < 3; pass++) {
-      // The largest that still fits the window...
+      // The largest that still fits the window — measured at the
+      // OUTER edge of the band, since that is what actually runs off
+      // the screen, and the clearance below at the inner one.
       let low = RING * 1.1, high = OPEN_MOST;
       for (let n = 0; n < 16; n++) {
         const mid = (low + high) / 2;
-        if (reachOf(mid, from).fills > OPEN_FILL) high = mid; else low = mid;
+        if (reachOf(mid * (1 + DISC), from).fills > OPEN_FILL) high = mid; else low = mid;
       }
       want = low;
 
@@ -900,12 +1083,12 @@
       // the smallest that is. Clearing the writing wins: an orbit a
       // little off the edge of the window still reads as an orbit, one
       // crossing the menu does not.
-      const held = reachOf(want, from);
+      const held = reachOf(want * (1 - DISC), from);
       if (held.wide < needW || held.tall < needH) {
         low = want; high = OPEN_MOST;
         for (let n = 0; n < 16; n++) {
           const mid = (low + high) / 2;
-          const got = reachOf(mid, from);
+          const got = reachOf(mid * (1 - DISC), from);
           if (got.wide < needW || got.tall < needH) low = mid; else high = mid;
         }
         want = high;
@@ -934,7 +1117,10 @@
   function readRow() {
     if (!hotRow || spread < 0.5) { drawTo = null; return; }
     const box = hotRow.getBoundingClientRect();
-    drawTo = { left: box.left, right: box.right, y: (box.top + box.bottom) / 2 };
+    // Its height on the window, and nothing else: where the row
+    // begins and ends was only ever wanted by the leaders that used to
+    // be run out from it, and those are gone.
+    drawTo = { y: (box.top + box.bottom) / 2 };
   }
 
   function move(dt) {
@@ -951,6 +1137,12 @@
     // into and no step between two of them, which is what makes both
     // directions smooth for the same reason.
     const orbit = orbitNow();
+    // HOW FAR THE ORBIT ITSELF MOVED THIS FRAME. Whatever it is
+    // holding is carried out with it by that much, and the radial
+    // spring is left with nothing to do but the fine work — see
+    // `carried` below.
+    const grew = orbit - wasOrbit;
+    wasOrbit = orbit;
     // How near the orbit the chamber takes hold — and never so far out
     // that it reaches the injectors themselves. The orbit widens a
     // long way when the menu opens, and with it the distance it takes
@@ -992,12 +1184,12 @@
       // orbit the chamber takes hold and does four things at once, and
       // it needs all four. It turns it the way the orbit runs, up to
       // the speed that would carry it round and no further; it holds
-      // it to the orbit's radius, so what gathers stands AROUND the
-      // writing rather than piling up behind it; it takes the fall out
-      // of it — the radial part of its travel only, never the
-      // going-round part, which is the difference between an orbit
-      // settling and everything grinding to a halt; and it presses it
-      // flat onto the orbit's own plane.
+      // it to its own radius in the band, so what gathers stands
+      // AROUND the writing rather than piling up behind it; it takes
+      // the fall out of it — the radial part of its travel only,
+      // never the going-round part, which is the difference between an
+      // orbit settling and everything grinding to a halt; and it
+      // presses it flat onto its own leaf of the orbit's plane.
       if (r < takes) {
         // HOW FIRMLY IT IS HELD: nothing at the outer edge of the
         // band, coming on to full over `CATCH_GRIP` and staying there
@@ -1029,7 +1221,28 @@
         speck.vy += ty * turn;
         speck.vz += tz * turn;
 
-        const want = orbit + READ_SWELL * read;
+        // ITS OWN PLACE IN THE BAND, not the orbit's own line: every
+        // particle the chamber catches stands a little way in or out
+        // of it, which is what makes the orbit a disc with a
+        // thickness rather than a wire with a crust on it.
+        const mine = 1 + speck.band * DISC;
+        const want = orbit * mine + READ_SWELL * read;
+
+        // CARRIED OUT WITH IT while the orbit is changing size, and
+        // not dragged. A spring stiff enough to catch a particle
+        // arriving at speed is far too stiff to move one gently, so
+        // leaving the widening to it threw the whole disc outward in
+        // long streaks and then let it fall back — the one moment on
+        // this page that was a step rather than a movement. The orbit
+        // takes what it is already holding with it instead, and the
+        // spring is left doing what it is for.
+        if (grew) {
+          const carried = grew * mine * hold;
+          speck.x -= ux * carried;
+          speck.y -= uy * carried;
+          speck.z -= uz * carried;
+        }
+
         const off = (r - want) * RING_K * hold * dt;
         speck.vx += ux * off;
         speck.vy += uy * off;
@@ -1041,9 +1254,14 @@
         speck.vy -= uy * fall * ease;
         speck.vz -= uz * fall * ease;
 
-        // And flattened onto the orbit's own plane — see FLAT.
+        // And flattened onto the orbit's own plane — see FLAT — or
+        // rather onto its own leaf of it: a particle is pressed
+        // towards where IT stands across the disc (`lift`) and not
+        // towards the one plane, so the disc has a thickness to it
+        // from the side as well as a width from above. Everything
+        // still lands on the same lens; it is a lens with a body.
         const along = (speck.x - core[0]) * AXIS[0] + (speck.y - core[1]) * AXIS[1] +
-                      (speck.z - core[2]) * AXIS[2];
+                      (speck.z - core[2]) * AXIS[2] - speck.lift * orbit;
         const press = FLAT * hold * dt;
         speck.vx -= AXIS[0] * along * press;
         speck.vy -= AXIS[1] * along * press;
@@ -1132,15 +1350,17 @@
     if (ink) ink.stroke();
 
     // Ticked round it every thirtieth of a turn, the way the rest of
-    // the site rules something it is measuring.
+    // the site rules something it is measuring — and ruled ACROSS the
+    // band, from its inner edge to its outer one, so the ticks say how
+    // wide the disc is rather than merely where its middle line runs.
     paint.lineWidth = 1;
     paint.strokeStyle = rgba(STEEL, PATH_INK * 0.85);
     paint.beginPath();
     for (let n = 0; n < 30; n++) {
       const at = (n / 30) * Math.PI * 2;
-      onOrbit(at, orbit * 0.975, spot);
+      onOrbit(at, orbit * (1 - DISC * 0.7), spot);
       const a = to(spot[0], spot[1], spot[2]);
-      onOrbit(at, orbit * 1.025, spot);
+      onOrbit(at, orbit * (1 + DISC * 0.7), spot);
       const b = to(spot[0], spot[1], spot[2]);
       if (!a || !b) continue;
       paint.moveTo(a.x, a.y);
@@ -1148,25 +1368,14 @@
     }
     paint.stroke();
 
-    // THE ROW BEING POINTED AT, called out against the orbit: a leader
-    // from each end of it running out to the window, with a tick where
-    // it lands. The stretch of orbit level with it has already taken
-    // the cool accent and swelled — this is what says which row it is
-    // reading.
-    if (drawTo && spread > 0.4) {
-      const lit = 0.55 * spread;
-      paint.lineWidth = 1;
-      paint.strokeStyle = rgba(INK, lit);
-      const y = Math.round(drawTo.y) + 0.5;
-      [[drawTo.left - 18, 28], [drawTo.right + 18, width - 28]].forEach((run) => {
-        paint.beginPath();
-        paint.moveTo(run[0], y);
-        paint.lineTo(run[1], y);
-        paint.moveTo(run[1], y - 6);
-        paint.lineTo(run[1], y + 6);
-        paint.stroke();
-      });
-    }
+    // THE ROW BEING POINTED AT is answered by the ORBIT ALONE — the
+    // stretch of it level with the row swells outward, and that is the
+    // whole of it. There used to be a leader run from each end of the
+    // row out to the sides of the window as well, with a tick where it
+    // landed: a pair of full-width horizontal lines drawn across the
+    // page every time the hand passed over a row. The owner asked for
+    // them gone, and they are gone rather than switched off — a
+    // reading against the orbit is what this page answers with.
 
     // The injectors: a registration square at each, and a leader along
     // the way its own stream leaves — aimed at the place on the orbit
@@ -1248,7 +1457,7 @@
     // so the edge the particles stop at is an edge you can see.
     paint.save();
     paintFront.save();
-    if (taken && opened) {
+    if (taken && !panel.hidden) {
       paintFront.beginPath();
       paintFront.rect(0, 0, width, height);
       paintFront.rect(taken.left, taken.top,
@@ -1407,7 +1616,7 @@
     } else {
       if (stepAt >= 0) {
         const gone = Math.min(1, (now - stepAt) / OPEN_MS);
-        spread = stepFrom + (stepTo - stepFrom) * smoother(gone);
+        spread = stepFrom + (stepTo - stepFrom) * STEP_EASE(gone);
         if (gone >= 1) { spread = stepTo; stepAt = -1; }
       }
       clock += dt;
