@@ -149,12 +149,10 @@
   // --- the moving parts
   const CARRIAGE_FROM = 58;    // where the travelling gantry starts back
   const CARRIAGE_SPEED = 13;   // and how fast it comes at you, units a second
-  const CARRIAGE_EVERY = 10;   // and how many seconds from one pass to the next
+  const CARRIAGE_EVERY = 6.7;  // and how many seconds from one pass to the next
   const CARRIAGE_FIRST = 2.6;  // nothing runs until the drawing has set itself up
   const TRAVERSE_EVERY = 2.3;  // seconds between things running across the frame
   const TRAVERSES = 4;         // how many can be in the air at once
-  const SCAN_EVERY = 9;        // seconds between one pass of the scan
-  const SCAN_FOR = 0.3;        // and how much of that it takes to cross
 
   // The palette is a drawing office, not a sky: white and near-white
   // on gray-black, with one cool blue kept back for the things you
@@ -1099,23 +1097,6 @@
     }
   }
 
-  /** A line passing down the whole window every so often, the way a
-      screen showing a reading refreshes it. It is deliberately almost
-      too faint to see: it is meant to be noticed the second time. */
-  function drawScan() {
-    const beat = (clock % SCAN_EVERY) / SCAN_EVERY;
-    if (beat > SCAN_FOR) return;
-    const y = (beat / SCAN_FOR) * (height + 180) - 90;
-    const band = paint.createLinearGradient(0, y - 80, 0, y + 12);
-    band.addColorStop(0, rgba(COOL, 0));
-    band.addColorStop(0.82, rgba(COOL, 0.045));
-    band.addColorStop(1, rgba(COOL, 0));
-    paint.fillStyle = band;
-    paint.fillRect(0, y - 80, width, 92);
-    paint.fillStyle = rgba(WHITE, 0.05);
-    paint.fillRect(0, y, width, 1);
-  }
-
   /** The drafting marks: a sight in each corner of the screen and a
       crosshair dead centre, where you are going. They belong to the
       window rather than to the frame, so they never move. */
@@ -1183,7 +1164,6 @@
       paint.fillStyle = grain;
       paint.fillRect(0, 0, width, height);
     }
-    if (!REDUCE_MOTION) drawScan();
     drawSights();
 
     // How far along the road you have come — read off the SCROLL, not

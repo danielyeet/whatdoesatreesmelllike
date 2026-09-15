@@ -8,27 +8,91 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../style.css">
+<script>
+  /* The page's own contents are held back for the moment between the
+     first paint and this page's script taking over. Without it the
+     browser shows the no-script version first — a plain list of
+     favourites — and then the chamber replaces it, which is a flash of
+     a different page in front of it.
+
+     It undoes itself if that script never arrives, so the no-script
+     version of this page is still exactly what you get without one. */
+  document.documentElement.classList.add("js-coming");
+  var ready = function () {
+    document.documentElement.classList.remove("js-coming");
+  };
+  window.addEventListener("load", ready);
+  setTimeout(ready, 4000);
+</script>
 </head>
-<!-- See categories/scent-descriptions.html for the fully worked example
-     of this same template, with real work-row entries filled in. -->
-<body>
+<!--
+  This category is a CHAMBER: four injectors, one at each corner of the
+  window, firing a fine stream of particles inward on white. The streams
+  fall towards the middle, are swung round by what is there, and either
+  settle into an orbit or break up and scatter — the theories drawing's
+  world turned inside out, ink on white instead of white on near-black.
+  The menu of favourites stands in the middle of it, and the streams
+  close on the writing from every corner. chamber.js is the whole of it.
+
+  IT IS THE SAME MENU the contact sheet's Favorites view carries — the
+  chapters, their counts, and every favourite with its number, its date
+  and its name — in a different shape: one narrow column down the middle
+  rather than two columns down the sides.
+
+  TO ADD A FAVOURITE: copy one whole <a class="gallery-entry"> block
+  below, give it a name, a date and a chapter, and point its href at the
+  piece. Nothing in the script changes — the chapters are whatever the
+  data-chapter values are, in the order they first appear, and the strip
+  across the top of the menu is made from them.
+
+  WITHOUT JAVASCRIPT this page is that same plain list of favourites,
+  which is the right fallback: every one of them is there and every one
+  is a link.
+
+  THE ENTRIES BELOW ARE PLACEHOLDERS, and deliberately the same ones the
+  contact sheet's Favorites view carries, so the two menus read alike
+  until there is real work to put in them.
+-->
+<body class="favorites-page">
 
 <div class="page-content">
   <h1>Favorites</h1>
   <p class="category-lede">Things I like. No other criteria than that.</p>
 
   <div class="work-list">
-    <!--
-      No pieces here yet. Add one the same way as in
-      categories/scent-descriptions.html: an
-      <a class="work-row" href="../works/your-piece.html"> block
-      per piece, containing a work-thumb, a work-row-title, and a
-      work-row-meta line.
-    -->
+
+    <a class="gallery-entry" data-chapter="Chapter 1" data-date="14.03.2024"
+       href="../works/example-gallery-work.html">First favourite</a>
+
+    <a class="gallery-entry" data-chapter="Chapter 1" data-date="02.11.2023"
+       href="../works/example-article-work.html">Second favourite</a>
+
+    <a class="gallery-entry" data-chapter="Chapter 1" data-date="27.06.2023"
+       href="../works/example-gallery-work.html">Third favourite</a>
+
+    <a class="gallery-entry" data-chapter="Chapter 2" data-date="09.01.2024"
+       href="../works/example-article-work.html">Fourth favourite</a>
+
+    <a class="gallery-entry" data-chapter="Chapter 2" data-date="18.08.2022"
+       href="../works/example-gallery-work.html">Fifth favourite</a>
+
+    <a class="gallery-entry" data-chapter="Chapter 2" data-date="30.04.2025"
+       href="../works/example-article-work.html">Sixth favourite</a>
+
+    <a class="gallery-entry" data-chapter="Chapter 3" data-date="05.12.2021"
+       href="../works/example-gallery-work.html">Seventh favourite</a>
+
+    <a class="gallery-entry" data-chapter="Chapter 3" data-date="22.09.2024"
+       href="../works/example-article-work.html">Eighth favourite</a>
+
+    <a class="gallery-entry" data-chapter="Chapter 3" data-date="11.05.2020"
+       href="../works/example-gallery-work.html">Ninth favourite</a>
+
   </div>
 </div>
 
 <script>window.SITE_ROOT = "../";</script>
 <script src="../nav.js"></script>
+<script src="../chamber.js"></script>
 </body>
 </html>

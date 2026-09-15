@@ -633,33 +633,48 @@ test("without its script the page is still the plain grid of pictures",
 });
 
 test("nothing on the sheet answers the pointer until it has settled", async ({ page }) => {
+  // Recorded by the page itself on every frame rather than the test
+  // trying to photograph the right moment: the flick takes about three
+  // seconds from the moment the script runs, and on a busy machine the
+  // page can be most of the way through it before a test could look.
+  await page.addInitScript(() => {
+    window.__answered = { tipped: 0, peeked: 0, frames: 0 };
+    const watch = () => {
+      const sheet = document.getElementById("sheet");
+      if (sheet && sheet.classList.contains("scripted") &&
+          !sheet.classList.contains("settled")) {
+        window.__answered.frames++;
+        if (sheet.classList.contains("peeking")) window.__answered.peeked++;
+        [...document.querySelectorAll(".sheet-frame")].forEach((frame) => {
+          const turn = frame.style.getPropertyValue("--turn-y");
+          if (turn && parseFloat(turn) !== 0) window.__answered.tipped++;
+        });
+      }
+      if (performance.now() < 8000) requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  });
+
+  // The pointer is put where the middle window will be BEFORE the page
+  // is opened, so it is over a picture for the whole of the flick.
+  await page.mouse.move(640, 300);
   await page.goto(SHEET);
+  await waitForSheet(page);
 
-  // Mid-flick: every picture takes its turn in the middle window, so
-  // tipping whatever the cursor happens to be over is nonsense.
-  await page.waitForSelector(".sheet-frame.is-plate", { state: "visible" });
-  const box = await page.locator(".sheet-frame.is-plate").boundingBox();
-  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3);
-  await page.waitForTimeout(400);
+  const seen = await page.evaluate(() => window.__answered);
+  expect(seen.frames, "the flick should have been watched").toBeGreaterThan(10);
+  expect(seen.tipped, "nothing should be tipped while the page is still drawing itself")
+    .toBe(0);
+  expect(seen.peeked, "and nothing held").toBe(0);
 
-  const flicking = await page.evaluate(() => ({
-    settled: document.getElementById("sheet").classList.contains("settled"),
-    peeking: document.getElementById("sheet").classList.contains("peeking"),
-    // Leaving a picture still resets it to nothing, which is fine —
-    // what must not happen is any of them being turned.
-    turns: [...document.querySelectorAll(".sheet-frame")]
-      .map((f) => f.style.getPropertyValue("--turn-y"))
-      .filter((turn) => turn && parseFloat(turn) !== 0),
-    faint: [...document.querySelectorAll(".sheet-frame")]
-      .filter((f) => parseFloat(getComputedStyle(f).opacity) < 0.9 &&
-                     f.classList.contains("landed")).length,
-  }));
-  expect(flicking.settled, "the flick should still be running").toBe(false);
-  expect(flicking.peeking, "nothing should be held").toBe(false);
-  expect(flicking.turns, "and nothing tipped").toEqual([]);
+  // Non-vacuous: that really is a place where a picture ends up, so
+  // the pointer was over one the whole time.
+  const plate = await page.locator(".sheet-frame.is-plate").boundingBox();
+  expect(640 > plate.x && 640 < plate.x + plate.width &&
+         300 > plate.y && 300 < plate.y + plate.height,
+    `the pointer at 640,300 should be over the plate at ${JSON.stringify(plate)}`).toBe(true);
 
   // Once the page has drawn itself, the same pointer does work.
-  await waitForSheet(page);
   const frame = page.locator(".sheet-frame").nth(2);
   await frame.scrollIntoViewIfNeeded();
   const on = await frame.boundingBox();

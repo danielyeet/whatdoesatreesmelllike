@@ -423,7 +423,12 @@ test("a station is the thing you click, and nothing else on the drawing is",
 test("it is drawn white on near-black, not blue on a night sky", async ({ page }) => {
   await page.goto(PAGE);
   await waitForStructure(page);
-  await page.waitForTimeout(700);
+  // Once it has finished setting itself up, rather than a moment after
+  // it started: the marks that carry the cool accent are the last
+  // things to come up, and on a busy machine a fixed wait can land
+  // before them.
+  await page.waitForSelector(".structure.lit", { timeout: 15000 });
+  await page.waitForTimeout(400);
 
   // A full-bleed dark region has to carry `dark-surface`, or nav.js's
   // cursor stays dark over it and is invisible.

@@ -1266,6 +1266,179 @@ body.sheet-scripted .gallery-entry { display: none; }
 }
 
 /* ==================================================================
+   THE CHAMBER — categories/favorites.html
+   Four injectors, one at each corner of the window, firing a fine
+   stream of particles inward on white; the menu of favourites stands
+   in the middle of it. It is the theories drawing's world turned
+   inside out — same particles, same instrument marks, same one cool
+   accent for the things you can open — printed as ink on white.
+   Everything here is written under `body.chambered`, which chamber.js
+   adds; without it the page is the plain list of favourites, and
+   stays that way.
+   ================================================================== */
+body.chambered { background: var(--bg); }
+body.chambered .page-content { padding: 0; margin: 0; max-width: none; }
+/* The list is still in the page for anything reading rather than
+   looking — it is the menu's own index — but it is not drawn. */
+body.chambered .work-list,
+body.chambered .page-content > h1,
+body.chambered .page-content > .category-lede {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Before chamber.js has taken over — see the note in the page's head. */
+html.js-coming body.favorites-page .page-content { visibility: hidden; }
+
+.chamber {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--bg);
+}
+.chamber-field { display: block; width: 100%; height: 100%; }
+
+/* THE MENU. The same things the contact sheet's Favorites menu
+   carries — the chapters, their counts, and every favourite with its
+   number, its date and its name — in one narrow column down the middle
+   instead of two columns down the sides, so the four streams close on
+   the writing from every corner. Nothing is drawn behind it: chamber.js
+   measures this box and drops the particles inside it. */
+.chamber-plate {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(460px, calc(100% - 96px));
+  max-height: calc(100vh - 150px);
+  overflow: auto;
+  padding: 26px 30px 30px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  z-index: 2;
+  animation: chamber-in 0.9s var(--menu-ease) both;
+}
+@keyframes chamber-in {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 10px)); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.chamber-rail {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+}
+.chamber-tab {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  transition: color 0.3s var(--menu-ease);
+  position: relative;
+}
+.chamber-tab:hover, .chamber-tab.open { color: var(--ink); }
+/* The open one is underlined on the rule itself, the way the rest of
+   the site marks what is selected. */
+.chamber-tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0;
+  height: 1px;
+  background: var(--brass);
+  transition: width 0.45s var(--menu-ease);
+}
+.chamber-tab.open::after { width: 100%; }
+/* The same hollow square the rest of the site marks a point with. */
+.chamber-reg { width: 8px; height: 8px; border: 1px solid currentColor; flex: none; }
+.chamber-tab-name { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chamber-tab.open .chamber-reg { background: var(--brass); border-color: var(--brass); }
+.chamber-tab-count { color: var(--muted); }
+
+.chamber-spec {
+  margin: 14px 0 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.chamber-panel[hidden] { display: none; }
+.chamber-panel { animation: chamber-open 0.45s var(--menu-ease) both; }
+@keyframes chamber-open {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+/* A favourite is a stack, not a row: its number and date above, its
+   name under them — the contact sheet's rows set the other way up. */
+.chamber-item {
+  position: relative;
+  display: block;
+  padding: 16px 22px 16px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--ink);
+  transition: padding-left 0.3s var(--menu-ease);
+}
+.chamber-item:hover, .chamber-item:focus-visible { padding-left: 8px; }
+.chamber-file {
+  display: flex;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.chamber-no { color: var(--brass); }
+.chamber-item:hover .chamber-date { color: var(--ink); }
+.chamber-name {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--sans);
+  font-size: clamp(16px, 1.5vw, 19px);
+  letter-spacing: -0.01em;
+}
+.chamber-go {
+  position: absolute;
+  right: 0;
+  bottom: 16px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
+}
+.chamber-item:hover .chamber-go,
+.chamber-item:focus-visible .chamber-go { opacity: 1; transform: none; color: var(--brass); }
+
+@media (max-width: 720px) {
+  .chamber-plate { width: calc(100% - 44px); padding: 20px 20px 24px; }
+  .chamber-rail { flex-wrap: wrap; gap: 4px 14px; }
+  .chamber-tab { flex: 1 1 40%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chamber-plate, .chamber-panel { animation-duration: 0.01s; }
+}
+
+/* ==================================================================
    THE STRUCTURE — categories/theories.html
    A technical drawing in three dimensions that you scroll *into*: a
    frame of ribs and rails running away into the depth, a ruled spine

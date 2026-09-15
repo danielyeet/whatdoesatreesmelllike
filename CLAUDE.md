@@ -95,6 +95,12 @@ cursor and settling again afterwards, the way it lies being a reading of the cha
 have open with no two chapters reading the same, pointing at a chapter laying the field
 its way and letting it back when the pointer goes, pointing at a favourite knotting the
 field beside it, and the whole view fitting one screen;
+and the chamber — the menu being grown from that page's own favourites and carrying
+what the sheet's Favorites menu carries (number, date, name and link), one chapter open at
+a time with the strip working from the keyboard, an injector firing in each corner, what
+it catches standing in a ring round the writing with nothing drawn behind it, the streams
+answering the cursor and letting go again, it standing still under
+`prefers-reduced-motion`, and the plain list coming back when the script is blocked;
 and the structure — the drawing setting itself up when the page opens without ever
 showing the plain list it replaces, it being grown from the page's own rows with one
 station per theory,
@@ -125,7 +131,8 @@ they look right.
 Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
-  `node-scene.js`, `contact-sheet.js`, `favorites.js`, `structure.js` and `style.css`,
+  `node-scene.js`, `contact-sheet.js`, `favorites.js`, `structure.js`, `chamber.js` and
+  `style.css`,
   each degrading to a still version. `nav.js` (the cursor) and `extras.js` do *not*
   currently check it; if you add motion there, add the guard too.
 - **Portrait / narrow viewport** — `resize()` in `node-scene.js` uses a larger `frameH`
@@ -458,15 +465,19 @@ Two kinds of assembly stand in that frame, and the difference is the point:
   something happening in it while you are standing still: the specks wobble about their
   own places, provisional lines come and go, beads run along the lines of whatever station
   you are among, a **carriage** runs down the frame at you and lights each rib as it
-  passes, **traverses** streak across it, and a faint scan passes down the window every
-  nine seconds. Under `prefers-reduced-motion` none of it moves: the clock stops, so the
-  wobble, the beads, the ranging squares, the traverses and the scan are all gone and the
-  carriage simply stands where it is — held still rather than switched off.
+  passes, and **traverses** streak across it. Under `prefers-reduced-motion` none of it
+  moves: the clock stops, so the wobble, the beads, the ranging squares and the traverses
+  are all gone and the carriage simply stands where it is — held still rather than
+  switched off.
   The carriage makes **one pass every `CARRIAGE_EVERY` seconds** and is not drawn at all
-  in between (the owner asked for it far less often than the four-and-a-bit seconds it
-  used to run at). Its place is worked out from the clock rather than stepped along frame
-  by frame, so the rest between passes is one number to change; `CARRIAGE_FIRST` keeps it
-  away until the drawing has finished setting itself up.
+  in between. Its place is worked out from the clock rather than stepped along frame by
+  frame, so the rest between passes is one number to change; `CARRIAGE_FIRST` keeps it
+  away until the drawing has finished setting itself up. The owner has tuned this twice:
+  from the four-and-a-bit seconds it originally ran at, out to ten, and then back in by
+  half again to its present rate.
+  A faint **scan** used to pass down the whole window every nine seconds. The owner asked
+  for it gone; it was removed outright rather than left switched off, so there is no
+  `SCAN_*` and no `drawScan()` any more.
 - **Glows are stamped, not generated.** One radial gradient is drawn once into a small
   offscreen canvas per colour and then `drawImage`d wherever a glow is needed. Asking for
   a fresh `createRadialGradient` per speck per frame is the one thing that will not hold
@@ -474,6 +485,58 @@ Two kinds of assembly stand in that frame, and the difference is the point:
 - **A grain tile is laid over the whole drawing.** It is not texture for its own sake: a
   wide, shallow vignette over a near-black ground comes out in visible steps, and
   something uneven laid over it is what breaks them.
+
+### The chamber (`chamber.js`) — categories/favorites.html
+
+The main menu's **Favorites** category is a **chamber**: four injectors, one at each
+corner of the window, firing a fine stream of particles inward on white. The streams fall
+towards the middle, are caught there, and settle into a **ring** standing round the menu
+of favourites, which sits in the middle of it. It is the theories drawing's world turned
+inside out — the same particles, the same instrument marks, the same one cool accent kept
+for what answers you — printed as ink on white instead of white on near-black.
+
+Not to be confused with the **Favorites view on the contact sheet page**
+(`favorites.js`), which is a different page. The two carry the *same kind of menu* — the
+chapters, their counts, and every favourite with its number, its date and its name — in
+deliberately different shapes: the sheet's is two columns down the sides, this one is a
+single narrow column down the middle, so the four streams close on the writing from every
+corner.
+
+- **It is a real fall, not a path.** Every particle is shot at the middle and pulled
+  towards it, and four forces do the rest — and each does one legible thing:
+  `PULL` draws it in; `CATCH` is the distance at which the chamber takes hold, so the
+  streams read as straight until they arrive rather than spiralling all the way from the
+  corners; inside that it is turned the way the chamber turns (up to the speed that would
+  carry it round, and no further), held to the ring at `RING`, and has the *radial* part
+  of its travel damped away — never the going-round part, which is the difference between
+  an orbit settling and everything grinding to a halt. Writing the curves by hand instead
+  gives a pattern, and a pattern is something you can see repeat.
+- **The swirl axis points nearly at you** (`SWIRL`). A ring turning about an upright axis
+  is seen edge-on from the camera and reads as a smear across the middle; tilted a little
+  off straight it comes out as an ellipse, which is the only way a ring says which way up
+  it is.
+- **The corners are the corners of the WINDOW.** Each injector is placed by working back
+  from the screen corner it is meant to sit in *at its own depth*, so all four stay in
+  their corners at any window size while standing at four different depths in the volume
+  — which is what stops the streams reading as a flat X. Both launch speeds are fractions
+  of what it would take to go round in a circle at that injector's own distance, not flat
+  numbers: with flat numbers one stream dropped straight down the hole while another
+  sailed past it.
+- **Nothing is drawn where the writing stands.** The menu's box is measured off the page
+  and the drawing is clipped to outside it, so the ring passes *behind* the writing. It
+  has to be a clip rather than a test on each particle's own place: a speck just clear of
+  the menu can still trail its tail across it, and the ranging circles cross it too.
+- **The cursor is a hand in the volume, not a cursor on a picture**: it is put at each
+  particle's own depth before it pushes, so what it shoves aside is a real hole in a real
+  stream, and what it is holding turns to the cool accent.
+- **Some of them break up** (`FRAGILE`, `FRAG_AT`) rather than joining the ring. The
+  radius that happens at is deliberately *outside* the ring: bursting at the very middle
+  is bursting behind the menu, where nothing can be seen.
+- Two things keep it cheap: the specks are grouped into `BANDS` weights and each band is
+  one `stroke()` and one `fill()`, and there is no gradient anywhere in it.
+- **Without the script the page is the plain list of favourites**, and the page holds its
+  own markup back until the script has taken over the same way the other two replaced
+  pages do — see **js-coming** in the glossary.
 
 ### The contact sheet (`contact-sheet.js`), and favorites (`favorites.js`)
 
@@ -748,14 +811,18 @@ background luminance, but the class is the reliable path.
 - **New piece of work**: duplicate a template in `works/` — `example-gallery-work.html`
   for image-and-paragraph sequences, `example-article-work.html` for reference pieces —
   then add it to the relevant `categories/` page. There are three kinds of category page,
-  and they take a new piece differently: the **row list** (`favorites`, the two `other`
-  pages) takes another `<a class="work-row">` block; the **contact sheet**
+  and they take a new piece differently: the **row list** (the two `other` pages) takes
+  another `<a class="work-row">` block; the **contact sheet**
   (`scent-descriptions`) takes another `<a class="sheet-frame">` block for the map, or a
   `<a class="gallery-entry">` block with a `data-chapter` and a `data-date` for its
   Favorites view; and the **structure** (`theories`) takes another `<a class="work-row">`
   block, which becomes a station of its own and lengthens the road — optionally with a
   `data-note`, a line about the piece that the station's card shows when it is clicked.
   Each page says which in the comment at the top of it.
+- A favourite on the **chamber** page (`favorites`) is an `<a class="gallery-entry">`
+  block with a `data-chapter` and a `data-date`, exactly as on the contact sheet's
+  Favorites view — the chapters are the different `data-chapter` values in the order they
+  first appear, and the strip across the top of the menu is made from them.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map.
@@ -812,7 +879,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **rib** / **rail** | The frame you travel through: ribs across the way at fixed depths, rails running the length of it between their corners. |
 | **the spine** | The ruler drawn along the floor of the frame to the vanishing point, ticked at every whole depth. It is also the **wheel**: dragging it writes the page's own scroll, and pressing it goes on to the next station. |
 | **the opening** / **setting up** | What the theories drawing does when the page loads: the rails shoot out to the vanishing point, the ribs come up out of the depth towards you, the rule writes itself along the floor, the air fills and the corner sights snap in last. `INTRO_*` and `built` in `structure.js`; the chrome arrives with it on the `lit` class. |
-| **js-coming** | The class a page puts on `<html>` in its own `<head>` while the script that replaces its contents is on its way, so the plain fallback is never flashed first. Carried by `theories.html` and `scent-descriptions.html`; each script clears it once it has laid itself out, and `window.load` clears it if the script never arrives. |
+| **js-coming** | The class a page puts on `<html>` in its own `<head>` while the script that replaces its contents is on its way, so the plain fallback is never flashed first. Carried by `theories.html`, `scent-descriptions.html` and `favorites.html`; each script clears it once it has laid itself out, and `window.load` clears it if the script never arrives. |
 | **the breath** | The structure's own slow creep: the eye drifts a little way in and back out again on a fixed cycle (`CREEP`, `CREEP_EVERY`), so the page is never quite still but the scroll is always the whole of where you are. |
 | **carriage** | The gantry that runs down the frame towards you on its own clock, lighting each rib as it passes. |
 | **traverse** | One of the streaks that run across the frame — the mechanical version of a falling star. |
@@ -822,6 +889,9 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the wave** / **the sweep** | How a new grain arrives: a front travelling out from the tab under the pointer, turning the strokes as it passes and drawing the ones in the front longer and in brass. `SWEEP_*` in `favorites.js`. |
 | **knot** | What pointing at a favourite does to the field: the strokes near that entry's own place turn to circle it. |
 | **mound** / **skyline** | The reading the field carried before it became a hatch — a rise in its top edge per entry. Nothing of it is in the code now (no `MOUND_*`, no `lattice()`). If the owner uses the word, they mean that removed treatment. |
+| **the chamber** | The way `categories/favorites.html` is laid out: four injectors at the corners of the window firing streams of particles inward on white, settling into a ring round the menu of favourites. `chamber.js`. The theories drawing's world turned inside out. |
+| **injector** | One of the chamber's four corner sources (`S-01`…`S-04` on the drawing), each at its own depth in the volume. |
+| **the ring** (chamber) | Where the chamber settles what it catches: a tilted circle of particles standing round the writing. Not to be confused with **the ring / the orbit** below, which is a removed Favorites treatment. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. In Favorites it is also the name of the block on the left carrying the open chapter (`.chapters-plate`). Which one is meant follows from the view being talked about. |
