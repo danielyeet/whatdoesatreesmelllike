@@ -84,18 +84,25 @@ once a real picture is put in it, the whole map being one network with no pictur
 island left out of it and no picture on the end of a single line, pointing at a picture
 turning it in three dimensions without moving where it was laid out, nothing answering
 the pointer until the sheet has settled, every line carrying a date with none of them
-landing on a picture, and a date being written along its line rather than switched on;
+landing on a picture, and a date being written along its line rather than switched on, the page never
+showing its own contents before the sheet takes over and the pictures being placed rather
+than slid in, and the plain grid still being there when the script is blocked;
 and favorites — switching views taking one away before the other arrives, the
 screen flickering once and only once as the chapters come up, the chapters and their dates
 being read off the page's own entries, one chapter open at a time with the strip working
 from the keyboard, every favourite still a link to its piece, the field answering the
-cursor and settling again afterwards, its skyline being a reading of the chapter you have
-open and rising under the entry you point at, and the whole view fitting one screen;
-and the structure — it being grown from the page's own rows with one station per theory,
+cursor and settling again afterwards, the way it lies being a reading of the chapter you
+have open with no two chapters reading the same, pointing at a chapter laying the field
+its way and letting it back when the pointer goes, pointing at a favourite knotting the
+field beside it, and the whole view fitting one screen;
+and the structure — the drawing setting itself up when the page opens without ever
+showing the plain list it replaces, it being grown from the page's own rows with one
+station per theory,
 the travel being the page's own scroll down a road several screens long, going further in
 bringing new stations up and leaving the ones behind you off the page, travelling *back*
 filling the air again as many times as you like, travelling back also coming all the way
-back to the beginning after the page has been left alone, the spine working as a wheel
+back to the beginning after the page has been left alone, the reading holding still
+wherever you stop, the spine working as a wheel
 both dragged and pressed, a station being the thing you click and the only thing on the
 drawing that is one, clicking one setting it out on the window and writing its card while
 pointing at one does nothing, the click after that being the one that opens the theory,
@@ -362,6 +369,27 @@ Two kinds of assembly stand in that frame, and the difference is the point:
   minute and the start of the road was a minute behind you, and scrolling back to the top
   of the page no longer got you to the beginning of it. That was a reported bug. Anything
   new that moves the eye has to be something a scroll can undo.
+- **The reading is the scroll, not the eye.** The percentage in the corner is worked out
+  from `travel` — where the scroll has brought you — and not from `eye`, which also
+  carries the breath. A number that ticks up and down on its own while nothing is being
+  touched reads as drift however small it is; the drawing may move, the reading may not.
+  That was a reported bug too.
+- **The page sets itself up when it opens** (`INTRO_*`, `built`): the rails shoot out to
+  the vanishing point, the ribs come up out of the depth one after another towards you,
+  the rule writes itself along the floor, the air fills, the stations come up, and the
+  corner sights snap in last. `built` runs 0→1 off the wall clock (not off frames, so it
+  takes the same moment on any machine) and every drawing function reads it. Under
+  `prefers-reduced-motion` it starts at 1 — there is nothing to watch being set up. The
+  chrome comes with it: `structure.js` adds `lit` to the shell when the opening is over
+  and the stylesheet fades the readout, the category mark and the cue in on that.
+- **The page's own markup is never shown on the way in.** `theories.html` carries a line
+  in its `<head>` that marks the document `js-coming`, which paints the ground dark and
+  holds the plain list out of sight; `structure.js` clears it the moment the drawing is on
+  the page. Without it the browser paints the light page with its heading and rows first
+  and then has it replaced, which is a flash of a different page in front of the opening.
+  It clears itself on `window.load` as well, so a blocked or broken script still leaves
+  the plain list as the page rather than hiding it for good — which is what
+  `tests/structure.spec.js` checks.
 - **The swarm wraps in BOTH directions.** A speck keeps no position along the road at all:
   its depth is taken modulo `DEEP` each frame and *which lap* it is on decides where it
   stands across the frame, so it is somewhere new each time round and the air is full
@@ -434,6 +462,11 @@ Two kinds of assembly stand in that frame, and the difference is the point:
   nine seconds. Under `prefers-reduced-motion` none of it moves: the clock stops, so the
   wobble, the beads, the ranging squares, the traverses and the scan are all gone and the
   carriage simply stands where it is — held still rather than switched off.
+  The carriage makes **one pass every `CARRIAGE_EVERY` seconds** and is not drawn at all
+  in between (the owner asked for it far less often than the four-and-a-bit seconds it
+  used to run at). Its place is worked out from the clock rather than stepped along frame
+  by frame, so the rest between passes is one number to change; `CARRIAGE_FIRST` keeps it
+  away until the drawing has finished setting itself up.
 - **Glows are stamped, not generated.** One radial gradient is drawn once into a small
   offscreen canvas per colour and then `drawImage`d wherever a glow is needed. Asking for
   a fresh `createRadialGradient` per speck per frame is the one thing that will not hold
@@ -489,6 +522,24 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   { display: block }`): it is a list of links now rather than pictures placed in three
   dimensions, so it is worth having on the page without the script — both views end up
   one under the other, and everything is reachable.
+- **The page's own markup is never shown on the way in.** `scent-descriptions.html`
+  carries a line in its `<head>` that marks the document `js-coming`, and the stylesheet
+  holds `.views` out of sight while it is set; `contact-sheet.js` clears it the moment it
+  has laid the sheet out. Without it the browser paints the page as written — every
+  picture in a plain grid with the favourites listed under them — and then has all of it
+  swept away, which reads as the page blinking its whole contents at you before it starts.
+  That was a reported bug. It clears itself on `window.load` too, so a blocked or broken
+  script leaves the plain grid as the page rather than hiding it for good. `visibility`,
+  not `display` or `opacity`: the sheet measures its own captions on the first layout, and
+  something with no layout box measures nothing.
+- **The pictures are placed by the first layout, not slid into it.** `.sheet-frame` carries
+  a transform transition (it is what tips a picture towards the pointer), and with it
+  running every picture glided in from the corner of the sheet as the page opened. The
+  script puts `placing` on the sheet for that one layout, which takes the transition off,
+  and removes it on the next frame.
+- **The map hangs below the chrome rather than starting under it** (`.sheet`'s top
+  margin). The Menu, the two buttons and the Search are fixed across the top and stay
+  where they are; the sheet is what sits lower.
 - **Room is kept for the scrollbar from the start** (`scrollbar-gutter: stable`, on pages
   carrying a sheet only). The page grows a lot taller the moment the sheet lands, and on
   a browser with ordinary scrollbars that made one appear — which took 15px off the width
@@ -626,51 +677,56 @@ switching between the two — it owns the buttons, so it owns the switch.
   fault.
 - **The date is what a favourite is filed under**, so it is set first in each row (after
   its number) and in the mono the rest of the site keeps for readings. It is also what the
-  field's skyline is a reading of — see below.
+  field's grain is a reading of — see below.
 - **Only the open chapter's tab is in the tab order**, and the arrow keys, Home and End move
   along the strip. The chapters you are not reading are `hidden`, not faded.
 - **The two columns are set high and given room.** The plate on the left carries the open
   chapter large and then a small spec list under it (entries, first, last); the menu on the
   right is wide, with the tabs above and generous numbered rows below. The page is read
   from the top down and there is nothing above either of them, so neither is set low.
-- **The field is a lattice over the whole page, and two things disturb it.** It is fine
-  and close-set (`PITCH`, `MARK`) rather than large and far apart — it is a ruled ground
-  for the writing to stand on, and the reading it carries is its top edge, which a coarse
-  lattice can only step through. Every fifth mark each way (`EVERY`) is the site's own
-  hollow registration square instead of a tick, so the grid counts itself the way a
-  drawing's does.
-  - **The writing keeps its own room.** The field is not drawn where the plate or the
-    menu stands: both boxes are *measured* off the page (`clearing()`, re-read whenever a
-    chapter is opened, since both change size with it) and marks inside them are dropped,
-    fading back in over `CLEAR_SOFT` so the field thins towards the words rather than
-    stopping at a line. It is read off where a mark actually *is*, so one shoved towards
-    the words by the cursor is taken out too. A ground printed through the words on top
-    of it is neither a ground nor words.
-  - **The cursor**, which shoves the marks near it out of place and draws them larger; they
-    find their way back when it goes. Make the lattice itself uneven and there is nothing
-    left for the cursor to disturb.
-  - **The open chapter**, which stands one **mound** in it per entry. What a mound changes
-    is not where the marks are but **how many of them you can see**: the field's top edge
-    is lifted, everything under it stays exactly where the lattice put it. Marks are not
-    slid about by the reading, which leaves being slid about to the cursor alone. Pointing
-    at an entry (or tabbing to it) raises the mound that is its and turns it brass.
-  - A mound's height comes from the **day in its entry's own date**, so the skyline is a
-    reading of what the chapter is filed under and no two chapters come out the same shape.
-    Three mounds of one height is a pattern, not a reading.
-- **The mounds stand in the clear column between the two pieces of writing**, and that
-  column is *measured* off the page (`plate.right` → `menu.left`) rather than taken as a
-  fraction of the width — that fraction is right at one window size and wrong at every
-  other. The stylesheet keeps both columns narrow enough that there is always daylight
-  between them to measure. Letting the mounds under the plate instead, each cut off at the
-  writing above it, made every one of them the same capped height: a step across the page
-  rather than a reading, and identical for every chapter.
-- **`hotItem`, `drawing` and `remeasure` are declared above the part of the file that
-  opens a chapter, not with the rest of the field's state.** A chapter is opened while the
-  page is still being built, and opening one touches all three; left where they belong
-  they do not exist yet at that moment and the whole view falls over before it has drawn
-  anything. This has now bitten three times in this repository — most recently reaching
-  for `width` from `show()` to re-measure the room the writing keeps, which is why that
-  is a flag the next frame acts on rather than work done on the spot.
+- **The field is a ruled ground of fine strokes** — an engraver's hatch, not a scatter of
+  dots. Every stroke is the same length and weight and they stand on a fixed pitch
+  (`PITCH`, `STROKE`); what the field says is which **way** it lies, and turning is the
+  whole of what it does. It replaced a lattice of marks whose reading was its top edge
+  (mounds, a skyline); none of that is in the code any more — no `MOUND_*`, no `lattice()`,
+  no `liftAt`. Four things move it, and they compose:
+  - **The open chapter** lays the whole field at its own angle and draws it at its own
+    weight. The angle comes from where that chapter stands among the others when they are
+    put in the order of the dates they are filed under — spread across the whole sweep
+    (`ANGLE_SPAN`) by that order rather than by the dates themselves, because three
+    chapters filed within a fortnight of each other would otherwise all lie within a few
+    degrees, and a reading no one can tell apart is not a reading. The weight comes from
+    how far apart that chapter's own dates are (`WEIGHT_SPAN`).
+  - **Pointing at a chapter** sends that chapter's angle across the page as a **wave** out
+    of the tab under the pointer (`layAt`, `SWEEP_*`): the grain turns as the front goes
+    by, and the strokes caught in the front are drawn longer and in brass, so the reading
+    is something you watch arrive. It is only a preview — the open chapter does not change
+    — and taking the pointer off brings the open chapter's angle back the same way.
+    Tabbing along the strip does it too. This is the view's main answer to the hand and it
+    is meant to be unmissable.
+  - **Pointing at a favourite** knots the field about that entry's own place: the strokes
+    within `KNOT_REACH` turn to circle a point standing in the clear column between the
+    two columns of writing, at the height of that entry's own row (worked out in
+    `clearing()`).
+  - **The cursor**, which turns the strokes within `HAND_REACH` to face the hand and draws
+    them longer and in brass — a starburst under the pointer.
+  - **The writing keeps its own room.** The field is not drawn where the writing stands:
+    the plate, the tab strip and the open chapter's entries are *measured* off the page
+    (`clearing()`, re-read whenever a chapter is opened, since all three change with it)
+    and strokes inside them are dropped, fading back in over `CLEAR_SOFT` so the field
+    thins towards the words rather than stopping at a line. It is read off where a stroke
+    actually is, so one turned towards the words is taken out too.
+  - Two things keep it cheap: strokes are grouped into `BANDS` weights and each band is
+    one `stroke()` call, and the angle is eased the short way round (`turnTo`) — a stroke
+    is a line and not an arrow, so 89° and -89° are two degrees apart, not 178.
+- **Everything opening a chapter touches is declared above the part of the file that
+  opens one** — `hotItem`, `drawing`, `remeasure`, and the field's own `width`, `height`,
+  `lie`, `sweep` and `weight`. A chapter is opened while the page is still being built,
+  and opening one now lays the field at that chapter's angle as well; left where the rest
+  of the field's state belongs, none of it exists yet at that moment and the whole view
+  falls over before it has drawn anything. This has bitten four times in this repository
+  now. It is also why `show()` sets a flag for the next frame rather than measuring on the
+  spot: at that moment the field has no size at all.
 - **Without the script both views are simply on the page**, one under the other, and the
   entries are a plain list of links — everything reachable.
 
@@ -755,12 +811,17 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the swarm** | The particles that are not part of any assembly. Their depth is wrapped both ways each frame, so the air is full going forward *and* going back. |
 | **rib** / **rail** | The frame you travel through: ribs across the way at fixed depths, rails running the length of it between their corners. |
 | **the spine** | The ruler drawn along the floor of the frame to the vanishing point, ticked at every whole depth. It is also the **wheel**: dragging it writes the page's own scroll, and pressing it goes on to the next station. |
+| **the opening** / **setting up** | What the theories drawing does when the page loads: the rails shoot out to the vanishing point, the ribs come up out of the depth towards you, the rule writes itself along the floor, the air fills and the corner sights snap in last. `INTRO_*` and `built` in `structure.js`; the chrome arrives with it on the `lit` class. |
+| **js-coming** | The class a page puts on `<html>` in its own `<head>` while the script that replaces its contents is on its way, so the plain fallback is never flashed first. Carried by `theories.html` and `scent-descriptions.html`; each script clears it once it has laid itself out, and `window.load` clears it if the script never arrives. |
 | **the breath** | The structure's own slow creep: the eye drifts a little way in and back out again on a fixed cycle (`CREEP`, `CREEP_EVERY`), so the page is never quite still but the scroll is always the whole of where you are. |
 | **carriage** | The gantry that runs down the frame towards you on its own clock, lighting each rib as it passes. |
 | **traverse** | One of the streaks that run across the frame — the mechanical version of a falling star. |
 | **chapter** | One grouping in Favorites — whatever an entry's `data-chapter` says. The chapters, their names and their order all come from the page. |
-| **the field** | The lattice of marks behind the Favorites view. Regular on its own; disturbed by the cursor, and uncovered by the open chapter. |
-| **mound** | One entry's share of the field's skyline — a soft rise in the field's top edge, as tall as the day in that entry's date. Pointing at the entry raises its mound. |
+| **the field** | The ruled ground of fine strokes behind the Favorites view. Regular on its own; what it says is which **way** it lies. |
+| **the grain** | Which way the field lies. Every chapter has its own, taken from where its dates put it among the other chapters. |
+| **the wave** / **the sweep** | How a new grain arrives: a front travelling out from the tab under the pointer, turning the strokes as it passes and drawing the ones in the front longer and in brass. `SWEEP_*` in `favorites.js`. |
+| **knot** | What pointing at a favourite does to the field: the strokes near that entry's own place turn to circle it. |
+| **mound** / **skyline** | The reading the field carried before it became a hatch — a rise in its top edge per entry. Nothing of it is in the code now (no `MOUND_*`, no `lattice()`). If the owner uses the word, they mean that removed treatment. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. In Favorites it is also the name of the block on the left carrying the open chapter (`.chapters-plate`). Which one is meant follows from the view being talked about. |

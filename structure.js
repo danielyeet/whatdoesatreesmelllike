@@ -116,6 +116,23 @@
   const EASE = 0.12;           // how quickly it catches up with the scroll
   const SCREENS = 1.25;        // how many screens of scrolling a station is worth
 
+  // --- the opening
+  //
+  // The page does not simply appear: the drawing is SET UP. The rails
+  // shoot out to the vanishing point, the ribs come up out of the
+  // depth one after another towards you, the rule writes itself along
+  // the floor, the air fills, and the corner sights snap in last —
+  // the instrument being made ready, and then handed to you.
+  //
+  // It is short on purpose. An opening you have to sit through is a
+  // door you have to wait at, and this one is in front of the only
+  // thing on the page.
+  const INTRO_MS = 1500;       // how long the drawing takes to set itself up
+  const INTRO_AIR = 0.3;       // the air is full by this far into it
+  const INTRO_RAILS = 0.45;    // the rails have reached you by here
+  const INTRO_RIBS = 0.55;     // the last rib arrives by here
+  const INTRO_SIGHTS = 0.72;   // and the sights snap in after this
+
   // --- opening one
   //
   // Clicking a station does not go to it: it takes it out of the
@@ -132,6 +149,8 @@
   // --- the moving parts
   const CARRIAGE_FROM = 58;    // where the travelling gantry starts back
   const CARRIAGE_SPEED = 13;   // and how fast it comes at you, units a second
+  const CARRIAGE_EVERY = 10;   // and how many seconds from one pass to the next
+  const CARRIAGE_FIRST = 2.6;  // nothing runs until the drawing has set itself up
   const TRAVERSE_EVERY = 2.3;  // seconds between things running across the frame
   const TRAVERSES = 4;         // how many can be in the air at once
   const SCAN_EVERY = 9;        // seconds between one pass of the scan
@@ -404,6 +423,9 @@
 
   page.insertBefore(road, page.firstChild);
   page.insertBefore(shell, page.firstChild);
+  // The drawing is on the page now, so the plain list it replaces need
+  // not be held back any longer — see the note in this page's <head>.
+  document.documentElement.classList.remove("js-coming");
 
   const paint = canvas.getContext("2d");
 
@@ -457,6 +479,11 @@
   let width = 0, height = 0, lens = 0, midX = 0, midY = 0;
   let travel = 0, wantTravel = 0, drifted = 0, eye = 0;
   let clock = 0, last = 0;
+  // How far the drawing has set itself up: 0 nothing, 1 finished. With
+  // animation turned off there is no setting up to watch, so it starts
+  // finished.
+  let built = REDUCE_MOTION ? 1 : 0;
+  let began = 0;
   let vignette = null;
 
   function resize() {
@@ -516,11 +543,16 @@
     // line in the world is a straight line on the screen, so each one
     // is two points and a stroke however far it runs.
     const corners = [[-RIB_X, -RIB_Y], [RIB_X, -RIB_Y], [RIB_X, RIB_Y], [-RIB_X, RIB_Y]];
+    // Setting up, a rail is drawn from the vanishing point towards you
+    // rather than all at once: the frame arrives out of the depth, the
+    // way everything else on this page does.
+    const reached = Math.min(1, built / INTRO_RAILS);
+    const nearEnd = FRAME_SHOW + (3.2 - FRAME_SHOW) * reached;
     paint.lineWidth = 1;
     paint.strokeStyle = rgba(STEEL, 0.1);
     paint.beginPath();
     corners.forEach((c) => {
-      const a = to(c[0], c[1], eye + 3.2);
+      const a = to(c[0], c[1], eye + nearEnd);
       const b = to(c[0], c[1], eye + FRAME_SHOW);
       if (!a || !b) return;
       paint.moveTo(a.x, a.y);
@@ -532,8 +564,15 @@
       const z = i * RIB_EVERY;
       const p = to(0, 0, z);
       if (!p) continue;
-      const fade = Math.min(1, (FRAME_SHOW - p.ahead) / (FRAME_SHOW * 0.45)) *
-                   Math.min(1, p.ahead / 6);
+      let fade = Math.min(1, (FRAME_SHOW - p.ahead) / (FRAME_SHOW * 0.45)) *
+                 Math.min(1, p.ahead / 6);
+      // Setting up, the ribs arrive one after another from the far end
+      // towards you — the deepest first, so the frame is built in front
+      // of you rather than around you.
+      if (built < 1) {
+        const far = Math.min(1, Math.max(0, p.ahead / FRAME_SHOW));
+        fade *= Math.min(1, Math.max(0, (built - (1 - far) * INTRO_RIBS) / 0.18));
+      }
       if (fade <= 0.02) continue;
       // Lit as the carriage goes by it. A gantry that passes through
       // the frame without the frame answering is a gantry drawn on
@@ -582,8 +621,12 @@
   let spineHot = 0, spineWant = 0;
 
   function drawSpine() {
+    // Setting up, the rule writes itself from under you out to the
+    // vanishing point, and the ticks only exist as far as it has got.
+    const ruled = 1.7 + (SPINE_SHOW - 1.7) * Math.min(1, Math.max(0, (built - 0.12) / 0.5));
+    if (ruled <= 2) return;
     const a = to(0, FLOOR, eye + 1.7);
-    const b = to(0, FLOOR, eye + SPINE_SHOW);
+    const b = to(0, FLOOR, eye + ruled);
     if (!a || !b) return;
 
     paint.lineWidth = 1;
@@ -598,7 +641,7 @@
     // wheel, which is what the rule is.
     const first = Math.ceil(eye + 1.7);
     const lit = 0.3 + spineHot * 0.4;
-    for (let z = first; z - eye < SPINE_SHOW; z++) {
+    for (let z = first; z - eye < ruled; z++) {
       const p = to(0, FLOOR, z);
       if (!p) continue;
       const fade = Math.min(1, (SPINE_SHOW - p.ahead) / (SPINE_SHOW * 0.5));
@@ -629,6 +672,9 @@
   // round rather than the same volume repeating.
   // ============================================================
   function drawSwarm() {
+    // The air is the first thing there: it fills over the opening
+    // frames and everything else is drawn into it.
+    const air = Math.min(1, built / INTRO_AIR);
     for (let n = 0; n < swarm.length; n++) {
       const speck = swarm[n];
       const depth = speck.z - eye;
@@ -648,7 +694,7 @@
       // Out at both ends of its lap, so neither wrap can be seen.
       const far = Math.min(1, (NEAR + DEEP - ahead) / (DEEP * 0.5));
       const close = Math.min(1, (ahead - NEAR) / FADE_NEAR);
-      const lit = speck.lit * far * close * Math.min(1, 16 / ahead);
+      const lit = speck.lit * far * close * Math.min(1, 16 / ahead) * air;
       if (lit < 0.012) continue;
 
       const tone = speck.cool ? COOL : WHITE;
@@ -805,7 +851,7 @@
       if (ahead <= NEAR || ahead > FRAME_SHOW) continue;
       const fade = Math.min(1, (FRAME_SHOW - ahead) / (FRAME_SHOW * 0.4)) *
                    Math.min(1, (ahead - NEAR) / 5);
-      const strength = fade * fixture.faint;
+      const strength = fade * fixture.faint * built;
       if (strength <= 0.01) continue;
       const box = drawAssembly(fixture, strength, false);
       // A code, not a name: it is plant, and plant is labelled but not
@@ -914,7 +960,7 @@
       // The opened one is drawn after the veil that takes the rest of
       // the frame back, not with them.
       if (stop === shown) continue;
-      const strength = carry(stop.at.z - eye) * (1 - opened * OPEN_VEIL);
+      const strength = carry(stop.at.z - eye) * (1 - opened * OPEN_VEIL) * built;
       if (strength <= 0.004) { stop.mark.classList.add("gone"); continue; }
       drawStop(stop, strength, stop === nearest && !shown, null);
     }
@@ -958,12 +1004,36 @@
   // Both are on their own clocks rather than on the travel, so the
   // page has something happening in it while you are standing still.
   // ============================================================
+  // Where the gantry is, or -1 for the stretch between passes when it
+  // is not on the drawing at all. It is worked out from the clock
+  // rather than stepped along frame by frame, so one pass takes the
+  // same time whatever the frame rate is doing — and so that the rest
+  // between passes is a plain number to change rather than a state to
+  // keep. Set at the top of every frame, because the ribs light as it
+  // goes by and they are drawn before it is.
+  const CARRIAGE_RUN = (CARRIAGE_FROM - 2.4) / CARRIAGE_SPEED;
   let carriage = CARRIAGE_FROM;
 
-  function drawCarriage(on) {
+  function placeCarriage() {
+    // Held still rather than switched off, like the rest of the moving
+    // parts: with animation turned off it simply stands in the frame.
+    if (REDUCE_MOTION) { carriage = CARRIAGE_FROM * 0.45; return; }
+    const since = clock - CARRIAGE_FIRST;
+    if (since < 0) { carriage = -1; return; }
+    const phase = since % CARRIAGE_EVERY;
+    carriage = phase > CARRIAGE_RUN ? -1 : CARRIAGE_FROM - phase * CARRIAGE_SPEED;
+  }
+
+  function drawCarriage() {
+    if (carriage < 0) return;
     const p = to(0, 0, eye + carriage);
     if (!p) return;
-    const fade = Math.min(1, carriage / 14) * Math.min(1, (CARRIAGE_FROM - carriage) / 8 + 0.2);
+    // Coming on at the far end rather than simply being there: it is
+    // away for most of the time now, so its arrival is something you
+    // could otherwise catch.
+    const started = Math.min(1, (CARRIAGE_FROM - carriage) / 5);
+    const fade = started * Math.min(1, carriage / 14) *
+                 Math.min(1, (CARRIAGE_FROM - carriage) / 8 + 0.2);
     const w = RIB_X * 0.82 * p.k, h = RIB_Y * 0.82 * p.k;
     paint.lineWidth = 1;
     paint.strokeStyle = rgba(STEEL, 0.34 * fade);
@@ -981,8 +1051,6 @@
       paint.lineTo(c[0], c[1] + c[3] * arm);
     });
     paint.stroke();
-    if (on) carriage -= CARRIAGE_SPEED * on / 60;
-    if (carriage < 2.4) carriage = CARRIAGE_FROM;
   }
 
   const traverses = [];
@@ -1052,9 +1120,12 @@
       crosshair dead centre, where you are going. They belong to the
       window rather than to the frame, so they never move. */
   function drawSights() {
+    // Last of all: the instrument is ready, and then it is yours.
+    const ready = Math.min(1, Math.max(0, (built - INTRO_SIGHTS) / (1 - INTRO_SIGHTS)));
+    if (ready <= 0.01) return;
     const arm = 18, gap = 46;
     paint.lineWidth = 1;
-    paint.strokeStyle = rgba(STEEL, 0.28);
+    paint.strokeStyle = rgba(STEEL, 0.28 * ready);
     paint.beginPath();
     [[gap, gap, 1, 1], [width - gap, gap, -1, 1],
      [width - gap, height - gap, -1, -1], [gap, height - gap, 1, -1]].forEach((c) => {
@@ -1063,7 +1134,7 @@
       paint.lineTo(c[0], c[1] + c[3] * arm);
     });
     paint.stroke();
-    paint.strokeStyle = rgba(WHITE, 0.2);
+    paint.strokeStyle = rgba(WHITE, 0.2 * ready);
     paint.beginPath();
     paint.moveTo(midX - 11, midY); paint.lineTo(midX - 4, midY);
     paint.moveTo(midX + 4, midY); paint.lineTo(midX + 11, midY);
@@ -1077,6 +1148,7 @@
   // ============================================================
   function draw(on) {
     eye = travel + drifted;
+    placeCarriage();
     paint.fillStyle = DARK;
     paint.fillRect(0, 0, width, height);
 
@@ -1093,7 +1165,7 @@
       if (strength > best) { best = strength; nearest = stop; }
     }
     drawStops(nearest);
-    drawCarriage(on);
+    drawCarriage();
     drawTraverses(on);
 
     // The frame goes back behind an opened station — the whole of it,
@@ -1114,7 +1186,12 @@
     if (!REDUCE_MOTION) drawScan();
     drawSights();
 
-    const along = Math.min(1, eye / ROAD);
+    // How far along the road you have come — read off the SCROLL, not
+    // off the eye. The eye also carries the breath, and a number that
+    // ticks up and down on its own while nothing is being touched
+    // reads as drift however small it is. The drawing may move; the
+    // reading is where you have got to.
+    const along = Math.min(1, Math.max(0, travel / ROAD));
     readout.textContent =
       (shown ? shown.number : nearest ? nearest.number : "--") +
       " / " + String(stops.length).padStart(2, "0") +
@@ -1129,6 +1206,14 @@
     last = now;
     if (!REDUCE_MOTION) {
       clock += on / 60;
+      // Setting up. Timed off the wall clock rather than counted in
+      // frames, so the opening takes the same moment on any machine.
+      if (built < 1) {
+        if (!began) began = now;
+        const t = Math.min(1, (now - began) / INTRO_MS);
+        built = t * t * (3 - 2 * t);
+        if (t >= 1) { built = 1; shell.classList.add("lit"); }
+      }
       // The page is never quite still even when nothing is being done
       // to it — but the creep is a breath rather than a drift: it
       // leaves and comes back, so it can never carry the road out from
@@ -1273,6 +1358,9 @@
   resize();
   fromScroll();
   travel = wantTravel;
+  // Nothing to watch being set up when animation is turned off: the
+  // drawing and its chrome are simply there.
+  if (REDUCE_MOTION) shell.classList.add("lit");
   draw(1);
   requestAnimationFrame(frame);
 })();

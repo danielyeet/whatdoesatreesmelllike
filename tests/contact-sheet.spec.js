@@ -567,6 +567,71 @@ test("a date is written along its line rather than switched on", async ({ page }
     `all written in full: ${ends.join(" | ")}`).toBe(true);
 });
 
+test("the page never shows its own contents before the sheet takes over",
+  async ({ page }) => {
+  // A REGRESSION TEST, and a deterministic one: the page records what
+  // it looked like on every frame rather than the test trying to catch
+  // the right moment. Between the first paint and contact-sheet.js
+  // taking over, the browser used to show the page as it is written —
+  // every picture in a plain grid and the favourites listed under them
+  // — and then have all of it swept away, which reads as the page
+  // blinking its whole contents at you before it starts.
+  await page.addInitScript(() => {
+    window.__flashed = 0;
+    window.__placed = null;
+    const watch = () => {
+      const sheet = document.getElementById("sheet");
+      if (sheet) {
+        const seen = [...document.querySelectorAll(".sheet-frame, .gallery-entry")]
+          .filter((el) => {
+            const box = el.getBoundingClientRect();
+            return box.width > 4 && box.height > 4 &&
+                   getComputedStyle(el).visibility === "visible" &&
+                   parseFloat(getComputedStyle(el).opacity) > 0.02;
+          });
+        if (!sheet.classList.contains("scripted")) {
+          if (seen.length > window.__flashed) window.__flashed = seen.length;
+        } else if (window.__placed === null) {
+          // Where the picture it lands on was on the very first frame
+          // the script had drawn: that is where it should stay.
+          const plate = document.querySelector(".sheet-frame");
+          window.__placed = plate ? plate.getBoundingClientRect().x : null;
+        }
+      }
+      if (performance.now() < 5000) requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  });
+
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  expect(await page.evaluate(() => window.__flashed),
+    "nothing of the page's own contents should be shown before the script has laid it out")
+    .toBe(0);
+
+  // And the pictures are PLACED by that first layout rather than
+  // sliding into place from the corner of the sheet, which is what the
+  // transition that moves them did to every one of them on arrival.
+  const placed = await page.evaluate(() => window.__placed);
+  const settled = (await page.locator(".sheet-frame").first().boundingBox()).x;
+  expect(Math.abs(placed - settled),
+    `the plate was first drawn at ${placed} and settled at ${settled}`).toBeLessThan(12);
+});
+
+test("without its script the page is still the plain grid of pictures",
+  async ({ page }) => {
+  // The holding-back above must not be able to hide the page for good:
+  // with the script blocked, what is written in the page IS the page,
+  // and it comes back as soon as everything else has loaded.
+  await page.route("**/contact-sheet.js", (route) => route.abort());
+  await page.goto(SHEET);
+  const frames = page.locator(".sheet-frame");
+  await expect(frames.first()).toBeVisible({ timeout: 6000 });
+  expect(await frames.count()).toBeGreaterThan(4);
+  await expect(page.locator(".sheet-head h1")).toHaveText("Scent descriptions");
+});
+
 test("nothing on the sheet answers the pointer until it has settled", async ({ page }) => {
   await page.goto(SHEET);
 

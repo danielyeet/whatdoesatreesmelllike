@@ -204,7 +204,11 @@ test("travelling back comes all the way back to the beginning", async ({ page })
   // Down the road and back again: the beginning is still the beginning.
   await page.evaluate(() => window.scrollTo(0, window.innerHeight * 4));
   await page.waitForTimeout(1300);
-  expect(await reading(), "further in").not.toMatch(/000%/);
+  const partWay = await reading();
+  expect(partWay, "further in").not.toMatch(/000%/);
+  // And it holds there too: the drawing breathes, the reading does not.
+  await page.waitForTimeout(5000);
+  expect(await reading(), "the reading should hold wherever you stop").toBe(partWay);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(1600);
 
@@ -215,6 +219,61 @@ test("travelling back comes all the way back to the beginning", async ({ page })
     Math.hypot(back.x - was.x, back.y - was.y),
     `it should be back where it started: was ${JSON.stringify(was)}, now ${JSON.stringify(back)}`
   ).toBeLessThan(30);
+});
+
+test("the drawing sets itself up when the page opens", async ({ page }) => {
+  // Recorded by the page itself, frame by frame, rather than the test
+  // trying to photograph the right moment: on a slow machine the
+  // opening can be over before a test could look.
+  await page.addInitScript(() => {
+    window.__setUp = { unlit: 0, lit: 0, first: -1, list: 0 };
+    const watch = () => {
+      const shell = document.querySelector(".structure");
+      const rows = document.querySelector(".work-list");
+      // The plain list this page replaces must never be seen.
+      if (rows && rows.getBoundingClientRect().height > 40 &&
+          getComputedStyle(rows).visibility === "visible") {
+        window.__setUp.list++;
+      }
+      if (shell) {
+        const lit = shell.classList.contains("lit");
+        window.__setUp[lit ? "lit" : "unlit"]++;
+        const canvas = shell.querySelector(".structure-field");
+        if (!lit && window.__setUp.first < 0 && canvas && canvas.width) {
+          // How much is drawn on the very first frame of the opening.
+          const shot = canvas.getContext("2d")
+            .getImageData(0, 0, canvas.width, canvas.height).data;
+          let bright = 0;
+          for (let n = 0; n < shot.length; n += 4) {
+            if ((shot[n] + shot[n + 1] + shot[n + 2]) / 3 > 60) bright++;
+          }
+          window.__setUp.first = bright;
+        }
+      }
+      if (performance.now() < 6000) requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  });
+
+  await page.goto(PAGE);
+  await waitForStructure(page);
+  await page.waitForTimeout(2600);
+
+  const setUp = await page.evaluate(() => window.__setUp);
+  expect(setUp.list, "the plain list it replaces should never be shown").toBe(0);
+  expect(setUp.unlit, "there should be an opening to watch").toBeGreaterThan(4);
+  expect(setUp.lit, "and it should finish").toBeGreaterThan(4);
+
+  // It is built rather than faded up: at the start of it there is far
+  // less on the drawing than there is at the end.
+  const settled = (await inkNow(page)).bright;
+  expect(setUp.first, `it began with ${setUp.first} lit and settled at ${settled}`)
+    .toBeLessThan(settled * 0.55);
+
+  // And the chrome comes with it rather than standing there first.
+  await expect(page.locator(".structure")).toHaveClass(/lit/);
+  expect(await page.evaluate(() =>
+    getComputedStyle(document.querySelector(".structure-readout")).opacity)).toBe("1");
 });
 
 test("clicking a station lays it out and writes a card beside it", async ({ page }) => {

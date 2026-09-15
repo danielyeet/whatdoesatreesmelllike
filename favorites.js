@@ -7,8 +7,9 @@
 //   Description portfolio   the map, drawn by contact-sheet.js
 //   Favorites               this: the screen flickers once, a menu of
 //                           chapters comes up on the right, and a
-//                           field of marks settles along the foot
-//                           that answers the cursor
+//                           ruled field settles behind it that lies
+//                           whichever way the chapter you are pointing
+//                           at is filed
 //
 // Everything in the menu is read off the page itself: the chapters
 // are the different data-chapter values on the entries, in the order
@@ -37,43 +38,44 @@
   const SWITCH_MS = 520;       // how long the view being left takes to go
   const FLICKER_MS = 460;      // and how long the screen takes to settle after it
 
-  // The field of marks. Geometric rather than organic: a lattice on a
-  // fixed pitch, every mark the same, and the only two things that are
-  // not regular about it are the cursor and the chapter you have open.
-  //
-  // Fine and close-set rather than large and far apart: it is a ruled
-  // ground for the writing to stand on, and the reading it carries is
-  // its top edge, which a coarse lattice can only step through. Every
-  // fifth mark across and down is the site's own hollow registration
-  // square instead of a tick, so the grid counts itself the way a
-  // drawing's does.
-  const PITCH = 18;            // how far apart the marks stand
-  const MARK = 1.7;            // and how big one is at rest
-  const EVERY = 5;             // one mark in this many, each way, is a registration square
-  const NODE_MARK = 2.6;       // which is drawn this much larger, and hollow
-  const FIELD_DEEP = 0.44;     // how much of the page the field lies over at rest
-  const REACH = 170;           // how far from the cursor a mark still answers
-  const SHOVE = 13;            // how far it is pushed out of the lattice
-  const SWELL = 3.2;           // and how much larger it is drawn
-  const EASE = 0.14;           // how quickly a mark goes where it is going
-  const FADE_IN = 0.55;        // the field is faintest at the top and strongest low
+  // THE FIELD. A ruled ground of fine strokes — an engraver's hatch,
+  // not a scatter of dots. Every stroke is the same length and the same
+  // weight and they stand on a fixed pitch: what the field says is
+  // which WAY it lies, and turning is the whole of what it does.
+  const PITCH = 21;            // how far apart the strokes stand
+  const STROKE = 12;           // and how long one is at rest
+  const EASE = 0.16;           // how quickly a stroke goes where it is going
+  const FIELD_TOP = 0.16;      // the ground starts this far down the page
+  const BANDS = 6;             // how many weights the strokes are grouped into to draw
+  const ALPHA_TOP = 0.62;      // and the heaviest a stroke is drawn
+
+  // The reading: each chapter lies at its own angle, taken from the
+  // dates its favourites are filed under, and is drawn at its own
+  // weight, taken from how far apart those dates are. The angles are
+  // spread across the whole sweep so that no two chapters can come out
+  // reading the same — which is the one thing the reading must not do.
+  const ANGLE_SPAN = 1.15;     // how far either side of flat a chapter may lie, in radians
+  const WEIGHT_SPAN = 0.45;    // and how much longer the loosest chapter's strokes are
+
+  // Pointing at a chapter sends its angle across the page as a wave.
+  const SWEEP_SPEED = 2600;    // how fast the front crosses, pixels a second
+  const SWEEP_WIDE = 230;      // how wide the front is
+  const LEAD = 2.1;            // and how much longer a stroke is drawn inside it
+
+  // Pointing at a favourite knots the field about that entry's own place.
+  const KNOT_REACH = 210;      // how far from it the strokes still turn
+  const KNOT_LIFT = 1.5;       // and how much longer they are drawn there
+
+  // And the hand: the strokes near the cursor turn to face it.
+  const HAND_REACH = 150;
+  const HAND_LIFT = 1.9;
 
   // THE WRITING KEEPS ITS OWN ROOM. The field is a ground, and a ground
-  // printed through the words on top of it is neither: the marks are
-  // taken out of the room the two columns of writing actually occupy,
-  // measured off the page, and fade out rather than stopping at a line.
+  // printed through the words on top of it is neither: the strokes are
+  // taken out of the room the writing actually occupies, measured off
+  // the page, and fade out rather than stopping at a line.
   const CLEAR_PAD = 14;        // how far past the writing the room reaches
   const CLEAR_SOFT = 34;       // and how far outside that the field comes back
-
-  // The reading. The open chapter stands one mound in the field for
-  // each of its entries, and the field is lifted into them — so the
-  // middle of the page carries what you have chosen rather than being
-  // the empty space between the writing on either side of it.
-  const MOUND_CLEAR = 26;      // how far clear of the writing the mounds keep
-  const MOUND_ROOF = 0.14;     // and how near the top of the page one may reach
-  const MOUND_UP = 0.38;       // how far one lifts the field, against the page
-  const MOUND_WIDE = 0.78;     // how wide one is, against the room it is given
-  const MOUND_HOT = 1.4;       // and how much further the one you point at goes
 
   const INK = "23,23,15";
   const BRASS = "156,111,53";
@@ -96,14 +98,39 @@
       name: entry.textContent.trim(),
       date: date,
       href: entry.getAttribute("href"),
-      // How tall this one's mound stands: taken from the day in its
-      // own date, so the skyline is a reading of what the chapter is
-      // filed under rather than decoration, and so no two chapters
-      // come out the same shape. Three mounds of one height is a
-      // pattern, not a reading.
-      tall: 0.5 + (Number(date.slice(0, 2)) || 16) / 31 * 0.65,
+      day: Number(date.slice(0, 2)) || 16,
     });
   });
+
+  // WHICH WAY EACH CHAPTER LIES. The chapters are put in the order of
+  // the dates their favourites are filed under — earliest in the month
+  // first — and laid across the whole sweep in that order, so the
+  // angle says where a chapter stands among the others. The weight is
+  // a reading of how far apart its own dates are, so a chapter filed
+  // across a month is drawn looser than one filed inside a week.
+  //
+  // Spread by ORDER rather than by the dates themselves, because the
+  // dates themselves do not spread: three chapters filed within a
+  // fortnight of each other would all lie within a few degrees, and a
+  // reading no one can tell apart is not a reading at all.
+  (function () {
+    const middles = chapters.map((chapter) => {
+      const days = chapter.items.map((item) => item.day);
+      const sum = days.reduce((a, b) => a + b, 0);
+      chapter.spread = days.length > 1
+        ? (Math.max.apply(null, days) - Math.min.apply(null, days)) / 30
+        : 0.5;
+      return days.length ? sum / days.length : 16;
+    });
+    const order = chapters.map((chapter, i) => i)
+      .sort((a, b) => middles[a] - middles[b] || a - b);
+    const last = Math.max(1, chapters.length - 1);
+    order.forEach((which, place) => {
+      const chapter = chapters[which];
+      chapter.angle = -ANGLE_SPAN + 2 * ANGLE_SPAN * (place / last);
+      chapter.weight = 1 + chapter.spread * WEIGHT_SPAN;
+    });
+  })();
 
   // ============================================================
   // THE VIEW
@@ -220,6 +247,14 @@
   // yet when this is set — and because at the moment the first chapter
   // is opened the field does not have a size at all.
   let remeasure = true;
+  // And the same again for the field's own reading: opening a chapter
+  // lays the field at that chapter's angle, so every piece of state
+  // that says which way it lies has to exist by the time the first one
+  // is opened, which is while the page is still being built.
+  let width = 0, height = 0;
+  let lie = 0;        // which way the field lies now
+  let sweep = null;   // and the wave carrying it to a new angle, if one is running
+  let weight = 1;     // how long this chapter's strokes are drawn
 
   function show(next, andFocus) {
     open = (next + chapters.length) % chapters.length;
@@ -242,15 +277,33 @@
     plate.querySelector(".chapters-last").textContent =
       items.length ? items[items.length - 1].date : "—";
     // The field carries the chapter you have open, so opening one is
-    // the other half of what moves on this page.
+    // the other half of what moves on this page: its angle goes out
+    // across the page from the tab that was pressed.
     hotItem = -1;
     drawing = true;
     remeasure = true;
+    weight = chapter.weight;
+    if (width) layAt(chapter.angle, chapter.tab);
+    else lie = chapter.angle;
     if (andFocus) chapters[open].tab.focus();
   }
 
   chapters.forEach((chapter, i) => {
     chapter.tab.addEventListener("click", () => show(i));
+    // Pointing at a chapter lays the field at ITS angle without opening
+    // it — the reading arrives as a wave out of the tab under your
+    // hand, and goes back to the open chapter's when you take it away.
+    // Tabbing along the strip does the same, so it is not only a
+    // pointer that can see it.
+    const show_ = () => { weight = chapter.weight; layAt(chapter.angle, chapter.tab); };
+    const back = () => {
+      weight = chapters[open].weight;
+      layAt(chapters[open].angle, chapters[open].tab);
+    };
+    chapter.tab.addEventListener("pointerenter", show_);
+    chapter.tab.addEventListener("focus", show_);
+    chapter.tab.addEventListener("pointerleave", back);
+    chapter.tab.addEventListener("blur", back);
   });
 
   rail.addEventListener("keydown", (e) => {
@@ -268,57 +321,52 @@
   // ============================================================
   // THE FIELD
   //
-  // A lattice of marks along the foot of the page. Everything about
-  // it is regular — one pitch, one size, one colour — and only two
-  // things disturb it:
+  // A ruled ground of fine strokes — an engraver's hatch rather than a
+  // scatter of dots. Every stroke is the same length and the same
+  // weight, and they stand on a fixed pitch; what the field says is
+  // which WAY it lies.
   //
-  //   THE CURSOR. Near it the marks are shoved out of the lattice and
-  //   drawn larger, and they find their way back when it goes.
+  //   THE OPEN CHAPTER lays the whole field at its own angle, read off
+  //   the dates its favourites are filed under, and draws it at its
+  //   own weight, read off how far apart those dates are.
   //
-  //   THE OPEN CHAPTER. Each of its entries stands a mound in the
-  //   field, and the lattice is lifted into them — most at the top of
-  //   the field and not at all along its foot, so the field's own top
-  //   edge becomes the reading and its bottom stays put. Pointing at
-  //   an entry raises the mound that is its.
+  //   POINTING AT A CHAPTER sends that chapter's angle across the page
+  //   as a WAVE, out from the tab under the pointer: the grain turns as
+  //   the front goes by, and the strokes caught in the front are drawn
+  //   longer and in brass, so the reading is something you watch
+  //   arrive. Take the pointer off and the open chapter's angle comes
+  //   back the same way. This is the view's whole reactivity and it is
+  //   meant to be unmissable.
   //
-  // Regular on its own and irregular under the hand is the whole of
-  // the effect; make the lattice itself uneven and there is nothing
-  // left for either of them to disturb.
+  //   POINTING AT A FAVOURITE knots the field about that entry's own
+  //   place on the page: the strokes near it turn to circle it.
+  //
+  //   THE CURSOR turns the strokes near it to face the hand.
+  //
+  // Make the hatch itself uneven and there is nothing left for any of
+  // those to disturb. And nothing is ever drawn where the writing
+  // stands — see `clearing()` below.
   // ============================================================
-  let width = 0, height = 0, deep = 0;
-  let midFrom = 0, midTo = 0, midUp = 1;
-  let marks = [];
-  let mounds = [];
+  let strokes = [];
   let taken = [];
-  // What the reading comes to in each column of the lattice, emptied
-  // and worked out afresh every frame: the mounds move, and the one
-  // being pointed at moves most.
-  let lifts = [];
-  let heats = [];
+  let knots = [];
   let handX = -9999, handY = -9999, hasHand = false;
 
-  function lattice() {
-    marks = [];
-    const foot = height + PITCH;
-    const across = Math.ceil(width / PITCH) + 1;
-    // The lattice is laid over the whole page rather than only along
-    // the foot: how much of it you can see is what the open chapter
-    // changes, so it has to be there to be uncovered.
-    const down = Math.ceil(height / PITCH) + 1;
+  function hatch() {
+    strokes = [];
+    const across = Math.ceil(width / PITCH) + 2;
+    const down = Math.ceil(height / PITCH) + 2;
     for (let j = 0; j < down; j++) {
       for (let i = 0; i < across; i++) {
         const x = i * PITCH + (j % 2 ? PITCH / 2 : 0);
-        const y = foot - j * PITCH;
-        marks.push({
-          x: x, y: y, ox: x, oy: y, size: MARK, show: 0, warm: 0,
-          // Counted from the foot, so the registration squares stand in
-          // the same places however tall the window is.
-          node: i % EVERY === 0 && j % EVERY === 0,
-          // Which column of the lattice it stands in — two per step
-          // across, since every other row is offset by half a pitch.
-          // How high the reading stands depends only on that, so it is
-          // worked out once a column a frame rather than once a mark.
-          col: i * 2 + (j % 2),
+        const y = j * PITCH;
+        strokes.push({
+          x: x, y: y,
+          a: lie, len: STROKE, warm: 0,
+          // Faint at the top of the page and stronger low down, so the
+          // writing at the top is standing on clear paper and the
+          // ground gathers under it.
+          fade: Math.max(0, Math.min(1, (y - height * FIELD_TOP) / (height * 0.55))),
         });
       }
     }
@@ -332,7 +380,12 @@
       It is the WRITING that is measured, not the blocks around it: on
       a narrow window the menu carries a deep skirt of padding under
       the last entry, and taking the menu's own box would knock the
-      field out of the one piece of the page that is still clear. */
+      field out of the one piece of the page that is still clear.
+
+      The same pass works out where each favourite's KNOT stands: in
+      the clear column between the two columns of writing, at the
+      height of its own row, so the field answers beside the entry you
+      are pointing at rather than somewhere unrelated to it. */
   function clearing() {
     const box = view.getBoundingClientRect();
     taken = [plate, rail, chapters[open].panel].map((one) => {
@@ -343,6 +396,19 @@
         right: it.right - box.left + CLEAR_PAD,
         foot: it.bottom - box.top + CLEAR_PAD,
       };
+    });
+
+    const plateBox = plate.getBoundingClientRect();
+    const menuBox = menu.getBoundingClientRect();
+    const from = plateBox.right - box.left;
+    const to = menuBox.left - box.left;
+    // On a narrow window the two columns are stacked and there is no
+    // clear column between them; the knots go down the middle instead.
+    const wide = to - from > KNOT_REACH;
+    const mid = wide ? (from + to) / 2 : width * 0.5;
+    knots = [...chapters[open].panel.querySelectorAll(".chapters-item")].map((row) => {
+      const it = row.getBoundingClientRect();
+      return { x: mid, y: (it.top + it.bottom) / 2 - box.top };
     });
   }
 
@@ -363,53 +429,23 @@
     return room;
   }
 
-  /** Where the open chapter's mounds stand, and how high.
-
-      They are kept to the gap the writing actually leaves — measured
-      between the plate and the menu rather than taken as a fraction of
-      the width, because that fraction is right at one window size and
-      wrong at every other: on a narrower screen the two columns close
-      in and a mound that was in the clear is suddenly rising up behind
-      the entries. Measured here once a layout, it cannot be. */
-  function setMounds() {
-    const items = chapters[open].items;
-    const room = (midTo - midFrom) / items.length;
-    const rest = height - deep;
-    // They stand in the clear column between the two pieces of
-    // writing, so the only ceiling any of them has is the top of the
-    // page. Letting them under the plate instead meant every one of
-    // them was cut off at the same height — which is a step across
-    // the page, not a reading, and no two chapters could differ.
-    const roof = height * MOUND_ROOF;
-    mounds = items.map((item, n) => ({
-      n: n,
-      x: midFrom + room * (n + 0.5),
-      wide: room * MOUND_WIDE + PITCH,
-      high: Math.max(0, Math.min(height * MOUND_UP * midUp * item.tall, rest - roof)),
-    }));
-  }
-
-  // How far the field is lifted at one place across the page, and
-  // whether that place belongs to the entry being pointed at. Written
-  // into these rather than returned, because it is asked once per mark
-  // per frame and a fresh little object each time is a thousand of
-  // them a second for nothing.
-  let liftHere = 0, heatHere = 0;
-  function liftAt(x) {
-    liftHere = 0;
-    heatHere = 0;
-    for (let m = 0; m < mounds.length; m++) {
-      const mound = mounds[m];
-      const off = (x - mound.x) / mound.wide;
-      if (off <= -1 || off >= 1) continue;
-      // A cosine bump rather than a bell: it comes to nothing at a
-      // definite place, so a mound has an edge and does not haze off
-      // across the whole page.
-      const bump = 0.5 * (1 + Math.cos(Math.PI * off));
-      const hot = mound.n === hotItem;
-      liftHere += bump * mound.high * (hot ? MOUND_HOT : 1);
-      if (hot && bump > heatHere) heatHere = bump;
+  /** Send the field to an angle, as a wave out from a place on the
+      page. Everything that changes the reading goes through here: a
+      chapter opened, a chapter pointed at, a pointer taken away. */
+  function layAt(angle, fromEl) {
+    if (Math.abs(angle - (sweep ? sweep.to : lie)) < 0.004) return;
+    let x = width / 2, y = height / 2;
+    if (fromEl) {
+      const box = view.getBoundingClientRect();
+      const it = fromEl.getBoundingClientRect();
+      x = (it.left + it.right) / 2 - box.left;
+      y = (it.top + it.bottom) / 2 - box.top;
     }
+    // Carrying on from wherever the last wave had got to, so pointing
+    // quickly along the strip reads as one field being turned rather
+    // than as several fields fighting.
+    sweep = { x: x, y: y, r: 0, from: sweep ? sweep.to : lie, to: angle };
+    drawing = true;
   }
 
   function resize() {
@@ -417,160 +453,151 @@
     const ratio = Math.min(2, window.devicePixelRatio || 1);
     width = Math.max(1, Math.round(box.width));
     height = Math.max(1, Math.round(box.height));
-    deep = Math.round(height * FIELD_DEEP);
-
-    // The room between the two columns of writing, read off the page
-    // itself. On a narrow window they stack instead of standing side
-    // by side, and then there is no gap between them — the mounds go
-    // down the middle and are kept low, so the entries above them stay
-    // readable.
-    // The clear column between the two pieces of writing, read off the
-    // page itself rather than taken as a fraction of the width: that
-    // fraction is right at one window size and wrong at every other.
-    // The stylesheet keeps the two columns narrow enough that there is
-    // always a column of daylight between them to read this out of.
-    const plateBox = plate.getBoundingClientRect();
-    const menuBox = menu.getBoundingClientRect();
-    const from = plateBox.right - box.left + MOUND_CLEAR;
-    const to = menuBox.left - box.left - MOUND_CLEAR;
-    if (to - from > PITCH * 4) {
-      midFrom = from;
-      midTo = to;
-      midUp = 1;
-    } else {
-      // Stacked, on a narrow window: there is no clear column at all,
-      // so they go down the middle and are kept low enough to read
-      // the entries over them.
-      midFrom = width * 0.12;
-      midTo = width * 0.88;
-      midUp = 0.4;
-    }
     field.width = Math.round(width * ratio);
     field.height = Math.round(height * ratio);
     field.style.width = width + "px";
     field.style.height = height + "px";
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
-    lattice();
+    hatch();
     clearing();
-    setMounds();
     drawing = true;
+  }
+
+  /** Where one stroke wants to be pointing, how long it wants to be
+      drawn, and how warm — written into these rather than returned,
+      because it is asked thousands of times a frame. */
+  let wantA = 0, wantLen = 0, wantWarm = 0;
+  function wantedAt(x, y) {
+    wantA = lie;
+    wantLen = STROKE * weight;
+    wantWarm = 0;
+
+    // The wave. Behind its front the field has already been turned;
+    // ahead of it, it has not been reached yet.
+    if (sweep) {
+      const off = Math.hypot(x - sweep.x, y - sweep.y);
+      const past = (sweep.r - off) / SWEEP_WIDE;
+      const turned = Math.max(0, Math.min(1, past));
+      wantA = sweep.from + (sweep.to - sweep.from) * turned;
+      // In the front itself: drawn longer and in brass, so the reading
+      // is visibly travelling rather than simply being different now.
+      const infront = Math.max(0, 1 - Math.abs(past - 0.5) * 2.2);
+      wantLen *= 1 + infront * (LEAD - 1);
+      wantWarm = infront;
+    }
+
+    // A favourite being pointed at: the field circles its own place.
+    if (hotItem >= 0 && knots[hotItem]) {
+      const knot = knots[hotItem];
+      const dx = x - knot.x, dy = y - knot.y;
+      const off = Math.hypot(dx, dy);
+      if (off < KNOT_REACH) {
+        const hold = 1 - off / KNOT_REACH;
+        const round = Math.atan2(dy, dx) + Math.PI / 2;
+        wantA = turnTo(wantA, round, hold * hold);
+        wantLen *= 1 + hold * (KNOT_LIFT - 1);
+        wantWarm = Math.max(wantWarm, hold);
+      }
+    }
+
+    // And the hand: the strokes near it face it.
+    if (hasHand) {
+      const dx = x - handX, dy = y - handY;
+      const off = Math.hypot(dx, dy);
+      if (off < HAND_REACH) {
+        const hold = 1 - off / HAND_REACH;
+        wantA = turnTo(wantA, Math.atan2(dy, dx), hold * hold);
+        wantLen *= 1 + hold * (HAND_LIFT - 1);
+        wantWarm = Math.max(wantWarm, hold * 0.8);
+      }
+    }
+  }
+
+  /** Blending one direction into another the short way round. A stroke
+      is a line, not an arrow: half a turn is no turn at all, so the two
+      are compared modulo half a circle or a stroke lying at 89 degrees
+      would swing the long way round to reach -89. */
+  function turnTo(from, to, by) {
+    let step = (to - from) % Math.PI;
+    if (step > Math.PI / 2) step -= Math.PI;
+    if (step < -Math.PI / 2) step += Math.PI;
+    return from + step * by;
   }
 
   function settle() {
     let moving = false;
-    const rest = height - deep;        // where the field lies with nothing open
-    const edge = PITCH * 1.6;          // how softly it stops at the top
     const step = REDUCE_MOTION ? 1 : EASE;
-    setMounds();
 
-    lifts.length = 0;
-    heats.length = 0;
-
-    for (let n = 0; n < marks.length; n++) {
-      const mark = marks[n];
-      let wantX = mark.ox, wantY = mark.oy, wantSize = MARK;
-
-      // The reading. The lattice itself never moves for it — what the
-      // open chapter changes is how much of the lattice you can see,
-      // so the field's top edge is the reading and everything under it
-      // is simply field. Marks are not slid about by it, which leaves
-      // being slid about to the cursor alone.
-      // The reading is the same the whole way down a column of the
-      // lattice, so it is worked out once a column rather than once a
-      // mark: there are a couple of hundred columns on the page and
-      // several thousand marks.
-      if (lifts[mark.col] === undefined) {
-        liftAt(mark.ox);
-        lifts[mark.col] = liftHere;
-        heats[mark.col] = heatHere;
+    if (sweep) {
+      if (REDUCE_MOTION) {
+        lie = sweep.to;
+        sweep = null;
       } else {
-        liftHere = lifts[mark.col];
-        heatHere = heats[mark.col];
+        sweep.r += SWEEP_SPEED / 60;
+        moving = true;
+        // Gone once the front has left the far corner of the page.
+        const far = Math.max(
+          Math.hypot(sweep.x, sweep.y),
+          Math.hypot(width - sweep.x, sweep.y),
+          Math.hypot(sweep.x, height - sweep.y),
+          Math.hypot(width - sweep.x, height - sweep.y)
+        );
+        if (sweep.r > far + SWEEP_WIDE) { lie = sweep.to; sweep = null; }
       }
-      const under = (mark.oy - (rest - liftHere)) / edge;
-      const want = Math.max(0, Math.min(1, under));
-      // How much of a mound this mark stands in. A mound is drawn
-      // harder than the flat field around it: it is the reading, and
-      // the flat field is only what the reading is drawn on.
-      mark.rise = Math.min(1, liftHere / (height * MOUND_UP));
-      const warm = heatHere * Math.max(0, Math.min(1, 1.6 - under * 0.5));
+    }
 
-      if (hasHand) {
-        const dx = mark.ox - handX, dy = mark.oy - handY;
-        const off = Math.sqrt(dx * dx + dy * dy);
-        if (off < REACH) {
-          // Falls away smoothly to nothing at the edge of its reach,
-          // so there is no ring where the effect stops.
-          const near = 1 - off / REACH;
-          const push = near * near * SHOVE;
-          const away = off < 0.001 ? 0 : 1 / off;
-          wantX += dx * away * push;
-          wantY += dy * away * push;
-          wantSize = MARK * (1 + near * near * (SWELL - 1));
-        }
-      }
-
-      mark.x += (wantX - mark.x) * step;
-      mark.y += (wantY - mark.y) * step;
-      mark.size += (wantSize - mark.size) * step;
-      mark.show += (want - mark.show) * step;
-      mark.warm += (warm - mark.warm) * step;
-      if (Math.abs(mark.x - wantX) > 0.05 ||
-          Math.abs(mark.size - wantSize) > 0.01 ||
-          Math.abs(mark.show - want) > 0.004 ||
-          Math.abs(mark.warm - warm) > 0.004) {
+    for (let n = 0; n < strokes.length; n++) {
+      const stroke = strokes[n];
+      wantedAt(stroke.x, stroke.y);
+      stroke.a = turnTo(stroke.a, wantA, step);
+      stroke.len += (wantLen - stroke.len) * step;
+      stroke.warm += (wantWarm - stroke.warm) * step;
+      if (Math.abs(stroke.len - wantLen) > 0.06 ||
+          Math.abs(stroke.warm - wantWarm) > 0.01 ||
+          Math.abs(turnTo(stroke.a, wantA, 1) - stroke.a) > 0.004) {
         moving = true;
       }
-      // Faintest high up the page and strongest low, wherever the top
-      // edge happens to be at the time.
-      mark.fade = Math.max(0, Math.min(1, (mark.oy - height * 0.2) / (height * 0.8)));
     }
     return moving;
   }
 
   function draw() {
     paint.clearRect(0, 0, width, height);
+    paint.lineCap = "round";
     paint.lineWidth = 1;
-    for (let n = 0; n < marks.length; n++) {
-      const mark = marks[n];
-      if (mark.show < 0.01) continue;
-      // Where the writing stands, the field is not drawn at all. Read
-      // off where the mark actually IS rather than where the lattice
-      // put it, so one shoved towards the words by the cursor is taken
-      // out too.
-      const room = roomAt(mark.x, mark.y);
-      if (room <= 0.01) continue;
-      const lit = Math.min(1, (mark.size - MARK) / (MARK * (SWELL - 1)));
-      // Brass for what the hand is doing, and for the mound belonging
-      // to the entry it is pointing at; ink for the reading itself,
-      // which is the page's own and not something being done to it.
-      const ink = lit > 0.08 || mark.warm > 0.5 ? BRASS : INK;
-      // The top edge of the field is the reading, so the marks along
-      // it are drawn a little harder than the ones under it: a skyline
-      // that fades out is a skyline you have to look for.
-      const crest = mark.show * (1 - mark.show) * 4;
-      const alpha =
-        ((0.1 + mark.fade * 0.26 + (mark.rise || 0) * 0.16 +
-          lit * 0.5 + mark.warm * 0.3) * mark.show +
-         crest * 0.14) * room;
-      const tone = "rgba(" + ink + "," + alpha.toFixed(3) + ")";
-      // Squares, not dots: the same shape every other mark on the site
-      // is made of — and every fifth one each way is the hollow
-      // registration square the site marks a point with, so the grid
-      // counts itself rather than being an even wash of ticks.
-      const size = mark.size * (1 + mark.warm * 0.35);
-      if (mark.node) {
-        const wide = size * NODE_MARK;
-        paint.strokeStyle = tone;
-        paint.strokeRect(
-          Math.round(mark.x - wide / 2) + 0.5, Math.round(mark.y - wide / 2) + 0.5,
-          Math.round(wide), Math.round(wide)
-        );
-      } else {
-        paint.fillStyle = tone;
-        const half = size / 2;
-        paint.fillRect(mark.x - half, mark.y - half, size, size);
+    // Grouped into a few weights and drawn a band at a time: a stroke
+    // that needs its own alpha needs its own stroke() call, and there
+    // are thousands of them.
+    const bands = [];
+    for (let b = 0; b < BANDS * 2; b++) bands.push(null);
+
+    for (let n = 0; n < strokes.length; n++) {
+      const stroke = strokes[n];
+      const room = roomAt(stroke.x, stroke.y);
+      if (room <= 0.02) continue;
+      const alpha = (0.06 + stroke.fade * 0.3 + stroke.warm * 0.55) * room;
+      if (alpha < 0.012) continue;
+      const warm = stroke.warm > 0.22;
+      let band = Math.min(BANDS - 1, Math.floor(alpha / ALPHA_TOP * BANDS));
+      if (band < 0) band = 0;
+      const at = band + (warm ? BANDS : 0);
+      if (!bands[at]) bands[at] = [];
+      const half = stroke.len / 2;
+      const dx = Math.cos(stroke.a) * half, dy = Math.sin(stroke.a) * half;
+      bands[at].push(stroke.x - dx, stroke.y - dy, stroke.x + dx, stroke.y + dy);
+    }
+
+    for (let at = 0; at < bands.length; at++) {
+      const band = bands[at];
+      if (!band) continue;
+      const alpha = ((at % BANDS) + 0.5) / BANDS * ALPHA_TOP;
+      paint.strokeStyle = "rgba(" + (at >= BANDS ? BRASS : INK) + "," + alpha.toFixed(3) + ")";
+      paint.beginPath();
+      for (let n = 0; n < band.length; n += 4) {
+        paint.moveTo(band[n], band[n + 1]);
+        paint.lineTo(band[n + 2], band[n + 3]);
       }
+      paint.stroke();
     }
   }
 

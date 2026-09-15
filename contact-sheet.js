@@ -809,7 +809,18 @@
     });
   }
 
+  // The first layout is where every picture STARTS. `placing` holds off
+  // the transition that places them for that one frame, or each of them
+  // slides in from the corner of the sheet as the page opens; and the
+  // page is only shown once they are where they belong, so what the
+  // browser painted before this — the no-script grid of every picture
+  // — is never seen. Both are undone on the next frame.
+  sheet.classList.add("placing");
   layout();
+  document.documentElement.classList.remove("js-coming");
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    sheet.classList.remove("placing");
+  }));
   window.addEventListener("resize", layout);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
 

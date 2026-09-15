@@ -9,6 +9,27 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../style.css">
+<script>
+  /* The page's own contents are held back for the moment between the
+     first paint and this page's script taking over. Without it the
+     browser shows the no-script version first — every picture in a
+     plain grid, and the favourites as a list under them — and then
+     the script sweeps it all away, which reads as the page blinking
+     its whole contents at you before it starts.
+
+     It undoes itself if that script never arrives, so the no-script
+     version of this page is still exactly what you get without one. */
+  document.documentElement.classList.add("js-coming");
+  var ready = function () {
+    document.documentElement.classList.remove("js-coming");
+  };
+  /* If that script never arrives — blocked, missing, or broken — then
+     the page's own contents ARE the page, so they are shown the moment
+     everything else has finished loading. The timer is only a last
+     resort behind that. */
+  window.addEventListener("load", ready);
+  setTimeout(ready, 4000);
+</script>
 </head>
 <!--
   This page is one full "body of work" — a category — laid out as a

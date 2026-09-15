@@ -8,6 +8,26 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../style.css">
+<script>
+  /* The page's own contents are held back for the moment between the
+     first paint and this page's script taking over. Without it the
+     browser shows the no-script version first — a light page with a
+     heading and a list of rows — and then the drawing replaces it,
+     which is a flash of a different page in front of the opening.
+
+     It undoes itself if that script never arrives, so the no-script
+     version of this page is still exactly what you get without one. */
+  document.documentElement.classList.add("js-coming");
+  var ready = function () {
+    document.documentElement.classList.remove("js-coming");
+  };
+  /* If that script never arrives — blocked, missing, or broken — then
+     the page's own contents ARE the page, so they are shown the moment
+     everything else has finished loading. The timer is only a last
+     resort behind that. */
+  window.addEventListener("load", ready);
+  setTimeout(ready, 4000);
+</script>
 </head>
 <!--
   This category is a STRUCTURE you travel through — read as a

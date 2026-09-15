@@ -778,7 +778,10 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
 .sheet {
   position: relative;
   width: min(1240px, calc(100% - 80px));
-  margin: 0 auto;
+  /* Hanging a little below the chrome rather than starting right under
+     it: the Menu, the two buttons and the Search are fixed across the
+     top and stay where they are — the map is what sits lower. */
+  margin: clamp(18px, 3.4vh, 46px) auto 0;
   padding-bottom: 90px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -849,6 +852,11 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
              scale(var(--lift, 1));
   transition: transform 0.28s var(--menu-ease), opacity 0.45s var(--menu-ease);
 }
+/* The first layout is where the pictures START, not somewhere they
+   move to: with the transition above running, every one of them slid
+   in from the corner of the sheet as the page opened. contact-sheet.js
+   takes this off again on the frame after that first layout. */
+.sheet.placing .sheet-frame { transition: none; }
 /* While one picture is being pointed at, the rest of the sheet steps
    back — only just, enough to notice and not enough to interrupt the
    map. All three of these are written under .settled as well: nothing
@@ -1018,6 +1026,17 @@ body.sheet-named .sheet-where {
    by the rule that dims the page behind the menu, and that rule
    outranks anything written here — the fades below would be that
    rule's, not these. Inside a wrapper they are these. */
+/* HELD BACK UNTIL THE SCRIPT HAS TAKEN OVER. Both of the pages that
+   replace their own contents (this one and the theories drawing) carry
+   a line in their <head> that marks the document while their script is
+   on its way, and each script clears it the moment it has laid itself
+   out. Without it the browser paints the no-script version first and
+   then has it swept away — the page blinking its whole contents at you
+   before it begins. `visibility` rather than `display` or `opacity`:
+   the sheet measures its own captions on the first layout, and
+   something with no layout box measures nothing. */
+html.js-coming .views { visibility: hidden; }
+
 .views { position: relative; padding-top: clamp(64px, 9vh, 96px); }
 .sheet, .gallery { transition: opacity 0.5s var(--menu-ease); }
 body.view-switching .sheet,
@@ -1258,6 +1277,12 @@ body.sheet-scripted .gallery-entry { display: none; }
    uses, and stays that way.
    ================================================================== */
 body.structured { background: #0a0b0e; }
+/* Before structure.js has taken over: the ground is already the
+   drawing's, so what follows is the drawing arriving rather than one
+   page being swapped for another. */
+html.js-coming body.theories-page { background: #0a0b0e; }
+html.js-coming body.theories-page .page-content { visibility: hidden; }
+html.js-coming body.theories-page .menu-trigger { color: #dce6f7; }
 body.structured .page-content { padding: 0; margin: 0; max-width: none; }
 /* The list is still in the page for anything reading rather than
    looking — it is the structure's own index — but it is not drawn.
@@ -1306,6 +1331,17 @@ body.structured .menu-trigger { color: #dce6f7; }
   color: rgba(226, 232, 242, 0.6);
 }
 body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-color: rgba(226, 232, 242, 0.2); }
+
+/* THE OPENING. The drawing sets itself up when the page loads — the
+   rails shoot out, the ribs come up out of the depth, the rule writes
+   itself along the floor — and the chrome arrives with it rather than
+   standing there first over an empty screen. structure.js adds `lit`
+   when the setting up has finished. */
+.structure:not(.lit) .structure-readout,
+.structure:not(.lit) .page-where,
+.structure:not(.lit) .structure-cue { opacity: 0; }
+.structure .structure-readout,
+.structure .page-where { transition: opacity 0.9s var(--menu-ease); }
 
 /* Said once, at the top of the road, and gone as soon as you have
    started down it. */
