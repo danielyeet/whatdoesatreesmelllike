@@ -114,7 +114,7 @@ async function waitForChamber(page) {
 async function openMenu(page) {
   await page.locator(".chamber-word").click();
   await expect(page.locator(".chamber-panel")).toBeVisible();
-  await page.waitForTimeout(2600);
+  await page.waitForTimeout(3100);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -377,7 +377,7 @@ test("the word travels to its place on the step rather than jumping there",
   // window — further, in one frame, than the whole journey it then
   // eased through. The owner reported it. It goes the other way when
   // the menu is taken off the page again, so both halves are watched.
-  const OPEN_MS = 1900;
+  const OPEN_MS = 2200;
   const honest = (seen, what) => {
     const travel = Math.abs(seen[seen.length - 1][1] - seen[0][1]);
     expect(travel, `${what}: the word should travel at all`).toBeGreaterThan(40);
@@ -397,9 +397,9 @@ test("the word travels to its place on the step rather than jumping there",
       .toBeLessThan(worstGap);
   };
 
-  honest(await travelOfWord(page, () => page.locator(".chamber-word").click(), 2600), "opening");
+  honest(await travelOfWord(page, () => page.locator(".chamber-word").click(), 2900), "opening");
   await page.waitForTimeout(900);
-  honest(await travelOfWord(page, () => page.locator(".chamber-word").click(), 2600), "closing");
+  honest(await travelOfWord(page, () => page.locator(".chamber-word").click(), 2900), "closing");
 });
 
 /** How far out the drawing stands in a band of the window: the

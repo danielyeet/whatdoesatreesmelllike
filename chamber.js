@@ -295,11 +295,13 @@
   // they used to do, and no amount of tuning either on its own made
   // that read as one movement.
   //
-  // A little longer than it was (1.7s), because a movement this big
-  // reads as smoother taken at a walk — and because the menu now goes
-  // out on the same step rather than being taken off the page in one
-  // frame.
-  const OPEN_MS = 1900;        // how long the step between the two states takes
+  // Taken at a walk, and lengthened twice for it: 1.7s, then 1.9s,
+  // now this. A movement this big reads as smoother the longer it is
+  // given, up to the point where it reads as slow — the owner has
+  // asked for smoother twice and the drawing itself is already even
+  // (measured: every frame of the step comes in at 16.7ms, none over
+  // 20), so time is what is left to give it.
+  const OPEN_MS = 2200;        // how long the step between the two states takes
   // AND HOW LONG THE MENU ITSELF TAKES TO GO, which is less: it is
   // back inside the word well before the orbit has finished narrowing.
   // It is taken off the page at the end of that rather than at the end
@@ -308,7 +310,7 @@
   // come in far enough to have specks standing inside that room, and
   // they would all appear in the one frame it was dropped. This must
   // stay the length of `chamber-shut` in `style.css`.
-  const SHUT_MS = 1100;
+  const SHUT_MS = 1250;
   const OPEN_CLEAR = 46;       // how far outside the writing the orbit stands
   const OPEN_FILL = 0.96;      // how much of the window it is allowed to fill
   const OPEN_MOST = 22;        // and how wide it is ever allowed to grow
@@ -650,6 +652,9 @@
   // How far the plate is standing above the middle of the window — see
   // `clearing()`. Kept so it is only written when it actually changes.
   let lifted = 0;
+  // And how far the menu has arrived, which is how much of the room it
+  // stands in is cleared of specks — see `veil` in clearing() and draw().
+  let veil = 0;
   const now = () =>
     (window.performance && window.performance.now ? window.performance.now() : Date.now());
   /** THE CURVE THE STEP IS EASED ON — and the very one the stylesheet
@@ -1014,6 +1019,15 @@
 
     const menu = panel.getBoundingClientRect();
     if (menu.width > 8 && menu.height > 8) fitOrbit(menu);
+
+    // HOW MUCH OF THE ROOM THE MENU TAKES IS CLEARED of everything
+    // near — nothing while it is not there, all of it once it has
+    // arrived, and on the way in and out exactly as much as the menu
+    // itself is there. Read off the page rather than worked out from
+    // a clock of its own: the menu's fade is the stylesheet's
+    // (`chamber-open`, `chamber-shut`), and a second clock here would
+    // be one more thing to keep in step with it.
+    veil = panel.hidden ? 0 : Number(window.getComputedStyle(panel).opacity) || 0;
 
     // HOW FAR THE PLATE STANDS ABOVE THE MIDDLE OF THE WINDOW. The
     // menu hangs out of the flow under the word, so it is the word
@@ -1479,24 +1493,35 @@
     // by box. The far rim now threads between the letters and is hidden
     // behind the strokes, which is what it should have done all along.
     //
-    // The front canvas is another matter. Closed it is not clipped
-    // either: the nearer half of the ring is meant to pass over the
+    // The front canvas is another matter. Closed, nothing is taken out
+    // of it: the nearer half of the ring is meant to pass over the
     // word, and that crossing is the whole of what makes the word sit
-    // inside the chamber rather than on top of a picture of it. Opened
-    // it IS clipped — to everything OUTSIDE the menu's box, which is
-    // what the whole-window rectangle plus the box under `evenodd`
-    // below comes to: the box becomes a hole, and nothing near is
-    // drawn inside it. The panel has a border and a ground of its own,
-    // so the edge the particles stop at is an edge you can see.
+    // inside the chamber rather than on top of a picture of it. Open,
+    // the room the menu stands in is CLEARED of everything near, or
+    // the specks and the web would be drawn over the writing. The
+    // panel has a border and a ground of its own, so the edge they
+    // stop at is an edge you can see.
+    //
+    // THAT CLEARING IS FADED IN WITH THE MENU ITSELF, and that is the
+    // whole of `veil` — see `clearing()`, which reads the menu's own
+    // opacity off the page rather than keeping a clock of its own.
+    // It used to be a clip, switched on in the one frame the panel
+    // joined the page — two thirds of a second before the panel began
+    // to fade in at all. So a hard-edged rectangle of nothing appeared
+    // in the middle of the drawing and the streams stopped dead
+    // against it with nothing there to stop them: the same invisible
+    // pane the back canvas used to stand in the chamber, except in
+    // time rather than in space. The owner reported it — the table
+    // appears instantly as an object and obstructs the flow of the
+    // particles.
+    //
+    // It is done by taking the room back OUT of the finished drawing
+    // rather than by not drawing into it (`destination-out`), because
+    // the fade has to reach everything the front canvas carries — the
+    // near rim of the orbit and its ticks, the specks, their tails and
+    // the web — and one pass over the box does all of them at once.
     paint.save();
     paintFront.save();
-    if (taken && !panel.hidden) {
-      paintFront.beginPath();
-      paintFront.rect(0, 0, width, height);
-      paintFront.rect(taken.left, taken.top,
-                      taken.right - taken.left, taken.foot - taken.top);
-      paintFront.clip("evenodd");
-    }
 
     drawMarks();
     for (let b = 0; b < behind.length; b++) {
@@ -1577,6 +1602,14 @@
 
     drawWeb();
     near.length = 0;
+
+    if (taken && veil > 0.002) {
+      paintFront.globalCompositeOperation = "destination-out";
+      paintFront.globalAlpha = Math.min(1, veil);
+      paintFront.fillStyle = "#000";
+      paintFront.fillRect(taken.left, taken.top,
+                          taken.right - taken.left, taken.foot - taken.top);
+    }
 
     paint.restore();
     paintFront.restore();

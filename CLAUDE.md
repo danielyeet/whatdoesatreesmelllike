@@ -596,10 +596,13 @@ the borders of the window and held there as a rectangle. That put two different 
 one page with a costly step between them, and the step was the most awkward moment on it.
 One thing that grows is smooth in both directions for the same reason — there is no
 `EDGE`, no seat and no border in this file any more. The step itself is a **timed ramp**
-eased flat at both ends (`OPEN_MS`, 1.9s), not an exponential chase: a chase starts at its
-fastest and creeps at the end.
+eased flat at both ends (`OPEN_MS`, 2.2s), not an exponential chase: a chase starts at its
+fastest and creeps at the end. It has been lengthened twice — 1.7s, 1.9s, 2.2s — because
+the owner has asked for it smoother twice, and there is nothing uneven left in the drawing
+to fix: measured, every frame of the step comes in at 16.7ms and none over 20, so time is
+what is left to give it.
 
-Four things make that step one movement rather than several, and each of them was once
+Five things make that step one movement rather than several, and each of them was once
 the thing that made it read as a lurch:
 
 - **NOTHING THAT ARRIVES MAY CHANGE THE SIZE OF THE PLATE.** The menu hangs out of the
@@ -639,6 +642,21 @@ the thing that made it read as a lurch:
   tails is drawn from — rose by a third, so the whole ring combed outward in long streaks
   and then fell back. Carried, the peak is about six times resting and the overall speed
   does not change at all.
+- **The room the menu takes is CLEARED of the near specks as the menu arrives, not
+  before it.** Everything on `.chamber-front` is drawn, and then the menu's own box is
+  taken back out of the finished drawing (`destination-out`, `veil` in `draw()`) by
+  exactly as much as the menu itself has faded in — which `chamber.js` reads off the
+  page's own computed opacity rather than keeping a second clock for. It used to be a
+  clip switched on in the one frame the panel joined the page, two thirds of a second
+  before the panel began to fade in at all, so a hard-edged rectangle of nothing appeared
+  in the middle of the drawing and the streams stopped dead against it with nothing there
+  to stop them — the same **invisible pane** the back canvas used to stand in the
+  chamber, except in time rather than in space. That was a reported bug ("the table
+  appears instantly as an object and obstructs the flow of the particles"). Taking the
+  room out of the finished drawing rather than not drawing into it is what makes one pass
+  reach all of it: the near rim and its ticks, the specks, their tails and the web.
+  It must still reach 1 when the menu is fully there, or specks are drawn over the
+  writing; `tests/chamber.spec.js` checks that nothing at all is drawn inside the menu.
 - **The menu leaves on the same step it arrives on.** It used to be taken off the page in
   the one frame the word was pressed, leaving the orbit to spend the next two seconds
   coming back in after it — half of the page's only movement was a cut. It fades and rises
