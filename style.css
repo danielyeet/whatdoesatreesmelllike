@@ -1378,17 +1378,22 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   align-items: center;
   justify-content: center;
   gap: 0.18em;
-  padding: 0.22em 0.5em 0.3em;
+  padding: 0.3em 0.62em 0.36em;
   border: 0;
   background: none;
   cursor: pointer;
   white-space: nowrap;
   font-family: var(--mono);
-  /* Against `vmin` because the ring is, and capped against `vw` as
+  /* Against `vmin` because the orbit is, and capped against `vw` as
      well so the lettering cannot run off the sides of a narrow window
-     — on a phone the ring is drawn against the short side and the word
-     against the long one, and only the cap keeps the two apart. */
-  font-size: clamp(20px, min(9.4vmin, 8.2vw), 104px);
+     — on a phone the orbit is drawn against the short side and the
+     word against the long one, and only the cap keeps the two apart.
+
+     It is set SMALLER than it was, and `RING` in chamber.js came down
+     with it: the word still has to be a little wider than the orbit or
+     the orbit's rims cannot cross the ends of the lettering, so the
+     two sizes are one decision and neither moves alone. */
+  font-size: clamp(17px, min(6vmin, 5.4vw), 68px);
   letter-spacing: 0.55em;
   text-transform: uppercase;
   color: var(--ink);
@@ -1416,19 +1421,26 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
    heading somebody centred. */
 .chamber-crop {
   position: absolute;
-  width: 0.3em;
-  height: 0.3em;
+  width: 0.34em;
+  height: 0.34em;
   border: 0 solid var(--line);
-  transition: border-color 0.35s var(--menu-ease), width 1.5s var(--menu-ease),
-              height 1.5s var(--menu-ease);
+  transition: border-color 0.35s var(--menu-ease), width 0.4s var(--menu-ease),
+              height 0.4s var(--menu-ease);
 }
 .chamber-crop.tl { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
 .chamber-crop.tr { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
 .chamber-crop.bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
 .chamber-crop.br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+/* Pressed-looking on the way in: the brackets run out towards each
+   other so the four of them read as one frame closing round the word,
+   which is as near as this page comes to saying "button" without
+   drawing a box permanently round the only thing on it. */
 .chamber-word:hover .chamber-crop, .chamber-word:focus-visible .chamber-crop {
   border-color: var(--brass);
+  width: 0.9em;
+  height: 0.55em;
 }
+.chamber-word:active .chamber-crop { width: 1.3em; height: 0.7em; }
 
 /* THE CUE. The other half: a small boxed label under the lettering
    saying what pressing it does, and which way it will go. It is set in
@@ -1438,9 +1450,10 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  margin-top: 0.06em;
-  padding: 5px 13px;
+  margin-top: 0.12em;
+  padding: 6px 14px;
   border: 1px solid var(--line);
+  background: var(--bg);
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.26em;
@@ -1461,6 +1474,12 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
 .chamber-word:hover .chamber-cue, .chamber-word:focus-visible .chamber-cue {
   border-color: var(--brass);
   color: var(--brass);
+  background: rgba(156, 111, 53, 0.08);
+}
+.chamber-word:active .chamber-cue {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: var(--bg);
 }
 .chamber-plate.open .chamber-cue-mark { transform: translateY(1px) rotate(225deg); }
 .chamber-reg {
