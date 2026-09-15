@@ -28,7 +28,8 @@
 // from anywhere else, that the orbit stands round the writing and runs on
 // behind it unbroken with its near rim drawn over it, that opening the
 // menu widens that same orbit
-// rather than replacing it, that it keeps turning either way, that
+// rather than replacing it, that the word travels to its place on that
+// step rather than jumping there, that it keeps turning either way, that
 // pointing at a row swells the orbit level with it and does nothing
 // else — the leaders that used to be run out across the page are gone
 // —
@@ -337,6 +338,70 @@ test("opening the menu widens the same orbit rather than replacing it",
   ])).ink, "nothing should be drawn over the menu").toBe(0);
 });
 
+/** Where the word stands, every frame, while `act` is being done to
+    the page — its top edge on the window, against the clock.
+
+    This is the reading that says whether the step is a movement or a
+    cut: a jump does not show up in what the page looks like before and
+    after, only in the one frame between them. */
+const travelOfWord = async (page, act, ms) => {
+  const watching = page.evaluate((span) => new Promise((done) => {
+    const word = document.querySelector(".chamber-word");
+    const seen = [];
+    const t0 = performance.now();
+    const tick = () => {
+      seen.push([performance.now() - t0, word.getBoundingClientRect().top]);
+      if (performance.now() - t0 < span) requestAnimationFrame(tick); else done(seen);
+    };
+    requestAnimationFrame(tick);
+  }), ms);
+  await act();
+  return watching;
+};
+
+test("the word travels to its place on the step rather than jumping there",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await page.mouse.move(4, 4);
+  await page.waitForTimeout(6000);
+
+  // THE STEP IS 1.9 SECONDS EASED FLAT AT BOTH ENDS, and the steepest
+  // that curve ever gets is about twice the average — so in any one
+  // frame the word cannot honestly have moved more than twice its
+  // whole travel times that frame's share of the step. Anything past
+  // that is not easing, it is a cut.
+  //
+  // The menu used to be stacked under the word in the same box, so the
+  // frame it went on to the page the word was shoved 143 pixels up the
+  // window — further, in one frame, than the whole journey it then
+  // eased through. The owner reported it. It goes the other way when
+  // the menu is taken off the page again, so both halves are watched.
+  const OPEN_MS = 1900;
+  const honest = (seen, what) => {
+    const travel = Math.abs(seen[seen.length - 1][1] - seen[0][1]);
+    expect(travel, `${what}: the word should travel at all`).toBeGreaterThan(40);
+    // The frame that came closest to moving more than it could have.
+    let over = -Infinity, worst = 0, worstAt = 0, worstGap = 1;
+    for (let n = 1; n < seen.length; n++) {
+      const moved = Math.abs(seen[n][1] - seen[n - 1][1]);
+      const gap = seen[n][0] - seen[n - 1][0];
+      const could = (travel * 2.2 * gap) / OPEN_MS + 6;
+      if (moved - could > over) {
+        over = moved - could;
+        worst = moved; worstGap = could; worstAt = seen[n][0];
+      }
+    }
+    expect(worst, `${what}: it jumped ${Math.round(worst)}px at ${Math.round(worstAt)}ms, ` +
+      `where the step could carry it ${Math.round(worstGap)}px — travel was ${Math.round(travel)}px`)
+      .toBeLessThan(worstGap);
+  };
+
+  honest(await travelOfWord(page, () => page.locator(".chamber-word").click(), 2600), "opening");
+  await page.waitForTimeout(900);
+  honest(await travelOfWord(page, () => page.locator(".chamber-word").click(), 2600), "closing");
+});
+
 /** How far out the drawing stands in a band of the window: the
     outermost ink on each side, as a distance from the middle of the
     window in CSS pixels. Where the orbit swells, it reaches further.
@@ -345,8 +410,10 @@ test("opening the menu widens the same orbit rather than replacing it",
     turning the whole time: how much ink stands in any one square of
     the window goes up and down by a fifth on its own as the specks
     carry round it, which is the same order as the swell being
-    measured. How far out the orbit REACHES is steady to a few pixels
-    whatever is passing through. */
+    measured.
+
+    ONE READING OF IT IS NOT ENOUGH ON ITS OWN, though — see
+    `reachOverTime` below. */
 const reachOfOrbit = (page, top, deep) =>
   page.evaluate(([t, d]) => {
     let left = 1e9, right = -1e9;
@@ -366,6 +433,24 @@ const reachOfOrbit = (page, top, deep) =>
     const mid = window.innerWidth / 2;
     return { left: Math.round(mid - left), right: Math.round(right - mid) };
   }, [top, deep]);
+
+/** The same reading, taken several times over a second and averaged.
+    The orbit is a BAND now and not a line, so how far out the
+    outermost speck in a given stripe of the window happens to stand
+    swings by sixty-odd pixels on its own as the specks carry round it
+    — measured: 364 to 497 across six readings of the same resting
+    orbit. Averaged, resting and read-off are far apart and steady
+    (about 430 against about 545). A single reading of each is the same
+    test with a quarter of the evidence, and it fails about one run in
+    five. */
+async function reachOverTime(page, band, times) {
+  const seen = [];
+  for (let n = 0; n < (times || 5); n++) {
+    seen.push((await reachOfOrbit(page, ...band)).right);
+    await page.waitForTimeout(220);
+  }
+  return { right: Math.round(seen.reduce((a, b) => a + b, 0) / seen.length), seen: seen };
+}
 
 test("pointing at a row swells the orbit level with it, and nothing else",
   async ({ page }) => {
@@ -393,25 +478,26 @@ test("pointing at a row swells the orbit level with it, and nothing else",
   const gap = [190, mid - 22, 220, 44];
 
   const restGap = await inkSeen(page, gap);
-  const restReach = await reachOfOrbit(page, ...band);
+  const restReach = await reachOverTime(page, band);
 
   await page.mouse.move(row.x + row.width / 2, mid);
   await page.waitForTimeout(1400);
   const readGap = await inkSeen(page, gap);
-  const readReach = await reachOfOrbit(page, ...band);
+  const readReach = await reachOverTime(page, band);
 
   expect(readReach.right,
-    `the orbit level with it should swell: ${restReach.right} \u2192 ${readReach.right}`)
-    .toBeGreaterThan(restReach.right + 30);
+    `the orbit level with it should swell: ${restReach.right} \u2192 ${readReach.right}` +
+    ` (${restReach.seen.join(",")} against ${readReach.seen.join(",")})`)
+    .toBeGreaterThan(restReach.right + 50);
   expect(readGap.ink - restGap.ink,
     `and nothing run out across the page: ${restGap.ink} \u2192 ${readGap.ink}`)
     .toBeLessThan(4000);
 
   await page.mouse.move(4, 4);
   await page.waitForTimeout(2200);
-  const goneReach = await reachOfOrbit(page, ...band);
+  const goneReach = await reachOverTime(page, band);
   expect(goneReach.right, `and let go again: ${readReach.right} \u2192 ${goneReach.right}`)
-    .toBeLessThan(readReach.right - 20);
+    .toBeLessThan(readReach.right - 50);
 });
 
 test("the orbit keeps turning, open and closed alike", async ({ page }) => {

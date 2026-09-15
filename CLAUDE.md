@@ -100,7 +100,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 118 passed, 0 failed, and takes six to seven minutes.** If you get a
+**A clean run is 119 passed, 0 failed, and takes six to seven minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -159,7 +159,9 @@ the menu and a chapter opening its own favourites with Escape stepping back out 
 at a time, the two injectors standing at opposite corners with nothing fired from the
 other two, the orbit standing round the
 word and running on behind it unbroken with its near rim drawn over it, opening the menu
-widening that same orbit rather than replacing it and never crossing the menu, the orbit
+widening that same orbit rather than replacing it and never crossing the menu, the word
+travelling to its place on that step rather than jumping there (watched every frame,
+through both halves of it), the orbit
 turning on open and closed alike, pointing at a row swelling the orbit level with it with
 nothing run out across the page and drawing that row's own rule back, the word saying what pressing it does
 and saying the
@@ -597,8 +599,26 @@ One thing that grows is smooth in both directions for the same reason — there 
 eased flat at both ends (`OPEN_MS`, 1.9s), not an exponential chase: a chase starts at its
 fastest and creeps at the end.
 
-Three things make that step one movement rather than several, and each of them was once
+Four things make that step one movement rather than several, and each of them was once
 the thing that made it read as a lurch:
+
+- **NOTHING THAT ARRIVES MAY CHANGE THE SIZE OF THE PLATE.** The menu hangs out of the
+  flow (`position: absolute` on `.chamber-panel`, under the word), and what centres the
+  word and the menu together is `--menu-lift` — how far `.chamber-plate` stands above the
+  middle of the window, measured by `chamber.js` off the laid-out boxes and eased by the
+  stylesheet on the step's own curve. The menu used to be a second thing in the plate's
+  own stack, so the frame it went on to the page the box grew by the whole height of it
+  and the word was **shoved 143 pixels up the window in that one frame**, before any of
+  the easing had begun — and the same in reverse when the menu was taken off the page
+  again. That was a reported bug: *"the word expand blinks to a position above it and then
+  only is a smooth animation played"*. `tests/chamber.spec.js` now watches the word every
+  frame through both halves of the step and fails on any jump.
+  Two things about the lift are easy to undo. It is read from `offsetTop` / `offsetHeight`
+  and not from a drawn box, because the menu's own arrival shifts it a few pixels as it
+  fades: a target that keeps moving restarts the easing under itself every frame, and the
+  plate was still short of its place a second after the step had finished. And the
+  `max-height` that keeps a long menu inside a short window now lives on the panel, since
+  the plate is no longer what holds it.
 
 - **The drawing and the writing travel on ONE curve.** `--chamber-step` and
   `--chamber-step-ms` in `style.css` are the whole of it, and `chamber.js` solves that
@@ -821,9 +841,11 @@ Worth knowing before changing any of it (the list has outgrown being counted):
   particle's own depth before it pushes, so what it shoves aside is a real hole in a real
   stream — and the web is strung across whatever is left round it.
 - **The step from the word to the menu is ONE property moving, once.** The word's
-  `font-size` is the whole of it; its letter-spacing, padding, crop marks and the gap
-  either side of its registration marks are all written in `em`, so they come down with
-  it rather than being animated in their own right. They used to be, each with its own
+  `font-size` is the whole of what happens to the word — its letter-spacing, padding, crop
+  marks and the gap either side of its registration marks are all written in `em`, so they
+  come down with it rather than being animated in their own right. (Where the word
+  *stands* is the plate's `--menu-lift`, above, and travels on the same curve over the
+  same length, so the two read as one movement.) They used to be, each with its own
   duration and several of them in pixels, and they arrived at slightly different moments
   — the word appeared to settle in stages. The panel fades and rises a few pixels and
   does nothing else; it used to be squashed flat and stretched out, which draws every

@@ -647,6 +647,9 @@
   // carried out with it as it widens rather than dragged — see
   // `carried` in move().
   let wasOrbit = RING;
+  // How far the plate is standing above the middle of the window — see
+  // `clearing()`. Kept so it is only written when it actually changes.
+  let lifted = 0;
   const now = () =>
     (window.performance && window.performance.now ? window.performance.now() : Date.now());
   /** THE CURVE THE STEP IS EASED ON — and the very one the stylesheet
@@ -1011,6 +1014,36 @@
 
     const menu = panel.getBoundingClientRect();
     if (menu.width > 8 && menu.height > 8) fitOrbit(menu);
+
+    // HOW FAR THE PLATE STANDS ABOVE THE MIDDLE OF THE WINDOW. The
+    // menu hangs out of the flow under the word, so it is the word
+    // alone that the plate centres — and lifting the plate by half of
+    // what hangs below it is what centres the WORD AND THE MENU
+    // TOGETHER, which is what anyone looks at once it is open.
+    //
+    // Measured off the page rather than worked out from the gap and
+    // the height, so there is no number here to keep in step with the
+    // stylesheet. It is a length the stylesheet eases on the step's
+    // own curve, so the word rises to its place over the whole step;
+    // set straight to its open value it would be the jump this was
+    // written to stop.
+    //
+    // Read off the LAID-OUT boxes and not the drawn ones, which is
+    // what `offsetTop` and `offsetHeight` are: the menu's arrival
+    // shifts it a few pixels as it fades, and a drawn box would carry
+    // that, so the lift would creep by four pixels over the first
+    // second. A target that keeps moving restarts the easing under
+    // itself every frame and the plate never arrives — measured, it
+    // was still short of its place a second after the step had
+    // finished. (The plate's own height falls out of the sum, so the
+    // word shrinking does not move this either.)
+    const lift = opened && menu.height > 8
+      ? Math.max(0, (panel.offsetTop + panel.offsetHeight - plate.offsetHeight) / 2)
+      : 0;
+    if (Math.abs(lift - lifted) > 0.5) {
+      lifted = lift;
+      plate.style.setProperty("--menu-lift", lift.toFixed(1) + "px");
+    }
   }
 
   /** How far the orbit of radius `r` reaches from the middle of the
