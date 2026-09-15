@@ -174,10 +174,13 @@ test("every favourite is a link to its piece", async ({ page }) => {
 });
 
 /** How the drawing runs across one horizontal band of the window,
-    given in the WINDOW's coordinates: how much ink there is in it, and
-    how much of the width has any at all. A track is a line right
-    across the page, so `across` is what tells one from a few loose
-    marks that happen to be at the same height. */
+    given in the WINDOW's coordinates: how much ink there is in it, how
+    much of the width has any at all, and whereabouts along it that ink
+    sits. A track is a line right across the page, so `across` is what
+    tells one from a few loose marks that happen to be at the same
+    height — and `along` is what says the squares have MOVED, which a
+    total cannot: they travel sideways along the band, so the same
+    amount of ink is in it from one moment to the next. */
 const bandAt = (page, top, tall) =>
   page.evaluate(([atY, high]) => {
     const canvas = document.querySelector(".chapters-field");
@@ -187,15 +190,18 @@ const bandAt = (page, top, tall) =>
     const deep = Math.max(1, Math.round(high * ratio));
     const shot = canvas.getContext("2d")
       .getImageData(0, y, canvas.width, Math.min(deep, canvas.height - y)).data;
-    let ink = 0;
+    let ink = 0, sum = 0;
     const hit = new Array(canvas.width).fill(0);
     for (let n = 0; n < shot.length; n += 4) {
       if (shot[n + 3] < 10) continue;
+      const at = (n / 4) % canvas.width;
       ink += shot[n + 3];
-      hit[(n / 4) % canvas.width] = 1;
+      sum += shot[n + 3] * at;
+      hit[at] = 1;
     }
     return {
       ink: ink,
+      along: ink ? sum / ink / ratio : 0,
       across: hit.reduce((a, b) => a + b, 0) / canvas.width,
     };
   }, [top, tall]);
@@ -270,17 +276,21 @@ test("the register runs: the squares travel along their tracks", async ({ page }
   await openFavorites(page);
   await page.mouse.move(6, 6);
 
-  // Watched below the writing, where nothing but the drawing is: what
-  // is there has to keep changing, and keep being there.
+  // Watched below the writing, where nothing but the drawing is —
+  // and watched by WHERE the ink is, not how much of it there is. The
+  // squares travel sideways along their tracks, so the amount of ink
+  // in a band across the page is the same from one moment to the next
+  // even while everything in it is moving.
   const at = await page.evaluate(() => window.innerHeight - 90);
   const seen = [];
   for (let n = 0; n < 4; n++) {
-    seen.push((await bandAt(page, at, 60)).ink);
+    seen.push(await bandAt(page, at, 60));
     await page.waitForTimeout(420);
   }
-  const moved = seen.filter((ink, n) => n > 0 && ink !== seen[n - 1]).length;
-  expect(moved, `it should keep running: ${seen.join(", ")}`).toBe(3);
-  seen.forEach((ink) => expect(ink, "and keep being drawn").toBeGreaterThan(400));
+  const moved = seen.filter((band, n) => n > 0 && band.along !== seen[n - 1].along).length;
+  expect(moved, `it should keep running: ${seen.map((b) => b.along.toFixed(1)).join(", ")}`)
+    .toBe(3);
+  seen.forEach((band) => expect(band.ink, "and keep being drawn").toBeGreaterThan(400));
 });
 
 test("how the page is ruled is a reading of the chapter you have open, and no two read the same",

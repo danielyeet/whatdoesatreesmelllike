@@ -7,23 +7,28 @@
 // into a tilted ring — the theories drawing's world turned inside out,
 // ink on white instead of white on near-black.
 //
-// The page has two states and the whole of the interaction is the step
-// between them. CLOSED: the word FAVORITES stands in the middle of the
-// ring, set wider than the ring is so that the ring's rims cross the
-// ends of the lettering — one in front of it and one behind, which is
-// what gives the word a place in the volume. OPEN: pressing the word
-// throws the ring out to the borders of the window and holds it there
-// while the word opens out into the menu; pointing at a row makes the
-// particles along the sides lean in towards it.
+// There is only ever ONE arrangement here, and the whole of the
+// interaction is that arrangement changing size. CLOSED: the word
+// FAVORITES stands in the middle of the orbit, set wider than the
+// orbit is so that its rims cross the ends of the lettering — one in
+// front of it and one behind, which is what gives the word a place in
+// the volume. OPEN: the orbit widens until it stands clear round the
+// menu and never stops turning; pointing at a row makes the stretch of
+// orbit level with it take the cool accent and swell.
+//
+// Two injectors, both on the left: four, one to a corner, fired at
+// each other across the middle and read as a collision rather than as
+// an orbit.
 //
 // These check that the menu is grown from the page's own favourites
 // and carries what the contact sheet's Favorites menu carries, that
 // the word opens it and a chapter opens its own favourites with a way
 // back, that there really is an injector in each corner, that the ring
 // stands round the writing with nothing drawn behind it and its near
-// rim drawn over it, that opening throws it out to the borders, that
-// pointing at a row draws them in towards it, that the streams answer
-// the cursor, that it holds still when animation is turned off, and
+// rim drawn over it, that opening the menu widens that same orbit
+// rather than replacing it, that it keeps turning either way, that
+// pointing at a row reads it off against the orbit, that the streams
+// answer the cursor, that it holds still when animation is turned off, and
 // that the plain list comes back when the script is blocked.
 // ============================================================
 const { test, expect } = require("@playwright/test");
@@ -62,6 +67,31 @@ async function inkSeen(page, box) {
   const ahead = await inkOn(page, ".chamber-front", box);
   return { ink: back.ink + ahead.ink, cool: back.cool + ahead.cool };
 }
+
+/** How far out from the middle of the window the drawing stands, as
+    the ink-weighted mean distance over both canvases. It is the one
+    reading that says whether the orbit is the narrow one or the wide
+    one without having to know where either of them is. */
+const spreadOfInk = (page) =>
+  page.evaluate(() => {
+    let ink = 0, sum = 0;
+    ["chamber-field", "chamber-front"].forEach((which) => {
+      const canvas = document.querySelector("." + which);
+      const ratio = canvas.width / canvas.clientWidth;
+      const shot = canvas.getContext("2d")
+        .getImageData(0, 0, canvas.width, canvas.height).data;
+      const mx = canvas.width / 2, my = canvas.height / 2;
+      for (let y = 0; y < canvas.height; y += 2) {
+        for (let x = 0; x < canvas.width; x += 2) {
+          const a = shot[(y * canvas.width + x) * 4 + 3];
+          if (a < 12) continue;
+          ink += a;
+          sum += (a * Math.hypot(x - mx, y - my)) / ratio;
+        }
+      }
+    });
+    return { mean: Math.round(sum / Math.max(1, ink)), ink: ink };
+  });
 
 async function waitForChamber(page) {
   await page.waitForSelector(".chamber-field", { timeout: 15000 });
@@ -182,24 +212,75 @@ test("it carries what the sheet's Favorites menu carries: number, date, name, li
     .toMatch(/ENTRIES.+\d{2}\.\d{2}\.\d{4} – \d{2}\.\d{2}\.\d{4}/);
 });
 
-test("there is an injector in each corner, firing inward", async ({ page }) => {
+test("both injectors stand on the same side, and neither fires at the middle",
+  async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
   await page.mouse.move(4, 4);
-  await page.waitForTimeout(6000);
+  await page.waitForTimeout(13000);
 
   const box = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
   const side = Math.round(Math.min(box.w, box.h) * 0.3);
-  const corners = [
+
+  // Two injectors, both on the LEFT. Four, one to a corner, fired at
+  // each other across the middle and read as a collision rather than
+  // as an orbit — so the right-hand corners must have nothing in them.
+  for (const [where, at] of [
     ["top left", [0, 0, side, side]],
+    ["bottom left", [0, box.h - side, side, side]],
+  ]) {
+    expect((await inkSeen(page, at)).ink, `an injector and its stream in the ${where} corner`)
+      .toBeGreaterThan(2000);
+  }
+  for (const [where, at] of [
     ["top right", [box.w - side, 0, side, side]],
     ["bottom right", [box.w - side, box.h - side, side, side]],
-    ["bottom left", [0, box.h - side, side, side]],
-  ];
-  for (const [where, at] of corners) {
-    const seen = await inkIn(page, at);
-    expect(seen.ink, `there should be an injector and its stream in the ${where} corner`)
-      .toBeGreaterThan(400);
+  ]) {
+    expect((await inkSeen(page, at)).ink, `nothing should be fired from the ${where} corner`)
+      .toBeLessThan(400);
+  }
+
+  // And a stream is AIMED AT THE ORBIT, not at the middle: where the
+  // injector stands round the orbit is carried forward along the way
+  // the orbit runs, and the stream is fired at there, so it comes in
+  // at a slant and joins going the way the orbit goes. Aimed at the
+  // middle it would dive at the centre and have to be turned through
+  // most of a right angle — which is what "chaotic" looked like.
+  // The two places are CORNERS in chamber.js.
+  for (const at of [[0.06, 0.09], [0.05, 0.93]]) {
+    const off = await page.evaluate(([fx, fy]) => {
+      const from = { x: fx * window.innerWidth, y: fy * window.innerHeight };
+      let ink = 0, sx = 0, sy = 0;
+      ["chamber-field", "chamber-front"].forEach((which) => {
+        const canvas = document.querySelector("." + which);
+        const ratio = canvas.width / canvas.clientWidth;
+        const shot = canvas.getContext("2d")
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        for (let y = 0; y < canvas.height; y += 2) {
+          for (let x = 0; x < canvas.width; x += 2) {
+            const a = shot[(y * canvas.width + x) * 4 + 3];
+            if (a < 12) continue;
+            const px = x / ratio, py = y / ratio;
+            const far = Math.hypot(px - from.x, py - from.y);
+            // Past the injector's own mark, its label and its leader,
+            // and not so far out that the orbit is being measured.
+            if (far < 90 || far > 300) continue;
+            ink += a; sx += a * px; sy += a * py;
+          }
+        }
+      });
+      if (!ink) return null;
+      const went = Math.atan2(sy / ink - from.y, sx / ink - from.x);
+      const straight = Math.atan2(window.innerHeight / 2 - from.y,
+                                  window.innerWidth / 2 - from.x);
+      let turn = went - straight;
+      while (turn > Math.PI) turn -= Math.PI * 2;
+      while (turn < -Math.PI) turn += Math.PI * 2;
+      return Math.abs(turn) * 180 / Math.PI;
+    }, at);
+    expect(off, `there should be a stream leaving ${at}`).not.toBeNull();
+    expect(off, `the stream from ${at} left ${off && off.toFixed(1)}\u00b0 off the middle`)
+      .toBeGreaterThan(9);
   }
 });
 
@@ -252,41 +333,33 @@ test("its near rim is drawn over the word, not round it", async ({ page }) => {
     .toBeGreaterThan(1500);
 });
 
-test("opening the menu throws the ring out to the borders and holds it there",
+test("opening the menu widens the same orbit rather than replacing it",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
   await page.mouse.move(4, 4);
   await page.waitForTimeout(12000);
 
-  const box = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
-  const middle = [box.w * 0.28, box.h * 0.1, box.w * 0.44, box.h * 0.22];
-  const before = await inkSeen(page, middle);
-  expect(before.ink, "there is something in the middle of the window to begin with")
-    .toBeGreaterThan(400);
-
+  const closed = await spreadOfInk(page);
   await openMenu(page);
-  const after = await inkSeen(page, middle);
-  const top = await inkSeen(page, [0, 0, box.w, 96]);
-  const foot = await inkSeen(page, [0, box.h - 96, box.w, 96]);
+  const open = await spreadOfInk(page);
 
-  expect(after.ink, `the middle should be cleared: ${before.ink} before, ${after.ink} after`)
-    .toBeLessThan(before.ink / 4);
-  expect(top.ink, "and they should be held along the top border").toBeGreaterThan(3000);
-  expect(foot.ink, "and along the bottom one").toBeGreaterThan(3000);
+  // There is ONE arrangement on this page and opening the menu is that
+  // arrangement getting bigger. It used to be thrown out to the
+  // borders of the window and held there as a rectangle, which put two
+  // different things on one page with a costly step between them. So
+  // what must change is how far out the drawing stands, and not what
+  // the drawing is.
+  expect(open.mean, `the orbit should widen: ${closed.mean}px out closed, ${open.mean}px open`)
+    .toBeGreaterThan(closed.mean * 1.25);
+  expect(open.ink, "and it should still be the same drawing, not a thinner one")
+    .toBeGreaterThan(closed.ink * 0.5);
 
-  // Held, not stopped: they keep a little life of their own.
-  const shot = () =>
-    page.evaluate(() => {
-      const canvas = document.querySelector(".chamber-front");
-      const d = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
-      let ink = 0;
-      for (let n = 3; n < d.length; n += 4) ink += d[n];
-      return ink;
-    });
-  const one = await shot();
-  await page.waitForTimeout(900);
-  expect(await shot(), "they should not be frozen outright").not.toBe(one);
+  // And it stands clear round the menu rather than crossing it.
+  const menu = await page.locator(".chamber-panel").boundingBox();
+  expect((await inkOn(page, ".chamber-front", [
+    menu.x + 8, menu.y + 8, menu.width - 16, menu.height - 16,
+  ])).ink, "nothing should be drawn over the menu").toBe(0);
 });
 
 test("pointing at a row reads it off against the frame, without pulling the frame out of shape",
@@ -334,29 +407,30 @@ test("pointing at a row reads it off against the frame, without pulling the fram
     .toBeLessThan(readGap.cool);
 });
 
-test("held, the frame keeps travelling round the border", async ({ page }) => {
+test("the orbit keeps turning, open and closed alike", async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
   await page.mouse.move(4, 4);
   await page.waitForTimeout(12000);
+
+  // A patch of the orbit is a different patch of the orbit a moment
+  // later — closed, and once the menu is open too. Nothing on this
+  // page is ever held still.
+  const watch = async (what) => {
+    const seen = [];
+    for (let n = 0; n < 4; n++) {
+      seen.push((await spreadOfInk(page)).ink);
+      await page.waitForTimeout(450);
+    }
+    const moved = seen.filter((ink, n) => n > 0 && ink !== seen[n - 1]).length;
+    expect(moved, `${what}: it should keep turning — ${seen.join(", ")}`).toBe(3);
+    seen.forEach((ink) => expect(ink, `${what}: and keep being drawn`).toBeGreaterThan(2000));
+  };
+  await watch("closed");
   await openMenu(page);
   await page.mouse.move(4, 4);
-  await page.waitForTimeout(1400);
-
-  // Held is not stopped: every particle keeps its seat on the border
-  // but the whole frame travels round it, so a patch of border is a
-  // different patch of border a moment later.
-  const box = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
-  const patch = [box.w * 0.3, 0, 180, 110];
-  const seen = [];
-  for (let n = 0; n < 4; n++) {
-    seen.push((await inkSeen(page, patch)).ink);
-    await page.waitForTimeout(550);
-  }
-  const moved = seen.filter((ink, n) => n > 0 && ink !== seen[n - 1]).length;
-  expect(moved, `the frame should keep moving: ${seen.join(", ")}`).toBe(3);
-  // And it is still a frame, not a drift: there is always ink there.
-  seen.forEach((ink) => expect(ink).toBeGreaterThan(200));
+  await page.waitForTimeout(900);
+  await watch("open");
 });
 
 test("the word says what pressing it does, and says the other thing once it is open",

@@ -1,55 +1,73 @@
 // ============================================================
 // THE CHAMBER (categories/favorites.html only)
 //
-// The favourites live inside a CHAMBER: four injectors, one at each
-// corner of the window, firing a fine stream of square particles
-// inward on white. The streams fall towards the middle, are caught
-// there, and settle into a ring — tilted well off square to the
-// window, so it reads as a lens rather than as a circle drawn on the
-// page. It is the theories drawing's world turned inside out: the same
-// particles, the same instrument marks, the same one cool accent kept
-// for what answers you, printed as ink on white instead of white on
-// near-black.
+// The favourites live inside a CHAMBER: two injectors, both on the
+// left-hand side of the window, firing a fine stream of particles at a
+// slant across it on white. What the streams join is an ORBIT — tilted
+// well off square to the window, so it reads as a lens rather than as
+// a circle drawn on the page. It is the theories drawing's world
+// turned inside out: the same particles, the same instrument marks,
+// the same one cool accent kept for what answers you, printed as ink
+// on white instead of white on near-black.
 //
-// THE PAGE HAS TWO STATES, and the whole of the interaction is the
-// step between them:
+// THERE IS ONLY EVER ONE ARRANGEMENT HERE, and the whole of the
+// interaction is that one arrangement changing size:
 //
 //   CLOSED   the word FAVORITES stands alone in the middle of the
-//            ring, and the ring turns round it. The word is set a
-//            little WIDER than the ring, so the ring's left and right
-//            rims fall across the ends of the lettering — one of them
-//            in front of the word and the other behind, which is what
-//            makes the word sit inside the volume rather than on top
-//            of a picture of one, and why there are two canvases.
+//            orbit, and the orbit turns round it. The word is set a
+//            little WIDER than the orbit, so the orbit's left and
+//            right rims fall across the ends of the lettering — one of
+//            them in front of the word and the other behind, which is
+//            what makes the word sit inside the volume rather than on
+//            top of a picture of one, and why there are two canvases.
 //
-//   OPEN     clicking the word throws the ring outward: every particle
-//            runs to its own place on the border of the window and
-//            holds there, near enough to frozen but never quite, while
-//            the word opens out into the menu. Pointing at a row makes
-//            the particles along the sides TRY to converge on it —
-//            they lean in towards that row and are stopped by the edge
-//            of the writing, which is what makes it read as an
-//            attempt rather than as an animation.
+//   OPEN     pressing the word widens the orbit until it stands clear
+//            round the menu, which opens out of the word as it goes.
+//            It never stops turning. Pointing at a row makes the
+//            stretch of orbit level with it take the cool accent and
+//            swell outward, with a leader run out to each side — a
+//            reading of that row against the orbit, not a reaching for
+//            it.
 //
-// Five things are worth knowing before changing any of it:
+// The open state used to be something else entirely: the particles
+// were thrown out to the borders of the window and held there as a
+// rectangle. That put two different things on one page with a costly
+// step between them, and the step was the most awkward moment on it.
+// One thing that grows is smooth in both directions for the same
+// reason, and there is no `EDGE`, no seat and no border in this file
+// any more.
 //
-//   It is a real fall, not a path. Every particle is shot at the
-//   middle and pulled in; the chamber takes hold of it only once it is
-//   near. Writing the curves by hand instead gives a pattern, and a
-//   pattern is something you can see repeat.
+// Six things are worth knowing before changing any of it:
 //
-//   What it catches is pressed flat onto the ring's own plane (FLAT).
-//   Holding a particle at RING alone gives a shell and not a lens, and
-//   a fat shell seen obliquely is a smear.
+//   It is a real fall, not a path. Every particle is thrown at the
+//   orbit and pulled in by the middle; the chamber takes hold of it
+//   only once it is near. Writing the curves by hand instead gives a
+//   pattern, and a pattern is something you can see repeat.
 //
-//   The corners are the corners of the WINDOW. Each injector is placed
-//   by working back from the screen corner it is meant to sit in at
-//   its own depth, so all four stay in their corners at any window
-//   size while standing at four different depths. They also take turns
-//   being the quick one (`PACE`), so no corner is always the fast one.
+//   A stream is aimed AT THE ORBIT, not at the middle (`ENTRY_LEAD`).
+//   Where the injector stands round the orbit is carried forward along
+//   the way the orbit runs, and the stream is fired at there — so it
+//   comes in at a slant and arrives already going the way the orbit
+//   goes. Aimed at the middle, every stream dived at the centre and
+//   had to be turned through most of a right angle to join, which is
+//   what read as chaos.
 //
-//   Nothing is ever drawn where the writing stands. The menu's own box
-//   is measured off the page and both canvases are clipped around it.
+//   Both injectors are on the SAME SIDE. Four, one to a corner, fired
+//   at each other across the middle; two entering from one side, one
+//   above and one below, go round the same way and fall in behind each
+//   other. They are placed by working back from the point of the
+//   window they are meant to sit at, at their own depths, so they stay
+//   put at any window size — and they take turns being the quick one
+//   (`PACE`), so neither is always the fast one.
+//
+//   What it catches is pressed flat onto the orbit's own plane (FLAT).
+//   Holding a particle at the orbit's radius alone gives a shell and
+//   not a lens, and a fat shell seen obliquely is a smear.
+//
+//   The orbit's own path is drawn, faintly, split at the middle of the
+//   chamber like everything else. It is what makes the drawing legible
+//   AS an orbit in a still frame, and at the moment a stream is
+//   arriving.
 //
 //   The cursor is a hand in the volume, not a cursor on a picture: it
 //   is put at each particle's own depth before it pushes.
@@ -79,98 +97,113 @@
   const NEAR = 3.5;            // nothing nearer than this is drawn
   const FAR = 52;              // and nothing further
 
-  // --- the four injectors, one to a corner, each at its own depth so
-  // the streams dive through the volume rather than sliding across it.
+  // --- THE INJECTORS. Two of them, and both on the LEFT of the window.
+  // Four, one to a corner, fired at each other across the middle and
+  // the result read as a collision rather than as an orbit: two
+  // streams entering from the same side, one above and one below, go
+  // round the same way and fall in behind each other.
+  // Both stand BEYOND the middle of the chamber in depth. An injector
+  // nearer than that is only a short way from the middle in the
+  // volume, however far into the corner of the window it looks — and
+  // one inside the distance the chamber takes hold at has its stream
+  // caught the instant it leaves, so there is no stream to see at all.
+  // That happened: the upper one had no visible stream whatever while
+  // the lower one had a long one.
   const CORNERS = [
-    { at: [0.07, 0.10], z: 13 },
-    { at: [0.93, 0.13], z: 24 },
-    { at: [0.94, 0.89], z: 16 },
-    { at: [0.06, 0.92], z: 27 },
+    { at: [0.06, 0.09], z: 24 },
+    { at: [0.05, 0.93], z: 31 },
   ];
-  const PER_STREAM = 180;      // particles in the air from each of them
-  // They take turns being the quick one rather than one corner always
-  // running faster than the others: each injector's speed breathes on
-  // its own slow clock, and the four clocks are deliberately out of
-  // step with each other.
-  const PACE = 0.42;           // how much quicker and slower they get
-  const PACE_EVERY = [9, 17];  // and how many seconds one of those turns takes
+  const PER_STREAM = 300;      // particles in the air from each of them
+  // They take turns being the quick one rather than one always running
+  // faster than the other: each injector's speed breathes on its own
+  // slow clock, and the two clocks are deliberately out of step.
+  const PACE = 0.3;            // how much quicker and slower they get
+  const PACE_EVERY = [11, 19]; // and how many seconds one of those turns takes
 
   // --- the fall
   //
-  //   PULL     draws a particle in, harder the nearer it is
-  //   CATCH    the distance at which the chamber takes hold of it, so
-  //            the streams read as straight until they arrive
-  //   RING     where it settles what it catches
-  //   SETTLE   how fast the falling is taken out of it — the radial
-  //            part of its travel only, never the going-round part
+  //   PULL       draws a particle in, harder the nearer it is
+  //   CATCH_MUL  the distance the chamber takes hold at, as a multiple
+  //              of the orbit's own radius, so the streams read as
+  //              straight until they arrive
+  //   SETTLE     how fast the falling is taken out of it — the radial
+  //              part of its travel only, never the going-round part
   const PULL = 320;            // how hard the middle draws a particle in
   const SOFT = 2.6;            // and how close in that pull stops growing
-  const FALL = [0.95, 1.35];   // how fast one is shot at the middle
-  const SWING = [0.04, 0.20];  // and how little of that is across the aim
-  const CATCH = 11;            // how near the middle the chamber takes hold
-  // THE AXIS THE CHAMBER TURNS ABOUT, and so the way the ring is
-  // tilted: the ring lies square across it, and how much of the axis
-  // points at you is exactly how squashed the ring comes out. Straight
-  // at you is a circle; upright is a smear seen edge-on. This is well
-  // off both — a lens, tipped away from you, with a near side and a
-  // far side.
+  // A STREAM IS AIMED AT THE ORBIT, NOT AT THE MIDDLE. Where the
+  // injector stands round the orbit is worked out, that place is
+  // carried FORWARD along the way the orbit runs, and the stream is
+  // fired at *there* — so it comes in at a slant and meets the orbit
+  // already going the way the orbit goes. Aimed at the middle instead,
+  // every stream dived at the centre and had to be turned through most
+  // of a right angle to join, which is what read as chaos.
+  const ENTRY_LEAD = 1.15;     // how far forward it is aimed, in radians
+  // BOTH SPEEDS ARE FRACTIONS OF THE SPEED IT WOULD TAKE TO GO ROUND
+  // AT THE INJECTOR'S OWN DISTANCE, not at the orbit's. An injector
+  // standing well out is much further from the middle than the orbit
+  // is, and going round out there is far slower; given the orbit's own
+  // sideways speed that far out, a stream was simply thrown off the
+  // side of the window and never arrived at all.
+  const FALL = [1.0, 1.25];    // how hard it is sent at the orbit
+  const SWING = [0.55, 0.75];  // and how much sideways it leaves with
+  const CATCH_MUL = 1.9;       // how near the orbit the chamber takes hold
+  const CATCH_KEEP = 0.8;      // but never nearer the injectors than this much
+                               // of the way to them — see `takes` in move()
+  // THE AXIS THE CHAMBER TURNS ABOUT, and so the way the orbit is
+  // tilted: the orbit lies square across it, and how much of the axis
+  // points at you is exactly how squashed it comes out. Straight at
+  // you is a circle; upright is a smear seen edge-on. This is well off
+  // both — a lens, tipped away from you, with a near side and a far
+  // side.
   const SWIRL = [0.2, 0.86, 0.46];
-  const RING = 6.4;            // the ring it settles what it catches into
-  const RING_K = 34;           // how firmly it is held there
-  const SETTLE = 3.2;          // and how quickly the fall is taken out of it
-  // HOW THIN THE LENS IS. Holding a particle at RING alone gives a
-  // shell and not a lens — a particle caught while travelling along
-  // the axis keeps that travel, and what gathers is a fat doughnut
-  // seen obliquely, which reads as a smear rather than as a ring with
-  // a near side and a far side. So the part of where it stands and the
-  // part of how it travels that lie ALONG the axis are taken out of
-  // it, and only those: everything in the plane is the going-round the
-  // ring is made of and is never touched.
-  const FLAT = 26;             // how hard it is drawn onto the ring's own plane
-  const FLAT_V = 3.4;          // and how quickly its drift along the axis goes
+  const RING = 6.4;            // the orbit, closed
+  const RING_K = 40;           // how firmly a particle is held to it
+  const SETTLE = 3.6;          // and how quickly the fall is taken out of it
+  // HOW THIN THE LENS IS. Holding a particle at the orbit's radius
+  // alone gives a shell and not a lens — a particle caught while
+  // travelling along the axis keeps that travel, and what gathers is a
+  // fat doughnut seen obliquely, which reads as a smear rather than as
+  // a ring with a near side and a far side. So the part of where it
+  // stands and the part of how it travels that lie ALONG the axis are
+  // taken out of it, and only those: everything in the plane is the
+  // going-round the orbit is made of and is never touched.
+  const FLAT = 30;             // how hard it is drawn onto the orbit's own plane
+  const FLAT_V = 3.8;          // and how quickly its drift along the axis goes
   const DRAG = 0.05;           // a little drag everywhere, so nothing runs away
   const MAX_V = 15;            // nothing travels faster than this
-  const LIFE = [7, 14];        // seconds in the air before it is sent again
-  const SPREAD = 0.55;         // how wide a stream is where it leaves
+  const LIFE = [9, 17];        // seconds in the air before it is sent again
+  const SPREAD = 0.42;         // how wide a stream is where it leaves
 
-  // --- breaking up
-  const FRAGILE = 0.34;        // how many of them break up rather than orbit
-  const FRAG_AT = 7.6;         // how near the middle that happens — outside
-                               // the ring, where it can actually be seen
-  const FRAG_KICK = [3, 8];    // how hard the pieces are thrown outward
-  const FRAG_FOR = 1.5;        // and how long they last afterwards
-
-  // --- opening the menu: the ring thrown out to the borders, and kept
-  //     travelling once it is there.
+  // --- OPENING THE MENU: the orbit WIDENS.
   //
-  // The step between the two states is a TIMED ramp eased flat at both
-  // ends, not the exponential chase it used to be: a chase starts at
-  // its fastest and creeps at the end, so the ring leapt away from the
-  // middle and then dawdled into the border. Flat at both ends there
-  // is no moment you can point at where it starts or where it stops,
-  // and it can simply be told how long to take.
-  const OPEN_MS = 1500;        // how long the step between the two states takes
-  const EDGE = 54;             // how far inside the window they hold
-  const HOLD_EASE = 4.2;       // how hard each one is held to its place
-  // HELD IS NOT STOPPED. Every particle keeps its seat on the border
-  // but the whole frame TRAVELS round it, each at its own rate, so
-  // what stands round the menu is a current and not a printed dotted
-  // line. This is the movement the open state has; the wander below is
-  // only the life on top of it.
-  const FLOW = 0.021;          // laps of the border a second
-  const FLOW_VARY = 0.7;       // how differently the light and heavy ones travel
-  const ALIVE = 9;             // how far one wanders off its seat, in pixels
-  const ALIVE_EVERY = [3, 9];  // over this many seconds
+  // It used to be thrown out to the borders of the window and held
+  // there as a rectangle. That meant two different things on one page —
+  // an orbit and a frame — with a costly step between them, and the
+  // step was the most awkward moment on the page. Now there is one
+  // thing, and opening the menu is that one thing getting bigger: the
+  // orbit grows until it stands clear round the writing, and never
+  // stops turning. Closing it is the same in reverse, which is why
+  // both directions are smooth for the same reason.
+  //
+  // The step is a TIMED ramp eased flat at both ends, not an
+  // exponential chase: a chase starts at its fastest and creeps at the
+  // end. Flat at both ends there is no moment you can point at where
+  // it starts or where it stops, and it can simply be told how long to
+  // take.
+  const OPEN_MS = 1700;        // how long the step between the two states takes
+  const OPEN_CLEAR = 46;       // how far outside the writing the orbit stands
+  const OPEN_FILL = 0.96;      // how much of the window it is allowed to fill
+  const OPEN_MOST = 22;        // and how wide it is ever allowed to grow
 
-  // --- and what pointing at a row does to them
+  // --- and what pointing at a row does to the orbit
   //
   // It used to CINCH: the sides left the border and leant in towards
-  // the row. That read as the frame being pulled out of shape. What it
-  // does now is READ the row off against the frame — the stretch of
-  // border level with it takes the cool accent, thickens, and is
-  // called out with a leader to each side. Nothing leaves the border.
-  const READ_SPAN = 170;       // how much of the border is read off, in pixels
-  const READ_OPEN = 26;        // how far that stretch thickens inward
+  // the row. That read as the drawing being pulled out of shape. What
+  // it does now is READ the row off against the orbit — the stretch of
+  // orbit level with it takes the cool accent and swells outward, and
+  // is called out with a leader to each side. Nothing leaves the orbit.
+  const READ_SPAN = 150;       // how much of the orbit is read off, in pixels
+  const READ_SWELL = 0.85;     // and how far that stretch swells, in units
 
   // --- the hand
   const HAND_PX = 150;         // how near the cursor a particle answers, in pixels
@@ -180,6 +213,7 @@
   const SPECK = 0.07;          // a particle's size, in units of the volume
   const TAIL = 0.03;           // how much of its own speed it trails behind it
   const BANDS = 6;             // how many weights the specks are grouped into to draw
+  const PATH_INK = 0.2;        // how plainly the orbit's own path is drawn
   const CLEAR_PAD = 18;        // how far past the writing the clear room reaches
 
   const INK = "23,23,15";      // --ink
@@ -193,6 +227,50 @@
     const n = Math.hypot(SWIRL[0], SWIRL[1], SWIRL[2]) || 1;
     return [SWIRL[0] / n, SWIRL[1] / n, SWIRL[2] / n];
   })();
+
+  // And a pair of directions across it, so a place on the orbit can be
+  // named by one angle. Going from U towards W is the way the orbit
+  // runs, which is the direction everything here calls FORWARD.
+  const PLANE = (function () {
+    const off = Math.abs(AXIS[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+    let u = [
+      AXIS[1] * off[2] - AXIS[2] * off[1],
+      AXIS[2] * off[0] - AXIS[0] * off[2],
+      AXIS[0] * off[1] - AXIS[1] * off[0],
+    ];
+    const n = Math.hypot(u[0], u[1], u[2]) || 1;
+    u = [u[0] / n, u[1] / n, u[2] / n];
+    const w = [
+      AXIS[1] * u[2] - AXIS[2] * u[1],
+      AXIS[2] * u[0] - AXIS[0] * u[2],
+      AXIS[0] * u[1] - AXIS[1] * u[0],
+    ];
+    return { u: u, w: w };
+  })();
+
+  /** Which way the orbit RUNS at a place on it, given that place's
+      direction out from the middle. One definition, used both by the
+      launch and by the catch: written out twice they came out pointing
+      opposite ways, and a stream entering against the orbit is the
+      whole of what "chaotic" looked like.
+
+      Going FORWARD is `at` DECREASING, which is why every lead in this
+      file is subtracted. */
+  function runsAt(rx, ry, rz, out) {
+    out[0] = -(AXIS[1] * rz - AXIS[2] * ry);
+    out[1] = -(AXIS[2] * rx - AXIS[0] * rz);
+    out[2] = -(AXIS[0] * ry - AXIS[1] * rx);
+    return out;
+  }
+
+  /** A point on the orbit of radius `r`, at angle `at` round it. */
+  function onOrbit(at, r, out) {
+    const c = Math.cos(at), s = Math.sin(at);
+    out[0] = r * (c * PLANE.u[0] + s * PLANE.w[0]);
+    out[1] = r * (c * PLANE.u[1] + s * PLANE.w[1]);
+    out[2] = MID + r * (c * PLANE.u[2] + s * PLANE.w[2]);
+    return out;
+  }
 
   let seed = SEED;
   const random = () => {
@@ -373,6 +451,9 @@
   let hotRow = null;           // the row under the pointer, if any
   // The timed step between the two states — see OPEN_MS.
   let stepFrom = 0, stepTo = 0, stepAt = -1;
+  // How wide the orbit grows when the menu is open. Worked out from
+  // the menu's own box in clearing(), not set here.
+  let openRing = RING * 1.9;
   const now = () =>
     (window.performance && window.performance.now ? window.performance.now() : Date.now());
   /** Eased flat at both ends, the same curve the paper's arrival uses. */
@@ -508,57 +589,85 @@
         age: 0,
         life: between(LIFE),
         size: 0.55 + random() * random() * 1.5,
-        fragile: random() < FRAGILE,
-        burst: 0,
         wait: random() * between(LIFE),
         warm: 0,
-        // Where it holds when the menu is open, and the small life it
-        // keeps while it is there.
-        homeX: 0, homeY: 0, homeZ: MID, placed: false,
-        stir: between(ALIVE_EVERY),
-        turn: random() * Math.PI * 2,
       });
     }
   }
 
-  /** Sends one particle off from its injector, aimed at the middle
-      with a little of its speed across the aim. Both speeds are
-      fractions of what going round at that injector's own distance
-      would take — the four corners stand at four different distances,
-      and flat numbers had one stream drop straight down the hole while
-      another sailed past it — and both carry that injector's pace, so
-      the corners take turns being quick. */
+  /** Where the orbit stands now — RING closed, wider once the menu is
+      open, and eased between the two. Everything that measures against
+      the orbit asks for it here. */
+  function orbitNow() {
+    return RING + (openRing - RING) * spread;
+  }
+
+  /** Sends one particle off from its injector, AIMED AT THE ORBIT.
+
+      Where the injector itself stands round the orbit is worked out,
+      that place is carried forward along the way the orbit runs
+      (`ENTRY_LEAD`), and the particle is fired at *there* — carrying
+      most of the orbit's own speed along it as it goes. So it comes in
+      at a slant and arrives already going the way the orbit goes,
+      instead of diving at the middle and having to be turned through
+      most of a right angle to join.
+
+      Both speeds are fractions of the orbit's own, not flat numbers:
+      the two injectors stand at two different depths, and with flat
+      numbers one stream dropped straight down the hole while the other
+      sailed past it. Both carry that injector's pace, so the two take
+      turns being quick. */
+  const spot = [0, 0, 0];
+  const way = [0, 0, 0];
   function launch(speck) {
     const from = stream[speck.from];
     speck.x = from.x + (random() - 0.5) * 2 * SPREAD;
     speck.y = from.y + (random() - 0.5) * 2 * SPREAD;
     speck.z = from.z + (random() - 0.5) * 2 * SPREAD;
 
-    const dx = -speck.x, dy = -speck.y, dz = MID - speck.z;
-    const far = Math.hypot(dx, dy, dz) || 1;
-    const round = Math.sqrt(PULL / far) * from.pace;
-    const aim = round * between(FALL);
-    speck.vx = (dx / far) * aim;
-    speck.vy = (dy / far) * aim;
-    speck.vz = (dz / far) * aim;
+    // Where it stands round the orbit, and where it is going to join it.
+    const vx = speck.x, vy = speck.y, vz = speck.z - MID;
+    const along = vx * AXIS[0] + vy * AXIS[1] + vz * AXIS[2];
+    const px = vx - along * AXIS[0];
+    const py = vy - along * AXIS[1];
+    const pz = vz - along * AXIS[2];
+    const at = Math.atan2(
+      px * PLANE.w[0] + py * PLANE.w[1] + pz * PLANE.w[2],
+      px * PLANE.u[0] + py * PLANE.u[1] + pz * PLANE.u[2]
+    );
+    const r = orbitNow();
+    onOrbit(at - ENTRY_LEAD, r, spot);
 
-    const side = round * between(SWING);
-    let tx = SWIRL[1] * (dz / far) - SWIRL[2] * (dy / far);
-    let ty = SWIRL[2] * (dx / far) - SWIRL[0] * (dz / far);
-    let tz = SWIRL[0] * (dy / far) - SWIRL[1] * (dx / far);
-    const tn = Math.hypot(tx, ty, tz) || 1;
-    speck.vx += (tx / tn) * side;
-    speck.vy += (ty / tn) * side;
-    speck.vz += (tz / tn) * side;
+    const out = Math.hypot(speck.x, speck.y, speck.z - MID) || 1;
+    const spin = Math.sqrt(PULL / out) * from.pace;
+
+    const dx = spot[0] - speck.x, dy = spot[1] - speck.y, dz = spot[2] - speck.z;
+    const far = Math.hypot(dx, dy, dz) || 1;
+    const drop = spin * between(FALL);
+    speck.vx = (dx / far) * drop;
+    speck.vy = (dy / far) * drop;
+    speck.vz = (dz / far) * drop;
+
+    // And already going the way the orbit goes: the tangent where it
+    // stands, so the stream leans over into the turn rather than being
+    // turned into it once it gets there.
+    runsAt(speck.x / out, speck.y / out, (speck.z - MID) / out, way);
+    const round = spin * between(SWING);
+    speck.vx += way[0] * round;
+    speck.vy += way[1] * round;
+    speck.vz += way[2] * round;
 
     speck.age = 0;
     speck.life = between(LIFE);
-    speck.burst = 0;
     speck.warm = 0;
-    speck.placed = false;
   }
 
   specks.forEach(launch);
+
+  // How far off the middle the nearest injector stands, worked out
+  // whenever the window changes. The chamber is never allowed to take
+  // hold that far out — see `takes` in move().
+  let nearestSource = 99;
 
   function resize() {
     const ratio = Math.min(2, window.devicePixelRatio || 1);
@@ -576,19 +685,27 @@
     paintFront.setTransform(ratio, 0, 0, ratio, 0, 0);
     lens = Math.min(width, height) * LENS;
 
+    nearestSource = 99;
     stream.forEach((one) => {
       const k = lens / one.z;
       one.x = (one.at[0] * width - midX) / k;
       one.y = (one.at[1] * height - midY) / k;
+      nearestSource = Math.min(nearestSource,
+        Math.hypot(one.x, one.y, one.z - MID));
     });
-    // Where they hold is worked out from the window, so it has to be
-    // worked out again when the window changes.
-    specks.forEach((speck) => { speck.placed = false; });
   }
 
   /** The room the writing takes up, read off the page every frame: the
       menu grows out of the word and back into it, so its box is never
-      the same two frames running while that is happening. */
+      the same two frames running while that is happening.
+
+      The same pass hands the menu's own box to `fitOrbit`, which works
+      out how wide the orbit has to grow — so it is right at any window
+      size rather than being a number that happens to clear the menu on
+      a laptop. It is only asked while the menu actually has a box: the
+      panel is taken off the page the moment the menu is closed, and an
+      orbit sized against a box of nothing would snap inward halfway
+      through closing. */
   function clearing() {
     const box = (opened ? panel : word).getBoundingClientRect();
     taken = {
@@ -597,60 +714,75 @@
       right: box.right + CLEAR_PAD,
       foot: box.bottom + CLEAR_PAD,
     };
+
+    const menu = panel.getBoundingClientRect();
+    if (menu.width > 8 && menu.height > 8) fitOrbit(menu);
+  }
+
+  /** How far the orbit of radius `r` reaches from the middle of the
+      window, ON the window. Sampled through the real projection rather
+      than worked out on paper: the near half of the orbit stands a
+      long way closer to the eye than the far half and comes out much
+      bigger, so a reading taken flat at the middle depth is badly
+      wrong at the near edge — which is the edge that runs off the
+      bottom of the screen. */
+  const reach = [0, 0, 0];
+  function reachOf(r) {
+    let wide = 0, tall = 0;
+    for (let n = 0; n < 32; n++) {
+      onOrbit((n / 32) * Math.PI * 2, r, reach);
+      const p = to(reach[0], reach[1], reach[2]);
+      if (!p) continue;
+      wide = Math.max(wide, Math.abs(p.x - midX));
+      tall = Math.max(tall, Math.abs(p.y - midY));
+    }
+    return wide / Math.max(1, midX) > tall / Math.max(1, midY)
+      ? { wide: wide, tall: tall, fills: wide / Math.max(1, midX) }
+      : { wide: wide, tall: tall, fills: tall / Math.max(1, midY) };
+  }
+
+  /** How wide the orbit grows when the menu is open: as wide as the
+      window will hold, and never so narrow that the writing is not
+      standing inside it. Found by halving the difference rather than
+      by a formula, because the projection is not linear in the radius;
+      and worked out again only when the menu or the window changes
+      size, because that is the only time the answer can change. */
+  let fitKey = "";
+  function fitOrbit(box) {
+    const key = [Math.round(box.width), Math.round(box.height), width, height].join(",");
+    if (key === fitKey) return;
+    fitKey = key;
+    const needW = box.width / 2 + OPEN_CLEAR;
+    const needH = box.height / 2 + OPEN_CLEAR;
+
+    // The largest that still fits the window...
+    let low = RING * 1.1, high = OPEN_MOST;
+    for (let n = 0; n < 16; n++) {
+      const mid = (low + high) / 2;
+      if (reachOf(mid).fills > OPEN_FILL) high = mid; else low = mid;
+    }
+    let want = low;
+
+    // ...and if that is not enough to stand clear round the writing,
+    // the smallest that is. Clearing the writing wins: an orbit a
+    // little off the edge of the window still reads as an orbit, one
+    // crossing the menu does not.
+    const held = reachOf(want);
+    if (held.wide < needW || held.tall < needH) {
+      low = want; high = OPEN_MOST;
+      for (let n = 0; n < 16; n++) {
+        const mid = (low + high) / 2;
+        const got = reachOf(mid);
+        if (got.wide < needW || got.tall < needH) low = mid; else high = mid;
+      }
+      want = high;
+    }
+    openRing = Math.max(RING * 1.2, Math.min(OPEN_MOST, want));
   }
 
   // ============================================================
   // THE FALL, AND THE HOLD
   // ============================================================
-  /** A place from 0 to 1 round the border of the window, walked from
-      the middle of the right-hand edge clockwise, written into `out`.
-      Everything the open state does is a reading of this one line. */
-  const spot = { x: 0, y: 0, wide: 0, tall: 0 };
-  function onBorder(along, out) {
-    const wide = Math.max(20, midX - EDGE), tall = Math.max(20, midY - EDGE);
-    const round = 4 * wide + 4 * tall;
-    let s = (along - Math.floor(along)) * round;
-    let x, y;
-    if (s < tall) { x = wide; y = s; }
-    else if ((s -= tall) < 2 * wide) { x = wide - s; y = tall; }
-    else if ((s -= 2 * wide) < 2 * tall) { x = -wide; y = tall - s; }
-    else if ((s -= 2 * tall) < 2 * wide) { x = -wide + s; y = -tall; }
-    else { x = wide; y = -tall + (s - 2 * wide); }
-    out.x = x; out.y = y; out.wide = wide; out.tall = tall;
-  }
-
-  /** Which seat on the border each particle takes when the menu opens.
-
-      They are given seats IN THE ORDER THEY ALREADY LIE in the ring —
-      sorted by the way they stand round the middle, then spaced evenly
-      round the border from the same starting point — so the ring
-      UNROLLS outward into a frame rather than being replaced by one,
-      and the frame comes out even. Taking each particle straight
-      outward instead leaves the frame in clumps wherever the ring
-      happened to be crowded, which on a ring seen this obliquely is
-      most of it. Each also gets its own rate to travel at, so the
-      frame is a current rather than a belt. */
-  function seatAll() {
-    const order = [];
-    for (let n = 0; n < specks.length; n++) {
-      const speck = specks[n];
-      const p = to(speck.x, speck.y, speck.z);
-      order.push({
-        n: n,
-        a: p ? Math.atan2(p.y - midY, p.x - midX) : (n / specks.length) * 6.283 - 3.14,
-      });
-    }
-    order.sort((one, two) => one.a - two.a);
-
-    order.forEach((one, place) => {
-      const speck = specks[one.n];
-      speck.seat = (place + 0.5) / order.length;
-      speck.drift = 1 + (speck.size - 1.05) * FLOW_VARY;
-      speck.homeZ = Math.max(NEAR + 1, Math.min(FAR - 2, speck.z));
-      speck.placed = true;
-    });
-  }
-
   /** The row under the pointer, read ONCE A FRAME rather than once a
       particle: asking an element for its box is a question the browser
       has to stop and lay the page out to answer, and there are
@@ -668,68 +800,27 @@
       const one = stream[s];
       one.pace = 1 + PACE * Math.sin((clock * Math.PI * 2) / one.every + one.phase);
     }
-
     readRow();
-    const held = spread > 0.004;
-    if (held && !specks[0].placed) seatAll();
+
+    // ONE ORBIT, WHATEVER STATE THE PAGE IS IN. Opening the menu makes
+    // it wider and closing it makes it narrower, and that is the whole
+    // of the difference — there is no second arrangement to be thrown
+    // into and no step between two of them, which is what makes both
+    // directions smooth for the same reason.
+    const orbit = orbitNow();
+    // How near the orbit the chamber takes hold — and never so far out
+    // that it reaches the injectors themselves. The orbit widens a
+    // long way when the menu opens, and with it the distance it takes
+    // hold at; unchecked, that swallowed each stream where it left and
+    // there was nothing between the corner and the orbit to look at.
+    const takes = Math.min(orbit * CATCH_MUL, nearestSource * CATCH_KEEP);
 
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
 
-      // HELD. Nothing is launched, nothing ages, nothing breaks up:
-      // the chamber is stopped, and every particle is running to its
-      // own place on the border and staying there. It keeps a little
-      // life of its own so that it reads as held rather than as a
-      // picture of itself.
-      if (held) {
-        // Its seat, carried round the border on its own rate. The
-        // whole frame is travelling; nothing is standing still.
-        const flow = REDUCE_MOTION ? 0 : clock * FLOW * speck.drift;
-        onBorder(speck.seat + flow, spot);
-
-        // A hair of scatter inward, so the frame has a thickness to it
-        // rather than reading as a printed dotted line — and level
-        // with the row being pointed at, that thickness OPENS, which
-        // is the whole of the reaction now that nothing leaves the
-        // border.
-        let off = (speck.size - 0.55) * 7;
-        const homeY = midY + spot.y;
-        if (drawTo) {
-          const read = 1 - Math.min(1, Math.abs(homeY - drawTo.y) / READ_SPAN);
-          if (read > 0) {
-            off += READ_OPEN * read * read * (0.35 + 0.65 * (speck.size - 0.55) / 1.5);
-            speck.warm = Math.max(speck.warm, read * read);
-          }
-        }
-
-        const stir = REDUCE_MOTION ? 0 : ALIVE;
-        const wobX = Math.sin((clock * Math.PI * 2) / speck.stir + speck.turn) * stir;
-        const wobY = Math.cos((clock * Math.PI * 2) / speck.stir * 0.8 + speck.turn) * stir;
-        const wantX = midX + spot.x * (1 - off / Math.max(1, spot.wide));
-        const wantY = midY + spot.y * (1 - off / Math.max(1, spot.tall));
-        const k = lens / speck.homeZ;
-        const toX = (wantX + wobX - midX) / k;
-        const toY = (wantY + wobY - midY) / k;
-        const ease = Math.min(1, HOLD_EASE * spread * dt);
-        speck.x += (toX - speck.x) * ease;
-        speck.y += (toY - speck.y) * ease;
-        speck.z += (speck.homeZ - speck.z) * ease;
-        speck.vx *= 1 - ease; speck.vy *= 1 - ease; speck.vz *= 1 - ease;
-        speck.warm *= 1 - Math.min(1, dt * 1.2);
-        continue;
-      }
-
-      speck.placed = false;
       if (speck.wait > 0) { speck.wait -= dt; continue; }
-
       speck.age += dt;
-      if (speck.burst > 0) {
-        speck.burst -= dt;
-        if (speck.burst <= 0) { launch(speck); continue; }
-      } else if (speck.age > speck.life) {
-        launch(speck);
-        continue;
-      }
+      if (speck.age > speck.life) { launch(speck); continue; }
 
       // Drawn towards the middle, harder the nearer it is — softened
       // close in, or a particle passing through the very middle is
@@ -742,36 +833,50 @@
       speck.vy += (dy / (r || 1)) * pull;
       speck.vz += (dz / (r || 1)) * pull;
 
+      // THE ROW BEING POINTED AT, read off against the orbit: the
+      // stretch of it level with that row takes the cool accent and is
+      // held a little wider, so the orbit swells where the row is.
+      // Nothing leaves the orbit — it is a reading, not a reaching.
+      let read = 0;
+      if (drawTo && speck.z > NEAR) {
+        const sy = midY + speck.y * (lens / speck.z);
+        read = 1 - Math.min(1, Math.abs(sy - drawTo.y) / READ_SPAN);
+        if (read > 0) {
+          read *= read;
+          speck.warm = Math.max(speck.warm, read);
+        } else read = 0;
+      }
+
       // CAUGHT. Out in the dark a particle simply falls, which is what
-      // keeps the four streams reading as streams; within CATCH of the
-      // middle the chamber takes hold and does three things at once,
-      // and it needs all three. It turns it the way the chamber turns,
-      // up to the speed that would carry it round and no further; it
-      // holds it to the ring, so what gathers stands AROUND the word
-      // rather than piling up behind it; and it takes the fall out of
-      // it — the radial part of its travel only, never the going-round
-      // part, which is the difference between an orbit settling and
-      // everything grinding to a halt.
-      if (r < CATCH && speck.burst <= 0) {
-        const hold = 1 - r / CATCH;
+      // keeps the two streams reading as streams; within reach of the
+      // orbit the chamber takes hold and does four things at once, and
+      // it needs all four. It turns it the way the orbit runs, up to
+      // the speed that would carry it round and no further; it holds
+      // it to the orbit's radius, so what gathers stands AROUND the
+      // writing rather than piling up behind it; it takes the fall out
+      // of it — the radial part of its travel only, never the
+      // going-round part, which is the difference between an orbit
+      // settling and everything grinding to a halt; and it presses it
+      // flat onto the orbit's own plane.
+      if (r < takes) {
+        const hold = 1 - r / takes;
         const ux = dx / (r || 1), uy = dy / (r || 1), uz = dz / (r || 1);
 
-        let tx = SWIRL[1] * uz - SWIRL[2] * uy;
-        let ty = SWIRL[2] * ux - SWIRL[0] * uz;
-        let tz = SWIRL[0] * uy - SWIRL[1] * ux;
-        const tn = Math.hypot(tx, ty, tz) || 1;
-        tx /= tn; ty /= tn; tz /= tn;
+        runsAt(-ux, -uy, -uz, way);
+        const tn = Math.hypot(way[0], way[1], way[2]) || 1;
+        const tx = way[0] / tn, ty = way[1] / tn, tz = way[2] / tn;
 
         const round = Math.sqrt(PULL / Math.max(1, r));
         const going = speck.vx * tx + speck.vy * ty + speck.vz * tz;
         if (going < round) {
-          const turn = Math.min(round - going, round * hold * dt * 3.2);
+          const turn = Math.min(round - going, round * hold * dt * 3.6);
           speck.vx += tx * turn;
           speck.vy += ty * turn;
           speck.vz += tz * turn;
         }
 
-        const off = (r - RING) * RING_K * hold * dt;
+        const want = orbit + READ_SWELL * read;
+        const off = (r - want) * RING_K * hold * dt;
         speck.vx += ux * off;
         speck.vy += uy * off;
         speck.vz += uz * off;
@@ -782,7 +887,7 @@
         speck.vy -= uy * fall * ease;
         speck.vz -= uz * fall * ease;
 
-        // And flattened onto the ring's own plane — see FLAT.
+        // And flattened onto the orbit's own plane — see FLAT.
         const along =
           speck.x * AXIS[0] + speck.y * AXIS[1] + (speck.z - MID) * AXIS[2];
         const press = FLAT * hold * dt;
@@ -801,42 +906,29 @@
       // The hand, put at this particle's own depth so that what it
       // pushes aside is a hole in the stream and not a circle drawn on
       // the picture.
-      if (hasHand && speck.burst <= 0) {
+      if (hasHand) {
         const k = lens / Math.max(NEAR, speck.z);
         const reach = HAND_PX / k;
         const hx = speck.x - (handX - midX) / k;
         const hy = speck.y - (handY - midY) / k;
         const off = Math.hypot(hx, hy);
         if (off < reach) {
-          const hold = 1 - off / reach;
-          const shove = (HAND_PUSH * hold * hold * dt) / (off || 1);
+          const close = 1 - off / reach;
+          const shove = (HAND_PUSH * close * close * dt) / (off || 1);
           speck.vx += hx * shove;
           speck.vy += hy * shove;
-          speck.warm = Math.max(speck.warm, hold);
+          speck.warm = Math.max(speck.warm, close);
         }
       }
-      speck.warm *= 1 - Math.min(1, dt * 2.2);
+      speck.warm *= 1 - Math.min(1, dt * 1.6);
 
-      // Breaking up: a fragile one that reaches the middle is thrown
-      // apart there and gone soon after.
-      if (speck.fragile && speck.burst <= 0 && r < FRAG_AT) {
-        const kick = between(FRAG_KICK);
-        const a = random() * Math.PI * 2, b = (random() - 0.5) * Math.PI;
-        speck.vx = Math.cos(a) * Math.cos(b) * kick;
-        speck.vy = Math.sin(b) * kick;
-        speck.vz = Math.sin(a) * Math.cos(b) * kick;
-        speck.burst = FRAG_FOR;
-      }
-
-      if (speck.burst <= 0) {
-        const slow = 1 - Math.min(0.5, DRAG * dt);
-        speck.vx *= slow; speck.vy *= slow; speck.vz *= slow;
-      }
+      const slow = 1 - Math.min(0.5, DRAG * dt);
+      speck.vx *= slow; speck.vy *= slow; speck.vz *= slow;
 
       const fast = Math.hypot(speck.vx, speck.vy, speck.vz);
       if (fast > MAX_V) {
-        const hold = MAX_V / fast;
-        speck.vx *= hold; speck.vy *= hold; speck.vz *= hold;
+        const cap = MAX_V / fast;
+        speck.vx *= cap; speck.vy *= cap; speck.vz *= cap;
       }
 
       speck.x += speck.vx * dt;
@@ -856,34 +948,65 @@
   const rgba = (tone, a) => "rgba(" + tone + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
 
   function drawMarks() {
-    // The ranging circles, the same marks the theories drawing puts on
-    // something it is measuring. They are drawn square to the window
-    // rather than tilted with the ring: they are the instrument's
-    // marks, not part of what is being measured. They go as the menu
-    // opens — what is left then is the frame of held particles.
-    const centre = to(0, 0, MID);
-    if (centre) {
-      paint.lineWidth = 1;
-      for (let n = 0; n < 2; n++) {
-        const r = RING * (1 + n * 0.62) * centre.k;
-        paint.strokeStyle = rgba(STEEL, (n ? 0.08 : 0.13) * (1 - spread));
-        paint.beginPath();
-        paint.arc(centre.x, centre.y, r, 0, Math.PI * 2);
-        paint.stroke();
-      }
-    }
+    const orbit = orbitNow();
 
-    // THE ROW BEING POINTED AT, called out against the frame: a
-    // leader from each end of it running out to the border, with a
-    // tick where it lands. The particles level with it have already
-    // taken the cool accent and opened out — this is what says which
-    // row they are reading.
-    if (drawTo && spread > 0.5) {
+    // THE ORBIT'S OWN PATH. The particles are the orbit, but a fine
+    // line through where they are going is what makes it legible AS an
+    // orbit rather than as a drift — in a still frame, and at the
+    // moment a stream is arriving, which is exactly when it is hardest
+    // to see. It is split at the middle of the chamber like everything
+    // else here: the near half is drawn on the front canvas, over the
+    // writing, and the far half behind it, so the path itself says
+    // which way round the lens is tipped.
+    const ROUND = 128;
+    let ink = null, was = null;
+    for (let n = 0; n <= ROUND; n++) {
+      const at = (n / ROUND) * Math.PI * 2;
+      onOrbit(at, orbit, spot);
+      const p = to(spot[0], spot[1], spot[2]);
+      if (!p) { if (ink) { ink.stroke(); ink = null; } was = null; continue; }
+      const on = spot[2] < MID ? paintFront : paint;
+      if (on !== ink) {
+        if (ink) ink.stroke();
+        ink = on;
+        ink.beginPath();
+        ink.lineWidth = 1;
+        ink.strokeStyle = rgba(STEEL, PATH_INK);
+        ink.moveTo(was ? was.x : p.x, was ? was.y : p.y);
+      }
+      ink.lineTo(p.x, p.y);
+      was = p;
+    }
+    if (ink) ink.stroke();
+
+    // Ticked round it every thirtieth of a turn, the way the rest of
+    // the site rules something it is measuring.
+    paint.lineWidth = 1;
+    paint.strokeStyle = rgba(STEEL, PATH_INK * 0.85);
+    paint.beginPath();
+    for (let n = 0; n < 30; n++) {
+      const at = (n / 30) * Math.PI * 2;
+      onOrbit(at, orbit * 0.975, spot);
+      const a = to(spot[0], spot[1], spot[2]);
+      onOrbit(at, orbit * 1.025, spot);
+      const b = to(spot[0], spot[1], spot[2]);
+      if (!a || !b) continue;
+      paint.moveTo(a.x, a.y);
+      paint.lineTo(b.x, b.y);
+    }
+    paint.stroke();
+
+    // THE ROW BEING POINTED AT, called out against the orbit: a leader
+    // from each end of it running out to the window, with a tick where
+    // it lands. The stretch of orbit level with it has already taken
+    // the cool accent and swelled — this is what says which row it is
+    // reading.
+    if (drawTo && spread > 0.4) {
       const lit = 0.55 * spread;
       paint.lineWidth = 1;
       paint.strokeStyle = rgba(COOL, lit);
       const y = Math.round(drawTo.y) + 0.5;
-      [[drawTo.left - 18, EDGE + 6], [drawTo.right + 18, width - EDGE - 6]].forEach((run) => {
+      [[drawTo.left - 18, 28], [drawTo.right + 18, width - 28]].forEach((run) => {
         paint.beginPath();
         paint.moveTo(run[0], y);
         paint.lineTo(run[1], y);
@@ -893,8 +1016,10 @@
       });
     }
 
-    // The injectors: a registration square in each corner, a leader
-    // aimed at the middle, and the depth it stands at.
+    // The injectors: a registration square at each, and a leader along
+    // the way its own stream leaves — aimed at the place on the orbit
+    // that stream is fired at, not at the middle, because that is
+    // where it is actually going.
     stream.forEach((one, i) => {
       const p = to(one.x, one.y, one.z);
       if (!p) return;
@@ -903,13 +1028,22 @@
       paint.strokeStyle = rgba(COOL, 0.5);
       paint.strokeRect(Math.round(p.x - size / 2) + 0.5, Math.round(p.y - size / 2) + 0.5, size, size);
 
-      if (centre) {
-        const dx = centre.x - p.x, dy = centre.y - p.y;
+      const vx = one.x, vy = one.y, vz = one.z - MID;
+      const along = vx * AXIS[0] + vy * AXIS[1] + vz * AXIS[2];
+      const ax = vx - along * AXIS[0], ay = vy - along * AXIS[1], az = vz - along * AXIS[2];
+      const at = Math.atan2(
+        ax * PLANE.w[0] + ay * PLANE.w[1] + az * PLANE.w[2],
+        ax * PLANE.u[0] + ay * PLANE.u[1] + az * PLANE.u[2]
+      );
+      onOrbit(at - ENTRY_LEAD, orbit, spot);
+      const join = to(spot[0], spot[1], spot[2]);
+      if (join) {
+        const dx = join.x - p.x, dy = join.y - p.y;
         const far = Math.hypot(dx, dy) || 1;
-        paint.strokeStyle = rgba(STEEL, 0.18);
+        paint.strokeStyle = rgba(STEEL, 0.16);
         paint.beginPath();
         paint.moveTo(p.x + (dx / far) * 12, p.y + (dy / far) * 12);
-        paint.lineTo(p.x + (dx / far) * 44, p.y + (dy / far) * 44);
+        paint.lineTo(p.x + (dx / far) * Math.min(far - 8, 64), p.y + (dy / far) * Math.min(far - 8, 64));
         paint.stroke();
       }
 
@@ -977,7 +1111,7 @@
 
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
-      if (speck.wait > 0 && spread <= 0.004) continue;
+      if (speck.wait > 0) continue;
       const p = to(speck.x, speck.y, speck.z);
       if (!p) continue;
       if (p.x < -30 || p.x > width + 30 || p.y < -30 || p.y > height + 30) {
@@ -985,13 +1119,9 @@
         continue;
       }
 
-      const life = speck.burst > 0
-        ? Math.min(1, speck.burst / (FRAG_FOR * 0.6))
-        : Math.min(1, speck.age / 0.6) * Math.min(1, (speck.life - speck.age) / 1.6);
+      const life = Math.min(1, speck.age / 0.9) * Math.min(1, (speck.life - speck.age) / 2.2);
       const near = Math.min(1, 26 / speck.z);
-      // Held, they are all of them plainly there: no one is halfway
-      // through arriving or leaving while the chamber is stopped.
-      const lit = (spread > 0.004 ? near : life * near) * (0.4 + speck.warm * 0.6);
+      const lit = life * near * (0.4 + speck.warm * 0.6);
       if (lit < 0.02) { speck.pk = 0; continue; }
 
       // Nearer than the middle of the chamber goes on the front
@@ -1054,19 +1184,22 @@
     const dt = Math.min(0.05, (now - last) / 1000) || 0.016;
     last = now;
     clearing();
-    if (REDUCE_MOTION) spread = opened ? 1 : 0;
-    else if (stepAt >= 0) {
-      const gone = Math.min(1, (now - stepAt) / OPEN_MS);
-      spread = stepFrom + (stepTo - stepFrom) * smoother(gone);
-      if (gone >= 1) { spread = stepTo; stepAt = -1; }
-    }
-    if (!REDUCE_MOTION) {
+    if (REDUCE_MOTION) {
+      // Nothing is watched happening: the orbit is settled once into
+      // whichever size the page is now asking for, and then left
+      // exactly as it is.
+      const want = opened ? 1 : 0;
+      if (spread !== want) {
+        spread = want;
+        for (let n = 0; n < 240; n++) move(1 / 30);
+      }
+    } else {
+      if (stepAt >= 0) {
+        const gone = Math.min(1, (now - stepAt) / OPEN_MS);
+        spread = stepFrom + (stepTo - stepFrom) * smoother(gone);
+        if (gone >= 1) { spread = stepTo; stepAt = -1; }
+      }
       clock += dt;
-      move(dt);
-    } else if (spread > 0.5) {
-      // Held: still put where they belong, just not watched getting
-      // there — the same one step the rest of the site takes when
-      // animation is turned off.
       move(dt);
     }
     draw();

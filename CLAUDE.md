@@ -99,13 +99,15 @@ whole view fitting one screen;
 and the chamber — the menu being grown from that page's own favourites and carrying
 what the sheet's Favorites menu carries (number, date, name and link), the word opening
 the menu and a chapter opening its own favourites with Escape stepping back out one level
-at a time, an injector firing in each corner, what it catches standing in a ring round the
+at a time, both injectors standing on the same side with nothing fired from the other two
+corners and neither stream leaving straight at the middle, the orbit standing round the
 word and running on behind it unbroken with its near rim drawn over it, opening the menu
-throwing the ring out to the borders and keeping it travelling there, pointing at a row
-reading it off against the frame without pulling the frame out of shape, the word saying
-what pressing it does and saying the other thing once it is open, the streams answering
-the cursor and letting go again, it standing still under `prefers-reduced-motion`, and the
-plain list coming back when the script is blocked;
+widening that same orbit rather than replacing it and never crossing the menu, the orbit
+turning on open and closed alike, pointing at a row reading it off against the orbit
+without pulling it out of shape, the word saying what pressing it does and saying the
+other thing once it is open, the streams answering the cursor and letting go again, it
+standing still under `prefers-reduced-motion`, and the plain list coming back when the
+script is blocked;
 and the structure — the drawing setting itself up when the page opens without ever
 showing the plain list it replaces, it being grown from the page's own rows with one
 station per theory,
@@ -493,124 +495,146 @@ Two kinds of assembly stand in that frame, and the difference is the point:
 
 ### The chamber (`chamber.js`) — categories/favorites.html
 
-The main menu's **Favorites** category is a **chamber**: four injectors, one at each
-corner of the window, firing a fine stream of **square** particles inward on white. The
-streams fall towards the middle, are caught there, and settle into a **ring** — tilted
-well off square to the window, so it reads as a lens rather than as a circle drawn on the
-page. It is the theories drawing's world turned inside out — the same particles, the same
-instrument marks, the same one cool accent kept for what answers you — printed as ink on
-white instead of white on near-black.
+The main menu's **Favorites** category is a **chamber**: two injectors, both on the
+left-hand side of the window, firing a fine stream of particles at a slant across it on
+white. What the streams join is an **orbit** — tilted well off square to the window, so it
+reads as a lens rather than as a circle drawn on the page. It is the theories drawing's
+world turned inside out — the same particles, the same instrument marks, the same one cool
+accent kept for what answers you — printed as ink on white instead of white on near-black.
 
-Not to be confused with the **Favorites view on the contact sheet page**
-(`favorites.js`), which is a different page. The two carry the *same kind of menu* — the
-chapters and every favourite with its number, its date and its name — in deliberately
-different shapes: the sheet's is two columns down the sides with a strip of chapters
-across the top, this one is a single narrow column down the middle with no strip at all,
-so the four streams close on the writing from every corner.
+Not to be confused with the **register** on the contact sheet page (`favorites.js`), which
+is a different page. The two carry the *same kind of menu* — the chapters and every
+favourite with its number, its date and its name — in deliberately different shapes.
 
-**The page has two states, and the whole of the interaction is the step between them.**
+**There is only ever one arrangement here, and the whole of the interaction is that one
+arrangement changing size.**
 
-- **Closed**, the word **FAVORITES** stands alone in the middle of the ring and the ring
+- **Closed**, the word **FAVORITES** stands alone in the middle of the orbit and the orbit
   turns round it. That word is the whole of the page's chrome, and it is the button — so
   it is dressed as one: four **crop marks** bracket it and a small boxed **cue** under it
   says `EXPAND`, with a chevron pointing the way it will go. Without those it read as a
   heading somebody had centred rather than as something to press.
-- **Open**, pressing the word throws the ring outward: every particle runs to its own
-  seat on the border of the window and **holds** there, while the word comes down to the
-  size of a heading (the cue now reading `COLLAPSE`, its chevron turned over) and the
-  menu opens out under it. The chapters stand in the column first; opening one puts its
-  own favourites in the same column in their place, with a way back. Escape steps out one
-  level at a time, and a press anywhere off the writing closes it.
+- **Open**, pressing the word **widens the orbit** until it stands clear round the menu,
+  which opens out of the word as it goes (the cue now reading `COLLAPSE`, its chevron
+  turned over). It never stops turning. The chapters stand in the column first; opening
+  one puts its own favourites in the same column in their place, with a way back. Escape
+  steps out one level at a time, and a press anywhere off the writing closes it.
 
-The step between the two is a **timed ramp** eased flat at both ends (`OPEN_MS`, 1.5s),
-not an exponential chase. A chase starts at its fastest and creeps at the end, so the
-ring leapt away from the middle and then dawdled into the border; flat at both ends there
-is no moment you can point at where it starts or where it stops, and it can simply be
-told how long to take. The word's and the menu's own CSS transitions are set to the same
-length, and the menu waits out the first third of it, so the lettering has begun coming
-down before the panel appears under it.
+The open state **used to be something else entirely**: the particles were thrown out to
+the borders of the window and held there as a rectangle. That put two different things on
+one page with a costly step between them, and the step was the most awkward moment on it.
+One thing that grows is smooth in both directions for the same reason — there is no
+`EDGE`, no seat and no border in this file any more. The step itself is a **timed ramp**
+eased flat at both ends (`OPEN_MS`, 1.7s), not an exponential chase: a chase starts at its
+fastest and creeps at the end. The word's and the menu's own CSS transitions are set to
+the same length, and the menu waits out the first third of it, so the lettering has begun
+coming down before the panel appears under it.
 
 Ten things are worth knowing before changing any of it:
 
-- **It is a real fall, not a path.** Every particle is shot at the middle and pulled
-  towards it, and the rest is four forces, each doing one legible thing:
-  `PULL` draws it in; `CATCH` is the distance at which the chamber takes hold, so the
-  streams read as straight until they arrive rather than spiralling all the way from the
-  corners; inside that it is turned the way the chamber turns (up to the speed that would
-  carry it round, and no further), held to the ring at `RING`, and has the *radial* part
-  of its travel damped away — never the going-round part, which is the difference between
-  an orbit settling and everything grinding to a halt. Writing the curves by hand instead
-  gives a pattern, and a pattern is something you can see repeat.
-- **What it catches is pressed flat onto the ring's own plane** (`FLAT`, `FLAT_V`). The
-  ring alone gives a *shell* and not a lens: a particle caught while travelling along the
-  axis keeps that travel, and what gathers is a fat doughnut seen obliquely, which is a
-  smear and not a ring. So the part of where a caught particle stands and the part of how
-  it travels that lie **along** the axis are taken out of it, and only those — everything
-  in the plane is the going-round the ring is made of. Measured: without it the ring was
-  1.5–3.3 units thick against a radius of 6.4; with it, under 1.
+- **It is a real fall, not a path.** Every particle is thrown at the orbit and pulled in
+  by the middle (`PULL`, softened close in by `SOFT`); within `CATCH_MUL` times the
+  orbit's own radius the chamber takes hold and does four things at once, and it needs all
+  four. It turns it the way the orbit runs, up to the speed that would carry it round and
+  no further; it holds it to the orbit's radius; it takes the *radial* part of its travel
+  out of it and never the going-round part, which is the difference between an orbit
+  settling and everything grinding to a halt; and it presses it flat onto the plane.
+  Writing the curves by hand instead gives a pattern, and a pattern is something you can
+  see repeat.
+- **A stream is aimed AT THE ORBIT, not at the middle** (`ENTRY_LEAD`). Where the injector
+  stands round the orbit is worked out, that place is carried *forward* along the way the
+  orbit runs, and the stream is fired at there — carrying most of the orbit's own speed
+  along it as it goes. So it comes in at a slant and arrives already going the way the
+  orbit goes. Aimed at the middle, every stream dived at the centre and had to be turned
+  through most of a right angle to join, which is what read as chaos.
+- **Both injectors are on the same side.** Four, one to a corner, fired at each other
+  across the middle; two entering from one side, one above and one below, go round the
+  same way and fall in behind each other. Each is placed by working back from the point of
+  the window it is meant to sit at, *at its own depth*, so both stay put at any window
+  size while standing at two different depths — which is what stops the streams reading as
+  a flat V. **They take turns being the quick one** (`PACE`, `PACE_EVERY`), so neither is
+  always the fast one.
+- **Both stand beyond the middle of the chamber in depth, and that is not decoration.**
+  An injector nearer than `MID` is only a short way from the middle *in the volume*,
+  however far into the corner of the window it looks — and one inside the distance the
+  chamber takes hold at has its stream caught the instant it leaves. That happened: the
+  upper injector had no visible stream at all while the lower one had a long one. For the
+  same reason the capture distance is **capped** so it can never reach the injectors
+  (`CATCH_KEEP` against `nearestSource`): the orbit widens a long way when the menu opens
+  and the capture distance with it, and unchecked it swallowed each stream where it left.
+- **Both launch speeds are fractions of the speed it would take to go round AT THE
+  INJECTOR'S OWN DISTANCE**, not at the orbit's. An injector standing well out is much
+  further from the middle than the orbit is, and going round out there is far slower;
+  given the orbit's own sideways speed that far out, a stream was thrown off the side of
+  the window and never arrived at all. Flat numbers instead had one stream drop straight
+  down the hole while the other sailed past it.
+- **Which way the orbit runs is defined once** (`runsAt`), and both the launch and the
+  catch ask it. Written out twice they came out pointing opposite ways, and a stream
+  entering *against* the orbit is the whole of what "chaotic" looked like.
+- **What it catches is pressed flat onto the orbit's own plane** (`FLAT`, `FLAT_V`). The
+  radius alone gives a *shell* and not a lens: a particle caught while travelling along
+  the axis keeps that travel, and what gathers is a fat doughnut seen obliquely, which is
+  a smear and not a ring. So the part of where it stands and the part of how it travels
+  that lie **along** the axis are taken out of it, and only those. Measured: without it
+  the ring was 1.5–3.3 units thick against a radius of 6.4; with it, under 1.
 - **The swirl axis decides how the lens is tipped** (`SWIRL`). A ring turning about an
   axis pointing straight at you is a circle; about an upright one it is a smear seen
   edge-on. This is well off both — a lens with a near side and a far side.
-- **The word is set wider than the ring is, and that is the whole reason for its size.**
-  The ring is centred on the word, so no smaller word could ever be crossed by it — an
-  ellipse centred on something only crosses it if one of its semi-axes is shorter than
-  the thing is. Set a little wider, the ring's left and right rims fall **across the ends
-  of the lettering**, and because one of those rims is nearer than the middle of the
-  chamber and the other further, one is drawn in front of the word and the other passes
-  behind it. That is what gives the word a place in the volume instead of making it a
-  caption printed over a picture of one, and it is why there are **two canvases**:
-  everything nearer than `MID` is drawn on `.chamber-front`, over the writing, and
-  everything further on `.chamber-field`, under it. The word is sized against `vmin`
-  because the ring is (it is drawn against the smaller side of the window) and capped
-  against `vw` as well, or on a phone the lettering runs off the sides.
-- **The corners are the corners of the WINDOW.** Each injector is placed by working back
-  from the screen corner it is meant to sit in *at its own depth*, so all four stay in
-  their corners at any window size while standing at four different depths in the volume
-  — which is what stops the streams reading as a flat X. Both launch speeds are fractions
-  of what it would take to go round in a circle at that injector's own distance, not flat
-  numbers: with flat numbers one stream dropped straight down the hole while another
-  sailed past it. **They take turns being the quick one** (`PACE`, `PACE_EVERY`): each
-  injector's speed breathes on its own slow clock and the four clocks are deliberately
-  out of step, so no corner is always the fast one.
+- **The orbit's own path is drawn**, faintly, and ticked round every thirtieth of a turn.
+  It is what makes the drawing legible *as an orbit* in a still frame and at the moment a
+  stream is arriving, which is exactly when it is hardest to see. Like everything else
+  here it is split at the middle of the chamber — the near half on `.chamber-front`, over
+  the writing, the far half behind — so the path itself says which way round the lens is
+  tipped.
+- **The word is set wider than the orbit is, and that is the whole reason for its size.**
+  The orbit is centred on the word, so no smaller word could ever be crossed by it — an
+  ellipse centred on something only crosses it if one of its semi-axes is shorter than the
+  thing is. Set a little wider, the orbit's left and right rims fall **across the ends of
+  the lettering**, and because one of those rims is nearer than the middle of the chamber
+  and the other further, one is drawn in front of the word and the other passes behind it.
+  That is why there are **two canvases**: everything nearer than `MID` on `.chamber-front`,
+  over the writing, everything further on `.chamber-field`, under it. The word is sized
+  against `vmin` because the orbit is, and capped against `vw` as well, or on a phone the
+  lettering runs off the sides.
+- **How wide the orbit grows is measured, not set** (`fitOrbit`). It is as wide as the
+  window will hold (`OPEN_FILL`) and never so narrow that the writing is not standing
+  inside it (`OPEN_CLEAR`), found by halving the difference through the **real
+  projection** — the near half of the orbit stands a long way closer to the eye than the
+  far half and comes out much bigger, so a reading taken flat at the middle depth is badly
+  wrong at exactly the edge that runs off the bottom of the screen. It is worked out again
+  only when the menu or the window changes size, and only while the menu actually has a
+  box: the panel is taken off the page the moment the menu is closed, and an orbit sized
+  against a box of nothing would snap inward halfway through closing.
 - **The back canvas is NOT clipped, and that matters.** It used to be clipped to outside
   the writing's own box, and that was a mistake you could see: the word's box is a wide
-  flat rectangle, so the far side of the ring vanished along a straight line nowhere near
+  flat rectangle, so the far side of the orbit vanished along a straight line nowhere near
   any lettering and came back along another one — an **invisible pane** standing in the
-  chamber. It was never needed either. `.chamber-field` is *under* the plate in the
-  page's own stacking order, so the word and the menu occlude it by being drawn on top of
-  it — letter by letter, not box by box. The far rim now threads between the letters and
-  is hidden behind the strokes. `.chamber-front` is clipped **only while the menu is
+  chamber. It was never needed either. `.chamber-field` is *under* the plate in the page's
+  own stacking order, so the word and the menu occlude it by being drawn on top of it —
+  letter by letter, not box by box. `.chamber-front` is clipped **only while the menu is
   open**, to the panel's box, which is a panel with a border and a ground of its own, so
-  the edge the particles stop at is an edge you can see; closed, the near rim crossing
-  the word is the whole point.
-- **Held is not stopped, and the frame TRAVELS.** Open, nothing is launched, nothing ages
-  and nothing breaks up; each particle keeps a **seat** on the border and the whole frame
-  streams round it, each at its own rate (`FLOW`, `FLOW_VARY`), with a wander on top of
-  that (`ALIVE`, `ALIVE_EVERY`). A frame standing still is a printed dotted line; a frame
-  travelling is a current. Which seat each takes is worked out by sorting them **by the
-  way they already stand round the middle** and spacing them evenly round the border from
-  the same starting point, so the ring *unrolls* into a frame; taking each one straight
-  outward instead leaves the frame in clumps wherever the ring happened to be crowded,
-  which on a ring seen this obliquely is most of it.
-- **Pointing at a row READS it off against the frame** (`READ_SPAN`, `READ_OPEN`). It
-  used to **cinch** — the sides left the border and leant in towards the row, which read
-  as the frame being pulled out of shape. Now nothing leaves the border: the stretch of
-  frame level with the row takes the cool accent and its thickness *opens*, and a leader
-  is drawn from each end of the row out to the border with a tick where it lands. The
-  row's box is read **once a frame**, not once a particle: asking an element for its box
-  is a question the browser lays the page out to answer, and there are hundreds of them.
-  What is pointed at is also settled on every pointer move rather than left to
-  `pointerout`, because the menu grows out from under the pointer when it opens — a row
-  can arrive under a hand that never moved, and would then never be left.
+  the edge the particles stop at is an edge you can see.
+- **Pointing at a row READS it off against the orbit** (`READ_SPAN`, `READ_SWELL`). The
+  stretch of orbit level with that row takes the cool accent and is held a little wider,
+  so the orbit swells where the row is, and a leader is drawn from each end of the row out
+  to the window with a tick where it lands. Nothing leaves the orbit — it is a reading,
+  not a reaching. (It used to **cinch**: the sides left the border and leant in towards
+  the row, which read as the drawing being pulled out of shape.) The row's box is read
+  **once a frame**, not once a particle: asking an element for its box is a question the
+  browser lays the page out to answer, and there are hundreds of them. What is pointed at
+  is also settled on every pointer move rather than left to `pointerout`, because the menu
+  grows out from under the pointer when it opens — a row can arrive under a hand that
+  never moved, and would then never be left.
 - **The cursor is a hand in the volume, not a cursor on a picture**: it is put at each
   particle's own depth before it pushes, so what it shoves aside is a real hole in a real
   stream, and what it is holding turns to the cool accent.
 
-Two more, smaller: **some of them break up** (`FRAGILE`, `FRAG_AT`) rather than joining
-the ring, at a radius deliberately *outside* the ring, since bursting at the very middle
-is bursting behind the writing where nothing can be seen; and two things keep it cheap —
-the specks are grouped into `BANDS` weights with one `stroke()` and one `fill()` per
-band, and there is no gradient anywhere in it.
+Particles used to **break up** near the middle and throw fragments outward (`FRAGILE`,
+`FRAG_AT`). The owner asked for that gone — it read as fine particles flying in all
+directions after colliding with nothing — and it was removed outright rather than left
+switched off, so there is no `FRAG_*` in this file any more. Two things keep it cheap: the
+specks are grouped into `BANDS` weights with one `stroke()` and one `fill()` per band, and
+there is no gradient anywhere in it.
 
 **Without the script the page is the plain list of favourites**, and the page holds its
 own markup back until the script has taken over the same way the other two replaced
@@ -907,7 +931,7 @@ background luminance, but the class is the reliable path.
 - A favourite on the **chamber** page (`favorites`) is an `<a class="gallery-entry">`
   block with a `data-chapter` and a `data-date`, exactly as on the contact sheet's
   Favorites view — the chapters are the different `data-chapter` values in the order they
-  first appear, and the strip across the top of the menu is made from them.
+  first appear, and the chapters standing in the chamber's column are made from them.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map.
@@ -978,13 +1002,14 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the field** / **the hatch** | The ruled ground of fine strokes the Favorites view carried before it became the register — its reading was which **way** it lay. Nothing of it is in the code now (no `PITCH`, no `lie`, no `layAt`, no `SWEEP_*`, no `KNOT_*`). If the owner uses the word, they mean that removed treatment. |
 | **the grain** / **the wave** / **the sweep** / **knot** | All of the hatch's answers to the hand, removed with it — see **the field / the hatch** above. |
 | **mound** / **skyline** | The reading the field carried before *that*, when it was a lattice of marks: a rise in its top edge per entry. Nothing of it is in the code either. |
-| **the chamber** | The way `categories/favorites.html` is laid out: four injectors at the corners of the window firing streams of particles inward on white, settling into a ring round the menu of favourites. `chamber.js`. The theories drawing's world turned inside out. |
-| **injector** | One of the chamber's four corner sources (`S-01`…`S-04` on the drawing), each at its own depth in the volume. They take turns being the quick one. |
-| **the ring** (chamber) | Where the chamber settles what it catches: a tilted circle of particles — a **lens**, pressed flat onto its own plane — standing round the word. Not to be confused with **the ring / the orbit** below, which is a removed Favorites treatment. |
+| **the chamber** | The way `categories/favorites.html` is laid out: two injectors on the left of the window firing streams of particles across it on white, which join an orbit standing round the menu of favourites. `chamber.js`. The theories drawing's world turned inside out. |
+| **injector** | One of the chamber's two sources (`S-01`, `S-02` on the drawing), each at its own depth in the volume. Both stand on the left, and they take turns being the quick one. |
+| **the orbit** (chamber) | What the chamber's streams join: a tilted circle of particles — a **lens**, pressed flat onto its own plane — standing round the word, with its own path drawn faintly through it. It is the only arrangement the page has: opening the menu widens it, closing the menu narrows it. Not to be confused with **the ring / the orbit** below, which is a removed Favorites treatment. |
+| **the entry** | How a stream joins the orbit: aimed not at the middle but at a place on the orbit carried forward along the way the orbit runs (`ENTRY_LEAD`), so it comes in at a slant already going the right way. |
 | **the word** | `FAVORITES`, standing in the middle of the chamber's ring: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the ring so the ring's rims cross the ends of the lettering, one in front and one behind. Bracketed by **crop marks**, with the **cue** under it. |
 | **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
-| **the hold** | What the chamber does when the menu is opened: every particle takes a **seat** on the border of the window, and the whole frame travels round it. Held, not stopped. |
-| **the read** | What pointing at a row of the chamber's menu does: the stretch of frame level with it takes the cool accent and opens out, and a leader runs from each end of the row to the border. It replaced a **cinch**, where the sides left the border and leant in towards the row. |
+| **the hold** / **the frame** | What the chamber used to do when the menu was opened: every particle took a seat on the border of the window and the whole rectangle travelled round it. Removed — the orbit simply widens now. Nothing of it is in the code (no `EDGE`, no seat, no `FLOW`). |
+| **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it takes the cool accent and swells outward, and a leader runs from each end of the row out to the window. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. (Favorites used to have one too, on the left; the register has an **index** and a **log** instead.) |
