@@ -96,11 +96,14 @@ have open with no two chapters reading the same, pointing at a chapter laying th
 its way and letting it back when the pointer goes, pointing at a favourite knotting the
 field beside it, and the whole view fitting one screen;
 and the chamber — the menu being grown from that page's own favourites and carrying
-what the sheet's Favorites menu carries (number, date, name and link), one chapter open at
-a time with the strip working from the keyboard, an injector firing in each corner, what
-it catches standing in a ring round the writing with nothing drawn behind it, the streams
-answering the cursor and letting go again, it standing still under
-`prefers-reduced-motion`, and the plain list coming back when the script is blocked;
+what the sheet's Favorites menu carries (number, date, name and link), the word opening
+the menu and a chapter opening its own favourites with Escape stepping back out one level
+at a time, an injector firing in each corner, what it catches standing in a ring round the
+word with nothing drawn behind it and its near rim drawn over it, opening the menu
+throwing the ring out to the borders and holding it there without freezing it, pointing at
+a row drawing the particles in towards it and letting them back, the streams answering the
+cursor and letting go again, it standing still under `prefers-reduced-motion`, and the
+plain list coming back when the script is blocked;
 and the structure — the drawing setting itself up when the page opens without ever
 showing the plain list it replaces, it being grown from the page's own rows with one
 station per theory,
@@ -489,21 +492,35 @@ Two kinds of assembly stand in that frame, and the difference is the point:
 ### The chamber (`chamber.js`) — categories/favorites.html
 
 The main menu's **Favorites** category is a **chamber**: four injectors, one at each
-corner of the window, firing a fine stream of particles inward on white. The streams fall
-towards the middle, are caught there, and settle into a **ring** standing round the menu
-of favourites, which sits in the middle of it. It is the theories drawing's world turned
-inside out — the same particles, the same instrument marks, the same one cool accent kept
-for what answers you — printed as ink on white instead of white on near-black.
+corner of the window, firing a fine stream of **square** particles inward on white. The
+streams fall towards the middle, are caught there, and settle into a **ring** — tilted
+well off square to the window, so it reads as a lens rather than as a circle drawn on the
+page. It is the theories drawing's world turned inside out — the same particles, the same
+instrument marks, the same one cool accent kept for what answers you — printed as ink on
+white instead of white on near-black.
 
 Not to be confused with the **Favorites view on the contact sheet page**
 (`favorites.js`), which is a different page. The two carry the *same kind of menu* — the
-chapters, their counts, and every favourite with its number, its date and its name — in
-deliberately different shapes: the sheet's is two columns down the sides, this one is a
-single narrow column down the middle, so the four streams close on the writing from every
-corner.
+chapters and every favourite with its number, its date and its name — in deliberately
+different shapes: the sheet's is two columns down the sides with a strip of chapters
+across the top, this one is a single narrow column down the middle with no strip at all,
+so the four streams close on the writing from every corner.
+
+**The page has two states, and the whole of the interaction is the step between them.**
+
+- **Closed**, the word **FAVORITES** stands alone in the middle of the ring and the ring
+  turns round it. That word is the whole of the page's chrome, and it is the button.
+- **Open**, pressing the word throws the ring outward: every particle runs to its own
+  place on the border of the window and **holds** there, near enough to frozen but never
+  quite, while the word shrinks to a heading and the menu opens out under it. The
+  chapters stand in the column first; opening one puts its own favourites in the same
+  column in their place, with a way back. Escape steps out one level at a time, and a
+  press anywhere off the writing closes it.
+
+Nine things are worth knowing before changing any of it:
 
 - **It is a real fall, not a path.** Every particle is shot at the middle and pulled
-  towards it, and four forces do the rest — and each does one legible thing:
+  towards it, and the rest is four forces, each doing one legible thing:
   `PULL` draws it in; `CATCH` is the distance at which the chamber takes hold, so the
   streams read as straight until they arrive rather than spiralling all the way from the
   corners; inside that it is turned the way the chamber turns (up to the speed that would
@@ -511,32 +528,71 @@ corner.
   of its travel damped away — never the going-round part, which is the difference between
   an orbit settling and everything grinding to a halt. Writing the curves by hand instead
   gives a pattern, and a pattern is something you can see repeat.
-- **The swirl axis points nearly at you** (`SWIRL`). A ring turning about an upright axis
-  is seen edge-on from the camera and reads as a smear across the middle; tilted a little
-  off straight it comes out as an ellipse, which is the only way a ring says which way up
-  it is.
+- **What it catches is pressed flat onto the ring's own plane** (`FLAT`, `FLAT_V`). The
+  ring alone gives a *shell* and not a lens: a particle caught while travelling along the
+  axis keeps that travel, and what gathers is a fat doughnut seen obliquely, which is a
+  smear and not a ring. So the part of where a caught particle stands and the part of how
+  it travels that lie **along** the axis are taken out of it, and only those — everything
+  in the plane is the going-round the ring is made of. Measured: without it the ring was
+  1.5–3.3 units thick against a radius of 6.4; with it, under 1.
+- **The swirl axis decides how the lens is tipped** (`SWIRL`). A ring turning about an
+  axis pointing straight at you is a circle; about an upright one it is a smear seen
+  edge-on. This is well off both — a lens with a near side and a far side.
+- **The word is set wider than the ring is, and that is the whole reason for its size.**
+  The ring is centred on the word, so no smaller word could ever be crossed by it — an
+  ellipse centred on something only crosses it if one of its semi-axes is shorter than
+  the thing is. Set a little wider, the ring's left and right rims fall **across the ends
+  of the lettering**, and because one of those rims is nearer than the middle of the
+  chamber and the other further, one is drawn in front of the word and the other passes
+  behind it. That is what gives the word a place in the volume instead of making it a
+  caption printed over a picture of one, and it is why there are **two canvases**:
+  everything nearer than `MID` is drawn on `.chamber-front`, over the writing, and
+  everything further on `.chamber-field`, under it. The word is sized against `vmin`
+  because the ring is (it is drawn against the smaller side of the window) and capped
+  against `vw` as well, or on a phone the lettering runs off the sides.
 - **The corners are the corners of the WINDOW.** Each injector is placed by working back
   from the screen corner it is meant to sit in *at its own depth*, so all four stay in
   their corners at any window size while standing at four different depths in the volume
   — which is what stops the streams reading as a flat X. Both launch speeds are fractions
   of what it would take to go round in a circle at that injector's own distance, not flat
   numbers: with flat numbers one stream dropped straight down the hole while another
-  sailed past it.
-- **Nothing is drawn where the writing stands.** The menu's box is measured off the page
-  and the drawing is clipped to outside it, so the ring passes *behind* the writing. It
-  has to be a clip rather than a test on each particle's own place: a speck just clear of
-  the menu can still trail its tail across it, and the ranging circles cross it too.
+  sailed past it. **They take turns being the quick one** (`PACE`, `PACE_EVERY`): each
+  injector's speed breathes on its own slow clock and the four clocks are deliberately
+  out of step, so no corner is always the fast one.
+- **Nothing further away is drawn where the writing stands.** The word's box — or the
+  menu's, once it is open — is measured off the page and `.chamber-field` is clipped to
+  outside it, so the far half of the ring passes *behind* the writing. It has to be a
+  clip rather than a test on each particle's own place: a speck just clear of the writing
+  can still trail its tail across it, and the ranging circles cross it too. `.chamber-front`
+  is clipped **only while the menu is open** — closed, the near rim crossing the word is
+  the point.
+- **Held is not stopped.** Open, nothing is launched, nothing ages and nothing breaks up;
+  each particle runs to its own place on the border (`EDGE`, `HOLD_EASE`) and keeps a
+  small wander of its own there (`ALIVE`, `ALIVE_EVERY`), so it reads as held rather than
+  as a picture of itself. Where each one goes is worked out by sorting them **by the way
+  they already stand round the middle** and then spacing them evenly along the border
+  from the same starting point, so the ring *unrolls* into a frame; taking each one
+  straight outward instead leaves the frame in clumps wherever the ring happened to be
+  crowded, which on a ring seen this obliquely is most of it.
+- **Pointing at a row makes them TRY to converge on it** (`DRAW_IN`, `DRAW_SPAN`,
+  `DRAW_GAP`). The particles along the sides lean in towards that row's own height, the
+  nearer their place on the border is to it the harder, and they are stopped short of the
+  writing — which is what makes it read as an attempt rather than as an arrival. The
+  row's box is read **once a frame**, not once a particle: asking an element for its box
+  is a question the browser lays the page out to answer, and there are hundreds of them.
 - **The cursor is a hand in the volume, not a cursor on a picture**: it is put at each
   particle's own depth before it pushes, so what it shoves aside is a real hole in a real
   stream, and what it is holding turns to the cool accent.
-- **Some of them break up** (`FRAGILE`, `FRAG_AT`) rather than joining the ring. The
-  radius that happens at is deliberately *outside* the ring: bursting at the very middle
-  is bursting behind the menu, where nothing can be seen.
-- Two things keep it cheap: the specks are grouped into `BANDS` weights and each band is
-  one `stroke()` and one `fill()`, and there is no gradient anywhere in it.
-- **Without the script the page is the plain list of favourites**, and the page holds its
-  own markup back until the script has taken over the same way the other two replaced
-  pages do — see **js-coming** in the glossary.
+
+Two more, smaller: **some of them break up** (`FRAGILE`, `FRAG_AT`) rather than joining
+the ring, at a radius deliberately *outside* the ring, since bursting at the very middle
+is bursting behind the writing where nothing can be seen; and two things keep it cheap —
+the specks are grouped into `BANDS` weights with one `stroke()` and one `fill()` per
+band, and there is no gradient anywhere in it.
+
+**Without the script the page is the plain list of favourites**, and the page holds its
+own markup back until the script has taken over the same way the other two replaced
+pages do — see **js-coming** in the glossary.
 
 ### The contact sheet (`contact-sheet.js`), and favorites (`favorites.js`)
 
@@ -890,8 +946,10 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **knot** | What pointing at a favourite does to the field: the strokes near that entry's own place turn to circle it. |
 | **mound** / **skyline** | The reading the field carried before it became a hatch — a rise in its top edge per entry. Nothing of it is in the code now (no `MOUND_*`, no `lattice()`). If the owner uses the word, they mean that removed treatment. |
 | **the chamber** | The way `categories/favorites.html` is laid out: four injectors at the corners of the window firing streams of particles inward on white, settling into a ring round the menu of favourites. `chamber.js`. The theories drawing's world turned inside out. |
-| **injector** | One of the chamber's four corner sources (`S-01`…`S-04` on the drawing), each at its own depth in the volume. |
-| **the ring** (chamber) | Where the chamber settles what it catches: a tilted circle of particles standing round the writing. Not to be confused with **the ring / the orbit** below, which is a removed Favorites treatment. |
+| **injector** | One of the chamber's four corner sources (`S-01`…`S-04` on the drawing), each at its own depth in the volume. They take turns being the quick one. |
+| **the ring** (chamber) | Where the chamber settles what it catches: a tilted circle of particles — a **lens**, pressed flat onto its own plane — standing round the word. Not to be confused with **the ring / the orbit** below, which is a removed Favorites treatment. |
+| **the word** | `FAVORITES`, standing in the middle of the chamber's ring: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the ring so the ring's rims cross the ends of the lettering, one in front and one behind. |
+| **the hold** | What the chamber does when the menu is opened: every particle runs to its own place on the border of the window and stays there, keeping a small wander of its own. Held, not stopped. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
 | **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. In Favorites it is also the name of the block on the left carrying the open chapter (`.chapters-plate`). Which one is meant follows from the view being talked about. |

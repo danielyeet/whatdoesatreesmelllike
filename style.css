@@ -1267,14 +1267,15 @@ body.sheet-scripted .gallery-entry { display: none; }
 
 /* ==================================================================
    THE CHAMBER — categories/favorites.html
-   Four injectors, one at each corner of the window, firing a fine
-   stream of particles inward on white; the menu of favourites stands
-   in the middle of it. It is the theories drawing's world turned
-   inside out — same particles, same instrument marks, same one cool
-   accent for the things you can open — printed as ink on white.
-   Everything here is written under `body.chambered`, which chamber.js
-   adds; without it the page is the plain list of favourites, and
-   stays that way.
+   Four injectors, one at each corner of the window, firing streams of
+   square particles inward on white; they settle into a tilted ring,
+   and the word FAVORITES stands in the middle of it. Pressing the word
+   throws the ring out to the borders and opens the menu out of it.
+   Two canvases: everything further than the middle of the chamber is
+   drawn under the writing, everything nearer over it, so the near half
+   of the ring passes in front of the word. Everything here is written
+   under `body.chambered`, which chamber.js adds; without it the page
+   is the plain list of favourites, and stays that way.
    ================================================================== */
 body.chambered { background: var(--bg); }
 body.chambered .page-content { padding: 0; margin: 0; max-width: none; }
@@ -1302,101 +1303,171 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   z-index: 0;
   background: var(--bg);
 }
-.chamber-field { display: block; width: 100%; height: 100%; }
+.chamber-field, .chamber-front {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* The near half of the chamber is drawn over the writing, so it must
+   never be the thing you click. */
+.chamber-front { z-index: 3; pointer-events: none; }
 
-/* THE MENU. The same things the contact sheet's Favorites menu
-   carries — the chapters, their counts, and every favourite with its
-   number, its date and its name — in one narrow column down the middle
-   instead of two columns down the sides, so the four streams close on
-   the writing from every corner. Nothing is drawn behind it: chamber.js
-   measures this box and drops the particles inside it. */
+/* What stands in the middle of the ring: the word alone to begin with,
+   and the menu it opens into. Both are centred on the same spot, so
+   the menu reads as the word opening out rather than as a panel
+   arriving from somewhere else. */
 .chamber-plate {
   position: fixed;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(460px, calc(100% - 96px));
-  max-height: calc(100vh - 150px);
-  overflow: auto;
-  padding: 26px 30px 30px;
-  background: var(--bg);
-  border: 1px solid var(--line);
   z-index: 2;
-  animation: chamber-in 0.9s var(--menu-ease) both;
-}
-@keyframes chamber-in {
-  from { opacity: 0; transform: translate(-50%, calc(-50% + 10px)); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
-}
-
-.chamber-rail {
   display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--line);
+  flex-direction: column;
+  align-items: center;
+  width: min(94vmin, calc(100% - 28px));
+  max-height: calc(100vh - 140px);
+  /* The plate is only somewhere to stand: it is wider than the menu
+     it holds, so anything it caught either side of the menu would be
+     a click that looked like it landed on the page and did nothing. */
+  pointer-events: none;
 }
-.chamber-tab {
-  flex: 1 1 0;
+.chamber-word, .chamber-panel { pointer-events: auto; }
+
+/* THE WORD. Technical, in the mono the rest of the site keeps for its
+   readings, bracketed by the same hollow registration square the site
+   marks a point with.
+
+   IT IS SET WIDER THAN THE RING IS, and that is the whole reason it is
+   this size. The ring is centred on the word, so a smaller word would
+   sit in the hole of the ellipse and nothing would ever cross it. Set
+   a little wider, the ring's left and right rims fall ACROSS the ends
+   of the lettering — and because one of those rims is nearer than the
+   middle of the chamber and the other further, one crosses in front of
+   the word and the other passes behind it. That is what gives the word
+   a place in the volume instead of making it a caption printed over a
+   picture of one. Sized against `vmin` because the ring is too (it is
+   drawn against the smaller side of the window), so the two keep their
+   proportion at every window size. */
+.chamber-word {
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.52em;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--mono);
+  /* Against `vmin` because the ring is, and capped against `vw` as
+     well so the lettering cannot run off the sides of a narrow window
+     — on a phone the ring is drawn against the short side and the word
+     against the long one, and only the cap keeps the two apart. */
+  font-size: clamp(20px, min(9.4vmin, 8.2vw), 104px);
+  letter-spacing: 0.55em;
+  text-transform: uppercase;
+  color: var(--ink);
+  transition: font-size 0.55s var(--menu-ease), letter-spacing 0.55s var(--menu-ease),
+              gap 0.55s var(--menu-ease), color 0.35s var(--menu-ease);
+}
+.chamber-word:hover, .chamber-word:focus-visible { color: var(--brass); }
+.chamber-word:hover .chamber-reg, .chamber-word:focus-visible .chamber-reg {
+  background: var(--brass);
+}
+.chamber-reg {
+  width: 0.34em;
+  height: 0.34em;
+  border: 1px solid var(--brass);
+  flex: none;
+  transition: background 0.35s var(--menu-ease);
+}
+/* The trailing letter-space would otherwise push the lettering off
+   centre against the two marks. */
+.chamber-word-name { margin-right: -0.55em; }
+/* Open, the word is the menu's own heading: it comes back to the size
+   of a heading and the panel unfolds under it. */
+.chamber-plate.open .chamber-word {
+  font-size: 13px;
+  letter-spacing: 0.42em;
+  gap: 12px;
+  color: var(--muted);
+}
+.chamber-plate.open .chamber-reg { border-color: var(--brass); }
+
+.chamber-panel {
+  width: min(460px, 100%);
+  margin-top: 10px;
+  padding: 18px 22px 22px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  overflow: auto;
+  animation: chamber-open 0.55s var(--menu-ease) both;
+}
+@keyframes chamber-open {
+  from { opacity: 0; transform: scaleY(0.82) translateY(-14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.chamber-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
-  padding: 0 4px 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.chamber-back {
+  flex: none;
+  padding: 0;
   border: none;
   background: none;
-  text-align: left;
   cursor: pointer;
-  color: var(--muted);
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  transition: color 0.3s var(--menu-ease);
-  position: relative;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
 }
-.chamber-tab:hover, .chamber-tab.open { color: var(--ink); }
-/* The open one is underlined on the rule itself, the way the rest of
-   the site marks what is selected. */
-.chamber-tab::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  width: 0;
-  height: 1px;
-  background: var(--brass);
-  transition: width 0.45s var(--menu-ease);
-}
-.chamber-tab.open::after { width: 100%; }
-/* The same hollow square the rest of the site marks a point with. */
-.chamber-reg { width: 8px; height: 8px; border: 1px solid currentColor; flex: none; }
-.chamber-tab-name { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chamber-tab.open .chamber-reg { background: var(--brass); border-color: var(--brass); }
-.chamber-tab-count { color: var(--muted); }
-
+.chamber-back[hidden] { display: none; }
+.chamber-back:hover, .chamber-back:focus-visible { color: var(--ink); }
 .chamber-spec {
-  margin: 14px 0 4px;
+  margin: 0;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   color: var(--muted);
 }
 
-.chamber-panel[hidden] { display: none; }
-.chamber-panel { animation: chamber-open 0.45s var(--menu-ease) both; }
-@keyframes chamber-open {
-  from { opacity: 0; transform: translateY(6px); }
+.chamber-level[hidden] { display: none; }
+.chamber-level { animation: chamber-level 0.4s var(--menu-ease) both; }
+@keyframes chamber-level {
+  from { opacity: 0; transform: translateX(8px); }
   to { opacity: 1; transform: none; }
 }
-/* A favourite is a stack, not a row: its number and date above, its
-   name under them — the contact sheet's rows set the other way up. */
-.chamber-item {
+
+/* ONE COLUMN, and no strip across the top: the chapters stand in it
+   first, and opening one puts its favourites in the same column in
+   their place. A row is a stack — its number and reading above, its
+   name under them — whether it is a chapter or a favourite, so the two
+   levels read as one thing going deeper rather than as two designs. */
+.chamber-row {
   position: relative;
   display: block;
-  padding: 16px 22px 16px 0;
+  width: 100%;
+  padding: 15px 22px 15px 0;
+  border: none;
   border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
   text-decoration: none;
   color: var(--ink);
+  cursor: pointer;
   transition: padding-left 0.3s var(--menu-ease);
 }
-.chamber-item:hover, .chamber-item:focus-visible { padding-left: 8px; }
+.chamber-row:hover, .chamber-row:focus-visible { padding-left: 9px; }
 .chamber-file {
   display: flex;
   gap: 12px;
@@ -1406,7 +1477,6 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   color: var(--muted);
 }
 .chamber-no { color: var(--brass); }
-.chamber-item:hover .chamber-date { color: var(--ink); }
 .chamber-name {
   display: block;
   margin-top: 5px;
@@ -1417,7 +1487,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
 .chamber-go {
   position: absolute;
   right: 0;
-  bottom: 16px;
+  bottom: 15px;
   font-family: var(--mono);
   font-size: 13px;
   color: var(--muted);
@@ -1425,17 +1495,18 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   transform: translateX(-6px);
   transition: opacity 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
 }
-.chamber-item:hover .chamber-go,
-.chamber-item:focus-visible .chamber-go { opacity: 1; transform: none; color: var(--brass); }
+.chamber-row:hover .chamber-go,
+.chamber-row:focus-visible .chamber-go { opacity: 1; transform: none; color: var(--brass); }
 
 @media (max-width: 720px) {
-  .chamber-plate { width: calc(100% - 44px); padding: 20px 20px 24px; }
-  .chamber-rail { flex-wrap: wrap; gap: 4px 14px; }
-  .chamber-tab { flex: 1 1 40%; }
+  .chamber-plate { width: calc(100% - 44px); }
+  .chamber-panel { padding: 16px 16px 18px; }
+  .chamber-head { flex-wrap: wrap; gap: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chamber-plate, .chamber-panel { animation-duration: 0.01s; }
+  .chamber-panel, .chamber-level { animation-duration: 0.01s; }
+  .chamber-word { transition-duration: 0.01s; }
 }
 
 /* ==================================================================
