@@ -1010,11 +1010,11 @@ body.sheet-named .sheet-where {
 
 /* ==================================================================
    FAVORITES — the other half of a contact sheet page
-   The screen flickers once, a menu of chapters comes up on the right,
-   and a field of marks settles along the foot that answers the
-   cursor. favorites.js does the reading and the switching; this is
-   how it looks.
-   ================================================================== */
+   The screen flickers once and what comes up is the REGISTER: a page
+   ruled edge to edge with fine horizontal tracks, a small square
+   travelling along each one, and a glitch that tears the whole thing
+   sideways every few seconds. favorites.js does the reading, the
+   drawing and the switching; this is how it looks.
 /* Only one of the two views is on the page at a time. The one being
    left fades away first and the other arrives after it — favorites.js
    holds the swap until the fade is over, so they are never both up.
@@ -1061,15 +1061,30 @@ body:not(.sheet-scripted) .gallery { display: block; }
 }
 body.sheet-scripted .gallery-entry { display: none; }
 
+/* ------------------------------------------------------------------
+   THE REGISTER
+   One screen, never scrolled. The tracks are drawn on the canvas
+   underneath, and the writing is laid over it — so a square running
+   along a favourite's own track passes BEHIND that favourite's line of
+   writing without anything having to be clipped.
+   ------------------------------------------------------------------ */
 .chapters {
   position: relative;
   width: 100%;
   height: calc(100vh - clamp(64px, 9vh, 96px));
   overflow: hidden;
 }
-/* The field of marks along the foot is drawn on this; the menu and
-   the plate are laid over it. */
-.chapters-field { position: absolute; inset: 0; display: block; }
+/* The width and the height have to be written out: a canvas is a
+   replaced element with an intrinsic size of its own, so `inset: 0`
+   alone leaves it 300 by 150 in the corner rather than filling the
+   page. */
+.chapters-field {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 
 /* Coming up. A panel being switched on does not simply appear: it
    catches, drops, and settles. Two flickers is enough to read as one
@@ -1084,185 +1099,190 @@ body.sheet-scripted .gallery-entry { display: none; }
   62% { opacity: 0.7; }
   100% { opacity: 1; }
 }
-.chapters-plate, .chapters-menu { opacity: 0; }
-.chapters.flicker .chapters-plate,
-.chapters.flicker .chapters-menu {
+.chapters-head, .chapters-body { opacity: 0; }
+.chapters.flicker .chapters-head,
+.chapters.flicker .chapters-body {
   animation: chapters-flicker 0.46s steps(1, end) both;
 }
-.chapters.lit .chapters-plate,
-.chapters.lit .chapters-menu {
+.chapters.lit .chapters-head,
+.chapters.lit .chapters-body {
   opacity: 1;
   transition: opacity 0.5s var(--menu-ease);
 }
 
-/* The open chapter, written large on the left. It is set high — the
-   page is read from the top down and there is nothing above it — and
-   given a small spec list underneath, so the left-hand column carries
-   some weight of its own rather than being one line and a lot of
-   nothing. */
-.chapters-plate {
-  position: absolute;
-  left: clamp(24px, 5vw, 72px);
-  top: clamp(20px, 4vh, 60px);
-  width: min(380px, 23vw);
+/* --- the head line, and the code the glitch scrambles */
+.chapters-head {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 20px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
 }
-.chapters-kicker {
-  margin: 0 0 12px;
+.chapters-head p { margin: 0; }
+.chapters-sig { color: var(--brass); }
+
+/* --- the two columns underneath it */
+.chapters-body {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(190px, 21%) 1fr;
+  gap: clamp(28px, 5vw, 76px);
+  padding-top: clamp(26px, 4.2vh, 52px);
+}
+
+/* THE INDEX. The chapters, stacked. Vertical rather than a strip
+   across the top: the register is read down the page, and the index
+   is the thing you read down it with. */
+.chapters-rail {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+.chapters-tab {
+  display: grid;
+  grid-template-columns: 9px 2.4em 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  cursor: pointer;
+  text-align: left;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.12em;
-  color: var(--brass);
+  color: var(--muted);
+  transition: color 0.3s var(--menu-ease), padding-left 0.3s var(--menu-ease);
 }
-.chapters-plate h2 {
-  margin: 0;
-  /* Set to the column it stands in rather than to the window: the
-     plate is narrower than it was, so that the clear room between the
-     two columns of writing is wider, and a name that breaks in the
-     middle is the first thing that gives that away. */
-  font-size: clamp(28px, 4.4vw, 62px);
-  letter-spacing: -0.02em;
-  line-height: 1.04;
+.chapters-tab:hover, .chapters-tab:focus-visible { color: var(--ink); padding-left: 8px; }
+.chapters-reg {
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--line);
+  transition: background 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
 }
-/* Label, rule, figure — the way the rest of the site sets out a
-   reading. */
+.chapters-tab .chapters-name {
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.chapters-count-small { color: var(--muted); }
+.chapters-tab.open { color: var(--ink); }
+.chapters-tab.open .chapters-reg { background: var(--brass); border-color: var(--brass); }
+.chapters-tab.open .chapters-name { color: var(--ink); }
+
+/* The reading under it, set out the way the rest of the site sets out
+   a reading: a label, a rule, a figure. */
 .chapters-spec {
-  margin: clamp(20px, 3vh, 34px) 0 0;
+  margin: 26px 0 0;
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
 }
 .chapters-spec > div {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  padding: clamp(12px, 1.8vh, 20px) 0;
-  border-top: 1px solid var(--line);
+  gap: 12px;
+  padding: 6px 2px;
+  border-bottom: 1px solid var(--line);
 }
-.chapters-spec dt { color: var(--muted); text-transform: uppercase; }
+.chapters-spec dt { text-transform: uppercase; }
 .chapters-spec dd { margin: 0; color: var(--ink); }
 
-/* The menu, on the right. Kept narrower than the room it has: the
-   column of daylight between it and the plate is where the field's
-   reading stands, and the page is easier to read for the space. */
-.chapters-menu {
-  position: absolute;
-  right: clamp(24px, 5vw, 72px);
-  top: clamp(20px, 4vh, 60px);
-  width: min(620px, 36vw);
+/* THE LOG. The open chapter, and its favourites as full-width ruled
+   rows — full width because each row is a TRACK, and a track that
+   stopped short of the margin would not be one. */
+.chapters-log { position: relative; min-width: 0; }
+.chapters-title {
+  margin: 0 0 clamp(18px, 3vh, 34px);
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: clamp(30px, 5.2vw, 62px);
+  line-height: 1;
+  letter-spacing: -0.015em;
+  color: var(--ink);
 }
-.chapters-rail { display: flex; flex-direction: column; margin-bottom: clamp(26px, 4.6vh, 52px); }
-.chapters-tab {
+.chapters-panel { display: none; }
+.chapters-panel.open { display: block; border-top: 1px solid var(--line); }
+
+.chapters-item {
   position: relative;
   display: grid;
-  grid-template-columns: 11px 1fr auto;
-  align-items: center;
-  gap: 14px;
-  padding: clamp(15px, 2.8vh, 30px) 2px;
-  border: none;
-  border-top: 1px solid var(--line);
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  color: var(--muted);
-  transition: color 0.3s var(--menu-ease);
-}
-.chapters-rail .chapters-tab:last-child { border-bottom: 1px solid var(--line); }
-.chapters-tab:hover, .chapters-tab.open { color: var(--ink); }
-.chapters-tab::after {
-  content: "";
-  position: absolute;
-  left: -1px;
-  bottom: -1px;
-  width: 0;
-  height: 1px;
-  background: var(--brass);
-  transition: width 0.45s var(--menu-ease);
-}
-.chapters-tab.open::after { width: 100%; }
-/* The same hollow square the rest of the site marks a point with. */
-.chapters-reg { width: 9px; height: 9px; border: 1px solid currentColor; }
-.chapters-tab.open .chapters-reg { background: var(--brass); border-color: var(--brass); }
-.chapters-name {
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: clamp(15px, 1.25vw, 18px);
-  color: inherit;
-}
-.chapters-count-small { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-
-.chapters-panel[hidden] { display: none; }
-.chapters-panel { animation: chapters-open 0.45s var(--menu-ease) both; }
-@keyframes chapters-open {
-  from { opacity: 0; transform: translateX(8px); }
-  to { opacity: 1; transform: none; }
-}
-.chapters-item {
-  display: grid;
-  grid-template-columns: 28px 86px 1fr auto;
+  grid-template-columns: 2.4em 7.2em 1fr 1.6em;
   align-items: baseline;
-  gap: 18px;
-  padding: clamp(18px, 3.6vh, 42px) 2px;
+  gap: clamp(10px, 2vw, 28px);
+  padding: clamp(11px, 1.8vh, 19px) 2px;
   border-bottom: 1px solid var(--line);
   text-decoration: none;
   color: var(--ink);
-  transition: padding-left 0.3s var(--menu-ease);
+  transition: padding-left 0.32s var(--menu-ease), background 0.32s var(--menu-ease);
 }
-.chapters-item:first-child { border-top: 1px solid var(--line); }
-.chapters-item:hover { padding-left: 8px; }
-.chapters-no {
+.chapters-item-no, .chapters-date {
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--brass);
-}
-/* The date is what a favourite is filed under, so it is set first and
-   in the mono the rest of the site keeps for readings. */
-.chapters-date {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  letter-spacing: 0.16em;
   color: var(--muted);
 }
-.chapters-item:hover .chapters-date { color: var(--brass); }
-.chapters-item-name { font-family: var(--sans); font-size: clamp(16px, 1.4vw, 20px); letter-spacing: -0.01em; }
+.chapters-item-name {
+  font-family: var(--sans);
+  font-size: clamp(15px, 1.5vw, 19px);
+}
 .chapters-go {
   font-family: var(--mono);
-  font-size: 13px;
-  color: var(--muted);
+  color: var(--brass);
   opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
+  transition: opacity 0.32s var(--menu-ease);
+}
+/* A favourite lights its own track right across the page, so what
+   answers the pointer here is deliberately quiet: the drawing is doing
+   the talking. */
+.chapters-item:hover, .chapters-item:focus-visible {
+  padding-left: 10px;
+  background: rgba(23, 23, 15, 0.025);
 }
 .chapters-item:hover .chapters-go,
-.chapters-item:focus-visible .chapters-go { opacity: 1; transform: none; color: var(--brass); }
+.chapters-item:focus-visible .chapters-go { opacity: 1; }
+.chapters-item:hover .chapters-date,
+.chapters-item:focus-visible .chapters-date { color: var(--brass); }
 
-/* The two columns are kept off each other on the way down: the room
-   between them is where the field's reading stands, and favorites.js
-   measures that room rather than assuming it. */
-@media (max-width: 1100px) {
-  .chapters-plate { width: min(300px, 25vw); }
-  .chapters-menu { width: min(430px, 40vw); }
+/* ------------------------------------------------------------------
+   THE TEAR
+   What the glitch does to the WRITING. Only ever where a line is
+   drawn, never what it says: the row slips sideways and is fringed in
+   the two accents for a tenth of a second, and no character of any
+   name, date or number is ever anything but itself.
+   ------------------------------------------------------------------ */
+.chapters-item.torn, .chapters-title.torn {
+  transform: translateX(var(--tear, 0px));
+  text-shadow: 2px 0 rgba(156, 111, 53, 0.55), -2px 0 rgba(47, 95, 150, 0.5);
+}
+
+@media (max-width: 560px) {
+  .chapters-head { font-size: 9px; letter-spacing: 0.1em; }
 }
 
 @media (max-width: 860px) {
-  .chapters { height: auto; min-height: calc(100vh - 64px); }
-  .chapters-plate {
-    position: static;
-    padding: 18px 24px 0;
-    width: auto;
-  }
-  .chapters-menu {
-    position: static;
-    width: auto;
-    padding: 26px 24px 120px;
-  }
-  .chapters-item { grid-template-columns: 24px 78px 1fr auto; gap: 12px; }
+  .chapters-body { grid-template-columns: 1fr; gap: 26px; }
+  .chapters-spec { margin-top: 16px; }
+  .chapters-item { grid-template-columns: 2.2em 6.6em 1fr 1.2em; }
 }
 
+/* Nothing on this page moves when animation is turned off: the
+   register is ruled once and left, and nothing ever tears. */
 @media (prefers-reduced-motion: reduce) {
-  .chapters-panel { animation-duration: 0.01s; }
-  .chapters.flicker .chapters-plate,
-  .chapters.flicker .chapters-menu { animation-duration: 0.01s; }
+  .chapters-head, .chapters-body { opacity: 1; }
+  .chapters-item.torn, .chapters-title.torn { transform: none; text-shadow: none; }
+  .chapters-tab, .chapters-item, .chapters-go, .chapters-reg { transition: none; }
 }
 
 /* ==================================================================
@@ -1352,11 +1372,13 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
    drawn against the smaller side of the window), so the two keep their
    proportion at every window size. */
 .chamber-word {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.52em;
-  padding: 0;
+  gap: 0.18em;
+  padding: 0.22em 0.5em 0.3em;
   border: 0;
   background: none;
   cursor: pointer;
@@ -1370,13 +1392,77 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   letter-spacing: 0.55em;
   text-transform: uppercase;
   color: var(--ink);
-  transition: font-size 0.55s var(--menu-ease), letter-spacing 0.55s var(--menu-ease),
-              gap 0.55s var(--menu-ease), color 0.35s var(--menu-ease);
+  /* As long as the ring's own step out to the borders (OPEN_MS in
+     chamber.js), so the lettering and the particles arrive together. */
+  transition: font-size 1.5s var(--menu-ease), letter-spacing 1.5s var(--menu-ease),
+              padding 1.5s var(--menu-ease), color 0.6s var(--menu-ease);
+}
+.chamber-word-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.52em;
+  transition: gap 1.5s var(--menu-ease);
 }
 .chamber-word:hover, .chamber-word:focus-visible { color: var(--brass); }
 .chamber-word:hover .chamber-reg, .chamber-word:focus-visible .chamber-reg {
   background: var(--brass);
 }
+
+/* THE CROP MARKS. Four corner brackets round the word, the way a
+   drawing brackets the thing it is about — and the first half of
+   saying "this is a control": closed, the word is the only thing on
+   the page, so it has to read as something you press rather than as a
+   heading somebody centred. */
+.chamber-crop {
+  position: absolute;
+  width: 0.3em;
+  height: 0.3em;
+  border: 0 solid var(--line);
+  transition: border-color 0.35s var(--menu-ease), width 1.5s var(--menu-ease),
+              height 1.5s var(--menu-ease);
+}
+.chamber-crop.tl { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
+.chamber-crop.tr { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
+.chamber-crop.bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
+.chamber-crop.br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+.chamber-word:hover .chamber-crop, .chamber-word:focus-visible .chamber-crop {
+  border-color: var(--brass);
+}
+
+/* THE CUE. The other half: a small boxed label under the lettering
+   saying what pressing it does, and which way it will go. It is set in
+   pixels rather than with the word, so it stays a control's size
+   however large the lettering is drawn. */
+.chamber-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 0.06em;
+  padding: 5px 13px;
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: border-color 0.35s var(--menu-ease), color 0.35s var(--menu-ease),
+              background 0.35s var(--menu-ease);
+}
+.chamber-cue-name { margin-right: -0.26em; }
+.chamber-cue-mark {
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.55s var(--menu-ease);
+}
+.chamber-word:hover .chamber-cue, .chamber-word:focus-visible .chamber-cue {
+  border-color: var(--brass);
+  color: var(--brass);
+}
+.chamber-plate.open .chamber-cue-mark { transform: translateY(1px) rotate(225deg); }
 .chamber-reg {
   width: 0.34em;
   height: 0.34em;
@@ -1392,10 +1478,13 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
 .chamber-plate.open .chamber-word {
   font-size: 13px;
   letter-spacing: 0.42em;
-  gap: 12px;
   color: var(--muted);
 }
+.chamber-plate.open .chamber-word-line { gap: 12px; }
 .chamber-plate.open .chamber-reg { border-color: var(--brass); }
+/* Open, the brackets close right in on the heading rather than
+   standing off it at the size the big lettering needed. */
+.chamber-plate.open .chamber-crop { width: 5px; height: 5px; }
 
 .chamber-panel {
   width: min(460px, 100%);
@@ -1404,10 +1493,14 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   border: 1px solid var(--line);
   background: var(--bg);
   overflow: auto;
-  animation: chamber-open 0.55s var(--menu-ease) both;
+  /* It unfolds over the same moment the ring takes to reach the
+     borders, and waits out the first third of it: the word has to have
+     begun coming down to a heading before the menu appears under it,
+     or the two read as two separate things happening at once. */
+  animation: chamber-open 1.1s var(--menu-ease) 0.42s both;
 }
 @keyframes chamber-open {
-  from { opacity: 0; transform: scaleY(0.82) translateY(-14px); }
+  from { opacity: 0; transform: scaleY(0.72) translateY(-20px); }
   to { opacity: 1; transform: none; }
 }
 

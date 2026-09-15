@@ -203,7 +203,7 @@ test("there is an injector in each corner, firing inward", async ({ page }) => {
   }
 });
 
-test("what it catches stands in a ring round the word, and nothing is drawn behind it",
+test("what it catches stands in a ring round the word, and runs behind it unbroken",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
@@ -211,13 +211,18 @@ test("what it catches stands in a ring round the word, and nothing is drawn behi
   await page.waitForTimeout(14000);
 
   const word = await page.locator(".chamber-word").boundingBox();
-  // Nothing further away than the middle of the chamber is drawn where
-  // the word stands: the far half of the ring passes behind it, so the
-  // lettering is never printed through.
+  // The far half of the ring RUNS ON where the word stands rather than
+  // being cut out round it. The back canvas used to be clipped to
+  // outside the word's box, and since that box is a wide flat
+  // rectangle the rim vanished along a straight line nowhere near any
+  // lettering: an invisible pane standing in the chamber. It was never
+  // needed — this canvas is under the writing in the page's own
+  // stacking order, so the letters occlude it themselves, letter by
+  // letter. So there must be ink here, not none.
   const behind = await inkOn(page, ".chamber-field", [
     word.x + 6, word.y + 6, word.width - 12, word.height - 12,
   ]);
-  expect(behind.ink, "nothing should be drawn behind the word").toBe(0);
+  expect(behind.ink, "the ring should carry on behind the word").toBeGreaterThan(300);
 
   // And the ring stands round it: the far rim above the lettering and
   // the near rim below, both on the word's own column.
@@ -284,32 +289,87 @@ test("opening the menu throws the ring out to the borders and holds it there",
   expect(await shot(), "they should not be frozen outright").not.toBe(one);
 });
 
-test("pointing at a row draws the particles in towards it", async ({ page }) => {
+test("pointing at a row reads it off against the frame, without pulling the frame out of shape",
+  async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
   await page.mouse.move(4, 4);
   await page.waitForTimeout(12000);
   await openMenu(page);
   await page.mouse.move(4, 4);
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1600);
 
   const rows = page.locator(".chamber-level:not([hidden]) .chamber-chapter");
   const row = await rows.nth(await rows.count() - 1).boundingBox();
-  // Well inside the border on the left, level with that row: empty
-  // while nothing is pointed at, and leant into once something is.
-  const watch = [150, row.y - 60, 200, 120];
+  const mid = row.y + row.height / 2;
+  // Open ground between the menu and the border, level with that row:
+  // nothing stands here, so a leader run out to the side is the only
+  // thing that can put the cool accent in it.
+  const gap = [190, mid - 22, 220, 44];
+  // And a strip hard against the left border, where the frame is.
+  const border = [0, mid - 70, 120, 140];
 
-  const before = await inkSeen(page, watch);
-  await page.mouse.move(row.x + row.width / 2, row.y + row.height / 2);
-  await page.waitForTimeout(1600);
-  const under = await inkSeen(page, watch);
-  expect(under.ink, `before ${before.ink}, pointed at ${under.ink}`)
-    .toBeGreaterThan(before.ink + 2000);
+  const restGap = await inkSeen(page, gap);
+  const restBorder = await inkSeen(page, border);
 
-  // And they fall back to the border when it is let go of.
+  await page.mouse.move(row.x + row.width / 2, mid);
+  await page.waitForTimeout(1400);
+  const readGap = await inkSeen(page, gap);
+  const readBorder = await inkSeen(page, border);
+
+  expect(readGap.cool, `it should be called out: ${restGap.cool} → ${readGap.cool}`)
+    .toBeGreaterThan(restGap.cool + 600);
+  expect(readBorder.cool, "and the frame level with it should take the accent")
+    .toBeGreaterThan(restBorder.cool + 400);
+  // But it must NOT cinch: the particles stay on the border rather
+  // than leaving it and leaning in towards the writing. The ground
+  // between the two is the leader and nothing else.
+  expect(readGap.ink - readGap.cool,
+    "no particles should leave the border for the writing")
+    .toBeLessThan(restGap.ink + 2500);
+
   await page.mouse.move(4, 4);
-  await page.waitForTimeout(2000);
-  expect((await inkSeen(page, watch)).ink, "and let go again").toBeLessThan(under.ink);
+  await page.waitForTimeout(1800);
+  expect((await inkSeen(page, gap)).cool, "and let go again")
+    .toBeLessThan(readGap.cool);
+});
+
+test("held, the frame keeps travelling round the border", async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await page.mouse.move(4, 4);
+  await page.waitForTimeout(12000);
+  await openMenu(page);
+  await page.mouse.move(4, 4);
+  await page.waitForTimeout(1400);
+
+  // Held is not stopped: every particle keeps its seat on the border
+  // but the whole frame travels round it, so a patch of border is a
+  // different patch of border a moment later.
+  const box = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  const patch = [box.w * 0.3, 0, 180, 110];
+  const seen = [];
+  for (let n = 0; n < 4; n++) {
+    seen.push((await inkSeen(page, patch)).ink);
+    await page.waitForTimeout(550);
+  }
+  const moved = seen.filter((ink, n) => n > 0 && ink !== seen[n - 1]).length;
+  expect(moved, `the frame should keep moving: ${seen.join(", ")}`).toBe(3);
+  // And it is still a frame, not a drift: there is always ink there.
+  seen.forEach((ink) => expect(ink).toBeGreaterThan(200));
+});
+
+test("the word says what pressing it does, and says the other thing once it is open",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+
+  const cue = page.locator(".chamber-cue-name");
+  await expect(cue).toHaveText(/expand/i);
+  await openMenu(page);
+  await expect(cue).toHaveText(/collapse/i);
+  await page.keyboard.press("Escape");
+  await expect(cue).toHaveText(/expand/i);
 });
 
 test("the streams answer the cursor", async ({ page }) => {

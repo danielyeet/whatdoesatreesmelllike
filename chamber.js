@@ -140,17 +140,37 @@
   const FRAG_KICK = [3, 8];    // how hard the pieces are thrown outward
   const FRAG_FOR = 1.5;        // and how long they last afterwards
 
-  // --- opening the menu: the ring thrown out to the borders and held
-  const OPEN_EASE = 0.055;     // how quickly the whole thing changes state
+  // --- opening the menu: the ring thrown out to the borders, and kept
+  //     travelling once it is there.
+  //
+  // The step between the two states is a TIMED ramp eased flat at both
+  // ends, not the exponential chase it used to be: a chase starts at
+  // its fastest and creeps at the end, so the ring leapt away from the
+  // middle and then dawdled into the border. Flat at both ends there
+  // is no moment you can point at where it starts or where it stops,
+  // and it can simply be told how long to take.
+  const OPEN_MS = 1500;        // how long the step between the two states takes
   const EDGE = 54;             // how far inside the window they hold
-  const HOLD_EASE = 3.4;       // how hard each one is held to its place
-  const ALIVE = 3.2;           // and how far it still wanders there, in pixels
+  const HOLD_EASE = 4.2;       // how hard each one is held to its place
+  // HELD IS NOT STOPPED. Every particle keeps its seat on the border
+  // but the whole frame TRAVELS round it, each at its own rate, so
+  // what stands round the menu is a current and not a printed dotted
+  // line. This is the movement the open state has; the wander below is
+  // only the life on top of it.
+  const FLOW = 0.021;          // laps of the border a second
+  const FLOW_VARY = 0.7;       // how differently the light and heavy ones travel
+  const ALIVE = 9;             // how far one wanders off its seat, in pixels
   const ALIVE_EVERY = [3, 9];  // over this many seconds
 
   // --- and what pointing at a row does to them
-  const DRAW_IN = 0.62;        // how far towards it they get — never all the way
-  const DRAW_SPAN = 420;       // how far up and down the border it is felt
-  const DRAW_GAP = 26;         // and how close to the writing they are stopped
+  //
+  // It used to CINCH: the sides left the border and leant in towards
+  // the row. That read as the frame being pulled out of shape. What it
+  // does now is READ the row off against the frame — the stretch of
+  // border level with it takes the cool accent, thickens, and is
+  // called out with a leader to each side. Nothing leaves the border.
+  const READ_SPAN = 170;       // how much of the border is read off, in pixels
+  const READ_OPEN = 26;        // how far that stretch thickens inward
 
   // --- the hand
   const HAND_PX = 150;         // how near the cursor a particle answers, in pixels
@@ -241,10 +261,23 @@
   word.type = "button";
   word.className = "chamber-word";
   word.setAttribute("aria-expanded", "false");
+  // Bracketed like a title block on a drawing, with a pressable cue
+  // under it saying what it does: closed it is the only thing on the
+  // page, so it has to read as something you press and not as a
+  // heading somebody centred.
   word.innerHTML =
+    '<span class="chamber-word-line">' +
     '<span class="chamber-reg" aria-hidden="true"></span>' +
     '<span class="chamber-word-name">Favorites</span>' +
-    '<span class="chamber-reg" aria-hidden="true"></span>';
+    '<span class="chamber-reg" aria-hidden="true"></span>' +
+    "</span>" +
+    '<span class="chamber-cue"><span class="chamber-cue-name">Expand</span>' +
+    '<span class="chamber-cue-mark" aria-hidden="true"></span></span>' +
+    '<span class="chamber-crop tl" aria-hidden="true"></span>' +
+    '<span class="chamber-crop tr" aria-hidden="true"></span>' +
+    '<span class="chamber-crop bl" aria-hidden="true"></span>' +
+    '<span class="chamber-crop br" aria-hidden="true"></span>';
+  const cue = word.querySelector(".chamber-cue-name");
   plate.appendChild(word);
 
   // THE MENU it opens into. One central column and no strip across the
@@ -338,6 +371,12 @@
   let spread = 0;              // 0 the ring turning, 1 held at the borders
   let open = -1;               // which chapter is showing, or -1 for the list
   let hotRow = null;           // the row under the pointer, if any
+  // The timed step between the two states — see OPEN_MS.
+  let stepFrom = 0, stepTo = 0, stepAt = -1;
+  const now = () =>
+    (window.performance && window.performance.now ? window.performance.now() : Date.now());
+  /** Eased flat at both ends, the same curve the paper's arrival uses. */
+  const smoother = (t) => t * t * t * (t * (t * 6 - 15) + 10);
 
   function showLevel() {
     chapterList.hidden = open >= 0;
@@ -362,8 +401,12 @@
     if (opened === next) return;
     opened = next;
     word.setAttribute("aria-expanded", String(opened));
+    cue.textContent = opened ? "Collapse" : "Expand";
     panel.hidden = !opened;
     plate.classList.toggle("open", opened);
+    stepFrom = spread;
+    stepTo = opened ? 1 : 0;
+    stepAt = now();
     if (!opened) {
       open = -1;
       hotRow = null;
@@ -559,19 +602,35 @@
   // ============================================================
   // THE FALL, AND THE HOLD
   // ============================================================
-  /** Where every particle holds when the menu is opened.
-
-      They are put round the border IN THE ORDER THEY ALREADY LIE in
-      the ring — sorted by the way they stand round the middle, then
-      spaced evenly along the border from the same starting point — so
-      the ring UNROLLS outward into a frame rather than being replaced
-      by one, and the frame comes out even. Taking each particle
-      straight outward instead leaves the frame in clumps wherever the
-      ring happened to be crowded, which on a ring seen this obliquely
-      is most of it. */
-  function placeAll() {
+  /** A place from 0 to 1 round the border of the window, walked from
+      the middle of the right-hand edge clockwise, written into `out`.
+      Everything the open state does is a reading of this one line. */
+  const spot = { x: 0, y: 0, wide: 0, tall: 0 };
+  function onBorder(along, out) {
     const wide = Math.max(20, midX - EDGE), tall = Math.max(20, midY - EDGE);
     const round = 4 * wide + 4 * tall;
+    let s = (along - Math.floor(along)) * round;
+    let x, y;
+    if (s < tall) { x = wide; y = s; }
+    else if ((s -= tall) < 2 * wide) { x = wide - s; y = tall; }
+    else if ((s -= 2 * wide) < 2 * tall) { x = -wide; y = tall - s; }
+    else if ((s -= 2 * tall) < 2 * wide) { x = -wide + s; y = -tall; }
+    else { x = wide; y = -tall + (s - 2 * wide); }
+    out.x = x; out.y = y; out.wide = wide; out.tall = tall;
+  }
+
+  /** Which seat on the border each particle takes when the menu opens.
+
+      They are given seats IN THE ORDER THEY ALREADY LIE in the ring —
+      sorted by the way they stand round the middle, then spaced evenly
+      round the border from the same starting point — so the ring
+      UNROLLS outward into a frame rather than being replaced by one,
+      and the frame comes out even. Taking each particle straight
+      outward instead leaves the frame in clumps wherever the ring
+      happened to be crowded, which on a ring seen this obliquely is
+      most of it. Each also gets its own rate to travel at, so the
+      frame is a current rather than a belt. */
+  function seatAll() {
     const order = [];
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
@@ -585,51 +644,22 @@
 
     order.forEach((one, place) => {
       const speck = specks[one.n];
-      // Walked from the middle of the right-hand edge, the way the
-      // angles above are measured from.
-      let along = ((place + 0.5) / order.length) * round;
-      let x, y;
-      if (along < tall) { x = wide; y = along; }
-      else if ((along -= tall) < 2 * wide) { x = wide - along; y = tall; }
-      else if ((along -= 2 * wide) < 2 * tall) { x = -wide; y = tall - along; }
-      else if ((along -= 2 * tall) < 2 * wide) { x = -wide + along; y = -tall; }
-      else { x = wide; y = -tall + (along - 2 * wide); }
-      // A hair of scatter inward, so the frame has a thickness to it
-      // rather than reading as a printed dotted line.
-      const off = (speck.size - 0.55) * 7;
-      speck.homeX = midX + x * (1 - off / Math.max(1, wide));
-      speck.homeY = midY + y * (1 - off / Math.max(1, tall));
+      speck.seat = (place + 0.5) / order.length;
+      speck.drift = 1 + (speck.size - 1.05) * FLOW_VARY;
       speck.homeZ = Math.max(NEAR + 1, Math.min(FAR - 2, speck.z));
       speck.placed = true;
     });
   }
 
-  /** Pointing at a row draws the particles along the sides in towards
-      it — the nearer their own place is to that row, the harder. They
-      are stopped short of the writing, so it reads as an attempt
-      rather than as an arrival. */
-  // Read once a frame, not once a particle: asking an element for its
-  // box is a question the browser has to stop and lay the page out to
-  // answer, and there are hundreds of particles.
-  let wantX = 0, wantY = 0;
+  /** The row under the pointer, read ONCE A FRAME rather than once a
+      particle: asking an element for its box is a question the browser
+      has to stop and lay the page out to answer, and there are
+      hundreds of particles. */
   let drawTo = null;
   function readRow() {
-    if (!hotRow) { drawTo = null; return; }
+    if (!hotRow || spread < 0.5) { drawTo = null; return; }
     const box = hotRow.getBoundingClientRect();
     drawTo = { left: box.left, right: box.right, y: (box.top + box.bottom) / 2 };
-  }
-  function drawnTo(speck) {
-    wantX = speck.homeX;
-    wantY = speck.homeY;
-    if (!drawTo) return;
-    const near = 1 - Math.min(1, Math.abs(speck.homeY - drawTo.y) / DRAW_SPAN);
-    if (near <= 0) return;
-    // The sides lean in hardest; the top and the bottom only lean.
-    const sideways = Math.abs(speck.homeX - midX) / Math.max(1, midX - EDGE);
-    const pull = DRAW_IN * near * near * (0.25 + 0.75 * sideways);
-    const toX = speck.homeX < midX ? drawTo.left - DRAW_GAP : drawTo.right + DRAW_GAP;
-    wantX += (toX - speck.homeX) * pull;
-    wantY += (drawTo.y - speck.homeY) * pull;
   }
 
   function move(dt) {
@@ -639,11 +669,9 @@
       one.pace = 1 + PACE * Math.sin((clock * Math.PI * 2) / one.every + one.phase);
     }
 
+    readRow();
     const held = spread > 0.004;
-    if (held) {
-      readRow();
-      if (!specks[0].placed) placeAll();
-    }
+    if (held && !specks[0].placed) seatAll();
 
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
@@ -654,10 +682,31 @@
       // life of its own so that it reads as held rather than as a
       // picture of itself.
       if (held) {
-        drawnTo(speck);
+        // Its seat, carried round the border on its own rate. The
+        // whole frame is travelling; nothing is standing still.
+        const flow = REDUCE_MOTION ? 0 : clock * FLOW * speck.drift;
+        onBorder(speck.seat + flow, spot);
+
+        // A hair of scatter inward, so the frame has a thickness to it
+        // rather than reading as a printed dotted line — and level
+        // with the row being pointed at, that thickness OPENS, which
+        // is the whole of the reaction now that nothing leaves the
+        // border.
+        let off = (speck.size - 0.55) * 7;
+        const homeY = midY + spot.y;
+        if (drawTo) {
+          const read = 1 - Math.min(1, Math.abs(homeY - drawTo.y) / READ_SPAN);
+          if (read > 0) {
+            off += READ_OPEN * read * read * (0.35 + 0.65 * (speck.size - 0.55) / 1.5);
+            speck.warm = Math.max(speck.warm, read * read);
+          }
+        }
+
         const stir = REDUCE_MOTION ? 0 : ALIVE;
         const wobX = Math.sin((clock * Math.PI * 2) / speck.stir + speck.turn) * stir;
         const wobY = Math.cos((clock * Math.PI * 2) / speck.stir * 0.8 + speck.turn) * stir;
+        const wantX = midX + spot.x * (1 - off / Math.max(1, spot.wide));
+        const wantY = midY + spot.y * (1 - off / Math.max(1, spot.tall));
         const k = lens / speck.homeZ;
         const toX = (wantX + wobX - midX) / k;
         const toY = (wantY + wobY - midY) / k;
@@ -666,7 +715,7 @@
         speck.y += (toY - speck.y) * ease;
         speck.z += (speck.homeZ - speck.z) * ease;
         speck.vx *= 1 - ease; speck.vy *= 1 - ease; speck.vz *= 1 - ease;
-        speck.warm *= 1 - Math.min(1, dt * 2.2);
+        speck.warm *= 1 - Math.min(1, dt * 1.2);
         continue;
       }
 
@@ -824,6 +873,26 @@
       }
     }
 
+    // THE ROW BEING POINTED AT, called out against the frame: a
+    // leader from each end of it running out to the border, with a
+    // tick where it lands. The particles level with it have already
+    // taken the cool accent and opened out — this is what says which
+    // row they are reading.
+    if (drawTo && spread > 0.5) {
+      const lit = 0.55 * spread;
+      paint.lineWidth = 1;
+      paint.strokeStyle = rgba(COOL, lit);
+      const y = Math.round(drawTo.y) + 0.5;
+      [[drawTo.left - 18, EDGE + 6], [drawTo.right + 18, width - EDGE - 6]].forEach((run) => {
+        paint.beginPath();
+        paint.moveTo(run[0], y);
+        paint.lineTo(run[1], y);
+        paint.moveTo(run[1], y - 6);
+        paint.lineTo(run[1], y + 6);
+        paint.stroke();
+      });
+    }
+
     // The injectors: a registration square in each corner, a leader
     // aimed at the middle, and the depth it stands at.
     stream.forEach((one, i) => {
@@ -869,29 +938,35 @@
     paint.clearRect(0, 0, width, height);
     paintFront.clearRect(0, 0, width, height);
 
-    // WHAT IS CLIPPED, AND WHAT IS NOT. Nothing behind the writing is
-    // ever drawn: that canvas is clipped around the menu's own box,
-    // trails and ranging circles included, which a check on each
-    // particle's own place cannot do — a speck just clear of the menu
-    // can still trail a line across it.
+    // WHAT IS CLIPPED, AND WHAT IS NOT — and the back canvas is NOT,
+    // which matters.
     //
-    // The front canvas is another matter. Closed, it is NOT clipped:
-    // the nearer half of the ring is meant to pass over the word, and
-    // that crossing is the whole of what makes the word sit inside the
-    // chamber rather than on top of a picture of it. Opened, it is
-    // clipped like the other one — a menu with particles crossing the
-    // lettering is a menu you cannot read.
+    // It used to be clipped to outside the writing's own box, and that
+    // was a mistake you could see: the word's box is a wide, flat
+    // rectangle, so the far side of the ring vanished along a straight
+    // line nowhere near any lettering and came back along another one.
+    // It read as an invisible pane standing in the chamber. It was
+    // never needed either — this canvas is UNDER the plate in the
+    // page's own stacking order, so the word and the menu occlude it
+    // by simply being drawn on top of it, letter by letter and not box
+    // by box. The far rim now threads between the letters and is hidden
+    // behind the strokes, which is what it should have done all along.
+    //
+    // The front canvas is another matter. Closed it is not clipped
+    // either: the nearer half of the ring is meant to pass over the
+    // word, and that crossing is the whole of what makes the word sit
+    // inside the chamber rather than on top of a picture of it. Opened
+    // it IS clipped, to the menu's box — which is a panel with a
+    // border and a ground of its own, so the edge the particles stop
+    // at is an edge you can see.
     paint.save();
     paintFront.save();
-    if (taken) {
-      const hole = (ink) => {
-        ink.beginPath();
-        ink.rect(0, 0, width, height);
-        ink.rect(taken.left, taken.top, taken.right - taken.left, taken.foot - taken.top);
-        ink.clip("evenodd");
-      };
-      hole(paint);
-      if (opened) hole(paintFront);
+    if (taken && opened) {
+      paintFront.beginPath();
+      paintFront.rect(0, 0, width, height);
+      paintFront.rect(taken.left, taken.top,
+                      taken.right - taken.left, taken.foot - taken.top);
+      paintFront.clip("evenodd");
     }
 
     drawMarks();
@@ -979,9 +1054,12 @@
     const dt = Math.min(0.05, (now - last) / 1000) || 0.016;
     last = now;
     clearing();
-    const want = opened ? 1 : 0;
-    if (REDUCE_MOTION) spread = want;
-    else spread += (want - spread) * Math.min(1, OPEN_EASE * 60 * dt);
+    if (REDUCE_MOTION) spread = opened ? 1 : 0;
+    else if (stepAt >= 0) {
+      const gone = Math.min(1, (now - stepAt) / OPEN_MS);
+      spread = stepFrom + (stepTo - stepFrom) * smoother(gone);
+      if (gone >= 1) { spread = stepTo; stepAt = -1; }
+    }
     if (!REDUCE_MOTION) {
       clock += dt;
       move(dt);
@@ -998,8 +1076,14 @@
     handX = e.clientX;
     handY = e.clientY;
     hasHand = true;
+    // And the row under it, settled here rather than left to
+    // pointerout alone: the menu grows out from under the pointer when
+    // it opens, so a row can arrive under a hand that never moved and
+    // then never be left. Asked on every move, what is pointed at is
+    // whatever is actually pointed at.
+    if (hotRow && !(e.target.closest && e.target.closest(".chamber-row"))) hotRow = null;
   });
-  window.addEventListener("pointerleave", () => { hasHand = false; });
+  window.addEventListener("pointerleave", () => { hasHand = false; hotRow = null; });
   window.addEventListener("resize", resize);
 
   resize();

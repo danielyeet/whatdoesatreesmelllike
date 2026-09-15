@@ -1,17 +1,20 @@
 // ============================================================
 // FAVORITES (the other half of categories/scent-descriptions.html)
 //
-// The second of the two views on that page: the screen flickers
-// once, a menu of chapters comes up on the right, and a ruled field
-// settles behind it. These check the switch between the two views,
-// that the chapters and their dates are read off the page's own
-// entries rather than written into the script, that one chapter is
-// open at a time and the strip works from the keyboard, that the
-// field answers the cursor and settles again when it goes, that the
-// way it LIES is a reading of the chapter — the one you have open,
-// and the one you are merely pointing at — that pointing at a
-// favourite knots it beside that entry, and that the whole view fits
-// one screen.
+// The second of the two views on that page: the screen flickers once
+// and what comes up is the REGISTER — a page ruled edge to edge with
+// fine horizontal tracks, a small square travelling along each one,
+// and a glitch that tears the whole thing sideways every few seconds.
+//
+// These check the switch between the two views, that the chapters and
+// their dates are read off the page's own entries rather than written
+// into the script, that one chapter is open at a time and the index
+// works from the keyboard, that every favourite has a track of its own
+// running the full width at its own row, that pointing at one lights
+// that track, that the register runs, that how the page is ruled is a
+// reading of the chapter you have open with no two chapters ruled the
+// same, that it tears but never in what it SAYS, and that the whole
+// view fits one screen.
 // ============================================================
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
@@ -64,7 +67,7 @@ test("choosing favorites takes the map away and flickers the chapters up",
   expect(
     await page.evaluate(() => getComputedStyle(document.getElementById("sheet")).display)
   ).toBe("none");
-  await expect(page.locator(".chapters-menu")).toBeVisible();
+  await expect(page.locator(".chapters-body")).toBeVisible();
   await expect(page.locator(".sheet-filter", { hasText: "Favorites" })).toHaveClass(/chosen/);
 
   // And the flicker is the thing being switched on, so it happens
@@ -120,7 +123,7 @@ test("the chapters and their dates are read off the page's own entries",
   read.dates.forEach((date) => expect(date).toMatch(/^\d{2}\.\d{2}\.\d{4}$/));
 });
 
-test("one chapter is open at a time, and the strip works from the keyboard",
+test("one chapter is open at a time, and the index works from the keyboard",
   async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
@@ -136,19 +139,19 @@ test("one chapter is open at a time, and the strip works from the keyboard",
 
   // Only the open one is in the tab order: the strip is one control.
   const stops = await page.$$eval(".chapters-tab", (tabs) => tabs.map((t) => t.tabIndex));
-  expect(stops.filter((n) => n === 0).length, "one stop for the whole strip").toBe(1);
+  expect(stops.filter((n) => n === 0).length, "one stop for the whole index").toBe(1);
 
   const first = await openTab(page).locator(".chapters-name").textContent();
   await page.locator(".chapters-tab.open").focus();
   await page.keyboard.press("ArrowDown");
   await page.waitForTimeout(400);
   expect(await openTab(page).locator(".chapters-name").textContent(),
-    "the arrow keys should move along the strip").not.toBe(first);
+    "the arrow keys should move down the index").not.toBe(first);
   expect(await page.evaluate(() => document.activeElement.className))
     .toContain("chapters-tab");
 
-  // The plate on the left follows whichever is open.
-  expect(await page.locator(".chapters-plate h2").textContent())
+  // The log follows whichever is open.
+  expect(await page.locator(".chapters-title").textContent())
     .toBe(await openTab(page).locator(".chapters-name").textContent());
 });
 
@@ -170,222 +173,231 @@ test("every favourite is a link to its piece", async ({ page }) => {
   });
 });
 
-test("the field answers the cursor, and settles again when it goes",
-  async ({ page }) => {
-  await page.goto(PAGE);
-  await page.waitForTimeout(600);
-  await openFavorites(page);
+/** How the drawing runs across one horizontal band of the window,
+    given in the WINDOW's coordinates: how much ink there is in it, and
+    how much of the width has any at all. A track is a line right
+    across the page, so `across` is what tells one from a few loose
+    marks that happen to be at the same height. */
+const bandAt = (page, top, tall) =>
+  page.evaluate(([atY, high]) => {
+    const canvas = document.querySelector(".chapters-field");
+    const box = canvas.getBoundingClientRect();
+    const ratio = canvas.width / box.width;
+    const y = Math.max(0, Math.round((atY - box.top) * ratio));
+    const deep = Math.max(1, Math.round(high * ratio));
+    const shot = canvas.getContext("2d")
+      .getImageData(0, y, canvas.width, Math.min(deep, canvas.height - y)).data;
+    let ink = 0;
+    const hit = new Array(canvas.width).fill(0);
+    for (let n = 0; n < shot.length; n += 4) {
+      if (shot[n + 3] < 10) continue;
+      ink += shot[n + 3];
+      hit[(n / 4) % canvas.width] = 1;
+    }
+    return {
+      ink: ink,
+      across: hit.reduce((a, b) => a + b, 0) / canvas.width,
+    };
+  }, [top, tall]);
 
-  /** What is drawn in one square of the field. */
-  const inkAt = (x, y) =>
-    page.evaluate(([px, py]) => {
-      const canvas = document.querySelector(".chapters-field");
-      const paint = canvas.getContext("2d");
-      const ratio = canvas.width / canvas.clientWidth;
-      const strip = paint.getImageData(
-        Math.round(px * ratio), Math.round(py * ratio),
-        Math.round(90 * ratio), Math.round(90 * ratio)
-      ).data;
-      let ink = 0;
-      for (let n = 3; n < strip.length; n += 4) ink += strip[n];
-      return ink;
-    }, [x, y]);
-
-  const box = await page.locator(".chapters").boundingBox();
-  const low = box.height - 150;
-  const away = await inkAt(120, low);
-  expect(away, "there should be marks along the foot").toBeGreaterThan(0);
-
-  // Put the cursor in the middle of a square of it: the marks near it
-  // are shoved out of the lattice and drawn larger, so there is more
-  // ink there than there was.
-  await page.mouse.move(box.x + 165, box.y + low + 45);
-  await page.waitForTimeout(700);
-  const under = await inkAt(120, low);
-  expect(under, "the field should answer the cursor").toBeGreaterThan(away * 1.15);
-
-  // And find its way back when the cursor goes.
-  await page.mouse.move(box.x + box.width - 40, box.y + 30);
-  await page.waitForTimeout(900);
-  expect(await inkAt(120, low), "and settle again afterwards")
-    .toBeLessThan(under);
-});
-
-/** WHICH WAY THE FIELD LIES over a patch of the page, in degrees,
-    read off the drawing itself rather than off the script: the
-    structure tensor of the ink there — the direction the ink changes
-    fastest in is across the strokes, so the strokes lie a quarter turn
-    from it. Returned modulo 180, because a stroke is a line and not an
-    arrow: lying at 179 degrees and at 1 degree is very nearly the same
-    thing. */
-const grain = (page) =>
+/** Where the drawing has a line right across it, in canvas rows. */
+const ruledRows = (page) =>
   page.evaluate(() => {
     const canvas = document.querySelector(".chapters-field");
-    const paint = canvas.getContext("2d");
-    // A patch low on the left, which is clear of both columns of
-    // writing at every window size the tests run at.
-    const x0 = Math.round(canvas.width * 0.02), y0 = Math.round(canvas.height * 0.6);
-    const w = Math.round(canvas.width * 0.45), h = Math.round(canvas.height * 0.35);
-    const shot = paint.getImageData(x0, y0, w, h).data;
-    const at = (x, y) => shot[(y * w + x) * 4 + 3];
-    let xx = 0, yy = 0, xy = 0;
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        const gx = at(x + 1, y) - at(x - 1, y);
-        const gy = at(x, y + 1) - at(x, y - 1);
-        xx += gx * gx; yy += gy * gy; xy += gx * gy;
+    const d = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+    const out = [];
+    for (let y = 0; y < canvas.height; y++) {
+      let seen = 0;
+      for (let x = 0; x < canvas.width; x += 2) {
+        if (d[(y * canvas.width + x) * 4 + 3] > 10) seen++;
       }
+      if (seen > canvas.width * 0.35) out.push(y);
     }
-    const across = 0.5 * Math.atan2(2 * xy, xx - yy);
-    return (((across * 180) / Math.PI + 90) % 180 + 180) % 180;
+    return out;
   });
 
-/** How far apart two directions are, the short way round. */
-const apart = (a, b) => {
-  const off = Math.abs(a - b) % 180;
-  return Math.min(off, 180 - off);
-};
-
-/** How much ink there is in one square of the field. */
-const inkIn = (page, x, y, side) =>
-  page.evaluate(([px, py, wide]) => {
-    const canvas = document.querySelector(".chapters-field");
-    const paint = canvas.getContext("2d");
-    const ratio = canvas.width / canvas.clientWidth;
-    const shot = paint.getImageData(
-      Math.round(px * ratio), Math.round(py * ratio),
-      Math.round(wide * ratio), Math.round(wide * ratio)
-    ).data;
-    let ink = 0;
-    for (let n = 3; n < shot.length; n += 4) ink += shot[n];
-    return ink;
-  }, [x, y, side]);
-
-test("the way the field lies is a reading of the chapter you have open",
+test("every favourite has a track of its own, running right across the page at its row",
   async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
-  // The pointer is parked well away from the field: it answers the
-  // hand too, and that is a different test.
-  await page.mouse.move(6, 6);
-  await page.waitForTimeout(1400);
-
-  const first = await grain(page);
-  // Left alone it is perfectly still — it is a ruled ground, not a
-  // thing that wanders.
   await page.waitForTimeout(900);
-  expect(apart(first, await grain(page)), "it should be still when nothing is touching it")
-    .toBeLessThan(3);
 
-  // Open a different chapter and the whole field turns: each chapter
-  // lies at its own angle, taken from where the dates it is filed
-  // under stand among the other chapters'.
-  await page.locator(".chapters-tab").nth(1).click();
-  await page.waitForTimeout(1800);
-  await page.mouse.move(6, 6);
-  await page.waitForTimeout(1200);
-  const second = await grain(page);
-  expect(apart(first, second), `chapter 1 lay at ${first.toFixed(0)}°, chapter 2 at ${second.toFixed(0)}°`)
-    .toBeGreaterThan(20);
+  const rows = await page.$$eval(".chapters-panel.open .chapters-item", (all) =>
+    all.map((row) => {
+      const box = row.getBoundingClientRect();
+      return { at: (box.top + box.bottom) / 2, name: row.textContent.trim() };
+    })
+  );
+  expect(rows.length).toBeGreaterThan(1);
 
-  await page.locator(".chapters-tab").nth(2).click();
-  await page.waitForTimeout(1800);
-  await page.mouse.move(6, 6);
-  await page.waitForTimeout(1200);
-  const third = await grain(page);
-  expect(apart(second, third), "and so does the third").toBeGreaterThan(20);
-  expect(apart(first, third), "no two of them read the same").toBeGreaterThan(20);
+  for (const row of rows) {
+    const band = await bandAt(page, row.at - 2, 5);
+    expect(band.across, `${row.name} should have a line right across the page at its own row`)
+      .toBeGreaterThan(0.7);
+  }
 });
 
-test("pointing at a chapter lays the field its way, and lets it back",
+test("pointing at a favourite lights its own track, and lets it go again",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await page.waitForTimeout(600);
+  await openFavorites(page);
+  await page.waitForTimeout(900);
+
+  const rows = page.locator(".chapters-panel.open .chapters-item");
+  const box = await rows.nth(1).boundingBox();
+  const at = box.y + box.height / 2;
+  // Away from the writing, out at the left-hand margin, where only the
+  // drawing can put anything.
+  const rest = await bandAt(page, at - 2, 5);
+
+  await page.mouse.move(box.x + box.width * 0.75, at);
+  await page.waitForTimeout(700);
+  const lit = await bandAt(page, at - 2, 5);
+  expect(lit.ink, `at rest ${rest.ink}, pointed at ${lit.ink}`)
+    .toBeGreaterThan(rest.ink * 1.4);
+
+  await page.mouse.move(10, 10);
+  await page.waitForTimeout(800);
+  expect((await bandAt(page, at - 2, 5)).ink, "and let go again")
+    .toBeLessThan(lit.ink);
+});
+
+test("the register runs: the squares travel along their tracks", async ({ page }) => {
+  await page.goto(PAGE);
+  await page.waitForTimeout(600);
+  await openFavorites(page);
+  await page.mouse.move(6, 6);
+
+  // Watched below the writing, where nothing but the drawing is: what
+  // is there has to keep changing, and keep being there.
+  const at = await page.evaluate(() => window.innerHeight - 90);
+  const seen = [];
+  for (let n = 0; n < 4; n++) {
+    seen.push((await bandAt(page, at, 60)).ink);
+    await page.waitForTimeout(420);
+  }
+  const moved = seen.filter((ink, n) => n > 0 && ink !== seen[n - 1]).length;
+  expect(moved, `it should keep running: ${seen.join(", ")}`).toBe(3);
+  seen.forEach((ink) => expect(ink, "and keep being drawn").toBeGreaterThan(400));
+});
+
+test("how the page is ruled is a reading of the chapter you have open, and no two read the same",
   async ({ page }) => {
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
   await page.mouse.move(6, 6);
-  await page.waitForTimeout(1400);
-  const open = await grain(page);
 
-  // Merely pointing at another chapter's tab — not opening it — sends
-  // that chapter's angle out across the page.
-  const tab = await page.locator(".chapters-tab").nth(1).boundingBox();
-  await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
-  await page.waitForTimeout(1600);
-  const pointed = await grain(page);
-  expect(apart(open, pointed), "the field should answer the chapter under the pointer")
-    .toBeGreaterThan(20);
-  // And it is only a preview: the open chapter has not changed.
-  expect(await openTab(page).locator(".chapters-name").textContent())
-    .toBe(await page.locator(".chapters-plate h2").textContent());
+  const tabs = page.locator(".chapters-tab");
+  const many = await tabs.count();
+  expect(many).toBeGreaterThan(1);
 
-  // Take the pointer away and the open chapter's own angle comes back.
-  await page.mouse.move(6, 6);
-  await page.waitForTimeout(1700);
-  expect(apart(open, await grain(page)), "and come back when the pointer goes")
-    .toBeLessThan(8);
+  const read = [];
+  for (let n = 0; n < many; n++) {
+    await tabs.nth(n).click();
+    await page.waitForTimeout(800);
+    // The gauge the page says it is ruled at...
+    const said = Number(await page.locator(".chapters-gauge").textContent());
+    // ...against how far apart the lines actually stand, measured off
+    // the drawing itself, below the writing where only the tracks
+    // filling the page are.
+    const rows = (await ruledRows(page)).filter((y) => y > 0);
+    const deep = await page.evaluate(() => {
+      const canvas = document.querySelector(".chapters-field");
+      const box = canvas.getBoundingClientRect();
+      const ratio = canvas.width / box.width;
+      const log = document.querySelector(".chapters-panel.open").getBoundingClientRect();
+      return { from: (log.bottom - box.top + 30) * ratio, ratio: ratio };
+    });
+    const low = rows.filter((y) => y > deep.from);
+    const gaps = low.slice(1).map((y, i) => (y - low[i]) / deep.ratio).filter((g) => g > 6);
+    gaps.sort((a, b) => a - b);
+    read.push({ said: said, drawn: gaps[Math.floor(gaps.length / 2)] });
+  }
+
+  read.forEach((one, n) => {
+    expect(one.drawn, `chapter ${n + 1} says it is ruled at ${one.said}`)
+      .toBeGreaterThan(one.said - 4);
+    expect(one.drawn).toBeLessThan(one.said + 4);
+  });
+  // And no two chapters are ruled the same, or the reading says nothing.
+  const said = read.map((one) => one.said);
+  expect(new Set(said).size, `each chapter should rule it its own way: ${said.join(", ")}`)
+    .toBe(read.length);
 });
 
-test("pointing at a favourite knots the field beside it", async ({ page }) => {
+test("it glitches — and never in what it says", async ({ page }) => {
+  // Recorded in the page, frame by frame, rather than by catching it:
+  // a tear is over in a tenth of a second and nothing outside the page
+  // can be relied on to look during one.
+  await page.addInitScript(() => {
+    window.__seen = { tears: 0, codes: {}, said: {} };
+    const look = () => {
+      const state = window.__seen;
+      if (document.querySelector(".chapters-field")) {
+        if (document.querySelectorAll(".torn").length) state.tears++;
+        const sig = document.querySelector(".chapters-sig");
+        if (sig) state.codes[sig.textContent] = 1;
+        document.querySelectorAll(".chapters-panel.open .chapters-item").forEach((row) => {
+          const name = row.querySelector(".chapters-item-name").textContent;
+          const date = row.querySelector(".chapters-date").textContent;
+          state.said[name + " | " + date] = 1;
+        });
+      }
+      requestAnimationFrame(look);
+    };
+    requestAnimationFrame(look);
+  });
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
   await page.mouse.move(6, 6);
-  await page.waitForTimeout(1400);
+  await page.waitForTimeout(9000);
 
-  // The knot stands in the clear column between the two columns of
-  // writing, at the height of the entry's own row.
-  const where = await page.evaluate(() => {
-    const box = document.querySelector(".chapters").getBoundingClientRect();
-    const plate = document.querySelector(".chapters-plate").getBoundingClientRect();
-    const menu = document.querySelector(".chapters-menu").getBoundingClientRect();
-    const row = document.querySelectorAll(".chapters-panel.open .chapters-item")[1]
-      .getBoundingClientRect();
-    return {
-      x: (plate.right + menu.left) / 2 - box.left,
-      y: (row.top + row.bottom) / 2 - box.top,
-    };
-  });
-  const side = 150;
-  const before = await inkIn(page, where.x - side / 2, where.y - side / 2, side);
-  expect(before, "there should be field there to disturb").toBeGreaterThan(0);
-
-  const row = await page.locator(".chapters-panel.open .chapters-item").nth(1).boundingBox();
-  await page.mouse.move(row.x + row.width / 2, row.y + row.height / 2);
-  await page.waitForTimeout(1100);
-  const knotted = await inkIn(page, where.x - side / 2, where.y - side / 2, side);
-  expect(knotted, "the field should gather where that entry's own place is")
-    .toBeGreaterThan(before * 1.15);
-
-  // And let go of it again.
-  await page.mouse.move(6, 6);
-  await page.waitForTimeout(1400);
-  expect(await inkIn(page, where.x - side / 2, where.y - side / 2, side),
-    "and settle back when the pointer goes").toBeLessThan(knotted);
+  const seen = await page.evaluate(() => window.__seen);
+  expect(seen.tears, "the writing should be thrown out of line now and then").toBeGreaterThan(2);
+  expect(Object.keys(seen.codes).length, "and the code in the corner should scramble")
+    .toBeGreaterThan(2);
+  // But never the content. Every row said exactly one thing for the
+  // whole nine seconds: a glitch that changes a date is not a glitch,
+  // it is a page telling you something that is not true.
+  const rows = await page.locator(".chapters-panel.open .chapters-item").count();
+  expect(Object.keys(seen.said).length,
+    `each row should have said one thing throughout: ${Object.keys(seen.said).join(" / ")}`)
+    .toBe(rows);
 });
 
 test("the whole view fits on one screen, with nothing to scroll to", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(PAGE);
   await page.waitForTimeout(600);
   await openFavorites(page);
 
-  const fit = await page.evaluate(() => ({
-    page: document.documentElement.scrollHeight,
-    window: window.innerHeight,
-  }));
-  expect(fit.page, `page is ${fit.page}px in a ${fit.window}px window`)
-    .toBeLessThanOrEqual(fit.window + 2);
+  const over = await page.evaluate(() =>
+    document.documentElement.scrollHeight - window.innerHeight);
+  expect(over, "nothing should hang below the fold").toBeLessThanOrEqual(1);
 });
 
-test("with animation turned off it arrives without the flicker", async ({ page }) => {
+test("with animation turned off it arrives without the flicker, and never tears",
+  async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(PAGE);
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(600);
   await page.locator(".sheet-filter", { hasText: "Favorites" }).click();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(900);
 
-  const view = page.locator(".chapters");
-  await expect(view).toHaveClass(/lit/);
-  await expect(view).not.toHaveClass(/flicker/);
-  await expect(page.locator(".chapters-tab.open")).toHaveCount(1);
+  expect(await page.evaluate(() =>
+    document.querySelector(".chapters").classList.contains("flicker")),
+    "nothing to watch being switched on").toBe(false);
+  await expect(page.locator(".chapters-body")).toBeVisible();
+
+  // Ruled once and left: nothing travels and nothing tears.
+  const at = await page.evaluate(() => window.innerHeight - 90);
+  const before = await bandAt(page, at, 60);
+  await page.waitForTimeout(1500);
+  expect((await bandAt(page, at, 60)).ink, "nothing should move").toBe(before.ink);
+  expect(await page.locator(".torn").count(), "and nothing should tear").toBe(0);
+  expect(before.ink, "still drawn, though").toBeGreaterThan(0);
 });

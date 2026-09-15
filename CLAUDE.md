@@ -89,20 +89,22 @@ showing its own contents before the sheet takes over and the pictures being plac
 than slid in, and the plain grid still being there when the script is blocked;
 and favorites — switching views taking one away before the other arrives, the
 screen flickering once and only once as the chapters come up, the chapters and their dates
-being read off the page's own entries, one chapter open at a time with the strip working
-from the keyboard, every favourite still a link to its piece, the field answering the
-cursor and settling again afterwards, the way it lies being a reading of the chapter you
-have open with no two chapters reading the same, pointing at a chapter laying the field
-its way and letting it back when the pointer goes, pointing at a favourite knotting the
-field beside it, and the whole view fitting one screen;
+being read off the page's own entries, one chapter open at a time with the index working
+from the keyboard, every favourite still a link to its piece, every favourite having a
+track of its own running right across the page at its own row, pointing at one lighting
+that track and letting it go again, the register running, how the page is ruled being a
+reading of the chapter you have open (measured off the drawing against the gauge the page
+prints) with no two chapters ruled the same, it tearing but never in what it says, and the
+whole view fitting one screen;
 and the chamber — the menu being grown from that page's own favourites and carrying
 what the sheet's Favorites menu carries (number, date, name and link), the word opening
 the menu and a chapter opening its own favourites with Escape stepping back out one level
 at a time, an injector firing in each corner, what it catches standing in a ring round the
-word with nothing drawn behind it and its near rim drawn over it, opening the menu
-throwing the ring out to the borders and holding it there without freezing it, pointing at
-a row drawing the particles in towards it and letting them back, the streams answering the
-cursor and letting go again, it standing still under `prefers-reduced-motion`, and the
+word and running on behind it unbroken with its near rim drawn over it, opening the menu
+throwing the ring out to the borders and keeping it travelling there, pointing at a row
+reading it off against the frame without pulling the frame out of shape, the word saying
+what pressing it does and saying the other thing once it is open, the streams answering
+the cursor and letting go again, it standing still under `prefers-reduced-motion`, and the
 plain list coming back when the script is blocked;
 and the structure — the drawing setting itself up when the page opens without ever
 showing the plain list it replaces, it being grown from the page's own rows with one
@@ -134,8 +136,8 @@ they look right.
 Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
-  `node-scene.js`, `contact-sheet.js`, `favorites.js`, `structure.js`, `chamber.js` and
-  `style.css`,
+  `node-scene.js`, `contact-sheet.js`, `favorites.js` (nothing travels and nothing tears),
+  `structure.js`, `chamber.js` and `style.css`,
   each degrading to a still version. `nav.js` (the cursor) and `extras.js` do *not*
   currently check it; if you add motion there, add the guard too.
 - **Portrait / narrow viewport** — `resize()` in `node-scene.js` uses a larger `frameH`
@@ -509,15 +511,26 @@ so the four streams close on the writing from every corner.
 **The page has two states, and the whole of the interaction is the step between them.**
 
 - **Closed**, the word **FAVORITES** stands alone in the middle of the ring and the ring
-  turns round it. That word is the whole of the page's chrome, and it is the button.
+  turns round it. That word is the whole of the page's chrome, and it is the button — so
+  it is dressed as one: four **crop marks** bracket it and a small boxed **cue** under it
+  says `EXPAND`, with a chevron pointing the way it will go. Without those it read as a
+  heading somebody had centred rather than as something to press.
 - **Open**, pressing the word throws the ring outward: every particle runs to its own
-  place on the border of the window and **holds** there, near enough to frozen but never
-  quite, while the word shrinks to a heading and the menu opens out under it. The
-  chapters stand in the column first; opening one puts its own favourites in the same
-  column in their place, with a way back. Escape steps out one level at a time, and a
-  press anywhere off the writing closes it.
+  seat on the border of the window and **holds** there, while the word comes down to the
+  size of a heading (the cue now reading `COLLAPSE`, its chevron turned over) and the
+  menu opens out under it. The chapters stand in the column first; opening one puts its
+  own favourites in the same column in their place, with a way back. Escape steps out one
+  level at a time, and a press anywhere off the writing closes it.
 
-Nine things are worth knowing before changing any of it:
+The step between the two is a **timed ramp** eased flat at both ends (`OPEN_MS`, 1.5s),
+not an exponential chase. A chase starts at its fastest and creeps at the end, so the
+ring leapt away from the middle and then dawdled into the border; flat at both ends there
+is no moment you can point at where it starts or where it stops, and it can simply be
+told how long to take. The word's and the menu's own CSS transitions are set to the same
+length, and the menu waits out the first third of it, so the lettering has begun coming
+down before the panel appears under it.
+
+Ten things are worth knowing before changing any of it:
 
 - **It is a real fall, not a path.** Every particle is shot at the middle and pulled
   towards it, and the rest is four forces, each doing one legible thing:
@@ -559,27 +572,36 @@ Nine things are worth knowing before changing any of it:
   sailed past it. **They take turns being the quick one** (`PACE`, `PACE_EVERY`): each
   injector's speed breathes on its own slow clock and the four clocks are deliberately
   out of step, so no corner is always the fast one.
-- **Nothing further away is drawn where the writing stands.** The word's box — or the
-  menu's, once it is open — is measured off the page and `.chamber-field` is clipped to
-  outside it, so the far half of the ring passes *behind* the writing. It has to be a
-  clip rather than a test on each particle's own place: a speck just clear of the writing
-  can still trail its tail across it, and the ranging circles cross it too. `.chamber-front`
-  is clipped **only while the menu is open** — closed, the near rim crossing the word is
-  the point.
-- **Held is not stopped.** Open, nothing is launched, nothing ages and nothing breaks up;
-  each particle runs to its own place on the border (`EDGE`, `HOLD_EASE`) and keeps a
-  small wander of its own there (`ALIVE`, `ALIVE_EVERY`), so it reads as held rather than
-  as a picture of itself. Where each one goes is worked out by sorting them **by the way
-  they already stand round the middle** and then spacing them evenly along the border
-  from the same starting point, so the ring *unrolls* into a frame; taking each one
-  straight outward instead leaves the frame in clumps wherever the ring happened to be
-  crowded, which on a ring seen this obliquely is most of it.
-- **Pointing at a row makes them TRY to converge on it** (`DRAW_IN`, `DRAW_SPAN`,
-  `DRAW_GAP`). The particles along the sides lean in towards that row's own height, the
-  nearer their place on the border is to it the harder, and they are stopped short of the
-  writing — which is what makes it read as an attempt rather than as an arrival. The
+- **The back canvas is NOT clipped, and that matters.** It used to be clipped to outside
+  the writing's own box, and that was a mistake you could see: the word's box is a wide
+  flat rectangle, so the far side of the ring vanished along a straight line nowhere near
+  any lettering and came back along another one — an **invisible pane** standing in the
+  chamber. It was never needed either. `.chamber-field` is *under* the plate in the
+  page's own stacking order, so the word and the menu occlude it by being drawn on top of
+  it — letter by letter, not box by box. The far rim now threads between the letters and
+  is hidden behind the strokes. `.chamber-front` is clipped **only while the menu is
+  open**, to the panel's box, which is a panel with a border and a ground of its own, so
+  the edge the particles stop at is an edge you can see; closed, the near rim crossing
+  the word is the whole point.
+- **Held is not stopped, and the frame TRAVELS.** Open, nothing is launched, nothing ages
+  and nothing breaks up; each particle keeps a **seat** on the border and the whole frame
+  streams round it, each at its own rate (`FLOW`, `FLOW_VARY`), with a wander on top of
+  that (`ALIVE`, `ALIVE_EVERY`). A frame standing still is a printed dotted line; a frame
+  travelling is a current. Which seat each takes is worked out by sorting them **by the
+  way they already stand round the middle** and spacing them evenly round the border from
+  the same starting point, so the ring *unrolls* into a frame; taking each one straight
+  outward instead leaves the frame in clumps wherever the ring happened to be crowded,
+  which on a ring seen this obliquely is most of it.
+- **Pointing at a row READS it off against the frame** (`READ_SPAN`, `READ_OPEN`). It
+  used to **cinch** — the sides left the border and leant in towards the row, which read
+  as the frame being pulled out of shape. Now nothing leaves the border: the stretch of
+  frame level with the row takes the cool accent and its thickness *opens*, and a leader
+  is drawn from each end of the row out to the border with a tick where it lands. The
   row's box is read **once a frame**, not once a particle: asking an element for its box
   is a question the browser lays the page out to answer, and there are hundreds of them.
+  What is pointed at is also settled on every pointer move rather than left to
+  `pointerout`, because the menu grows out from under the pointer when it opens — a row
+  can arrive under a hand that never moved, and would then never be left.
 - **The cursor is a hand in the volume, not a cursor on a picture**: it is put at each
   particle's own depth before it pushes, so what it shoves aside is a real hole in a real
   stream, and what it is holding turns to the cool accent.
@@ -786,6 +808,13 @@ carrying a date, and each of the other pictures appears as its line lands on it.
 **Favorites** (`favorites.js`) is the other view, and the other half of that file's job is
 switching between the two — it owns the buttons, so it owns the switch.
 
+It is **the register**. The screen flickers once and what comes up is a page ruled edge
+to edge with fine horizontal **tracks**, a small **square** travelling along each one and
+trailing behind it, lines drawn between squares that come near each other — and a
+**glitch** that tears the whole thing sideways every few seconds. It replaced a ruled
+**hatch** of strokes whose reading was which way it lay; none of that is in the code any
+more (no `PITCH`, no `lie`, no `layAt`, no `turnTo`, no `KNOT_*`, no `SWEEP_*`).
+
 - **The pictures are gone; it is a menu now.** The entries are the
   `<a class="gallery-entry">` blocks in the page, each carrying a `data-chapter` and a
   `data-date`. The chapters are the different `data-chapter` values **in the order they
@@ -794,58 +823,58 @@ switching between the two — it owns the buttons, so it owns the switch.
   settles; it is not the view arriving, it is the thing being turned on, so going away and
   coming back does not do it again. Two flickers is enough to read as one — more reads as a
   fault.
-- **The date is what a favourite is filed under**, so it is set first in each row (after
-  its number) and in the mono the rest of the site keeps for readings. It is also what the
-  field's grain is a reading of — see below.
-- **Only the open chapter's tab is in the tab order**, and the arrow keys, Home and End move
-  along the strip. The chapters you are not reading are `hidden`, not faded.
-- **The two columns are set high and given room.** The plate on the left carries the open
-  chapter large and then a small spec list under it (entries, first, last); the menu on the
-  right is wide, with the tabs above and generous numbered rows below. The page is read
-  from the top down and there is nothing above either of them, so neither is set low.
-- **The field is a ruled ground of fine strokes** — an engraver's hatch, not a scatter of
-  dots. Every stroke is the same length and weight and they stand on a fixed pitch
-  (`PITCH`, `STROKE`); what the field says is which **way** it lies, and turning is the
-  whole of what it does. It replaced a lattice of marks whose reading was its top edge
-  (mounds, a skyline); none of that is in the code any more — no `MOUND_*`, no `lattice()`,
-  no `liftAt`. Four things move it, and they compose:
-  - **The open chapter** lays the whole field at its own angle and draws it at its own
-    weight. The angle comes from where that chapter stands among the others when they are
-    put in the order of the dates they are filed under — spread across the whole sweep
-    (`ANGLE_SPAN`) by that order rather than by the dates themselves, because three
-    chapters filed within a fortnight of each other would otherwise all lie within a few
-    degrees, and a reading no one can tell apart is not a reading. The weight comes from
-    how far apart that chapter's own dates are (`WEIGHT_SPAN`).
-  - **Pointing at a chapter** sends that chapter's angle across the page as a **wave** out
-    of the tab under the pointer (`layAt`, `SWEEP_*`): the grain turns as the front goes
-    by, and the strokes caught in the front are drawn longer and in brass, so the reading
-    is something you watch arrive. It is only a preview — the open chapter does not change
-    — and taking the pointer off brings the open chapter's angle back the same way.
-    Tabbing along the strip does it too. This is the view's main answer to the hand and it
-    is meant to be unmissable.
-  - **Pointing at a favourite** knots the field about that entry's own place: the strokes
-    within `KNOT_REACH` turn to circle a point standing in the clear column between the
-    two columns of writing, at the height of that entry's own row (worked out in
-    `clearing()`).
-  - **The cursor**, which turns the strokes within `HAND_REACH` to face the hand and draws
-    them longer and in brass — a starburst under the pointer.
-  - **The writing keeps its own room.** The field is not drawn where the writing stands:
-    the plate, the tab strip and the open chapter's entries are *measured* off the page
-    (`clearing()`, re-read whenever a chapter is opened, since all three change with it)
-    and strokes inside them are dropped, fading back in over `CLEAR_SOFT` so the field
-    thins towards the words rather than stopping at a line. It is read off where a stroke
-    actually is, so one turned towards the words is taken out too.
-  - Two things keep it cheap: strokes are grouped into `BANDS` weights and each band is
-    one `stroke()` call, and the angle is eased the short way round (`turnTo`) — a stroke
-    is a line and not an arrow, so 89° and -89° are two degrees apart, not 178.
+- **The layout is an index and a log.** The chapters stand in a column down the left with
+  the chapter's own reading under them (entries, first, last, gauge); the open chapter's
+  favourites are full-width ruled rows on the right. Full width **because each row is a
+  track** — a track that stopped short of the margin would not be one. Only the open
+  chapter's tab is in the tab order, and the arrow keys, Home and End move down the index;
+  the chapters you are not reading are `hidden`, not faded.
+- **The date is what a favourite is filed under**, so it is set before its name and in the
+  mono the rest of the site keeps for readings. It is also what that favourite's own
+  square is paced by.
+- **Every favourite has a track of its own**, standing at its own row's height — measured
+  off the page, not guessed — and running the whole width, straight through its own line
+  of writing. The rest of the page is filled with tracks carrying nothing, ruled at the
+  chapter's **gauge**. That is the reading: the gauge comes from how far apart a chapter's
+  own dates are, and how fast the whole register runs comes from where that chapter stands
+  among the others when they are put in the order of the dates they are filed under —
+  by **order** rather than by the dates themselves, because three chapters filed within a
+  fortnight would otherwise all run at the same rate, and a reading no one can tell apart
+  is not a reading. The page prints the gauge it is ruled at, and
+  `tests/favorites.spec.js` measures the drawing to check it is telling the truth.
+- **A track carries a few squares, not one** (`CARS`). One square a track reads as a
+  diagram of something; several read as traffic — and the **lines between tracks**, drawn
+  wherever two squares come within `JOIN` of the same place, are what those squares are
+  for. One square a track gave almost none.
+- **The marks are dimmed over the writing, never dropped** (`DIM`, `SOFT`). A square
+  running along a favourite's own track has to pass *through* that favourite's line of
+  writing; something that vanishes at a straight edge and comes back at another reads as
+  a pane of glass standing on the page — the same mistake the chamber's back canvas used
+  to make.
+- **The glitch is never in what the page SAYS.** A tear (`TEAR_EVERY`, `TEAR_FOR`) slips
+  slices of the drawing sideways, doubles some squares into coloured ghosts, throws a row
+  or two of the writing out of line with a brass-and-cool fringe, and scrambles the code
+  in the corner. The code is decorative and says nothing; no name, date or number is ever
+  shown as anything but itself, and a test watches every frame for nine seconds to make
+  sure of it. Opening or previewing a chapter tears too — it is a panel being switched
+  over, not a panel fading.
+- **The tear copies through a scratch canvas.** Clearing a slice of the page and then
+  copying that same slice back from the page itself copies the hole that was just made:
+  the slices came out empty, which is not a tear, it is a page with bands missing.
+- **The canvas needs `width: 100%; height: 100%` written out.** A canvas is a replaced
+  element with an intrinsic size of its own, so `position: absolute; inset: 0` alone
+  leaves it 300 by 150 in the corner. It looked like the drawing had almost nothing in it.
+- **Everything the field reads is in the canvas's coordinates, and everything read off
+  the page is in the window's.** One subtraction, in one place (`originX`, `originY`, set
+  in `resize()`); the canvas's corner is some way down the page.
 - **Everything opening a chapter touches is declared above the part of the file that
-  opens one** — `hotItem`, `drawing`, `remeasure`, and the field's own `width`, `height`,
-  `lie`, `sweep` and `weight`. A chapter is opened while the page is still being built,
-  and opening one now lays the field at that chapter's angle as well; left where the rest
-  of the field's state belongs, none of it exists yet at that moment and the whole view
-  falls over before it has drawn anything. This has bitten four times in this repository
-  now. It is also why `show()` sets a flag for the next frame rather than measuring on the
-  spot: at that moment the field has no size at all.
+  opens one** — `hotItem`, `drawing`, `remeasure`, `width`, `height`, `run`, `gauge` and
+  `tracks`. A chapter is opened while the page is still being built, and opening one
+  re-rules the whole page; left where the rest of the field's state belongs, none of it
+  exists yet at that moment and the whole view falls over before it has drawn anything.
+  This has bitten four times in this repository now.
+- Two things keep it cheap: the marks are grouped into `BANDS` weights and each band is
+  one `stroke()` or one `fill()`, and there is no gradient anywhere in it.
 - **Without the script both views are simply on the page**, one under the other, and the
   entries are a plain list of links — everything reachable.
 
@@ -940,19 +969,26 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **carriage** | The gantry that runs down the frame towards you on its own clock, lighting each rib as it passes. |
 | **traverse** | One of the streaks that run across the frame — the mechanical version of a falling star. |
 | **chapter** | One grouping in Favorites — whatever an entry's `data-chapter` says. The chapters, their names and their order all come from the page. |
-| **the field** | The ruled ground of fine strokes behind the Favorites view. Regular on its own; what it says is which **way** it lies. |
-| **the grain** | Which way the field lies. Every chapter has its own, taken from where its dates put it among the other chapters. |
-| **the wave** / **the sweep** | How a new grain arrives: a front travelling out from the tab under the pointer, turning the strokes as it passes and drawing the ones in the front longer and in brass. `SWEEP_*` in `favorites.js`. |
-| **knot** | What pointing at a favourite does to the field: the strokes near that entry's own place turn to circle it. |
-| **mound** / **skyline** | The reading the field carried before it became a hatch — a rise in its top edge per entry. Nothing of it is in the code now (no `MOUND_*`, no `lattice()`). If the owner uses the word, they mean that removed treatment. |
+| **the register** | The way the contact sheet page's Favorites view is laid out: a page ruled edge to edge with horizontal tracks, a square travelling along each, lines between them, and a glitch. `favorites.js`. |
+| **track** | One ruled line right across the register. The first of them are the open chapter's favourites, standing at their own rows' heights; the rest fill the page at the chapter's **gauge** and carry nothing. |
+| **gauge** | How far apart the register's empty tracks stand — a reading of how far apart the open chapter's own dates are. The page prints it. |
+| **car** / **square** | One of the few small squares travelling along a track, trailing behind it. Where two on neighbouring tracks come near the same place, a line is drawn between them. |
+| **the tear** / **the glitch** | The register's own fault: slices of the drawing slip sideways, squares double into coloured ghosts, a row or two of the writing is thrown out of line, and the code in the corner scrambles. Over in a tenth of a second, and never in what the page *says*. |
+| **the sig** | The code in the top right corner of the register. Decorative: it is there so the tear has something to scramble that means nothing. |
+| **the field** / **the hatch** | The ruled ground of fine strokes the Favorites view carried before it became the register — its reading was which **way** it lay. Nothing of it is in the code now (no `PITCH`, no `lie`, no `layAt`, no `SWEEP_*`, no `KNOT_*`). If the owner uses the word, they mean that removed treatment. |
+| **the grain** / **the wave** / **the sweep** / **knot** | All of the hatch's answers to the hand, removed with it — see **the field / the hatch** above. |
+| **mound** / **skyline** | The reading the field carried before *that*, when it was a lattice of marks: a rise in its top edge per entry. Nothing of it is in the code either. |
 | **the chamber** | The way `categories/favorites.html` is laid out: four injectors at the corners of the window firing streams of particles inward on white, settling into a ring round the menu of favourites. `chamber.js`. The theories drawing's world turned inside out. |
 | **injector** | One of the chamber's four corner sources (`S-01`…`S-04` on the drawing), each at its own depth in the volume. They take turns being the quick one. |
 | **the ring** (chamber) | Where the chamber settles what it catches: a tilted circle of particles — a **lens**, pressed flat onto its own plane — standing round the word. Not to be confused with **the ring / the orbit** below, which is a removed Favorites treatment. |
-| **the word** | `FAVORITES`, standing in the middle of the chamber's ring: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the ring so the ring's rims cross the ends of the lettering, one in front and one behind. |
-| **the hold** | What the chamber does when the menu is opened: every particle runs to its own place on the border of the window and stays there, keeping a small wander of its own. Held, not stopped. |
+| **the word** | `FAVORITES`, standing in the middle of the chamber's ring: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the ring so the ring's rims cross the ends of the lettering, one in front and one behind. Bracketed by **crop marks**, with the **cue** under it. |
+| **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
+| **the hold** | What the chamber does when the menu is opened: every particle takes a **seat** on the border of the window, and the whole frame travels round it. Held, not stopped. |
+| **the read** | What pointing at a row of the chamber's menu does: the stretch of frame level with it takes the cool accent and opens out, and a leader runs from each end of the row to the border. It replaced a **cinch**, where the sides left the border and leant in towards the row. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
-| **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. In Favorites it is also the name of the block on the left carrying the open chapter (`.chapters-plate`). Which one is meant follows from the view being talked about. |
+| **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. (Favorites used to have one too, on the left; the register has an **index** and a **log** instead.) |
+| **index** / **log** | The two halves of the register: the chapters and the open chapter's reading down the left, its favourites as full-width ruled rows on the right. |
 | **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. `FLIP_*` in `contact-sheet.js`. |
 | **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
 | **view** | One of the two ways the contact sheet page shows a category: the **map** (Description portfolio) or **Favorites**. One at a time; `favorites.js` switches them. |
