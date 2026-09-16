@@ -690,30 +690,6 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
    the rule that dims the page behind the menu, and that rule outranks
    anything written here — so a nav loose in the page could not be
    hidden without being seen fading away first. Inside the head block
-   it is no longer a child of body, and this works as written. */
-.sheet-filters {
-  position: fixed;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  display: flex;
-  gap: 8px;
-}
-.sheet-filter {
-  background: none;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: color 0.3s ease, border-color 0.3s ease;
-}
-.sheet-filter:hover { color: var(--ink); border-color: var(--ink); }
-.sheet-filter.chosen { color: var(--ink); border-color: var(--ink); }
 
 /* Search, top right, mirroring the Menu button top left. */
 .sheet-search {
@@ -791,12 +767,27 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
    sheet is given its height rather than deriving one. */
 .sheet.scripted { display: block; }
 
+/* WHAT IS DRAWN, AND WHAT ONLY SAYS WHERE. Everything on this sheet is
+   drawn in specks on `.sheet-specks`, the canvas below: a picture is
+   bounded by a chain of them rather than by a ruled border, and a line
+   between two pictures is a run of them rather than a stroke.
+
+   The SVG is what the drawing is drawn FROM. Each `.sheet-route` is
+   one line of the map, carrying which two pictures it joins and where
+   it runs; the canvas strings its specks along that, and the dates
+   ride on it as text, which is the one thing a canvas is the wrong
+   place for. So a route is not stroked here — it is the route, not the
+   drawing of it. */
 .sheet-lines { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-.sheet-route {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 1;
-  stroke-opacity: 0.42;
+.sheet-route { fill: none; stroke: none; }
+/* The specks themselves, under the pictures and over nothing: they are
+   placed once and never move again, so this canvas is drawn while the
+   map arrives and then left exactly as it is. */
+.sheet-specks {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
 }
 /* The date a line carries, riding along it. Knocked out of the line
    rather than printed over it — the same thing a map does where a road
@@ -822,7 +813,13 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
   position: relative;
   display: block;
   aspect-ratio: 1 / 1;
-  border: 1px solid var(--line);
+  /* NO BORDER. What bounds a picture here is the chain of specks the
+     canvas draws round it — the owner asked for the ruled border to be
+     replaced by particles joined with lines, the way the chamber's
+     cursor strings a web. A border as well would be the same edge
+     drawn twice. The plain no-script grid keeps one, below, since
+     there is no canvas in that. */
+  border: 0;
   background-color: var(--bg-2);
   /* Hatching, as everywhere else on this site that a picture is still
      to come. The angle and spacing are set per frame by the script so
@@ -842,34 +839,23 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
   top: 0;
   aspect-ratio: auto;
   visibility: hidden;
-  /* Placed by --x and --y, then tipped in place by --turn-*: the tip
-     comes after the perspective, so it is a real turn towards the
-     cursor rather than a squash, and the picture's middle never moves
-     off the spot the map gave it. */
-  transform: translate(var(--x, 0px), var(--y, 0px))
-             perspective(760px)
-             rotateX(var(--turn-x, 0deg)) rotateY(var(--turn-y, 0deg))
-             scale(var(--lift, 1));
-  transition: transform 0.28s var(--menu-ease), opacity 0.45s var(--menu-ease);
+  /* Placed by --x and --y, and that is all that is ever done to it.
+     A picture used to tip in three dimensions towards the pointer
+     (`--turn-x`, `--turn-y`, `--lift`, and `.peeking` on the sheet for
+     the rest of the sheet stepping back); the owner asked for nothing
+     on this page to answer the hand for now, and it was taken out
+     rather than switched off. */
+  transform: translate(var(--x, 0px), var(--y, 0px));
+  transition: opacity 0.45s var(--menu-ease);
 }
 /* The first layout is where the pictures START, not somewhere they
    move to: with the transition above running, every one of them slid
    in from the corner of the sheet as the page opened. contact-sheet.js
    takes this off again on the frame after that first layout. */
 .sheet.placing .sheet-frame { transition: none; }
-/* While one picture is being pointed at, the rest of the sheet steps
-   back — only just, enough to notice and not enough to interrupt the
-   map. All three of these are written under .settled as well: nothing
-   on the sheet answers the pointer while the page is still drawing
-   itself, and during the flick every picture in turn is the one in the
-   middle window. */
-.sheet.scripted.settled.peeking .sheet-frame:not(:hover) { opacity: 0.62; }
-.sheet.scripted.settled.peeking .sheet-route,
-.sheet.scripted.settled.peeking .sheet-date { opacity: 0.45; }
-.sheet.scripted.settled .sheet-frame:hover {
-  z-index: 6;
-  box-shadow: 0 8px 20px rgba(20, 20, 14, 0.1);
-}
+/* Without the script there is no canvas and so no chain of specks;
+   the plain grid keeps the ruled border it always had. */
+.sheet:not(.scripted) .sheet-frame { border: 1px solid var(--line); }
 .sheet-frame:has(img) { background-image: none; background-color: transparent; }
 .sheet-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sheet-number {
@@ -915,14 +901,10 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
    flick. */
 .sheet.scripted .sheet-frame .sheet-caption { opacity: 0; transition: opacity 0.5s var(--menu-ease) 0.15s; }
 .sheet.scripted .sheet-frame.landed .sheet-caption { opacity: 1; }
-.sheet-frame:hover { border-color: var(--ink); }
-.sheet-frame:hover .sheet-caption { color: var(--ink); }
-/* Whatever is in the middle window carries the window's own edge, so
-   flicking through the pictures doesn't flicker the border along with
-   them. Once a picture has landed on the map it goes back to the
-   hairline every other frame on the site is drawn with. */
-.sheet.scripted .sheet-frame:not(.landed) { border-color: var(--ink); }
-.sheet-frame.is-plate { border-color: var(--ink); }
+/* Nothing here answers the pointer for now — see the note on the
+   frame's transform above. A picture's own edge, while it is in the
+   middle window and while it stands on the map, is the chain of specks
+   the canvas draws round it. */
 /* The settled picture's caption is printed inside its own bottom
    corner, the way a caption is written on a print — outside it is
    where the lines leave from. */
@@ -934,9 +916,16 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
   padding: 3px 7px;
   color: var(--ink);
 }
-/* Searching: everything that doesn't match steps back. */
+/* Searching: everything that doesn't match steps back. The routes are
+   drawn on the canvas now, so it is the canvas that steps back with
+   the dates rather than the (unstroked) route elements. */
 .sheet-frame.dimmed { opacity: 0.16; }
-.sheet.searching .sheet-route, .sheet.searching .sheet-date { opacity: 0.12; }
+.sheet.searching .sheet-specks, .sheet.searching .sheet-date { opacity: 0.12; }
+/* Only the canvas: `.sheet-date` already carries its own transition,
+   and the clip-path in it is what writes a date on rather than
+   switching it on. Naming the date here as well replaced that whole
+   declaration and the writing went with it. */
+.sheet-specks { transition: opacity 0.4s var(--menu-ease); }
 
 /* With the script running the page opens white, so the name, the lede
    and the three buttons are not there to begin with — and must not be
@@ -952,7 +941,6 @@ body.sheet-scripted .sheet-head h1 {
 }
 body.sheet-scripted .sheet-head h1::after { width: 0; transition: none; }
 body.sheet-scripted .sheet-head .category-lede { opacity: 0; transition: none; }
-body.sheet-scripted .sheet-filters { opacity: 0; transition: none; pointer-events: none; }
 
 /* What this page is, written small beside the Menu: a rule, then the
    name of the category in the same mono the rest of the chrome is set
@@ -998,34 +986,26 @@ body.sheet-named .sheet-head .category-lede {
   opacity: 1;
   transition: opacity 1.1s var(--menu-ease) 0.3s;
 }
-body.sheet-named .sheet-filters {
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0.9s var(--menu-ease);
-}
 body.sheet-named .sheet-where {
   opacity: 1;
   transition: opacity 1.1s var(--menu-ease) 0.15s;
 }
 
 /* ==================================================================
-   FAVORITES — the other half of a contact sheet page
-   The screen flickers once and what comes up is the REGISTER: a page
-   ruled edge to edge with fine horizontal tracks, a small square
-   travelling along each one, and a glitch that tears the whole thing
-   sideways every few seconds. favorites.js does the reading, the
-   drawing and the switching; this is how it looks.
-/* Only one of the two views is on the page at a time. The one being
-   left fades away first and the other arrives after it — favorites.js
-   holds the swap until the fade is over, so they are never both up.
-   The one not showing is taken out of the layout altogether, or the
-   page would keep the height of whichever is taller.
+   THE SHEET'S STAGE
+   The contact sheet is wrapped rather than left loose in the page, and
+   it has to be: every direct child of <body> is given a transition by
+   the rule that dims the page behind the menu, and that rule outranks
+   anything written for the sheet — its fades would be that rule's, not
+   its own. Inside a wrapper they are its own.
 
-   They are wrapped in .views rather than sitting loose in the page,
-   and have to be: every direct child of <body> is given a transition
-   by the rule that dims the page behind the menu, and that rule
-   outranks anything written here — the fades below would be that
-   rule's, not these. Inside a wrapper they are these. */
+   This page once carried a SECOND view of the same category behind two
+   buttons — the REGISTER, a page ruled edge to edge with tracks and a
+   glitch, in favorites.js. The owner asked for it and the two buttons
+   gone; they are gone outright rather than switched off, and there is
+   no `.gallery`, no `.views`, no `view-favorites` and no favorites.js
+   in the site any more.
+   ================================================================== */
 /* HELD BACK UNTIL THE SCRIPT HAS TAKEN OVER. Both of the pages that
    replace their own contents (this one and the theories drawing) carry
    a line in their <head> that marks the document while their script is
@@ -1035,255 +1015,9 @@ body.sheet-named .sheet-where {
    before it begins. `visibility` rather than `display` or `opacity`:
    the sheet measures its own captions on the first layout, and
    something with no layout box measures nothing. */
-html.js-coming .views { visibility: hidden; }
+html.js-coming .sheet-stage { visibility: hidden; }
 
-.views { position: relative; padding-top: clamp(64px, 9vh, 96px); }
-.sheet, .gallery { transition: opacity 0.5s var(--menu-ease); }
-body.view-switching .sheet,
-body.view-switching .gallery,
-body.view-switching .sheet-head .category-lede { opacity: 0; }
-
-.gallery { position: relative; width: 100%; margin: 0; padding: 0; display: none; }
-body.view-favorites .gallery { display: block; }
-body.view-favorites .sheet { display: none; }
-body.view-favorites .sheet-head .category-lede { opacity: 0; }
-/* Without the script both views are simply on the page, one under the
-   other, which is the right fallback: everything is reachable. The
-   entries are a plain list of links until then. */
-body:not(.sheet-scripted) .gallery { display: block; }
-.gallery-entry {
-  display: block;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line);
-  font-family: var(--sans);
-  color: var(--ink);
-  text-decoration: none;
-}
-body.sheet-scripted .gallery-entry { display: none; }
-
-/* ------------------------------------------------------------------
-   THE REGISTER
-   One screen, never scrolled. The tracks are drawn on the canvas
-   underneath, and the writing is laid over it — so a square running
-   along a favourite's own track passes BEHIND that favourite's line of
-   writing without anything having to be clipped.
-   ------------------------------------------------------------------ */
-.chapters {
-  position: relative;
-  width: 100%;
-  height: calc(100vh - clamp(64px, 9vh, 96px));
-  overflow: hidden;
-}
-/* The width and the height have to be written out: a canvas is a
-   replaced element with an intrinsic size of its own, so `inset: 0`
-   alone leaves it 300 by 150 in the corner rather than filling the
-   page. */
-.chapters-field {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* Coming up. A panel being switched on does not simply appear: it
-   catches, drops, and settles. Two flickers is enough to read as one
-   — any more and it reads as a fault rather than as a switch. */
-@keyframes chapters-flicker {
-  0% { opacity: 0; }
-  12% { opacity: 0.85; }
-  18% { opacity: 0.1; }
-  32% { opacity: 1; }
-  38% { opacity: 0.35; }
-  55% { opacity: 1; }
-  62% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-.chapters-head, .chapters-body { opacity: 0; }
-.chapters.flicker .chapters-head,
-.chapters.flicker .chapters-body {
-  animation: chapters-flicker 0.46s steps(1, end) both;
-}
-.chapters.lit .chapters-head,
-.chapters.lit .chapters-body {
-  opacity: 1;
-  transition: opacity 0.5s var(--menu-ease);
-}
-
-/* --- the head line, and the code the glitch scrambles */
-.chapters-head {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 4px 20px;
-  padding: 0 0 12px;
-  border-bottom: 1px solid var(--line);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  color: var(--muted);
-}
-.chapters-head p { margin: 0; }
-.chapters-sig { color: var(--brass); }
-
-/* --- the two columns underneath it */
-.chapters-body {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(190px, 21%) 1fr;
-  gap: clamp(28px, 5vw, 76px);
-  padding-top: clamp(26px, 4.2vh, 52px);
-}
-
-/* THE INDEX. The chapters, stacked. Vertical rather than a strip
-   across the top: the register is read down the page, and the index
-   is the thing you read down it with. */
-.chapters-rail {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--line);
-}
-.chapters-tab {
-  display: grid;
-  grid-template-columns: 9px 2.4em 1fr auto;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 11px 2px;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  background: none;
-  cursor: pointer;
-  text-align: left;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  transition: color 0.3s var(--menu-ease), padding-left 0.3s var(--menu-ease);
-}
-.chapters-tab:hover, .chapters-tab:focus-visible { color: var(--ink); padding-left: 8px; }
-.chapters-reg {
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--line);
-  transition: background 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
-}
-.chapters-tab .chapters-name {
-  font-family: var(--sans);
-  font-size: 14px;
-  letter-spacing: 0;
-}
-.chapters-count-small { color: var(--muted); }
-.chapters-tab.open { color: var(--ink); }
-.chapters-tab.open .chapters-reg { background: var(--brass); border-color: var(--brass); }
-.chapters-tab.open .chapters-name { color: var(--ink); }
-
-/* The reading under it, set out the way the rest of the site sets out
-   a reading: a label, a rule, a figure. */
-.chapters-spec {
-  margin: 26px 0 0;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--muted);
-}
-.chapters-spec > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 2px;
-  border-bottom: 1px solid var(--line);
-}
-.chapters-spec dt { text-transform: uppercase; }
-.chapters-spec dd { margin: 0; color: var(--ink); }
-
-/* THE LOG. The open chapter, and its favourites as full-width ruled
-   rows — full width because each row is a TRACK, and a track that
-   stopped short of the margin would not be one. */
-.chapters-log { position: relative; min-width: 0; }
-.chapters-title {
-  margin: 0 0 clamp(18px, 3vh, 34px);
-  font-family: var(--sans);
-  font-weight: 400;
-  font-size: clamp(30px, 5.2vw, 62px);
-  line-height: 1;
-  letter-spacing: -0.015em;
-  color: var(--ink);
-}
-.chapters-panel { display: none; }
-.chapters-panel.open { display: block; border-top: 1px solid var(--line); }
-
-.chapters-item {
-  position: relative;
-  display: grid;
-  grid-template-columns: 2.4em 7.2em 1fr 1.6em;
-  align-items: baseline;
-  gap: clamp(10px, 2vw, 28px);
-  padding: clamp(11px, 1.8vh, 19px) 2px;
-  border-bottom: 1px solid var(--line);
-  text-decoration: none;
-  color: var(--ink);
-  transition: padding-left 0.32s var(--menu-ease), background 0.32s var(--menu-ease);
-}
-.chapters-item-no, .chapters-date {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--muted);
-}
-.chapters-item-name {
-  font-family: var(--sans);
-  font-size: clamp(15px, 1.5vw, 19px);
-}
-.chapters-go {
-  font-family: var(--mono);
-  color: var(--brass);
-  opacity: 0;
-  transition: opacity 0.32s var(--menu-ease);
-}
-/* A favourite lights its own track right across the page, so what
-   answers the pointer here is deliberately quiet: the drawing is doing
-   the talking. */
-.chapters-item:hover, .chapters-item:focus-visible {
-  padding-left: 10px;
-  background: rgba(23, 23, 15, 0.025);
-}
-.chapters-item:hover .chapters-go,
-.chapters-item:focus-visible .chapters-go { opacity: 1; }
-.chapters-item:hover .chapters-date,
-.chapters-item:focus-visible .chapters-date { color: var(--brass); }
-
-/* ------------------------------------------------------------------
-   THE TEAR
-   What the glitch does to the WRITING. Only ever where a line is
-   drawn, never what it says: the row slips sideways and is fringed in
-   the two accents for a tenth of a second, and no character of any
-   name, date or number is ever anything but itself.
-   ------------------------------------------------------------------ */
-.chapters-item.torn, .chapters-title.torn {
-  transform: translateX(var(--tear, 0px));
-  text-shadow: 2px 0 rgba(156, 111, 53, 0.55), -2px 0 rgba(47, 95, 150, 0.5);
-}
-
-@media (max-width: 560px) {
-  .chapters-head { font-size: 9px; letter-spacing: 0.1em; }
-}
-
-@media (max-width: 860px) {
-  .chapters-body { grid-template-columns: 1fr; gap: 26px; }
-  .chapters-spec { margin-top: 16px; }
-  .chapters-item { grid-template-columns: 2.2em 6.6em 1fr 1.2em; }
-}
-
-/* Nothing on this page moves when animation is turned off: the
-   register is ruled once and left, and nothing ever tears. */
-@media (prefers-reduced-motion: reduce) {
-  .chapters-head, .chapters-body { opacity: 1; }
-  .chapters-item.torn, .chapters-title.torn { transform: none; text-shadow: none; }
-  .chapters-tab, .chapters-item, .chapters-go, .chapters-reg { transition: none; }
-}
+.sheet-stage { position: relative; padding-top: clamp(64px, 9vh, 96px); }
 
 /* ==================================================================
    THE CHAMBER — categories/favorites.html
@@ -1297,6 +1031,20 @@ body.sheet-scripted .gallery-entry { display: none; }
    under `body.chambered`, which chamber.js adds; without it the page
    is the plain list of favourites, and stays that way.
    ================================================================== */
+/* The favourites on this page are `.gallery-entry` blocks, the same
+   ones the contact sheet's removed Favorites view used, and that view
+   is where their plain-list styling used to live. Without the script
+   this page IS that list, so it keeps it — written for this page only,
+   since the works templates give the same class a quite different job.
+*/
+body.favorites-page .gallery-entry {
+  display: block;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--sans);
+  color: var(--ink);
+  text-decoration: none;
+}
 body.chambered { background: var(--bg); }
 body.chambered .page-content { padding: 0; margin: 0; max-width: none; }
 /* The list is still in the page for anything reading rather than
@@ -2129,7 +1877,331 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   .infobox { float: none; width: 100%; margin: 0 0 32px; }
   .node3d-text { font-size: 14px; }
   .node3d-sub { width: 160px; }
-  /* 80px of margin is a quarter of a phone's screen: the ring needs
-     the room more than the page needs the gutter. */
-  .gallery { width: calc(100% - 24px); }
+}
+
+
+/* ==================================================================
+   PINEWARD — works/pineward.html
+   A long piece: an introduction and fifty-two parts, each of which is
+   a picture and a few paragraphs. Fifty-two of anything listed down a
+   page is a wall, so a part shows only its number, a small picture and
+   its title until it is opened.
+
+   The parts are grouped into four STRATA of thirteen — Canopy,
+   Understorey, Trunk, Roots — a section through a forest read from the
+   light down into the ground. Down the side runs the TRUNK: one tick
+   per part, inked in as you pass it, with the reading in the corner
+   counting them. pineward.js draws the canopy, adds the trunk and the
+   reading, and brings the parts up as they are reached; without it the
+   page is all of its writing and nothing is hidden.
+   ================================================================== */
+.pineward-page { background: var(--bg); }
+
+/* THE CANOPY, standing behind the title and fading out before the
+   writing starts. It is drawn by the script; there is nothing in it
+   without one. */
+.pine-canopy {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: clamp(340px, 62vh, 620px);
+  pointer-events: none;
+  z-index: 0;
+  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+}
+
+.pine-head {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(150px, 26vh, 260px) 64px clamp(40px, 7vh, 80px);
+}
+.pine-kicker {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+.pine-head h1 {
+  font-size: clamp(34px, 6.4vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+/* The second half of the title is the quiet half: it is what the house
+   smells like, and the house is what the piece is called. */
+.pine-head h1 em {
+  display: block;
+  margin-top: 0.18em;
+  font-size: 0.44em;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+}
+.pine-standfirst {
+  margin: 28px 0 0;
+  max-width: 54ch;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+/* THE INTRODUCTION, and every stratum's own heading: the same block,
+   a number in the mono the site keeps for readings and then the name
+   under a hairline. */
+.pine-intro,
+.pine-stratum-head {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(40px, 7vh, 86px) 64px clamp(20px, 3vh, 34px);
+}
+.pine-section-mark,
+.pine-stratum-no {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.pine-intro h2,
+.pine-stratum-head h2 {
+  font-size: clamp(22px, 3vw, 34px);
+  letter-spacing: -0.01em;
+  margin: 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.pine-stratum-line {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-style: italic;
+  max-width: 46ch;
+}
+.pine-stratum-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+.pine-text { max-width: 62ch; }
+.pine-text p { margin: 0 0 16px; color: var(--muted); }
+.pine-intro .pine-text { margin-top: 22px; }
+
+/* THE PARTS. Closed, one is a number, a small picture and a title on a
+   ruled line — fifty-two of those read as an index rather than as a
+   wall. Open, the picture is printed at size with the writing beside
+   it. */
+.pine-parts {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 64px clamp(30px, 6vh, 70px);
+}
+.pine-part {
+  border-bottom: 1px solid var(--line);
+}
+.pine-part > summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0;
+  cursor: pointer;
+  list-style: none;
+  /* The marker a browser draws for a <summary> is the one thing on
+     this page that would not be the site's own drawing. */
+}
+.pine-part > summary::-webkit-details-marker { display: none; }
+.pine-part > summary::marker { content: ""; }
+.pine-no {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  flex: none;
+  width: 28px;
+}
+/* The small picture. Hatched while there is none, like every other
+   place on this site where a picture is still to come. */
+.pine-thumb {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(
+    -45deg, var(--line) 0px, var(--line) 1px, transparent 1px, transparent 9px
+  );
+  overflow: hidden;
+}
+.pine-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pine-title {
+  flex: 0 1 auto;
+  font-size: 17px;
+  color: var(--ink);
+}
+/* The run of dots between a part's title and its cue: the same thing
+   the contact sheet does between two pictures, in a line of type. It
+   is a pseudo-element rather than another span in the markup because
+   there are fifty-two of these, and it is ordered between the two
+   rather than after them because that is where a leader goes. */
+.pine-part > summary::after {
+  content: "";
+  order: 1;
+  flex: 1 1 auto;
+  height: 3px;
+  margin: 0 4px;
+  background-image: radial-gradient(circle at 1.5px 50%, var(--line) 1.1px, transparent 1.3px);
+  background-size: 7px 3px;
+  background-repeat: repeat-x;
+}
+.pine-cue { order: 2; }
+.pine-cue {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex: none;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+}
+.pine-part > summary:hover .pine-cue,
+.pine-part > summary:focus-visible .pine-cue { color: var(--ink); border-color: var(--ink); }
+.pine-part[open] > summary .pine-no,
+.pine-part[open] > summary .pine-title { color: var(--ink); }
+
+.pine-body {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  padding: 6px 0 30px 48px;
+}
+.pine-plate {
+  flex: 1 1 46%;
+  margin: 0;
+}
+.pine-plate::before {
+  content: "";
+  display: block;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(
+    -45deg, var(--line) 0px, var(--line) 1px, transparent 1px, transparent 14px
+  );
+}
+.pine-plate:has(img)::before { display: none; }
+.pine-plate img { width: 100%; display: block; }
+.pine-plate figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.pine-body .pine-text { flex: 1 1 54%; }
+
+/* THE TRUNK: one tick per part down the side of the page, inked in as
+   it is passed, with the reading in the corner counting them. Both are
+   the script's; neither carries anything to read. */
+.pine-trunk {
+  position: fixed;
+  left: clamp(14px, 2.4vw, 34px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+  pointer-events: none;
+}
+.pine-trunk-line {
+  width: 1px;
+  height: min(52vh, 460px);
+  background: var(--line);
+}
+.pine-ticks {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: min(52vh, 460px);
+  margin-left: -5px;
+}
+.pine-tick {
+  width: 5px;
+  height: 1px;
+  background: var(--line);
+  transition: width 0.5s var(--menu-ease), background 0.5s var(--menu-ease);
+}
+.pine-tick.passed { width: 11px; background: var(--ink); }
+.pine-readout {
+  position: fixed;
+  right: clamp(14px, 2.4vw, 34px);
+  bottom: clamp(14px, 2.4vw, 30px);
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  z-index: 3;
+  pointer-events: none;
+  text-align: right;
+}
+.pine-readout-no { color: var(--ink); }
+.pine-readout-where { display: block; margin-top: 4px; text-transform: uppercase; }
+
+/* Coming up as they are reached. Only ever a part of the page that has
+   not been read yet: `arrived` is put on and never taken off, so
+   nothing is ever animated twice or animated on the way back up. */
+.pine-ready .pine-part,
+.pine-ready .pine-rises {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 620ms var(--menu-ease), transform 620ms var(--menu-ease);
+}
+.pine-ready .pine-part.arrived,
+.pine-ready .pine-rises.arrived {
+  opacity: 1;
+  transform: none;
+}
+
+.pine-foot {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 40px 64px 90px;
+  border-top: 1px solid var(--line);
+}
+.pine-back {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-decoration: none;
+}
+.pine-back:hover { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pine-ready .pine-part,
+  .pine-ready .pine-rises { opacity: 1; transform: none; transition: none; }
+  .pine-tick { transition: none; }
+}
+
+@media (max-width: 860px) {
+  .pine-head,
+  .pine-intro,
+  .pine-stratum-head,
+  .pine-parts,
+  .pine-foot { padding-left: 24px; padding-right: 24px; }
+  .pine-body { flex-direction: column; padding-left: 0; gap: 20px; }
+  /* The trunk is a scale for a page being read across a room; on a
+     phone the page is the whole of the room. */
+  .pine-trunk { display: none; }
 }

@@ -13,9 +13,8 @@
   /* The page's own contents are held back for the moment between the
      first paint and this page's script taking over. Without it the
      browser shows the no-script version first — every picture in a
-     plain grid, and the favourites as a list under them — and then
-     the script sweeps it all away, which reads as the page blinking
-     its whole contents at you before it starts.
+     plain grid — and then the script sweeps it all away, which reads
+     as the page blinking its whole contents at you before it starts.
 
      It undoes itself if that script never arrives, so the no-script
      version of this page is still exactly what you get without one. */
@@ -37,6 +36,12 @@
   middle, every picture below flicks through it, it lands on the first
   one, and lines then reach out across the page to the rest, each
   carrying a date.
+
+  EVERYTHING ON IT IS DRAWN IN PARTICLES: a picture is bounded by a
+  fine chain of specks rather than by a ruled border, and every line
+  between two pictures is a run of specks rather than a stroke. They
+  are still — they are placed once, and the page does not answer the
+  pointer.
 
   TO ADD A PIECE: copy one whole <a class="sheet-frame"> block below,
   point its href at the piece's page in /works/, uncomment the <img>
@@ -73,31 +78,21 @@
 
   <!-- What this sheet is, written small beside the Menu — the only
        place the category is named on the page now that the title has
-       gone. It is inside this block rather than loose in the page for
-       the same reason the buttons are: the note in style.css says why. -->
+       gone. It is inside this block rather than loose in the page:
+       the note in style.css says why. -->
   <p class="sheet-where">Scent descriptions</p>
 
-  <!-- The two ways of looking at this category, and the whole of this
-       page's chrome: they appear once the page has finished drawing
-       itself, and switching between them fades one view away and
-       brings the other up — see favorites.js. They are inside this
-       block rather than loose in the page on purpose: the note in
-       style.css says why. -->
-  <nav class="sheet-filters" aria-label="How to look at this category">
-    <button class="sheet-filter chosen" type="button" data-view="sheet">Description portfolio</button>
-    <button class="sheet-filter" type="button" data-view="favorites">Favorites</button>
-  </nav>
 </div>
 
-<!-- The two views of this category, one at a time. Wrapped
-     together on purpose: see the note in style.css. -->
-<div class="views">
+<!-- The sheet is wrapped rather than loose in the page, and it has to
+     be: see the note in style.css. -->
+<div class="sheet-stage">
 
 <div class="sheet" id="sheet">
 
-  <a class="sheet-frame" href="../works/example-gallery-work.html">
+  <a class="sheet-frame" href="../works/pineward.html">
     <!-- <img src="../images/your-picture.jpg" alt=""> -->
-    <span class="sheet-caption">Vetiver, in fifty-two parts</span>
+    <span class="sheet-caption">Pineward: the house that smells like trees</span>
   </a>
 
   <a class="sheet-frame" href="../works/example-article-work.html">
@@ -158,59 +153,10 @@
 </div>
 
 
-<!--
-  FAVORITES — the other way of looking at this category, and the other
-  half of this page. It is hidden until the Favorites button is
-  pressed; the screen then flickers once, a menu of chapters comes up
-  on the right, and a field of marks settles along the foot that
-  answers the cursor. favorites.js is the whole of it.
-
-  TO ADD A FAVOURITE: copy one whole <a class="gallery-entry"> block
-  below, give it a title, a date and a chapter, and point its href at
-  the piece. Nothing in the script changes — the chapters are read off
-  however many different data-chapter values are here, in the order
-  they first appear, so adding a new chapter is the same edit.
-
-  WITHOUT JAVASCRIPT both views are simply on the page one under the
-  other, which is the right fallback: everything is reachable.
-
-  THE TITLES, THE DATES AND THE CHAPTER NAMES ARE ALL PLACEHOLDERS,
-  like the "Untitled" captions on the sheet above.
--->
-<div class="gallery" id="gallery">
-
-  <a class="gallery-entry" data-chapter="Chapter 1" data-date="14.03.2024"
-     href="../works/example-gallery-work.html">First favourite</a>
-
-  <a class="gallery-entry" data-chapter="Chapter 1" data-date="02.11.2023"
-     href="../works/example-article-work.html">Second favourite</a>
-
-  <a class="gallery-entry" data-chapter="Chapter 1" data-date="27.06.2023"
-     href="../works/example-gallery-work.html">Third favourite</a>
-
-  <a class="gallery-entry" data-chapter="Chapter 2" data-date="09.01.2024"
-     href="../works/example-article-work.html">Fourth favourite</a>
-
-  <a class="gallery-entry" data-chapter="Chapter 2" data-date="18.08.2022"
-     href="../works/example-gallery-work.html">Fifth favourite</a>
-
-  <a class="gallery-entry" data-chapter="Chapter 2" data-date="30.04.2025"
-     href="../works/example-article-work.html">Sixth favourite</a>
-
-  <a class="gallery-entry" data-chapter="Chapter 3" data-date="05.12.2021"
-     href="../works/example-gallery-work.html">Seventh favourite</a>
-
-  <a class="gallery-entry" data-chapter="Chapter 3" data-date="22.09.2024"
-     href="../works/example-article-work.html">Eighth favourite</a>
-
-  <a class="gallery-entry" data-chapter="Chapter 3" data-date="11.05.2020"
-     href="../works/example-gallery-work.html">Ninth favourite</a>
-
 </div>
 
 <script>window.SITE_ROOT = "../";</script>
 <script src="../nav.js"></script>
 <script src="../contact-sheet.js"></script>
-<script src="../favorites.js"></script>
 </body>
 </html>

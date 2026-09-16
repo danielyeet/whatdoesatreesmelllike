@@ -41,17 +41,18 @@ which talk through five `window` globals; see the table further down).
 | page | what it is | scripts it loads beyond `nav.js` |
 |---|---|---|
 | `index.html` | three scroll-snapped **slides**: the title, the italic line, the 3D **node map** | `landing.js`, `node-scene.js`, `paper.js`, `thread.js`, `extras.js` (and Three.js from a CDN — the only page that uses it) |
-| `categories/scent-descriptions.html` | the **contact sheet**: pictures scattered and joined by dated lines, with a second view of the same category — the **register** — behind two buttons | `contact-sheet.js` (the map), `favorites.js` (the register, and the switch between the two) |
+| `categories/scent-descriptions.html` | the **contact sheet**: pictures scattered and joined by dated lines, all of it drawn in specks | `contact-sheet.js` |
 | `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `structure.js` |
 | `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVORITES, which opens into a menu | `chamber.js` |
 | `categories/other-1.html`, `other-2.html` | plain **row lists** of works | none |
-| `works/*.html` | individual pieces — two templates and two sandbox pages | none |
+| `works/pineward.html` | **Pineward**, the first piece in Scent descriptions: an introduction and 52 compacted parts in four forest **strata**, with a grown **canopy** and a ticked **trunk** | `pineward.js` |
+| `works/*.html` | the other individual pieces — two templates and two sandbox pages | none |
 | `contact.html` | a plain page | none |
 
-Five of those page scripts are elaborate, and there is a long section below for each
-drawing: `node-scene.js` (~1,450 lines), `chamber.js` (~1,445), `structure.js` (~1,346),
-and the contact sheet pair under one heading (`contact-sheet.js` ~829, `favorites.js`
-~880). **Read the matching section before editing one of them.** Each records decisions that were arrived at by
+Four of those page scripts are elaborate, and there is a long section below for each
+drawing: `node-scene.js` (~1,450 lines), `chamber.js` (~1,460), `structure.js` (~1,346)
+and `contact-sheet.js` (~1,000). `pineward.js` (~330) is the small one and has a short
+section of its own. **Read the matching section before editing one of them.** Each records decisions that were arrived at by
 trial and error and specific bugs the owner reported and that were fixed — several of
 them more than once, because the fix was later undone by someone who didn't know why it
 was there. The sections are written to stop that happening again, so a line that says
@@ -84,7 +85,7 @@ particle systems need one, because the stock Three.js points material cannot giv
 speck its own size and opacity). A shader that fails to compile takes the whole 3D scene
 with it, so the map comes up **blank rather than merely wrong** — and blank looks like a
 loading failure, not like a bug you introduced. The other drawings (`paper.js`,
-`thread.js`, `structure.js`, `chamber.js`, `contact-sheet.js`, `favorites.js`) are plain
+`thread.js`, `structure.js`, `chamber.js`, `contact-sheet.js`, `pineward.js`) are plain
 canvas, SVG and DOM with no shader anywhere, so they fail visibly instead.
 
 ## Tests
@@ -100,7 +101,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 119 passed, 0 failed, and takes six to seven minutes.** If you get a
+**A clean run is 116 passed, 0 failed, and takes five to seven minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -138,21 +139,22 @@ pointing at, no picture left with nothing joined to it, the pictures arriving on
 another rather than together, nothing shifting sideways when the page grows, the two
 buttons arriving only once it has finished drawing itself, a frame keeping its number
 once a real picture is put in it, the whole map being one network with no picture and no
-island left out of it and no picture on the end of a single line, pointing at a picture
-turning it in three dimensions without moving where it was laid out, nothing answering
-the pointer until the sheet has settled, every line carrying a date with none of them
+island left out of it and no picture on the end of a single line, a picture being bounded by specks rather than by a
+ruled border with nothing drawn across it, a line between two pictures being a run of
+specks rather than a stroke, the specks standing still when the page is scrolled and
+travelling with the page rather than the window, nothing on the sheet answering the
+pointer at all, the category naming itself only once the page has drawn itself, every
+line carrying a date with none of them
 landing on a picture, and a date being written along its line rather than switched on, the page never
 showing its own contents before the sheet takes over and the pictures being placed rather
 than slid in, and the plain grid still being there when the script is blocked;
-and favorites — switching views taking one away before the other arrives, the
-screen flickering once and only once as the chapters come up, the chapters and their dates
-being read off the page's own entries, one chapter open at a time with the index working
-from the keyboard, every favourite still a link to its piece, every favourite having a
-track of its own running right across the page at its own row, pointing at one lighting
-that track and letting it go again, the register running, how the page is ruled being a
-reading of the chapter you have open (measured off the drawing against the gauge the page
-prints) with no two chapters ruled the same, it tearing but never in what it says, and the
-whole view fitting one screen;
+and Pineward — the piece being an introduction and fifty-two parts in four strata of
+thirteen, numbered straight through, a part being a title and a small picture until it is
+opened and its picture and writing once it is, the trunk carrying one tick per part with
+the reading counting what has been passed and letting go again on the way back up, the
+canopy growing when the page opens and standing still afterwards, the piece being simply
+there with animation turned off, all of its writing being there without its script, and
+the sheet's first picture pointing at it;
 and the chamber — the menu being grown from that page's own favourites and carrying
 what the sheet's Favorites menu carries (number, date, name and link), the word opening
 the menu and a chapter opening its own favourites with Escape stepping back out one level
@@ -199,8 +201,8 @@ they look right.
 Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
-  `node-scene.js`, `contact-sheet.js`, `favorites.js` (nothing travels and nothing tears),
-  `structure.js`, `chamber.js` and `style.css`,
+  `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`
+  and `style.css`,
   each degrading to a still version. `nav.js` (the cursor) and `extras.js` do *not*
   currently check it; if you add motion there, add the guard too.
 - **Portrait / narrow viewport** — `resize()` in `node-scene.js` works the camera's
@@ -573,9 +575,9 @@ world turned inside out — the same particles and the same instrument marks, pr
 on white instead of white on near-black — except that this one spends no accent at all:
 it is ink on white and nothing else.
 
-Not to be confused with the **register** on the contact sheet page (`favorites.js`), which
-is a different page. The two carry the *same kind of menu* — the chapters and every
-favourite with its number, its date and its name — in deliberately different shapes.
+The contact sheet page used to carry the same kind of menu in a different shape — the
+**register**, its Favorites view. That has been removed; this is the only place on the
+site the chapters and their favourites are now.
 
 **There is only ever one arrangement here, and the whole of the interaction is that one
 arrangement changing size.**
@@ -883,28 +885,53 @@ there is no gradient anywhere in it.
 own markup back until the script has taken over the same way the other two replaced
 pages do — see **js-coming** in the glossary.
 
-### The contact sheet (`contact-sheet.js`), and favorites (`favorites.js`)
+### The contact sheet (`contact-sheet.js`) — categories/scent-descriptions.html
 
 One category page — `categories/scent-descriptions.html` — is laid out as a **contact
-sheet** rather than as a list of rows. It carries **two views of the same category**, and
-the two buttons above the middle window switch between them:
+sheet** rather than as a list of rows.
 
-| button | view | file |
-|---|---|---|
-| Description portfolio | the map — every picture scattered, joined by dated lines | `contact-sheet.js` |
-| Favorites | a menu of chapters, over a field of marks that reads the chapter you have open | `favorites.js` |
-
-Neither file touches the other's elements. All they share is a class on `<body>`
-(`view-favorites`), which `style.css` reads to take one view out of the page and put the
-other in — and the switching itself lives in `favorites.js`, because it owns the buttons.
-Only one view is ever on the page: the one being left fades away *first*, and the other
-arrives after it, so the page never shows two different things at once.
+It **used to carry a second view** of the same category behind two buttons — the
+**register**, in a `favorites.js`: a page ruled edge to edge with tracks, squares
+travelling along them and a glitch that tore it sideways. The owner asked for the
+Favorites view and the two buttons gone, and they are gone outright: no `favorites.js`,
+no `.gallery`, no `.views`, no `view-favorites`, no `.sheet-filters`, and no
+`tests/favorites.spec.js`. The two ways of looking at the category are now one way.
 
 The page opens white with one square window in the middle; every picture in the category
 flicks through it on hard cuts, fast at first and slowing to a stop; it lands on the
-first one, which stays exactly where it is; the two buttons above it and the category's
-name arrive; then lines reach out across the page at whatever angle they need, each
-carrying a date, and each of the other pictures appears as its line lands on it.
+first one, which stays exactly where it is; the category names itself beside the Menu;
+then lines reach out across the page at whatever angle they need, each carrying a date,
+and each of the other pictures appears as its line lands on it.
+
+**EVERYTHING ON IT IS DRAWN IN SPECKS**, and three rules come with that:
+
+- **A picture is bounded by a chain of specks, not by a ruled border** (`edgeChain`).
+  Small squares round its edge, joined with fine lines, with the occasional one standing
+  a little off the chain and netted back in — the chamber's web, laid along a square.
+  `.sheet-frame` rules nothing itself; the only border left on the page is the one the
+  no-script grid keeps, since there is no canvas in that. The corners are landed on
+  exactly: a square whose corners are guessed at reads as a blob.
+  Which specks stand off the chain has to be **uneven** — every fourth one pushed out
+  came out as a saw-tooth frill round each picture rather than as a net.
+- **A line between two pictures is a run of specks, not a stroke** (`routeRun`). The
+  `<line class="sheet-route">` elements are still there and still carry `data-from` /
+  `data-to` and their own coordinates — they are the MAP, which the dates ride on and
+  which anything reading the page (including the tests) uses to know what joins what —
+  but they are not stroked. The specks are the drawing; the SVG is what it is drawn from.
+- **Nothing moves once it has been drawn, and nothing answers the pointer.** Where a
+  speck stands is worked out from what it belongs to and its number along it (`wobble`),
+  so the same speck is in the same place on every redraw and a resize moves the map
+  rather than re-rolling it into a different pattern. The canvas stands in the sheet's
+  own coordinates, so it is carried up and down with the page. The tipping a picture used
+  to do towards the cursor is gone with `.peeking`, `--turn-x`, `--turn-y` and `--lift` —
+  the owner asked for no reactivity on this page for now.
+
+The map is still watched drawing itself: each line's specks are laid down one after
+another from the picture it leaves, and `drawOut()` repaints the whole canvas while any
+of them is travelling, then stops. **The sheet says when it has finished** by taking the
+class `drawn` — and that is not the same moment as every picture having `landed`, because
+a line that closes a loop lands after the picture at the end of it already did. Tests
+wait for `drawn`.
 
 - **The pictures are the `<a class="sheet-frame">` blocks in the page.** Adding one is an
   HTML edit; nothing in the script changes. The first block is the one it lands on.
@@ -1072,78 +1099,35 @@ carrying a date, and each of the other pictures appears as its line lands on it.
   (`.page-where`, written by `structure.js`). Both are hidden below 720px, where the
   buttons in the middle of the chrome reach back far enough to print over them.
 
-**Favorites** (`favorites.js`) is the other view, and the other half of that file's job is
-switching between the two — it owns the buttons, so it owns the switch.
 
-It is **the register**. The screen flickers once and what comes up is a page ruled edge
-to edge with fine horizontal **tracks**, a small **square** travelling along each one and
-trailing behind it, lines drawn between squares that come near each other — and a
-**glitch** that tears the whole thing sideways every few seconds. It replaced a ruled
-**hatch** of strokes whose reading was which way it lay; none of that is in the code any
-more (no `PITCH`, no `lie`, no `layAt`, no `turnTo`, no `KNOT_*`, no `SWEEP_*`).
+### Pineward (`pineward.js`) — works/pineward.html
 
-- **The pictures are gone; it is a menu now.** The entries are the
-  `<a class="gallery-entry">` blocks in the page, each carrying a `data-chapter` and a
-  `data-date`. The chapters are the different `data-chapter` values **in the order they
-  first appear**, so naming them and ordering them is an HTML edit.
-- **The screen flickers once, and only once.** A panel being switched on catches, drops and
-  settles; it is not the view arriving, it is the thing being turned on, so going away and
-  coming back does not do it again. Two flickers is enough to read as one — more reads as a
-  fault.
-- **The layout is an index and a log.** The chapters stand in a column down the left with
-  the chapter's own reading under them (entries, first, last, gauge); the open chapter's
-  favourites are full-width ruled rows on the right. Full width **because each row is a
-  track** — a track that stopped short of the margin would not be one. Only the open
-  chapter's tab is in the tab order, and the arrow keys, Home and End move down the index;
-  the chapters you are not reading are `hidden`, not faded.
-- **The date is what a favourite is filed under**, so it is set before its name and in the
-  mono the rest of the site keeps for readings. It is also what that favourite's own
-  square is paced by.
-- **Every favourite has a track of its own**, standing at its own row's height — measured
-  off the page, not guessed — and running the whole width, straight through its own line
-  of writing. The rest of the page is filled with tracks carrying nothing, ruled at the
-  chapter's **gauge**. That is the reading: the gauge comes from how far apart a chapter's
-  own dates are, and how fast the whole register runs comes from where that chapter stands
-  among the others when they are put in the order of the dates they are filed under —
-  by **order** rather than by the dates themselves, because three chapters filed within a
-  fortnight would otherwise all run at the same rate, and a reading no one can tell apart
-  is not a reading. The page prints the gauge it is ruled at, and
-  `tests/favorites.spec.js` measures the drawing to check it is telling the truth.
-- **A track carries a few squares, not one** (`CARS`). One square a track reads as a
-  diagram of something; several read as traffic — and the **lines between tracks**, drawn
-  wherever two squares come within `JOIN` of the same place, are what those squares are
-  for. One square a track gave almost none.
-- **The marks are dimmed over the writing, never dropped** (`DIM`, `SOFT`). A square
-  running along a favourite's own track has to pass *through* that favourite's line of
-  writing; something that vanishes at a straight edge and comes back at another reads as
-  a pane of glass standing on the page — the same mistake the chamber's back canvas used
-  to make.
-- **The glitch is never in what the page SAYS.** A tear (`TEAR_EVERY`, `TEAR_FOR`) slips
-  slices of the drawing sideways, doubles some squares into coloured ghosts, throws a row
-  or two of the writing out of line with a brass-and-cool fringe, and scrambles the code
-  in the corner. The code is decorative and says nothing; no name, date or number is ever
-  shown as anything but itself, and a test watches every frame for nine seconds to make
-  sure of it. Opening or previewing a chapter tears too — it is a panel being switched
-  over, not a panel fading.
-- **The tear copies through a scratch canvas.** Clearing a slice of the page and then
-  copying that same slice back from the page itself copies the hole that was just made:
-  the slices came out empty, which is not a tear, it is a page with bands missing.
-- **The canvas needs `width: 100%; height: 100%` written out.** A canvas is a replaced
-  element with an intrinsic size of its own, so `position: absolute; inset: 0` alone
-  leaves it 300 by 150 in the corner. It looked like the drawing had almost nothing in it.
-- **Everything the field reads is in the canvas's coordinates, and everything read off
-  the page is in the window's.** One subtraction, in one place (`originX`, `originY`, set
-  in `resize()`); the canvas's corner is some way down the page.
-- **Everything opening a chapter touches is declared above the part of the file that
-  opens one** — `hotItem`, `drawing`, `remeasure`, `width`, `height`, `run`, `gauge` and
-  `tracks`. A chapter is opened while the page is still being built, and opening one
-  re-rules the whole page; left where the rest of the field's state belongs, none of it
-  exists yet at that moment and the whole view falls over before it has drawn anything.
-  This has bitten four times in this repository now.
-- Two things keep it cheap: the marks are grouped into `BANDS` weights and each band is
-  one `stroke()` or one `fill()`, and there is no gradient anywhere in it.
-- **Without the script both views are simply on the page**, one under the other, and the
-  entries are a plain list of links — everything reachable.
+The first piece in Scent descriptions, and the only page in `works/` with a script. It is
+a long piece — an introduction and **fifty-two parts**, each of which is a picture and a
+few paragraphs — and the layout is the answer to that length:
+
+- **A part is compacted.** Closed it is its number, a small picture and its title on a
+  ruled line with a run of dots between the title and the cue; open it is the picture at
+  size with the writing beside it. Fifty-two of anything listed straight down a page is a
+  wall. It is a real `<details>`, so it opens and closes, takes the keyboard and works
+  without the script; `pineward.js` only measures the height so the page does not jump.
+- **They are grouped into four strata of thirteen** — Canopy, Understorey, Trunk, Roots —
+  a section through a forest read from the light down into the ground. The strata and the
+  numbers are in the page's own markup, not worked out in the script.
+- **The canopy is grown, not drawn.** A few boughs rise from the foot of the drawing and
+  split, and split again, thinning as they go, with specks strung along them and only
+  their near neighbours joined (`grow`, `paintCanopy`). It comes up from the foot out to
+  the last twig when the page opens and then stands still. Joining every speck within
+  reach instead — the first version — came out as long lines striking across the page and
+  closing into triangles: a net thrown over the title rather than something growing behind
+  it. It is also kept out of the middle of the page (`CLEAR_MID`), where the title stands.
+- **The trunk is the piece's own scale**: one tick per part down the side, inked in as it
+  is passed, with the reading in the corner counting them. It reads the PARTS and not the
+  scrollbar — a part that runs long should not read as more of the piece than a part that
+  runs short — and it is taken off the page below 860px, where the window is the whole of
+  the room.
+- **Without the script the page is all of its writing.** The trunk and the reading are
+  added by it and the canopy is drawn by it; none of them carry anything to read.
 
 ### Styling
 
@@ -1165,16 +1149,19 @@ background luminance, but the class is the reliable path.
   then add it to the relevant `categories/` page. There are three kinds of category page,
   and they take a new piece differently: the **row list** (the two `other` pages) takes
   another `<a class="work-row">` block; the **contact sheet**
-  (`scent-descriptions`) takes another `<a class="sheet-frame">` block for the map, or a
-  `<a class="gallery-entry">` block with a `data-chapter` and a `data-date` for its
-  Favorites view; and the **structure** (`theories`) takes another `<a class="work-row">`
+  (`scent-descriptions`) takes another `<a class="sheet-frame">` block; and the
+  **structure** (`theories`) takes another `<a class="work-row">`
   block, which becomes a station of its own and lengthens the road — optionally with a
   `data-note`, a line about the piece that the station's card shows when it is clicked.
   Each page says which in the comment at the top of it.
 - A favourite on the **chamber** page (`favorites`) is an `<a class="gallery-entry">`
-  block with a `data-chapter` and a `data-date`, exactly as on the contact sheet's
-  Favorites view — the chapters are the different `data-chapter` values in the order they
-  first appear, and the chapters standing in the chamber's column are made from them.
+  block with a `data-chapter` and a `data-date` — the chapters are the different
+  `data-chapter` values in the order they first appear, and the chapters standing in the
+  chamber's column are made from them.
+- **A part of Pineward** (`works/pineward.html`) is a `<details class="pine-part">` block:
+  a number, a small picture and a title in its `<summary>`, and the full picture and the
+  writing inside. Copy a whole block to add one, and renumber the ones after it — the
+  numbers are in the markup rather than counted, so they are the owner's.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map.
@@ -1236,13 +1223,14 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **carriage** | The gantry that runs down the frame towards you on its own clock, lighting each rib as it passes. |
 | **traverse** | One of the streaks that run across the frame — the mechanical version of a falling star. |
 | **chapter** | One grouping in Favorites — whatever an entry's `data-chapter` says. The chapters, their names and their order all come from the page. |
-| **the register** | The way the contact sheet page's Favorites view is laid out: a page ruled edge to edge with horizontal tracks, a square travelling along each, lines between them, and a glitch. `favorites.js`. |
-| **track** | One ruled line right across the register. The first of them are the open chapter's favourites, standing at their own rows' heights; the rest fill the page at the chapter's **gauge** and carry nothing. |
-| **gauge** | How far apart the register's empty tracks stand — a reading of how far apart the open chapter's own dates are. The page prints it. |
-| **car** / **square** | One of the few small squares travelling along a track, trailing behind it. Where two on neighbouring tracks come near the same place, a line is drawn between them. |
-| **the tear** / **the glitch** | The register's own fault: slices of the drawing slip sideways, squares double into coloured ghosts, a row or two of the writing is thrown out of line, and the code in the corner scrambles. Over in a tenth of a second, and never in what the page *says*. |
-| **the sig** | The code in the top right corner of the register. Decorative: it is there so the tear has something to scramble that means nothing. |
-| **the field** / **the hatch** | The ruled ground of fine strokes the Favorites view carried before it became the register — its reading was which **way** it lay. Nothing of it is in the code now (no `PITCH`, no `lie`, no `layAt`, no `SWEEP_*`, no `KNOT_*`). If the owner uses the word, they mean that removed treatment. |
+| **the register** | The way the contact sheet page's *Favorites view* was laid out: a page ruled edge to edge with horizontal tracks, a square travelling along each, lines between them, and a glitch. **Removed** with that whole view and its two buttons — there is no `favorites.js` in the site any more. If the owner uses the word, they mean that. |
+| **track** / **gauge** / **car** / **square** / **the tear** / **the sig** / **index** / **log** | All of the register's own parts, removed with it. |
+| **the field** / **the hatch** | The ruled ground of fine strokes the Favorites view carried before it became the register — its reading was which **way** it lay. Removed, like everything else that view had. |
+| **Pineward** | The first piece in Scent descriptions: `works/pineward.html`, "the house that smells like trees". An introduction and fifty-two parts. |
+| **part** (Pineward) | One of Pineward's fifty-two: a `<details>` showing its number, a small picture and its title until it is opened, and its full picture and writing inside. |
+| **stratum** | One of the four groups of thirteen parts — Canopy, Understorey, Trunk, Roots — a section through a forest read from the light down into the ground. |
+| **the canopy** | The drawing behind Pineward's title: a few boughs that branch as they rise, specks strung along them, grown from the foot up when the page opens and still afterwards. Kept out of the middle of the page, where the title stands. |
+| **the trunk** (Pineward) | The rule down the side of that page with one tick per part, inked in as each is passed, with the reading in the corner counting them. |
 | **the grain** / **the wave** / **the sweep** / **knot** | All of the hatch's answers to the hand, removed with it — see **the field / the hatch** above. |
 | **mound** / **skyline** | The reading the field carried before *that*, when it was a lattice of marks: a rise in its top edge per entry. Nothing of it is in the code either. |
 | **the chamber** | The way `categories/favorites.html` is laid out: two injectors at opposite corners of the window — top right and bottom left — firing streams of particles across it on white, which join an orbit standing round the menu of favourites. `chamber.js`. The theories drawing's world turned inside out, and the one page here that spends no accent colour at all. |
@@ -1259,11 +1247,12 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **ranged** | What the chamber briefly did to a particle it was answering with: a fine hollow square drawn round it. Removed with the rest of the reaction-by-emphasis — there is no `MARK_*` in the file. If the owner uses the word, they mean that removed treatment; what is there now is **the web**. |
 | **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
 | **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. |
-| **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. (Favorites used to have one too, on the left; the register has an **index** and a **log** instead.) |
-| **index** / **log** | The two halves of the register: the chapters and the open chapter's reading down the left, its favourites as full-width ruled rows on the right. |
+| **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. |
 | **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. `FLIP_*` in `contact-sheet.js`. |
 | **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
-| **view** | One of the two ways the contact sheet page shows a category: the **map** (Description portfolio) or **Favorites**. One at a time; `favorites.js` switches them. |
+| **view** | What the contact sheet page used to have two of — the **map** and **Favorites**, behind two buttons. There is one way of looking at that category now. |
+| **the chain** | What bounds a picture on the contact sheet: small squares round its edge joined with fine lines, a few of them standing off it and netted back in. It replaced the ruled border. |
+| **the run** | The same thing along a line between two pictures: the line is specks rather than a stroke. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
 | **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter` and a `data-date`. |
 | **work** | An individual piece, one page in `works/`. |
@@ -1282,10 +1271,11 @@ words rather than in code, often with a photo, and then refine it over several r
 that and are worth matching:
 
 - **When they ask for something gone, it comes out of the code, not switched off.**
-  `structure.js` has no `SCAN_*`, `chamber.js` no `FRAG_*`, `MARK_*` or `EDGE`, and
-  `favorites.js` no `PITCH` or `layAt`, because each was asked for and then removed
-  outright rather than left switched off. (Watch the names: `node-scene.js` has a live
-  `CORR_PITCH`, which is unrelated to the register's removed `PITCH`.) The exceptions are the few things
+  `structure.js` has no `SCAN_*` and `chamber.js` no `FRAG_*`, `MARK_*`, `EDGE` or
+  leader, because each was asked for and then removed outright rather than left switched
+  off. The **whole register** went the same way — `favorites.js`, its markup, its styles
+  and its tests — when the owner asked for the contact sheet's Favorites view and its two
+  buttons gone, and so did that page's pointer reactions. The exceptions are the few things
   deliberately *dialled to zero with the machinery intact* and documented as such
   (`SWAY = 0`, `CLOUD_COUNT = 0`) — those are the owner's to bring back by raising a
   number. When something is removed, the glossary keeps an entry for the word saying it

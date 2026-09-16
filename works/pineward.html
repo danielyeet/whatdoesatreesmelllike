@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pineward: the house that smells like trees — Your Name</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  PINEWARD — the first piece in Scent descriptions, and a long one:
+  an introduction and then FIFTY-TWO PARTS, each of which is a picture
+  and a few paragraphs.
+
+  HOW IT IS LAID OUT. Fifty-two of anything listed straight down a page
+  is a wall, so the parts are COMPACTED: each one shows only its
+  number, a small picture and its title until it is opened, and opens
+  into the full picture and the writing. They are grouped into four
+  STRATA of thirteen — Canopy, Understorey, Trunk, Roots — which is a
+  section through a forest read from the light down into the ground,
+  and gives the year four seasons' worth of shape.
+
+  TO WRITE A PART: find its <details class="pine-part"> block below,
+  give the <span class="pine-title"> its title, uncomment the two
+  <img> tags (the small one in the summary and the big one in the
+  figure) and point them at your picture, and replace the paragraphs.
+  Everything else — the trunk down the side, the ticks on it, the
+  reading in the corner — is counted off however many parts are here.
+
+  TO ADD OR REMOVE A PART: copy or delete one whole block. The numbers
+  are written in the markup rather than counted, so renumber the ones
+  after it.
+
+  WITHOUT JAVASCRIPT this page is all of its writing, one part after
+  another: <details> opens and closes on its own, and the drawing down
+  the side is the only thing that does not arrive.
+-->
+<body class="pineward-page">
+
+<!-- THE CANOPY. A still drawing of specks and the lines between them,
+     standing behind the title: the same language as the contact sheet
+     this piece is reached from. pineward.js draws it; without that
+     script there is simply nothing here. -->
+<canvas class="pine-canopy" aria-hidden="true"></canvas>
+
+<header class="pine-head">
+  <p class="pine-kicker">Scent descriptions · 01</p>
+  <h1>Pineward<br><em>the house that smells like trees</em></h1>
+  <p class="pine-standfirst">
+    Replace this line with your own standing first paragraph — the one
+    that says what the piece is before the introduction begins.
+  </p>
+</header>
+
+<!-- The introduction. Yours to write; as many paragraphs as it needs. -->
+<section class="pine-intro" id="introduction" aria-labelledby="introduction-name">
+  <p class="pine-section-mark">00</p>
+  <h2 id="introduction-name">Introduction</h2>
+  <div class="pine-text">
+    <p>
+      Replace this paragraph with your introduction to the piece: what
+      the house is, what you went there for, and what the fifty-two
+      parts below are counting.
+    </p>
+    <p>
+      And this one, and however many more you want before the parts
+      begin.
+    </p>
+  </div>
+</section>
+
+<!-- THE FIFTY-TWO, in four strata of thirteen. -->
+<div class="pine-strata">
+
+<section class="pine-stratum" id="canopy" aria-labelledby="canopy-name">
+  <header class="pine-stratum-head">
+    <p class="pine-stratum-no">I</p>
+    <h2 id="canopy-name">Canopy</h2>
+    <p class="pine-stratum-line">The first light, and everything the wind gets to first.</p>
+    <p class="pine-stratum-count">01 – 13</p>
+  </header>
+
+  <div class="pine-parts">
+      <details class="pine-part" id="part-01">
+        <summary>
+          <span class="pine-no">01</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-01.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-01.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 01 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 01.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-02">
+        <summary>
+          <span class="pine-no">02</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-02.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-02.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 02 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 02.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-03">
+        <summary>
+          <span class="pine-no">03</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-03.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-03.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 03 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 03.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-04">
+        <summary>
+          <span class="pine-no">04</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-04.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-04.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 04 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 04.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-05">
+        <summary>
+          <span class="pine-no">05</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-05.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-05.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 05 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 05.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-06">
+        <summary>
+          <span class="pine-no">06</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-06.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-06.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 06 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 06.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-07">
+        <summary>
+          <span class="pine-no">07</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-07.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-07.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 07 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 07.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-08">
+        <summary>
+          <span class="pine-no">08</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-08.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-08.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 08 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 08.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-09">
+        <summary>
+          <span class="pine-no">09</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-09.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-09.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 09 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 09.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-10">
+        <summary>
+          <span class="pine-no">10</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-10.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-10.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 10 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 10.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-11">
+        <summary>
+          <span class="pine-no">11</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-11.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-11.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 11 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 11.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-12">
+        <summary>
+          <span class="pine-no">12</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-12.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-12.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 12 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 12.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-13">
+        <summary>
+          <span class="pine-no">13</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-13.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-13.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 13 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 13.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+  </div>
+</section>
+
+<section class="pine-stratum" id="understorey" aria-labelledby="understorey-name">
+  <header class="pine-stratum-head">
+    <p class="pine-stratum-no">II</p>
+    <h2 id="understorey-name">Understorey</h2>
+    <p class="pine-stratum-line">Shade, and what grows in it.</p>
+    <p class="pine-stratum-count">14 – 26</p>
+  </header>
+
+  <div class="pine-parts">
+      <details class="pine-part" id="part-14">
+        <summary>
+          <span class="pine-no">14</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-14.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-14.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 14 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 14.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-15">
+        <summary>
+          <span class="pine-no">15</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-15.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-15.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 15 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 15.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-16">
+        <summary>
+          <span class="pine-no">16</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-16.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-16.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 16 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 16.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-17">
+        <summary>
+          <span class="pine-no">17</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-17.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-17.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 17 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 17.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-18">
+        <summary>
+          <span class="pine-no">18</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-18.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-18.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 18 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 18.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-19">
+        <summary>
+          <span class="pine-no">19</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-19.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-19.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 19 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 19.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-20">
+        <summary>
+          <span class="pine-no">20</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-20.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-20.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 20 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 20.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-21">
+        <summary>
+          <span class="pine-no">21</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-21.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-21.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 21 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 21.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-22">
+        <summary>
+          <span class="pine-no">22</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-22.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-22.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 22 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 22.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-23">
+        <summary>
+          <span class="pine-no">23</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-23.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-23.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 23 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 23.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-24">
+        <summary>
+          <span class="pine-no">24</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-24.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-24.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 24 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 24.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-25">
+        <summary>
+          <span class="pine-no">25</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-25.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-25.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 25 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 25.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-26">
+        <summary>
+          <span class="pine-no">26</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-26.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-26.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 26 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 26.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+  </div>
+</section>
+
+<section class="pine-stratum" id="trunk" aria-labelledby="trunk-name">
+  <header class="pine-stratum-head">
+    <p class="pine-stratum-no">III</p>
+    <h2 id="trunk-name">Trunk</h2>
+    <p class="pine-stratum-line">The years, read from the inside.</p>
+    <p class="pine-stratum-count">27 – 39</p>
+  </header>
+
+  <div class="pine-parts">
+      <details class="pine-part" id="part-27">
+        <summary>
+          <span class="pine-no">27</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-27.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-27.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 27 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 27.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-28">
+        <summary>
+          <span class="pine-no">28</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-28.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-28.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 28 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 28.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-29">
+        <summary>
+          <span class="pine-no">29</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-29.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-29.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 29 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 29.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-30">
+        <summary>
+          <span class="pine-no">30</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-30.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-30.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 30 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 30.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-31">
+        <summary>
+          <span class="pine-no">31</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-31.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-31.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 31 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 31.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-32">
+        <summary>
+          <span class="pine-no">32</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-32.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-32.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 32 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 32.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-33">
+        <summary>
+          <span class="pine-no">33</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-33.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-33.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 33 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 33.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-34">
+        <summary>
+          <span class="pine-no">34</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-34.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-34.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 34 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 34.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-35">
+        <summary>
+          <span class="pine-no">35</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-35.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-35.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 35 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 35.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-36">
+        <summary>
+          <span class="pine-no">36</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-36.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-36.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 36 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 36.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-37">
+        <summary>
+          <span class="pine-no">37</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-37.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-37.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 37 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 37.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-38">
+        <summary>
+          <span class="pine-no">38</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-38.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-38.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 38 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 38.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-39">
+        <summary>
+          <span class="pine-no">39</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-39.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-39.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 39 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 39.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+  </div>
+</section>
+
+<section class="pine-stratum" id="roots" aria-labelledby="roots-name">
+  <header class="pine-stratum-head">
+    <p class="pine-stratum-no">IV</p>
+    <h2 id="roots-name">Roots</h2>
+    <p class="pine-stratum-line">What the house stands in, and cannot be seen.</p>
+    <p class="pine-stratum-count">40 – 52</p>
+  </header>
+
+  <div class="pine-parts">
+      <details class="pine-part" id="part-40">
+        <summary>
+          <span class="pine-no">40</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-40.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-40.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 40 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 40.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-41">
+        <summary>
+          <span class="pine-no">41</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-41.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-41.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 41 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 41.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-42">
+        <summary>
+          <span class="pine-no">42</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-42.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-42.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 42 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 42.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-43">
+        <summary>
+          <span class="pine-no">43</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-43.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-43.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 43 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 43.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-44">
+        <summary>
+          <span class="pine-no">44</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-44.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-44.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 44 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 44.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-45">
+        <summary>
+          <span class="pine-no">45</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-45.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-45.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 45 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 45.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-46">
+        <summary>
+          <span class="pine-no">46</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-46.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-46.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 46 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 46.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-47">
+        <summary>
+          <span class="pine-no">47</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-47.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-47.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 47 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 47.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-48">
+        <summary>
+          <span class="pine-no">48</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-48.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-48.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 48 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 48.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-49">
+        <summary>
+          <span class="pine-no">49</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-49.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-49.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 49 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 49.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-50">
+        <summary>
+          <span class="pine-no">50</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-50.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-50.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 50 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 50.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-51">
+        <summary>
+          <span class="pine-no">51</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-51.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-51.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 51 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 51.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+      <details class="pine-part" id="part-52">
+        <summary>
+          <span class="pine-no">52</span>
+          <span class="pine-thumb" aria-hidden="true">
+            <!-- <img src="../images/pineward-52.jpg" alt=""> -->
+          </span>
+          <span class="pine-title">Untitled</span>
+          <span class="pine-cue" aria-hidden="true">Open</span>
+        </summary>
+        <div class="pine-body">
+          <figure class="pine-plate">
+            <!-- <img src="../images/pineward-52.jpg" alt="Describe the picture"> -->
+            <figcaption>Part 52 — what the picture shows.</figcaption>
+          </figure>
+          <div class="pine-text">
+            <p>Replace this paragraph with your own writing for part 52.</p>
+            <p>And this one, and add as many more as the part needs.</p>
+          </div>
+        </div>
+      </details>
+  </div>
+</section>
+</div>
+
+<footer class="pine-foot">
+  <a class="pine-back" href="../categories/scent-descriptions.html">← Scent descriptions</a>
+</footer>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../nav.js"></script>
+<script src="../pineward.js"></script>
+</body>
+</html>

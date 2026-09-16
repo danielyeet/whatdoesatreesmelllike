@@ -30,16 +30,23 @@ const showing = (page) =>
     })
   );
 
-/** Wait for the whole sequence — flick, settle, every line drawn. */
+/** Wait for the whole sequence — flick, settle, every line drawn.
+ *
+ *  `.drawn` on the sheet and not `.landed` on every frame: the
+ *  pictures are all in place a moment before the map is, because a
+ *  line that closes a loop lands after the picture at the end of it
+ *  already did. The little wait after it is the last picture's own
+ *  fade, which is CSS and not the script's. */
 async function waitForSheet(page) {
   await page.waitForFunction(
     () => {
-      const frames = [...document.querySelectorAll(".sheet-frame")];
-      return frames.length > 1 && frames.slice(1).every((f) => f.classList.contains("landed"));
+      const sheet = document.getElementById("sheet");
+      return sheet && sheet.classList.contains("drawn");
     },
     null,
     { timeout: 20000 }
   );
+  await page.waitForTimeout(600);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -58,11 +65,11 @@ test("the page opens white, with one picture in the middle and nothing else", as
   );
   expect(visible, "one picture at a time").toBe(1);
 
-  // The two buttons are not there yet: they arrive once the page has
+  // The category's name is not there yet: it arrives once the page has
   // finished drawing itself.
-  const buttons = await page.evaluate(() =>
-    parseFloat(getComputedStyle(document.querySelector(".sheet-filters")).opacity));
-  expect(buttons, "the buttons wait for the page to finish").toBeLessThan(0.05);
+  const named = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.querySelector(".sheet-where")).opacity));
+  expect(named, "the name waits for the page to finish").toBeLessThan(0.05);
 
   expect(errors).toEqual([]);
 });
@@ -207,12 +214,12 @@ test("nothing shifts sideways when the page grows", async ({ page }) => {
   await page.goto(SHEET);
   await page.waitForTimeout(400);
 
-  const buttonsAt = () =>
-    page.locator(".sheet-filters").evaluate((el) => el.getBoundingClientRect().left);
-  const before = await buttonsAt();
+  const searchAt = () =>
+    page.locator(".sheet-search").evaluate((el) => el.getBoundingClientRect().left);
+  const before = await searchAt();
 
   await waitForSheet(page);
-  expect(Math.abs((await buttonsAt()) - before), "the buttons should not move").toBeLessThan(1);
+  expect(Math.abs((await searchAt()) - before), "the chrome should not move").toBeLessThan(1);
 
   const gutter = await page.evaluate(() =>
     getComputedStyle(document.documentElement).scrollbarGutter);
@@ -303,38 +310,40 @@ test("the flick ends on the picture it keeps, with no last blink", async ({ page
   ).toBe(lastOfFlick.showing);
 });
 
-test("the two buttons arrive once the page has drawn itself", async ({ page }) => {
+test("the category names itself once the page has drawn itself", async ({ page }) => {
   await page.goto(SHEET);
 
-  const buttons = page.locator(".sheet-filter");
-  await expect(buttons).toHaveCount(2);
-  await expect(buttons).toHaveText(["Description portfolio", "Favorites"]);
+  // The two buttons this page used to carry — Description portfolio
+  // and Favorites, the two ways of looking at the category — are gone,
+  // and so is the second view they switched to. The owner asked for
+  // both. What is left across the top is the Menu, the category's own
+  // name beside it, and the Search.
+  await expect(page.locator(".sheet-filter")).toHaveCount(0);
+  await expect(page.locator(".gallery-entry")).toHaveCount(0);
 
-  const showingButtons = () =>
+  const name = page.locator(".sheet-where");
+  await expect(name).toHaveText("Scent descriptions");
+  const showingName = () =>
     page.evaluate(() =>
-      parseFloat(getComputedStyle(document.querySelector(".sheet-filters")).opacity));
+      parseFloat(getComputedStyle(document.querySelector(".sheet-where")).opacity));
 
   // Not there while the pictures are still flicking through.
-  expect(await showingButtons()).toBeLessThan(0.05);
+  expect(await showingName()).toBeLessThan(0.05);
 
   // Nor while the map is still drawing itself.
   await waitForSheet(page);
-  await expect.poll(showingButtons, { timeout: 6000 }).toBeGreaterThan(0.9);
+  await expect.poll(showingName, { timeout: 6000 }).toBeGreaterThan(0.9);
 
-  // They sit across the top of the page rather than in it, between the
-  // Menu on the left and the Search on the right.
+  // It stands up at the top of the page beside the Menu, rather than
+  // in the page.
   const where = await page.evaluate(() => {
-    const style = getComputedStyle(document.querySelector(".sheet-filters"));
-    const box = document.querySelector(".sheet-filters").getBoundingClientRect();
-    return { fixed: style.position, top: box.top, middle: box.left + box.width / 2 };
+    const box = document.querySelector(".sheet-where").getBoundingClientRect();
+    return { fixed: getComputedStyle(document.querySelector(".sheet-where")).position,
+             top: box.top, left: box.left };
   });
   expect(where.fixed).toBe("fixed");
   expect(where.top, "up at the top of the page").toBeLessThan(70);
-  expect(Math.abs(where.middle - 640), "across the middle of it").toBeLessThan(40);
-
-  // The page opens on the map, and says so.
-  await expect(buttons.nth(0)).toHaveClass(/chosen/);
-  await expect(buttons.nth(1)).not.toHaveClass(/chosen/);
+  expect(where.left, "beside the Menu, on the left").toBeLessThan(220);
 });
 
 // The number in the corner belongs to the frame, not to the placeholder
@@ -449,75 +458,197 @@ test("with animation turned off it goes straight to the finished sheet", async (
   expect(landed, "every picture should already be in place").toBe(frames);
 });
 
-test("pointing at a picture lifts it out of the page without moving it", async ({ page }) => {
+/** How much ink the canvas has laid down in a square of the SHEET —
+    the specks stand in the sheet's own coordinates, which is why they
+    do not move when the page is scrolled. */
+const speckInk = (page, box) =>
+  page.evaluate(([x, y, w, h]) => {
+    const canvas = document.querySelector(".sheet-specks");
+    const ratio = canvas.width / parseFloat(canvas.style.width);
+    const shot = canvas.getContext("2d").getImageData(
+      Math.round(x * ratio), Math.round(y * ratio),
+      Math.max(1, Math.round(w * ratio)), Math.max(1, Math.round(h * ratio))
+    ).data;
+    let ink = 0;
+    for (let n = 3; n < shot.length; n += 4) ink += shot[n];
+    return Math.round(ink / 100);
+  }, box);
+
+/** Where a frame stands in the sheet's own coordinates. */
+const inSheet = (page, which) =>
+  page.evaluate((pick) => {
+    const canvas = document.querySelector(".sheet-specks").getBoundingClientRect();
+    const box = document.querySelectorAll(".sheet-frame")[pick].getBoundingClientRect();
+    return { x: box.left - canvas.left, y: box.top - canvas.top,
+             w: box.width, h: box.height };
+  }, which);
+
+test("a picture is bounded by specks, not by a ruled border", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
 
+  // The border this page used to draw round every picture is gone —
+  // the owner asked for it to be replaced by particles joined with
+  // lines — so the frame itself rules nothing at all.
+  const border = await page.$$eval(".sheet.scripted .sheet-frame", (frames) =>
+    frames.map((f) => getComputedStyle(f).borderTopWidth));
+  expect(new Set(border), "no frame should carry a border").toEqual(new Set(["0px"]));
+
+  const at = await inSheet(page, 3);
+  // Ink along each of its four edges...
+  const band = 7;
+  const edges = {
+    top: await speckInk(page, [at.x, at.y - band, at.w, band * 2]),
+    foot: await speckInk(page, [at.x, at.y + at.h - band, at.w, band * 2]),
+    left: await speckInk(page, [at.x - band, at.y, band * 2, at.h]),
+    right: await speckInk(page, [at.x + at.w - band, at.y, band * 2, at.h]),
+  };
+  Object.keys(edges).forEach((side) => {
+    expect(edges[side], `the ${side} edge should be drawn in specks: ${JSON.stringify(edges)}`)
+      .toBeGreaterThan(200);
+  });
+
+  // ...and none across the middle of it: this is an edge, not a fill.
+  const inside = await speckInk(page, [
+    at.x + at.w * 0.25, at.y + at.h * 0.25, at.w * 0.5, at.h * 0.5,
+  ]);
+  expect(inside, "and nothing drawn across the picture itself").toBe(0);
+});
+
+test("a line between two pictures is a run of specks, not a stroke", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  // The route elements are still the map — they say which two pictures
+  // each line joins and where it runs, and the dates ride on them —
+  // but they are not what is drawn: the specks are.
+  const stroke = await page.$$eval(".sheet-route", (routes) =>
+    routes.map((r) => getComputedStyle(r).stroke));
+  expect(new Set(stroke), "a route is not stroked").toEqual(new Set(["none"]));
+
+  // HOW MANY SEPARATE RUNS OF INK there are along one line's own
+  // path. A stroke is one unbroken run from end to end; a line made of
+  // specks is dozens of them with clear page between. Counting them is
+  // the difference stated exactly — asking merely whether there is ink
+  // near each sampled point cannot tell the two apart, since a window
+  // wide enough to catch a speck that stands a pixel off the line is
+  // wide enough to be filled by a stroke as well.
+  const along = await page.evaluate(() => {
+    const route = [...document.querySelectorAll(".sheet-route")]
+      .map((r) => ({
+        x1: +r.getAttribute("x1"), y1: +r.getAttribute("y1"),
+        x2: +r.getAttribute("x2"), y2: +r.getAttribute("y2"),
+      }))
+      .sort((a, b) => Math.hypot(b.x2 - b.x1, b.y2 - b.y1) - Math.hypot(a.x2 - a.x1, a.y2 - a.y1))[0];
+    const far = Math.hypot(route.x2 - route.x1, route.y2 - route.y1);
+    const canvas = document.querySelector(".sheet-specks");
+    const ratio = canvas.width / parseFloat(canvas.style.width);
+    const paint = canvas.getContext("2d");
+    const ux = (route.x2 - route.x1) / far, uy = (route.y2 - route.y1) / far;
+    let runs = 0, inked = 0, was = false, steps = 0;
+    for (let at = 0; at <= far; at += 1) {
+      const x = route.x1 + ux * at, y = route.y1 + uy * at;
+      // Across the line rather than along it, so a speck standing a
+      // little off it still counts as this point being drawn.
+      const shot = paint.getImageData(
+        Math.round((x - uy * 3) * ratio), Math.round((y + ux * 3) * ratio),
+        Math.max(1, Math.round(Math.abs(uy) * 6 + 1) * ratio),
+        Math.max(1, Math.round(Math.abs(ux) * 6 + 1) * ratio)).data;
+      let ink = 0;
+      for (let i = 3; i < shot.length; i += 4) ink += shot[i];
+      const now = ink > 120;
+      if (now && !was) runs++;
+      if (now) inked++;
+      was = now;
+      steps++;
+    }
+    return { runs: runs, inked: inked, steps: steps, far: Math.round(far) };
+  });
+  expect(along.inked, `the line should be drawn: ${JSON.stringify(along)}`)
+    .toBeGreaterThan(along.steps * 0.2);
+  expect(along.runs, `and in specks rather than stroked: ${JSON.stringify(along)}`)
+    .toBeGreaterThan(8);
+  expect(along.inked, `with page showing between them: ${JSON.stringify(along)}`)
+    .toBeLessThan(along.steps * 0.9);
+});
+
+test("the specks stand still when the page is scrolled", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  // What the whole canvas has on it, and where the canvas stands in
+  // the page rather than in the window.
+  const look = () =>
+    page.evaluate(() => {
+      const canvas = document.querySelector(".sheet-specks");
+      const shot = canvas.getContext("2d")
+        .getImageData(0, 0, canvas.width, canvas.height).data;
+      let ink = 0, stamp = 0;
+      for (let n = 3; n < shot.length; n += 4) {
+        if (!shot[n]) continue;
+        ink += shot[n];
+        stamp = (stamp * 31 + n + shot[n]) % 2147483647;
+      }
+      return {
+        ink: ink, stamp: stamp,
+        down: Math.round(canvas.getBoundingClientRect().top + window.scrollY),
+      };
+    });
+
+  const before = await look();
+  await page.mouse.wheel(0, 900);
+  await page.waitForTimeout(900);
+  const after = await look();
+
+  expect(await page.evaluate(() => window.scrollY), "the page should have scrolled")
+    .toBeGreaterThan(300);
+  expect(after.stamp, "not one speck should have moved").toBe(before.stamp);
+  expect(after.ink, "nor been redrawn").toBe(before.ink);
+  expect(after.down, "and the drawing travels with the page, not the window")
+    .toBe(before.down);
+});
+
+test("nothing on the sheet answers the pointer", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  // A picture used to tip in three dimensions towards the cursor, with
+  // the rest of the sheet stepping back behind it. The owner asked for
+  // the page to stop answering the hand for now.
   const frame = page.locator(".sheet-frame").nth(3);
   await frame.scrollIntoViewIfNeeded();
   const box = await frame.boundingBox();
-  const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 
   const look = () =>
-    frame.evaluate((el) => {
-      const r = el.getBoundingClientRect();
+    page.evaluate(() => {
+      const canvas = document.querySelector(".sheet-specks");
+      const shot = canvas.getContext("2d")
+        .getImageData(0, 0, canvas.width, canvas.height).data;
+      let ink = 0;
+      for (let n = 3; n < shot.length; n += 4) ink += shot[n];
       return {
-        centre: [r.left + r.width / 2, r.top + r.height / 2],
-        turn: getComputedStyle(el).transform,
+        ink: ink,
+        frames: [...document.querySelectorAll(".sheet-frame")].map((f) => {
+          const style = getComputedStyle(f);
+          return style.transform + "|" + style.opacity + "|" + style.boxShadow;
+        }).join(" "),
+        peeking: document.getElementById("sheet").className,
       };
     });
 
   const resting = await look();
-
-  // Pointed at near one corner...
-  await page.mouse.move(box.x + box.width * 0.15, box.y + box.height * 0.15);
-  await page.waitForTimeout(500);
-  const tipped = await look();
-
-  expect(tipped.turn, "it should leave its plane").toMatch(/^matrix3d/);
-  expect(tipped.turn).not.toBe(resting.turn);
-
-  // ...but turned about its own middle, which stays where the picture
-  // was laid out. The exact statement of that is that the moving part
-  // of its transform — the last two numbers, where on the sheet it
-  // has been put — is untouched by the pointer.
-  const where = (matrix) => matrix.slice(9, -1).split(",").slice(12, 14).map(Number);
-  expect(where(tipped.turn), "it should not be moved, only turned")
-    .toEqual(where(resting.turn));
-  // Which leaves the picture drawn all but exactly where it was: a
-  // turned square seen in perspective is a little wider on the near
-  // side, so its outline shifts by a pixel or two even though what it
-  // is turning about has not moved at all.
-  expect(
-    Math.hypot(tipped.centre[0] - resting.centre[0], tipped.centre[1] - resting.centre[1]),
-    "and should stay where it was drawn"
-  ).toBeLessThan(4);
-
-  // The rest of the page steps back while it is held.
-  const others = await page.evaluate(() =>
-    [...document.querySelectorAll(".sheet-frame")]
-      .filter((f) => !f.matches(":hover"))
-      .map((f) => parseFloat(getComputedStyle(f).opacity))
-  );
-  // Dimmed, but only just: the map has to stay readable behind the one
-  // being held.
-  expect(Math.max(...others), "everything else should dim").toBeLessThan(0.8);
-  expect(Math.max(...others), "but not go away").toBeGreaterThan(0.4);
-
-  // It follows the cursor rather than striking one pose.
-  await page.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.85);
-  await page.waitForTimeout(500);
-  const other = await look();
-  expect(other.turn, "it should follow the pointer").not.toBe(tipped.turn);
-
-  // And everything comes back when the pointer leaves.
-  await page.mouse.move(middle.x, box.y - 80);
+  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2);
   await page.waitForTimeout(600);
-  const back = await page.evaluate(() =>
-    [...document.querySelectorAll(".sheet-frame")].map((f) =>
-      parseFloat(getComputedStyle(f).opacity))
-  );
-  expect(Math.min(...back), "and come back afterwards").toBeGreaterThan(0.9);
+  const held = await look();
+  await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.8);
+  await page.waitForTimeout(600);
+  const moved = await look();
+
+  expect(held.frames, "no picture should answer the pointer").toBe(resting.frames);
+  expect(moved.frames, "however it is moved over one").toBe(resting.frames);
+  expect(held.peeking, "and the sheet should not hold itself back").toBe(resting.peeking);
+  expect(held.ink, "nor should a speck of the drawing change").toBe(resting.ink);
+  expect(moved.ink).toBe(resting.ink);
 });
 
 test("a date is written along its line rather than switched on", async ({ page }) => {
@@ -573,16 +704,16 @@ test("the page never shows its own contents before the sheet takes over",
   // it looked like on every frame rather than the test trying to catch
   // the right moment. Between the first paint and contact-sheet.js
   // taking over, the browser used to show the page as it is written —
-  // every picture in a plain grid and the favourites listed under them
-  // — and then have all of it swept away, which reads as the page
-  // blinking its whole contents at you before it starts.
+  // every picture in a plain grid — and then have all of it swept
+  // away, which reads as the page blinking its whole contents at you
+  // before it starts.
   await page.addInitScript(() => {
     window.__flashed = 0;
     window.__placed = null;
     const watch = () => {
       const sheet = document.getElementById("sheet");
       if (sheet) {
-        const seen = [...document.querySelectorAll(".sheet-frame, .gallery-entry")]
+        const seen = [...document.querySelectorAll(".sheet-frame")]
           .filter((el) => {
             const box = el.getBoundingClientRect();
             return box.width > 4 && box.height > 4 &&
@@ -630,59 +761,6 @@ test("without its script the page is still the plain grid of pictures",
   await expect(frames.first()).toBeVisible({ timeout: 6000 });
   expect(await frames.count()).toBeGreaterThan(4);
   await expect(page.locator(".sheet-head h1")).toHaveText("Scent descriptions");
-});
-
-test("nothing on the sheet answers the pointer until it has settled", async ({ page }) => {
-  // Recorded by the page itself on every frame rather than the test
-  // trying to photograph the right moment: the flick takes about three
-  // seconds from the moment the script runs, and on a busy machine the
-  // page can be most of the way through it before a test could look.
-  await page.addInitScript(() => {
-    window.__answered = { tipped: 0, peeked: 0, frames: 0 };
-    const watch = () => {
-      const sheet = document.getElementById("sheet");
-      if (sheet && sheet.classList.contains("scripted") &&
-          !sheet.classList.contains("settled")) {
-        window.__answered.frames++;
-        if (sheet.classList.contains("peeking")) window.__answered.peeked++;
-        [...document.querySelectorAll(".sheet-frame")].forEach((frame) => {
-          const turn = frame.style.getPropertyValue("--turn-y");
-          if (turn && parseFloat(turn) !== 0) window.__answered.tipped++;
-        });
-      }
-      if (performance.now() < 8000) requestAnimationFrame(watch);
-    };
-    requestAnimationFrame(watch);
-  });
-
-  // The pointer is put where the middle window will be BEFORE the page
-  // is opened, so it is over a picture for the whole of the flick.
-  await page.mouse.move(640, 300);
-  await page.goto(SHEET);
-  await waitForSheet(page);
-
-  const seen = await page.evaluate(() => window.__answered);
-  expect(seen.frames, "the flick should have been watched").toBeGreaterThan(10);
-  expect(seen.tipped, "nothing should be tipped while the page is still drawing itself")
-    .toBe(0);
-  expect(seen.peeked, "and nothing held").toBe(0);
-
-  // Non-vacuous: that really is a place where a picture ends up, so
-  // the pointer was over one the whole time.
-  const plate = await page.locator(".sheet-frame.is-plate").boundingBox();
-  expect(640 > plate.x && 640 < plate.x + plate.width &&
-         300 > plate.y && 300 < plate.y + plate.height,
-    `the pointer at 640,300 should be over the plate at ${JSON.stringify(plate)}`).toBe(true);
-
-  // Once the page has drawn itself, the same pointer does work.
-  const frame = page.locator(".sheet-frame").nth(2);
-  await frame.scrollIntoViewIfNeeded();
-  const on = await frame.boundingBox();
-  await page.mouse.move(on.x + on.width * 0.25, on.y + on.height * 0.25);
-  await expect
-    .poll(() => frame.evaluate((el) => el.style.getPropertyValue("--turn-y")),
-      { timeout: 3000 })
-    .not.toBe("");
 });
 
 test("every line carries a date, and no date lands on a picture", async ({ page }) => {

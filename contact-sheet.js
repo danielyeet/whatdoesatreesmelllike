@@ -130,6 +130,16 @@
   lines.setAttribute("aria-hidden", "true");
   sheet.insertBefore(lines, sheet.firstChild);
 
+  // AND THE CANVAS EVERYTHING IS DRAWN ON. The SVG above says where
+  // the map runs and carries the dates, which are the one thing a
+  // canvas is the wrong place for; the specks are drawn here. See
+  // "THE SPECKS" below.
+  const specks = document.createElement("canvas");
+  specks.className = "sheet-specks";
+  specks.setAttribute("aria-hidden", "true");
+  sheet.insertBefore(specks, sheet.firstChild);
+  const ink = specks.getContext("2d");
+
   // ============================================================
   // THE MAP
   //
@@ -631,6 +641,186 @@
     lines.setAttribute("viewBox", "0 0 " + width + " " + height);
     lines.setAttribute("width", width);
     lines.setAttribute("height", height);
+
+    // The canvas covers the whole sheet and stands in the sheet's own
+    // coordinates, so it is carried up and down with the page: the
+    // specks stay exactly where the map put them however far you have
+    // scrolled.
+    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    specks.width = Math.round(width * ratio);
+    specks.height = Math.round(height * ratio);
+    specks.style.width = width + "px";
+    specks.style.height = height + "px";
+    ink.setTransform(ratio, 0, 0, ratio, 0, 0);
+    paintSpecks();
+  }
+
+  // ============================================================
+  // THE SPECKS
+  //
+  // Every edge on this sheet is a chain of them: a picture is bounded
+  // by specks joined with fine lines rather than by a ruled border,
+  // and a line between two pictures is a run of them rather than a
+  // stroke. The owner asked for both, after the web the chamber's
+  // cursor strings between whatever it is near.
+  //
+  // THEY ARE STILL. Where a speck stands is worked out from what it
+  // belongs to and its number along it, through `wobble` below, so the
+  // same speck is in the same place on every redraw — a resize moves
+  // the map and the specks go with it rather than being re-rolled into
+  // a different pattern. Nothing here is on a clock: the canvas is
+  // drawn while the map is arriving and then left exactly as it is.
+  // ============================================================
+  const EDGE_EVERY = 7;       // how far apart the specks round a picture stand
+  const EDGE_WANDER = 1.6;    // and how far off its edge they may stand
+  const ROUTE_EVERY = 7.5;    // the same, along a line between two pictures
+  const ROUTE_WANDER = 1.3;
+  const SPECK_MIN = 1;        // how big a speck is drawn, in pixels
+  const SPECK_MAX = 2.7;
+  const WEB_REACH = 15;       // two specks nearer than this are joined
+  const WEB_MISS = 0.22;      // and this share of those joins are left out
+  const EDGE_INK = 0.62;      // how heavily a speck round a picture is drawn
+  const ROUTE_INK = 0.5;      // and one on a line between two
+  const WEB_INK = 0.3;        // and the join between two of them
+  // AND THE ONES STANDING OFF THE CHAIN. A run of specks at even
+  // spacing with a line through them is a dashed border; what makes it
+  // read as the chamber's web instead is the few that stand a little
+  // off it and are joined back in.
+  //
+  // WHICH ones has to be uneven. Every fourth speck pushed out was
+  // worse than none at all: an even rhythm of them all standing the
+  // same way out came out as a saw-tooth frill round each picture
+  // rather than as a net. So it is a roll against this, and how far
+  // out is rolled too.
+  const LOOSE_ODDS = 0.18;
+  const LOOSE_OUT = [2.5, 6];
+  const INK = "23,23,15";     // --ink
+
+  /** One number between 0 and 1 for a given speck of a given thing,
+      the same every time it is asked. What makes the drawing steady:
+      re-rolled on each redraw instead, every resize would come out as
+      a different scatter. */
+  function wobble(of, n, salt) {
+    let h = ((of + 1) * 374761393 + (n + 1) * 668265263 + salt * 2246822519) >>> 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  }
+
+  const rgba = (a) => "rgba(" + INK + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
+
+  /** The chain of specks round one picture. Corners are landed on
+      exactly — a square whose corners are guessed at reads as a blob —
+      and everything between them wanders a little off the edge. */
+  function edgeChain(node, of) {
+    const out = [];
+    const sides = Math.max(2, Math.round(node.size / EDGE_EVERY));
+    const many = sides * 4;
+    for (let n = 0; n < many; n++) {
+      const t = (n / many) * 4;
+      const side = Math.floor(t), along = t - side;
+      let x, y, nx, ny;
+      if (side === 0) { x = node.x + node.size * along; y = node.y; nx = 0; ny = -1; }
+      else if (side === 1) { x = node.x + node.size; y = node.y + node.size * along; nx = 1; ny = 0; }
+      else if (side === 2) { x = node.x + node.size * (1 - along); y = node.y + node.size; nx = 0; ny = 1; }
+      else { x = node.x; y = node.y + node.size * (1 - along); nx = -1; ny = 0; }
+      const corner = along < 0.001;
+      const off = corner ? 0 : (wobble(of, n, 1) - 0.5) * 2 * EDGE_WANDER;
+      const drift = corner ? 0 : (wobble(of, n, 2) - 0.5) * EDGE_EVERY * 0.5;
+      const loose = !corner && wobble(of, n, 7) < LOOSE_ODDS
+        ? LOOSE_OUT[0] + wobble(of, n, 8) * (LOOSE_OUT[1] - LOOSE_OUT[0])
+        : 0;
+      out.push({
+        x: x + nx * (off + loose) + ny * drift,
+        y: y + ny * (off + loose) - nx * drift,
+        size: SPECK_MIN + wobble(of, n, 3) * (SPECK_MAX - SPECK_MIN) + (corner ? 0.6 : 0),
+        loose: loose > 0,
+      });
+    }
+    return out;
+  }
+
+  /** And the run of them along one line between two pictures. */
+  function routeRun(a, b, of) {
+    const out = [];
+    const far = Math.hypot(b.x - a.x, b.y - a.y);
+    const many = Math.max(2, Math.round(far / ROUTE_EVERY));
+    const ux = (b.x - a.x) / far, uy = (b.y - a.y) / far;
+    for (let n = 0; n <= many; n++) {
+      const at = (n / many) * far;
+      const off = (n === 0 || n === many ? 0 : (wobble(of, n, 4) - 0.5) * 2 * ROUTE_WANDER);
+      out.push({
+        x: a.x + ux * at - uy * off,
+        y: a.y + uy * at + ux * off,
+        size: SPECK_MIN + wobble(of, n, 5) * (SPECK_MAX - SPECK_MIN),
+        at: at,
+      });
+    }
+    return out;
+  }
+
+  /** A chain drawn: the specks themselves, and the fine lines between
+      the ones that are near each other. Squares on whole pixels, like
+      every other speck on this site — at this size a rectangle laid
+      across a pixel boundary comes out as a soft blob. */
+  function drawChain(run, of, weight, upTo) {
+    ink.beginPath();
+    for (let n = 1; n < run.length; n++) {
+      if (upTo !== undefined && run[n].at > upTo) break;
+      const one = run[n - 1], two = run[n];
+      // A speck standing off the chain is always joined back to the
+      // one before it, or it reads as dirt on the page rather than as
+      // part of the edge.
+      const held = one.loose || two.loose;
+      if (!held && wobble(of, n, 6) < WEB_MISS) continue;
+      if (Math.hypot(two.x - one.x, two.y - one.y) > WEB_REACH + (held ? LOOSE_OUT[1] : 0)) continue;
+      ink.moveTo(one.x, one.y);
+      ink.lineTo(two.x, two.y);
+      // And on to the next one as well, so it hangs in a net rather
+      // than on a thread.
+      if (two.loose && run[n + 1] && (upTo === undefined || run[n + 1].at <= upTo)) {
+        ink.moveTo(two.x, two.y);
+        ink.lineTo(run[n + 1].x, run[n + 1].y);
+      }
+    }
+    ink.strokeStyle = rgba(WEB_INK);
+    ink.lineWidth = 1;
+    ink.stroke();
+
+    ink.fillStyle = rgba(weight);
+    ink.beginPath();
+    run.forEach((speck, n) => {
+      if (upTo !== undefined && speck.at > upTo) return;
+      const size = Math.max(1, Math.round(speck.size));
+      ink.rect(Math.round(speck.x - size / 2), Math.round(speck.y - size / 2), size, size);
+    });
+    ink.fill();
+  }
+
+  /** How far along its own line each route has been drawn, 0 to 1.
+      Set by the arrival and left at 1 afterwards. */
+  const reached = new Map();
+
+  function paintSpecks() {
+    if (!nodes.length) return;
+    ink.clearRect(0, 0, specks.width, specks.height);
+
+    // Every picture that is on the map, and the middle window while the
+    // flick is still running — the window's own edge is the chain too.
+    nodes.forEach((node, i) => {
+      if (i > 0 && !placed) return;
+      if (i > 0 && !rest[i - 1].classList.contains("landed")) return;
+      drawChain(edgeChain(node, i), i, EDGE_INK);
+    });
+
+    if (!placed) return;
+    links.forEach((link, i) => {
+      const got = reached.has(link) ? reached.get(link) : 0;
+      if (got <= 0) return;
+      const from = nodes[link.a], to = nodes[link.b];
+      const a = edgePoint(from, to), b = edgePoint(to, from);
+      const run = routeRun(a, b, 100 + i);
+      drawChain(run, 100 + i, ROUTE_INK, got * Math.hypot(b.x - a.x, b.y - a.y));
+    });
   }
 
   // ============================================================
@@ -666,25 +856,30 @@
     if (REDUCE_MOTION) {
       links.forEach((link) => {
         link.line.classList.add("drawn");
-        link.line.style.strokeDashoffset = "0";
+        reached.set(link, 1);
         if (link.label) link.label.classList.add("shown");
       });
       rest.forEach((frame, i) => land(i + 1));
+      paintSpecks();
+      sheet.classList.add("drawn");
       return;
     }
 
     // Each line reaches out, and the picture at the far end of it
     // appears as it lands — appears, not fades: the same hard cut the
     // flick is made of, so the whole page is drawn in one language.
+    //
+    // A line reaching out is its specks being laid down one after
+    // another from the picture it leaves. It used to be a stroke with
+    // its own dash offset eased by the stylesheet; the run of specks
+    // is drawn on the canvas, so how far each line has got is kept
+    // here (`reached`) and the whole sheet is repainted while any of
+    // them is still travelling. Once the last has landed the loop
+    // stops and the canvas is left exactly as it is — nothing on this
+    // page moves again.
     links.forEach((link) => {
       setTimeout(() => {
         link.line.classList.add("drawn");
-        // Eased rather than at a constant rate: a line that sets off
-        // and settles reads as being drawn, one at a steady speed as
-        // being played back.
-        link.line.style.transition =
-          "stroke-dashoffset " + Math.round(link.draw) + "ms cubic-bezier(0.22, 0.61, 0.36, 1)";
-        link.line.style.strokeDashoffset = "0";
         setTimeout(() => { if (link.label) link.label.classList.add("shown"); }, link.draw);
       }, ROUTE_AFTER_MS + link.start);
     });
@@ -692,6 +887,41 @@
       if (i === 0) return;
       setTimeout(() => land(i), ROUTE_AFTER_MS + node.arriveAt);
     });
+    drawOut();
+  }
+
+  /** The map being drawn: every line's own share of it worked out from
+      the clock, so a slow machine draws the same map more coarsely
+      rather than a different one. Eased rather than run at a steady
+      rate — a line that sets off and settles reads as being drawn, one
+      at a constant speed as being played back. */
+  function drawOut() {
+    const began = window.performance && window.performance.now
+      ? window.performance.now() : Date.now();
+    const settled = (t) => 1 - Math.pow(1 - t, 3);
+    // The last thing to happen, whichever it is: the end of the last
+    // line, or the last picture appearing. A picture appears on a
+    // timer of its own, so stopping the moment the lines are done can
+    // leave the last chain of specks undrawn until something else asks
+    // for a repaint.
+    const done = links.reduce((m, l) => Math.max(m, l.start + l.draw), 0);
+    const lands = nodes.reduce((m, n) => Math.max(m, n.arriveAt || 0), 0);
+    const over = ROUTE_AFTER_MS + Math.max(done, lands) + 90;
+    const tick = (now) => {
+      const gone = now - began;
+      links.forEach((link) => {
+        const t = (gone - ROUTE_AFTER_MS - link.start) / link.draw;
+        reached.set(link, t <= 0 ? 0 : t >= 1 ? 1 : settled(t));
+      });
+      paintSpecks();
+      if (gone < over) requestAnimationFrame(tick);
+      // AND THE PAGE SAYS WHEN IT HAS FINISHED DRAWING ITSELF. The
+      // pictures are all in place a moment before the map is: a line
+      // that closes a loop lands after the picture at the end of it
+      // did, so `.landed` on every frame is not the end of it.
+      else sheet.classList.add("drawn");
+    };
+    requestAnimationFrame(tick);
   }
 
   function flick() {
@@ -719,57 +949,17 @@
   }
 
   // ============================================================
-  // POINTING AT A PICTURE
+  // NOTHING HERE ANSWERS THE POINTER.
   //
-  // The rest of the sheet steps back a little and the one under the
-  // pointer leaves the flat plane of the page: it turns to face
-  // wherever the cursor is, as though it were lying under glass and
-  // being tipped. Its middle stays exactly where the picture was — it
-  // is turning, not moving — so nothing else on the map has to shift
-  // around it. It is meant to be barely there: a picture that answers
-  // the hand, not a picture that jumps.
-  //
-  // None of it is live until the page has finished putting itself
-  // together. A picture is only answering the pointer once it has
-  // settled where it belongs — during the flick every one of them is
-  // taking its turn in the middle window, and tipping whatever the
-  // cursor happens to be over while that is going on is nonsense.
+  // A picture used to tip in three dimensions towards the cursor —
+  // `perspective()` and a pair of rotations written as custom
+  // properties, with the rest of the sheet stepping back behind it
+  // (`.peeking`) — and it was tuned to be barely there. The owner
+  // asked for the page to stop answering the hand for now, so it is
+  // gone rather than switched off: there is no `TIP`, no `LIFT`, no
+  // `tip()` and no `.peeking` in the page any more, and the frame's
+  // transform is the `translate()` that places it and nothing else.
   // ============================================================
-  const TIP = 6;           // degrees at the far corner of a picture
-  const LIFT = 1.02;       // and how much bigger it is drawn while tipped
-
-  /** Has this picture finished arriving? Nothing answers before then. */
-  const ready = (frame) =>
-    sheet.classList.contains("settled") && frame.classList.contains("landed");
-
-  function tip(frame, event) {
-    const box = frame.getBoundingClientRect();
-    const acrossX = (event.clientX - (box.left + box.width / 2)) / (box.width / 2);
-    const acrossY = (event.clientY - (box.top + box.height / 2)) / (box.height / 2);
-    const hold = Math.max(-1, Math.min(1, acrossX));
-    const rise = Math.max(-1, Math.min(1, acrossY));
-    if (!ready(frame)) return;
-    frame.style.setProperty("--turn-y", (hold * TIP).toFixed(2) + "deg");
-    frame.style.setProperty("--turn-x", (-rise * TIP).toFixed(2) + "deg");
-    frame.style.setProperty("--lift", String(LIFT));
-  }
-
-  function untip(frame) {
-    frame.style.setProperty("--turn-y", "0deg");
-    frame.style.setProperty("--turn-x", "0deg");
-    frame.style.setProperty("--lift", "1");
-  }
-
-  frames.forEach((frame) => {
-    frame.addEventListener("pointerenter", () => {
-      if (ready(frame)) sheet.classList.add("peeking");
-    });
-    frame.addEventListener("pointermove", (e) => tip(frame, e));
-    frame.addEventListener("pointerleave", () => {
-      sheet.classList.remove("peeking");
-      untip(frame);
-    });
-  });
 
   // ============================================================
   // SEARCH
