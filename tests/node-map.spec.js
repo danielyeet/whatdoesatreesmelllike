@@ -19,7 +19,7 @@ const EXPECTED_LABELS = [
   "Scent descriptions",
   "Theories",
   "Favourites",
-  "Other",
+  "Researches",
   "Other",
   "Test node",
   "Test node",

@@ -37,11 +37,31 @@ const REAL_NODES = [
     href: "categories/theories.html", pos: [-2.09, 1.97, 1.91],
     preview: { description: "Half-formed ideas, written down before I lose them." },
   },
-  { label: "Favourites", sub: "things I like, no other reason needed", href: "categories/favorites.html", pos: [0.27, 0.93, -3.1] },
-  { label: "Other", sub: "whatever doesn't fit anywhere else", href: "categories/other-1.html", pos: [1.78, 1.0, 2.33] },
-  { label: "Other", sub: "the other other pile", href: "categories/other-2.html", pos: [-3.25, -0.99, -0.57] },
-  { label: "Test node", sub: "a working sandbox node — safe to repurpose", href: "works/test-node-a.html", pos: [2.26, -1.86, -1.43] },
-  { label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html", pos: [-0.4, -2.62, 1.52] },
+  {
+    label: "Favourites", sub: "things I like, no other reason needed",
+    href: "categories/favorites.html", pos: [0.27, 0.93, -3.1],
+    preview: { description: "The ones I keep coming back to, kept by chapter." },
+  },
+  {
+    label: "Researches", sub: "things I looked into properly and wrote up",
+    href: "categories/researches.html", pos: [1.78, 1.0, 2.33],
+    preview: { description: "Longer pieces where I go and find out, rather than describe." },
+  },
+  {
+    label: "Other", sub: "the other other pile", href: "categories/other-2.html",
+    pos: [-3.25, -0.99, -0.57],
+    preview: { description: "Whatever doesn't fit anywhere else on this map." },
+  },
+  {
+    label: "Test node", sub: "a working sandbox node — safe to repurpose",
+    href: "works/test-node-a.html", pos: [2.26, -1.86, -1.43],
+    preview: { description: "A sandbox: somewhere to try a page out before it is a real one." },
+  },
+  {
+    label: "Test node", sub: "a second sandbox node", href: "works/test-node-b.html",
+    pos: [-0.4, -2.62, 1.52],
+    preview: { description: "The second sandbox, for trying two things at once." },
+  },
 ];
 
 (function () {

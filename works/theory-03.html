@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Third theory — Your Name</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  A THEORY, written out. This is a TEMPLATE: the writing in it is
+  placeholder, and everything about the page is here to be written
+  over.
+
+  HOW IT IS LAID OUT. The piece stands on the theories drawing's own
+  ground — near-white on gray-black, with a fine swarm of particles
+  in the air behind it and sights at the corners — so that opening a
+  theory from that category reads as going further into the same
+  instrument rather than as arriving somewhere else. essay.js draws
+  that field and builds the RULE down the left: one tick per section,
+  filled in as far as you have read, with the section you are in
+  named under it. Every tick is a link, so the rule is a way of
+  getting about as well as a readout.
+
+  TO WRITE IT: change the <h1>, the standfirst and the three readings
+  under it, point the <img> in the plate at your picture, and then
+  write the sections. A SECTION is one <section class="essay-section">
+  with an <h2> in it — the rule is built from those, in the order they
+  stand here, so adding one to the page adds a tick to the rule with
+  no other change.
+
+  TO ADD ANOTHER THEORY PAGE: copy this whole file, rename it in
+  /works/, and point its row on categories/theories.html at it.
+
+  WITHOUT JAVASCRIPT the page is all of its writing on the same
+  ground: the field and the rule are the only things the script adds,
+  and neither of them carries anything to read.
+-->
+<body class="essay-page dark-surface">
+
+<canvas class="essay-field" aria-hidden="true"></canvas>
+
+<header class="essay-head">
+  <p class="essay-kicker">Theories · 03</p>
+  <h1>Third theory<br><em>a working title for the third one</em></h1>
+  <p class="essay-standfirst">
+    Replace this line with the standing first paragraph — the one that
+    says what the theory is before the piece begins.
+  </p>
+  <dl class="essay-facts">
+    <div><dt>Written</dt><dd>2026</dd></div>
+    <div><dt>Reading</dt><dd>15 min</dd></div>
+    <div><dt>Filed under</dt><dd>Theories · 03</dd></div>
+  </dl>
+</header>
+
+<article class="essay-body">
+
+  <figure class="essay-plate">
+    <!-- <img src="../images/theory-03.jpg" alt="Describe the picture"> -->
+    <figcaption>What the picture shows.</figcaption>
+  </figure>
+
+  <section class="essay-section" id="section-01">
+    <h2><span class="essay-no">01</span>Premise</h2>
+    <p class="essay-lead">Replace this paragraph with what the theory says, in one or two sentences, before any of the working is shown. This first paragraph is set a little brighter than the rest — that is what <code>class="essay-lead"</code> on it does.</p>
+    <p>And this one, and however many more the premise needs.</p>
+  </section>
+
+  <section class="essay-section" id="section-02">
+    <h2><span class="essay-no">02</span>The reading</h2>
+    <p>Replace this with what you actually observed — the readings the theory is built on.</p>
+    <p>A run of readings, a note or a list can be set apart in the mono the rest of the site keeps for them by putting it in a <code>p class="essay-note"</code>, like the block below.</p>
+    <p class="essay-note">A reading · a note · a number<br>Another one<br>And a third</p>
+  </section>
+
+  <section class="essay-section" id="section-03">
+    <h2><span class="essay-no">03</span>The working</h2>
+    <p>Replace this with the working: how you got from the reading to the theory.</p>
+  </section>
+
+  <section class="essay-section" id="section-04">
+    <h2><span class="essay-no">04</span>Where it breaks</h2>
+    <p>Replace this with what the theory does not explain, or where you stopped trusting it.</p>
+  </section>
+
+  <section class="essay-section" id="section-05">
+    <h2><span class="essay-no">05</span>Notes</h2>
+    <p>Anything left over: references, things to check, someone else's reading of the same thing.</p>
+  </section>
+
+</article>
+
+<footer class="essay-foot">
+  <a class="essay-back" href="../categories/theories.html">← Theories</a>
+</footer>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../nav.js"></script>
+<script src="../essay.js"></script>
+</body>
+</html>

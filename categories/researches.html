@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Researches — Your Name</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  RESEARCHES — the pieces where I go and find out rather than
+  describe. This category is laid out as an INDEX rather than as a
+  drawing: a few readings across the top, two plates on the right, and
+  the list itself standing in the bottom left corner of the window,
+  scrolling inside its own box with its headings stuck to the top.
+
+  It pays its homage to the drawn pages in its own quiet way: the
+  first plate is DRAWN — a slow ring of specks with lines strung
+  between the near ones, the chamber's orbit printed small — and
+  everything else is the hairlines, the mono readings and the numbers
+  the rest of the site is made of.
+
+  TO ADD A RESEARCH: copy one whole <tr> below. What a row carries is
+  written ON the row (data-no, data-name, data-date) and not read off
+  the lettering, so sorting by date still sorts by date; the number is
+  the research's own and does not change when the table is sorted.
+  A row with data-open="no" is one that hasn't been written yet: it is
+  drawn quieter and is not a link.
+
+  index-page.js does the sorting and the searching. Without it the
+  table is the same table in the order it is written here, and every
+  row that is a link still is one.
+-->
+<body class="researches-page">
+
+<div class="index-page">
+
+  <header class="index-head">
+    <p class="index-name">Researches</p>
+    <p class="index-col">Information</p>
+    <div class="index-say">
+      <p class="index-say-lede">
+        Pieces where I go and find out rather than describe: a material
+        at a time, where it comes from, what it is called, and what it
+        actually smells like on a strip.
+      </p>
+      <p class="index-say-head">New research &amp; corrections</p>
+      <p class="index-say-meta">you@example.com</p>
+    </div>
+  </header>
+
+  <div class="index-right">
+  <p class="index-line">Currently reading round and writing these up one at a time.</p>
+
+  <div class="index-plates">
+    <figure class="index-plate">
+      <!-- DRAWN, not photographed — see the note at the top of this file. -->
+      <canvas class="index-mark" aria-hidden="true"></canvas>
+      <figcaption>001</figcaption>
+    </figure>
+    <figure class="index-plate">
+      <!-- <img src="../images/researches-02.jpg" alt=""> -->
+      <div aria-hidden="true"></div>
+      <figcaption>002</figcaption>
+    </figure>
+  </div>
+  </div>
+
+  <div class="index-board">
+    <div class="index-search">
+      <span class="index-search-mark" aria-hidden="true"></span>
+      <input class="index-search-field" type="search" placeholder="Search researches" aria-label="Search the researches">
+      <span class="index-count" aria-hidden="true">006</span>
+    </div>
+
+    <div class="index-scroll" tabindex="0">
+      <table class="index-table">
+        <thead>
+          <tr>
+            <th scope="col"><button class="index-sort sorted" type="button" data-key="no">No.</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="name">Research</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="date">Date</button></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-no="1" data-name="Resins in Perfumery" data-date="2026-02-14">
+            <td class="index-no">001</td>
+            <td class="index-what"><a href="../works/resins-in-perfumery.html">Resins in Perfumery</a></td>
+            <td class="index-date">14.02.2026</td>
+          </tr>
+          <tr data-no="2" data-name="Untitled" data-date="" data-open="no">
+            <td class="index-no">002</td>
+            <td class="index-what">Untitled</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="3" data-name="Untitled" data-date="" data-open="no">
+            <td class="index-no">003</td>
+            <td class="index-what">Untitled</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="4" data-name="Untitled" data-date="" data-open="no">
+            <td class="index-no">004</td>
+            <td class="index-what">Untitled</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="5" data-name="Untitled" data-date="" data-open="no">
+            <td class="index-no">005</td>
+            <td class="index-what">Untitled</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="6" data-name="Untitled" data-date="" data-open="no">
+            <td class="index-no">006</td>
+            <td class="index-what">Untitled</td>
+            <td class="index-date">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="index-foot">
+    2026 © Your Name
+    <span>All rights reserved.</span>
+  </footer>
+
+</div>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../nav.js"></script>
+<script src="../index-page.js"></script>
+</body>
+</html>

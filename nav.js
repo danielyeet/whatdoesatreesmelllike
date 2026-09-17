@@ -21,7 +21,7 @@ const SITE_LINKS = [
   { label: "Scent descriptions", href: "categories/scent-descriptions.html" },
   { label: "Theories", href: "categories/theories.html" },
   { label: "Favourites", href: "categories/favorites.html" },
-  { label: "Other", href: "categories/other-1.html" },
+  { label: "Researches", href: "categories/researches.html" },
   { label: "Other", href: "categories/other-2.html" },
   { label: "Contact", href: "contact.html" },
 ];

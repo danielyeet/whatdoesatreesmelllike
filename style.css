@@ -679,17 +679,77 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
   white-space: nowrap;
 }
 
-/* The two ways of looking at the category, and the whole of this
-   page's chrome now that the title has gone: fixed across the top
-   between the Menu on the left and the Search on the right, so they
-   sit where they sit whatever the view below them is doing. They
-   arrive once the page has finished drawing itself.
+/* THE TWO WAYS OF LOOKING AT THE CATEGORY — Houses, which is the
+   contact sheet itself, and Individual fragrances, which is the index
+   of every fragrance written up anywhere on this site. The buttons are
+   fixed across the top between the Menu on the left and the Search on
+   the right, so they stand where they stand whatever the view below
+   them is doing, and they arrive once the page has finished drawing
+   itself.
 
    They sit INSIDE .sheet-head rather than loose in the page, and have
    to: every direct child of <body> is given an opacity transition by
    the rule that dims the page behind the menu, and that rule outranks
    anything written here — so a nav loose in the page could not be
    hidden without being seen fading away first. Inside the head block
+   they are their own. */
+.sheet-filters {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  gap: 26px;
+  padding: 4px 0;
+}
+.sheet-filter {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 15px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  position: relative;
+}
+/* Which one you are looking at is said with a rule under it rather
+   than with colour — the same answer the chamber's menu gives, for the
+   same reason: this page spends nothing on accent. */
+.sheet-filter::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--menu-ease);
+}
+.sheet-filter:hover { color: var(--ink); }
+.sheet-filter.is-on { color: var(--ink); }
+.sheet-filter.is-on::after { transform: scaleX(1); }
+/* They are not there while the sheet is drawing itself, and must not
+   be seen leaving either. */
+body.sheet-scripted .sheet-filters { opacity: 0; transition: none; }
+body.sheet-named .sheet-filters { opacity: 1; transition: opacity 1.1s var(--menu-ease) 0.3s; }
+
+/* THE VIEWS. Only ever one of them is on the page: the one being left
+   fades away FIRST and the other arrives after it, so the page never
+   shows two different things at once. views.js does the ordering; what
+   is here is only how each one goes. */
+.view { transition: opacity 0.34s var(--menu-ease); }
+.view.leaving { opacity: 0; }
+.view[hidden] { display: none; }
+/* The sheet's own Search belongs to the sheet. The index has a search
+   of its own above its table, and two search fields on one page is one
+   too many. */
+body.view-fragrances .sheet-search { display: none; }
 
 /* Search, top right, mirroring the Menu button top left. */
 .sheet-search {
@@ -1017,7 +1077,8 @@ body.sheet-named .sheet-where {
    before it begins. `visibility` rather than `display` or `opacity`:
    the sheet measures its own captions on the first layout, and
    something with no layout box measures nothing. */
-html.js-coming .sheet-stage { visibility: hidden; }
+html.js-coming .sheet-stage,
+html.js-coming .view[data-view="fragrances"] { visibility: hidden; }
 
 .sheet-stage { position: relative; padding-top: clamp(64px, 9vh, 96px); }
 
@@ -2244,4 +2305,810 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   /* The trunk is a scale for a page being read across a room; on a
      phone the page is the whole of the room. */
   .pine-trunk { display: none; }
+}
+
+/* ==================================================================
+   THE ESSAY PAGES — works/theory-*.html, works/resins-in-perfumery.html
+   A page for a long piece of writing, in the theories drawing's
+   language rather than the contact sheet's: near-white on gray-black,
+   a swarm of particles standing in the air behind the writing, corner
+   sights, and a RULE down the left — one tick per section, filled in
+   as far as you have read, with the section you are in named under it.
+
+   essay.js draws the field and builds the rule. Without it the page is
+   all of its writing on the same ground; nothing here hides anything.
+   ================================================================== */
+.essay-page {
+  background: #0a0b0e;
+  color: #e8ecf3;
+}
+.essay-page .menu-trigger { color: #dce6f7; }
+.essay-field {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.essay-head {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(150px, 26vh, 260px) 64px clamp(30px, 5vh, 60px);
+}
+.essay-kicker {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8d94a3;
+  margin: 0 0 18px;
+}
+.essay-head h1 {
+  font-size: clamp(32px, 5.6vw, 66px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #f2f5fa;
+}
+.essay-head h1 em {
+  display: block;
+  margin-top: 0.2em;
+  font-size: 0.42em;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  color: #9aa2b2;
+}
+.essay-standfirst {
+  margin: 26px 0 0;
+  max-width: 54ch;
+  color: #aab2c1;
+  font-size: 17px;
+}
+/* The readings at the head of the piece — when it was written, how
+   long it runs, what it is about. Ruled like an instrument's plate. */
+.essay-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 42px;
+  margin: 34px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(150, 160, 176, 0.35);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.essay-facts dt { color: #767e8d; margin: 0 0 4px; }
+.essay-facts dd { color: #cdd4df; margin: 0; }
+
+.essay-body {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 64px clamp(60px, 10vh, 130px);
+}
+/* The picture. It is a plate on a dark ground, so it is ruled rather
+   than floated: nothing here has a shadow. */
+.essay-plate {
+  margin: 0 0 clamp(40px, 7vh, 80px);
+  border: 1px solid rgba(150, 160, 176, 0.4);
+  background: #101218;
+  background-image: repeating-linear-gradient(-45deg, rgba(150,160,176,0.18) 0px, rgba(150,160,176,0.18) 1px, transparent 1px, transparent 16px);
+  padding: 0;
+}
+.essay-plate img { display: block; width: 100%; height: auto; }
+.essay-plate:not(:has(img)) { aspect-ratio: 16 / 9; position: relative; }
+.essay-plate figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #767e8d;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(150, 160, 176, 0.25);
+  background: #0a0b0e;
+}
+.essay-plate:not(:has(img)) figcaption { position: absolute; left: 0; right: 0; bottom: 0; }
+
+.essay-section { max-width: 66ch; padding-top: clamp(30px, 5vh, 56px); }
+.essay-section h2 {
+  font-size: clamp(20px, 2.6vw, 30px);
+  letter-spacing: -0.01em;
+  margin: 0 0 18px;
+  color: #f2f5fa;
+}
+/* The number beside a heading — the piece's own section marks, which
+   are what the rule down the side is ticking off. */
+.essay-section h2 .essay-no {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #8eb4e2;
+  margin-bottom: 10px;
+}
+.essay-section p { margin: 0 0 18px; color: #aab2c1; }
+.essay-section p.essay-lead { color: #dbe1ea; font-size: 18px; }
+.essay-section ul { margin: 0 0 18px; padding-left: 20px; color: #aab2c1; }
+.essay-section li { margin: 0 0 8px; }
+/* A short run of readings inside the writing — notes, a pyramid, a
+   list of what is in something. Mono, ruled, and quiet. */
+.essay-note {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  color: #cdd4df;
+  border-left: 1px solid #8eb4e2;
+  padding: 4px 0 4px 16px;
+  margin: 0 0 20px;
+}
+.essay-section a { color: #cfe0f5; text-decoration: none; border-bottom: 1px solid rgba(142, 180, 226, 0.6); }
+.essay-section a:hover { color: #fff; border-bottom-color: #8eb4e2; }
+
+/* THE RULE. It stands clear of the writing on the left, and is taken
+   off the page below 1080px, where there is no margin to stand in. */
+.essay-rule {
+  position: fixed;
+  left: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 180px;
+}
+.essay-rule-line {
+  position: relative;
+  width: 1px;
+  height: 34vh;
+  background: rgba(150, 160, 176, 0.35);
+  margin-left: 3px;
+}
+.essay-rule-run {
+  position: absolute;
+  left: -1px;
+  top: 0;
+  width: 3px;
+  background: #8eb4e2;
+  height: 0;
+}
+.essay-marks { list-style: none; margin: 0; padding: 0; }
+.essay-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  text-decoration: none;
+  color: #767e8d;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.essay-mark-tick {
+  width: 9px;
+  height: 1px;
+  background: rgba(150, 160, 176, 0.6);
+  flex: none;
+  transition: width 0.25s var(--menu-ease, ease), background-color 0.25s ease;
+}
+.essay-mark-name {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+.essay-rule:hover .essay-mark-name,
+.essay-mark:focus-visible .essay-mark-name,
+.essay-mark.here .essay-mark-name { opacity: 1; transform: none; }
+.essay-mark.here { color: #dbe1ea; }
+.essay-mark.here .essay-mark-tick { width: 16px; background: #8eb4e2; }
+.essay-mark:hover { color: #e8ecf3; }
+.essay-here {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8d94a3;
+  margin: 6px 0 0;
+  max-width: 150px;
+}
+.essay-read {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: #e8ecf3;
+  margin: 0;
+}
+
+.essay-foot {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 64px 80px;
+  border-top: 1px solid rgba(150, 160, 176, 0.25);
+  padding-top: 26px;
+}
+.essay-back {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #8d94a3;
+  text-decoration: none;
+}
+.essay-back:hover { color: #e8ecf3; }
+
+@media (max-width: 1080px) {
+  .essay-rule { display: none; }
+}
+@media (max-width: 860px) {
+  .essay-head,
+  .essay-body,
+  .essay-foot { padding-left: 24px; padding-right: 24px; }
+}
+
+/* ==================================================================
+   ADAR — works/adar.html
+   The house nobody has heard of, and the second piece in Scent
+   descriptions. It is laid out like Pineward — an introduction and
+   then the fragrances, each compacted to a number, a small picture and
+   a title until it is opened — but its ground is a VOID rather than a
+   wood: near-white on near-black, a hole standing off to one side of
+   the window with soundings ringing out from it, and specks falling
+   round its rim. Nothing on it is ever tinted.
+
+   The fragrances are grouped into the house's own trilogies. Down the
+   side runs the SOUNDING: one tick per fragrance, inked in as it is
+   passed, with the reading in the corner counting them and naming the
+   group. adar.js draws the void, adds the sounding and brings the
+   parts up; without it the page is all of its writing.
+   ================================================================== */
+.adar-page {
+  background: #07070a;
+  color: #e8e8ee;
+}
+.adar-page .menu-trigger { color: #e8e8ee; }
+.adar-void {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.adar-head {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(150px, 26vh, 260px) 64px clamp(40px, 7vh, 80px);
+}
+.adar-kicker {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8a8a96;
+  margin: 0 0 18px;
+}
+.adar-head h1 {
+  font-size: clamp(34px, 6.4vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #f4f4f8;
+}
+.adar-head h1 em {
+  display: block;
+  margin-top: 0.18em;
+  font-size: 0.4em;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  color: #9a9aa6;
+}
+.adar-standfirst {
+  margin: 28px 0 0;
+  max-width: 54ch;
+  color: #a8a8b4;
+  font-size: 17px;
+}
+
+.adar-intro,
+.adar-group-head {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(40px, 7vh, 86px) 64px clamp(20px, 3vh, 34px);
+}
+.adar-section-mark,
+.adar-group-no {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: #8a8a96;
+  margin: 0 0 10px;
+}
+.adar-intro h2,
+.adar-group-head h2 {
+  font-size: clamp(22px, 3vw, 34px);
+  letter-spacing: -0.01em;
+  margin: 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(232, 232, 238, 0.18);
+  color: #f4f4f8;
+}
+.adar-group-line {
+  margin: 14px 0 0;
+  color: #9a9aa6;
+  font-style: italic;
+  max-width: 46ch;
+}
+.adar-group-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #8a8a96;
+  margin: 8px 0 0;
+}
+.adar-text { max-width: 62ch; }
+.adar-text p { margin: 0 0 16px; color: #a8a8b4; }
+.adar-intro .adar-text { margin-top: 22px; }
+/* The ADAR Effect note at the end of the introduction: the owner's
+   own coinage, set apart from the placeholder writing above it. */
+.adar-text p.adar-effect {
+  color: #dcdce4;
+  border-left: 1px solid rgba(232, 232, 238, 0.35);
+  padding-left: 18px;
+}
+
+.adar-parts {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 64px clamp(30px, 6vh, 70px);
+}
+.adar-part { border-bottom: 1px solid rgba(232, 232, 238, 0.14); }
+.adar-part > summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0;
+  cursor: pointer;
+  list-style: none;
+}
+.adar-part > summary::-webkit-details-marker { display: none; }
+.adar-no {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #8a8a96;
+  flex: none;
+  width: 26px;
+}
+.adar-thumb {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border: 1px solid rgba(232, 232, 238, 0.18);
+  background-color: #101014;
+  background-image: repeating-linear-gradient(-45deg, rgba(232,232,238,0.1) 0px, rgba(232,232,238,0.1) 1px, transparent 1px, transparent 12px);
+}
+.adar-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.adar-title { font-size: 18px; color: #f4f4f8; }
+/* What a fragrance is also called — its Greek, or the way the owner
+   writes it when the title is a symbol. */
+.adar-sub { font-family: var(--mono); font-size: 12px; color: #8a8a96; margin-left: 8px; }
+/* The run of dots between a title and its cue — the index line of a
+   book, and what keeps a long column of names readable. */
+.adar-part > summary::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-image: radial-gradient(circle, rgba(232,232,238,0.32) 0.5px, transparent 0.6px);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  order: 3;
+}
+.adar-cue {
+  order: 4;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8a8a96;
+  border: 1px solid rgba(232, 232, 238, 0.2);
+  padding: 3px 9px;
+}
+.adar-part[open] > summary .adar-cue,
+.adar-part > summary:hover .adar-cue { color: #f4f4f8; border-color: rgba(232, 232, 238, 0.5); }
+
+.adar-body {
+  display: flex;
+  gap: 36px;
+  align-items: flex-start;
+  padding: 6px 0 34px 46px;
+}
+.adar-plate {
+  flex: none;
+  width: 320px;
+  margin: 0;
+}
+.adar-plate > div,
+.adar-plate img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(232, 232, 238, 0.18);
+  background-color: #101014;
+  background-image: repeating-linear-gradient(-45deg, rgba(232,232,238,0.1) 0px, rgba(232,232,238,0.1) 1px, transparent 1px, transparent 16px);
+  object-fit: cover;
+}
+.adar-plate figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #8a8a96;
+  margin-top: 10px;
+}
+/* A STAGE of a fragrance — top, mid, base, a sidenote. The owner
+   writes in those, so the page sets them as what they are: a small
+   mono label with a rule beside it, not a heading. */
+.adar-stage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a8a96;
+  margin: 0 0 12px;
+  font-weight: 400;
+}
+.adar-stage::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(232, 232, 238, 0.14);
+}
+.adar-stage + p { margin-top: 0; }
+.adar-part .adar-text p + .adar-stage { margin-top: 26px; }
+
+/* THE SOUNDING down the side, and the reading in the corner. */
+.adar-sounding {
+  position: fixed;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 2;
+  pointer-events: none;
+}
+.adar-sounding-line { width: 1px; height: 34vh; background: rgba(232, 232, 238, 0.16); }
+.adar-ticks { display: flex; flex-direction: column; gap: 6px; }
+.adar-tick {
+  width: 8px;
+  height: 1px;
+  background: rgba(232, 232, 238, 0.25);
+  transition: width 0.3s var(--menu-ease), background-color 0.3s ease;
+}
+.adar-tick.passed { width: 16px; background: #e8e8ee; }
+.adar-readout {
+  position: fixed;
+  right: 28px;
+  bottom: 24px;
+  margin: 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #8a8a96;
+  z-index: 2;
+  pointer-events: none;
+}
+.adar-readout-no { color: #f4f4f8; }
+.adar-readout-where {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* The parts come up as they are reached. Nothing is hidden until the
+   script says it is watching, so a blocked script leaves every one of
+   them on the page. */
+.adar-ready .adar-part,
+.adar-ready .adar-rises {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.62s var(--menu-ease), transform 0.62s var(--menu-ease);
+}
+.adar-ready .adar-part.arrived,
+.adar-ready .adar-rises.arrived { opacity: 1; transform: none; }
+
+.adar-foot {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 40px 64px 80px;
+  border-top: 1px solid rgba(232, 232, 238, 0.14);
+}
+.adar-back {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #8a8a96;
+  text-decoration: none;
+}
+.adar-back:hover { color: #e8e8ee; }
+
+@media (prefers-reduced-motion: reduce) {
+  .adar-ready .adar-part,
+  .adar-ready .adar-rises { opacity: 1; transform: none; transition: none; }
+  .adar-tick { transition: none; }
+}
+
+@media (max-width: 1080px) {
+  .adar-sounding { display: none; }
+}
+@media (max-width: 860px) {
+  .adar-head,
+  .adar-intro,
+  .adar-group-head,
+  .adar-parts,
+  .adar-foot { padding-left: 24px; padding-right: 24px; }
+  .adar-body { flex-direction: column; padding-left: 0; gap: 20px; }
+  .adar-plate { width: 100%; }
+}
+
+/* A class name or a snippet written inside an essay's own text. */
+.essay-section code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  color: #cdd4df;
+}
+
+/* ==================================================================
+   THE INDEX PAGES — categories/researches.html, and the Individual
+   fragrances view of the contact sheet page.
+
+   A directory rather than a drawing: a few readings across the top, a
+   plate or two on the right, and a long TABLE standing in the bottom
+   left corner of the window. The table scrolls inside its own box
+   with its headings stuck to the top of it, and every heading is a
+   button that sorts by that column — index-page.js does the sorting
+   and the searching; everything about the way it looks is here.
+
+   Both places use the same block, so a change here is a change to
+   both. That is deliberate: they are the same kind of page.
+   ================================================================== */
+.index-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto 1fr auto;
+  align-content: start;
+  gap: 0 26px;
+  padding: 74px 28px 22px;
+  font-size: 13px;
+}
+.index-head {
+  grid-column: 1 / span 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 26px;
+}
+.index-name { margin: 0; color: var(--muted); }
+.index-col { margin: 0; color: var(--muted); }
+/* What the page is, written where the template's own paragraph
+   stands: a long way down the second column, so the top of the page
+   is mostly air. */
+.index-say {
+  grid-column: 2;
+  margin-top: clamp(40px, 11vh, 120px);
+  max-width: 42ch;
+}
+.index-say p { margin: 0 0 4px; }
+.index-say .index-say-lede { color: var(--ink); margin-bottom: 22px; }
+.index-say .index-say-head { color: var(--ink); }
+.index-say .index-say-meta { color: var(--muted); }
+
+/* The right-hand half: the one line that says what is going on, and
+   then the plates under it. They are wrapped together because they
+   share the two right-hand columns of the grid — side by side in the
+   same cell they would be drawn on top of each other. */
+.index-right {
+  grid-column: 3 / span 2;
+  grid-row: 1;
+}
+/* The plates are capped rather than left to fill the two columns they
+   stand in: the whole page is meant to come out on one screen, table
+   and footer and all, and on a wide window a plate that is half the
+   page wide is what pushes the table off the bottom of it. */
+.index-plates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 250px));
+  gap: 26px;
+  align-items: start;
+}
+.index-line {
+  margin: 0 0 22px;
+  color: var(--ink);
+}
+.index-plate { margin: 0; }
+.index-plate > div,
+.index-plate img,
+.index-plate canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(-45deg, var(--line) 0px, var(--line) 1px, transparent 1px, transparent 14px);
+  object-fit: cover;
+}
+/* The one plate that is drawn rather than photographed keeps the
+   page's own ground, not the placeholder's hatching. */
+.index-plate canvas { background-image: none; background-color: var(--bg); }
+.index-plate figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* THE TABLE, standing in the bottom left corner. */
+.index-board {
+  grid-column: 1 / span 2;
+  grid-row: 2;
+  align-self: end;
+  margin-top: clamp(24px, 4vh, 44px);
+  min-width: 0;
+}
+.index-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 7px;
+  margin-bottom: 10px;
+}
+.index-search-mark {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--muted);
+  flex: none;
+}
+.index-search-field {
+  flex: 1;
+  border: 0;
+  background: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  padding: 0;
+}
+.index-search-field::placeholder { color: var(--muted); }
+.index-search-field:focus { outline: none; }
+.index-count { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+/* The box the table scrolls inside. Its height is set here rather
+   than left to the content, because the whole point of the thing is
+   that the rest of the page stays where it is however many rows there
+   are — the owner has a great many more to add. */
+.index-scroll {
+  max-height: min(38vh, 360px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.index-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.index-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 0 0 5px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--ink);
+  font-weight: 400;
+}
+.index-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink);
+}
+.index-sort::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid var(--muted);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.index-sort:hover::after { opacity: 0.45; }
+.index-sort.sorted::after { opacity: 1; border-top-color: var(--ink); }
+.index-sort.sorted.up::after { transform: rotate(180deg); }
+.index-table td {
+  padding: 3px 12px 3px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+.index-table tr:hover td { color: var(--ink); }
+.index-table .index-no,
+.index-table .index-date { font-family: var(--mono); font-size: 12px; }
+.index-table .index-no { width: 64px; max-width: none; }
+.index-table .index-date { width: 92px; max-width: none; }
+.index-table .index-of { width: 30%; }
+.index-table td a { color: inherit; text-decoration: none; display: block; }
+.index-table tr:hover .index-what { color: var(--ink); }
+/* A row with nothing to open is not a link, and says so by being
+   quieter than one that is. */
+.index-table tr[data-open="no"] td { color: var(--line); }
+.index-table tr[data-open="no"]:hover td { color: var(--muted); }
+
+.index-foot {
+  grid-column: 1;
+  grid-row: 3;
+  margin: clamp(18px, 3vh, 30px) 0 0;
+  color: var(--ink);
+  line-height: 1.45;
+}
+.index-foot span { color: var(--muted); display: block; }
+
+@media (max-width: 900px) {
+  .index-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    padding: 74px 22px 22px;
+  }
+  .index-head,
+  .index-right,
+  .index-board,
+  .index-foot { grid-column: 1; }
+  .index-head { grid-row: 1; grid-template-columns: 1fr; }
+  .index-say { grid-column: 1; margin-top: 26px; }
+  .index-right { grid-row: 2; margin-top: 30px; }
+  .index-board { grid-row: 3; margin-top: 40px; }
+  .index-foot { grid-row: 4; }
+  .index-scroll { max-height: 56vh; }
 }

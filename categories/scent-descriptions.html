@@ -31,11 +31,30 @@
 </script>
 </head>
 <!--
-  This page is one full "body of work" — a category — laid out as a
-  CONTACT SHEET: the page opens white with one square window in the
-  middle, every picture below flicks through it, it lands on the first
-  one, and lines then reach out across the page to the rest, each
-  carrying a date.
+  This page is one full "body of work" — a category — and it can be
+  looked at TWO WAYS, which the two buttons across the top switch
+  between:
+
+    HOUSES, the contact sheet. The page opens white with one square
+    window in the middle, every picture below flicks through it, it
+    lands on the first one, and lines then reach out across the page to
+    the rest, each carrying a date. One picture is one house.
+
+    INDIVIDUAL FRAGRANCES, an index of every fragrance written up
+    anywhere on this site: its number, its name, the house it belongs
+    to and the date it was written about. The headings are buttons —
+    press one to sort by that column, press it again to turn the sort
+    round — the table scrolls inside its own box with the headings
+    stuck to the top of it, and the field above it searches. Every row
+    is a link to that fragrance where it stands in its house's page.
+
+    THE DATES IN THAT TABLE ARE PLACEHOLDERS. Each row carries what it
+    sorts by on itself (data-no, data-name, data-house, data-date), so
+    changing a date means changing it in two places on the row: the
+    data-date, which is what it sorts by, and the lettering, which is
+    what is read.
+
+  views.js switches the two; neither view knows about the other.
 
   EVERYTHING ON IT IS DRAWN IN PARTICLES: a picture is bounded by a
   fine chain of specks rather than by a ruled border, and every line
@@ -82,10 +101,21 @@
        the note in style.css says why. -->
   <p class="sheet-where">Scent descriptions</p>
 
+  <!-- The two ways of looking at the category. They have to be inside
+       this block rather than loose in the page: the note in style.css
+       says why. -->
+  <nav class="sheet-filters" aria-label="How to look at this category">
+    <button class="sheet-filter is-on" type="button" data-view="houses">Houses</button>
+    <button class="sheet-filter" type="button" data-view="fragrances">Individual fragrances</button>
+  </nav>
+
 </div>
 
-<!-- The sheet is wrapped rather than loose in the page, and it has to
-     be: see the note in style.css. -->
+<div class="views">
+
+<!-- THE HOUSES. The sheet is wrapped rather than loose in the page,
+     and it has to be: see the note in style.css. -->
+<section class="view" data-view="houses" aria-label="Houses">
 <div class="sheet-stage">
 
 <div class="sheet" id="sheet">
@@ -95,9 +125,9 @@
     <span class="sheet-caption">Pineward: the house that smells like trees</span>
   </a>
 
-  <a class="sheet-frame" href="../works/example-article-work.html">
+  <a class="sheet-frame" href="../works/adar.html">
     <!-- <img src="../images/your-picture.jpg" alt=""> -->
-    <span class="sheet-caption">A short history of vetiver</span>
+    <span class="sheet-caption">ADAR: the house that you have never heard of</span>
   </a>
 
   <!--
@@ -154,9 +184,468 @@
 
 
 </div>
+</section>
+
+<!-- THE INDIVIDUAL FRAGRANCES: the same category read as a list. -->
+<section class="view" data-view="fragrances" aria-label="Individual fragrances">
+<div class="index-page">
+
+  <header class="index-head">
+    <p class="index-name">Scent descriptions</p>
+    <p class="index-col">Information</p>
+    <div class="index-say">
+      <p class="index-say-lede">
+        Every fragrance I have written about, whichever house it came
+        from — the same descriptions the Houses view reaches, listed
+        one to a line.
+      </p>
+      <p class="index-say-head">Sorting</p>
+      <p class="index-say-meta">Press a heading to sort by it; press it again to turn it round.</p>
+    </div>
+  </header>
+
+  <div class="index-right">
+    <p class="index-line">Currently smelling, writing up, and adding to this list.</p>
+    <div class="index-plates">
+      <figure class="index-plate">
+        <canvas class="index-mark" aria-hidden="true"></canvas>
+        <figcaption>001</figcaption>
+      </figure>
+      <figure class="index-plate">
+        <!-- <img src="../images/fragrances-02.jpg" alt=""> -->
+        <div aria-hidden="true"></div>
+        <figcaption>002</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="index-board">
+    <div class="index-search">
+      <span class="index-search-mark" aria-hidden="true"></span>
+      <input class="index-search-field" type="search" placeholder="Search fragrances" aria-label="Search the fragrances">
+      <span class="index-count" aria-hidden="true">065</span>
+    </div>
+
+    <div class="index-scroll" tabindex="0">
+      <table class="index-table">
+        <thead>
+          <tr>
+            <th scope="col"><button class="index-sort sorted" type="button" data-key="no">No.</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="name">Fragrance</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="house">House</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="date">Date</button></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-no="1" data-name="Acadian" data-house="Pineward" data-date="2025-05-10">
+            <td class="index-no">001</td>
+            <td class="index-what"><a href="../works/pineward.html#part-01">Acadian</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">10.05.2025</td>
+          </tr>
+          <tr data-no="2" data-name="Akero" data-house="Pineward" data-date="2025-05-16">
+            <td class="index-no">002</td>
+            <td class="index-what"><a href="../works/pineward.html#part-02">Akero</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">16.05.2025</td>
+          </tr>
+          <tr data-no="3" data-name="Alfiryn" data-house="Pineward" data-date="2025-05-19">
+            <td class="index-no">003</td>
+            <td class="index-what"><a href="../works/pineward.html#part-03">Alfiryn</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">19.05.2025</td>
+          </tr>
+          <tr data-no="4" data-name="Apple Tabac" data-house="Pineward" data-date="2025-05-27">
+            <td class="index-no">004</td>
+            <td class="index-what"><a href="../works/pineward.html#part-04">Apple Tabac</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">27.05.2025</td>
+          </tr>
+          <tr data-no="5" data-name="Autumnal" data-house="Pineward" data-date="2025-06-04">
+            <td class="index-no">005</td>
+            <td class="index-what"><a href="../works/pineward.html#part-05">Autumnal</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">04.06.2025</td>
+          </tr>
+          <tr data-no="6" data-name="Bindebole" data-house="Pineward" data-date="2025-06-07">
+            <td class="index-no">006</td>
+            <td class="index-what"><a href="../works/pineward.html#part-06">Bindebole</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">07.06.2025</td>
+          </tr>
+          <tr data-no="7" data-name="Boreal" data-house="Pineward" data-date="2025-06-12">
+            <td class="index-no">007</td>
+            <td class="index-what"><a href="../works/pineward.html#part-07">Boreal</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">12.06.2025</td>
+          </tr>
+          <tr data-no="8" data-name="Borealis" data-house="Pineward" data-date="2025-06-22">
+            <td class="index-no">008</td>
+            <td class="index-what"><a href="../works/pineward.html#part-08">Borealis</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">22.06.2025</td>
+          </tr>
+          <tr data-no="9" data-name="Brokilän" data-house="Pineward" data-date="2025-07-01">
+            <td class="index-no">009</td>
+            <td class="index-what"><a href="../works/pineward.html#part-09">Brokilän</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">01.07.2025</td>
+          </tr>
+          <tr data-no="10" data-name="Bucolic" data-house="Pineward" data-date="2025-07-10">
+            <td class="index-no">010</td>
+            <td class="index-what"><a href="../works/pineward.html#part-10">Bucolic</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">10.07.2025</td>
+          </tr>
+          <tr data-no="11" data-name="Caravansary" data-house="Pineward" data-date="2025-07-18">
+            <td class="index-no">011</td>
+            <td class="index-what"><a href="../works/pineward.html#part-11">Caravansary</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">18.07.2025</td>
+          </tr>
+          <tr data-no="12" data-name="Chandlery" data-house="Pineward" data-date="2025-07-25">
+            <td class="index-no">012</td>
+            <td class="index-what"><a href="../works/pineward.html#part-12">Chandlery</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">25.07.2025</td>
+          </tr>
+          <tr data-no="13" data-name="Christmas Wine" data-house="Pineward" data-date="2025-07-30">
+            <td class="index-no">013</td>
+            <td class="index-what"><a href="../works/pineward.html#part-13">Christmas Wine</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">30.07.2025</td>
+          </tr>
+          <tr data-no="14" data-name="Clemenpine" data-house="Pineward" data-date="2025-08-06">
+            <td class="index-no">014</td>
+            <td class="index-what"><a href="../works/pineward.html#part-14">Clemenpine</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">06.08.2025</td>
+          </tr>
+          <tr data-no="15" data-name="Coastal Veil" data-house="Pineward" data-date="2025-08-14">
+            <td class="index-no">015</td>
+            <td class="index-what"><a href="../works/pineward.html#part-15">Coastal Veil</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">14.08.2025</td>
+          </tr>
+          <tr data-no="16" data-name="Coffee Tabac" data-house="Pineward" data-date="2025-08-21">
+            <td class="index-no">016</td>
+            <td class="index-what"><a href="../works/pineward.html#part-16">Coffee Tabac</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">21.08.2025</td>
+          </tr>
+          <tr data-no="17" data-name="Cotswald" data-house="Pineward" data-date="2025-09-01">
+            <td class="index-no">017</td>
+            <td class="index-what"><a href="../works/pineward.html#part-17">Cotswald</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">01.09.2025</td>
+          </tr>
+          <tr data-no="18" data-name="Delfiño" data-house="Pineward" data-date="2025-09-06">
+            <td class="index-no">018</td>
+            <td class="index-what"><a href="../works/pineward.html#part-18">Delfiño</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">06.09.2025</td>
+          </tr>
+          <tr data-no="19" data-name="Eldrich" data-house="Pineward" data-date="2025-09-15">
+            <td class="index-no">019</td>
+            <td class="index-what"><a href="../works/pineward.html#part-19">Eldrich</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">15.09.2025</td>
+          </tr>
+          <tr data-no="20" data-name="Fanghorn I" data-house="Pineward" data-date="2025-09-23">
+            <td class="index-no">020</td>
+            <td class="index-what"><a href="../works/pineward.html#part-20">Fanghorn I</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">23.09.2025</td>
+          </tr>
+          <tr data-no="21" data-name="Fanghorn II" data-house="Pineward" data-date="2025-09-29">
+            <td class="index-no">021</td>
+            <td class="index-what"><a href="../works/pineward.html#part-21">Fanghorn II</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">29.09.2025</td>
+          </tr>
+          <tr data-no="22" data-name="Funerie" data-house="Pineward" data-date="2025-10-04">
+            <td class="index-no">022</td>
+            <td class="index-what"><a href="../works/pineward.html#part-22">Funerie</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">04.10.2025</td>
+          </tr>
+          <tr data-no="23" data-name="Gelatto" data-house="Pineward" data-date="2025-10-13">
+            <td class="index-no">023</td>
+            <td class="index-what"><a href="../works/pineward.html#part-23">Gelatto</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">13.10.2025</td>
+          </tr>
+          <tr data-no="24" data-name="Gingerbread" data-house="Pineward" data-date="2025-10-17">
+            <td class="index-no">024</td>
+            <td class="index-what"><a href="../works/pineward.html#part-24">Gingerbread</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">17.10.2025</td>
+          </tr>
+          <tr data-no="25" data-name="Gingermoss" data-house="Pineward" data-date="2025-10-23">
+            <td class="index-no">025</td>
+            <td class="index-what"><a href="../works/pineward.html#part-25">Gingermoss</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">23.10.2025</td>
+          </tr>
+          <tr data-no="26" data-name="Gluhwein" data-house="Pineward" data-date="2025-10-29">
+            <td class="index-no">026</td>
+            <td class="index-what"><a href="../works/pineward.html#part-26">Gluhwein</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">29.10.2025</td>
+          </tr>
+          <tr data-no="27" data-name="Graymist" data-house="Pineward" data-date="2025-11-08">
+            <td class="index-no">027</td>
+            <td class="index-what"><a href="../works/pineward.html#part-27">Graymist</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">08.11.2025</td>
+          </tr>
+          <tr data-no="28" data-name="Gristmill" data-house="Pineward" data-date="2025-11-13">
+            <td class="index-no">028</td>
+            <td class="index-what"><a href="../works/pineward.html#part-28">Gristmill</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">13.11.2025</td>
+          </tr>
+          <tr data-no="29" data-name="Hayloft" data-house="Pineward" data-date="2025-11-19">
+            <td class="index-no">029</td>
+            <td class="index-what"><a href="../works/pineward.html#part-29">Hayloft</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">19.11.2025</td>
+          </tr>
+          <tr data-no="30" data-name="Hayride" data-house="Pineward" data-date="2025-11-26">
+            <td class="index-no">030</td>
+            <td class="index-what"><a href="../works/pineward.html#part-30">Hayride</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">26.11.2025</td>
+          </tr>
+          <tr data-no="31" data-name="Holy Cross" data-house="Pineward" data-date="2025-12-04">
+            <td class="index-no">031</td>
+            <td class="index-what"><a href="../works/pineward.html#part-31">Holy Cross</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">04.12.2025</td>
+          </tr>
+          <tr data-no="32" data-name="Ice Fall" data-house="Pineward" data-date="2025-12-09">
+            <td class="index-no">032</td>
+            <td class="index-what"><a href="../works/pineward.html#part-32">Ice Fall</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">09.12.2025</td>
+          </tr>
+          <tr data-no="33" data-name="Ivy Moss" data-house="Pineward" data-date="2025-12-14">
+            <td class="index-no">033</td>
+            <td class="index-what"><a href="../works/pineward.html#part-33">Ivy Moss</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">14.12.2025</td>
+          </tr>
+          <tr data-no="34" data-name="Juniperus" data-house="Pineward" data-date="2025-12-23">
+            <td class="index-no">034</td>
+            <td class="index-what"><a href="../works/pineward.html#part-34">Juniperus</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">23.12.2025</td>
+          </tr>
+          <tr data-no="35" data-name="Katabatic" data-house="Pineward" data-date="2026-01-01">
+            <td class="index-no">035</td>
+            <td class="index-what"><a href="../works/pineward.html#part-35">Katabatic</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">01.01.2026</td>
+          </tr>
+          <tr data-no="36" data-name="Lime Cola" data-house="Pineward" data-date="2026-01-10">
+            <td class="index-no">036</td>
+            <td class="index-what"><a href="../works/pineward.html#part-36">Lime Cola</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">10.01.2026</td>
+          </tr>
+          <tr data-no="37" data-name="Meadowmoss" data-house="Pineward" data-date="2026-01-19">
+            <td class="index-no">037</td>
+            <td class="index-what"><a href="../works/pineward.html#part-37">Meadowmoss</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">19.01.2026</td>
+          </tr>
+          <tr data-no="38" data-name="Mint Cocoa" data-house="Pineward" data-date="2026-01-30">
+            <td class="index-no">038</td>
+            <td class="index-what"><a href="../works/pineward.html#part-38">Mint Cocoa</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">30.01.2026</td>
+          </tr>
+          <tr data-no="39" data-name="Murkwood" data-house="Pineward" data-date="2026-02-03">
+            <td class="index-no">039</td>
+            <td class="index-what"><a href="../works/pineward.html#part-39">Murkwood</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">03.02.2026</td>
+          </tr>
+          <tr data-no="40" data-name="Nocturnis" data-house="Pineward" data-date="2026-02-12">
+            <td class="index-no">040</td>
+            <td class="index-what"><a href="../works/pineward.html#part-40">Nocturnis</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">12.02.2026</td>
+          </tr>
+          <tr data-no="41" data-name="Noki" data-house="Pineward" data-date="2026-02-20">
+            <td class="index-no">041</td>
+            <td class="index-what"><a href="../works/pineward.html#part-41">Noki</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">20.02.2026</td>
+          </tr>
+          <tr data-no="42" data-name="Oxylus" data-house="Pineward" data-date="2026-03-03">
+            <td class="index-no">042</td>
+            <td class="index-what"><a href="../works/pineward.html#part-42">Oxylus</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">03.03.2026</td>
+          </tr>
+          <tr data-no="43" data-name="Pastoral" data-house="Pineward" data-date="2026-03-08">
+            <td class="index-no">043</td>
+            <td class="index-what"><a href="../works/pineward.html#part-43">Pastoral</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">08.03.2026</td>
+          </tr>
+          <tr data-no="44" data-name="Ponderosa" data-house="Pineward" data-date="2026-03-16">
+            <td class="index-no">044</td>
+            <td class="index-what"><a href="../works/pineward.html#part-44">Ponderosa</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">16.03.2026</td>
+          </tr>
+          <tr data-no="45" data-name="Revelries" data-house="Pineward" data-date="2026-03-24">
+            <td class="index-no">045</td>
+            <td class="index-what"><a href="../works/pineward.html#part-45">Revelries</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">24.03.2026</td>
+          </tr>
+          <tr data-no="46" data-name="Shire" data-house="Pineward" data-date="2026-03-28">
+            <td class="index-no">046</td>
+            <td class="index-what"><a href="../works/pineward.html#part-46">Shire</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">28.03.2026</td>
+          </tr>
+          <tr data-no="47" data-name="Snoqualmie" data-house="Pineward" data-date="2026-04-05">
+            <td class="index-no">047</td>
+            <td class="index-what"><a href="../works/pineward.html#part-47">Snoqualmie</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">05.04.2026</td>
+          </tr>
+          <tr data-no="48" data-name="Steading" data-house="Pineward" data-date="2026-04-13">
+            <td class="index-no">048</td>
+            <td class="index-what"><a href="../works/pineward.html#part-48">Steading</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">13.04.2026</td>
+          </tr>
+          <tr data-no="49" data-name="Sturbridge" data-house="Pineward" data-date="2026-04-21">
+            <td class="index-no">049</td>
+            <td class="index-what"><a href="../works/pineward.html#part-49">Sturbridge</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">21.04.2026</td>
+          </tr>
+          <tr data-no="50" data-name="Subalpine" data-house="Pineward" data-date="2026-04-25">
+            <td class="index-no">050</td>
+            <td class="index-what"><a href="../works/pineward.html#part-50">Subalpine</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">25.04.2026</td>
+          </tr>
+          <tr data-no="51" data-name="Tome" data-house="Pineward" data-date="2026-05-01">
+            <td class="index-no">051</td>
+            <td class="index-what"><a href="../works/pineward.html#part-51">Tome</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">01.05.2026</td>
+          </tr>
+          <tr data-no="52" data-name="Treacle" data-house="Pineward" data-date="2026-05-08">
+            <td class="index-no">052</td>
+            <td class="index-what"><a href="../works/pineward.html#part-52">Treacle</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">08.05.2026</td>
+          </tr>
+          <tr data-no="53" data-name="Velvetine" data-house="Pineward" data-date="2026-05-19">
+            <td class="index-no">053</td>
+            <td class="index-what"><a href="../works/pineward.html#part-53">Velvetine</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">19.05.2026</td>
+          </tr>
+          <tr data-no="54" data-name="White fir" data-house="Pineward" data-date="2026-05-27">
+            <td class="index-no">054</td>
+            <td class="index-what"><a href="../works/pineward.html#part-54">White fir</a></td>
+            <td class="index-of">Pineward</td>
+            <td class="index-date">27.05.2026</td>
+          </tr>
+          <tr data-no="55" data-name="Amber Zero" data-house="ADAR" data-date="2026-06-01">
+            <td class="index-no">055</td>
+            <td class="index-what"><a href="../works/adar.html#part-01">Amber Zero</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">01.06.2026</td>
+          </tr>
+          <tr data-no="56" data-name="Aetherealism" data-house="ADAR" data-date="2026-06-06">
+            <td class="index-no">056</td>
+            <td class="index-what"><a href="../works/adar.html#part-02">Aetherealism</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">06.06.2026</td>
+          </tr>
+          <tr data-no="57" data-name="Incantu" data-house="ADAR" data-date="2026-06-15">
+            <td class="index-no">057</td>
+            <td class="index-what"><a href="../works/adar.html#part-03">Incantu</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">15.06.2026</td>
+          </tr>
+          <tr data-no="58" data-name="Against All Odds" data-house="ADAR" data-date="2026-06-25">
+            <td class="index-no">058</td>
+            <td class="index-what"><a href="../works/adar.html#part-04">Against All Odds</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">25.06.2026</td>
+          </tr>
+          <tr data-no="59" data-name="α11" data-house="ADAR" data-date="2026-06-29">
+            <td class="index-no">059</td>
+            <td class="index-what"><a href="../works/adar.html#part-05">α11</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">29.06.2026</td>
+          </tr>
+          <tr data-no="60" data-name="Alta Luna" data-house="ADAR" data-date="2026-07-06">
+            <td class="index-no">060</td>
+            <td class="index-what"><a href="../works/adar.html#part-06">Alta Luna</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">06.07.2026</td>
+          </tr>
+          <tr data-no="61" data-name="ADHD" data-house="ADAR" data-date="2026-07-13">
+            <td class="index-no">061</td>
+            <td class="index-what"><a href="../works/adar.html#part-07">ADHD</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">13.07.2026</td>
+          </tr>
+          <tr data-no="62" data-name="Root Code" data-house="ADAR" data-date="2026-07-20">
+            <td class="index-no">062</td>
+            <td class="index-what"><a href="../works/adar.html#part-08">Root Code</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">20.07.2026</td>
+          </tr>
+          <tr data-no="63" data-name="Lignum Dei" data-house="ADAR" data-date="2026-07-29">
+            <td class="index-no">063</td>
+            <td class="index-what"><a href="../works/adar.html#part-09">Lignum Dei</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">29.07.2026</td>
+          </tr>
+          <tr data-no="64" data-name="Lithos Diaphanes Λίθος Διαφανές" data-house="ADAR" data-date="2026-08-09">
+            <td class="index-no">064</td>
+            <td class="index-what"><a href="../works/adar.html#part-10">Lithos Diaphanes Λίθος Διαφανές</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">09.08.2026</td>
+          </tr>
+          <tr data-no="65" data-name="Tyrian" data-house="ADAR" data-date="2026-08-14">
+            <td class="index-no">065</td>
+            <td class="index-what"><a href="../works/adar.html#part-11">Tyrian</a></td>
+            <td class="index-of">ADAR</td>
+            <td class="index-date">14.08.2026</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="index-foot">
+    2026 © Your Name
+    <span>All rights reserved.</span>
+  </footer>
+
+</div>
+</section>
+
+</div>
 
 <script>window.SITE_ROOT = "../";</script>
 <script src="../nav.js"></script>
 <script src="../contact-sheet.js"></script>
+<script src="../index-page.js"></script>
+<script src="../views.js"></script>
 </body>
 </html>

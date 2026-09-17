@@ -2,11 +2,12 @@
 // PINEWARD (works/pineward.html)
 //
 // The first piece in Scent descriptions, and a long one: an
-// introduction and fifty-two parts, each of which is a picture and a
+// introduction and fifty-four parts, each of which is a fragrance: a picture and a
 // few paragraphs. Fifty-two of anything listed straight down a page is
 // a wall, so a part is COMPACTED — only its number, a small picture
 // and its title until it is opened — and they are grouped into four
-// STRATA of thirteen, a section through a forest read from the light
+// STRATA — fourteen, fourteen, thirteen, thirteen — a section through
+// a forest read from the light
 // down into the ground.
 //
 // These check that the piece is all there and in that shape, that a
@@ -24,7 +25,7 @@ test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
 });
 
-test("the piece is an introduction and fifty-two parts in four strata",
+test("the piece is an introduction and fifty-four parts in four strata",
   async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(PAGE);
@@ -34,9 +35,9 @@ test("the piece is an introduction and fifty-two parts in four strata",
   await expect(page.locator("#introduction h2")).toHaveText("Introduction");
 
   const parts = page.locator(".pine-part");
-  await expect(parts).toHaveCount(52);
+  await expect(parts).toHaveCount(54);
 
-  // Four strata of thirteen, named for a section through a forest.
+  // Four strata, named for a section through a forest.
   const strata = page.locator(".pine-stratum");
   await expect(strata).toHaveCount(4);
   expect(await strata.evaluateAll((all) =>
@@ -44,18 +45,18 @@ test("the piece is an introduction and fifty-two parts in four strata",
     .toEqual(["Canopy", "Understorey", "Trunk", "Roots"]);
   expect(await strata.evaluateAll((all) =>
     all.map((one) => one.querySelectorAll(".pine-part").length)))
-    .toEqual([13, 13, 13, 13]);
+    .toEqual([14, 14, 13, 13]);
 
-  // Numbered straight through, 01 to 52, in the markup rather than
+  // Numbered straight through, 01 to 54, in the markup rather than
   // counted — so the numbers are the owner's to renumber.
   expect(await parts.evaluateAll((all) =>
     all.map((one) => one.querySelector(".pine-no").textContent.trim())))
-    .toEqual(Array.from({ length: 52 }, (v, n) => String(n + 1).padStart(2, "0")));
+    .toEqual(Array.from({ length: 54 }, (v, n) => String(n + 1).padStart(2, "0")));
 
   // And every one of them carries a picture and writing, waiting.
   expect(await parts.evaluateAll((all) =>
     all.filter((one) => one.querySelector(".pine-plate") && one.querySelector(".pine-text")).length))
-    .toBe(52);
+    .toBe(54);
 
   expect(errors).toEqual([]);
 });
@@ -105,7 +106,7 @@ test("the trunk has one tick per part, and the reading counts them",
   await page.goto(PAGE);
   await page.waitForTimeout(600);
 
-  await expect(page.locator(".pine-tick")).toHaveCount(52);
+  await expect(page.locator(".pine-tick")).toHaveCount(54);
 
   // At the top of the piece nothing has been passed: the reading says
   // where you are in the FIFTY-TWO, not how far down the document you
@@ -128,7 +129,7 @@ test("the trunk has one tick per part, and the reading counts them",
   await page.waitForTimeout(600);
   const at = Number(await reading());
   expect(at, "the reading should have counted the parts passed").toBeGreaterThan(20);
-  expect(at, "and not run past them").toBeLessThanOrEqual(52);
+  expect(at, "and not run past them").toBeLessThanOrEqual(54);
   expect(await where()).toBe("Trunk");
   const inked = await page.locator(".pine-tick.passed").count();
   expect(inked, "the ticks behind you should be inked in").toBe(at);
@@ -155,9 +156,12 @@ test("the wood runs the length of the piece, and is grown", async ({ page }) => 
 
   // It grows when the page opens, from the foot of each tree out to
   // the last twig.
-  await page.waitForTimeout(400);
+  // Early enough to catch it part-grown: the whole wood is up in
+  // GROW_MS, and most of the ink is on the page well before the end of
+  // that.
+  await page.waitForTimeout(150);
   const early = await ink();
-  await page.waitForTimeout(2400);
+  await page.waitForTimeout(2600);
   const grown = await ink();
   expect(early, "something should be drawn early on").toBeGreaterThan(0);
   expect(grown, "and more of it once it has grown").toBeGreaterThan(early * 1.3);
@@ -280,7 +284,7 @@ test("without its script the page is still all of its writing", async ({ page })
 
   // ...and everything anyone came to read is on the page and works:
   // <details> opens and closes on its own.
-  await expect(page.locator(".pine-part")).toHaveCount(52);
+  await expect(page.locator(".pine-part")).toHaveCount(54);
   const part = page.locator(".pine-part").nth(1);
   await expect(part.locator(".pine-title")).toBeVisible();
   await expect(part.locator(".pine-text")).toBeHidden();

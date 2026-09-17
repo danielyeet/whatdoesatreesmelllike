@@ -310,15 +310,44 @@ test("the flick ends on the picture it keeps, with no last blink", async ({ page
   ).toBe(lastOfFlick.showing);
 });
 
+test("the pictures run in order down the page", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  // The scatter is which SQUARES are used; the order they are filled
+  // in is separate, and the owner asked for it to read downwards —
+  // 01 at the top, then 02, 03 and so on to the foot of the page. So
+  // each picture must stand no higher than the one before it, give or
+  // take the wander inside its own square.
+  const down = await page.$$eval(".sheet-frame", (frames) =>
+    frames.map((f) => f.getBoundingClientRect().top + window.scrollY));
+
+  let wrong = [];
+  for (let n = 1; n < down.length; n++) {
+    // A row's worth of slack: two pictures side by side in the same
+    // row are in order left to right, and one may sit a little higher
+    // in its own square than the other.
+    if (down[n] < down[n - 1] - 160) wrong.push(n + 1);
+  }
+  expect(wrong, `pictures standing above the one before them: ${JSON.stringify(wrong)}`)
+    .toEqual([]);
+
+  // And the first is genuinely at the top: it is the one the flick
+  // lands on and the one everything else is drawn out from.
+  expect(Math.min(...down), "the first picture is the highest").toBe(down[0]);
+});
+
 test("the category names itself once the page has drawn itself", async ({ page }) => {
   await page.goto(SHEET);
 
-  // The two buttons this page used to carry — Description portfolio
-  // and Favorites, the two ways of looking at the category — are gone,
-  // and so is the second view they switched to. The owner asked for
-  // both. What is left across the top is the Menu, the category's own
-  // name beside it, and the Search.
-  await expect(page.locator(".sheet-filter")).toHaveCount(0);
+  // The two buttons are back, and named for what this category is
+  // actually two of now: the Houses — the sheet itself — and the
+  // Individual fragrances, an index of everything written up on it.
+  // (The REGISTER those buttons used to switch to is still gone: no
+  // gallery entries live on this page any more, they are the
+  // chamber's.)
+  await expect(page.locator(".sheet-filter")).toHaveCount(2);
+  await expect(page.locator(".sheet-filter")).toHaveText(["Houses", "Individual fragrances"]);
   await expect(page.locator(".gallery-entry")).toHaveCount(0);
 
   const name = page.locator(".sheet-where");
@@ -432,13 +461,13 @@ test("the search finds a picture by what it is called", async ({ page }) => {
   await page.locator(".sheet-search-trigger").click();
   await expect(field).toBeVisible();
 
-  await field.fill("history");
+  await field.fill("adar");
   // One picture is called that; everything else steps back.
   const dimmed = await page.$$eval(".sheet-frame.dimmed", (els) => els.length);
   const frames = await page.$$eval(".sheet-frame", (els) => els.length);
   expect(dimmed, "everything that doesn't match should step back").toBe(frames - 1);
   await expect(page.locator(".sheet-frame:not(.dimmed) .sheet-caption")).toHaveText(
-    "A short history of vetiver"
+    "ADAR: the house that you have never heard of"
   );
 
   // Escape clears it and puts the sheet back.
@@ -602,15 +631,23 @@ test("a line between two pictures is a run of specks, not a stroke", async ({ pa
     let runs = 0, inked = 0, was = false, steps = 0;
     for (let at = 0; at <= far; at += 1) {
       const x = route.x1 + ux * at, y = route.y1 + uy * at;
-      // Across the line rather than along it, so a speck standing a
-      // little off it still counts as this point being drawn.
+      // A small box ON the sample point, so a speck standing a little
+      // off the line still counts as this point being drawn. It has to
+      // be CENTRED: it was written as an axis-aligned band pushed out
+      // along the perpendicular, which straddles a level line but sits
+      // entirely to one side of a steep one — on a diagonal it read a
+      // line that is drawn end to end as nine tenths empty. Small, too:
+      // a box wide enough to catch the next speck along as well cannot
+      // tell a run of specks from a stroke, which is the whole point of
+      // this test.
+      const box = Math.max(1, Math.round(3 * ratio));
       const shot = paint.getImageData(
-        Math.round((x - uy * 3) * ratio), Math.round((y + ux * 3) * ratio),
-        Math.max(1, Math.round(Math.abs(uy) * 6 + 1) * ratio),
-        Math.max(1, Math.round(Math.abs(ux) * 6 + 1) * ratio)).data;
+        Math.round(x * ratio) - Math.floor(box / 2),
+        Math.round(y * ratio) - Math.floor(box / 2),
+        box, box).data;
       let ink = 0;
       for (let i = 3; i < shot.length; i += 4) ink += shot[i];
-      const now = ink > 120;
+      const now = ink > 90;
       if (now && !was) runs++;
       if (now) inked++;
       was = now;

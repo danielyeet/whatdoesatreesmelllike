@@ -228,7 +228,7 @@
     };
   }
 
-  function clearBetween(a, b) {
+  function clearBetween(a, b, mayCross) {
     const from = edgePoint(nodes[a], nodes[b]);
     const to = edgePoint(nodes[b], nodes[a]);
     for (let i = 0; i < nodes.length; i++) {
@@ -242,6 +242,11 @@
       }
       // The middle window's caption is printed inside it, not under it.
       if (i === 0) continue;
+      // `mayCross` is one picture whose own caption this line is
+      // allowed to pass over. It is never passed except by the rule
+      // below that saves a picture from being left on the end of a
+      // single line — see the note there.
+      if (i === mayCross) continue;
       if (crosses(from, to, captionBox(n))) return false;
     }
     return true;
@@ -342,15 +347,28 @@
     // to. It is not a tree link: both ends are already on the map by
     // then, so it closes a loop rather than carrying the spread, which
     // is what keeps the map arriving outwards in order.
+    //
+    // A picture standing in a corner of the sheet with a long caption
+    // can have NO clear run at all: everything below it is behind its
+    // own caption and there is nothing above it. So the search is made
+    // twice — once properly, and then, only if that found nothing, once
+    // more allowing the line to pass over THAT PICTURE'S OWN caption.
+    // A stroke running out from under a picture's own words still reads
+    // as belonging to it; a picture with one line reads as the map
+    // having given up. Of the two, this is the better fault, and it is
+    // the only place on the sheet where a caption may be crossed at
+    // all.
     nodes.forEach((node, i) => {
       const joined = links.filter((link) => link.a === i || link.b === i);
       if (joined.length !== 1) return;
       const already = joined.map((link) => (link.a === i ? link.b : link.a));
-      const reachable = nodes
+      const near = (mayCross) => nodes
         .map((other, j) => ({ j: j, d: distance(other, node) }))
         .filter((entry) =>
-          entry.j !== i && already.indexOf(entry.j) < 0 && clearBetween(entry.j, i))
+          entry.j !== i && already.indexOf(entry.j) < 0 &&
+          clearBetween(entry.j, i, mayCross))
         .sort((a, b) => a.d - b.d);
+      const reachable = near(-1).length ? near(-1) : near(i);
       if (reachable.length) links.push({ a: reachable[0].j, b: i, tree: false });
     });
 
@@ -453,13 +471,26 @@
     }
     open.sort((a, b) => a.key - b.key);
 
+    // WHICH squares get used is the scatter; the ORDER they are filled
+    // in is a separate question, and the answer is straight down the
+    // page. The shuffle above picks the squares — which is what leaves
+    // the gaps that keep this from being a table — and then the ones
+    // picked are put back into reading order, so the second picture in
+    // the page is the one nearest the top, the third the one after it,
+    // and so on to the bottom. The owner asked for the pictures to run
+    // 1 to 13 down the page without the look of the scatter changing,
+    // and this is exactly that: the same squares, filled in a different
+    // order.
+    const taken = open.slice(0, rest.length);
+    taken.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+
     nodes = [{
       x: plateX, y: 0, size: plateSize,
       cx: plateX + plateSize / 2, cy: plateSize / 2,
     }];
 
     rest.forEach((frame, i) => {
-      const spot = open[i] || { x: 0, y: 0, h: cell + CAPTION_ROOM };
+      const spot = taken[i] || { x: 0, y: 0, h: cell + CAPTION_ROOM };
       const cellH = spot.h;
       // Pictures differ a little in size, and none of them sits dead
       // centre in its own square — both are what keep the scatter from
