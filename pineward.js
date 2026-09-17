@@ -45,31 +45,58 @@
   // ============================================================
   const SEED = 31;
 
-  // --- the canopy
+// --- the forest
   //
-  // A CANOPY, not a constellation. Every speck joined to whatever was
-  // within reach of it came out as long lines striking across the page
-  // and closing into triangles — a net thrown over the title rather
-  // than something growing behind it. What is drawn now is branching:
-  // a few boughs rise from the foot of it and split, and split again,
-  // thinning as they go, with the specks strung along them and only
-  // their near neighbours joined.
-  const BOUGHS = 5;            // how many rise from the foot of the drawing
-  const SPLITS = 4;            // and how many times each one divides
-  const BOUGH_LEN = 0.3;       // the first run, as a share of the drawing's height
-  const BOUGH_KEEP = 0.72;     // and how much of its length the next one keeps
-  const BOUGH_OUT = [0.32, 0.62]; // how far a split leans off its parent, in radians
-  const SPECK_EVERY = 13;      // how far apart the specks along a run stand
-  const WEB_REACH = 30;        // two specks nearer than this are joined
-  const WEB_EACH = 2;          // and no speck carries more lines than this
+  // A STAND OF CONIFERS DOWN BOTH SIDES OF THE WHOLE PAGE, not a
+  // canopy behind the title. The owner asked for it to run the length
+  // of the piece and to be more coniferous — so a tree here is a
+  // straight leader with side branches that shorten towards the top
+  // and droop as they go out, which is a fir seen from the side, and
+  // there are as many of them as the page is long.
+  //
+  // It is drawn in PAGE coordinates on a canvas fixed to the window,
+  // and only the part of it that is on the screen is drawn. That is
+  // what lets it be six thousand pixels tall without a canvas that
+  // size.
+  const TREE_EVERY = 430;      // how far apart the trees stand down the page
+  const TREE_TALL = [420, 760];// and how tall one is
+  // How far in from the edge a trunk may stand, as a share of the
+  // window. The writing runs down the middle of the page in a column
+  // about 940px wide, so a trunk further in than this is a tree
+  // growing through the text.
+  const TREE_IN = 0.14;
+  const WHORLS = [9, 15];      // how many rounds of branches one carries
+  const BRANCH_OUT = [0.34, 0.86]; // how far out a branch reaches, against its tree
+  const BRANCH_DROOP = 0.42;   // and how far it falls as it goes
+  const TWIG_EVERY = 11;       // how far apart the specks along a branch stand
   const SPECK_MIN = 1;         // how big a speck is drawn, in pixels
-  const SPECK_MAX = 2.6;
-  const CANOPY_INK = 0.46;     // how heavily a speck is drawn
-  const BOUGH_INK = 0.13;      // the run it stands on
-  const WEB_INK = 0.13;        // and a line between two specks
-  const CLEAR_MID = 0.34;      // the share of the width kept quiet for the writing
-  const GROW_MS = 1900;        // how long the canopy takes to grow when the page opens
+  const SPECK_MAX = 2.4;
+  const TREE_INK = 0.4;        // how heavily a speck is drawn
+  const BOUGH_INK = 0.11;      // the branch it stands on
+  const WEB_INK = 0.1;         // and a line between two specks
+  const WEB_REACH = 26;        // two specks nearer than this are joined
+  const WEB_EACH = 2;          // and no speck carries more lines than this
+  const CLEAR_MID = 0.42;      // the share of the width kept quiet for the writing
+  const GROW_MS = 2100;        // how long the forest takes to grow when the page opens
   const INK = "23,23,15";      // --ink
+
+  // --- and what it does while it stands there
+  //
+  // NOTHING FOLLOWS THE POINTER and nothing is dragged about by it —
+  // the owner was plain about that. What there is: every speck idles a
+  // hair about its own place, which is a tree in air rather than a
+  // diagram of one; and wherever the hand rests, the needles near it
+  // BLOOM — the specks there brighten and put out fine needles of
+  // their own, and more of them are netted together. The tree does not
+  // move to meet the hand; it is only more itself where the hand is.
+  const IDLE = 0.9;            // how far a speck drifts from its own place, in pixels
+  const IDLE_RATE = [0.12, 0.5]; // and how slowly, in turns a second
+  const BLOOM_REACH = 150;     // how near the hand a speck blooms, in pixels
+  const BLOOM_INK = 0.5;       // how much more plainly it is drawn
+  const BLOOM_NEEDLES = 3;     // how many needles it puts out
+  const BLOOM_LONG = 7;        // and how long they are, in pixels
+  const BLOOM_EASE = 2.6;      // how quickly the bloom comes and goes
+
 
   // --- the parts arriving
   const RISE_MS = 620;         // how long one takes to come up
@@ -85,161 +112,245 @@
   const rgba = (a) => "rgba(" + INK + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
 
   // ============================================================
-  // THE CANOPY
+  // THE FOREST
   //
-  // Not a picture of a tree — a few runs of specks that branch as they
-  // climb, and the loose ones caught between them. It is drawn once,
-  // at the size the page is, and again only if the window changes: the
-  // owner asked for the drawings on the contact sheet to stand still,
-  // and this page keeps the same rule.
+  // Conifers down both sides of the page, the whole length of it. One
+  // tree is a straight leader with whorls of branches coming off it,
+  // shortening towards the top and drooping as they reach out — which
+  // is a fir seen from the side, and is what makes this read as a wood
+  // rather than as a net of lines.
+  //
+  // It is worked out ONCE, in the page's own coordinates, and only the
+  // part of it that is on the screen is ever drawn. The canvas is
+  // fixed to the window, so a page six thousand pixels long does not
+  // need a canvas six thousand pixels tall.
   // ============================================================
   const canopy = document.querySelector(".pine-canopy");
   const ink = canopy ? canopy.getContext("2d") : null;
 
-  /** One run of a bough, and then the ones that grow out of its end.
-      Written as a walk rather than as a shape: every branch is the
-      same walk with less left of it, which is what makes the thing
-      read as grown rather than drawn. */
-  function grow(x, y, angle, len, left, specks, runs, from) {
-    const toX = x + Math.cos(angle) * len;
-    const toY = y + Math.sin(angle) * len;
-    // HOW FAR ALONG THE TREE this is, measured from the foot of it —
-    // which is what the canopy is grown BY when the page opens, so a
-    // branch can never come up before the branch it grows out of.
-    runs.push({ x1: x, y1: y, x2: toX, y2: toY, left: left, from: from, to: from + len });
-    const many = Math.max(1, Math.round(len / SPECK_EVERY));
-    for (let n = 0; n <= many; n++) {
+  /** Every speck of the forest, and every branch they stand on, in
+      page coordinates. Rebuilt only when the page changes size. */
+  let wood = null;
+  /** How much of it is standing: 1 once it has grown. */
+  let grown = REDUCE_MOTION ? 1 : 0;
+  /** Where the hand is, in the window. Nothing follows it; what is
+      near it blooms. */
+  let handX = -9999, handY = -9999;
+  let handAt = 0;
+
+  /** One branch of one tree: a run out from the leader, drooping as it
+      goes, with the specks strung along it. */
+  function branchOf(x, y, side, len, droop, specks, runs, from) {
+    const many = Math.max(2, Math.round(len / TWIG_EVERY));
+    let was = { x: x, y: y };
+    for (let n = 1; n <= many; n++) {
       const at = n / many;
-      // The specks wander a hair off their own run, or the bough reads
-      // as a ruled line with beads on it.
-      const off = (random() - 0.5) * 2.4;
+      // Out and down: a conifer's branch leaves the trunk level and
+      // falls away, and the fall grows as it goes.
+      const to = {
+        x: x + side * len * at,
+        y: y + droop * len * at * at,
+      };
+      runs.push({ x1: was.x, y1: was.y, x2: to.x, y2: to.y, from: from + len * (at - 1 / many), to: from + len * at });
       specks.push({
-        x: x + (toX - x) * at - Math.sin(angle) * off,
-        y: y + (toY - y) * at + Math.cos(angle) * off,
-        size: SPECK_MIN + random() * (SPECK_MAX - SPECK_MIN) * (left / SPLITS),
-        left: left,
+        x: to.x + (random() - 0.5) * 2.2,
+        y: to.y + (random() - 0.5) * 2.2,
+        size: SPECK_MIN + random() * (SPECK_MAX - SPECK_MIN) * (1 - at * 0.5),
         at: from + len * at,
+        rate: IDLE_RATE[0] + random() * (IDLE_RATE[1] - IDLE_RATE[0]),
+        phase: random() * Math.PI * 2,
+      });
+      was = to;
+    }
+  }
+
+  /** One tree, from its foot up. */
+  function treeAt(x, foot, tall, specks, runs) {
+    const whorls = Math.round(WHORLS[0] + random() * (WHORLS[1] - WHORLS[0]));
+    // The leader: dead straight, which is what a fir has and what
+    // keeps the drawing taut.
+    runs.push({ x1: x, y1: foot, x2: x, y2: foot - tall, from: 0, to: tall, leader: true });
+    for (let n = 0; n <= tall; n += TWIG_EVERY) {
+      specks.push({
+        x: x + (random() - 0.5) * 1.6,
+        y: foot - n,
+        size: SPECK_MIN + random() * (SPECK_MAX - SPECK_MIN),
+        at: n,
+        rate: IDLE_RATE[0] + random() * (IDLE_RATE[1] - IDLE_RATE[0]),
+        phase: random() * Math.PI * 2,
       });
     }
-    if (left <= 0) return;
-    const spread = between(BOUGH_OUT);
-    grow(toX, toY, angle - spread, len * BOUGH_KEEP, left - 1, specks, runs, from + len);
-    grow(toX, toY, angle + spread * (0.6 + random() * 0.8), len * BOUGH_KEEP * (0.8 + random() * 0.3),
-         left - 1, specks, runs, from + len);
+    for (let w = 0; w < whorls; w++) {
+      // Up the tree, and shorter as it goes: the whorls of a conifer
+      // are a triangle seen from the side.
+      const up = (w + 0.6) / whorls;
+      const y = foot - tall * up;
+      const left = tall * (BRANCH_OUT[0] + random() * (BRANCH_OUT[1] - BRANCH_OUT[0])) *
+        (1 - up) * 0.5;
+      const droop = BRANCH_DROOP * (0.6 + random() * 0.8);
+      branchOf(x, y, -1, left, droop, specks, runs, tall * up);
+      branchOf(x, y, 1, left * (0.75 + random() * 0.5), droop, specks, runs, tall * up);
+    }
   }
 
-  /** How much of the tree is standing: 1 once it has grown. */
-  let grown = REDUCE_MOTION ? 1 : 0;
-  /** And what was worked out to draw, kept so that growing it is only
-      a repaint rather than the whole tree being grown again. */
-  let boughs = null;
+  /** The whole stand, worked out for the page as it now is. */
+  function growWood() {
+    if (!canopy) return;
+    const wide = window.innerWidth;
+    const tall = Math.max(
+      document.documentElement.scrollHeight,
+      document.body ? document.body.scrollHeight : 0
+    );
+    seed = SEED;
+    const specks = [], runs = [];
+    // Down both sides, all the way to the foot of the page.
+    for (let foot = tall; foot > -TREE_EVERY; foot -= TREE_EVERY) {
+      [0, 1].forEach((side) => {
+        const inFrom = random() * TREE_IN;
+        const x = side ? wide * (1 - inFrom) : wide * inFrom;
+        const high = TREE_TALL[0] + random() * (TREE_TALL[1] - TREE_TALL[0]);
+        treeAt(x, foot - random() * TREE_EVERY * 0.5, high, specks, runs);
+      });
+    }
+    // Bucketed by where they stand down the page, so that drawing only
+    // what is on the screen is a lookup rather than a search through
+    // every speck in the wood.
+    const rows = new Map();
+    const ROW = 400;
+    specks.forEach((one) => {
+      const row = Math.floor(one.y / ROW);
+      if (!rows.has(row)) rows.set(row, { specks: [], runs: [] });
+      rows.get(row).specks.push(one);
+    });
+    runs.forEach((one) => {
+      const row = Math.floor(Math.min(one.y1, one.y2) / ROW);
+      if (!rows.has(row)) rows.set(row, { specks: [], runs: [] });
+      rows.get(row).runs.push(one);
+    });
+    wood = { rows: rows, ROW: ROW, wide: wide, tall: tall, reach: 0 };
+    wood.reach = specks.reduce((m, one) => Math.max(m, one.at), 1);
+  }
 
-  function drawCanopy() {
-    if (!ink) return;
-    const wide = canopy.clientWidth;
-    const tall = canopy.clientHeight;
-    if (!wide || !tall) return;
+  /** What is on the screen, in page coordinates. */
+  function inView(from, to) {
+    const out = { specks: [], runs: [] };
+    if (!wood) return out;
+    for (let row = Math.floor(from / wood.ROW); row <= Math.floor(to / wood.ROW); row++) {
+      const has = wood.rows.get(row);
+      if (!has) continue;
+      out.specks = out.specks.concat(has.specks);
+      out.runs = out.runs.concat(has.runs);
+    }
+    return out;
+  }
+
+  function paintWood() {
+    if (!ink || !wood) return;
+    const wide = canopy.clientWidth, tall = canopy.clientHeight;
     const ratio = Math.min(2, window.devicePixelRatio || 1);
-    canopy.width = Math.round(wide * ratio);
-    canopy.height = Math.round(tall * ratio);
-    ink.setTransform(ratio, 0, 0, ratio, 0, 0);
+    if (canopy.width !== Math.round(wide * ratio)) {
+      canopy.width = Math.round(wide * ratio);
+      canopy.height = Math.round(tall * ratio);
+      ink.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
     ink.clearRect(0, 0, wide, tall);
 
-    seed = SEED;
-    const specks = [];
-    const runs = [];
-    for (let b = 0; b < BOUGHS; b++) {
-      // Out at the sides rather than evenly across: the middle of the
-      // page is where the title stands.
-      const at = (b + 0.5) / BOUGHS;
-      const side = at < 0.5 ? at * 0.62 : 1 - (1 - at) * 0.62;
-      grow(
-        wide * side,
-        tall * (1.02 + random() * 0.06),
-        -Math.PI / 2 + (side - 0.5) * 0.5,
-        tall * BOUGH_LEN * (0.85 + random() * 0.4),
-        SPLITS, specks, runs, 0
-      );
-    }
+    const down = window.scrollY || window.pageYOffset || 0;
+    const seen = inView(down - wood.ROW, down + tall + wood.ROW);
+    const upTo = wood.reach * grown;
 
-    boughs = {
-      specks: specks,
-      runs: runs,
-      wide: wide,
-      tall: tall,
-      reach: specks.reduce((m, one) => Math.max(m, one.at), 1),
-      /** How plainly anything at (x, y) is drawn: thinning down the
-          page so the writing is never fought, and again across the
-          middle of it where the title stands. */
-      seen: (x, y) => {
-        const down = 1 - Math.min(1, (y / tall) * 0.9);
-        const off = Math.min(1, Math.abs(x - wide / 2) / (wide * CLEAR_MID));
-        return down * (0.22 + 0.78 * off);
-      },
+    /** How plainly anything at x is drawn: quiet across the middle of
+        the page, where the writing is. */
+    const lit = (x) => {
+      const off = Math.min(1, Math.abs(x - wide / 2) / (wide * CLEAR_MID));
+      // Nearly nothing across the middle: a branch that reaches in
+      // over the writing has to be something you only notice if you
+      // look for it.
+      return 0.04 + 0.96 * off * off;
     };
-    paintCanopy();
-  }
 
-  /** As much of the tree as has grown. */
-  function paintCanopy() {
-    if (!ink || !boughs) return;
-    const specks = boughs.specks, runs = boughs.runs, seen = boughs.seen;
-    const upTo = boughs.reach * grown;
-    ink.clearRect(0, 0, boughs.wide, boughs.tall);
-
-    // The runs themselves, faintly: what the specks are strung along.
-    runs.forEach((run) => {
+    // The branches, faintly: what the specks are strung along.
+    seen.runs.forEach((run) => {
       if (run.from > upTo) return;
-      const lit = BOUGH_INK * seen((run.x1 + run.x2) / 2, (run.y1 + run.y2) / 2) *
-        (0.4 + (run.left / SPLITS) * 0.6);
-      if (lit < 0.012) return;
-      // Drawn only as far as it has grown, so a bough reaches out
-      // rather than appearing whole.
+      const at = lit((run.x1 + run.x2) / 2) * BOUGH_INK * (run.leader ? 1.4 : 1);
+      if (at < 0.012) return;
       const part = Math.min(1, (upTo - run.from) / Math.max(1, run.to - run.from));
       ink.beginPath();
-      ink.moveTo(run.x1, run.y1);
-      ink.lineTo(run.x1 + (run.x2 - run.x1) * part, run.y1 + (run.y2 - run.y1) * part);
+      ink.moveTo(run.x1, run.y1 - down);
+      ink.lineTo(run.x1 + (run.x2 - run.x1) * part, (run.y1 + (run.y2 - run.y1) * part) - down);
       ink.lineWidth = 1;
-      ink.strokeStyle = rgba(lit);
+      ink.strokeStyle = rgba(at);
       ink.stroke();
     });
 
-    // The web between the specks, near neighbours only and never more
-    // than `WEB_EACH` from any one of them — the difference between a
-    // net and a scribble, which is the chamber's own lesson.
-    const carried = specks.map(() => 0);
-    for (let a = 0; a < specks.length; a++) {
+    // Where each speck actually stands this frame: its own place, plus
+    // the hair it idles by. The idle is written from the clock rather
+    // than added up, so it drifts about its place instead of away
+    // from it — the taut character the owner asked to keep.
+    const now = window.performance && window.performance.now
+      ? window.performance.now() / 1000 : Date.now() / 1000;
+    const placed = [];
+    seen.specks.forEach((one) => {
+      if (one.at > upTo) return;
+      const x = one.x + (REDUCE_MOTION ? 0 : Math.sin(now * one.rate * 6.28 + one.phase) * IDLE);
+      const y = one.y - down +
+        (REDUCE_MOTION ? 0 : Math.cos(now * one.rate * 5.1 + one.phase) * IDLE * 0.7);
+      if (y < -40 || y > tall + 40) return;
+      // THE BLOOM: how near the hand this speck is. Nothing moves
+      // towards it — what is near is simply drawn more fully.
+      const bloom = handAt > 0
+        ? handAt * Math.max(0, 1 - Math.hypot(x - handX, y - handY) / BLOOM_REACH)
+        : 0;
+      placed.push({ x: x, y: y, size: one.size, bloom: bloom, of: one, lit: lit(one.x) });
+    });
+
+    // The web between near neighbours, and never more than `WEB_EACH`
+    // from any one of them.
+    const carried = placed.map(() => 0);
+    ink.lineWidth = 1;
+    for (let a = 0; a < placed.length; a++) {
       if (carried[a] >= WEB_EACH) continue;
-      for (let b = a + 1; b < specks.length; b++) {
+      for (let b = a + 1; b < placed.length; b++) {
         if (carried[a] >= WEB_EACH) break;
         if (carried[b] >= WEB_EACH) continue;
-        const one = specks[a], two = specks[b];
-        if (one.at > upTo || two.at > upTo) continue;
+        const one = placed[a], two = placed[b];
         const off = Math.hypot(two.x - one.x, two.y - one.y);
-        if (off > WEB_REACH || off < 5) continue;
-        const lit = WEB_INK * seen((one.x + two.x) / 2, (one.y + two.y) / 2);
-        if (lit < 0.012) continue;
+        const bloom = Math.max(one.bloom, two.bloom);
+        if (off > WEB_REACH * (1 + bloom) || off < 4) continue;
+        const at = (WEB_INK + bloom * WEB_INK * 2) * Math.min(one.lit, two.lit);
+        if (at < 0.012) continue;
         ink.beginPath();
         ink.moveTo(one.x, one.y);
         ink.lineTo(two.x, two.y);
-        ink.lineWidth = 1;
-        ink.strokeStyle = rgba(lit);
+        ink.strokeStyle = rgba(at);
         ink.stroke();
         carried[a]++; carried[b]++;
       }
     }
 
-    // Squares on whole pixels, like every speck on this site: at this
-    // size a rectangle laid across a pixel boundary is a soft blob.
-    specks.forEach((speck) => {
-      if (speck.at > upTo) return;
-      const lit = CANOPY_INK * seen(speck.x, speck.y);
-      if (lit < 0.02) return;
-      const size = Math.max(1, Math.round(speck.size));
-      ink.fillStyle = rgba(lit);
-      ink.fillRect(Math.round(speck.x - size / 2), Math.round(speck.y - size / 2), size, size);
+    // The specks themselves — squares on whole pixels, like every
+    // speck on this site — and the needles the bloomed ones put out.
+    placed.forEach((one) => {
+      const at = one.lit * (TREE_INK + one.bloom * BLOOM_INK);
+      if (at < 0.02) return;
+      const size = Math.max(1, Math.round(one.size + one.bloom * 1.6));
+      ink.fillStyle = rgba(at);
+      ink.fillRect(Math.round(one.x - size / 2), Math.round(one.y - size / 2), size, size);
+      if (one.bloom < 0.08) return;
+      // NEEDLES. A conifer blooming is not a flower opening: it is the
+      // needles standing out from the twig, so that is what is drawn.
+      ink.strokeStyle = rgba(at * 0.7);
+      ink.beginPath();
+      for (let n = 0; n < BLOOM_NEEDLES; n++) {
+        const way = one.of.phase + (n / BLOOM_NEEDLES) * Math.PI * 2;
+        const long = BLOOM_LONG * one.bloom;
+        ink.moveTo(one.x, one.y);
+        ink.lineTo(one.x + Math.cos(way) * long, one.y + Math.sin(way) * long);
+      }
+      ink.stroke();
     });
   }
+
 
   // ============================================================
   // THE TRUNK
@@ -368,27 +479,67 @@
     requestAnimationFrame(() => { waiting = false; reckon(); });
   }
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", () => { drawCanopy(); reckon(); });
+
+  let sized = null;
+  function onResize() {
+    // Only when the window itself has changed, not when the page has
+    // grown a little because a part was opened: a whole wood is worked
+    // out again here, and opening a part should not cost that.
+    const now = window.innerWidth + "x" + window.innerHeight;
+    if (now !== sized) { sized = now; growWood(); }
+    reckon();
+  }
+  window.addEventListener("resize", onResize);
+
+  // WHERE THE HAND IS, and nothing more than that: what is near it
+  // blooms where it stands. Nothing is dragged towards it and nothing
+  // follows it, which is what the owner asked for — the wood is not
+  // interactive, it is only more itself where somebody is looking.
+  window.addEventListener("pointermove", (e) => {
+    handX = e.clientX;
+    handY = e.clientY;
+  }, { passive: true });
+  window.addEventListener("pointerleave", () => { handX = -9999; handY = -9999; });
 
   page.classList.add("pine-ready");
-  drawCanopy();
+  sized = window.innerWidth + "x" + window.innerHeight;
+  growWood();
   reckon();
 
-  // THE TREE GROWS WHEN THE PAGE OPENS, from the foot of each bough
-  // out to the last twig, and then stands still — the same rule the
-  // contact sheet this piece is reached from keeps: a drawing is
-  // watched being made, and afterwards it is a drawing. With animation
-  // turned off it is simply already grown.
-  if (!REDUCE_MOTION) {
+  // THE WOOD GROWS WHEN THE PAGE OPENS, from the foot of each tree out
+  // to the last twig, and then stands there: the specks idle a hair
+  // about their own places and bloom where the hand rests, and nothing
+  // else moves. With animation turned off it is simply already grown
+  // and perfectly still.
+  if (REDUCE_MOTION) {
+    paintWood();
+  } else {
     const began = window.performance && window.performance.now
       ? window.performance.now() : Date.now();
     const settled = (t) => 1 - Math.pow(1 - t, 3);
     const tick = (now) => {
       const t = (now - began) / GROW_MS;
       grown = t >= 1 ? 1 : settled(t);
-      paintCanopy();
-      if (t < 1) requestAnimationFrame(tick);
+      // The bloom comes up and goes down rather than switching: the
+      // hand arriving somewhere should not light the wood in one
+      // frame.
+      const wanted = handX > -9000 ? 1 : 0;
+      const step = Math.min(1, BLOOM_EASE / 60);
+      handAt += (wanted - handAt) * step;
+      paintWood();
+      requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }
+
+  // A part opening makes the page longer, so the wood has to reach
+  // further down it. Worked out again a moment after, rather than on
+  // every frame of the opening.
+  let regrow = 0;
+  parts.forEach((part) => {
+    part.addEventListener("toggle", () => {
+      window.clearTimeout(regrow);
+      regrow = window.setTimeout(growWood, 520);
+    });
+  });
 })();

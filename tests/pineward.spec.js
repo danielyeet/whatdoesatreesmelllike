@@ -140,7 +140,7 @@ test("the trunk has one tick per part, and the reading counts them",
   expect(await page.locator(".pine-tick.passed").count()).toBe(0);
 });
 
-test("the canopy is drawn, and then stands still", async ({ page }) => {
+test("the wood runs the length of the piece, and is grown", async ({ page }) => {
   await page.goto(PAGE);
 
   const ink = () =>
@@ -148,33 +148,113 @@ test("the canopy is drawn, and then stands still", async ({ page }) => {
       const canvas = document.querySelector(".pine-canopy");
       const shot = canvas.getContext("2d")
         .getImageData(0, 0, canvas.width, canvas.height).data;
-      let ink = 0, stamp = 0;
-      for (let n = 3; n < shot.length; n += 4) {
-        if (!shot[n]) continue;
-        ink += shot[n];
-        stamp = (stamp * 31 + n + shot[n]) % 2147483647;
-      }
-      return { ink: ink, stamp: stamp };
+      let ink = 0;
+      for (let n = 3; n < shot.length; n += 4) ink += shot[n];
+      return ink;
     });
 
-  // It grows when the page opens, from the foot of each bough out to
+  // It grows when the page opens, from the foot of each tree out to
   // the last twig.
   await page.waitForTimeout(400);
   const early = await ink();
-  await page.waitForTimeout(2200);
+  await page.waitForTimeout(2400);
   const grown = await ink();
-  expect(early.ink, "something should be drawn early on").toBeGreaterThan(0);
-  expect(grown.ink, "and more of it once it has grown").toBeGreaterThan(early.ink * 1.3);
+  expect(early, "something should be drawn early on").toBeGreaterThan(0);
+  expect(grown, "and more of it once it has grown").toBeGreaterThan(early * 1.3);
 
-  // And then nothing moves: the drawing is watched being made, and
-  // afterwards it is a drawing.
-  await page.waitForTimeout(1200);
-  const after = await ink();
-  expect(after.stamp, "not a speck should change once it has grown").toBe(grown.stamp);
+  // AND IT RUNS THE WHOLE LENGTH OF THE PIECE. The owner asked for the
+  // trees to go through the entire page rather than standing behind
+  // the title, so there is a wood at the foot of it as well as at the
+  // head — and the canvas is fixed to the window, so that is not the
+  // same pixels scrolling past.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(900);
+  expect(await ink(), "there should be trees at the foot of the piece too")
+    .toBeGreaterThan(grown * 0.3);
 
-  await page.mouse.wheel(0, 800);
-  await page.waitForTimeout(700);
-  expect((await ink()).stamp, "nor when the page is scrolled").toBe(grown.stamp);
+  // And it is drawn out at the sides, where the writing is not: the
+  // middle of the page is kept quiet.
+  const across = await page.evaluate(() => {
+    const canvas = document.querySelector(".pine-canopy");
+    const ratio = canvas.width / canvas.clientWidth;
+    const shot = canvas.getContext("2d")
+      .getImageData(0, 0, canvas.width, canvas.height).data;
+    let middle = 0, sides = 0;
+    for (let y = 0; y < canvas.height; y += 3) {
+      for (let x = 0; x < canvas.width; x += 3) {
+        const a = shot[(y * canvas.width + x) * 4 + 3];
+        if (!a) continue;
+        const at = x / ratio / canvas.clientWidth;
+        if (at > 0.32 && at < 0.68) middle += a; else sides += a;
+      }
+    }
+    return { middle: middle, sides: sides };
+  });
+  expect(across.sides, "the trees stand out at the sides").toBeGreaterThan(0);
+  expect(across.middle, `and the writing's own column is kept quiet: ${JSON.stringify(across)}`)
+    .toBeLessThan(across.sides * 0.3);
+});
+
+test("the wood idles where it stands, and blooms under the hand",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(3200);
+
+  const inkAt = (x, y, r) =>
+    page.evaluate(([x, y, r]) => {
+      const canvas = document.querySelector(".pine-canopy");
+      const ratio = canvas.width / canvas.clientWidth;
+      const shot = canvas.getContext("2d").getImageData(
+        Math.round((x - r) * ratio), Math.round((y - r) * ratio),
+        Math.round(2 * r * ratio), Math.round(2 * r * ratio)).data;
+      let ink = 0;
+      for (let n = 3; n < shot.length; n += 4) ink += shot[n];
+      return ink;
+    }, [x, y, r]);
+
+  // The busiest patch of the right-hand margin: somewhere there is
+  // actually a tree to bloom.
+  const spot = await page.evaluate(() => {
+    const canvas = document.querySelector(".pine-canopy");
+    const ratio = canvas.width / canvas.clientWidth;
+    const paint = canvas.getContext("2d");
+    let best = null;
+    for (let x = canvas.clientWidth - 240; x < canvas.clientWidth - 30; x += 40) {
+      for (let y = 120; y < canvas.clientHeight - 120; y += 40) {
+        const shot = paint.getImageData(Math.round((x - 40) * ratio),
+          Math.round((y - 40) * ratio), Math.round(80 * ratio), Math.round(80 * ratio)).data;
+        let ink = 0;
+        for (let n = 3; n < shot.length; n += 4) ink += shot[n];
+        if (!best || ink > best.ink) best = { x: x, y: y, ink: ink };
+      }
+    }
+    return best;
+  });
+  expect(spot.ink, "there should be a tree to point at").toBeGreaterThan(0);
+
+  // POINTED AT, IT BLOOMS: what is near the hand is drawn more fully
+  // and puts out needles. Nothing moves towards the pointer — the
+  // owner was plain that this is not interactive — so what is measured
+  // is how much more is drawn in the same place.
+  const resting = await inkAt(spot.x, spot.y, 80);
+  await page.mouse.move(spot.x, spot.y);
+  await page.waitForTimeout(1100);
+  const bloomed = await inkAt(spot.x, spot.y, 80);
+  expect(bloomed, `it should bloom under the hand: ${resting} -> ${bloomed}`)
+    .toBeGreaterThan(resting * 1.5);
+
+  // And let go again when the hand leaves.
+  await page.mouse.move(4, 4);
+  await page.waitForTimeout(1400);
+  const after = await inkAt(spot.x, spot.y, 80);
+  expect(after, `and let go again: ${bloomed} -> ${after}`).toBeLessThan(bloomed * 0.7);
+
+  // The tree does not FOLLOW the hand: where its trunk stands is the
+  // same before and after being pointed at.
+  const trunkNow = await inkAt(spot.x, spot.y, 80);
+  expect(Math.abs(trunkNow - resting) / Math.max(1, resting),
+    "and stand exactly where it stood").toBeLessThan(0.35);
 });
 
 test("with animation turned off the piece is simply there", async ({ page }) => {

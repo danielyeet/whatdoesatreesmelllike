@@ -20,7 +20,7 @@ const SITE_LINKS = [
   { label: "Home", href: "index.html" },
   { label: "Scent descriptions", href: "categories/scent-descriptions.html" },
   { label: "Theories", href: "categories/theories.html" },
-  { label: "Favorites", href: "categories/favorites.html" },
+  { label: "Favourites", href: "categories/favorites.html" },
   { label: "Other", href: "categories/other-1.html" },
   { label: "Other", href: "categories/other-2.html" },
   { label: "Contact", href: "contact.html" },

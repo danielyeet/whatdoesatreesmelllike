@@ -18,7 +18,7 @@ const {
 const EXPECTED_LABELS = [
   "Scent descriptions",
   "Theories",
-  "Favorites",
+  "Favourites",
   "Other",
   "Other",
   "Test node",
@@ -59,10 +59,10 @@ test.describe("the map itself", () => {
 
     expect(await page.evaluate(() => window.__mapReadout.activeIndex)).toBe(-1);
 
-    await page.locator(".node3d-label", { hasText: "Favorites" }).hover({ force: true });
+    await page.locator(".node3d-label", { hasText: "Favourites" }).hover({ force: true });
     await expect
       .poll(() => page.evaluate(() => window.__mapReadout.activeIndex))
-      .toBe(EXPECTED_LABELS.indexOf("Favorites"));
+      .toBe(EXPECTED_LABELS.indexOf("Favourites"));
   });
 
   // Regression test. Depth used to be read straight off the 3D

@@ -43,15 +43,15 @@ which talk through five `window` globals; see the table further down).
 | `index.html` | three scroll-snapped **slides**: the title, the italic line, the 3D **node map** | `landing.js`, `node-scene.js`, `paper.js`, `thread.js`, `extras.js` (and Three.js from a CDN — the only page that uses it) |
 | `categories/scent-descriptions.html` | the **contact sheet**: pictures scattered and joined by dated lines, all of it drawn in specks | `contact-sheet.js` |
 | `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `structure.js` |
-| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVORITES, which opens into a menu | `chamber.js` |
+| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu | `chamber.js` |
 | `categories/other-1.html`, `other-2.html` | plain **row lists** of works | none |
-| `works/pineward.html` | **Pineward**, the first piece in Scent descriptions: an introduction and 52 compacted parts in four forest **strata**, with a grown **canopy** and a ticked **trunk** | `pineward.js` |
+| `works/pineward.html` | **Pineward**, the first piece in Scent descriptions: an introduction and 52 compacted parts in four forest **strata**, with a **wood** grown down both margins and a ticked **trunk** | `pineward.js` |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages | none |
 | `contact.html` | a plain page | none |
 
 Four of those page scripts are elaborate, and there is a long section below for each
 drawing: `node-scene.js` (~1,450 lines), `chamber.js` (~1,460), `structure.js` (~1,346)
-and `contact-sheet.js` (~1,000). `pineward.js` (~330) is the small one and has a short
+and `contact-sheet.js` (~1,000). `pineward.js` (~490) is the small one and has a short
 section of its own. **Read the matching section before editing one of them.** Each records decisions that were arrived at by
 trial and error and specific bugs the owner reported and that were fixed — several of
 them more than once, because the fix was later undone by someone who didn't know why it
@@ -101,7 +101,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 116 passed, 0 failed, and takes five to seven minutes.** If you get a
+**A clean run is 120 passed, 0 failed, and takes six to seven minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -139,9 +139,9 @@ pointing at, no picture left with nothing joined to it, the pictures arriving on
 another rather than together, nothing shifting sideways when the page grows, the two
 buttons arriving only once it has finished drawing itself, a frame keeping its number
 once a real picture is put in it, the whole map being one network with no picture and no
-island left out of it and no picture on the end of a single line, a picture being bounded by specks rather than by a
-ruled border with nothing drawn across it, a line between two pictures being a run of
-specks rather than a stroke, the specks standing still when the page is scrolled and
+island left out of it and no picture on the end of a single line, a picture being ruled with specks only where the map is tied on to it, a line between
+two pictures being a run of specks rather than a stroke, a line arriving slack and being
+pulled taut, the page opening on the picture it will land on and holding it, the specks standing still when the page is scrolled and
 travelling with the page rather than the window, nothing on the sheet answering the
 pointer at all, the category naming itself only once the page has drawn itself, every
 line carrying a date with none of them
@@ -151,8 +151,9 @@ than slid in, and the plain grid still being there when the script is blocked;
 and Pineward — the piece being an introduction and fifty-two parts in four strata of
 thirteen, numbered straight through, a part being a title and a small picture until it is
 opened and its picture and writing once it is, the trunk carrying one tick per part with
-the reading counting what has been passed and letting go again on the way back up, the
-canopy growing when the page opens and standing still afterwards, the piece being simply
+the reading counting what has been passed and letting go again on the way back up, the wood
+running the length of the piece and being grown when the page opens, it idling where it
+stands and blooming under the hand, the piece being simply
 there with animation turned off, all of its writing being there without its script, and
 the sheet's first picture pointing at it;
 and the chamber — the menu being grown from that page's own favourites and carrying
@@ -161,7 +162,8 @@ the menu and a chapter opening its own favourites with Escape stepping back out 
 at a time, the two injectors standing at opposite corners with nothing fired from the
 other two, the orbit standing round the
 word and running on behind it unbroken with its near rim drawn over it, opening the menu
-widening that same orbit rather than replacing it and never crossing the menu, the word
+widening that same orbit rather than replacing it and passing in front of the menu, the
+menu being a fixed length whatever is in it, the word
 travelling to its place on that step rather than jumping there (watched every frame,
 through both halves of it), the orbit
 turning on open and closed alike, pointing at a row swelling the orbit level with it with
@@ -542,7 +544,11 @@ Two kinds of assembly stand in that frame, and the difference is the point:
   something happening in it while you are standing still: the specks wobble about their
   own places, provisional lines come and go, beads run along the lines of whatever station
   you are among, a **carriage** runs down the frame at you and lights each rib as it
-  passes, and **traverses** streak across it. Under `prefers-reduced-motion` none of it
+  passes, and **traverses** streak across it on **random bearings**. Each is given a
+  direction anywhere round the circle, started off the frame on the far side of that
+  direction and run until both its head and its tail are outside the box; they used to
+  go only straight across or straight down, which read as a grid being drawn rather than
+  as falling stars, and the owner asked for them in random directions. Under `prefers-reduced-motion` none of it
   moves: the clock stops, so the wobble, the beads, the ranging squares and the traverses
   are all gone and the carriage simply stands where it is — held still rather than
   switched off.
@@ -582,7 +588,7 @@ site the chapters and their favourites are now.
 **There is only ever one arrangement here, and the whole of the interaction is that one
 arrangement changing size.**
 
-- **Closed**, the word **FAVORITES** stands alone in the middle of the orbit and the orbit
+- **Closed**, the word **FAVOURITES** stands alone in the middle of the orbit and the orbit
   turns round it. That word is the whole of the page's chrome, and it is the button — so
   it is dressed as one: four **crop marks** bracket it and a small boxed **cue** under it
   says `EXPAND`, with a chevron pointing the way it will go. Without those it read as a
@@ -618,12 +624,25 @@ the thing that made it read as a lurch:
   again. That was a reported bug: *"the word expand blinks to a position above it and then
   only is a smooth animation played"*. `tests/chamber.spec.js` now watches the word every
   frame through both halves of the step and fails on any jump.
-  Two things about the lift are easy to undo. It is read from `offsetTop` / `offsetHeight`
-  and not from a drawn box, because the menu's own arrival shifts it a few pixels as it
-  fades: a target that keeps moving restarts the easing under itself every frame, and the
-  plate was still short of its place a second after the step had finished. And the
-  `max-height` that keeps a long menu inside a short window now lives on the panel, since
-  the plate is no longer what holds it.
+  Three things about the lift are easy to undo. It is measured off the MENU alone — its
+  own height plus the gap under the word — and not off the plate's laid-out box, which
+  the menu's own arrival shifts by a few pixels as it fades: a target that keeps moving
+  restarts the easing under itself every frame, and the plate was still short of its
+  place a second after the step had finished. It is written to the page **once per
+  step**, when the menu opens or closes, and never again while that step is running:
+  re-measuring mid-step is the same moving target by another route, and on a screen
+  whose pixels are not whole numbers it came out a fraction different every frame, so
+  the word crept up and down by a pixel the whole way. That was a reported bug — *"the
+  word favorites (and its corresponding menu) seems to blink up and down whenever you
+  expand and collapse"* — and it is why the reading is taken in fractions of a pixel
+  rather than from the whole-number `offsetTop` / `offsetHeight` it used to use. And the
+  menu is a **fixed length** (`height` on `.chamber-panel`, with `max-height` in `svh`
+  behind it for a short window), so a chapter of three favourites and a chapter of
+  thirty stand the word in exactly the same place and the column scrolls inside the
+  panel instead. The owner asked for that outright, having more than ten favourites in
+  mind; it also means the lift is one number rather than a different one at every level
+  of the menu. `tests/chamber.spec.js` clones thirty rows into an open chapter and
+  checks the panel's box does not change.
 
 - **The drawing and the writing travel on ONE curve.** `--chamber-step` and
   `--chamber-step-ms` in `style.css` are the whole of it, and `chamber.js` solves that
@@ -644,21 +663,26 @@ the thing that made it read as a lurch:
   tails is drawn from — rose by a third, so the whole ring combed outward in long streaks
   and then fell back. Carried, the peak is about six times resting and the overall speed
   does not change at all.
-- **The room the menu takes is CLEARED of the near specks as the menu arrives, not
-  before it.** Everything on `.chamber-front` is drawn, and then the menu's own box is
-  taken back out of the finished drawing (`destination-out`, `veil` in `draw()`) by
-  exactly as much as the menu itself has faded in — which `chamber.js` reads off the
-  page's own computed opacity rather than keeping a second clock for. It used to be a
-  clip switched on in the one frame the panel joined the page, two thirds of a second
-  before the panel began to fade in at all, so a hard-edged rectangle of nothing appeared
-  in the middle of the drawing and the streams stopped dead against it with nothing there
-  to stop them — the same **invisible pane** the back canvas used to stand in the
-  chamber, except in time rather than in space. That was a reported bug ("the table
-  appears instantly as an object and obstructs the flow of the particles"). Taking the
-  room out of the finished drawing rather than not drawing into it is what makes one pass
-  reach all of it: the near rim and its ticks, the specks, their tails and the web.
-  It must still reach 1 when the menu is fully there, or specks are drawn over the
-  writing; `tests/chamber.spec.js` checks that nothing at all is drawn inside the menu.
+- **The near specks pass IN FRONT OF the menu, and nothing is taken out of the drawing
+  for it.** The owner asked for the particles to move in front of the table, so
+  `.chamber-front` is simply drawn over the writing and left alone: there is no clip and
+  no veil in this file any more — no `veil`, no `taken`, no `CLEAR_PAD` — and
+  `clearing()` is now only the orbit's fit and the lift. Two earlier answers to the same
+  room are worth not going back to. A **clip** switched on in the one frame the panel
+  joined the page put a hard-edged rectangle of nothing in the middle of the drawing two
+  thirds of a second before the panel began to fade in at all, and the streams stopped
+  dead against it with nothing there to stop them — the same **invisible pane** the back
+  canvas used to stand in the chamber, except in time rather than in space, and a
+  reported bug ("the table appears instantly as an object and obstructs the flow of the
+  particles"). A **veil** replaced it — the menu's box taken back out of the finished
+  drawing with `destination-out`, by exactly as much as the menu itself had faded in —
+  and that is what the page carried until the owner asked for the particles in front.
+  The panel keeps its border and its own ground, so the writing is still writing with
+  the streams crossing it; `tests/chamber.spec.js` now checks the opposite of what it
+  used to, that the drawing does reach inside the menu's box.
+- **The line under the word counts the whole category** — `FAVOURITES · 03 CHAPTERS ·
+  09 TOTAL ENTRIES`, read off the page's own entries. It said `ENTRIES` before; the
+  owner asked for "total entries" in as many words.
 - **The menu leaves on the same step it arrives on.** It used to be taken off the page in
   the one frame the word was pressed, leaving the orbit to spend the next two seconds
   coming back in after it — half of the page's only movement was a cut. It fades and rises
@@ -810,12 +834,9 @@ Worth knowing before changing any of it (the list has outgrown being counted):
   any lettering and came back along another one — an **invisible pane** standing in the
   chamber. It was never needed either. `.chamber-field` is *under* the plate in the page's
   own stacking order, so the word and the menu occlude it by being drawn on top of it —
-  letter by letter, not box by box. `.chamber-front` is clipped **only while the menu is
-  open**, and to everything *outside* the panel's box rather than to it: the clip path is
-  the whole window plus the box, taken under the `evenodd` rule, so the box becomes a
-  hole and nothing near is drawn inside it. The panel has a border and a ground of its
-  own, so the edge the particles stop at is an edge you can see. (`CLEAR_PAD` is how far
-  past the box that hole reaches.)
+  letter by letter, not box by box. And `.chamber-front` is not clipped either, nor ever
+  is now: it is drawn over the writing, menu and all — see the bullet above about the
+  specks passing in front of it.
 - **What the cursor does is string a WEB between the specks it is near** (`WEB_*`). It is
   drawn on the front canvas, over everything, and it is meant to be *slightly* wrong:
   each link comes and goes on its own clock and is drawn a hair off the two specks it
@@ -905,12 +926,15 @@ and each of the other pictures appears as its line lands on it.
 
 **EVERYTHING ON IT IS DRAWN IN SPECKS**, and three rules come with that:
 
-- **A picture is bounded by a chain of specks, not by a ruled border** (`edgeChain`).
-  Small squares round its edge, joined with fine lines, with the occasional one standing
-  a little off the chain and netted back in — the chamber's web, laid along a square.
-  `.sheet-frame` rules nothing itself; the only border left on the page is the one the
-  no-script grid keeps, since there is no canvas in that. The corners are landed on
-  exactly: a square whose corners are guessed at reads as a blob.
+- **A picture is RULED, and specked only where the map is tied on to it** (`edgeChain`,
+  `TUFT_REACH`). It was bounded by a chain of specks round its whole edge and nothing
+  else for one round, and the owner asked to "revert back to the normal classic bold
+  border of the pictures themselves, only embellishing on the areas which are connected
+  to the particles" — so `.sheet-frame` carries its own border again, and the specks are
+  a **tuft**: small squares joined with fine lines, drawn only within `TUFT_REACH` of a
+  point where a line is tied on and fading out along the edge as they go. A picture no
+  line reaches carries none at all. The corners are landed on exactly: a square whose
+  corners are guessed at reads as a blob.
   Which specks stand off the chain has to be **uneven** — every fourth one pushed out
   came out as a saw-tooth frill round each picture rather than as a net.
 - **A line between two pictures is a run of specks, not a stroke** (`routeRun`). The
@@ -918,6 +942,11 @@ and each of the other pictures appears as its line lands on it.
   `data-to` and their own coordinates — they are the MAP, which the dates ride on and
   which anything reading the page (including the tests) uses to know what joins what —
   but they are not stroked. The specks are the drawing; the SVG is what it is drawn from.
+  The run is **dense and a little scattered** — `ROUTE_EVERY` apart along the line, and
+  wandering up to `ROUTE_WANDER` off it, which is the owner's "denser in particles and
+  slightly more dispersed, so that it looks more like geometric connections rather than
+  simple lines". Neither end is ever wandered, or a line would stop somewhere other than
+  where it points.
 - **Nothing moves once it has been drawn, and nothing answers the pointer.** Where a
   speck stands is worked out from what it belongs to and its number along it (`wobble`),
   so the same speck is in the same place on every redraw and a resize moves the map
@@ -980,6 +1009,10 @@ wait for `drawn`.
   a browser with ordinary scrollbars that made one appear — which took 15px off the width
   and shifted everything centred on the page sideways at exactly the moment the flick
   stopped, so the whole thing looked like it twitched.
+- **The page opens on the picture it will land on, and holds it** (`FLIP_HOLD_MS`). The
+  flick used to start in the same frame the script took over. A quarter of a second of
+  the first picture before anything moves reads as a projector being started rather than
+  as a page loading, which is the delay the owner asked for.
 - **The flick is set up to END on the first picture** rather than cutting to it when the
   flicking is over. It counts its own cuts before it starts and begins at whichever
   picture makes the last one land there. Cutting at the end is one blink too many: the
@@ -1074,6 +1107,16 @@ wait for `drawn`.
   whole of its pace; it takes about four seconds to reach the bottom of the page. The
   flick is the exception and keeps its hard cuts: that is the film going past, not the
   map being drawn.
+- **A line arrives slack and is then pulled taut** (`SAG`, `TAUT_MS`). While it is
+  travelling it hangs between the two pictures like a loose rope — a half-sine bow with a
+  smaller third harmonic laid over it, so what hangs is not a perfect arc — and over
+  `TAUT_MS` after it lands it is drawn into the straight run. That is the owner's "wiggly
+  like loose ropes/connections for a brief moment, and then very shortly after appearing
+  they get pulled taut into perfect straight lines". The whole spread was lengthened and
+  eased with it (`ROUTE_MS_PER_PX`, and a smootherstep on the travel), since a rope that
+  goes taut in a hurry reads as a twitch. `tests/contact-sheet.spec.js` measures the ink
+  standing well off the straight line while the map is drawing itself, and none of it
+  once the map has settled.
 - **When each line sets off is worked out by going over the links until nothing changes**,
   not in one pass — a link's start depends on when the picture it leaves from was
   reached, and the links are not necessarily in an order where that is already known.
@@ -1114,20 +1157,36 @@ few paragraphs — and the layout is the answer to that length:
 - **They are grouped into four strata of thirteen** — Canopy, Understorey, Trunk, Roots —
   a section through a forest read from the light down into the ground. The strata and the
   numbers are in the page's own markup, not worked out in the script.
-- **The canopy is grown, not drawn.** A few boughs rise from the foot of the drawing and
-  split, and split again, thinning as they go, with specks strung along them and only
-  their near neighbours joined (`grow`, `paintCanopy`). It comes up from the foot out to
-  the last twig when the page opens and then stands still. Joining every speck within
-  reach instead — the first version — came out as long lines striking across the page and
-  closing into triangles: a net thrown over the title rather than something growing behind
-  it. It is also kept out of the middle of the page (`CLEAR_MID`), where the title stands.
+- **The wood is grown, and it runs the length of the piece.** Conifers stand down both
+  margins of the whole page rather than as one canopy behind the title: each is a
+  straight leader carrying whorls of branches that shorten as they rise and droop as they
+  reach out, with specks strung along them and only their near neighbours joined
+  (`treeAt`, `branchOf`, `growWood`, `paintWood`). The owner asked for the trees
+  "extended and go through the entire page" and made "more coniferous". The whole page's
+  trees are grown ONCE, in the page's own coordinates, and bucketed into rows so that
+  only the rows on screen are drawn — growing them per screenful instead would re-roll
+  the wood every time you scrolled. It grows from nothing over `GROW_MS` when the page
+  opens and then holds its shape, and it is kept out of the middle of the page
+  (`CLEAR_MID`), where the writing stands. Joining every speck within reach — the first
+  version — came out as long lines striking across the page and closing into triangles: a
+  net thrown over the title rather than something growing behind it.
+- **It idles where it stands, and it blooms under the hand** (`IDLE`, `IDLE_RATE`,
+  `BLOOM_*`). A speck drifts about a pixel around its own place on its own slow clock, so
+  the wood is never quite still while never going anywhere — the owner asked for exactly
+  that: "the particles themselves are free to slightly idle, yet the taught character
+  should remain the same". Near the pointer a speck is drawn more plainly and puts out a
+  few short needles, eased in and out (`BLOOM_EASE`) so the bloom follows the hand rather
+  than switching on and off with it. **Nothing about the drawing moves with the pointer**
+  — it is the same tree in the same place, drawn fuller where the hand is — which is the
+  other half of what they asked for: "this should not be interactive and should not move
+  with the mouse".
 - **The trunk is the piece's own scale**: one tick per part down the side, inked in as it
   is passed, with the reading in the corner counting them. It reads the PARTS and not the
   scrollbar — a part that runs long should not read as more of the piece than a part that
   runs short — and it is taken off the page below 860px, where the window is the whole of
   the room.
 - **Without the script the page is all of its writing.** The trunk and the reading are
-  added by it and the canopy is drawn by it; none of them carry anything to read.
+  added by it and the wood is drawn by it; none of them carry anything to read.
 
 ### Styling
 
@@ -1229,7 +1288,9 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **Pineward** | The first piece in Scent descriptions: `works/pineward.html`, "the house that smells like trees". An introduction and fifty-two parts. |
 | **part** (Pineward) | One of Pineward's fifty-two: a `<details>` showing its number, a small picture and its title until it is opened, and its full picture and writing inside. |
 | **stratum** | One of the four groups of thirteen parts — Canopy, Understorey, Trunk, Roots — a section through a forest read from the light down into the ground. |
-| **the canopy** | The drawing behind Pineward's title: a few boughs that branch as they rise, specks strung along them, grown from the foot up when the page opens and still afterwards. Kept out of the middle of the page, where the title stands. |
+| **the wood** / **the canopy** | The drawing behind Pineward: conifers standing down both margins the whole length of the page, specks strung along their branches, grown from nothing when the page opens and holding their shape afterwards. Kept out of the middle of the page, where the writing stands. It was one canopy behind the title before the owner asked for it extended through the whole piece; they may still call it the canopy. |
+| **the bloom** | What Pineward's wood does under the pointer: the specks near the hand are drawn more plainly and put out a few short needles, eased in and out. Nothing moves — the tree is only drawn fuller there. |
+| **the idle** | The pixel of drift each speck in that wood keeps about its own place, so the drawing is never quite still without ever going anywhere. |
 | **the trunk** (Pineward) | The rule down the side of that page with one tick per part, inked in as each is passed, with the reading in the corner counting them. |
 | **the grain** / **the wave** / **the sweep** / **knot** | All of the hatch's answers to the hand, removed with it — see **the field / the hatch** above. |
 | **mound** / **skyline** | The reading the field carried before *that*, when it was a lattice of marks: a rise in its top edge per entry. Nothing of it is in the code either. |
@@ -1237,7 +1298,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **injector** | One of the chamber's two sources (`S-01`, `S-02` on the drawing), each at its own depth in the volume. They stand at opposite corners — top right and bottom left — and take turns being the quick one. |
 | **the orbit** (chamber) | What the chamber's streams join: a tilted circle of particles — a **lens**, pressed flat onto its own plane — standing round the word, with its own path drawn faintly through it. It is the only arrangement the page has: opening the menu widens it, closing the menu narrows it. Not to be confused with **the ring / the orbit** below, which is a removed Favorites treatment. |
 | **the entry** | How a stream joins the orbit: aimed not at the middle but along its own **tangent** to the orbit, carried forward along the way the orbit runs (`entryFor`, `ENTRY_GRAZE`), so it comes in at a slant already going the right way. |
-| **the word** | `FAVORITES`, standing in the middle of the chamber's orbit: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the orbit so the orbit's rims cross the ends of the lettering, one in front and one behind — so its size and `RING` are one decision. Bracketed by **crop marks**, which run out towards each other as the hand comes on to it, with the **cue** under it. |
+| **the word** | `FAVOURITES`, standing in the middle of the chamber's orbit: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the orbit so the orbit's rims cross the ends of the lettering, one in front and one behind — so its size and `RING` are one decision. Bracketed by **crop marks**, which run out towards each other as the hand comes on to it, with the **cue** under it. |
 | **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
 | **the hold** / **the frame** | What the chamber used to do when the menu was opened: every particle took a seat on the border of the window and the whole rectangle travelled round it. Removed — the orbit simply widens now. Nothing of it is in the code (no `EDGE`, no seat, no `FLOW`). |
 | **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it swells outward, and the rule under the row draws back from the right. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |

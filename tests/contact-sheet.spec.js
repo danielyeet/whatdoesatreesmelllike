@@ -483,36 +483,90 @@ const inSheet = (page, which) =>
              w: box.width, h: box.height };
   }, which);
 
-test("a picture is bounded by specks, not by a ruled border", async ({ page }) => {
+test("a picture is ruled, with specks only where the map is tied to it",
+  async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
 
-  // The border this page used to draw round every picture is gone —
-  // the owner asked for it to be replaced by particles joined with
-  // lines — so the frame itself rules nothing at all.
-  const border = await page.$$eval(".sheet.scripted .sheet-frame", (frames) =>
+  // The classic border is back — it was taken off for a round, when
+  // the chain of specks round a picture was the whole of its edge, and
+  // the owner asked for it back with the specks kept only where a line
+  // meets one.
+  const border = await page.$$eval(".sheet.scripted .sheet-frame.landed", (frames) =>
     frames.map((f) => getComputedStyle(f).borderTopWidth));
-  expect(new Set(border), "no frame should carry a border").toEqual(new Set(["0px"]));
+  expect(border.length).toBeGreaterThan(3);
+  expect(new Set(border), "every picture should be ruled").toEqual(new Set(["1px"]));
 
-  const at = await inSheet(page, 3);
-  // Ink along each of its four edges...
-  const band = 7;
-  const edges = {
-    top: await speckInk(page, [at.x, at.y - band, at.w, band * 2]),
-    foot: await speckInk(page, [at.x, at.y + at.h - band, at.w, band * 2]),
-    left: await speckInk(page, [at.x - band, at.y, band * 2, at.h]),
-    right: await speckInk(page, [at.x + at.w - band, at.y, band * 2, at.h]),
-  };
-  Object.keys(edges).forEach((side) => {
-    expect(edges[side], `the ${side} edge should be drawn in specks: ${JSON.stringify(edges)}`)
-      .toBeGreaterThan(200);
+  // Where a line is tied to a picture there are specks; where nothing
+  // is tied to it there are none.
+  const tied = await page.evaluate(() => {
+    const canvas = document.querySelector(".sheet-specks");
+    const ratio = canvas.width / parseFloat(canvas.style.width);
+    const paint = canvas.getContext("2d");
+    const ink = (x, y, r) => {
+      const shot = paint.getImageData(
+        Math.round((x - r) * ratio), Math.round((y - r) * ratio),
+        Math.round(2 * r * ratio), Math.round(2 * r * ratio)).data;
+      let n = 0;
+      for (let i = 3; i < shot.length; i += 4) n += shot[i];
+      return Math.round(n / 100);
+    };
+    // Every point where a route leaves a picture.
+    const ends = [];
+    document.querySelectorAll(".sheet-route").forEach((route) => {
+      ends.push({ x: +route.getAttribute("x1"), y: +route.getAttribute("y1") });
+      ends.push({ x: +route.getAttribute("x2"), y: +route.getAttribute("y2") });
+    });
+    // A frame with at least one line tied to it, and a stretch of its
+    // own edge as far from any of them as the frame allows.
+    const box = document.querySelector(".sheet-specks").getBoundingClientRect();
+    let best = null;
+    document.querySelectorAll(".sheet-frame.landed").forEach((frame) => {
+      const at = frame.getBoundingClientRect();
+      const on = { x: at.left - box.left, y: at.top - box.top, w: at.width, h: at.height };
+      // Walk its perimeter and find the point furthest from any tie.
+      // The lines tied to THIS picture: a route leaves a frame from
+      // just off its own edge, so anything within a few pixels of the
+      // box is one of its own.
+      const mine = ends.filter((end) =>
+        end.x > on.x - 16 && end.x < on.x + on.w + 16 &&
+        end.y > on.y - 16 && end.y < on.y + on.h + 16);
+      if (!mine.length) return;
+      let far = null;
+      for (let t = 0; t < 1; t += 1 / 160) {
+        const side = Math.floor(t * 4), along = t * 4 - side;
+        const p = side === 0 ? { x: on.x + on.w * along, y: on.y }
+          : side === 1 ? { x: on.x + on.w, y: on.y + on.h * along }
+          : side === 2 ? { x: on.x + on.w * (1 - along), y: on.y + on.h }
+          : { x: on.x, y: on.y + on.h * (1 - along) };
+        let away = Infinity;
+        ends.forEach((end) => {
+          away = Math.min(away, Math.hypot(end.x - p.x, end.y - p.y));
+        });
+        if (!far || away > far.away) far = { p: p, away: away };
+      }
+      if (far && far.away > 70 && (!best || far.away > best.far.away)) {
+        best = { near: { p: mine[0] }, far: far };
+      }
+    });
+    if (!best) return null;
+    return {
+      atTie: ink(best.near.p.x, best.near.p.y, 22),
+      away: ink(best.far.p.x, best.far.p.y, 22),
+      apart: Math.round(best.far.away),
+    };
   });
 
-  // ...and none across the middle of it: this is an edge, not a fill.
-  const inside = await speckInk(page, [
-    at.x + at.w * 0.25, at.y + at.h * 0.25, at.w * 0.5, at.h * 0.5,
-  ]);
-  expect(inside, "and nothing drawn across the picture itself").toBe(0);
+  expect(tied, "a picture with a line tied to it and a clear stretch of edge")
+    .not.toBeNull();
+  // The tuft is deliberately faint — it is an embellishment where the
+  // map meets a picture, not a second border — so what is measured is
+  // the contrast: something there, and nothing at all along the rest
+  // of the edge.
+  expect(tied.atTie, `specks where the line is tied: ${JSON.stringify(tied)}`)
+    .toBeGreaterThan(40);
+  expect(tied.away, `and none along the edge away from it: ${JSON.stringify(tied)}`)
+    .toBeLessThan(tied.atTie * 0.25);
 });
 
 test("a line between two pictures is a run of specks, not a stroke", async ({ page }) => {
@@ -570,6 +624,102 @@ test("a line between two pictures is a run of specks, not a stroke", async ({ pa
     .toBeGreaterThan(8);
   expect(along.inked, `with page showing between them: ${JSON.stringify(along)}`)
     .toBeLessThan(along.steps * 0.9);
+});
+
+test("a line arrives slack and is then pulled taut", async ({ page }) => {
+  await page.goto(SHEET);
+
+  // A line is meant to hang between the two pictures it joins while it
+  // is being drawn, and be pulled into the straight run shortly after
+  // it lands: the owner asked for loose ropes that go taut. So while
+  // the map is drawing itself there must be ink well off the straight
+  // line between two pictures, and once it has settled there must be
+  // none.
+  const offLine = () =>
+    page.evaluate(() => {
+      const route = [...document.querySelectorAll(".sheet-route")]
+        .map((r) => ({
+          x1: +r.getAttribute("x1"), y1: +r.getAttribute("y1"),
+          x2: +r.getAttribute("x2"), y2: +r.getAttribute("y2"),
+        }))
+        .sort((a, b) => Math.hypot(b.x2 - b.x1, b.y2 - b.y1) - Math.hypot(a.x2 - a.x1, a.y2 - a.y1))[0];
+      if (!route) return null;
+      const far = Math.hypot(route.x2 - route.x1, route.y2 - route.y1);
+      const ux = (route.x2 - route.x1) / far, uy = (route.y2 - route.y1) / far;
+      const canvas = document.querySelector(".sheet-specks");
+      const ratio = canvas.width / parseFloat(canvas.style.width);
+      const paint = canvas.getContext("2d");
+      // A band ACROSS the line at its middle, where a rope hangs
+      // furthest from it — but not so near the line that the specks
+      // that always stand a little off it are counted.
+      let off = 0, on = 0;
+      for (let at = 0.2; at < 0.8; at += 0.02) {
+        const x = route.x1 + (route.x2 - route.x1) * at;
+        const y = route.y1 + (route.y2 - route.y1) * at;
+        for (let out = -34; out <= 34; out += 2) {
+          const px = Math.round((x - uy * out) * ratio);
+          const py = Math.round((y + ux * out) * ratio);
+          const shot = paint.getImageData(px, py, 2, 2).data;
+          let ink = 0;
+          for (let i = 3; i < shot.length; i += 4) ink += shot[i];
+          if (Math.abs(out) > 9) off += ink; else on += ink;
+        }
+      }
+      return { off: Math.round(off / 100), on: Math.round(on / 100) };
+    });
+
+  // Caught while the map is still drawing itself.
+  let slack = null;
+  for (let n = 0; n < 60 && !slack; n++) {
+    await page.waitForTimeout(220);
+    const seen = await offLine();
+    if (seen && seen.off > 12) slack = seen;
+  }
+  expect(slack, "a line should hang off its own straight run while it arrives")
+    .not.toBeNull();
+
+  await waitForSheet(page);
+  await page.waitForTimeout(1200);
+  const taut = await offLine();
+  expect(taut.on, "the line should still be there once it is taut").toBeGreaterThan(20);
+  expect(taut.off, `and pulled into it: ${JSON.stringify({ slack, taut })}`)
+    .toBeLessThan(slack.off / 3);
+});
+
+test("the page opens on the picture it will land on, and holds it",
+  async ({ page }) => {
+  // The flick used to start in the same frame the page did. A beat of
+  // the piece itself first reads as a projector being started rather
+  // than as a page loading — so the page is watched from the moment
+  // the script takes over rather than photographed at a guessed
+  // instant, which on a busy machine is most of a second late.
+  await page.addInitScript(() => {
+    window.__opened = [];
+    const watch = () => {
+      const sheet = document.getElementById("sheet");
+      if (sheet && sheet.classList.contains("scripted")) {
+        const at = [...document.querySelectorAll(".sheet-frame")]
+          .findIndex((f) => getComputedStyle(f).visibility === "visible");
+        window.__opened.push([performance.now(), at]);
+      }
+      if (performance.now() < 4000) requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  });
+  await page.goto(SHEET);
+  await page.waitForTimeout(2500);
+
+  const seen = await page.evaluate(() => window.__opened);
+  expect(seen.length, "the opening should have been watched").toBeGreaterThan(20);
+  const began = seen[0][0];
+  const held = seen.filter(([at]) => at - began < 200);
+  expect(held.length, "and watched closely enough").toBeGreaterThan(4);
+  expect(held.every(([, at]) => at === 0),
+    `the first picture should be held while the page opens: ${JSON.stringify(held.slice(0, 8))}`)
+    .toBe(true);
+
+  // And then the cuts start: it does not simply sit there.
+  expect(seen.some(([, at]) => at > 0), "the flick should follow it").toBe(true);
 });
 
 test("the specks stand still when the page is scrolled", async ({ page }) => {

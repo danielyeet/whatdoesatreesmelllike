@@ -17,7 +17,7 @@ const PAGES = [
   { url: "/contact.html", root: "", title: /Contact/ },
   { url: "/categories/scent-descriptions.html", root: "../", title: /Scent descriptions/ },
   { url: "/categories/theories.html", root: "../", title: /Theories/ },
-  { url: "/categories/favorites.html", root: "../", title: /Favorites/ },
+  { url: "/categories/favorites.html", root: "../", title: /Favourites/ },
   { url: "/categories/other-1.html", root: "../", title: /Other/ },
   { url: "/categories/other-2.html", root: "../", title: /Other/ },
   { url: "/works/example-gallery-work.html", root: "../", title: /Vetiver/ },

@@ -22,7 +22,7 @@
 // and go round the same way.
 //
 // These check that the menu is grown from the page's own favourites
-// and carries what the contact sheet's Favorites menu carries, that
+// and carries the number, date, name and link of every favourite, that
 // the word opens it and a chapter opens its own favourites with a way
 // back, that the injectors stand where they should and nothing comes
 // from anywhere else, that the orbit stands round the writing and runs on
@@ -121,6 +121,46 @@ test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
 });
 
+test("the menu is a fixed length, whatever is in it", async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+
+  // Closed, the menu is not on the page at all. It has a display of
+  // its own now — it is a column with the rows scrolling inside it —
+  // and a display of one's own outranks the browser's own rule for
+  // `[hidden]`, which once left it standing open from the moment the
+  // page loaded.
+  await expect(page.locator(".chamber-panel")).toBeHidden();
+
+  await openMenu(page);
+  const was = await page.locator(".chamber-panel").boundingBox();
+
+  // The owner asked for the table to stay the same size as favourites
+  // are added to the page — which is what a fixed length is FOR, since
+  // how wide the orbit grows and how far the plate is lifted both hang
+  // off this box. So the page is given a great many more rows than it
+  // has, and the box may not move.
+  await page.evaluate(() => {
+    const level = document.querySelector(".chamber-level:not([hidden])");
+    const row = level.querySelector(".chamber-row");
+    for (let n = 0; n < 30; n++) level.appendChild(row.cloneNode(true));
+  });
+  await page.waitForTimeout(500);
+
+  const now = await page.locator(".chamber-panel").boundingBox();
+  expect(now.height, "the menu should be the same length with thirty more rows in it")
+    .toBeCloseTo(was.height, 0);
+  expect(now.y, "and stand in the same place").toBeCloseTo(was.y, 0);
+
+  // Which means the rows are what scrolls.
+  const column = await page.locator(".chamber-column").evaluate((el) => ({
+    scrolls: getComputedStyle(el).overflowY,
+    over: el.scrollHeight > el.clientHeight + 4,
+  }));
+  expect(column.scrolls, "the rows are what scrolls").toMatch(/auto|scroll/);
+  expect(column.over, "and there is more of them than the box holds").toBe(true);
+});
+
 test("the menu is grown from the page's own favourites", async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(PAGE);
@@ -191,7 +231,7 @@ test("the word opens the menu, a chapter opens its own favourites, and there is 
   await expect(page.locator(".chamber-word")).toHaveAttribute("aria-expanded", "false");
 });
 
-test("it carries what the sheet's Favorites menu carries: number, date, name, link",
+test("every favourite carries its number, date, name and link",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
@@ -331,11 +371,15 @@ test("opening the menu widens the same orbit rather than replacing it",
   expect(open.ink, "and it should still be the same drawing, not a thinner one")
     .toBeGreaterThan(closed.ink * 0.5);
 
-  // And it stands clear round the menu rather than crossing it.
+  // The orbit itself still stands clear round the menu — it is fitted
+  // to that box — but what is NEARER than the middle of the chamber
+  // passes in FRONT of the menu, the way it already passed in front of
+  // the word. The room the menu takes used to be cleared of it; the
+  // owner asked for the particles to be in front of the table.
   const menu = await page.locator(".chamber-panel").boundingBox();
   expect((await inkOn(page, ".chamber-front", [
     menu.x + 8, menu.y + 8, menu.width - 16, menu.height - 16,
-  ])).ink, "nothing should be drawn over the menu").toBe(0);
+  ])).ink, "the near specks should cross the menu").toBeGreaterThan(400);
 });
 
 /** Where the word stands, every frame, while `act` is being done to

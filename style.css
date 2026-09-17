@@ -813,13 +813,13 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
   position: relative;
   display: block;
   aspect-ratio: 1 / 1;
-  /* NO BORDER. What bounds a picture here is the chain of specks the
-     canvas draws round it — the owner asked for the ruled border to be
-     replaced by particles joined with lines, the way the chamber's
-     cursor strings a web. A border as well would be the same edge
-     drawn twice. The plain no-script grid keeps one, below, since
-     there is no canvas in that. */
-  border: 0;
+  /* THE CLASSIC BORDER. A picture is ruled, the way every frame on
+     this site is. It was taken off for a round — the chain of specks
+     the canvas draws was the whole of the edge — and the owner asked
+     for it back, with the specks kept only where the map is tied to a
+     picture. So the border is the edge and the specks are where
+     something meets it. */
+  border: 1px solid var(--line);
   background-color: var(--bg-2);
   /* Hatching, as everywhere else on this site that a picture is still
      to come. The angle and spacing are set per frame by the script so
@@ -853,9 +853,6 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
    in from the corner of the sheet as the page opened. contact-sheet.js
    takes this off again on the frame after that first layout. */
 .sheet.placing .sheet-frame { transition: none; }
-/* Without the script there is no canvas and so no chain of specks;
-   the plain grid keeps the ruled border it always had. */
-.sheet:not(.scripted) .sheet-frame { border: 1px solid var(--line); }
 .sheet-frame:has(img) { background-image: none; background-color: transparent; }
 .sheet-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sheet-number {
@@ -902,9 +899,14 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
 .sheet.scripted .sheet-frame .sheet-caption { opacity: 0; transition: opacity 0.5s var(--menu-ease) 0.15s; }
 .sheet.scripted .sheet-frame.landed .sheet-caption { opacity: 1; }
 /* Nothing here answers the pointer for now — see the note on the
-   frame's transform above. A picture's own edge, while it is in the
-   middle window and while it stands on the map, is the chain of specks
-   the canvas draws round it. */
+   frame's transform above.
+
+   Whatever is in the middle window carries the window's own edge, so
+   flicking through the pictures does not flicker the border along with
+   them; once a picture has landed on the map it goes back to the
+   hairline every other frame on the site is drawn with. */
+.sheet.scripted .sheet-frame:not(.landed) { border-color: var(--ink); }
+.sheet-frame.is-plate { border-color: var(--ink); }
 /* The settled picture's caption is printed inside its own bottom
    corner, the way a caption is written on a print — outside it is
    where the lines leave from. */
@@ -1317,10 +1319,27 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   padding: 18px 22px 22px;
   border: 1px solid var(--line);
   background: var(--bg);
-  /* Out of the flow it is no longer held inside the plate's height, so
-     it keeps its own room to scroll in. */
-  max-height: calc(100vh - 200px);
-  overflow: auto;
+  /* A FIXED LENGTH, whatever is in it. The owner asked for the table
+     to stay the same size as more favourites are added, and two things
+     come with that: the menu is a panel of a known size rather than a
+     list that grows down the window, and — since the orbit is fitted
+     to this box and the plate is lifted by half of it — neither the
+     orbit nor where the word stands changes when a favourite is
+     written. The rows scroll inside it instead.
+
+     Out of the flow it is not held inside the plate's height, so on a
+     short window it takes what there is rather than running off the
+     bottom. */
+  display: flex;
+  flex-direction: column;
+  height: 360px;
+  /* `svh` and not `vh`: on a phone the viewport height CHANGES as the
+     address bar slides away, and this box is what the orbit is fitted
+     to and what the plate is lifted by half of — so a height written
+     in `vh` moves the word and the menu every time the page is
+     touched. `svh` is the small viewport, which does not move. */
+  max-height: calc(100vh - 180px);
+  max-height: calc(100svh - 180px);
   /* It comes up over the same moment the orbit takes to widen, and
      waits out the first third of it: the word has to have begun coming
      down to a heading before the menu appears under it, or the two
@@ -1333,6 +1352,12 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
      minimal however smoothly it is eased. */
   animation: chamber-open 1.45s var(--chamber-step) 0.75s both;
 }
+/* A DISPLAY OF ITS OWN OUTRANKS `[hidden]`. The panel is a flex column
+   now, so the browser's own `[hidden] { display: none }` no longer
+   holds it off the page — it stood open from the moment the page
+   loaded until this was written back. Everything else here that is
+   hidden by the attribute carries the same line. */
+.chamber-panel[hidden] { display: none; }
 @keyframes chamber-open {
   from { opacity: 0; translate: -50% -8px; }
   to { opacity: 1; translate: -50% 0; }
@@ -1397,6 +1422,16 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   color: var(--muted);
 }
 
+/* The rows are what scrolls, not the panel: the heading and the way
+   back stay where they are at the top of it. `min-height: 0` because a
+   flex child will not shrink below its content without being told it
+   may. */
+.chamber-column {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .chamber-level[hidden] { display: none; }
 .chamber-level { animation: chamber-level 0.4s var(--menu-ease) both; }
 @keyframes chamber-level {
@@ -1900,16 +1935,21 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
 /* THE CANOPY, standing behind the title and fading out before the
    writing starts. It is drawn by the script; there is nothing in it
    without one. */
+/* THE WOOD stands behind the whole piece rather than behind its title,
+   so the canvas is FIXED to the window and the drawing is carried in
+   the page's own coordinates: a page six thousand pixels long does not
+   need a canvas six thousand pixels tall. What is quiet across the
+   middle of it, where the writing stands, is worked out in pineward.js
+   rather than masked here — a mask would take the trees out of the
+   page's foot as well. */
 .pine-canopy {
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
   width: 100%;
-  height: clamp(340px, 62vh, 620px);
+  height: 100%;
   pointer-events: none;
   z-index: 0;
-  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
 }
 
 .pine-head {

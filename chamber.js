@@ -368,7 +368,6 @@
   const TAIL = 0.03;           // how much of its own speed it trails behind it
   const BANDS = 6;             // how many weights the specks are grouped into to draw
   const PATH_INK = 0.2;        // how plainly the orbit's own path is drawn
-  const CLEAR_PAD = 18;        // how far past the writing the clear room reaches
 
   const INK = "23,23,15";      // --ink
   const STEEL = "109,108,98";  // --muted
@@ -474,7 +473,7 @@
   // ============================================================
   // WHAT IS ON THE PAGE
   //
-  // The same reading the contact sheet's Favorites view takes off its
+  // The same reading the contact sheet's removed Favorites view took off its
   // own entries: the chapters are the different data-chapter values in
   // the order they first appear, and each favourite carries the date
   // it is filed under. Naming them, ordering them and adding to them
@@ -516,7 +515,7 @@
 
   const where = document.createElement("p");
   where.className = "page-where";
-  where.textContent = "Favorites";
+  where.textContent = "Favourites";
   shell.appendChild(where);
 
   const plate = document.createElement("div");
@@ -537,7 +536,7 @@
   word.innerHTML =
     '<span class="chamber-word-line">' +
     '<span class="chamber-reg" aria-hidden="true"></span>' +
-    '<span class="chamber-word-name">Favorites</span>' +
+    '<span class="chamber-word-name">Favourites</span>' +
     '<span class="chamber-reg" aria-hidden="true"></span>' +
     "</span>" +
     '<span class="chamber-cue"><span class="chamber-cue-name">Expand</span>' +
@@ -649,12 +648,18 @@
   // carried out with it as it widens rather than dragged — see
   // `carried` in move().
   let wasOrbit = RING;
-  // How far the plate is standing above the middle of the window — see
-  // `clearing()`. Kept so it is only written when it actually changes.
+  // How far the plate is standing above the middle of the window, and
+  // which state it was written for — see `clearing()`. Kept so that it
+  // is written once per step and then held.
   let lifted = 0;
-  // And how far the menu has arrived, which is how much of the room it
-  // stands in is cleared of specks — see `veil` in clearing() and draw().
-  let veil = 0;
+  let liftFor = null;
+  /** The gap the stylesheet leaves between the word and the menu,
+      asked for rather than written here as well. */
+  function gapUnderWord() {
+    const said = window.getComputedStyle(panel).marginTop;
+    const gap = parseFloat(said);
+    return isNaN(gap) ? 10 : gap;
+  }
   const now = () =>
     (window.performance && window.performance.now ? window.performance.now() : Date.now());
   /** THE CURVE THE STEP IS EASED ON — and the very one the stylesheet
@@ -708,14 +713,14 @@
     back.hidden = !inside;
     if (inside) {
       const dates = inside.items.map((item) => item.date).filter(Boolean);
-      back.querySelector(".chamber-back-name").textContent = "Favorites";
+      back.querySelector(".chamber-back-name").textContent = "Favourites";
       spec.textContent =
         inside.name.toUpperCase() + "   ·   " + numbered(inside.items.length - 1) + " ENTRIES" +
         (dates.length ? "   ·   " + dates[0] + " – " + dates[dates.length - 1] : "");
     } else {
       spec.textContent =
-        "FAVORITES   ·   " + numbered(chapters.length - 1) + " CHAPTERS   ·   " +
-        numbered(entries.length - 1) + " ENTRIES";
+        "FAVOURITES   ·   " + numbered(chapters.length - 1) + " CHAPTERS   ·   " +
+        numbered(entries.length - 1) + " TOTAL ENTRIES";
     }
     hotRow = null;
   }
@@ -845,7 +850,6 @@
   // ============================================================
   let width = 0, height = 0, lens = 0, midX = 0, midY = 0;
   let clock = 0, last = 0;
-  let taken = null;
   let handX = -9999, handY = -9999, hasHand = false;
 
   const stream = CORNERS.map((corner, i) => ({
@@ -1006,28 +1010,8 @@
       than the menu is open — it fades back into the word first — and
       it is its box that is asked for the whole of that time.) */
   function clearing() {
-    // Whatever is standing in the middle: the menu while it is on the
-    // page — which is a little longer than the menu is OPEN, since it
-    // fades back into the word first — and the word itself otherwise.
-    const box = (panel.hidden ? word : panel).getBoundingClientRect();
-    taken = {
-      left: box.left - CLEAR_PAD,
-      top: box.top - CLEAR_PAD,
-      right: box.right + CLEAR_PAD,
-      foot: box.bottom + CLEAR_PAD,
-    };
-
     const menu = panel.getBoundingClientRect();
     if (menu.width > 8 && menu.height > 8) fitOrbit(menu);
-
-    // HOW MUCH OF THE ROOM THE MENU TAKES IS CLEARED of everything
-    // near — nothing while it is not there, all of it once it has
-    // arrived, and on the way in and out exactly as much as the menu
-    // itself is there. Read off the page rather than worked out from
-    // a clock of its own: the menu's fade is the stylesheet's
-    // (`chamber-open`, `chamber-shut`), and a second clock here would
-    // be one more thing to keep in step with it.
-    veil = panel.hidden ? 0 : Number(window.getComputedStyle(panel).opacity) || 0;
 
     // HOW FAR THE PLATE STANDS ABOVE THE MIDDLE OF THE WINDOW. The
     // menu hangs out of the flow under the word, so it is the word
@@ -1035,26 +1019,45 @@
     // what hangs below it is what centres the WORD AND THE MENU
     // TOGETHER, which is what anyone looks at once it is open.
     //
-    // Measured off the page rather than worked out from the gap and
-    // the height, so there is no number here to keep in step with the
-    // stylesheet. It is a length the stylesheet eases on the step's
-    // own curve, so the word rises to its place over the whole step;
-    // set straight to its open value it would be the jump this was
-    // written to stop.
+    // MEASURED OFF THE MENU ALONE, AND IN WHOLE FRACTIONS OF A PIXEL.
+    // It used to be read as `panel.offsetTop + panel.offsetHeight -
+    // plate.offsetHeight`, and all three of those are rounded to whole
+    // pixels: the word's size is travelling the whole time the step
+    // runs, so the plate's height changes every frame, and the two
+    // roundings drifted against each other by a pixel. Every time they
+    // did, this wrote a new lift, and every new lift restarted the
+    // stylesheet's two-second ease from wherever the plate had got to
+    // — so the word crept up and down under itself while it travelled.
+    // The owner reported it on another machine: it is worse the
+    // further a display's scaling is from whole pixels, which is why
+    // it can be invisible on the machine it was written on.
     //
-    // Read off the LAID-OUT boxes and not the drawn ones, which is
-    // what `offsetTop` and `offsetHeight` are: the menu's arrival
-    // shifts it a few pixels as it fades, and a drawn box would carry
-    // that, so the lift would creep by four pixels over the first
-    // second. A target that keeps moving restarts the easing under
-    // itself every frame and the plate never arrives — measured, it
-    // was still short of its place a second after the step had
-    // finished. (The plate's own height falls out of the sum, so the
-    // word shrinking does not move this either.)
+    // The menu's own height carries none of that: the panel's box is
+    // the same however big the word is, and `getBoundingClientRect` is
+    // not rounded. The gap is read from the stylesheet rather than
+    // written here twice.
     const lift = opened && menu.height > 8
-      ? Math.max(0, (panel.offsetTop + panel.offsetHeight - plate.offsetHeight) / 2)
+      ? Math.max(0, (menu.height + gapUnderWord()) / 2)
       : 0;
-    if (Math.abs(lift - lifted) > 0.5) {
+    // AND IT IS WRITTEN ONCE PER STEP, not whenever it has drifted.
+    //
+    // Opening or closing writes it immediately — that write is what
+    // the plate travels on — and then it is HELD until the step is
+    // over, however the page is measured in the meantime. The
+    // stylesheet eases the plate over two seconds, and every new value
+    // written into that restarts the ease from wherever the plate has
+    // got to: a target that moves under a running ease is a word that
+    // creeps up and down while it travels, which is what the owner
+    // reported seeing on another machine. Anything that can move the
+    // menu's box mid-step — a font arriving, a phone's address bar
+    // sliding away, a scrollbar — did exactly that.
+    //
+    // Standing still, a change of more than a pixel is taken: that is
+    // a window being resized or a chapter being opened, and the page
+    // should follow it. Under a pixel is the page's own rounding.
+    const forNow = opened;
+    if (forNow !== liftFor || (stepAt < 0 && Math.abs(lift - lifted) > 1)) {
+      liftFor = forNow;
       lifted = lift;
       plate.style.setProperty("--menu-lift", lift.toFixed(1) + "px");
     }
@@ -1493,33 +1496,15 @@
     // by box. The far rim now threads between the letters and is hidden
     // behind the strokes, which is what it should have done all along.
     //
-    // The front canvas is another matter. Closed, nothing is taken out
-    // of it: the nearer half of the ring is meant to pass over the
-    // word, and that crossing is the whole of what makes the word sit
-    // inside the chamber rather than on top of a picture of it. Open,
-    // the room the menu stands in is CLEARED of everything near, or
-    // the specks and the web would be drawn over the writing. The
-    // panel has a border and a ground of its own, so the edge they
-    // stop at is an edge you can see.
-    //
-    // THAT CLEARING IS FADED IN WITH THE MENU ITSELF, and that is the
-    // whole of `veil` — see `clearing()`, which reads the menu's own
-    // opacity off the page rather than keeping a clock of its own.
-    // It used to be a clip, switched on in the one frame the panel
-    // joined the page — two thirds of a second before the panel began
-    // to fade in at all. So a hard-edged rectangle of nothing appeared
-    // in the middle of the drawing and the streams stopped dead
-    // against it with nothing there to stop them: the same invisible
-    // pane the back canvas used to stand in the chamber, except in
-    // time rather than in space. The owner reported it — the table
-    // appears instantly as an object and obstructs the flow of the
-    // particles.
-    //
-    // It is done by taking the room back OUT of the finished drawing
-    // rather than by not drawing into it (`destination-out`), because
-    // the fade has to reach everything the front canvas carries — the
-    // near rim of the orbit and its ticks, the specks, their tails and
-    // the web — and one pass over the box does all of them at once.
+    // The front canvas is not either, and that is the owner's own
+    // call: WHAT IS NEARER THAN THE MIDDLE OF THE CHAMBER PASSES IN
+    // FRONT OF THE MENU, the way it already passed in front of the
+    // word. The room the menu stands in used to be cleared of it —
+    // first with a clip switched on in the frame the panel joined the
+    // page, then with a fade that came on exactly as the menu itself
+    // arrived. Neither is here any more: there is no `veil` and no
+    // `CLEAR_PAD` in this file, and what the front canvas draws is
+    // left exactly as it is drawn.
     paint.save();
     paintFront.save();
 
@@ -1602,14 +1587,6 @@
 
     drawWeb();
     near.length = 0;
-
-    if (taken && veil > 0.002) {
-      paintFront.globalCompositeOperation = "destination-out";
-      paintFront.globalAlpha = Math.min(1, veil);
-      paintFront.fillStyle = "#000";
-      paintFront.fillRect(taken.left, taken.top,
-                          taken.right - taken.left, taken.foot - taken.top);
-    }
 
     paint.restore();
     paintFront.restore();

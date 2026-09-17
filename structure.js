@@ -1056,27 +1056,35 @@
   function drawTraverses(on) {
     if (!REDUCE_MOTION && clock > nextTraverse && traverses.length < TRAVERSES) {
       nextTraverse = clock + TRAVERSE_EVERY * (0.5 + random());
-      const across = random() < 0.68;
+      // ANY DIRECTION, not along the frame. A streak used to run
+      // either across the frame or up and down it, which read as two
+      // kinds of rule being drawn rather than as something crossing
+      // the air; the owner asked for them to go any way at all. Each
+      // one is given a bearing, started from outside the frame on the
+      // side it is coming from, and run along that bearing.
+      const bearing = random() * Math.PI * 2;
+      const goX = Math.cos(bearing), goY = Math.sin(bearing);
       traverses.push({
         z: eye + 7 + random() * 26,
-        along: -RIB_X * 1.1,
-        at: (random() - 0.5) * 2 * (across ? RIB_Y : RIB_X) * 0.8,
-        across: across,
-        way: random() < 0.5 ? 1 : -1,
+        along: 0,
+        // Where it enters: back along its own bearing, far enough out
+        // to be off the frame, and offset across it so that two on the
+        // same bearing do not run down the same line.
+        fromX: -goX * RIB_X * 1.5 - goY * (random() - 0.5) * RIB_Y * 1.6,
+        fromY: -goY * RIB_Y * 1.5 + goX * (random() - 0.5) * RIB_X * 1.6,
+        goX: goX,
+        goY: goY,
         speed: 9 + random() * 13,
         trail: 1.4 + random() * 2.2,
       });
     }
     for (let n = traverses.length - 1; n >= 0; n--) {
       const one = traverses[n];
-      const reach = (one.across ? RIB_X : RIB_Y) * 1.1;
-      const from = one.along - one.trail;
-      const head = one.across
-        ? to(one.along * one.way, one.at, one.z)
-        : to(one.at, one.along * one.way, one.z);
-      const tail = one.across
-        ? to(from * one.way, one.at, one.z)
-        : to(one.at, from * one.way, one.z);
+      const from = Math.max(0, one.along - one.trail);
+      const headX = one.fromX + one.goX * one.along;
+      const headY = one.fromY + one.goY * one.along;
+      const head = to(headX, headY, one.z);
+      const tail = to(one.fromX + one.goX * from, one.fromY + one.goY * from, one.z);
       if (head && tail) {
         // A streak is a line that gets brighter towards its head, so
         // it is drawn as a gradient rather than as a flat stroke: a
@@ -1093,7 +1101,17 @@
         stamp(stampWhite, head.x, head.y, 7, 0.5);
       }
       one.along += one.speed * on / 60;
-      if (one.along - one.trail > reach || one.z - eye < NEAR) traverses.splice(n, 1);
+      // Gone once the whole streak, tail and all, is off the frame —
+      // which on a bearing means out of the box rather than past one
+      // edge of it.
+      const tailX = one.fromX + one.goX * from;
+      const tailY = one.fromY + one.goY * from;
+      if ((Math.abs(tailX) > RIB_X * 1.8 && Math.abs(headX) > RIB_X * 1.8) ||
+          (Math.abs(tailY) > RIB_Y * 1.8 && Math.abs(headY) > RIB_Y * 1.8) ||
+          one.along > (RIB_X + RIB_Y) * 3.2 ||
+          one.z - eye < NEAR) {
+        traverses.splice(n, 1);
+      }
     }
   }
 

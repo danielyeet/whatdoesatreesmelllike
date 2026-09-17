@@ -44,6 +44,11 @@
   // one a little longer than the last, and stops once one would be held
   // longer than FLIP_LAST_MS — so the whole run takes about three
   // seconds however many pictures there are.
+  // The page opens ON the picture it will land on and holds it for a
+  // beat before the flicking starts. Going straight into the cuts from
+  // a blank page is a jolt; a moment of the piece itself first reads
+  // as a projector being started rather than as a page loading.
+  const FLIP_HOLD_MS = 250;
   const FLIP_FIRST_MS = 42;
   const FLIP_SLOW = 1.14;
   const FLIP_LAST_MS = 430;
@@ -80,7 +85,7 @@
   // the whole of that pace — raise them and it spreads more slowly.
   const NAME_AFTER_MS = 420;    // pause between the page finishing and the buttons arriving
   const ROUTE_AFTER_MS = 760;   // and before the first lines set off
-  const ROUTE_MS_PER_PX = 1.35; // how long a line takes per pixel of its own length
+  const ROUTE_MS_PER_PX = 1.9;  // how long a line takes per pixel of its own length
   const LINK_DELAY_MS = 150;    // the pause at a picture before its own lines carry on
   const OUT_STAGGER_MS = 240;   // and between one line leaving a picture and the next
   const TIE_SPREAD_MS = 340;    // a little unevenness, so no two land in the same instant
@@ -673,13 +678,24 @@
   // ============================================================
   const EDGE_EVERY = 7;       // how far apart the specks round a picture stand
   const EDGE_WANDER = 1.6;    // and how far off its edge they may stand
-  const ROUTE_EVERY = 7.5;    // the same, along a line between two pictures
-  const ROUTE_WANDER = 1.3;
+  // THE RUN ALONG A LINE BETWEEN TWO PICTURES: dense, and well off the
+  // line. The owner asked for the connections to read as geometric
+  // rather than as simple lines, and what does that is a crowd of
+  // specks scattered about the run and netted to each other rather
+  // than a few threaded along it.
+  const ROUTE_EVERY = 4.5;    // how far apart they stand
+  const ROUTE_WANDER = 2.8;   // and how far off the line they may stand
+  // AND A LINE PULLS TAUT. While it is being drawn, and for a moment
+  // after it lands, its specks hang off the straight run like a loose
+  // rope — and are then pulled into line. `SAG` is how far it hangs at
+  // its middle, `TAUT_MS` how long the pulling takes.
+  const SAG = 26;
+  const TAUT_MS = 900;
   const SPECK_MIN = 1;        // how big a speck is drawn, in pixels
   const SPECK_MAX = 2.7;
   const WEB_REACH = 15;       // two specks nearer than this are joined
   const WEB_MISS = 0.22;      // and this share of those joins are left out
-  const EDGE_INK = 0.62;      // how heavily a speck round a picture is drawn
+  const EDGE_INK = 0.7;       // how heavily a speck round a picture is drawn
   const ROUTE_INK = 0.5;      // and one on a line between two
   const WEB_INK = 0.3;        // and the join between two of them
   // AND THE ONES STANDING OFF THE CHAIN. A run of specks at even
@@ -694,6 +710,11 @@
   // out is rolled too.
   const LOOSE_ODDS = 0.18;
   const LOOSE_OUT = [2.5, 6];
+  // HOW FAR ALONG THE EDGE A TUFT REACHES from the point a line is
+  // tied to the picture. The pictures are ruled again, so this is an
+  // embellishment where the map meets one rather than a border in its
+  // own right.
+  const TUFT_REACH = 54;
   const INK = "23,23,15";     // --ink
 
   /** One number between 0 and 1 for a given speck of a given thing,
@@ -708,10 +729,15 @@
 
   const rgba = (a) => "rgba(" + INK + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
 
-  /** The chain of specks round one picture. Corners are landed on
-      exactly — a square whose corners are guessed at reads as a blob —
-      and everything between them wanders a little off the edge. */
-  function edgeChain(node, of) {
+  /** The chain of specks round one picture — but only WHERE SOMETHING
+      IS TIED TO IT. The pictures carry their own ruled border again
+      (the owner asked for the classic one back), so a chain all the
+      way round would be the same edge drawn twice; what is left is a
+      tuft of specks where each line meets the picture, thinning out
+      along the edge either side of it. Corners are still landed on
+      exactly where a tuft reaches one — a square whose corners are
+      guessed at reads as a blob. */
+  function edgeChain(node, of, ties) {
     const out = [];
     const sides = Math.max(2, Math.round(node.size / EDGE_EVERY));
     const many = sides * 4;
@@ -729,25 +755,53 @@
       const loose = !corner && wobble(of, n, 7) < LOOSE_ODDS
         ? LOOSE_OUT[0] + wobble(of, n, 8) * (LOOSE_OUT[1] - LOOSE_OUT[0])
         : 0;
+      // How near this speck is to something tied to the picture here.
+      // Nothing is drawn where nothing is tied.
+      let near = Infinity;
+      for (let t = 0; t < ties.length; t++) {
+        const away = Math.hypot(x - ties[t].x, y - ties[t].y);
+        if (away < near) near = away;
+      }
+      if (near > TUFT_REACH) continue;
       out.push({
         x: x + nx * (off + loose) + ny * drift,
         y: y + ny * (off + loose) - nx * drift,
         size: SPECK_MIN + wobble(of, n, 3) * (SPECK_MAX - SPECK_MIN) + (corner ? 0.6 : 0),
         loose: loose > 0,
+        // Thinning out along the edge away from what is tied there.
+        fade: 1 - Math.pow(near / TUFT_REACH, 1.15),
       });
     }
     return out;
   }
 
-  /** And the run of them along one line between two pictures. */
-  function routeRun(a, b, of) {
+  /** And the run of them along one line between two pictures.
+
+      `slack` is how much of a rope it still is: 1 while it is being
+      drawn and easing to 0 once it has landed. A line arrives hanging
+      between the two pictures and is then pulled taut. The hang is a
+      real one — pinned at both ends and deepest in the middle, with a
+      second, shorter wave in it so that no two lines sag alike. */
+  function routeRun(a, b, of, slack) {
     const out = [];
     const far = Math.hypot(b.x - a.x, b.y - a.y);
     const many = Math.max(2, Math.round(far / ROUTE_EVERY));
     const ux = (b.x - a.x) / far, uy = (b.y - a.y) / far;
+    // How far this one hangs, which way, and where its second wave
+    // sits: rolled per line rather than per speck, or the rope reads
+    // as noise rather than as a rope.
+    const hang = slack ? SAG * (0.45 + wobble(of, 0, 8)) * Math.min(1, far / 260) : 0;
+    const lean = wobble(of, 0, 9) < 0.5 ? -1 : 1;
+    const phase = wobble(of, 0, 10) * Math.PI * 2;
     for (let n = 0; n <= many; n++) {
-      const at = (n / many) * far;
-      const off = (n === 0 || n === many ? 0 : (wobble(of, n, 4) - 0.5) * 2 * ROUTE_WANDER);
+      const t = n / many;
+      const at = t * far;
+      const wander = (n === 0 || n === many ? 0 : (wobble(of, n, 4) - 0.5) * 2 * ROUTE_WANDER);
+      const rope = slack
+        ? lean * slack * hang *
+          (Math.sin(Math.PI * t) + 0.3 * Math.sin(Math.PI * 3 * t + phase))
+        : 0;
+      const off = wander + rope;
       out.push({
         x: a.x + ux * at - uy * off,
         y: a.y + uy * at + ux * off,
@@ -786,39 +840,62 @@
     ink.lineWidth = 1;
     ink.stroke();
 
-    ink.fillStyle = rgba(weight);
-    ink.beginPath();
+    // Drawn in one pass where every speck is the same weight, and one
+    // at a time where they are not: a tuft fades out along the edge,
+    // and an alpha is a property of the brush rather than of a shape.
+    const evenly = run.every((speck) => speck.fade === undefined);
+    if (evenly) ink.fillStyle = rgba(weight);
+    if (evenly) ink.beginPath();
     run.forEach((speck, n) => {
       if (upTo !== undefined && speck.at > upTo) return;
       const size = Math.max(1, Math.round(speck.size));
-      ink.rect(Math.round(speck.x - size / 2), Math.round(speck.y - size / 2), size, size);
+      const x = Math.round(speck.x - size / 2), y = Math.round(speck.y - size / 2);
+      if (evenly) { ink.rect(x, y, size, size); return; }
+      const lit = weight * (speck.fade === undefined ? 1 : speck.fade);
+      if (lit < 0.03) return;
+      ink.fillStyle = rgba(lit);
+      ink.fillRect(x, y, size, size);
     });
-    ink.fill();
+    if (evenly) ink.fill();
   }
 
   /** How far along its own line each route has been drawn, 0 to 1.
       Set by the arrival and left at 1 afterwards. */
   const reached = new Map();
+  /** And how much of a rope each one still is: 1 while it is drawn,
+      easing to 0 over `TAUT_MS` once it has landed. */
+  const slackOf = new Map();
 
   function paintSpecks() {
     if (!nodes.length) return;
     ink.clearRect(0, 0, specks.width, specks.height);
+    if (!placed) return;
 
-    // Every picture that is on the map, and the middle window while the
-    // flick is still running — the window's own edge is the chain too.
-    nodes.forEach((node, i) => {
-      if (i > 0 && !placed) return;
-      if (i > 0 && !rest[i - 1].classList.contains("landed")) return;
-      drawChain(edgeChain(node, i), i, EDGE_INK);
+    // Where each line is tied to each picture, worked out first: the
+    // tufts are drawn round those points and nowhere else.
+    const tied = nodes.map(() => []);
+    links.forEach((link) => {
+      const got = reached.has(link) ? reached.get(link) : 0;
+      if (got <= 0) return;
+      const from = nodes[link.a], to = nodes[link.b];
+      tied[link.a].push(edgePoint(from, to));
+      // The far end is only tied once the line has reached it.
+      if (got > 0.98) tied[link.b].push(edgePoint(to, from));
     });
 
-    if (!placed) return;
+    nodes.forEach((node, i) => {
+      if (i > 0 && !rest[i - 1].classList.contains("landed")) return;
+      if (!tied[i].length) return;
+      drawChain(edgeChain(node, i, tied[i]), i, EDGE_INK);
+    });
+
     links.forEach((link, i) => {
       const got = reached.has(link) ? reached.get(link) : 0;
       if (got <= 0) return;
       const from = nodes[link.a], to = nodes[link.b];
       const a = edgePoint(from, to), b = edgePoint(to, from);
-      const run = routeRun(a, b, 100 + i);
+      const slack = slackOf.has(link) ? slackOf.get(link) : 0;
+      const run = routeRun(a, b, 100 + i, slack);
       drawChain(run, 100 + i, ROUTE_INK, got * Math.hypot(b.x - a.x, b.y - a.y));
     });
   }
@@ -857,6 +934,7 @@
       links.forEach((link) => {
         link.line.classList.add("drawn");
         reached.set(link, 1);
+        slackOf.set(link, 0);
         if (link.label) link.label.classList.add("shown");
       });
       rest.forEach((frame, i) => land(i + 1));
@@ -898,7 +976,11 @@
   function drawOut() {
     const began = window.performance && window.performance.now
       ? window.performance.now() : Date.now();
-    const settled = (t) => 1 - Math.pow(1 - t, 3);
+    // Eased flat at BOTH ends now rather than only at the finish. A
+    // line used to leave its picture at its fastest and settle at the
+    // far end; taken away gently as well, there is no moment in the
+    // whole spread you can point at where something starts.
+    const settled = (t) => t * t * t * (t * (t * 6 - 15) + 10);
     // The last thing to happen, whichever it is: the end of the last
     // line, or the last picture appearing. A picture appears on a
     // timer of its own, so stopping the moment the lines are done can
@@ -906,12 +988,19 @@
     // for a repaint.
     const done = links.reduce((m, l) => Math.max(m, l.start + l.draw), 0);
     const lands = nodes.reduce((m, n) => Math.max(m, n.arriveAt || 0), 0);
-    const over = ROUTE_AFTER_MS + Math.max(done, lands) + 90;
+    // And the last thing of all is the last line being pulled taut.
+    const over = ROUTE_AFTER_MS + Math.max(done, lands) + TAUT_MS + 90;
     const tick = (now) => {
       const gone = now - began;
       links.forEach((link) => {
         const t = (gone - ROUTE_AFTER_MS - link.start) / link.draw;
         reached.set(link, t <= 0 ? 0 : t >= 1 ? 1 : settled(t));
+        // AND THEN PULLED TAUT. A line hangs between its two pictures
+        // while it is being drawn and for a moment after it lands, and
+        // is then drawn into the straight run — eased, so it settles
+        // rather than snapping.
+        const after = (gone - ROUTE_AFTER_MS - link.start - link.draw) / TAUT_MS;
+        slackOf.set(link, after <= 0 ? 1 : after >= 1 ? 0 : 1 - settled(after));
       });
       paintSpecks();
       if (gone < over) requestAnimationFrame(tick);
@@ -933,7 +1022,8 @@
     for (let held = FLIP_FIRST_MS; held <= FLIP_LAST_MS; held *= FLIP_SLOW) steps++;
     let index = ((-steps % frames.length) + frames.length) % frames.length;
     let hold = FLIP_FIRST_MS;
-    show(index);
+    // The picture it will land on, held for a beat — see FLIP_HOLD_MS.
+    show(0);
 
     const step = () => {
       index = (index + 1) % frames.length;
@@ -945,7 +1035,10 @@
       }
       setTimeout(step, Math.round(hold));
     };
-    setTimeout(step, Math.round(hold));
+    setTimeout(() => {
+      show(index);
+      setTimeout(step, Math.round(hold));
+    }, FLIP_HOLD_MS);
   }
 
   // ============================================================
