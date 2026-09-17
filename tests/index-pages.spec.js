@@ -2,7 +2,7 @@
 // THE INDEX PAGES
 //
 // Two places are laid out as an index rather than as a drawing: the
-// Researches category, and the Individual fragrances view of the
+// Researches category, and the Fragrances view of the
 // contact sheet page. They share a stylesheet block and a script, so
 // these check both — and above all the three things the owner asked
 // for, which are the things a plain table does not do on its own:

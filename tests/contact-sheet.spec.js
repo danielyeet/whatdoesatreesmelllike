@@ -342,12 +342,12 @@ test("the category names itself once the page has drawn itself", async ({ page }
 
   // The two buttons are back, and named for what this category is
   // actually two of now: the Houses — the sheet itself — and the
-  // Individual fragrances, an index of everything written up on it.
+  // Fragrances, an index of everything written up on it.
   // (The REGISTER those buttons used to switch to is still gone: no
   // gallery entries live on this page any more, they are the
   // chamber's.)
   await expect(page.locator(".sheet-filter")).toHaveCount(2);
-  await expect(page.locator(".sheet-filter")).toHaveText(["Houses", "Individual fragrances"]);
+  await expect(page.locator(".sheet-filter")).toHaveText(["Houses", "Fragrances"]);
   await expect(page.locator(".gallery-entry")).toHaveCount(0);
 
   const name = page.locator(".sheet-where");

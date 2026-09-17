@@ -40,8 +40,8 @@
     lands on the first one, and lines then reach out across the page to
     the rest, each carrying a date. One picture is one house.
 
-    INDIVIDUAL FRAGRANCES, an index of every fragrance written up
-    anywhere on this site: its number, its name, the house it belongs
+    FRAGRANCES, an index of every fragrance written up anywhere on
+    this site: its number, its name, the house it belongs
     to and the date it was written about. The headings are buttons —
     press one to sort by that column, press it again to turn the sort
     round — the table scrolls inside its own box with the headings
@@ -110,7 +110,7 @@
        says why. -->
   <nav class="sheet-filters" aria-label="How to look at this category">
     <button class="sheet-filter is-on" type="button" data-view="houses">Houses</button>
-    <button class="sheet-filter" type="button" data-view="fragrances">Individual fragrances</button>
+    <button class="sheet-filter" type="button" data-view="fragrances">Fragrances</button>
   </nav>
 
 </div>
@@ -196,17 +196,17 @@
      while the parser waits for it the browser is free to paint what it
      has — which was this view, for one frame, every time the page was
      opened. What the page opens as has to be true in the markup. -->
-<section class="view" data-view="fragrances" aria-label="Individual fragrances" hidden>
+<section class="view" data-view="fragrances" aria-label="Fragrances" hidden>
 <div class="index-page">
 
   <header class="index-head">
-    <p class="index-name">Scent descriptions</p>
-    <p class="index-col">Information</p>
+    <p class="index-name">Fragrances</p>
+    <p class="index-col">Every one of them</p>
     <div class="index-say">
       <p class="index-say-lede">
         Every fragrance I have written about, whichever house it came
-        from — the same descriptions the Houses view reaches, listed
-        one to a line.
+        from — the same descriptions the Houses view reaches, one to a
+        line and in whatever order you ask for.
       </p>
       <p class="index-say-head">Sorting</p>
       <p class="index-say-meta">Press a heading to sort by it; press it again to turn it round.</p>
@@ -653,6 +653,7 @@
 
 <script>window.SITE_ROOT = "../";</script>
 <script src="../nav.js"></script>
+<script src="../search.js"></script>
 <script src="../contact-sheet.js"></script>
 <script src="../index-page.js"></script>
 <script src="../views.js"></script>

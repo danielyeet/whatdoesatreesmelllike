@@ -82,13 +82,20 @@
     }
 
     function sift() {
-      const looking = (field ? field.value : "").trim().toLowerCase();
+      const looking = (field ? field.value : "").trim();
       let showing = 0;
       rows.forEach((row) => {
-        const matches = !looking || row.textContent.toLowerCase().includes(looking);
+        // Forgiving, where the site's matcher is on the page: a name
+        // typed with a letter out of place is still that name. The
+        // plain test is what is left without it.
+        const matches = !looking || (window.SiteSearch
+          ? window.SiteSearch.score(looking, row.dataset.name || row.textContent) > 0 ||
+            row.textContent.toLowerCase().includes(looking.toLowerCase())
+          : row.textContent.toLowerCase().includes(looking.toLowerCase()));
         row.hidden = !matches;
         if (matches) showing++;
       });
+      board.classList.toggle("index-nothing", Boolean(looking) && !showing);
       if (count) {
         count.textContent =
           showing === rows.length
@@ -127,10 +134,51 @@
       // A search field's own clear button fires `search`, not `input`,
       // in some browsers.
       field.addEventListener("search", sift);
+      // What this table cannot answer goes to the site's own search
+      // page, with the question in the address.
+      field.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        const showing = rows.filter((row) => !row.hidden);
+        const term = field.value.trim();
+        if (showing.length) {
+          const link = showing[0].querySelector("a");
+          if (link) { window.location.href = link.href; return; }
+        }
+        if (term && window.SiteSearch) {
+          window.location.href = window.SiteSearch.siteSearchHref(window.SITE_ROOT, term);
+        }
+      });
     }
 
     order();
     sift();
+
+    // AND IT ARRIVES. Switched to, the index does not simply appear:
+    // the readings come up, the plates fade in and the rows land one
+    // after another — the same way the map on the other view draws
+    // itself outwards. A table that snaps into place reads as a
+    // document being swapped; this reads as one being laid out.
+    //
+    // Which rows are staggered is capped in the stylesheet, or the
+    // sixty-fifth row would arrive two seconds after the first.
+    const view = board.closest(".view");
+    const page = board.closest(".index-page");
+    if (view && page) {
+      const arrive = () => {
+        page.classList.remove("index-arriving");
+        // The frame after, so the animation starts from nothing rather
+        // than from wherever the last one left it.
+        requestAnimationFrame(() => page.classList.add("index-arriving"));
+        window.setTimeout(() => page.classList.remove("index-arriving"), 1800);
+      };
+      new MutationObserver((changes) => {
+        changes.forEach((change) => {
+          if (change.attributeName === "hidden" && !view.hidden) arrive();
+        });
+      }).observe(view, { attributes: true, attributeFilter: ["hidden"] });
+      if (!view.hidden) arrive();
+    }
   });
 })();
 

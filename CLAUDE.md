@@ -41,21 +41,23 @@ which talk through five `window` globals; see the table further down).
 | page | what it is | scripts it loads beyond `nav.js` |
 |---|---|---|
 | `index.html` | three scroll-snapped **slides**: the title, the italic line, the 3D **node map** | `landing.js`, `node-scene.js`, `paper.js`, `thread.js`, `extras.js` (and Three.js from a CDN — the only page that uses it) |
-| `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **contact sheet** of pictures scattered and joined by dated lines, all of it drawn in specks — and the **individual fragrances**, an **index** of every fragrance written up on the site | `contact-sheet.js`, `index-page.js`, `views.js` |
-| `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `structure.js` |
-| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu | `chamber.js` |
-| `categories/researches.html` | the **researches**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left | `index-page.js` |
+| `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **contact sheet** of pictures scattered and joined by dated lines, all of it drawn in specks — and the **fragrances**, an **index** of every fragrance written up on the site | `search.js`, `contact-sheet.js`, `index-page.js`, `views.js` |
+| `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `search.js`, `page-search.js`, `structure.js` |
+| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu | `search.js`, `page-search.js`, `chamber.js` |
+| `categories/researches.html` | the **researches**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left | `search.js`, `index-page.js` |
 | `categories/other-2.html` | a plain **row list** of works | none |
-| `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 54 compacted parts — one per fragrance — in four forest **strata**, with a **wood** grown down both margins and a ticked **trunk** | `pineward.js` |
-| `works/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window with soundings ringing out from it — and counted off by a **sounding** down the side | `adar.js` |
+| `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 54 compacted parts — one per fragrance — in four forest **strata**, with a **wood** grown down both margins and a ticked **trunk** | `search.js`, `pineward.js` |
+| `works/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window that shows the house's mark under the pointer — with a ruled **log** and falling **dust** down the left and a **sounding** down the side | `search.js`, `adar.js` |
 | `works/theory-01.html`, `-02`, `-03`, `works/resins-in-perfumery.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages | none |
+| `search.html` | the **search page**: one field over the whole site, with the answers as ruled rows carrying the trail that says where each lives | `search.js`, `search-page.js` |
 | `contact.html` | a plain page | none |
 
 Four of those page scripts are elaborate, and there is a long section below for each
 drawing: `node-scene.js` (~1,450 lines), `chamber.js` (~1,460), `structure.js` (~1,346)
 and `contact-sheet.js` (~1,000). The small ones have short sections of their own:
-`pineward.js` (~490), `adar.js` (~370), `essay.js` (~320), `index-page.js` (~240) and
+`pineward.js` (~530), `adar.js` (~520), `essay.js` (~380), `search.js` (~270),
+`index-page.js` (~280), `search-page.js` (~140), `page-search.js` (~120) and
 `views.js` (~85). **Read the matching section before editing one of them.** Each records decisions that were arrived at by
 trial and error and specific bugs the owner reported and that were fixed — several of
 them more than once, because the fix was later undone by someone who didn't know why it
@@ -105,7 +107,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 147 passed, 0 failed, and takes seven to nine minutes.** If you get a
+**A clean run is 153 passed, 0 failed, and takes seven to nine minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -145,7 +147,8 @@ buttons arriving only once it has finished drawing itself, a frame keeping its n
 once a real picture is put in it, the whole map being one network with no picture and no
 island left out of it and no picture on the end of a single line, a picture being ruled with specks only where the map is tied on to it, a line between
 two pictures being a run of specks rather than a stroke, a line arriving slack and being
-pulled taut, the page opening on the picture it will land on and holding it, the specks standing still when the page is scrolled and
+the page opening on the picture it will land on and holding it, pointing at a picture
+isolating it without moving it, the specks standing still when the page is scrolled and
 travelling with the page rather than the window, nothing on the sheet answering the
 pointer at all, the category naming itself only once the page has drawn itself, every
 line carrying a date with none of them
@@ -168,6 +171,10 @@ sounding counting them off as they are passed, the void being a hole with nothin
 drawn inside it, no part of the page being drawn in the site's accent colour, it standing
 still under `prefers-reduced-motion`, all of its writing being there without its script,
 and the sheet's second picture pointing at it;
+and the search — a fragrance being found by a misspelt name with the trail that says
+where it lives, following an answer opening that fragrance rather than only scrolling to
+it, a search with no answers saying so, a page's own search looking over that page only
+and handing on what it cannot answer, and the menu carrying Search above Contact;
 and the essay pages — the rule being built from the piece's own sections and naming them
 without their numbers, every tick being a link to its own section, the reading being the
 scroll and not drifting while nothing is touched, travelling back giving exactly the
@@ -230,7 +237,8 @@ Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
   `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
-  `adar.js`, `essay.js`, `index-page.js` (its drawn plate) and `style.css`,
+  `adar.js`, `essay.js`, `index-page.js` (its drawn plate and its arrival) and
+  `style.css`,
   each degrading to a still version. `nav.js` (the cursor), `extras.js` and `views.js`
   (which only shortens its fade to nothing) do *not* check it beyond that; if you add
   motion there, add the guard too.
@@ -869,6 +877,13 @@ Worth knowing before changing any of it (the list has outgrown being counted):
   letter by letter, not box by box. And `.chamber-front` is not clipped either, nor ever
   is now: it is drawn over the writing, menu and all — see the bullet above about the
   specks passing in front of it.
+- **The web never crosses the open menu.** The specks themselves may — the owner asked
+  for the particles in front of the table, and one that has joined the orbit passing over
+  the writing is the orbit doing what it does. A LINE is not: it is the cursor's own
+  mark, drawn between two specks that may be nowhere near the menu, and strung across the
+  writing it reads as scribble over the page rather than as a net in the air. So any link
+  that would touch the panel's box is not drawn (`menuBox`, `crossesMenu`), corners
+  included.
 - **What the cursor does is string a WEB between the specks it is near** (`WEB_*`). It is
   drawn on the front canvas, over everything, and it is meant to be *slightly* wrong:
   each link comes and goes on its own clock and is drawn a hair off the two specks it
@@ -946,7 +961,7 @@ of the page switch between them:
 | button | view | what it is | file |
 |---|---|---|---|
 | Houses | the **houses** | the contact sheet below: one picture per house, scattered and joined by dated lines | `contact-sheet.js` |
-| Individual fragrances | the **index** | every fragrance written up anywhere on this site, one to a line, sortable and searchable | `index-page.js` |
+| Fragrances | the **index** | every fragrance written up anywhere on this site, one to a line, sortable and searchable | `index-page.js` |
 
 `views.js` owns the buttons and nothing else: neither view knows about the other, and
 all they share is a class on `<body>` (`view-fragrances`) that the stylesheet reads.
@@ -983,6 +998,15 @@ and each of the other pictures appears as its line lands on it.
   corners are guessed at reads as a blob.
   Which specks stand off the chain has to be **uneven** — every fourth one pushed out
   came out as a saw-tooth frill round each picture rather than as a net.
+- **A line between two pictures is a STRUCTURE, not a scatter** (`routeRun`): two or
+  three parallel rails of specks, evenly spaced along their length, with rungs across
+  them every `RUNG_EVERY` specks, drawing together into a **knot** of specks at each end
+  where the line is tied to a picture. The rails PINCH — furthest apart in the middle,
+  meeting at the two tie points — so a line leaves a picture from one place rather than
+  from a smear along its edge, and the knots are what the owner asked for when they said
+  to "emphasize and compact the areas of where the lines connect to the boxes". Evenly
+  spaced on purpose: scattered about the line a run reads as a smudge; ruled like this it
+  reads as something built.
 - **A line between two pictures is a run of specks, not a stroke** (`routeRun`). The
   `<line class="sheet-route">` elements are still there and still carry `data-from` /
   `data-to` and their own coordinates — they are the MAP, which the dates ride on and
@@ -993,13 +1017,20 @@ and each of the other pictures appears as its line lands on it.
   slightly more dispersed, so that it looks more like geometric connections rather than
   simple lines". Neither end is ever wandered, or a line would stop somewhere other than
   where it points.
-- **Nothing moves once it has been drawn, and nothing answers the pointer.** Where a
-  speck stands is worked out from what it belongs to and its number along it (`wobble`),
-  so the same speck is in the same place on every redraw and a resize moves the map
-  rather than re-rolling it into a different pattern. The canvas stands in the sheet's
-  own coordinates, so it is carried up and down with the page. The tipping a picture used
-  to do towards the cursor is gone with `.peeking`, `--turn-x`, `--turn-y` and `--lift` —
-  the owner asked for no reactivity on this page for now.
+- **Nothing moves until something is pointed at.** Where a speck stands is worked out
+  from what it belongs to and its number along it (`wobble`), so the same speck is in the
+  same place on every redraw and a resize moves the map rather than re-rolling it into a
+  different pattern. The canvas stands in the sheet's own coordinates, so it is carried
+  up and down with the page.
+- **POINTING AT A PICTURE ISOLATES IT** (`HOT_*`, `COLD_INK`). The specks belonging to it
+  — its own tufts and the runs tied to it — come loose and drift about their own places,
+  drawn a little softer (`ink.filter`) and a little heavier, while every other speck and
+  every other picture steps back. **The picture itself does not move by a pixel**, and
+  `tests/contact-sheet.spec.js` compares every frame's transform and box before and
+  during to make sure of it. The page answered nothing at all for two rounds — the owner
+  had asked for the tipping in three dimensions to go, and it did, outright — and this is
+  what they asked for in its place. The drawing is still still: the loop runs only while
+  something is hot or cooling, and stops again.
 
 The map is still watched drawing itself: each line's specks are laid down one after
 another from the picture it leaves, and `drawOut()` repaints the whole canvas while any
@@ -1059,6 +1090,19 @@ wait for `drawn`.
   flick used to start in the same frame the script took over. A quarter of a second of
   the first picture before anything moves reads as a projector being started rather than
   as a page loading, which is the delay the owner asked for.
+  **And that quarter second is that picture and NOTHING ELSE.** Everything the page
+  carries — the other pictures, the two buttons, the category's name, the Search, even
+  the Menu — is held back under `js-coming` until the sheet has been laid out, and the
+  chrome arrives only when the sheet has finished drawing itself. Two things used to leak
+  through and both are worth knowing about:
+  - **The Search was a direct child of `<body>`**, which the rule that dims the page
+    behind the menu outranks anything written for (see the note further down). It is
+    inside `.sheet-head` now, with the buttons, for exactly that reason.
+  - **The second view was painted while the browser waited for the script that hides
+    it.** A script at the foot of the page is a fetch, and the parser is free to paint
+    what it has while it waits — so for one frame, every time, the whole index was on
+    screen. What a page opens as has to be true in the MARKUP: that view carries
+    `hidden` in the HTML, and `views.js` only takes over from there.
 - **The flick is set up to END on the first picture** rather than cutting to it when the
   flicking is over. It counts its own cuts before it starts and begins at whichever
   picture makes the last one land there. Cutting at the end is one blink too many: the
@@ -1168,16 +1212,11 @@ wait for `drawn`.
   whole of its pace; it takes about four seconds to reach the bottom of the page. The
   flick is the exception and keeps its hard cuts: that is the film going past, not the
   map being drawn.
-- **A line arrives slack and is then pulled taut** (`SAG`, `TAUT_MS`). While it is
-  travelling it hangs between the two pictures like a loose rope — a half-sine bow with a
-  smaller third harmonic laid over it, so what hangs is not a perfect arc — and over
-  `TAUT_MS` after it lands it is drawn into the straight run. That is the owner's "wiggly
-  like loose ropes/connections for a brief moment, and then very shortly after appearing
-  they get pulled taut into perfect straight lines". The whole spread was lengthened and
-  eased with it (`ROUTE_MS_PER_PX`, and a smootherstep on the travel), since a rope that
-  goes taut in a hurry reads as a twitch. `tests/contact-sheet.spec.js` measures the ink
-  standing well off the straight line while the map is drawing itself, and none of it
-  once the map has settled.
+- **A line used to arrive slack and be pulled taut** — it hung between its two pictures
+  like a rope while it was drawn and was then drawn into the straight run (`SAG`,
+  `TAUT_MS`). The owner asked for that gone and it came out outright: there is no `SAG`,
+  no `TAUT_MS` and no slack anywhere in the file, and the test that watched it went with
+  it. The spread is still the longer, smoother one it was lengthened to.
 - **When each line sets off is worked out by going over the links until nothing changes**,
   not in one pass — a link's start depends on when the picture it leaves from was
   reached, and the links are not necessarily in an order where that is already known.
@@ -1207,7 +1246,7 @@ wait for `drawn`.
 ### The index pages (`index-page.js`, `views.js`)
 
 Two places on the site are laid out as an **index** rather than as a drawing:
-`categories/researches.html`, and the Individual fragrances view above. They share one
+`categories/researches.html`, and the Fragrances view above. They share one
 block in `style.css` and one script, so a change to either is a change to both — which
 is deliberate: they are the same kind of page. The shape is the one the owner sent a
 picture of: a few readings across the top, a plate or two on the right, a long table in
@@ -1239,6 +1278,12 @@ the bottom left corner of the window, and the copyright under it.
   generator so they are the same on every build and the sorting has something real to
   work on. Changing one means changing it in two places on the row: the `data-date`,
   which is what it sorts by, and the lettering, which is what is read.
+- **It arrives.** Switched to, the index does not simply appear: the readings come up,
+  the plates fade in and the rows land one after another (`index-arriving`, put on by
+  `index-page.js` when the view is unhidden and taken off again). A table that snaps into
+  place reads as a document being swapped; this reads as one being laid out. Only the
+  first eighteen rows are staggered — the sixty-fifth would otherwise arrive two seconds
+  after the first.
 - **Without the script the table is the same table**, in the order it is written in the
   page, and every row that is a link still is one. Nothing here is the only way to reach
   anything.
@@ -1256,6 +1301,17 @@ the site's accent too.
 
 - **The eleven are in the house's own groups** — three trilogies and the two that stand
   outside them — written in the page's markup, not worked out in the script.
+- **The void shows the house's mark, under the pointer only.** `images/adar-sigil.jpg`
+  is drawn INSIDE the hole and nowhere else, clipped to the void's own circle and brought
+  up only while the hand is within `LIGHT_IN` of its rim — a spotlight carried over
+  something already down there rather than a picture hung on the page. It is brightest
+  in the middle of the hole and eases off towards the edge, and if the file is not there
+  the void simply stays empty.
+- **The left margin carries a LOG and DUST.** The right of the window has the void and
+  the left had nothing, which the owner asked to have filled, subtly: a hairline ruled
+  down it, ticked like a depth scale and travelling with the page at its own rate
+  (`LOG_*`), with a slow fall of specks through it (`DUST_*`). Instrument marks rather
+  than a picture, at a tenth of the ink the void's rings get.
 - **The void is a hole, not a disc drawn over the drawing.** Everything is drawn, and
   then the disc is taken back out of the finished drawing with `destination-out`. With
   that operation it is the **alpha of the fill** that says how much is taken out, and
@@ -1277,9 +1333,22 @@ the site's accent too.
   of nothing down the middle of a drawing is the **invisible pane** the chamber learnt
   not to stand in its own.
 - **The sounding** is the scale down the side: one tick per fragrance, inked in as it is
-  passed, with the reading in the corner counting them and naming the group. It is
-  Pineward's trunk by another name, and it reads the PARTS rather than the scrollbar for
-  the same reason.
+  passed. It is Pineward's trunk by another name, and it reads the PARTS rather than the
+  scrollbar for the same reason.
+- **The reading in the corner names WHAT FILLS THE WINDOW**, not what was passed last
+  (`filling`, `mostOf`). At the foot of a long open fragrance the thing you are looking
+  at began a long way up, so where something starts says nothing; how much of the screen
+  it has says everything. And when an open fragrance is most of what you can see — more
+  than `NAMES_IT` of the window — the reading names it as well as its group: "Aegis
+  Trilogy, Amber Zero". The owner asked for both. Pineward's reading works the same way,
+  and is worth keeping in step.
+- **Every fragrance names the photograph it wants** — `amber-zero.jpg` and so on, listed
+  in `images/README.txt` — and shows it the moment that file is in `images/`. Until then
+  the page takes the `<img>` off itself and the hatched placeholder stands, so a house
+  whose pictures are still coming looks unfinished rather than broken. The small picture
+  in the list is cropped to a SQUARE round its subject (`--focus` says which part to
+  keep); opened, a picture keeps its own shape. ADHD carries three, and the second and
+  third stand inside the body, which is what makes them appear only once it is open.
 - A **stage** — top, mid, base, a sidenote — is a `<p class="adar-stage">` label above
   the paragraphs it belongs to, because that is how the owner writes.
 - **ADAR Effect™ is the owner's own coinage** for this house's turpentine quality, and
@@ -1305,6 +1374,18 @@ else, and that is the whole reason for the ground.
   written from the clock and the travel from `scrollY`, so a page left alone reads the
   same a second later and travelling back gives exactly the drawing you left. A test
   checks both — the same two things the structure drawing got wrong first.
+- **WHICH SECTION THE RULE SAYS YOU ARE IN** is three rules in order (`readingAt`), and
+  the order is the point:
+  1. **One you have just pressed names itself** until you scroll away from where it took
+     you (`PIN_FREE`). Pressing "Myrrh" and being told you are in Camphor because Camphor
+     is longer is a readout arguing with you — the owner asked for exactly this.
+  2. **One you have just reached names itself** while its heading is in the top
+     `ARRIVED_BAND` of the window. That is what gives a short section a window of its own
+     in which it is the subject, rather than never being named at all.
+  3. **Otherwise the one filling the most of the window wins** — which is the honest
+     answer while you are reading through something long.
+  And at the very bottom of the page the last section wins outright: there is nowhere
+  further to go, so that is what you are looking at.
 - **The web between the specks is short and capped** (`WEB_REACH`, `WEB_EACH`). At a
   longer reach the field came out as long lines striking across the page and closing into
   triangles: a net thrown over the writing rather than air standing behind it. Pineward's
@@ -1323,7 +1404,22 @@ the owner's own notes — and the layout is the answer to that length:
   ruled line with a run of dots between the title and the cue; open it is the picture at
   size with the writing beside it. Fifty-four of anything listed straight down a page is a
   wall. It is a real `<details>`, so it opens and closes, takes the keyboard and works
-  without the script; `pineward.js` only measures the height so the page does not jump.
+  without the script.
+- **OPENING AND CLOSING ONE IS A MOVEMENT, NOT A CUT** (`OPEN_MS`, `SHUT_MS`,
+  `PART_EASE`). A `<details>` does both in one frame on its own, which is right when
+  nothing is watching and wrong here — the owner asked for both halves to be "smooth and
+  gradual". So the summary's own click is caught and the element is opened or closed
+  around an animation: OPENING, the element is opened at once (its contents have to be on
+  the page to be measured), the box travels from nothing to the height it wants, and the
+  writing comes up a beat later so the room is already opening before anything appears in
+  it; CLOSING, the writing goes first and the box follows it down, and only when the box
+  has closed is the element really shut. Shut it first and the browser takes the contents
+  off the page in that frame, which is the cut this exists to avoid.
+  **The padding travels with the height.** Left behind, the last frame of closing is a
+  forty-pixel box with nothing in it that then disappears — a step at the end of a smooth
+  movement. It is read off the stylesheet rather than written in the script, so the two
+  cannot disagree. ADAR's fragrances open exactly the same way, from the same code
+  written twice: these pages share nothing by design.
 - **They are grouped into four strata** — Canopy, Understorey, Trunk, Roots — a section
   through a forest read from the light down into the ground. The first two carry
   **fourteen** each and the last two **thirteen**, which is what fifty-four divides into
@@ -1366,6 +1462,42 @@ the owner's own notes — and the layout is the answer to that length:
 - **Without the script the page is all of its writing.** The trunk and the reading are
   added by it and the wood is drawn by it; none of them carry anything to read.
 
+### The search (`search.js`, `search-page.js`, `page-search.js`)
+
+One way of looking things up, in three places, with **no list of the site's contents
+anywhere**. That is the whole design: `SiteSearch.collect(doc, base, trail)` reads a
+document for the things this site is made of — a `.sheet-frame` is a house, a row in an
+`.index-table` is a fragrance, a `.pine-part` or an `.adar-part` is a fragrance written
+up, a `.gallery-entry` is a favourite, a `.work-row` is a piece, an `.essay-section` is a
+section — so anything added to a page is findable the moment it is added.
+
+- **The search page** (`search.html`, `search-page.js`) looks over the whole site. It
+  FETCHES the pages named in its own manifest and reads each of them with that same
+  collector. The manifest is the only thing to keep up to date: one line per page, with
+  the trail that says where a thing found in it lives. Everything is fetched once, on the
+  first search, and kept; a page that cannot be reached is skipped rather than fatal.
+- **A page's own search** looks over that page only. The contact sheet's is in
+  `contact-sheet.js` (it can answer for the whole category, since the Fragrances view
+  carries every fragrance in the page), the index pages' is in `index-page.js`, and
+  `page-search.js` builds one for the two pages that had none — theories and favourites
+  — from `data-find` on the `<body>`, which is the trail it hangs its answers under.
+- **What a page cannot answer it HANDS ON** to the search page, with the question in the
+  address (`?q=`). Arriving there with nothing found is a state that page has rather than
+  an error.
+- **It is forgiving** (`score`). An exact name beats one that starts with what you typed,
+  which beats one that contains it, which beats a near miss — and a near miss is allowed
+  one slip for a short word and up to three for a long one, so "murkwod" finds Murkwood.
+  What a thing is CALLED is what is searched; where it lives counts too, at a discount,
+  so "chapter 2" finds the favourites in Chapter 2 but never above something actually
+  called that.
+- **An answer opens the thing itself** (`openFromHash`). A result links at one fragrance
+  — `works/pineward.html#part-39` — and the page it lands on opens that part through its
+  own summary (so it opens gently, like everything else), brings it to the middle of the
+  window and marks it for a moment. Being taken to a page with the thing you asked for
+  closed somewhere inside it is not an answer.
+- **Without any of it nothing stops working**: every field is a plain field, and
+  everything a search would have found is still reachable by hand.
+
 ### Styling
 
 `style.css` is the only stylesheet, in commented sections mirroring the page types. Six
@@ -1391,13 +1523,13 @@ background luminance, but the class is the reliable path.
   `<a class="work-row">` block, which becomes a station of its own and lengthens the
   road — optionally with a `data-note`, a line about the piece that the station's card
   shows when it is clicked; and the **index** (`researches`, and the Individual
-  fragrances view) takes another `<tr>`. Each page says which in the comment at the top
+  Fragrances view) takes another `<tr>`. Each page says which in the comment at the top
   of it.
 - **A row on an index page** carries what it sorts by on itself: `data-no`, `data-name`,
   `data-date`, and `data-house` where there is one. Change a date and you change it in
   two places on the row — the `data-date` it sorts by and the lettering that is read. A
   row with nothing to open yet gets `data-open="no"` and no link.
-- **A fragrance in the Individual fragrances table** points at that fragrance where it
+- **A fragrance in the Fragrances table** points at that fragrance where it
   stands in its house's own page — `../works/pineward.html#part-06` — so the index and
   the houses are two ways into the same writing rather than two copies of it.
 - A favourite on the **chamber** page (`favorites`) is an `<a class="gallery-entry">`
@@ -1415,6 +1547,10 @@ background luminance, but the class is the reliable path.
   in it, whose number is a `<span class="essay-no">` inside that heading. The rule down
   the left is built from those, so adding a section adds a tick and nothing else needs
   changing.
+- **A NEW PAGE HAS TO BE ADDED TO THE SEARCH'S MANIFEST** — the `PAGES` list at the top
+  of `search-page.js`, one line with the trail that says where things found in it live.
+  It is the only list of the site's pages anywhere, and the only thing the search needs
+  kept up to date; everything *inside* a page is read off the page itself.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
   line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
   appears in the map. The first of the two **Other** pages became **Researches** at the
@@ -1490,8 +1626,16 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the ADAR Effect™** | The owner's own coinage for this house's turpentine quality — the menthol-like trigeminal lift without the dense forest behind it. Written as **ADAR DNA** in exactly three places on purpose (the introduction, and two entries where they said they meant it); leave those. |
 | **essay page** | A page for a long piece of writing on the theories drawing's ground: a swarm of particles behind it, sights at the corners, and the **rule** down the left. `essay.js`; the three theory templates and the resins research. |
 | **the rule** (essay) | The scroll indicator down the left of an essay page: a hairline filled in as far as you have read, one tick per section, the section you are in named under it, and a percentage. Every tick is a link. |
-| **index** | The way `categories/researches.html` and the contact sheet's Individual fragrances view are laid out: readings across the top, plates on the right, a sortable, searchable table in the bottom left corner, and the copyright under it. `index-page.js`. |
+| **index** | The way `categories/researches.html` and the contact sheet's Fragrances view are laid out: readings across the top, plates on the right, a sortable, searchable table in the bottom left corner, and the copyright under it. `index-page.js`. |
 | **the board** | That table and the search above it, taken together (`.index-board`). It scrolls inside its own box so the page around it does not grow. |
+| **the search page** | `search.html`: the one place that looks over the whole site. A field ruled across a squared plan, and the answers as rows carrying a number, a name, what kind of thing it is and the **trail**. |
+| **the trail** | Where a thing lives, said as a path: *Scent descriptions · Houses · Pineward*. Every answer a search gives carries one. |
+| **a page's own search** | The small mark in the top right of a page that opens into a field and looks over THAT PAGE only. What it cannot answer it hands to the search page. |
+| **the knot** | The crowd of specks where a line meets a picture on the contact sheet — the rails of the run drawing together to a point. |
+| **rail** / **rung** | The two or three parallel lines of specks a run between two pictures is made of, and the ties across them. |
+| **hot** (the sheet) | The picture the pointer is on: its specks come loose and drift, drawn softer and heavier, while the rest of the sheet steps back. The picture itself never moves. |
+| **the spotlight** | What the ADAR void does under the pointer: the house's own mark is drawn inside the hole and nowhere else, coming up as the hand nears it. |
+| **the log** / **the dust** | The hairline depth scale ruled down the left of the ADAR page, and the slow fall of specks through it. What fills that margin. |
 | **the mark** | The one plate on an index page that is drawn rather than photographed: a slow ring of specks with lines between the near ones — the chamber's orbit printed small, on white. |
 | **research** | One piece in Researches — a material at a time, where it comes from and what it smells like. The first is `works/resins-in-perfumery.html`. |
 | **stratum** | One of the four groups of thirteen parts — Canopy, Understorey, Trunk, Roots — a section through a forest read from the light down into the ground. |
@@ -1520,7 +1664,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
 | **view** | One of the two ways the contact sheet page shows its category, behind the two buttons across the top: the **houses** (the sheet itself) and the **individual fragrances** (the index). `views.js` switches them, and only one is ever on the page. It briefly had a different pair — the **map** and **Favorites**, the second of which was the removed **register** — so if the owner says "Description portfolio" or "the Favorites view", they mean those. |
 | **houses** | The contact sheet view: one picture per house, scattered and joined by dated lines. The pictures run in order down the page — 01 at the top, then 02, 03 and so on. |
-| **individual fragrances** | The index view: every fragrance written up anywhere on the site, with its number, its name, the house it belongs to and the date it was written about. |
+| **fragrances** (the view) | The index view of the contact sheet page: every fragrance written up anywhere on the site, with its number, its name, the house it belongs to and the date it was written about. It was called *Individual fragrances* for one round. |
 | **the chain** | What bounds a picture on the contact sheet: small squares round its edge joined with fine lines, a few of them standing off it and netted back in. It replaced the ruled border. |
 | **the run** | The same thing along a line between two pictures: the line is specks rather than a stroke. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
@@ -1576,10 +1720,20 @@ Their words are theirs: spelling, punctuation and all, including the notes to th
 And the site has grown a shape it did not have before — a house has a page, a fragrance
 is a part of that page, and the **index** is a way through all of them at once.
 
-**The most recent round added four page kinds at once**: the two views on the contact
+**The round after that added four page kinds at once**: the two views on the contact
 sheet page, the **index** those views and Researches share, **ADAR** on its void, and the
-**essay pages** for the theories and the researches. None of them has been through a
-round of the owner's notes yet — expect them to move.
+**essay pages** for the theories and the researches.
+
+**And the round after THAT was the first pass of notes on them**, which is worth reading
+as a pattern: nothing was rejected, everything was asked to be *gentler or more
+specific*. Opening a fragrance was "too sudden" — it is a movement now, on both houses.
+The readings were naming what had been passed rather than what fills the window — they
+name what fills the window. The void was empty and the left margin was empty — the void
+shows the house's mark under the hand and the margin carries a log and dust. The lines on
+the sheet were "simple lines" — they are two or three rails with rungs and knots. The
+sheet answered nothing — it isolates the picture under the hand. And the site got a
+**search**, which is the first thing on it that is not a drawing: one field over
+everything, forgiving of spelling, with every answer opening the thing itself.
 
 **That earlier ambiguity is now settled.** "Shrink the horizontal bars that select it"
 was read at the time as the ruled lines *between* the chamber menu's rows, and the
@@ -1596,9 +1750,14 @@ questioned.
   every page including the chamber. The owner asked for "the orange accents" gone from
   the favorites page and the chamber's own block was cleared; the shared chrome was left
   because changing it changes the chrome on every page of the site. They know this.
+- **The photographs.** ADAR names the file it wants for each of its eleven fragrances
+  (`images/README.txt` lists them) and shows it the moment it is there; the owner sent
+  the pictures as attachments, which arrive as pictures rather than as files, so the
+  names are what was agreed and the files are theirs to drop in. Every other plate on the
+  site is still a hatched placeholder.
 - **The placeholders in the new pages are marked as placeholders.** ADAR's introduction,
   the three theory pages, the standfirsts and every plate on the site are waiting for
-  the owner. The dates in the Individual fragrances table are rolled from a seed so the
+  the owner. The dates in the Fragrances table are rolled from a seed so the
   sorting has something to work on; they say nothing. The one thing that was not
   guessed at is a fragrance's own writing, which is theirs throughout.
 

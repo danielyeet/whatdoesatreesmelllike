@@ -23,6 +23,7 @@ const SITE_LINKS = [
   { label: "Favourites", href: "categories/favorites.html" },
   { label: "Researches", href: "categories/researches.html" },
   { label: "Other", href: "categories/other-2.html" },
+  { label: "Search", href: "search.html" },
   { label: "Contact", href: "contact.html" },
 ];
 

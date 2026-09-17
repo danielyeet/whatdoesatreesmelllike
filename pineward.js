@@ -601,6 +601,18 @@
   });
 
   // ============================================================
+  // ARRIVING FROM A SEARCH
+  //
+  // A result on the search page links straight at one fragrance —
+  // #part-06 — and being shown a closed list with it somewhere inside
+  // is not an answer, so the page opens it and takes you to it.
+  // `SiteSearch` is only on the pages that load it; without it this
+  // does nothing and the link still lands on the right part of the
+  // page.
+  // ============================================================
+  if (window.SiteSearch) window.SiteSearch.openFromHash(".pine-part");
+
+  // ============================================================
   // KEEPING UP
   // ============================================================
   let waiting = false;

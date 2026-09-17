@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search — Your Name</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<!--
+  THE SEARCH PAGE — the one place that looks over the whole site.
+
+  It keeps no list of what is on the site. search-page.js fetches the
+  pages named in its own manifest and reads each of them with the same
+  collector the pages use on themselves, so anything added to a page is
+  findable the moment it is added. The only thing to keep up to date is
+  that manifest: one line per page, with the trail that says where a
+  thing found in it lives.
+
+  A page's own search hands anything it cannot answer to this page,
+  with the question in the address (?q=...), which is why arriving here
+  with nothing found is a state this page has rather than an error.
+
+  The ground is a drawing office's: a squared plan, sights at the
+  corners, hairlines and numbers. It is all in the stylesheet — there
+  is no drawing script on this page.
+-->
+<body class="find-page">
+
+<div class="find-plan" aria-hidden="true"></div>
+
+<div class="find">
+
+  <header class="find-head">
+    <p class="find-name">Search</p>
+    <p class="find-col">Everything on this site — houses, fragrances, theories, researches, favourites.</p>
+  </header>
+
+  <form class="find-form" role="search">
+    <span class="find-mark" aria-hidden="true"></span>
+    <label class="find-label" for="find-field">Search</label>
+    <input class="find-field" id="find-field" type="search" name="q" autocomplete="off"
+           placeholder="Type a name — murkwood, amber zero, galbanum" aria-label="Search the site">
+    <span class="find-count" aria-hidden="true">000</span>
+  </form>
+
+  <p class="find-reading-note" aria-hidden="true">Reading the site…</p>
+
+  <section class="find-out" aria-live="polite">
+    <p class="find-saying" aria-hidden="true"></p>
+    <div class="find-results"></div>
+    <p class="find-nothing" hidden>
+      No results found.
+      <span>Nothing on the site is called that — try fewer letters, or a house rather than a fragrance.</span>
+    </p>
+  </section>
+
+  <footer class="find-foot">
+    2026 © Your Name
+    <span>All rights reserved.</span>
+  </footer>
+
+</div>
+
+<script>window.SITE_ROOT = "";</script>
+<script src="nav.js"></script>
+<script src="search.js"></script>
+<script src="search-page.js"></script>
+</body>
+</html>

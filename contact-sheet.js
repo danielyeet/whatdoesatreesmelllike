@@ -1245,24 +1245,74 @@
   // ============================================================
   // SEARCH
   //
-  // A placeholder, but a working one: it matches what a picture is
-  // called and dims everything that doesn't match, so the shape of a
-  // search is here and behaving while there is nothing real to
-  // search yet.
+  // This page's own search looks over THIS CATEGORY: the houses on the
+  // sheet and every fragrance in them, which are both already in the
+  // page (the fragrances view carries the lot). It is forgiving —
+  // "murkwod" finds Murkwood — and it says WHERE each answer lives, so
+  // a fragrance is an answer you can act on rather than a word.
+  //
+  // What it cannot answer it hands to the site's own search page with
+  // the question in the address, which is where a search that is not
+  // about this category belongs.
   // ============================================================
   const search = document.querySelector(".sheet-search");
   if (search) {
     const field = search.querySelector(".sheet-search-field");
     const trigger = search.querySelector(".sheet-search-trigger");
+    const found = document.createElement("div");
+    found.className = "sheet-found";
+    found.setAttribute("aria-live", "polite");
+    search.appendChild(found);
+
+    /** Everything this page can answer for, read off the page itself. */
+    const mine = () => (window.SiteSearch
+      ? window.SiteSearch.collect(document, window.location.href, ["Scent descriptions"])
+      : []);
+    let everything = null;
 
     const applySearch = () => {
-      const term = field.value.trim().toLowerCase();
+      const term = field.value.trim();
       sheet.classList.toggle("searching", term.length > 0);
+      if (!everything) everything = mine();
+
+      const hits = term && window.SiteSearch
+        ? window.SiteSearch.rank(term, everything, 6)
+        : [];
+
+      // The pictures dim as they always did — that is the search on
+      // the sheet itself — and a picture counts as matching if the
+      // search would have found it.
       frames.forEach((frame) => {
         const caption = frame.querySelector(".sheet-caption");
-        const text = (caption ? caption.textContent : "").toLowerCase();
-        frame.classList.toggle("dimmed", term.length > 0 && text.indexOf(term) < 0);
+        const text = caption ? caption.textContent : "";
+        const match = !term || (window.SiteSearch
+          ? window.SiteSearch.score(term, text) > 0
+          : text.toLowerCase().indexOf(term.toLowerCase()) >= 0);
+        frame.classList.toggle("dimmed", Boolean(term) && !match);
       });
+
+      found.innerHTML = "";
+      search.classList.toggle("has-found", hits.length > 0);
+      hits.forEach((hit) => {
+        const row = document.createElement("a");
+        row.className = "sheet-found-row";
+        row.href = hit.entry.href;
+        const name = document.createElement("span");
+        name.className = "sheet-found-what";
+        name.textContent = hit.entry.name;
+        const where = document.createElement("span");
+        where.className = "sheet-found-where";
+        where.textContent = hit.entry.where.join(" · ");
+        row.append(name, where);
+        found.appendChild(row);
+      });
+      if (term && !hits.length) {
+        const none = document.createElement("p");
+        none.className = "sheet-found-none";
+        none.textContent = "Nothing here by that name — press enter to search the site.";
+        found.appendChild(none);
+        search.classList.add("has-found");
+      }
     };
 
     trigger.addEventListener("click", () => {
@@ -1272,6 +1322,16 @@
     });
     field.addEventListener("input", applySearch);
     field.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const first = found.querySelector(".sheet-found-row");
+        if (first) { window.location.href = first.href; return; }
+        const term = field.value.trim();
+        if (term && window.SiteSearch) {
+          window.location.href = window.SiteSearch.siteSearchHref(window.SITE_ROOT, term);
+        }
+        return;
+      }
       if (e.key !== "Escape") return;
       field.value = "";
       applySearch();

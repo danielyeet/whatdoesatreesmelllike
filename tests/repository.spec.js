@@ -42,9 +42,20 @@ test("every link between pages points at a file that exists", async () => {
       if (href.startsWith("mailto:") || href.startsWith("#") || href.startsWith("data:")) continue;
 
       const target = path.resolve(path.dirname(file), href.split("#")[0].split("?")[0]);
-      if (!fs.existsSync(target)) {
-        problems.push(`${path.relative(ROOT, file)} -> ${href}`);
-      }
+      if (fs.existsSync(target)) continue;
+
+      // A PICTURE THAT IS NOT THERE YET IS NOT A BROKEN LINK. The
+      // pages name the photograph they want for each piece — ADAR's
+      // eleven are listed in images/README.txt — and show it the
+      // moment the file is added, taking the <img> off the page until
+      // then. The owner adds those one at a time. Everything else
+      // pointing at something missing is still a fault: a page, a
+      // script, a stylesheet, or a picture anywhere but in images/.
+      const missingPicture = /^\.{0,2}\/?(\.\.\/)?images\//.test(href) &&
+        /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(href);
+      if (missingPicture) continue;
+
+      problems.push(`${path.relative(ROOT, file)} -> ${href}`);
     }
   }
 

@@ -15,6 +15,7 @@ const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 const PAGES = [
   { url: "/index.html", root: "", title: /Portfolio/ },
   { url: "/contact.html", root: "", title: /Contact/ },
+  { url: "/search.html", root: "", title: /Search/ },
   { url: "/categories/scent-descriptions.html", root: "../", title: /Scent descriptions/ },
   { url: "/categories/theories.html", root: "../", title: /Theories/ },
   { url: "/categories/favorites.html", root: "../", title: /Favourites/ },
@@ -22,7 +23,11 @@ const PAGES = [
   { url: "/categories/other-2.html", root: "../", title: /Other/ },
   { url: "/works/example-gallery-work.html", root: "../", title: /Vetiver/ },
   { url: "/works/example-article-work.html", root: "../", title: /vetiver/ },
-  { url: "/works/adar.html", root: "../", title: /ADAR/ },
+  // ADAR names the photograph it wants for each fragrance and works
+  // without it — the picture is taken off the page and the placeholder
+  // shown — so a picture the owner has not added yet is an expected
+  // 404 rather than a fault. See images/README.txt.
+  { url: "/works/adar.html", root: "../", title: /ADAR/, allow: ["404 (File not found)"] },
   { url: "/works/theory-01.html", root: "../", title: /First theory/ },
   { url: "/works/theory-02.html", root: "../", title: /Second theory/ },
   { url: "/works/theory-03.html", root: "../", title: /Third theory/ },
@@ -33,7 +38,7 @@ const PAGES = [
 
 for (const page_ of PAGES) {
   test(`${page_.url} loads cleanly`, async ({ page }) => {
-    const errors = collectPageErrors(page);
+    const errors = collectPageErrors(page, page_.allow || []);
     await serveDependenciesLocally(page);
 
     const response = await page.goto(page_.url);
