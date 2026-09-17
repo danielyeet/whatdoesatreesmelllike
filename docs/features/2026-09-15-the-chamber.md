@@ -419,3 +419,14 @@ what pressing it does and saying the other thing once it is open; the cursor str
 web between the specks it is near and letting go again; no part of it ever being drawn in
 the site's accent colour; it standing still under `prefers-reduced-motion`; and the plain
 list coming back when the script is blocked.
+
+## Known issues / TODO
+
+- **This page spends no accent of its own, but the shared chrome still does** — the Menu
+  trigger, the menu overlay's links and the focus ring are all still `--brass` here,
+  because they belong to every page at once. That is the one place the owner's "no orange
+  on this page" is not yet true, and they know. See [the page
+  shell](2026-09-11-the-page-shell-and-menu.md).
+- `images/Favorites/` is empty but for its README.
+- This page has had more rounds than anything else here and should be treated as a live
+  subject.

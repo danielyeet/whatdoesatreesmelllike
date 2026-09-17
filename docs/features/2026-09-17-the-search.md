@@ -92,3 +92,14 @@ says where it lives; following an answer opening that fragrance rather than only
 scrolling to it; a search with no answers saying so; a page's own search looking over
 that page only and handing on what it cannot answer; and the menu carrying Search above
 Contact (`SITE_LINKS` in `nav.js`).
+
+## Known issues / TODO
+
+- **The `PAGES` manifest in `search-page.js` is hand-maintained and nothing tests that it
+  is complete.** A new page left out of it is simply invisible to the site-wide search,
+  silently, with every test still passing. It is the only list of the site's pages the
+  search has.
+- There is a **second** hand-maintained list of pages, unrelated to this one: `PAGES` in
+  `tests/pages.spec.js`, which decides what gets a clean-load check. Adding a page means
+  remembering both, and they are already out of step — `works/pineward.html` is in the
+  search's list but not the test's.

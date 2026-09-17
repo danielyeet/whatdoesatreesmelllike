@@ -6,10 +6,9 @@ Two other places to read before changing anything:
 
 - **`instructions.md`** at the repo root — standing behavioural rules the repo owner has
   given (how to conduct changes, verification steps). Not codebase documentation; rules.
-- **`docs/features/`** — one report per feature, most recent first, with the detail that
-  used to live in this file: what each drawing is, why it is built the way it is, what was
-  tried and was wrong, and what must stay true. Start at
-  [`docs/features/README.md`](docs/features/README.md).
+- **`docs/features/`** — one report per feature: what each drawing is, why it is built
+  the way it is, what was tried and was wrong, and what must stay true. The index is
+  [`docs/progress-log.md`](docs/progress-log.md), newest first — start there.
 
 **This file is the map. The reports are the ground.** Anything in here that runs longer
 than a paragraph about one feature belongs in that feature's report.
@@ -27,11 +26,34 @@ what you did about any failures — not raw test-framework output.
 
 See "Tests" below for how to run them.
 
-## Keeping this file correct
+## Feature reports (docs/features/)
 
-Whenever a code change makes something in this file out of date or incorrect, update it
-as part of that same change. Don't leave stale or wrong information in here. The same
-goes for the feature report the change belongs to, and for a new feature, a new report.
+- Before starting work in an area, check [`docs/progress-log.md`](docs/progress-log.md)
+  for related past entries and open the linked file if relevant.
+- Whenever you make changes to code that an existing report covers (new files, renamed
+  functions, changed behavior, etc.), update that report in the same turn so it stays
+  accurate — don't leave it to drift.
+- After completing a new feature, add an entry following the template below, and add a
+  line to [`docs/progress-log.md`](docs/progress-log.md).
+- Never add feature-level descriptions directly to CLAUDE.md — this file is for
+  architecture, conventions, and commands only.
+
+A report is `docs/features/YYYY-MM-DD-<short-slug>.md`, dated the day the feature landed:
+
+```markdown
+# <Feature name>
+Date: <original date if known, otherwise today's date, noted as "migrated">
+Files touched: <list>
+What changed: <2-4 sentences, plain language>
+Why / key decisions: <design choices, trade-offs, anything not obvious from the code>
+How to test it: <steps or commands>
+Known issues / TODO: <anything unresolved>
+```
+
+The reports written before this template was fixed carry the same sections under
+slightly different headings, and the longer ones break the middle into several sections
+of their own. Follow a report's existing shape when adding to it, and the template above
+when starting a new one.
 
 ## Project
 
@@ -138,13 +160,10 @@ test it". The browserless checks in `repository.spec.js` are the exception and b
 no one feature: no link points at a missing file, no credentials are committed, and the
 site still needs no build step to publish.
 
-Several tests are regressions for specific fixed bugs — the clipped connector SVG, the
-flat NDC depth, the cursor's angle snap, arrow keys leaking behind the menu, the paper's
-mask being dropped while still feathering, grain arriving along a moving edge, the
-reforming line both running across the slide-2 sentence and being visibly swapped out
-for the thread, and the structure's travel creeping away from the scrollbar so that the
-beginning of the road could not be got back to. **Keep them passing rather than
-adjusting them to match new behaviour**, unless the behaviour change is deliberate.
+Several tests are regressions for specific bugs the owner reported and that were fixed.
+Each one is named and explained in its own feature's report, under "How to test it", next
+to the reasoning it protects. **Keep them passing rather than adjusting them to match new
+behaviour**, unless the behaviour change is deliberate.
 
 Visual/aesthetic judgement is still manual — the suite checks that things work, not that
 they look right.
@@ -164,9 +183,9 @@ Two states are easy to forget when reviewing a change:
 
 ## Architecture
 
-Every feature has a report of its own. They are listed newest first in
-[`docs/features/README.md`](docs/features/README.md), and each one carries what it is,
-why it is built that way, what was tried and was wrong, and how to test it.
+Every feature has a report of its own, indexed newest first in
+[`docs/progress-log.md`](docs/progress-log.md). Each one carries what it is, why it is
+built that way, what was tried and was wrong, how to test it, and anything still open.
 
 | feature | file | report |
 |---|---|---|
@@ -365,13 +384,16 @@ obvious from the code, ask rather than guessing — then add it to this list.
 
 The site is finished and live in the sense that every page works and is deployed; what
 is unfinished is the *look* of the three drawn category pages, and that is what the
-owner has been iterating on. Everything below is the state of that conversation, so a
-fresh reader does not have to infer it.
+owner has been iterating on. The landing page and the row list have not been touched in
+several rounds and can be treated as settled; the three drawn pages are live subjects.
+What follows is how the owner works and what is still open. **What has moved on any one
+feature is in that feature's report** — start at
+[`docs/progress-log.md`](docs/progress-log.md).
 
 **How the owner works, and what they expect.** They describe an effect in their own
 words rather than in code, often with a photo, and then refine it over several rounds
-— the first version of anything is a starting point, not a spec. Two habits follow from
-that and are worth matching:
+— the first version of anything is a starting point, not a spec. Three habits follow
+from that and are worth matching:
 
 - **When they ask for something gone, it comes out of the code, not switched off.**
   `structure.js` has no `SCAN_*` and `chamber.js` no `FRAG_*`, `MARK_*`, `EDGE` or
@@ -388,51 +410,26 @@ that and are worth matching:
   percentage ticks up while I'm not touching it" — all real, all fixed, all now written
   down in the relevant report as things not to reintroduce. Take a vague-sounding
   complaint seriously; it has been specific every time.
+- **A note asks for gentler or more specific, not for something else.** The first full
+  pass of notes on the newest pages rejected nothing: every item asked for an effect to
+  be softened, slowed, or made to say something more exact. Read a note that way before
+  reaching for a rewrite.
 
-**What the owner has settled and what they are still moving.** The landing page and the
-row list have not been touched in several rounds and can be treated as settled. The
-drawn pages are live subjects: [the structure](docs/features/2026-09-14-the-structure.md)
-most recently had its travel made fully reversible, an opening sequence and a
-click-to-set-out for each station;
-[the chamber](docs/features/2026-09-15-the-chamber.md) has had the most rounds of
-anything here and most recently had the word stopped blinking, the menu given a fixed
-length and the specks put in front of it; and
-[the contact sheet](docs/features/2026-09-13-the-contact-sheet.md) was redrawn in specks,
-then given its pictures' borders back, a quarter-second hold before the flick, and its
-pictures put in order down the page. Each report carries that history in full.
+**The writing is the owner's.** The site began as drawings with placeholder text in them;
+the writing for two houses and the first research has since arrived. Their words are
+theirs — spelling, punctuation and all, including the notes to themselves. Never tidy
+them.
 
-**The writing has started arriving.** Up to now the site was a set of drawings with
-placeholder text in them; the owner has since sent the writing for two houses — fifty-four
-Pineward fragrances and eleven ADAR ones — and the first research. Two things follow.
-Their words are theirs: spelling, punctuation and all, including the notes to themselves.
-And the site has grown a shape it did not have before — a house has a page, a fragrance
-is a part of that page, and the **index** is a way through all of them at once.
+**What is still open** is recorded in the report of the feature it belongs to. Two are
+worth knowing before touching anything shared:
 
-**The round after that added four page kinds at once**: the two views on the contact
-sheet page, the **index** those views and Researches share, **ADAR** on its void, and the
-**essay pages** for the theories and the researches.
-
-**And the round after THAT was the first pass of notes on them**, which is worth reading
-as a pattern: nothing was rejected, everything was asked to be *gentler or more
-specific*. Opening a fragrance was "too sudden" — it is a movement now, on both houses.
-The readings were naming what had been passed rather than what fills the window — they
-name what fills the window. The void was empty and the left margin was empty — the void
-shows the house's mark under the hand and the margin carries a log and dust. The lines on
-the sheet were "simple lines" — they are two or three rails with rungs and knots. The
-sheet answered nothing — it isolates the picture under the hand. And the site got a
-**search**, which is the first thing on it that is not a drawing.
-
-**Two things left open, which the owner may come back to:**
-
-- **The accent is still spent on the site's shared chrome.** `nav.js`'s Menu trigger and
-  the menu overlay's links go `--brass` on hover, and the global focus ring is brass, on
-  every page including the chamber. The owner asked for "the orange accents" gone from
-  the favorites page and the chamber's own block was cleared; the shared chrome was left
-  because changing it changes the chrome on every page of the site. They know this.
-- **The photographs. ADAR's have arrived** — all eleven fragrances and the house's mark
-  are printed, in `images/ADAR/`. **Every other plate on the site is still a hatched
-  placeholder**, the contact sheet's thirteen houses included, with their `<img>` tags
-  commented out in the markup waiting for a file and a name.
+- **The accent is still spent on the site's shared chrome** — the Menu trigger, the menu
+  overlay's links and the global focus ring, on every page including the chamber. Why it
+  was left is in [the page shell's
+  report](docs/features/2026-09-11-the-page-shell-and-menu.md).
+- **Every plate on the site but ADAR's is still a hatched placeholder**, with its `<img>`
+  tag commented out waiting for a file and a name — see [the images
+  report](docs/features/2026-09-17-images-folder-per-house.md).
 
 **The placeholders in the new pages are marked as placeholders.** ADAR's introduction,
 the three theory pages, the standfirsts and every plate on the site but ADAR's are
@@ -447,10 +444,8 @@ links are all still placeholders on purpose — they are the author's to write.
 ## Maintaining this file
 
 Keep this file current: when the page list, the content workflow, or the glossary
-changes, update the matching section in the same commit. When the change is to how one
-feature works, the detail goes in that feature's report in `docs/features/` — and a new
-feature gets a new report and a new row at the top of
-[`docs/features/README.md`](docs/features/README.md).
+changes, update the matching section in the same commit. Feature detail does not belong
+here at all — see "Feature reports" above for where it goes.
 
 `README.md` is a running changelog written for the site's author and has drifted in
 several places (`__p23`'s owner, the palette, `DECORATIVE_POINTS`, and a section on

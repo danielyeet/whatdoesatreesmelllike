@@ -75,3 +75,11 @@ their numbers; every tick being a link to its own section; the reading being the
 and not drifting while nothing is touched; travelling back giving exactly the drawing you
 left; the field standing still under `prefers-reduced-motion`; all of the writing being
 there without the script; and the theories and the researches reaching their own pieces.
+
+## Known issues / TODO
+
+- **The three theory pages are templates** — real structure, placeholder writing, six
+  sections each. Only `works/resins-in-perfumery.html` carries the owner's own writing
+  (sixteen sections). The standfirsts are placeholders too.
+- The rule is built from the sections in the markup, so a page whose writing arrives
+  with a different number of sections needs nothing done to it.

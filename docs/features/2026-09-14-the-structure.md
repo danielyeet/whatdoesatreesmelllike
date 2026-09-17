@@ -205,3 +205,12 @@ putting it back; it being drawn mostly white on near-black with the cool accent 
 the marks that say a station can be opened; it saying `dark-surface` to the cursor; it not
 creeping on its own under `prefers-reduced-motion`; and the plain list coming back when
 the script is blocked.
+
+## Known issues / TODO
+
+- The three theory pages the stations point at are **templates** — real structure,
+  placeholder writing. See [the essay pages](2026-09-17-the-essay-pages.md).
+- `images/Theories/` is empty but for its README, so this page's plates have nothing to
+  show yet.
+- The look of this page is a live subject; the owner has asked for several rounds on it
+  and may ask for more.

@@ -55,6 +55,15 @@ dark region must carry it, or an untagged dark panel gets an invisible cursor.
 The ring and the dot are `pointer-events: none`, which is what lets `elementFromPoint` see
 through them to the page.
 
+The ring **stretches** with speed (`STRETCH`, in `nav.js`) and rotates to the direction of
+travel. Its angle is only recomputed while the pointer is actually moving — `if (speed > 1)`
+— and that guard is a fix, not an optimisation. **Regression: the angle must not snap back
+to zero when the pointer stops.** It used to, in a single frame, while the ring was still
+visibly stretched, which read as a flick at the exact moment it settled. Holding the last
+angle lets the stretch relax away to nothing before the angle stops mattering.
+`tests/background-and-cursor.spec.js` samples the angle as it settles and fails if it ever
+jumps.
+
 ## Styling
 
 `style.css` is the only stylesheet, in commented sections mirroring the page types. Six
@@ -97,3 +106,15 @@ behaviour, current-page marking, and the menu opening identically on all three s
 the landing page; every menu link on every page pointing at a page that exists; the
 cursor. `tests/menu.spec.js` includes the regression for arrow keys leaking behind the
 menu.
+
+## Known issues / TODO
+
+- **The accent is still spent on this shared chrome.** The Menu trigger and the menu
+  overlay's links go `--brass` on hover, and the global focus ring is brass — on every
+  page, including the two the owner asked to have no accent on at all. They asked for
+  "the orange accents" gone from the favorites page; the chamber's own block in
+  `style.css` was cleared, and this was left because changing it changes the chrome on
+  every page of the site. The owner knows, and may come back to it. If they do, it is one
+  decision made in one place, not a per-page fix.
+- `README.md` still describes an earlier near-black-background palette. The CSS is the
+  truth; the README has not been corrected.

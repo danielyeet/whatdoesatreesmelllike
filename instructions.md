@@ -1,10 +1,14 @@
 # instructions.md
 
 Standing instructions from the repo owner about how Claude should behave and
-conduct commands in this repository. Unlike `CLAUDE.md` (which documents the
-codebase), this file records behavioral rules the owner has asked for. Append
-new rules here as they're given, in their own dated section; don't remove or
-reword an existing rule without being asked.
+conduct commands in this repository. This file is rules, not codebase
+documentation. The codebase is documented in two other places, and neither is
+a place for rules: `CLAUDE.md` carries the architecture, the conventions, the
+commands and the glossary, and `docs/features/` carries one report per
+feature, indexed newest first in `docs/progress-log.md`.
+
+Append new rules here as they're given, in their own dated section; don't
+remove or reword an existing rule without being asked.
 
 ## Verify changes visually before calling them done (2026-09-10)
 
@@ -47,6 +51,10 @@ The glossary lives in `CLAUDE.md` under `## Glossary`, seeded with the
 project's existing vocabulary (slide, branch, waypoint, wake, ghost,
 registration mark, and so on), each definition checked against the code.
 
+- The glossary is **vocabulary**, and that is why it stays in `CLAUDE.md`
+  rather than moving to a report: a word is used across the whole site. How
+  the thing a word names actually *works* belongs in that feature's report in
+  `docs/features/` — a glossary entry is a sentence, not a description.
 - When the owner uses a term that isn't in the glossary and isn't obvious
   from the code, **ask** — don't infer a meaning and build on it.
 - Once its meaning is settled, add it to the glossary table in the same

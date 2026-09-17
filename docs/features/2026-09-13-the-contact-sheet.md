@@ -326,3 +326,14 @@ with none of them landing on a picture; a date being written along its line rath
 switched on; the page never showing its own contents before the sheet takes over; the
 pictures being placed rather than slid in; the pictures running in order down the page;
 and the plain grid still being there when the script is blocked.
+
+## Known issues / TODO
+
+- **Every one of the fourteen frames is still a hatched placeholder.** Two of them
+  (Pineward and ADAR) carry a commented-out `<img>` still pointing at the generic
+  `../images/your-picture.jpg`; uncommenting one means writing its own folder in, e.g.
+  `../images/ADAR/`. ADAR's photographs have arrived and its frame here still has none,
+  so that one could be filled in today. A frame keeps its number once a real picture is
+  put in it — there is a test for that.
+- The look of this page is a live subject; the owner has asked for several rounds on it
+  and may ask for more.

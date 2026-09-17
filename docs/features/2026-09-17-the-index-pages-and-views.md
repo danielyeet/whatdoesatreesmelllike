@@ -99,3 +99,11 @@ rows scroll under them; the whole index coming out on one screen however many ro
 in it; the table still being the table with its script blocked; and the researches —
 the table being numbered, titled and dated, and the first research opening a page that
 is really there.
+
+## Known issues / TODO
+
+- **The dates in the Fragrances table are rolled from a seed** so that sorting has
+  something to work on. They say nothing, and they are the owner's to replace — see "The
+  dates are placeholders" above.
+- The plates on both index pages are hatched placeholders; `images/Individual Fragrances/`
+  and `images/Theories/` are empty but for their READMEs.
