@@ -17,8 +17,15 @@ test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
 });
 
+// The photographs are the owner's to add: the page names the file it
+// wants for each fragrance and works without it, taking the <img> off
+// the page and leaving the hatched placeholder. So a picture that is
+// not there yet is an expected 404 here rather than a fault, and
+// `tests/adar.spec.js` says so in one place.
+const MISSING_PICTURES = ["404 (File not found)"];
+
 test("the house is eleven fragrances in four groups", async ({ page }) => {
-  const errors = collectPageErrors(page);
+  const errors = collectPageErrors(page, MISSING_PICTURES);
   await page.goto(ADAR);
 
   const parts = page.locator(".adar-part");

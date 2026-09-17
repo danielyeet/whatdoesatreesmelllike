@@ -1602,8 +1602,53 @@
       never reads as something twitching at random. The whole thing is
       one path and one stroke. */
   const webCount = [];
+
+  /** The menu's own box while it is open, in window coordinates, or
+      null. Read once a drawing rather than once a line: asking an
+      element for its box is a question the browser lays the page out to
+      answer, and there can be a hundred lines. */
+  function menuBox() {
+    if (!panel || panel.hidden) return null;
+    const box = panel.getBoundingClientRect();
+    if (box.width < 8 || box.height < 8) return null;
+    return box;
+  }
+
+  /** Does this line cross the menu? A line with either end inside it
+      counts, and so does one that only passes over a corner. */
+  function crossesMenu(box, ax, ay, bx, by) {
+    if (!box) return false;
+    const inside = (x, y) =>
+      x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+    if (inside(ax, ay) || inside(bx, by)) return true;
+    // Both ends outside: the line crosses only if it cuts one of the
+    // four sides.
+    const cuts = (x1, y1, x2, y2) => {
+      const side = (px, py, qx, qy, rx, ry) =>
+        (qx - px) * (ry - py) - (qy - py) * (rx - px);
+      const d1 = side(ax, ay, bx, by, x1, y1);
+      const d2 = side(ax, ay, bx, by, x2, y2);
+      const d3 = side(x1, y1, x2, y2, ax, ay);
+      const d4 = side(x1, y1, x2, y2, bx, by);
+      return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
+    };
+    return cuts(box.left, box.top, box.right, box.top) ||
+      cuts(box.right, box.top, box.right, box.bottom) ||
+      cuts(box.right, box.bottom, box.left, box.bottom) ||
+      cuts(box.left, box.bottom, box.left, box.top);
+  }
+
   function drawWeb() {
     if (!hasHand || near.length < 6) return;
+    // THE WEB NEVER CROSSES THE OPEN MENU. The specks themselves may —
+    // the owner asked for the particles in front of the table, and one
+    // that has joined the orbit passing over the writing is the orbit
+    // doing what it does. A LINE is not: it is the cursor's own mark,
+    // it is drawn between two specks that may be nowhere near the menu,
+    // and strung across the writing it reads as scribble over the page
+    // rather than as a net in the air. So any link that would touch the
+    // menu's box is simply not drawn.
+    const menu = menuBox();
     const many = Math.min(WEB_MOST, near.length / 3);
     webCount.length = 0;
     for (let i = 0; i < many; i++) webCount.push(0);
@@ -1628,6 +1673,7 @@
         if (flick < -0.4) continue;
         const skew = ((own >>> 11) % 100) / 100 - 0.5;
         const nx = (-dy / off) * WEB_SKEW * skew, ny = (dx / off) * WEB_SKEW * skew;
+        if (crossesMenu(menu, ax + nx, ay + ny, bx + nx, by + ny)) continue;
         paintFront.moveTo(ax + nx, ay + ny);
         paintFront.lineTo(bx + nx, by + ny);
         webCount[a]++; webCount[b]++;

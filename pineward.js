@@ -101,7 +101,13 @@
   // --- the parts arriving
   const RISE_MS = 620;         // how long one takes to come up
   const RISE_STEP = 45;        // and the pause between two that arrive together
-  const OPEN_MS = 420;         // how long a part takes to open
+  const OPEN_MS = 760;        // how long a part takes to open
+  const SHUT_MS = 620;        // and to close, which is a little quicker
+  // A gentle curve, flat at both ends — the same shape the chamber's
+  // step uses. The standard ones cover half their travel in a quarter
+  // of their length, which on a box this size is a lurch and then a
+  // wait.
+  const PART_EASE = "cubic-bezier(0.42, 0.02, 0.24, 1)";
 
   let seed = SEED;
   const random = () => {
@@ -387,25 +393,60 @@
   const readNo = readout.querySelector(".pine-readout-no");
   const readWhere = readout.querySelector(".pine-readout-where");
 
-  /** Which part is being read: the last one whose top edge has passed
-      the reading line a third of the way down the window. */
-  let shown = -1;
+  const strata = [...document.querySelectorAll(".pine-stratum")];
+  const intro = document.querySelector(".pine-intro");
+
+  /** How much of the WINDOW this thing is filling, in pixels. The
+      reading names whatever you are actually looking at, which at the
+      foot of a long open part is something that began a long way up —
+      so what matters is how much of the screen it has, not where it
+      started. */
+  function filling(el) {
+    const box = el.getBoundingClientRect();
+    return Math.max(0, Math.min(box.bottom, window.innerHeight) - Math.max(box.top, 0));
+  }
+
+  function mostOf(list) {
+    let best = null;
+    let most = 0;
+    list.forEach((el) => {
+      const room = filling(el);
+      if (room > most) { most = room; best = el; }
+    });
+    return { el: best, room: most };
+  }
+
+  // How much of the window an open part has to fill before the reading
+  // names it as well as its stratum.
+  const NAMES_IT = 0.45;
+
+  /** Which part is being read. The ticks count what you have been PAST;
+      the reading below names what is in front of you now. */
+  let said = "";
   function reckon() {
     const line = window.innerHeight * 0.34;
     let at = -1;
     for (let n = 0; n < parts.length; n++) {
       if (parts[n].getBoundingClientRect().top <= line) at = n; else break;
     }
-    if (at === shown) return;
-    shown = at;
     tickAt.forEach((tick, n) => tick.classList.toggle("passed", n <= at));
-    readNo.textContent = String(at + 1).padStart(2, "0");
-    const stratum = at < 0
-      ? null
-      : parts[at].closest(".pine-stratum");
-    readWhere.textContent = stratum
-      ? stratum.querySelector("h2").textContent
-      : "Introduction";
+
+    const part = mostOf(parts);
+    const stratum = mostOf(intro ? strata.concat([intro]) : strata);
+    const names = part.el && part.el.open && part.room >= window.innerHeight * NAMES_IT;
+    const where = !stratum.el || stratum.el === intro
+      ? "Introduction"
+      : stratum.el.querySelector("h2").textContent;
+    const number = names ? parts.indexOf(part.el) + 1 : at + 1;
+    const saying = names
+      ? where + ", " + part.el.querySelector(".pine-title").textContent.trim()
+      : where;
+
+    const now = number + "|" + saying;
+    if (now === said) return;
+    said = now;
+    readNo.textContent = String(Math.max(0, number)).padStart(2, "0");
+    readWhere.textContent = saying;
   }
 
   // ============================================================
@@ -443,29 +484,119 @@
     parts.forEach((part) => part.classList.add("arrived"));
   }
 
+  // ============================================================
+  // OPENING AND CLOSING A part
+  //
+  // A <details> opens and closes in ONE FRAME on its own, which is the
+  // right thing for it to do when nothing is watching and completely
+  // wrong here: the owner asked for both halves to be "smooth and
+  // gradual, not so sudden". So the summary's own click is caught and
+  // the element is opened or closed around an animation instead:
+  //
+  //   OPENING — the element is opened at once (its contents have to be
+  //   on the page to be measured), the box is run from nothing to the
+  //   height it wants, and the writing comes up a beat later, so the
+  //   room is already opening before anything appears in it.
+  //
+  //   CLOSING — the writing goes FIRST and the box follows it down,
+  //   and only when the box has closed is the element really shut. Shut
+  //   it first and the browser takes the contents off the page in that
+  //   frame, which is the cut this exists to avoid.
+  //
+  // Nothing here is needed for the page to work: under
+  // `prefers-reduced-motion`, and with this script blocked, the
+  // <details> opens and closes on its own as it always did.
+  // ============================================================
   parts.forEach((part) => {
     const body = part.querySelector(".pine-body");
-    if (!body) return;
-    part.addEventListener("toggle", () => {
-      part.querySelector(".pine-cue").textContent = part.open ? "Close" : "Open";
+    const summary = part.querySelector("summary");
+    if (!body || !summary) return;
+    const cue = part.querySelector(".pine-cue");
+    let moving = false;
+
+    const say = () => { if (cue) cue.textContent = part.open ? "Close" : "Open"; };
+    part.addEventListener("toggle", say);
+
+    // The box's own padding has to travel with its height, or the last
+    // frame of closing is a forty-pixel box with nothing in it that
+    // then disappears — a small step at the end of a smooth movement,
+    // which is the thing this whole treatment exists to avoid. Read off
+    // the stylesheet rather than written here, so the two cannot
+    // disagree.
+    const padTop = getComputedStyle(body).paddingTop;
+    const padBottom = getComputedStyle(body).paddingBottom;
+
+    /** Put the box back in the page's hands once it has arrived. */
+    const settle = () => {
+      body.style.transition = "";
+      body.style.height = "";
+      body.style.opacity = "";
+      body.style.transform = "";
+      body.style.overflow = "";
+      body.style.paddingTop = "";
+      body.style.paddingBottom = "";
+      moving = false;
+    };
+
+    summary.addEventListener("click", (event) => {
       if (REDUCE_MOTION) return;
-      // Where it is going, measured on the page as it now stands.
-      const to = part.open ? body.scrollHeight : 0;
-      const from = part.open ? 0 : body.scrollHeight;
-      body.style.height = from + "px";
+      event.preventDefault();
+      if (moving) return;
+      moving = true;
+
+      if (!part.open) {
+        part.open = true;
+        const to = body.scrollHeight;
+        body.style.overflow = "hidden";
+        body.style.height = "0px";
+        body.style.paddingTop = "0px";
+        body.style.paddingBottom = "0px";
+        body.style.opacity = "0";
+        body.style.transform = "translateY(8px)";
+        // The frame after, so there is a height of nothing for the box
+        // to travel from rather than a height it already had.
+        requestAnimationFrame(() => {
+          body.style.transition =
+            "height " + OPEN_MS + "ms " + PART_EASE + ", " +
+            "opacity " + Math.round(OPEN_MS * 0.7) + "ms " + PART_EASE + " " +
+              Math.round(OPEN_MS * 0.3) + "ms, " +
+            "transform " + Math.round(OPEN_MS * 0.8) + "ms " + PART_EASE + " " +
+              Math.round(OPEN_MS * 0.25) + "ms, " +
+            "padding " + OPEN_MS + "ms " + PART_EASE;
+          body.style.height = to + "px";
+          body.style.paddingTop = padTop;
+          body.style.paddingBottom = padBottom;
+          body.style.opacity = "1";
+          body.style.transform = "none";
+        });
+        window.setTimeout(() => { settle(); reckon(); }, OPEN_MS + 60);
+        return;
+      }
+
+      const from = body.getBoundingClientRect().height;
       body.style.overflow = "hidden";
-      // The frame after, so the height it is leaving has been taken.
+      body.style.height = from + "px";
+      body.style.paddingTop = padTop;
+      body.style.paddingBottom = padBottom;
+      body.style.opacity = "1";
       requestAnimationFrame(() => {
-        body.style.transition = "height " + OPEN_MS + "ms var(--menu-ease)";
-        body.style.height = to + "px";
+        body.style.transition =
+          "height " + SHUT_MS + "ms " + PART_EASE + ", " +
+          "opacity " + Math.round(SHUT_MS * 0.55) + "ms " + PART_EASE + ", " +
+          "transform " + Math.round(SHUT_MS * 0.6) + "ms " + PART_EASE + ", " +
+          "padding " + SHUT_MS + "ms " + PART_EASE;
+        body.style.height = "0px";
+        body.style.paddingTop = "0px";
+        body.style.paddingBottom = "0px";
+        body.style.opacity = "0";
+        body.style.transform = "translateY(6px)";
       });
-      const done = () => {
-        body.style.transition = "";
-        body.style.height = "";
-        body.style.overflow = "";
-        body.removeEventListener("transitionend", done);
-      };
-      body.addEventListener("transitionend", done);
+      window.setTimeout(() => {
+        part.open = false;
+        settle();
+        say();
+        reckon();
+      }, SHUT_MS + 40);
     });
   });
 

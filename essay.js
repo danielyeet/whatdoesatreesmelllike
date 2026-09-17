@@ -259,6 +259,12 @@
       name.className = "essay-mark-name";
       name.textContent = nameOf(section);
       link.append(tick, name);
+      // Pressed, this section names itself until you scroll away from
+      // where the press took you — see readingAt().
+      link.addEventListener("click", () => {
+        pinned = i;
+        pinnedAt = null;
+      });
       item.appendChild(link);
       list.appendChild(item);
       ticks.push(link);
@@ -273,6 +279,61 @@
     document.body.appendChild(rule);
   }
 
+  // WHICH SECTION IS BEING READ.
+  //
+  // The honest answer most of the time is whichever one is filling the
+  // most of the window — a short section between two long ones is not
+  // what you are reading when a line of it is on screen and half a page
+  // of the next one is. But two things have to come before that, and
+  // both were asked for:
+  //
+  //   A SECTION YOU HAVE JUST ARRIVED AT names itself. While a
+  //   heading is in the top part of the window you have just got to it,
+  //   whatever else is on screen — so every section, however short,
+  //   has a window in which it is the subject rather than being
+  //   skipped over entirely.
+  //
+  //   A SECTION YOU HAVE JUST ASKED FOR names itself, from the frame
+  //   you press its tick until you scroll away from where that took
+  //   you. Pressing "Myrrh" and being told you are in Camphor because
+  //   Camphor is longer is a readout arguing with you.
+  //
+  // And at the very bottom of the page the last section wins outright:
+  // there is nowhere further to go, so that is what you are looking at.
+  const ARRIVED_BAND = 0.45;   // the share of the window a heading is "just reached" in
+  const PIN_FREE = 60;         // how far you must scroll to let a pressed tick go
+  let pinned = -1;
+  let pinnedAt = null;
+
+  function filling(el) {
+    const box = el.getBoundingClientRect();
+    return Math.max(0, Math.min(box.bottom, window.innerHeight) - Math.max(box.top, 0));
+  }
+
+  function readingAt(down) {
+    const room = document.documentElement.scrollHeight - window.innerHeight;
+    if (room > 0 && down >= room - 4) return sections.length - 1;
+
+    if (pinned >= 0) {
+      if (pinnedAt === null) pinnedAt = down;
+      if (Math.abs(down - pinnedAt) <= PIN_FREE) return pinned;
+      pinned = -1;
+      pinnedAt = null;
+    }
+
+    const band = window.innerHeight * ARRIVED_BAND;
+    let arrived = -1;
+    let most = 0;
+    let biggest = 0;
+    sections.forEach((section, i) => {
+      const top = section.getBoundingClientRect().top;
+      if (top <= band && top >= -24) arrived = i;
+      const room2 = filling(section);
+      if (room2 > most) { most = room2; biggest = i; }
+    });
+    return arrived >= 0 ? arrived : biggest;
+  }
+
   // How far through the piece the reading is. It is the SCROLL and
   // nothing else — the field may drift, the reading may not.
   function readRule(down) {
@@ -282,15 +343,7 @@
     run.style.height = (through * 100).toFixed(2) + "%";
     readout.textContent = String(Math.round(through * 100)).padStart(2, "0") + "%";
 
-    // Which section is being read: the last one whose top has passed a
-    // third of the way down the window. A section is "here" from the
-    // moment it is properly on screen rather than from the moment its
-    // first pixel appears, which would flicker between two of them.
-    const mark = window.innerHeight * 0.34;
-    let at = 0;
-    sections.forEach((section, i) => {
-      if (section.getBoundingClientRect().top <= mark) at = i;
-    });
+    const at = readingAt(down);
     ticks.forEach((tick, i) => tick.classList.toggle("here", i === at));
     hereName.textContent = nameOf(sections[at]);
   }
