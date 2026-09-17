@@ -1,0 +1,65 @@
+# A folder of pictures per house and category
+
+Date: 2026-09-17 (`aa55557`, *Give each house and category its own folder of pictures*)
+
+Files: `images/` (the `ADAR/`, `Pineward/`, `Favorites/`, `Individual Fragrances/` and
+`Theories/` folders, each empty one carrying a `README.txt`; `images/README.txt`),
+`works/adar.html`, `works/pineward.html`, `works/theory-01.html`, `works/theory-02.html`,
+`works/theory-03.html`, `adar.js`
+
+## What it is
+
+`images/` was one flat pile of files. It has a folder per house or category now, and all
+fourteen pictures presently on the site live in `images/ADAR/`, since every one of them
+is ADAR's — the thirteen its fragrances ask for (the two extra ADHD photographs
+included) and the house's own mark. Everything that names a picture points there: the
+twenty-four live `<img>` tags on `works/adar.html`, the sigil `adar.js` draws inside the
+void, and the commented-out placeholder tags on the Pineward and theory pages. The four
+folders with no pictures in them yet each carry a `README.txt` saying what belongs
+there.
+
+## Why / key decisions
+
+- **One folder per house, not per kind of picture.** The site's shape is house →
+  fragrance, so the pictures follow the writing. Adding a house means adding a folder,
+  and nothing has to be renamed to avoid a clash with another house's `01.png`.
+- **The empty folders carry a `README.txt` because git does not store an empty
+  directory.** Without a file in it the folder would simply not exist on a fresh clone,
+  and the first person to add a picture would have to recreate it with exactly the right
+  capitalisation. The README is doing two jobs: saying what belongs there, and holding
+  the folder open.
+- **Placeholders were repointed too, even though they are commented out.** Uncommenting
+  one later should find its picture where it should be rather than in the old flat pile
+  — a broken path discovered months later reads as a missing photograph, not as a stale
+  comment.
+- **Folder names are the owner's own capitalisation** (`ADAR`, not `adar`). Paths are
+  case-sensitive on GitHub Pages, so a case mismatch works locally on a
+  case-insensitive filesystem and 404s on the live site.
+- **Prefer hyphens over spaces in any new folder**, because a space becomes `%20` in the
+  address. `Individual Fragrances` predates that advice and is kept because the owner
+  named it.
+
+## How to test it
+
+The repository link test **will not catch a broken picture path** — it deliberately
+tolerates a picture that is not there yet, because most of the site's plates are still
+placeholders waiting for a file. So check the page itself rather than trusting the
+suite:
+
+```bash
+npm test -- tests/adar.spec.js    # the mark in the void, and every fragrance's photograph
+python3 -m http.server 8000       # then open http://localhost:8000/works/adar.html
+```
+
+With the page open, confirm the pictures are served from their new place with nothing
+404ing (devtools → Network, filter images), and that the house's mark still stands in
+the void when the pointer comes near it.
+
+## Known issues / TODO
+
+- Only ADAR's pictures exist. `Pineward/`, `Favorites/`, `Individual Fragrances/` and
+  `Theories/` are empty but for their READMEs, and every plate on the site outside ADAR
+  is still a hatched placeholder with its `<img>` tag commented out.
+- The link test's tolerance of missing images is deliberate, but it means path breakage
+  in this area has to be caught by eye. If the placeholders are ever all filled in, that
+  tolerance is worth revisiting.
