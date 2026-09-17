@@ -19,6 +19,7 @@
   if (!field || !results || !window.SiteSearch) return;
 
   const count = document.querySelector(".find-count");
+  const filters = [...document.querySelectorAll(".find-filter")];
   const nothing = document.querySelector(".find-nothing");
   const saying = document.querySelector(".find-saying");
 
@@ -64,11 +65,49 @@
     return reading;
   }
 
+  // ============================================================
+  // FILTERING BY KIND
+  //
+  // The site is made of houses, fragrances, researches, favourites,
+  // pieces and sections, and `search.js` already says which of those
+  // each answer is. So a filter is one word compared, and the buttons
+  // carry that word in `data-kind` — there is no second list of the
+  // site's categories anywhere, which is the same rule the search
+  // itself is built on.
+  //
+  // WHAT IS FILTERED IS THE ANSWER, NOT THE SEARCH. The query is run
+  // once and its hits kept; pressing a filter re-draws from those. So
+  // the counts on the buttons are true — each says how many of *this*
+  // search's answers are of that kind — and switching filters never
+  // re-reads the site.
+  // ============================================================
+  let only = "";
+  let held = [];
+  let heldQuery = "";
+
+  function render() {
+    const hits = only ? held.filter((hit) => hit.entry.kind === only) : held;
+    // Each button says how many it would give, and one that would give
+    // nothing is put beyond use rather than left to be pressed for an
+    // empty page.
+    filters.forEach((button) => {
+      const kind = button.dataset.kind;
+      const many = kind ? held.filter((hit) => hit.entry.kind === kind).length : held.length;
+      const tally = button.querySelector(".find-filter-no");
+      if (tally) tally.textContent = heldQuery ? String(many) : "";
+      button.classList.toggle("is-on", kind === only);
+      button.disabled = Boolean(heldQuery) && many === 0 && kind !== "";
+      button.setAttribute("aria-pressed", String(kind === only));
+    });
+    draw(heldQuery, hits);
+  }
+
   function draw(query, hits) {
     results.innerHTML = "";
     if (saying) saying.textContent = query ? "“" + query + "”" : "";
     if (count) count.textContent = String(hits.length).padStart(3, "0");
     document.body.classList.toggle("find-empty", Boolean(query) && !hits.length);
+    document.body.classList.toggle("find-asked", Boolean(query));
     if (nothing) nothing.hidden = !(query && !hits.length);
 
     hits.forEach((hit, n) => {
@@ -101,13 +140,32 @@
   let asked = "";
   function look(query) {
     asked = query;
-    if (!query.trim()) { draw("", []); return; }
+    if (!query.trim()) { held = []; heldQuery = ""; render(); return; }
     readSite().then((all) => {
       // Something else was typed while the site was being read.
       if (asked !== query) return;
-      draw(query, window.SiteSearch.rank(query, all, 60));
+      held = window.SiteSearch.rank(query, all, 60);
+      heldQuery = query;
+      // A filter that the new answers have nothing of would show an
+      // empty page with no way of telling why, so it is let go of.
+      if (only && !held.some((hit) => hit.entry.kind === only)) only = "";
+      render();
     });
   }
+
+  filters.forEach((button) => {
+    // The tally each button carries. Built here rather than written into
+    // the markup, so the button reads as one word until there is a
+    // search for it to count.
+    const tally = document.createElement("span");
+    tally.className = "find-filter-no";
+    tally.setAttribute("aria-hidden", "true");
+    button.appendChild(tally);
+    button.addEventListener("click", () => {
+      only = button.dataset.kind === only ? "" : button.dataset.kind;
+      render();
+    });
+  });
 
   let waiting = null;
   field.addEventListener("input", () => {

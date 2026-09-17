@@ -91,6 +91,12 @@
   const CLEAR_MID = 0.42;      // the share of the width kept quiet for the writing
   const GROW_MS = 2100;        // how long the forest takes to grow when the page opens
   const INK = "23,23,15";      // --ink
+  // THE HOUSE'S GREEN. The owner asked for dark green accents on this
+  // page, and for the wood to answer the hand by turning green as well
+  // as by the bloom it already had. Kept in step with --pine-green in
+  // the stylesheet; nothing else on the site spends it.
+  const GREEN = [26, 74, 44];
+  const INK_RGB = [23, 23, 15];
 
   // --- and what it does while it stands there
   //
@@ -108,6 +114,7 @@
   const BLOOM_NEEDLES = 3;     // how many needles it puts out
   const BLOOM_LONG = 7;        // and how long they are, in pixels
   const BLOOM_EASE = 3.4;      // how quickly the bloom comes and goes
+  const GREEN_LIFT = 0.85;     // how far towards the house's green a bloomed speck goes
 
 
   // --- the parts arriving
@@ -128,6 +135,17 @@
   };
   const between = (pair) => pair[0] + random() * (pair[1] - pair[0]);
   const rgba = (a) => "rgba(" + INK + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
+  /** Ink, carried `green` of the way towards the house's green. What the
+      bloom uses: a speck under the hand is drawn more plainly AND more
+      green, and both come and go together. */
+  const rgbaGreen = (a, green) => {
+    const t = Math.max(0, Math.min(1, green));
+    const r = Math.round(INK_RGB[0] + (GREEN[0] - INK_RGB[0]) * t);
+    const g = Math.round(INK_RGB[1] + (GREEN[1] - INK_RGB[1]) * t);
+    const b = Math.round(INK_RGB[2] + (GREEN[2] - INK_RGB[2]) * t);
+    return "rgba(" + r + "," + g + "," + b + "," +
+      Math.max(0, Math.min(1, a)).toFixed(3) + ")";
+  };
 
   // ============================================================
   // THE FOREST
@@ -389,12 +407,16 @@
       const at = one.lit * (TREE_INK + one.bloom * BLOOM_INK);
       if (at < 0.02) return;
       const size = Math.max(1, Math.round(one.size + one.bloom * 1.6));
-      ink.fillStyle = rgba(at);
+      // Green where the hand is, and only there. `GREEN_LIFT` is how far
+      // towards the house's green a fully bloomed speck is carried — not
+      // all the way, or the wood reads as a different drawing under the
+      // pointer rather than the same one answering.
+      ink.fillStyle = rgbaGreen(at, one.bloom * GREEN_LIFT);
       ink.fillRect(Math.round(one.x - size / 2), Math.round(one.y - size / 2), size, size);
       if (one.bloom < 0.08) return;
       // NEEDLES. A conifer blooming is not a flower opening: it is the
       // needles standing out from the twig, so that is what is drawn.
-      ink.strokeStyle = rgba(at * 0.7);
+      ink.strokeStyle = rgbaGreen(at * 0.7, one.bloom * GREEN_LIFT);
       ink.beginPath();
       for (let n = 0; n < BLOOM_NEEDLES; n++) {
         const way = one.of.phase + (n / BLOOM_NEEDLES) * Math.PI * 2;
@@ -416,65 +438,20 @@
   // you have scrolled — a part that runs long should not read as more
   // of the piece than a part that runs short.
   // ============================================================
-  // THE READING TREE. How far down the piece you have come is drawn as
-  // the house's own mark — the fir off the Pineward bottle — standing
-  // in the left margin and inked in from the ground up as the parts go
-  // past. It is the whole of this page's progress bar.
+  // THE SCALE. One tick per part down the side of the page, on a
+  // hairline ruled the length of it, with the passed part of that rule
+  // inked in behind them in the house's green.
   //
-  // The fir is worked out rather than drawn by hand: a tier at a time
-  // down a straight leader, each one reaching further out than the one
-  // above it and notching back in under itself, which is the silhouette
-  // on the bottle. Working it out means its tiers always fit whatever
-  // height it is given, and means the shape lives with the drawing
-  // rather than in a file nobody will find.
-  const FIR_W = 34;            // the mark's own box, which the stylesheet scales
-  const FIR_H = 208;
-  const FIR_TIERS = 13;        // rounds of branches, tip to foot
-  const FIR_REACH = 0.8;       // how quickly it widens going down (a power)
-  const FIR_NOTCH = 0.42;      // how far back in it comes under each tier
-  const FIR_FOOT = 24;         // the bare stem at the bottom
-  const FIR_STEM = 2.2;        // and how thick that stem is
-
-  function firPath(w, h) {
-    const mid = w / 2;
-    const tip = 1.5;
-    const base = h - FIR_FOOT;
-    const step = (base - tip) / FIR_TIERS;
-    const left = [], right = [];
-    for (let i = 1; i <= FIR_TIERS; i++) {
-      const t = i / FIR_TIERS;
-      const y = tip + (base - tip) * t;
-      const reach = Math.pow(t, FIR_REACH) * (mid - 0.5);
-      const notch = reach * FIR_NOTCH;
-      left.push([mid - reach, y], [mid - notch, y + step * 0.34]);
-      right.push([mid + reach, y], [mid + notch, y + step * 0.34]);
-    }
-    const d = ["M", mid, tip];
-    left.forEach((pt) => d.push("L", pt[0].toFixed(2), pt[1].toFixed(2)));
-    d.push("L", (mid - FIR_STEM).toFixed(2), base.toFixed(2));
-    d.push("L", (mid - FIR_STEM).toFixed(2), h);
-    d.push("L", (mid + FIR_STEM).toFixed(2), h);
-    d.push("L", (mid + FIR_STEM).toFixed(2), base.toFixed(2));
-    // Back up the far side: the same tiers in reverse, so the mark is
-    // symmetrical about its own leader.
-    right.reverse().forEach((pt) => d.push("L", pt[0].toFixed(2), pt[1].toFixed(2)));
-    d.push("Z");
-    return d.join(" ");
-  }
-
+  // For one round this was the house's own mark — the fir off the
+  // Pineward bottle, filling from the ground up. The owner asked for it
+  // scrapped ("remove the tree on the left, scrap that idea"), so it is
+  // out of the file rather than turned off: there is no firPath and no
+  // FIR_* here any more.
   const trunk = document.createElement("div");
   trunk.className = "pine-trunk";
   trunk.setAttribute("aria-hidden", "true");
-  const firD = firPath(FIR_W, FIR_H);
   trunk.innerHTML =
-    '<svg class="pine-tree" viewBox="0 0 ' + FIR_W + ' ' + FIR_H + '" ' +
-    'preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
-      '<defs><clipPath id="pine-read-fill">' +
-        '<rect class="pine-tree-rect" x="0" y="' + FIR_H + '" width="' + FIR_W + '" height="0"></rect>' +
-      '</clipPath></defs>' +
-      '<path class="pine-tree-ghost" d="' + firD + '"></path>' +
-      '<path class="pine-tree-ink" d="' + firD + '" clip-path="url(#pine-read-fill)"></path>' +
-    '</svg>';
+    '<span class="pine-trunk-line"><span class="pine-trunk-fill"></span></span>';
   const ticks = document.createElement("div");
   ticks.className = "pine-ticks";
   parts.forEach(() => {
@@ -494,7 +471,7 @@
   page.appendChild(readout);
 
   const tickAt = Array.from(ticks.children);
-  const treeRect = trunk.querySelector(".pine-tree-rect");
+  const trunkFill = trunk.querySelector(".pine-trunk-fill");
   const readNo = readout.querySelector(".pine-readout-no");
   const readWhere = readout.querySelector(".pine-readout-where");
 
@@ -534,15 +511,26 @@
     for (let n = 0; n < parts.length; n++) {
       if (parts[n].getBoundingClientRect().top <= line) at = n; else break;
     }
+    // AT THE FOOT OF THE PAGE, EVERYTHING HAS BEEN PASSED.
+    // A part counts as passed when its top crosses a line a third of the
+    // way down the window — but the last few parts never get that far up
+    // the screen, because the page runs out before they can. So scrolling
+    // all the way down used to leave the reading short of the full count
+    // and the rule short of its end, which is exactly what the owner
+    // reported. Once the page itself has been passed, so has everything
+    // on it.
+    const down = window.scrollY || window.pageYOffset || 0;
+    const room = Math.max(0,
+      document.documentElement.scrollHeight - window.innerHeight);
+    if (room > 0 && down >= room - 2) at = parts.length - 1;
     tickAt.forEach((tick, n) => tick.classList.toggle("passed", n <= at));
 
-    // The mark fills from the ground up, off the same count: the parts
+    // The rule fills behind the ticks off the same count: the parts
     // passed, not the scrollbar, so a part that runs long does not read
     // as more of the piece than a part that runs short.
-    if (treeRect) {
+    if (trunkFill) {
       const filled = Math.max(0, Math.min(1, (at + 1) / parts.length));
-      treeRect.setAttribute("y", (FIR_H * (1 - filled)).toFixed(2));
-      treeRect.setAttribute("height", (FIR_H * filled).toFixed(2));
+      trunkFill.style.transform = "scaleY(" + filled.toFixed(4) + ")";
     }
 
     const part = mostOf(parts);

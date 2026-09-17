@@ -55,11 +55,36 @@ With the page open, confirm the pictures are served from their new place with no
 404ing (devtools → Network, filter images), and that the house's mark still stands in
 the void when the pointer comes near it.
 
+## Web copies, and why a picture is not used as it arrives
+
+The first photographs outside ADAR arrived on 2026-09-17: a Pineward bottle and ADAR's
+title page, both for the contact sheet. Neither is served as uploaded.
+
+| | as uploaded | as served |
+|---|---|---|
+| `Pineward/Batch 1 Photograph (40).JPG` | 19MB, 5152×7728 | `batch-1-photograph-40-web.jpg`, 0.21MB, 1067×1600 |
+| `ADAR/Adar Title page.png` | 6.3MB, 3873×3873 | `adar-title-page-web.jpg`, 0.16MB, 1600×1600 |
+
+**The originals are kept and nothing points at them.** The copies exist because the full
+files did measurable harm: together they starved the contact sheet's opening animation of
+frames, and the test that watches the flick being held on its first picture failed
+consistently until the page pointed at scaled copies instead. That is the whole reason,
+and it is worth keeping in mind for every picture that arrives from here on — a frame on
+the sheet is a few hundred pixels square, and a plate on an index page is smaller still.
+
+The rule, written into `images/README.txt` where the owner will find it: keep the
+original, and point the page at a copy no more than about 1600px on its long side.
+
+There is no build step on this site and there is not going to be one, so these copies are
+made by hand when a picture arrives. Pillow will do it in a few lines; ADAR's existing
+photographs are small enough already and were left alone.
+
 ## Known issues / TODO
 
-- Only ADAR's pictures exist. `Pineward/`, `Favorites/`, `Individual Fragrances/` and
-  `Theories/` are empty but for their READMEs, and every plate on the site outside ADAR
-  is still a hatched placeholder with its `<img>` tag commented out.
+- `Favorites/`, `Individual Fragrances/` and `Theories/` are still empty but for their
+  READMEs. ADAR's folder is complete; `Pineward/` has one photograph, on the contact
+  sheet. Every other plate on the site is still a hatched placeholder with its `<img>`
+  tag commented out — the fifty-four Pineward parts among them.
 - The link test's tolerance of missing images is deliberate, but it means path breakage
   in this area has to be caught by eye. If the placeholders are ever all filled in, that
   tolerance is worth revisiting.

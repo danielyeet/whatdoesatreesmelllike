@@ -129,6 +129,44 @@ gives it its ground and every word is still there.
 
 `prefers-reduced-motion` is honoured: the plan and the specks are drawn once, still.
 
+## The grid off, and filtering by kind
+
+The round after the ground was redrawn, the owner asked for three more things, and the
+page is better for all three:
+
+- **The grid goes.** `find-ground.js` no longer draws a plan at all. What is left is the
+  specks, hung across the whole window now rather than in two margins, drifting about
+  their own places and webbed to their near neighbours. They gather towards the field and
+  brighten while something is being typed — the page answers the question rather than the
+  pointer; nothing on it follows the hand.
+- **The standfirst goes** — *"Everything on this site — houses, fragrances…"*. The page
+  says what it is by being a field with the site's name beside the Menu.
+- **The answers can be filtered by kind**: All, Houses, Fragrances, Researches,
+  Favourites, Pieces, Sections.
+
+**The web here is short and capped, and must stay so.** The first version reached 96px
+and joined up to two neighbours, and it came out as long lines striking clear across the
+page and closing into triangles — a net thrown over the writing rather than a ground
+behind it. It is 44px and one neighbour now. [Pineward's wood](2026-09-16-pineward.md)
+learned the same lesson from the same mistake; so did the essay pages.
+
+### How the filters work, and why they are cheap
+
+`search.js` already writes a kind on every entry — House, Fragrance, Research, Favourite,
+Piece, Section — so a filter is **one word compared**, and each button carries that word
+in `data-kind`. There is no second list of the site's categories anywhere, which is the
+rule the whole search is built on. Adding a kind to `search.js` means adding one line to
+`search.html`.
+
+**What is filtered is the answer, not the search.** A query is run once and its hits
+held; pressing a filter re-draws from those. Two things follow, and both are the point:
+the number on each button is true — it says how many of *this* search's answers are of
+that kind — and switching filters never re-reads the site.
+
+A filter that would give nothing is disabled rather than left to be pressed for an empty
+page, and a filter is let go of if a new query has nothing of that kind, so you can never
+be left looking at an empty page with no way of telling why.
+
 ## Known issues / TODO
 
 - **The `PAGES` manifest in `search-page.js` is hand-maintained and nothing tests that it

@@ -390,13 +390,43 @@ drawn), and **a picture carries ink only where the map is tied to it** — the t
 what that measures now, and it was sized up once because the first version of it sat a
 hair under the threshold.
 
+## White again
+
+The dark ground lasted one round. The owner's note was exact about what to keep:
+*"flip the colours, make it white. Otherwise, the page itself looks really good. Keep the
+format and the locations and so on."*
+
+So everything the dark round brought — the traces, the pulses, the ties, the scatter, the
+flick, the plan laid faintly over the ground — is untouched, and only the tone turned
+over. It was a five-line change: the five tokens on `.sheet-page`, the canvas's `INK`
+back to near-black, and `dark-surface` off the body. **That is the argument for setting a
+page's colour as tokens on its own body class** rather than writing the colours into the
+rules — it made a change of mind cheap in both directions.
+
+## The first two photographs
+
+Frames 01 and 02 carry real pictures now — Pineward's bottle on moss, and ADAR's title
+page — in place of the hatched placeholders.
+
+**They are served from scaled copies, and this matters.** The files as uploaded are
+19MB (5152×7728) and 6MB (3873×3873). A frame on this sheet is a few hundred pixels
+square, so those are roughly twenty-five times more picture than the page can show — and
+at full size the two of them together **starved this page's opening of frames**: the test
+that watches the flick being held on its first picture began failing consistently, because
+fewer than five frames were rendered in the first 200ms while the browser decoded them.
+
+The originals are kept exactly as they arrived and nothing points at them; the page loads
+`-web` copies at 1600px on the long side (0.2MB each, a 99% saving). `images/README.txt`
+says so, and says to do the same for the next one. **If that test ever starts failing
+after a picture is added, this is the first thing to check.**
+
 ## Known issues / TODO
 
-- **Every one of the fourteen frames is still a hatched placeholder.** Two of them
-  (Pineward and ADAR) carry a commented-out `<img>` still pointing at the generic
-  `../images/your-picture.jpg`; uncommenting one means writing its own folder in, e.g.
-  `../images/ADAR/`. ADAR's photographs have arrived and its frame here still has none,
-  so that one could be filled in today. A frame keeps its number once a real picture is
-  put in it — there is a test for that.
+- **Frames 01 and 02 carry photographs; the other twelve are still hatched
+  placeholders**, each with a commented-out `<img>` pointing at the generic
+  `../images/your-picture.jpg`. Uncommenting one means writing its own folder in (e.g.
+  `../images/ADAR/`) and pointing it at a scaled copy, per "The first two photographs"
+  above. A frame keeps its number once a real picture is put in it — there is a test for
+  that.
 - The look of this page is a live subject; the owner has asked for several rounds on it
   and may ask for more.

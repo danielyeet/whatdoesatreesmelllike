@@ -25,11 +25,13 @@
   with nothing found is a state this page has rather than an error.
 
   THE GROUND is dark, and it is drawn rather than styled: find-ground.js
-  puts a squared plan behind the page and a column of black specks down
-  each margin, and both of them answer the search — the plan lights
-  along the field as you type and rules itself across each answer as it
-  arrives. The page is named beside the Menu, the way every other page
-  on the site names itself; there is no title on the page proper.
+  hangs a field of specks behind the page, webbed to their near
+  neighbours, and they answer the search — they gather towards the field
+  and brighten as you type. There was a squared plan behind them for one
+  round; the owner asked for the grid gone and the specks to carry the
+  page on their own. The page is named beside the Menu, the way every
+  other page on the site names itself; there is no title on the page
+  proper, and no standfirst under it.
 -->
 <body class="find-page dark-surface">
 
@@ -39,10 +41,6 @@
 
 <div class="find">
 
-  <header class="find-head">
-    <p class="find-col">Everything on this site — houses, fragrances, theories, researches, favourites.</p>
-  </header>
-
   <form class="find-form" role="search">
     <span class="find-mark" aria-hidden="true"></span>
     <label class="find-label" for="find-field">Search</label>
@@ -50,6 +48,23 @@
            placeholder="Search anything :)" aria-label="Search the site">
     <span class="find-count" aria-hidden="true">000</span>
   </form>
+
+  <!--
+    FILTERING. One button per kind of thing the site is made of, in the
+    order they matter here. `data-kind` is the word search.js puts on an
+    entry, so these are the categories themselves rather than a second
+    list of them kept in step by hand. Adding a kind to search.js means
+    adding one line here.
+  -->
+  <div class="find-filters" role="group" aria-label="Filter by kind">
+    <button class="find-filter is-on" type="button" data-kind="">All</button>
+    <button class="find-filter" type="button" data-kind="House">Houses</button>
+    <button class="find-filter" type="button" data-kind="Fragrance">Fragrances</button>
+    <button class="find-filter" type="button" data-kind="Research">Researches</button>
+    <button class="find-filter" type="button" data-kind="Favourite">Favourites</button>
+    <button class="find-filter" type="button" data-kind="Piece">Pieces</button>
+    <button class="find-filter" type="button" data-kind="Section">Sections</button>
+  </div>
 
   <p class="find-reading-note" aria-hidden="true">Reading the site…</p>
 

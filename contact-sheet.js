@@ -739,7 +739,7 @@
   const PULSE_HOT = 2.1;      // and how much faster it runs on a hot trace
   const HOT_LIFT = 1.5;       // how much more plainly a hot trace is drawn
   const COLD_INK = 0.35;      // and what is left of everything else
-  const INK = "226,228,234";  // --ink, which is light on this page now
+  const INK = "23,23,15";     // --ink
 
   /** One number between 0 and 1 for a given thing, the same every time
       it is asked. What keeps each trace's pulse on its own clock

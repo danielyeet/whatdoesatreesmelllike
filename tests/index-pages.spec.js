@@ -170,7 +170,8 @@ test("the whole index comes out on one screen, whatever is in the table",
   expect(fits.page, "and the page is still one screen").toBeLessThanOrEqual(fits.window + 2);
 });
 
-test("switching views takes one away before the other arrives", async ({ page }) => {
+test("the first switch swaps the views over; after that the page swipes",
+  async ({ page }) => {
   await page.goto(SHEET);
   await page.waitForFunction(
     () => {
@@ -181,37 +182,81 @@ test("switching views takes one away before the other arrives", async ({ page })
     { timeout: 20000 }
   );
 
-  // Watched every frame through the switch: there must never be a
-  // frame with both views showing. Two things fading through each
-  // other in the same place is the one thing this must not look like.
+  // Watched every frame through each switch. TWO THINGS ARE BEING
+  // GUARDED, and they are different things:
+  //   `both`    — frames with both views showing at once.
+  //   `overlap` — frames where those two actually stood on top of one
+  //               another. Fading through each other in the same place
+  //               is the thing this must never look like; travelling
+  //               side by side is what the owner asked for.
   await page.evaluate(() => {
-    window.__bothAtOnce = 0;
+    window.__both = 0;
+    window.__overlap = 0;
     window.__watching = true;
+    window.__reset = () => { window.__both = 0; window.__overlap = 0; };
     const watch = () => {
       const on = [...document.querySelectorAll(".view")].filter((v) => {
         if (v.hidden) return false;
         const style = getComputedStyle(v);
         return style.display !== "none" && parseFloat(style.opacity) > 0.05;
       });
-      if (on.length > 1) window.__bothAtOnce++;
+      if (on.length > 1) {
+        window.__both++;
+        const a = on[0].getBoundingClientRect();
+        const b = on[1].getBoundingClientRect();
+        // How much of the window they share. Travelling side by side
+        // this is zero: one's right edge is the other's left edge.
+        const shared = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        if (shared > 1) window.__overlap++;
+      }
       if (window.__watching) requestAnimationFrame(watch);
     };
     requestAnimationFrame(watch);
   });
 
+  // THE FIRST TIME a view is opened there is no swipe: the one being
+  // left goes, and the other arrives after it has gone.
   await page.click('.sheet-filter[data-view="fragrances"]');
   await page.waitForTimeout(1200);
+  const first = await page.evaluate(() => ({ both: window.__both, overlap: window.__overlap }));
+  expect(first.both, "the first switch swaps them over, one at a time").toBe(0);
+
+  // AND AFTER THAT IT SWIPES, because both have now been opened: the
+  // two travel across the window together, side by side, never one over
+  // the other.
+  await page.evaluate(() => window.__reset());
   await page.click('.sheet-filter[data-view="houses"]');
-  await page.waitForTimeout(1200);
-  const both = await page.evaluate(() => {
+  await page.waitForTimeout(1400);
+  const back = await page.evaluate(() => {
     window.__watching = false;
-    return window.__bothAtOnce;
+    return { both: window.__both, overlap: window.__overlap };
   });
-  expect(both, "the two views should never be on the page together").toBe(0);
+  expect(back.both, "the second switch swipes, so both are on the page")
+    .toBeGreaterThan(0);
+  expect(back.overlap, "but never in the same place as each other").toBe(0);
+
+  // The chrome does not travel with them: the category's name and the
+  // Menu are outside the box that slides.
+  const held = await page.evaluate(() => ({
+    where: Math.round(document.querySelector(".sheet-where").getBoundingClientRect().left),
+    menu: Math.round(document.querySelector(".menu-trigger").getBoundingClientRect().left),
+  }));
+  expect(held.menu, "the Menu stays where it is").toBeLessThan(80);
+  expect(held.where, "and so does the category's name").toBeLessThan(200);
 
   // And the sheet is still the sheet when you come back to it.
   await expect(page.locator('.view[data-view="houses"]')).toBeVisible();
   await expect(page.locator(".sheet-frame").first()).toBeVisible();
+
+  // Nothing is left lying across the page afterwards.
+  const after = await page.evaluate(() => ({
+    sliding: document.querySelectorAll(".view.sliding").length,
+    swiping: document.querySelector(".views").classList.contains("swiping"),
+    height: document.querySelector(".views").style.height,
+  }));
+  expect(after.sliding, "the views are put back in the flow").toBe(0);
+  expect(after.swiping).toBe(false);
+  expect(after.height, "and the box's held height is let go of").toBe("");
 });
 
 test("without the script the table is still the table", async ({ page }) => {

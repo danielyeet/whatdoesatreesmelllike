@@ -71,3 +71,22 @@ UNTIL A FILE IS THERE the page takes that picture off itself and shows
 the hatched placeholder instead, so nothing looks broken while the
 photographs are still coming. The console will say "404" for each one
 that is missing; that is the page asking, not a fault.
+
+WEB COPIES
+----------
+Two pictures on the contact sheet are served from scaled-down copies
+rather than from the files as they were uploaded:
+
+  Pineward/Batch 1 Photograph (40).JPG  19 MB  ->  batch-1-photograph-40-web.jpg   0.2 MB
+  ADAR/Adar Title page.png               6 MB  ->  adar-title-page-web.jpg         0.2 MB
+
+The originals are kept exactly as they arrived and nothing points at
+them; the "-web" copies are what the page loads. This is not tidiness.
+A frame on the sheet is a few hundred pixels square, so a 5152x7728
+photograph is about twenty-five times more picture than the page can
+show — and at full size the two of them together starved the sheet's
+opening animation of frames, which the test suite caught. 1600px on the
+long side is already generous for a high-resolution screen.
+
+If you add another photograph, do the same: keep the original, and point
+the page at a copy no more than about 1600px on its long side.

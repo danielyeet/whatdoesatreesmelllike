@@ -129,6 +129,46 @@ everything here is drawn in the page's own tokens.
 The copyright line that stood under the board (*2026 © Your Name, All rights reserved*)
 is gone, from this view and from Researches both: the owner asked for it off the site.
 
+## The swipe between the two views
+
+The owner asked for the change from one view to the other to be a swipe — *"all elements
+apart from the top left menu — scent descriptions will move to the left, and be replaced
+by the fragrances tab"* — and for it to happen **only after both views have been opened**.
+
+So there are two ways across now, and which is used depends on where you have been:
+
+| | |
+|---|---|
+| **the swap** | The first time a view is opened. The one being left fades away first and the other arrives after it has gone. Two things fading through each other in the same place is the one thing this must never look like. |
+| **the swipe** | Once both have been opened at least once. Both are stood on top of one another, the one being left travels off one edge while the one arriving comes in from the other, exactly adjacent — never overlapping. |
+
+**Why the wait is worth keeping**: a swipe says *these two things are side by side*, which
+is only worth saying to somebody who knows what is on both sides. The first time, it would
+be a flourish over a page you have not seen yet.
+
+**The chrome does not travel**, and it is not a list of exceptions that does it. The Menu,
+the category's name beside it, the two buttons and the search all live **outside**
+`.views`, so sliding what is inside that box leaves every one of them where it is. If
+something new ought to stay put during a swipe, put it outside the box.
+
+Two things `swipe()` has to do and both are easy to miss: **hold the box's height** while
+the two views are out of the flow (they are absolutely positioned, so the box would
+otherwise collapse to nothing and the page would jump under the pointer), and **wait a
+frame** after placing them before putting the travel on, or the browser has nothing to
+transition from and both simply appear in their finished places.
+
+`overflow: hidden` is on the box rather than the page: the arriving view starts a full
+width off to one side, and without it that is a horizontal scrollbar for half a second.
+
+Direction comes from the order of the buttons, not from a hard-coded side, so a third
+view would slot in without touching it.
+
+**The test for this was rewritten rather than dropped.** It used to say the two views may
+never be on the page together; it now says the first switch swaps them one at a time, and
+the second swipes with both on the page *but never overlapping* — measured as the overlap
+between their two boxes, which is zero all the way across. That is a stronger statement of
+the original rule, not a weaker one.
+
 ## Known issues / TODO
 
 - **The dates in the Fragrances table are rolled from a seed** so that sorting has

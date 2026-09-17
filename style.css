@@ -663,31 +663,35 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
    landing page scrolls inside its own element and must not get a gutter
    it would never use. */
 html:has(.sheet-page) { scrollbar-gutter: stable; }
-/* THE SHEET'S GROUND. It was white, and the owner asked for the page to
-   be modelled more interestingly than blocks on white. It is a dark
-   drawing board now, with the squared plan of the rest of the site's
-   technical pages laid faintly over it.
+/* THE SHEET'S GROUND. White, with the squared plan of the site's other
+   technical pages laid very faintly over it — the drawing board rather
+   than blank paper.
 
-   The tokens are redefined FOR THIS PAGE ONLY rather than a second set
-   of rules being written for everything on it: every rule below already
-   draws in --ink, --line, --bg and --muted, so flipping the four of them
-   here turns the whole page over at once and changes nothing anywhere
-   else. The menu overlay sets its own colours outright, so it is not
-   touched by this. */
+   It went dark for one round, when the owner asked for the page to be
+   modelled more interestingly than blocks on white, and they asked for
+   it flipped back the round after: "make it white... otherwise the page
+   itself looks really good. Keep the format and the locations." So
+   everything else about it — the traces, the ties, the scatter, the
+   flick — is exactly as the dark version was; only the tone turned over.
+
+   The tokens are set FOR THIS PAGE ONLY rather than a second set of
+   rules being written for everything on it: every rule below already
+   draws in --ink, --line, --bg and --muted, so these four are the whole
+   of the page's colour and flipping them turns it over at once. That is
+   what made turning it back a four-line change. */
 .sheet-page {
-  --bg: #101216;
-  --bg-2: #171a20;
-  --line: rgba(226, 228, 234, 0.24);
-  --ink: #e6e8ee;
-  --muted: #8d939d;
+  --bg: #ffffff;
+  --bg-2: #f4f3ef;
+  --line: #ddd9cf;
+  --ink: #17170f;
+  --muted: #6d6c62;
   background:
-    linear-gradient(to right, rgba(226, 228, 234, 0.032) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(226, 228, 234, 0.032) 1px, transparent 1px),
+    linear-gradient(to right, rgba(23, 23, 15, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(23, 23, 15, 0.035) 1px, transparent 1px),
     var(--bg);
   background-size: 46px 46px, 46px 46px, auto;
   color: var(--ink);
 }
-.sheet-page .menu-trigger { color: #dce6f7; }
 
 /* There is no title on this page any more. The heading stays in the
    markup for anything reading the page rather than looking at it — a
@@ -770,6 +774,33 @@ body.sheet-named .sheet-filters { opacity: 1; transition: opacity 1.1s var(--men
 .view { transition: opacity 0.34s var(--menu-ease); }
 .view.leaving { opacity: 0; }
 .view[hidden] { display: none; }
+
+/* THE SWIPE between the two views, once both have been opened. The two
+   are stood on top of one another for the length of it and travel
+   sideways together; views.js holds the box's height while they are out
+   of the flow, and puts everything back afterwards.
+
+   `overflow: hidden` is on the box and not on the page: the view coming
+   in starts a full width off to one side, and without it that would be
+   a horizontal scrollbar for half a second. */
+.views { position: relative; }
+.views.swiping { overflow: hidden; }
+.views.swiping .view.sliding {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+/* The travel is put on only once both are in their starting places, so
+   that neither of them transitions into position from wherever it
+   happened to be. */
+.views.swiping .view.travelling {
+  transition: transform 0.52s var(--menu-ease), opacity 0.52s var(--menu-ease);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .views.swiping .view.travelling { transition: none; }
+}
 /* The sheet's own Search belongs to the sheet. The index has a search
    of its own above its table, and two search fields on one page is one
    too many. */
@@ -2066,6 +2097,13 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
    middle of it, where the writing stands, is worked out in pineward.js
    rather than masked here — a mask would take the trees out of the
    page's foot as well. */
+/* THE HOUSE'S GREEN. The owner asked for dark green accents on this page
+   — the scale, the marks that say where you are, and the wood's answer to
+   the hand. It is scoped to this page, so no other page on the site
+   spends it, and pineward.js keeps its own copy of the same value for
+   the canvas (GREEN). Change one and change the other. */
+.pineward-page { --pine-green: #1a4a2c; }
+
 .pine-canopy {
   position: fixed;
   left: 0;
@@ -2285,43 +2323,46 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   z-index: 3;
   pointer-events: none;
 }
-/* THE READING TREE. The page's progress, drawn as the house's own mark:
-   the fir stands empty and is inked in from the ground up as the parts
-   go past. The outline is always there, so the mark reads as a tree
-   before it reads as a measure. pineward.js works the shape out. */
-.pine-tree {
-  width: clamp(26px, 2.6vw, 34px);
-  height: min(46vh, 380px);
-  display: block;
-  overflow: visible;
-}
-.pine-tree-ghost {
-  fill: none;
-  stroke: var(--line);
-  stroke-width: 0.9;
-  stroke-linejoin: round;
-}
-.pine-tree-ink { fill: var(--ink); }
-/* The fill is a clip rectangle that grows upward. `y` and `height` are
-   geometry rather than layout, so this transition is a Chromium nicety
-   and the mark simply steps where it is not honoured. */
-.pine-tree-rect { transition: y 0.55s var(--menu-ease), height 0.55s var(--menu-ease); }
+/* THE SCALE. A hairline the length of the piece with one tick per part
+   beside it, and the passed part of the rule inked in behind them in the
+   house's green — so how far down the piece you have come is read as a
+   bar filling rather than as ticks counted.
 
-/* The scale beside it: one tick per part, kept fine so that the tree is
-   what is read and the count is there to be looked for. */
+   The fir off the bottle stood here for one round, as the whole progress
+   bar; the owner asked for it scrapped. There is no .pine-tree here any
+   more. */
+.pine-trunk-line {
+  position: relative;
+  width: 2px;
+  height: min(52vh, 440px);
+  background: var(--line);
+  display: block;
+  overflow: hidden;
+}
+/* Grown from the top down, which is the way the piece is read. A scale
+   transform rather than a height, so filling it costs nothing. */
+.pine-trunk-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--pine-green);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.55s var(--menu-ease);
+}
 .pine-ticks {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: min(46vh, 380px);
+  height: min(52vh, 440px);
+  margin-left: -4px;
 }
 .pine-tick {
-  width: 3px;
+  width: 4px;
   height: 1px;
   background: var(--line);
   transition: width 0.5s var(--menu-ease), background 0.5s var(--menu-ease);
 }
-.pine-tick.passed { width: 8px; background: var(--ink); }
+.pine-tick.passed { width: 10px; background: var(--pine-green); }
 .pine-readout {
   position: fixed;
   right: clamp(14px, 2.4vw, 34px);
@@ -2335,7 +2376,18 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   pointer-events: none;
   text-align: right;
 }
-.pine-readout-no { color: var(--ink); }
+/* WHERE THE GREEN IS SPENT, and it is deliberately not spent anywhere
+   else on this page: the count of what has been read, the number of the
+   stratum you are in, and the cue on the part under the pointer. Three
+   marks that all say "where you are" — the same thing the scale says. */
+.pine-readout-no { color: var(--pine-green); font-weight: 500; }
+.pine-stratum-no { color: var(--pine-green); }
+.pine-part[open] > summary .pine-no { color: var(--pine-green); }
+.pine-part > summary:hover .pine-cue,
+.pine-part[open] > summary .pine-cue {
+  color: var(--pine-green);
+  border-color: var(--pine-green);
+}
 .pine-readout-where { display: block; margin-top: 4px; text-transform: uppercase; }
 
 /* Coming up as they are reached. Only ever a part of the page that has
@@ -3305,13 +3357,6 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   display: flex;
   flex-direction: column;
 }
-.find-head { font-size: 13px; }
-.find-col {
-  margin: 0;
-  color: var(--find-muted);
-  max-width: 46ch;
-}
-
 /* THE FIELD. One line ruled across the page, with a mark at its left
    and a count at its right — the same three-part reading the index
    pages use above their tables. */
@@ -3319,10 +3364,60 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-top: clamp(40px, 9vh, 90px);
+  margin-top: clamp(64px, 16vh, 150px);
   padding-bottom: 12px;
   border-bottom: 1px solid var(--find-rule-strong);
 }
+
+/* FILTERING BY KIND. A row of words under the field, each with the
+   number of this search's answers it would give. They are words rather
+   than boxes: the page is a field with one line ruled across it, and a
+   row of buttons would be the heaviest thing on it. */
+.find-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-top: 16px;
+}
+.find-filter {
+  border: 0;
+  background: none;
+  padding: 3px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--find-muted);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s var(--menu-ease), opacity 0.3s var(--menu-ease);
+}
+/* The rule under the one that is on is drawn from nothing rather than
+   switched on, the same way everything else on this site arrives. */
+.find-filter::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--find-ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--menu-ease);
+}
+.find-filter:hover:not(:disabled) { color: var(--find-ink); }
+.find-filter.is-on { color: var(--find-ink); }
+.find-filter.is-on::after { transform: scaleX(1); }
+.find-filter:disabled { opacity: 0.3; cursor: default; }
+/* The tally. Only there once there is a search for it to count — before
+   that the button is one word. */
+.find-filter-no {
+  margin-left: 6px;
+  font-size: 10px;
+  opacity: 0.65;
+}
+.find-filter-no:empty { display: none; }
 .find-label {
   position: absolute;
   width: 1px;
