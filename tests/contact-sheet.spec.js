@@ -663,66 +663,6 @@ test("a line between two pictures is a run of specks, not a stroke", async ({ pa
     .toBeLessThan(along.steps * 0.9);
 });
 
-test("a line arrives slack and is then pulled taut", async ({ page }) => {
-  await page.goto(SHEET);
-
-  // A line is meant to hang between the two pictures it joins while it
-  // is being drawn, and be pulled into the straight run shortly after
-  // it lands: the owner asked for loose ropes that go taut. So while
-  // the map is drawing itself there must be ink well off the straight
-  // line between two pictures, and once it has settled there must be
-  // none.
-  const offLine = () =>
-    page.evaluate(() => {
-      const route = [...document.querySelectorAll(".sheet-route")]
-        .map((r) => ({
-          x1: +r.getAttribute("x1"), y1: +r.getAttribute("y1"),
-          x2: +r.getAttribute("x2"), y2: +r.getAttribute("y2"),
-        }))
-        .sort((a, b) => Math.hypot(b.x2 - b.x1, b.y2 - b.y1) - Math.hypot(a.x2 - a.x1, a.y2 - a.y1))[0];
-      if (!route) return null;
-      const far = Math.hypot(route.x2 - route.x1, route.y2 - route.y1);
-      const ux = (route.x2 - route.x1) / far, uy = (route.y2 - route.y1) / far;
-      const canvas = document.querySelector(".sheet-specks");
-      const ratio = canvas.width / parseFloat(canvas.style.width);
-      const paint = canvas.getContext("2d");
-      // A band ACROSS the line at its middle, where a rope hangs
-      // furthest from it — but not so near the line that the specks
-      // that always stand a little off it are counted.
-      let off = 0, on = 0;
-      for (let at = 0.2; at < 0.8; at += 0.02) {
-        const x = route.x1 + (route.x2 - route.x1) * at;
-        const y = route.y1 + (route.y2 - route.y1) * at;
-        for (let out = -34; out <= 34; out += 2) {
-          const px = Math.round((x - uy * out) * ratio);
-          const py = Math.round((y + ux * out) * ratio);
-          const shot = paint.getImageData(px, py, 2, 2).data;
-          let ink = 0;
-          for (let i = 3; i < shot.length; i += 4) ink += shot[i];
-          if (Math.abs(out) > 9) off += ink; else on += ink;
-        }
-      }
-      return { off: Math.round(off / 100), on: Math.round(on / 100) };
-    });
-
-  // Caught while the map is still drawing itself.
-  let slack = null;
-  for (let n = 0; n < 60 && !slack; n++) {
-    await page.waitForTimeout(220);
-    const seen = await offLine();
-    if (seen && seen.off > 12) slack = seen;
-  }
-  expect(slack, "a line should hang off its own straight run while it arrives")
-    .not.toBeNull();
-
-  await waitForSheet(page);
-  await page.waitForTimeout(1200);
-  const taut = await offLine();
-  expect(taut.on, "the line should still be there once it is taut").toBeGreaterThan(20);
-  expect(taut.off, `and pulled into it: ${JSON.stringify({ slack, taut })}`)
-    .toBeLessThan(slack.off / 3);
-});
-
 test("the page opens on the picture it will land on, and holds it",
   async ({ page }) => {
   // The flick used to start in the same frame the page did. A beat of
@@ -795,13 +735,15 @@ test("the specks stand still when the page is scrolled", async ({ page }) => {
     .toBe(before.down);
 });
 
-test("nothing on the sheet answers the pointer", async ({ page }) => {
+test("pointing at a picture isolates it, without moving it", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
 
-  // A picture used to tip in three dimensions towards the cursor, with
-  // the rest of the sheet stepping back behind it. The owner asked for
-  // the page to stop answering the hand for now.
+  // The owner asked for the pictures to answer the hand again, in this
+  // shape: the specks belonging to the one under the pointer come
+  // loose and drift, the rest of the sheet steps back — and THE
+  // PICTURE ITSELF DOES NOT MOVE. It used to tip in three dimensions,
+  // which is what that last line is guarding against coming back.
   const frame = page.locator(".sheet-frame").nth(3);
   await frame.scrollIntoViewIfNeeded();
   const box = await frame.boundingBox();
@@ -815,27 +757,44 @@ test("nothing on the sheet answers the pointer", async ({ page }) => {
       for (let n = 3; n < shot.length; n += 4) ink += shot[n];
       return {
         ink: ink,
-        frames: [...document.querySelectorAll(".sheet-frame")].map((f) => {
-          const style = getComputedStyle(f);
-          return style.transform + "|" + style.opacity + "|" + style.boxShadow;
+        places: [...document.querySelectorAll(".sheet-frame")]
+          .map((f) => getComputedStyle(f).transform).join(" "),
+        boxes: [...document.querySelectorAll(".sheet-frame")].map((f) => {
+          const at = f.getBoundingClientRect();
+          return Math.round(at.x) + "," + Math.round(at.y) + "," + Math.round(at.width);
         }).join(" "),
-        peeking: document.getElementById("sheet").className,
+        holding: document.getElementById("sheet").classList.contains("holding"),
+        hot: [...document.querySelectorAll(".sheet-frame")]
+          .findIndex((f) => f.classList.contains("hot")),
       };
     });
 
   const resting = await look();
-  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2);
-  await page.waitForTimeout(600);
-  const held = await look();
-  await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.8);
-  await page.waitForTimeout(600);
-  const moved = await look();
+  expect(resting.holding, "nothing is held back to begin with").toBe(false);
+  expect(resting.hot, "and nothing is hot").toBe(-1);
 
-  expect(held.frames, "no picture should answer the pointer").toBe(resting.frames);
-  expect(moved.frames, "however it is moved over one").toBe(resting.frames);
-  expect(held.peeking, "and the sheet should not hold itself back").toBe(resting.peeking);
-  expect(held.ink, "nor should a speck of the drawing change").toBe(resting.ink);
-  expect(moved.ink).toBe(resting.ink);
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.waitForTimeout(500);
+  const held = await look();
+  expect(held.hot, "the picture under the pointer is the hot one").toBe(3);
+  expect(held.holding, "and the rest of the sheet steps back").toBe(true);
+
+  // The specks move — they are the whole of what answers.
+  await page.waitForTimeout(250);
+  const later = await look();
+  expect(later.ink, "the specks should be drifting").not.toBe(held.ink);
+
+  // And nothing that is being READ has moved: same transform, same box.
+  expect(held.places, "no picture may be turned or lifted").toBe(resting.places);
+  expect(held.boxes, "nor moved by a pixel").toBe(resting.boxes);
+
+  // Away again, and the sheet comes back to itself.
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(900);
+  const after = await look();
+  expect(after.holding, "the sheet lets go again").toBe(false);
+  expect(after.hot).toBe(-1);
+  expect(after.places).toBe(resting.places);
 });
 
 test("a date is written along its line rather than switched on", async ({ page }) => {

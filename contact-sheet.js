@@ -714,14 +714,23 @@
   // rather than as simple lines, and what does that is a crowd of
   // specks scattered about the run and netted to each other rather
   // than a few threaded along it.
-  const ROUTE_EVERY = 4.5;    // how far apart they stand
-  const ROUTE_WANDER = 2.8;   // and how far off the line they may stand
-  // AND A LINE PULLS TAUT. While it is being drawn, and for a moment
-  // after it lands, its specks hang off the straight run like a loose
-  // rope — and are then pulled into line. `SAG` is how far it hangs at
-  // its middle, `TAUT_MS` how long the pulling takes.
-  const SAG = 26;
-  const TAUT_MS = 900;
+  // A RUN IS SEVERAL PARALLEL LINES, NOT ONE. Two or three of them,
+  // evenly spaced along their own length and standing a fixed distance
+  // apart, with rungs across them every so often and the whole thing
+  // drawing together to a point at each end. That is what makes a
+  // connection read as built rather than drawn: a truss between two
+  // pictures. A single scattered line of specks read as a smudge.
+  const ROUTE_EVERY = 3.6;    // how far apart the specks along one rail stand
+  const RAILS = [2, 3];       // how many rails a run carries
+  const RAIL_GAP = 6;         // how far apart they stand at the middle
+  const RAIL_OFF = 0.8;       // and how far off its own rail a speck may stand
+  const RUNG_EVERY = 6;       // a rung across the rails every so many specks
+  // AND THE ENDS ARE KNOTS. Where a run meets a picture the rails come
+  // together and the specks crowd: the owner asked for the places a
+  // line connects to a box to be emphasised and compacted, and a crowd
+  // at a point is what that is.
+  const KNOT = 10;            // how many specks are added at each end
+  const KNOT_SPREAD = 6;      // and how far they are scattered round it
   const SPECK_MIN = 1;        // how big a speck is drawn, in pixels
   const SPECK_MAX = 2.7;
   const WEB_REACH = 15;       // two specks nearer than this are joined
@@ -729,6 +738,17 @@
   const EDGE_INK = 0.7;       // how heavily a speck round a picture is drawn
   const ROUTE_INK = 0.5;      // and one on a line between two
   const WEB_INK = 0.3;        // and the join between two of them
+  // WHAT POINTING AT A PICTURE DOES. The specks belonging to it come
+  // loose and drift about their own places, and are drawn a little
+  // soft, while the rest of the sheet steps back — so the picture is
+  // isolated on the page without anything moving that anybody is
+  // reading. This page answered nothing at all for two rounds; the
+  // owner has asked for it back, in this shape.
+  const HOT_DRIFT = 2.4;      // how far a speck comes off its place, in pixels
+  const HOT_RATE = [0.18, 0.5]; // and how slowly, in turns a second
+  const HOT_BLUR = 1.1;       // how soft one is drawn, in pixels
+  const HOT_LIFT = 1.35;      // and how much more plainly
+  const COLD_INK = 0.4;       // what is left of everything else
   // AND THE ONES STANDING OFF THE CHAIN. A run of specks at even
   // spacing with a line through them is a dashed border; what makes it
   // read as the chamber's web instead is the few that stand a little
@@ -745,7 +765,7 @@
   // tied to the picture. The pictures are ruled again, so this is an
   // embellishment where the map meets one rather than a border in its
   // own right.
-  const TUFT_REACH = 54;
+  const TUFT_REACH = 42;
   const INK = "23,23,15";     // --ink
 
   /** One number between 0 and 1 for a given speck of a given thing,
@@ -806,40 +826,80 @@
     return out;
   }
 
-  /** And the run of them along one line between two pictures.
+  /** And the run of them along one line between two pictures: two or
+      three parallel rails of specks, evenly spaced along their length,
+      with rungs across them and both ends drawn together into a knot
+      where the run meets the picture.
 
-      `slack` is how much of a rope it still is: 1 while it is being
-      drawn and easing to 0 once it has landed. A line arrives hanging
-      between the two pictures and is then pulled taut. The hang is a
-      real one — pinned at both ends and deepest in the middle, with a
-      second, shorter wave in it so that no two lines sag alike. */
-  function routeRun(a, b, of, slack) {
+      Evenly spaced and parallel ON PURPOSE. Scattered about the line,
+      a run reads as a smudge between two pictures; ruled like this it
+      reads as something built, which is what the owner asked for —
+      "denser in particles and slightly more dispersed, so that it
+      looks more like geometric connections rather than simple lines".
+
+      The rails PINCH at both ends: they are furthest apart in the
+      middle and meet at the two points the line is tied to, so a run
+      leaves a picture from one place rather than from a smear along
+      its edge. */
+  function routeRun(a, b, of) {
     const out = [];
+    out.rungs = [];
     const far = Math.hypot(b.x - a.x, b.y - a.y);
-    const many = Math.max(2, Math.round(far / ROUTE_EVERY));
     const ux = (b.x - a.x) / far, uy = (b.y - a.y) / far;
-    // How far this one hangs, which way, and where its second wave
-    // sits: rolled per line rather than per speck, or the rope reads
-    // as noise rather than as a rope.
-    const hang = slack ? SAG * (0.45 + wobble(of, 0, 8)) * Math.min(1, far / 260) : 0;
-    const lean = wobble(of, 0, 9) < 0.5 ? -1 : 1;
-    const phase = wobble(of, 0, 10) * Math.PI * 2;
-    for (let n = 0; n <= many; n++) {
-      const t = n / many;
+    const rails = RAILS[0] + Math.floor(wobble(of, 0, 11) * (RAILS[1] - RAILS[0] + 1));
+    const many = Math.max(2, Math.round(far / ROUTE_EVERY));
+    // A run's own spacing varies a little from its neighbours', or a
+    // sheet of them reads as one drawing repeated.
+    const gap = RAIL_GAP * (0.8 + wobble(of, 0, 12) * 0.5);
+
+    /** Where a speck on rail `r` stands at `t` along the run. */
+    const place = (r, t, n) => {
+      const spread = rails === 1 ? 0 : (r - (rails - 1) / 2) * gap;
+      // Sine: nothing at the two ends, everything in the middle.
+      const pinch = Math.sin(Math.PI * t);
+      const off = spread * pinch +
+        (wobble(of, n * 7 + r, 4) - 0.5) * 2 * RAIL_OFF;
       const at = t * far;
-      const wander = (n === 0 || n === many ? 0 : (wobble(of, n, 4) - 0.5) * 2 * ROUTE_WANDER);
-      const rope = slack
-        ? lean * slack * hang *
-          (Math.sin(Math.PI * t) + 0.3 * Math.sin(Math.PI * 3 * t + phase))
-        : 0;
-      const off = wander + rope;
-      out.push({
+      return {
         x: a.x + ux * at - uy * off,
         y: a.y + uy * at + ux * off,
-        size: SPECK_MIN + wobble(of, n, 5) * (SPECK_MAX - SPECK_MIN),
+        size: SPECK_MIN + wobble(of, n * 3 + r, 5) * (SPECK_MAX - SPECK_MIN),
         at: at,
-      });
+      };
+    };
+
+    for (let r = 0; r < rails; r++) {
+      for (let n = 0; n <= many; n++) out.push(place(r, n / many, n));
     }
+
+    // THE RUNGS. Every so many specks, one rail is tied across to the
+    // next — regular, because what is being drawn is a structure.
+    for (let n = RUNG_EVERY; n < many; n += RUNG_EVERY) {
+      for (let r = 0; r + 1 < rails; r++) {
+        const one = place(r, n / many, n);
+        const two = place(r + 1, n / many, n);
+        out.rungs.push({ x1: one.x, y1: one.y, x2: two.x, y2: two.y, at: one.at });
+      }
+    }
+
+    // THE KNOTS at each end.
+    [0, 1].forEach((end) => {
+      const at = end ? far : 0;
+      const px = end ? b.x : a.x, py = end ? b.y : a.y;
+      for (let k = 0; k < KNOT; k++) {
+        const turn = wobble(of, k + end * 40, 13) * Math.PI * 2;
+        const out2 = wobble(of, k + end * 40, 14) * KNOT_SPREAD;
+        out.push({
+          // Kept on the picture's side of the tie point, so the crowd
+          // gathers where the line lands rather than spilling across
+          // the picture it is landing on.
+          x: px + Math.cos(turn) * out2 + ux * (end ? -out2 : out2) * 0.5,
+          y: py + Math.sin(turn) * out2 + uy * (end ? -out2 : out2) * 0.5,
+          size: SPECK_MIN + wobble(of, k + end * 40, 15) * (SPECK_MAX - SPECK_MIN) + 0.4,
+          at: at,
+        });
+      }
+    });
     return out;
   }
 
@@ -847,8 +907,35 @@
       the ones that are near each other. Squares on whole pixels, like
       every other speck on this site — at this size a rectangle laid
       across a pixel boundary comes out as a soft blob. */
-  function drawChain(run, of, weight, upTo) {
+  function drawChain(run, of, weight, upTo, state) {
+    const move = state && state.move ? state.move : 0;
+    const shade = state && state.ink !== undefined ? state.ink : 1;
+
+    /** Where a speck is drawn right now. Standing still is the whole
+        character of this drawing, so this is zero for everything
+        except the picture the pointer is on. */
+    const at = (speck, n, salt) => {
+      if (!move) return speck;
+      const rate = HOT_RATE[0] + wobble(of, n, salt) * (HOT_RATE[1] - HOT_RATE[0]);
+      const turn = clock * rate * Math.PI * 2 + wobble(of, n, salt + 1) * Math.PI * 2;
+      const out = HOT_DRIFT * move * (0.4 + wobble(of, n, salt + 2) * 0.6);
+      return { x: speck.x + Math.cos(turn) * out, y: speck.y + Math.sin(turn) * out };
+    };
+
+    ink.save();
+    if (move) ink.filter = "blur(" + (HOT_BLUR * move).toFixed(2) + "px)";
+
     ink.beginPath();
+    // THE RUNGS ACROSS THE RAILS, where a run carries them.
+    if (run.rungs) {
+      run.rungs.forEach((rung, n) => {
+        if (upTo !== undefined && rung.at > upTo) return;
+        const one = at({ x: rung.x1, y: rung.y1 }, n, 21);
+        const two = at({ x: rung.x2, y: rung.y2 }, n, 24);
+        ink.moveTo(one.x, one.y);
+        ink.lineTo(two.x, two.y);
+      });
+    }
     for (let n = 1; n < run.length; n++) {
       if (upTo !== undefined && run[n].at > upTo) break;
       const one = run[n - 1], two = run[n];
@@ -858,16 +945,18 @@
       const held = one.loose || two.loose;
       if (!held && wobble(of, n, 6) < WEB_MISS) continue;
       if (Math.hypot(two.x - one.x, two.y - one.y) > WEB_REACH + (held ? LOOSE_OUT[1] : 0)) continue;
-      ink.moveTo(one.x, one.y);
-      ink.lineTo(two.x, two.y);
+      const from = at(one, n - 1, 31), to = at(two, n, 31);
+      ink.moveTo(from.x, from.y);
+      ink.lineTo(to.x, to.y);
       // And on to the next one as well, so it hangs in a net rather
       // than on a thread.
       if (two.loose && run[n + 1] && (upTo === undefined || run[n + 1].at <= upTo)) {
-        ink.moveTo(two.x, two.y);
-        ink.lineTo(run[n + 1].x, run[n + 1].y);
+        const on = at(run[n + 1], n + 1, 31);
+        ink.moveTo(to.x, to.y);
+        ink.lineTo(on.x, on.y);
       }
     }
-    ink.strokeStyle = rgba(WEB_INK);
+    ink.strokeStyle = rgba(WEB_INK * shade);
     ink.lineWidth = 1;
     ink.stroke();
 
@@ -875,27 +964,34 @@
     // at a time where they are not: a tuft fades out along the edge,
     // and an alpha is a property of the brush rather than of a shape.
     const evenly = run.every((speck) => speck.fade === undefined);
-    if (evenly) ink.fillStyle = rgba(weight);
+    if (evenly) ink.fillStyle = rgba(weight * shade);
     if (evenly) ink.beginPath();
     run.forEach((speck, n) => {
       if (upTo !== undefined && speck.at > upTo) return;
+      const where = at(speck, n, 31);
       const size = Math.max(1, Math.round(speck.size));
-      const x = Math.round(speck.x - size / 2), y = Math.round(speck.y - size / 2);
+      const x = Math.round(where.x - size / 2), y = Math.round(where.y - size / 2);
       if (evenly) { ink.rect(x, y, size, size); return; }
-      const lit = weight * (speck.fade === undefined ? 1 : speck.fade);
+      const lit = weight * shade * (speck.fade === undefined ? 1 : speck.fade);
       if (lit < 0.03) return;
       ink.fillStyle = rgba(lit);
       ink.fillRect(x, y, size, size);
     });
     if (evenly) ink.fill();
+    ink.restore();
   }
 
   /** How far along its own line each route has been drawn, 0 to 1.
       Set by the arrival and left at 1 afterwards. */
   const reached = new Map();
-  /** And how much of a rope each one still is: 1 while it is drawn,
-      easing to 0 over `TAUT_MS` once it has landed. */
-  const slackOf = new Map();
+
+  /** WHICH PICTURE THE POINTER IS ON, and how far its specks have come
+      loose — eased, so they gather and settle rather than switching on
+      and off with the hand. `clock` is what everything that moves here
+      is drawn from; it only runs while something is hot. */
+  let hotNode = -1;
+  let heat = 0;
+  let clock = 0;
 
   function paintSpecks() {
     if (!nodes.length) return;
@@ -914,10 +1010,22 @@
       if (got > 0.98) tied[link.b].push(edgePoint(to, from));
     });
 
+    // WHAT IS HOT AND WHAT IS NOT. With a picture pointed at, its own
+    // specks and the runs tied to it come loose and are drawn a little
+    // soft and a little heavier, and everything else steps back — so
+    // the one picture is isolated on the page without anything that is
+    // being read having moved.
+    const cold = heat > 0.01 ? COLD_INK + (1 - COLD_INK) * (1 - heat) : 1;
+    const mine = (i) => hotNode >= 0 && i === hotNode;
+
     nodes.forEach((node, i) => {
       if (i > 0 && !rest[i - 1].classList.contains("landed")) return;
       if (!tied[i].length) return;
-      drawChain(edgeChain(node, i, tied[i]), i, EDGE_INK);
+      const hot = mine(i);
+      drawChain(edgeChain(node, i, tied[i]), i,
+        EDGE_INK * (hot ? HOT_LIFT : 1),
+        undefined,
+        { move: hot ? heat : 0, ink: hot ? 1 : cold });
     });
 
     links.forEach((link, i) => {
@@ -925,9 +1033,12 @@
       if (got <= 0) return;
       const from = nodes[link.a], to = nodes[link.b];
       const a = edgePoint(from, to), b = edgePoint(to, from);
-      const slack = slackOf.has(link) ? slackOf.get(link) : 0;
-      const run = routeRun(a, b, 100 + i, slack);
-      drawChain(run, 100 + i, ROUTE_INK, got * Math.hypot(b.x - a.x, b.y - a.y));
+      const run = routeRun(a, b, 100 + i);
+      const hot = mine(link.a) || mine(link.b);
+      drawChain(run, 100 + i,
+        ROUTE_INK * (hot ? HOT_LIFT : 1),
+        got * Math.hypot(b.x - a.x, b.y - a.y),
+        { move: hot ? heat * 0.7 : 0, ink: hot ? 1 : cold });
     });
   }
 
@@ -965,7 +1076,6 @@
       links.forEach((link) => {
         link.line.classList.add("drawn");
         reached.set(link, 1);
-        slackOf.set(link, 0);
         if (link.label) link.label.classList.add("shown");
       });
       rest.forEach((frame, i) => land(i + 1));
@@ -1019,19 +1129,12 @@
     // for a repaint.
     const done = links.reduce((m, l) => Math.max(m, l.start + l.draw), 0);
     const lands = nodes.reduce((m, n) => Math.max(m, n.arriveAt || 0), 0);
-    // And the last thing of all is the last line being pulled taut.
-    const over = ROUTE_AFTER_MS + Math.max(done, lands) + TAUT_MS + 90;
+    const over = ROUTE_AFTER_MS + Math.max(done, lands) + 120;
     const tick = (now) => {
       const gone = now - began;
       links.forEach((link) => {
         const t = (gone - ROUTE_AFTER_MS - link.start) / link.draw;
         reached.set(link, t <= 0 ? 0 : t >= 1 ? 1 : settled(t));
-        // AND THEN PULLED TAUT. A line hangs between its two pictures
-        // while it is being drawn and for a moment after it lands, and
-        // is then drawn into the straight run — eased, so it settles
-        // rather than snapping.
-        const after = (gone - ROUTE_AFTER_MS - link.start - link.draw) / TAUT_MS;
-        slackOf.set(link, after <= 0 ? 1 : after >= 1 ? 0 : 1 - settled(after));
       });
       paintSpecks();
       if (gone < over) requestAnimationFrame(tick);
@@ -1073,16 +1176,70 @@
   }
 
   // ============================================================
-  // NOTHING HERE ANSWERS THE POINTER.
+  // WHAT POINTING AT A PICTURE DOES
   //
-  // A picture used to tip in three dimensions towards the cursor —
-  // `perspective()` and a pair of rotations written as custom
-  // properties, with the rest of the sheet stepping back behind it
-  // (`.peeking`) — and it was tuned to be barely there. The owner
-  // asked for the page to stop answering the hand for now, so it is
-  // gone rather than switched off: there is no `TIP`, no `LIFT`, no
-  // `tip()` and no `.peeking` in the page any more, and the frame's
-  // transform is the `translate()` that places it and nothing else.
+  // The specks belonging to it come loose: they drift about their own
+  // places, are drawn a little softer and a little heavier, and the
+  // rest of the sheet steps back behind them. The picture is isolated
+  // on the page — which is what the owner asked for — WITHOUT ANYTHING
+  // THAT IS BEING READ MOVING. The picture itself does not tip, lift,
+  // or shift by a pixel; only what is drawn round it does.
+  //
+  // A picture used to tip in three dimensions towards the cursor
+  // instead (`perspective()`, `--turn-x`, `--turn-y`, `.peeking`).
+  // That was taken out when the owner asked for no reactivity at all,
+  // and this is what they asked for in its place. The frame's own
+  // transform is still only the `translate()` that places it.
+  //
+  // NOTHING MOVES UNTIL SOMETHING IS POINTED AT. The canvas is drawn
+  // once and left; the loop below runs only while a picture is hot or
+  // cooling, and stops again.
+  // ============================================================
+  let warming = false;
+  let beat = 0;
+
+  function warm(now) {
+    const step = Math.min(0.05, (now - beat) / 1000) || 0.016;
+    beat = now;
+    clock += step;
+    const want = hotNode >= 0 ? 1 : 0;
+    heat += (want - heat) * Math.min(1, step * 6);
+    paintSpecks();
+    if (hotNode >= 0 || heat > 0.01) requestAnimationFrame(warm);
+    else { heat = 0; warming = false; paintSpecks(); }
+  }
+
+  function heatUp() {
+    if (warming || REDUCE_MOTION) {
+      if (REDUCE_MOTION) { heat = hotNode >= 0 ? 1 : 0; paintSpecks(); }
+      return;
+    }
+    warming = true;
+    beat = window.performance && window.performance.now
+      ? window.performance.now() : Date.now();
+    requestAnimationFrame(warm);
+  }
+
+  frames.forEach((frame, i) => {
+    frame.addEventListener("pointerenter", () => {
+      // Not while the sheet is still drawing itself: every picture
+      // takes its turn in the middle window during the flick, so
+      // answering whatever the pointer happens to be over then is
+      // nonsense.
+      if (!sheet.classList.contains("drawn")) return;
+      hotNode = i;
+      frame.classList.add("hot");
+      sheet.classList.add("holding");
+      heatUp();
+    });
+    frame.addEventListener("pointerleave", () => {
+      if (hotNode !== i) return;
+      hotNode = -1;
+      frame.classList.remove("hot");
+      sheet.classList.remove("holding");
+      heatUp();
+    });
+  });
   // ============================================================
 
   // ============================================================

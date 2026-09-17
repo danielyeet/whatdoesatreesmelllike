@@ -82,16 +82,6 @@
 -->
 <body class="sheet-page">
 
-<!-- Search. It matches what a picture is called and dims the rest —
-     a placeholder for a real search over real work. -->
-<div class="sheet-search">
-  <input class="sheet-search-field" type="search" placeholder="Search" aria-label="Search this sheet">
-  <button class="sheet-search-trigger" type="button" aria-label="Search">
-    <span class="sheet-search-mark" aria-hidden="true"></span>
-    <span class="sheet-search-word">Search</span>
-  </button>
-</div>
-
 <div class="sheet-head">
   <h1>Scent descriptions</h1>
 
@@ -100,6 +90,20 @@
        gone. It is inside this block rather than loose in the page:
        the note in style.css says why. -->
   <p class="sheet-where">Scent descriptions</p>
+
+  <!-- Search. It has to be in here rather than loose in the page, and
+       for the same reason the two buttons do: a direct child of <body>
+       is given an opacity transition by the rule that dims the page
+       behind the menu, and that rule outranks anything written for it
+       — so loose in the page it could not be held back on the way in
+       without being seen fading away. -->
+  <div class="sheet-search">
+    <input class="sheet-search-field" type="search" placeholder="Search" aria-label="Search this sheet">
+    <button class="sheet-search-trigger" type="button" aria-label="Search">
+      <span class="sheet-search-mark" aria-hidden="true"></span>
+      <span class="sheet-search-word">Search</span>
+    </button>
+  </div>
 
   <!-- The two ways of looking at the category. They have to be inside
        this block rather than loose in the page: the note in style.css
@@ -187,7 +191,12 @@
 </section>
 
 <!-- THE INDIVIDUAL FRAGRANCES: the same category read as a list. -->
-<section class="view" data-view="fragrances" aria-label="Individual fragrances">
+<!-- `hidden` is written here rather than left to views.js, and that is
+     not tidiness: a script at the foot of the page is fetched, and
+     while the parser waits for it the browser is free to paint what it
+     has — which was this view, for one frame, every time the page was
+     opened. What the page opens as has to be true in the markup. -->
+<section class="view" data-view="fragrances" aria-label="Individual fragrances" hidden>
 <div class="index-page">
 
   <header class="index-head">

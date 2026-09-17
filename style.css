@@ -957,6 +957,18 @@ body.view-fragrances .sheet-search { display: none; }
    no captions — a caption belongs to a picture on the map, not to the
    flick. */
 .sheet.scripted .sheet-frame .sheet-caption { opacity: 0; transition: opacity 0.5s var(--menu-ease) 0.15s; }
+
+/* POINTING AT A PICTURE isolates it: everything else on the sheet
+   steps back, and the one under the pointer is left where it is. The
+   picture does not move — what answers is drawn round it, on the
+   canvas (see contact-sheet.js). The specks are dimmed there rather
+   than here, because they are all on one canvas and cannot be dimmed
+   one at a time by a stylesheet. */
+.sheet.drawn.holding .sheet-frame { opacity: 0.45; transition: opacity 0.4s var(--menu-ease); }
+.sheet.drawn.holding .sheet-frame.hot { opacity: 1; }
+.sheet.drawn .sheet-frame { transition: opacity 0.5s var(--menu-ease); }
+.sheet.drawn.holding .sheet-lines { opacity: 0.4; transition: opacity 0.4s var(--menu-ease); }
+.sheet.drawn .sheet-lines { transition: opacity 0.5s var(--menu-ease); }
 .sheet.scripted .sheet-frame.landed .sheet-caption { opacity: 1; }
 /* Nothing here answers the pointer for now — see the note on the
    frame's transform above.
@@ -1077,8 +1089,32 @@ body.sheet-named .sheet-where {
    before it begins. `visibility` rather than `display` or `opacity`:
    the sheet measures its own captions on the first layout, and
    something with no layout box measures nothing. */
+/* NOTHING IS SHOWN until the script has laid the sheet out — not the
+   pictures, not the chrome, not the Menu. The page opens on ONE
+   picture in the middle of a white page, and the owner asked for that
+   quarter of a second to be exactly that and nothing else. Whatever
+   the browser painted before the script ran is the plain grid this
+   page falls back to, and it is never meant to be seen on the way in.
+   All of it comes back on `window.load` if the script never arrives. */
+html.js-coming .views,
 html.js-coming .sheet-stage,
-html.js-coming .view[data-view="fragrances"] { visibility: hidden; }
+html.js-coming .sheet-search,
+html.js-coming .sheet-filters,
+html.js-coming .sheet-where,
+html.js-coming body.sheet-page .menu-trigger { visibility: hidden; }
+
+/* And with the script running, the chrome waits for the sheet to
+   finish drawing itself: the page puts itself together, and then hands
+   you the controls. They are faded rather than hidden so that anything
+   reaching for them — a keyboard, a test — still finds them where they
+   are. */
+body.sheet-scripted .sheet-search,
+body.sheet-scripted .menu-trigger { opacity: 0; transition: none; }
+body.sheet-named .sheet-search,
+body.sheet-named .menu-trigger {
+  opacity: 1;
+  transition: opacity 1.1s var(--menu-ease) 0.25s;
+}
 
 .sheet-stage { position: relative; padding-top: clamp(64px, 9vh, 96px); }
 
