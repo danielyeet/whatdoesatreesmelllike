@@ -70,3 +70,24 @@ testing that a feature actually behaves as expected) matter more, not
 less, under this rule: there's no review step left to catch a mistake
 before it's live. Still never rewrite `main`'s history (no force-push, no
 rebase of already-merged commits) — only ordinary forward commits.
+
+## Don't ask before pushing; just push (2026-09-17)
+
+> Push it, and stop asking.
+
+The rule above said to push straight to `main`, but I had been asking for
+a yes before each push anyway. Don't. Verified work goes to `main`
+without checking first — no question, no waiting.
+
+"Verified" is the whole of the condition, and it is not loosened by this:
+the full test suite still runs before every push, the visual check still
+happens, and anything a change could plausibly break is still checked by
+hand before it goes. What this removes is the pause for permission, not
+the work that earns it.
+
+Two things stay true regardless. **Say what went live** — a short note of
+what was pushed, after the fact, so nothing arrives unannounced. And
+**still stop and ask when the call is genuinely the owner's**: deleting
+their writing, changing content they wrote, or anything whose blast
+radius reaches past this repository. Permission to push is not permission
+to decide.
