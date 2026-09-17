@@ -1303,7 +1303,7 @@ the site's accent too.
 
 - **The eleven are in the house's own groups** — three trilogies and the two that stand
   outside them — written in the page's markup, not worked out in the script.
-- **The void shows the house's mark, under the pointer only.** `images/adar-sigil.jpg`
+- **The void shows the house's mark, under the pointer only.** `images/ADAR/adar-sigil.jpg`
   is drawn INSIDE the hole and nowhere else, clipped to the void's own circle and brought
   up only while the hand is within `LIGHT_IN` of its rim — a spotlight carried over
   something already down there rather than a picture hung on the page. It is brightest
@@ -1358,7 +1358,7 @@ the site's accent too.
   Trilogy, Amber Zero". The owner asked for both. Pineward's reading works the same way,
   and is worth keeping in step.
 - **Every fragrance names the photograph it wants** — `amber-zero.png` and so on, listed
-  in `images/README.txt` — and shows it the moment that file is in `images/`. **All
+  in `images/README.txt` — and shows it the moment that file is in `images/ADAR/`. **All
   eleven are there now**, and the house's mark with them; the page is the one place on
   the site that is not waiting for a picture. The fallback stays wired up: a picture that
   is not there is taken off the page and the hatched placeholder stands in its place, so
@@ -1575,8 +1575,16 @@ background luminance, but the class is the reliable path.
   appears in the map. The first of the two **Other** pages became **Researches** at the
   owner's request: `categories/other-1.html` is gone, and `categories/researches.html`
   is an index page rather than a row list.
-- Images live in `images/`, referenced from the `<img>` tags left commented out in the
-  templates.
+- Images live in `images/`, **one folder per house or category** — `images/ADAR/`,
+  `images/Pineward/`, `images/Favorites/`, `images/Individual Fragrances/`,
+  `images/Theories/` — referenced from the `<img>` tags left commented out in the
+  templates. The folder names are the owner's own and are capitalised as they wrote
+  them; paths are case-sensitive on the live site, so `ADAR` is not `adar`. Each empty
+  folder holds a `README.txt` saying what it is for, which is also the only thing
+  keeping it in the repository — git does not store an empty directory. A new folder is
+  fine; prefer hyphens over spaces in any you add, since a space becomes `%20` in the
+  address (`Individual Fragrances` predates that advice and is kept because the owner
+  named it).
 - `works/test-node-a.html` / `test-node-b.html` are sandbox pages reached from the two
   "Test node" entries in `REAL_NODES`; safe to repurpose or delete together.
 - The HTML comments inside each template say which block to copy for another entry —
@@ -1770,7 +1778,8 @@ questioned.
   the favorites page and the chamber's own block was cleared; the shared chrome was left
   because changing it changes the chrome on every page of the site. They know this.
 - **The photographs. ADAR's have arrived** — the owner put them in `images/` themselves,
-  under their own names, and they were renamed to the ones the page asks for
+  under their own names, and they were renamed to the ones the page asks for and later
+  moved into `images/ADAR/` when the owner asked for a folder per house
   (`images/README.txt` lists them). All eleven fragrances and the house's mark are
   printed now. **Every other plate on the site is still a hatched placeholder**, the
   contact sheet's thirteen houses included, with their `<img>` tags commented out in the

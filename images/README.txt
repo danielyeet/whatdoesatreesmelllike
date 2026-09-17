@@ -1,11 +1,32 @@
-Put your image files in this folder, then point to them from the img
-tags in the work and category pages. Most of those tags are commented
-out and say which file they want; the ADAR page's are not.
+Image files live in here, sorted into a folder each. Point at them from
+the img tags in the work and category pages. Most of those tags are
+commented out and say which file they want; the ADAR page's are not.
 
-ADAR'S PICTURES ARE ALL HERE. Every one of the eleven fragrances has
-its photograph, and so does the house's own mark. These are the names
-the page asks for — if you replace a picture, keep the name (or change
-the one line in works/adar.html that names it):
+THE FOLDERS
+
+  ADAR/                   the ADAR house — all of its pictures, listed
+                          below. These are on the page now.
+  Pineward/               the Pineward house — 54 wanted, none yet
+  Favorites/              whatever categories/favorites.html comes to
+                          show
+  Individual Fragrances/  single fragrances that don't belong to one of
+                          the houses
+  Theories/               the three theory pages
+
+Each of the empty ones has a note inside saying what it is for. That
+note is also the only thing keeping the folder itself in the project —
+a folder with nothing at all in it doesn't get saved — so leave it
+there until there are real pictures alongside it.
+
+A NEW FOLDER is fine: make one, put the pictures in, and point the img
+tags at images/<folder>/<file>. Capitals matter (ADAR is not adar), and
+a space in a folder name works but turns into "%20" in the address, so
+hyphens are the easier choice for anything new.
+
+ADAR'S PICTURES ARE ALL HERE, in ADAR/. Every one of the eleven
+fragrances has its photograph, and so does the house's own mark. These
+are the names the page asks for — if you replace a picture, keep the
+name (or change the one line in works/adar.html that names it):
 
   adar-sigil.jpg        the house's own mark. It is NOT printed on the
                         page: it is what the VOID shows, and only while

@@ -73,7 +73,7 @@
   const HALO_OUT = 2.3;          // and how far past it it reaches
 
   // --- the sigil, which the void shows only under the hand
-  const SIGIL = "../images/adar-sigil.jpg";
+  const SIGIL = "../images/ADAR/adar-sigil.jpg";
   const LIGHT_IN = 1.25;         // how far past the void's rim the hand lights it
   const LIGHT_EASE = 3.4;        // and how quickly it comes up and goes again
   const SIGIL_FILL = 0.56;       // how much of the hole the mark stands in
