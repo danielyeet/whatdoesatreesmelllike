@@ -206,6 +206,47 @@ the marks that say a station can be opened; it saying `dark-surface` to the curs
 creeping on its own under `prefers-reduced-motion`; and the plain list coming back when
 the script is blocked.
 
+## The swarm is the size and the shape of the window
+
+The owner asked for "the stars to be related to the dimensions of that page". They were
+not: a fixed 2,200 specks scattered through a **square** cross-section, whatever the page
+was being looked at on. So the air was thin on a wide screen and crowded on a small one,
+and on a wide window the corners stood empty while a square of sky in the middle was
+full. Both come off the window now, in `resize`:
+
+- **How many** — `SWARM_PER` specks per million pixels of window, between `SWARM_LEAST`
+  and `SWARM_MOST`, so the air is the same thickness whatever it is shown on. It is
+  calibrated so that a 1280×720 window draws about what the fixed 2,200 always did; a
+  smaller window gets fewer and a larger one more.
+- **What shape** — the cross-section is stretched to the page's aspect ratio
+  (`spreadX`, `spreadY`), keeping its area about the same. Widening the window widens the
+  volume rather than magnifying what is in it.
+
+**The pool is still built whole, and first, and this is the part not to undo.** The
+specks that are *drawn* are the first `inAir` of a pool of `SWARM_POOL`; the pool itself
+is always built at full size. That is not an optimisation. `random()` is the one seeded
+stream this entire drawing is built from, and the stations are built *after* the swarm —
+so building a different number of specks consumes a different number of random values and
+**moves every station on the page**. The first version of this change built the swarm to
+fit the window, and did exactly that: it silently re-rolled the whole structure, and the
+regression test that says a station stays where it is while you stand still began to fail,
+because the new layout happened to put a station close enough to the eye for the breath to
+swing it more than the test's tolerance.
+
+A window larger than the pool is served by `growPool`, which extends it — **from a
+stream of numbers of its own (`morePool`), and only after everything else has been
+built**, so that not one value of `random()` is spent and no station moves.
+
+The lesson generalises to anything added to this file: **take specks off the end of the
+pool, or add them with `morePool` after the build; never change how many values
+`random()` is asked for before the stations are laid out.**
+
+One more thing this cost, worth knowing: drawing fewer specks at the test's own viewport
+made `it is drawn white on near-black` marginal, because that test counts lit pixels and
+the count had quietly dropped by a quarter. It passed alone and failed in a loaded full
+run. If a swarm change ever makes that test flaky, this is why — look at how many specks
+are actually being drawn before looking anywhere else.
+
 ## Known issues / TODO
 
 - The three theory pages the stations point at are **templates** — real structure,

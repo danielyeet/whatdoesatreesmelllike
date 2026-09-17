@@ -54,6 +54,23 @@ line has drawn. `tests/leaving-the-map.spec.js` contains regression tests for th
 for the collapse drawing every node into the centre, and for the reforming line stopping at
 the sentence.
 
+## The site's name
+
+Slide 1 carried `what does a tree smell like?` over `Photography and architecture` — the
+second a leftover from the template the site was built out of, and never true of it. The
+owner named the site on 2026-09-17:
+
+> **The Taste of Aldehydes** — *Perfumes and my notes about them*
+
+That is the big line and the line under it now, and it is the site's name: every page's
+`<title>` carries it after its own name (`Pineward: … — The Taste of Aldehydes`), in place
+of the `Your Name` placeholder they all used to end with. `tests/pages.spec.js` checks the
+landing page's title and was updated with it.
+
+**`Your Name` is still a placeholder everywhere else** — in `contact.html`, and as the
+author's own name — and is still theirs to write. Naming the site was not naming
+themselves.
+
 ## Known issues / TODO
 
 None outstanding. The landing page has not been touched in several rounds and the owner

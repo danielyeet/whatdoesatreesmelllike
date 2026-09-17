@@ -692,86 +692,58 @@
   }
 
   // ============================================================
-  // THE SPECKS
+  // THE TRACE
   //
-  // Every edge on this sheet is a chain of them: a picture is bounded
-  // by specks joined with fine lines rather than by a ruled border,
-  // and a line between two pictures is a run of them rather than a
-  // stroke. The owner asked for both, after the web the chamber's
-  // cursor strings between whatever it is near.
+  // What joins two pictures on this sheet. It used to be a truss of
+  // two or three ragged rails of specks with rungs across them and a
+  // knot of specks crowded at each end — and round each picture, a
+  // tuft of the same. The owner asked for the connections to be
+  // reworked: minimal, futuristic, interesting. This is that.
   //
-  // THEY ARE STILL. Where a speck stands is worked out from what it
-  // belongs to and its number along it, through `wobble` below, so the
-  // same speck is in the same place on every redraw — a resize moves
-  // the map and the specks go with it rather than being re-rolled into
-  // a different pattern. Nothing here is on a clock: the canvas is
-  // drawn while the map is arriving and then left exactly as it is.
+  //   THE TRACE   One hairline from picture to picture, broken into
+  //               even dashes — a measured line off a technical
+  //               drawing rather than a drawn one. Straight, because
+  //               the geometry of the map is the interesting part and
+  //               an elbow would only hide it.
+  //   THE PULSE   A short bright run of those dashes travelling the
+  //               length of the trace, each on its own clock. This is
+  //               the whole of the movement on the page and the reason
+  //               the map reads as live rather than printed.
+  //   THE TIE     A small open square where a trace meets a picture,
+  //               with a stub of line into the edge: the registration
+  //               mark the rest of the site uses, doing the job the
+  //               knot and the tuft used to.
+  //
+  // WHY IT IS DRAWN THIS WAY, and what must not come back: the old
+  // drawing built every speck of every rail, every frame, and drew the
+  // hot picture through `ctx.filter = "blur(...)"`. Canvas blur is a
+  // full offscreen pass per call, and there is one call per picture and
+  // per line — pointing at a picture dropped the page to a crawl. There
+  // is NO ctx.filter here and nothing is rebuilt per frame: a trace is
+  // a straight line and a phase, and drawing it is arithmetic. If
+  // softness is ever wanted again, it has to come from what is drawn,
+  // not from a filter.
   // ============================================================
-  const EDGE_EVERY = 7;       // how far apart the specks round a picture stand
-  const EDGE_WANDER = 1.6;    // and how far off its edge they may stand
-  // THE RUN ALONG A LINE BETWEEN TWO PICTURES: dense, and well off the
-  // line. The owner asked for the connections to read as geometric
-  // rather than as simple lines, and what does that is a crowd of
-  // specks scattered about the run and netted to each other rather
-  // than a few threaded along it.
-  // A RUN IS SEVERAL PARALLEL LINES, NOT ONE. Two or three of them,
-  // evenly spaced along their own length and standing a fixed distance
-  // apart, with rungs across them every so often and the whole thing
-  // drawing together to a point at each end. That is what makes a
-  // connection read as built rather than drawn: a truss between two
-  // pictures. A single scattered line of specks read as a smudge.
-  const ROUTE_EVERY = 3.6;    // how far apart the specks along one rail stand
-  const RAILS = [2, 3];       // how many rails a run carries
-  const RAIL_GAP = 6;         // how far apart they stand at the middle
-  const RAIL_OFF = 0.8;       // and how far off its own rail a speck may stand
-  const RUNG_EVERY = 6;       // a rung across the rails every so many specks
-  // AND THE ENDS ARE KNOTS. Where a run meets a picture the rails come
-  // together and the specks crowd: the owner asked for the places a
-  // line connects to a box to be emphasised and compacted, and a crowd
-  // at a point is what that is.
-  const KNOT = 10;            // how many specks are added at each end
-  const KNOT_SPREAD = 6;      // and how far they are scattered round it
-  const SPECK_MIN = 1;        // how big a speck is drawn, in pixels
-  const SPECK_MAX = 2.7;
-  const WEB_REACH = 15;       // two specks nearer than this are joined
-  const WEB_MISS = 0.22;      // and this share of those joins are left out
-  const EDGE_INK = 0.7;       // how heavily a speck round a picture is drawn
-  const ROUTE_INK = 0.5;      // and one on a line between two
-  const WEB_INK = 0.3;        // and the join between two of them
-  // WHAT POINTING AT A PICTURE DOES. The specks belonging to it come
-  // loose and drift about their own places, and are drawn a little
-  // soft, while the rest of the sheet steps back — so the picture is
-  // isolated on the page without anything moving that anybody is
-  // reading. This page answered nothing at all for two rounds; the
-  // owner has asked for it back, in this shape.
-  const HOT_DRIFT = 2.4;      // how far a speck comes off its place, in pixels
-  const HOT_RATE = [0.18, 0.5]; // and how slowly, in turns a second
-  const HOT_BLUR = 1.1;       // how soft one is drawn, in pixels
-  const HOT_LIFT = 1.35;      // and how much more plainly
-  const COLD_INK = 0.4;       // what is left of everything else
-  // AND THE ONES STANDING OFF THE CHAIN. A run of specks at even
-  // spacing with a line through them is a dashed border; what makes it
-  // read as the chamber's web instead is the few that stand a little
-  // off it and are joined back in.
-  //
-  // WHICH ones has to be uneven. Every fourth speck pushed out was
-  // worse than none at all: an even rhythm of them all standing the
-  // same way out came out as a saw-tooth frill round each picture
-  // rather than as a net. So it is a roll against this, and how far
-  // out is rolled too.
-  const LOOSE_ODDS = 0.18;
-  const LOOSE_OUT = [2.5, 6];
-  // HOW FAR ALONG THE EDGE A TUFT REACHES from the point a line is
-  // tied to the picture. The pictures are ruled again, so this is an
-  // embellishment where the map meets one rather than a border in its
-  // own right.
-  const TUFT_REACH = 42;
-  const INK = "23,23,15";     // --ink
+  const DASH = 5;             // how long one dash of a trace is, in pixels
+  const DASH_GAP = 5;         // and the clear page between two of them
+  const TRACE_INK = 0.34;     // how heavily a trace is drawn
+  const TIE = 6;              // the open square where a trace meets a picture
+  const TIE_INK = 0.66;
+  const TIE_STUB = 6;         // and the stub of line from it into the edge
+  // THE PULSE. Long enough to read as a run of light rather than a
+  // single blip, slow enough not to be busy with fourteen of them on
+  // the page at once.
+  const PULSE_LONG = 44;      // how much of a trace is lit at once, in pixels
+  const PULSE_RATE = 46;      // how fast it travels, in pixels a second
+  const PULSE_INK = 0.75;     // how bright the lit part is
+  const PULSE_HOT = 2.1;      // and how much faster it runs on a hot trace
+  const HOT_LIFT = 1.5;       // how much more plainly a hot trace is drawn
+  const COLD_INK = 0.35;      // and what is left of everything else
+  const INK = "226,228,234";  // --ink, which is light on this page now
 
-  /** One number between 0 and 1 for a given speck of a given thing,
-      the same every time it is asked. What makes the drawing steady:
-      re-rolled on each redraw instead, every resize would come out as
-      a different scatter. */
+  /** One number between 0 and 1 for a given thing, the same every time
+      it is asked. What keeps each trace's pulse on its own clock
+      without storing anything per trace. */
   function wobble(of, n, salt) {
     let h = ((of + 1) * 374761393 + (n + 1) * 668265263 + salt * 2246822519) >>> 0;
     h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
@@ -780,215 +752,70 @@
 
   const rgba = (a) => "rgba(" + INK + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
 
-  /** The chain of specks round one picture — but only WHERE SOMETHING
-      IS TIED TO IT. The pictures carry their own ruled border again
-      (the owner asked for the classic one back), so a chain all the
-      way round would be the same edge drawn twice; what is left is a
-      tuft of specks where each line meets the picture, thinning out
-      along the edge either side of it. Corners are still landed on
-      exactly where a tuft reaches one — a square whose corners are
-      guessed at reads as a blob. */
-  function edgeChain(node, of, ties) {
-    const out = [];
-    const sides = Math.max(2, Math.round(node.size / EDGE_EVERY));
-    const many = sides * 4;
-    for (let n = 0; n < many; n++) {
-      const t = (n / many) * 4;
-      const side = Math.floor(t), along = t - side;
-      let x, y, nx, ny;
-      if (side === 0) { x = node.x + node.size * along; y = node.y; nx = 0; ny = -1; }
-      else if (side === 1) { x = node.x + node.size; y = node.y + node.size * along; nx = 1; ny = 0; }
-      else if (side === 2) { x = node.x + node.size * (1 - along); y = node.y + node.size; nx = 0; ny = 1; }
-      else { x = node.x; y = node.y + node.size * (1 - along); nx = -1; ny = 0; }
-      const corner = along < 0.001;
-      const off = corner ? 0 : (wobble(of, n, 1) - 0.5) * 2 * EDGE_WANDER;
-      const drift = corner ? 0 : (wobble(of, n, 2) - 0.5) * EDGE_EVERY * 0.5;
-      const loose = !corner && wobble(of, n, 7) < LOOSE_ODDS
-        ? LOOSE_OUT[0] + wobble(of, n, 8) * (LOOSE_OUT[1] - LOOSE_OUT[0])
-        : 0;
-      // How near this speck is to something tied to the picture here.
-      // Nothing is drawn where nothing is tied.
-      let near = Infinity;
-      for (let t = 0; t < ties.length; t++) {
-        const away = Math.hypot(x - ties[t].x, y - ties[t].y);
-        if (away < near) near = away;
-      }
-      if (near > TUFT_REACH) continue;
-      out.push({
-        x: x + nx * (off + loose) + ny * drift,
-        y: y + ny * (off + loose) - nx * drift,
-        size: SPECK_MIN + wobble(of, n, 3) * (SPECK_MAX - SPECK_MIN) + (corner ? 0.6 : 0),
-        loose: loose > 0,
-        // Thinning out along the edge away from what is tied there.
-        fade: 1 - Math.pow(near / TUFT_REACH, 1.15),
-      });
-    }
-    return out;
-  }
-
-  /** And the run of them along one line between two pictures: two or
-      three parallel rails of specks, evenly spaced along their length,
-      with rungs across them and both ends drawn together into a knot
-      where the run meets the picture.
-
-      Evenly spaced and parallel ON PURPOSE. Scattered about the line,
-      a run reads as a smudge between two pictures; ruled like this it
-      reads as something built, which is what the owner asked for —
-      "denser in particles and slightly more dispersed, so that it
-      looks more like geometric connections rather than simple lines".
-
-      The rails PINCH at both ends: they are furthest apart in the
-      middle and meet at the two points the line is tied to, so a run
-      leaves a picture from one place rather than from a smear along
-      its edge. */
-  function routeRun(a, b, of) {
-    const out = [];
-    out.rungs = [];
-    const far = Math.hypot(b.x - a.x, b.y - a.y);
-    const ux = (b.x - a.x) / far, uy = (b.y - a.y) / far;
-    const rails = RAILS[0] + Math.floor(wobble(of, 0, 11) * (RAILS[1] - RAILS[0] + 1));
-    const many = Math.max(2, Math.round(far / ROUTE_EVERY));
-    // A run's own spacing varies a little from its neighbours', or a
-    // sheet of them reads as one drawing repeated.
-    const gap = RAIL_GAP * (0.8 + wobble(of, 0, 12) * 0.5);
-
-    /** Where a speck on rail `r` stands at `t` along the run. */
-    const place = (r, t, n) => {
-      const spread = rails === 1 ? 0 : (r - (rails - 1) / 2) * gap;
-      // Sine: nothing at the two ends, everything in the middle.
-      const pinch = Math.sin(Math.PI * t);
-      const off = spread * pinch +
-        (wobble(of, n * 7 + r, 4) - 0.5) * 2 * RAIL_OFF;
-      const at = t * far;
-      return {
-        x: a.x + ux * at - uy * off,
-        y: a.y + uy * at + ux * off,
-        size: SPECK_MIN + wobble(of, n * 3 + r, 5) * (SPECK_MAX - SPECK_MIN),
-        at: at,
-      };
-    };
-
-    for (let r = 0; r < rails; r++) {
-      for (let n = 0; n <= many; n++) out.push(place(r, n / many, n));
-    }
-
-    // THE RUNGS. Every so many specks, one rail is tied across to the
-    // next — regular, because what is being drawn is a structure.
-    for (let n = RUNG_EVERY; n < many; n += RUNG_EVERY) {
-      for (let r = 0; r + 1 < rails; r++) {
-        const one = place(r, n / many, n);
-        const two = place(r + 1, n / many, n);
-        out.rungs.push({ x1: one.x, y1: one.y, x2: two.x, y2: two.y, at: one.at });
-      }
-    }
-
-    // THE KNOTS at each end.
-    [0, 1].forEach((end) => {
-      const at = end ? far : 0;
-      const px = end ? b.x : a.x, py = end ? b.y : a.y;
-      for (let k = 0; k < KNOT; k++) {
-        const turn = wobble(of, k + end * 40, 13) * Math.PI * 2;
-        const out2 = wobble(of, k + end * 40, 14) * KNOT_SPREAD;
-        out.push({
-          // Kept on the picture's side of the tie point, so the crowd
-          // gathers where the line lands rather than spilling across
-          // the picture it is landing on.
-          x: px + Math.cos(turn) * out2 + ux * (end ? -out2 : out2) * 0.5,
-          y: py + Math.sin(turn) * out2 + uy * (end ? -out2 : out2) * 0.5,
-          size: SPECK_MIN + wobble(of, k + end * 40, 15) * (SPECK_MAX - SPECK_MIN) + 0.4,
-          at: at,
-        });
-      }
-    });
-    return out;
-  }
-
-  /** A chain drawn: the specks themselves, and the fine lines between
-      the ones that are near each other. Squares on whole pixels, like
-      every other speck on this site — at this size a rectangle laid
-      across a pixel boundary comes out as a soft blob. */
-  function drawChain(run, of, weight, upTo, state) {
-    const move = state && state.move ? state.move : 0;
-    const shade = state && state.ink !== undefined ? state.ink : 1;
-
-    /** Where a speck is drawn right now. Standing still is the whole
-        character of this drawing, so this is zero for everything
-        except the picture the pointer is on. */
-    const at = (speck, n, salt) => {
-      if (!move) return speck;
-      const rate = HOT_RATE[0] + wobble(of, n, salt) * (HOT_RATE[1] - HOT_RATE[0]);
-      const turn = clock * rate * Math.PI * 2 + wobble(of, n, salt + 1) * Math.PI * 2;
-      const out = HOT_DRIFT * move * (0.4 + wobble(of, n, salt + 2) * 0.6);
-      return { x: speck.x + Math.cos(turn) * out, y: speck.y + Math.sin(turn) * out };
-    };
-
-    ink.save();
-    if (move) ink.filter = "blur(" + (HOT_BLUR * move).toFixed(2) + "px)";
-
-    ink.beginPath();
-    // THE RUNGS ACROSS THE RAILS, where a run carries them.
-    if (run.rungs) {
-      run.rungs.forEach((rung, n) => {
-        if (upTo !== undefined && rung.at > upTo) return;
-        const one = at({ x: rung.x1, y: rung.y1 }, n, 21);
-        const two = at({ x: rung.x2, y: rung.y2 }, n, 24);
-        ink.moveTo(one.x, one.y);
-        ink.lineTo(two.x, two.y);
-      });
-    }
-    for (let n = 1; n < run.length; n++) {
-      if (upTo !== undefined && run[n].at > upTo) break;
-      const one = run[n - 1], two = run[n];
-      // A speck standing off the chain is always joined back to the
-      // one before it, or it reads as dirt on the page rather than as
-      // part of the edge.
-      const held = one.loose || two.loose;
-      if (!held && wobble(of, n, 6) < WEB_MISS) continue;
-      if (Math.hypot(two.x - one.x, two.y - one.y) > WEB_REACH + (held ? LOOSE_OUT[1] : 0)) continue;
-      const from = at(one, n - 1, 31), to = at(two, n, 31);
-      ink.moveTo(from.x, from.y);
-      ink.lineTo(to.x, to.y);
-      // And on to the next one as well, so it hangs in a net rather
-      // than on a thread.
-      if (two.loose && run[n + 1] && (upTo === undefined || run[n + 1].at <= upTo)) {
-        const on = at(run[n + 1], n + 1, 31);
-        ink.moveTo(to.x, to.y);
-        ink.lineTo(on.x, on.y);
-      }
-    }
-    ink.strokeStyle = rgba(WEB_INK * shade);
+  /** THE TIE. An open square sitting just off the picture's edge where
+      a trace leaves it, and a stub of line running from it into the
+      edge. Drawn on whole pixels: at this size a square laid across a
+      pixel boundary comes out as a soft blob. */
+  function drawTie(x, y, towardsX, towardsY, shade) {
+    const half = TIE / 2;
+    ink.strokeStyle = rgba(TIE_INK * shade);
     ink.lineWidth = 1;
+    ink.beginPath();
+    ink.rect(Math.round(x - half) + 0.5, Math.round(y - half) + 0.5, TIE, TIE);
+    // The stub points back at the picture the trace is leaving.
+    const far = Math.hypot(towardsX - x, towardsY - y) || 1;
+    const ux = (towardsX - x) / far, uy = (towardsY - y) / far;
+    ink.moveTo(Math.round(x - ux * half) + 0.5, Math.round(y - uy * half) + 0.5);
+    ink.lineTo(Math.round(x - ux * (half + TIE_STUB)) + 0.5,
+               Math.round(y - uy * (half + TIE_STUB)) + 0.5);
+    ink.stroke();
+  }
+
+  /** ONE TRACE, from a to b, drawn as far as `upTo` pixels along it.
+      `lit` is where the pulse has got to along the same line; dashes
+      inside it are drawn brighter. Everything here is a loop over the
+      length of one line — no arrays are built and nothing is kept. */
+  function drawTrace(a, b, of, upTo, shade, weight, lit) {
+    const far = Math.hypot(b.x - a.x, b.y - a.y);
+    if (far < 1) return;
+    const ux = (b.x - a.x) / far, uy = (b.y - a.y) / far;
+    const step = DASH + DASH_GAP;
+    const end = Math.min(far, upTo === undefined ? far : upTo);
+
+    ink.lineWidth = 1;
+    // The plain dashes, all in one path — one stroke for the whole
+    // trace rather than one per dash.
+    ink.strokeStyle = rgba(weight * shade);
+    ink.beginPath();
+    for (let at = 0; at < end; at += step) {
+      const to = Math.min(at + DASH, end);
+      if (lit !== undefined && at > lit - PULSE_LONG && at < lit) continue;
+      ink.moveTo(a.x + ux * at, a.y + uy * at);
+      ink.lineTo(a.x + ux * to, a.y + uy * to);
+    }
     ink.stroke();
 
-    // Drawn in one pass where every speck is the same weight, and one
-    // at a time where they are not: a tuft fades out along the edge,
-    // and an alpha is a property of the brush rather than of a shape.
-    const evenly = run.every((speck) => speck.fade === undefined);
-    if (evenly) ink.fillStyle = rgba(weight * shade);
-    if (evenly) ink.beginPath();
-    run.forEach((speck, n) => {
-      if (upTo !== undefined && speck.at > upTo) return;
-      const where = at(speck, n, 31);
-      const size = Math.max(1, Math.round(speck.size));
-      const x = Math.round(where.x - size / 2), y = Math.round(where.y - size / 2);
-      if (evenly) { ink.rect(x, y, size, size); return; }
-      const lit = weight * shade * (speck.fade === undefined ? 1 : speck.fade);
-      if (lit < 0.03) return;
-      ink.fillStyle = rgba(lit);
-      ink.fillRect(x, y, size, size);
-    });
-    if (evenly) ink.fill();
-    ink.restore();
+    // ...and the lit run, in a second pass at its own weight.
+    if (lit === undefined) return;
+    ink.strokeStyle = rgba(PULSE_INK * shade);
+    ink.beginPath();
+    for (let at = Math.max(0, Math.floor((lit - PULSE_LONG) / step) * step); at < end; at += step) {
+      if (at <= lit - PULSE_LONG || at >= lit) continue;
+      const to = Math.min(at + DASH, end);
+      ink.moveTo(a.x + ux * at, a.y + uy * at);
+      ink.lineTo(a.x + ux * to, a.y + uy * to);
+    }
+    ink.stroke();
   }
 
   /** How far along its own line each route has been drawn, 0 to 1.
       Set by the arrival and left at 1 afterwards. */
   const reached = new Map();
 
-  /** WHICH PICTURE THE POINTER IS ON, and how far its specks have come
-      loose — eased, so they gather and settle rather than switching on
-      and off with the hand. `clock` is what everything that moves here
-      is drawn from; it only runs while something is hot. */
+  /** WHICH PICTURE THE POINTER IS ON, and how far the sheet has stepped
+      back behind it — eased, so it gathers and settles rather than
+      switching on and off with the hand. `clock` is what the pulses are
+      drawn from. */
   let hotNode = -1;
   let heat = 0;
   let clock = 0;
@@ -998,47 +825,35 @@
     ink.clearRect(0, 0, specks.width, specks.height);
     if (!placed) return;
 
-    // Where each line is tied to each picture, worked out first: the
-    // tufts are drawn round those points and nowhere else.
-    const tied = nodes.map(() => []);
-    links.forEach((link) => {
-      const got = reached.has(link) ? reached.get(link) : 0;
-      if (got <= 0) return;
-      const from = nodes[link.a], to = nodes[link.b];
-      tied[link.a].push(edgePoint(from, to));
-      // The far end is only tied once the line has reached it.
-      if (got > 0.98) tied[link.b].push(edgePoint(to, from));
-    });
-
-    // WHAT IS HOT AND WHAT IS NOT. With a picture pointed at, its own
-    // specks and the runs tied to it come loose and are drawn a little
-    // soft and a little heavier, and everything else steps back — so
-    // the one picture is isolated on the page without anything that is
-    // being read having moved.
+    // WHAT IS HOT AND WHAT IS NOT. With a picture pointed at, the
+    // traces tied to it are drawn more plainly and their pulses run
+    // faster, and everything else steps back — so the one picture is
+    // isolated on the page without anything that is being read having
+    // moved.
     const cold = heat > 0.01 ? COLD_INK + (1 - COLD_INK) * (1 - heat) : 1;
     const mine = (i) => hotNode >= 0 && i === hotNode;
-
-    nodes.forEach((node, i) => {
-      if (i > 0 && !rest[i - 1].classList.contains("landed")) return;
-      if (!tied[i].length) return;
-      const hot = mine(i);
-      drawChain(edgeChain(node, i, tied[i]), i,
-        EDGE_INK * (hot ? HOT_LIFT : 1),
-        undefined,
-        { move: hot ? heat : 0, ink: hot ? 1 : cold });
-    });
 
     links.forEach((link, i) => {
       const got = reached.has(link) ? reached.get(link) : 0;
       if (got <= 0) return;
       const from = nodes[link.a], to = nodes[link.b];
       const a = edgePoint(from, to), b = edgePoint(to, from);
-      const run = routeRun(a, b, 100 + i);
+      const far = Math.hypot(b.x - a.x, b.y - a.y);
       const hot = mine(link.a) || mine(link.b);
-      drawChain(run, 100 + i,
-        ROUTE_INK * (hot ? HOT_LIFT : 1),
-        got * Math.hypot(b.x - a.x, b.y - a.y),
-        { move: hot ? heat * 0.7 : 0, ink: hot ? 1 : cold });
+      const shade = hot ? 1 : cold;
+      const upTo = got * far;
+
+      // Each trace's pulse starts somewhere of its own and runs at its
+      // own pace, so fourteen of them never fall into step.
+      const rate = PULSE_RATE * (0.7 + wobble(i, 1, 3) * 0.6) * (hot ? PULSE_HOT : 1);
+      const span = far + PULSE_LONG;
+      const lit = ((clock * rate + wobble(i, 2, 7) * span) % span);
+
+      drawTrace(a, b, i, upTo, shade, TRACE_INK * (hot ? HOT_LIFT : 1), lit);
+
+      // The ties, once the trace has actually reached them.
+      drawTie(a.x, a.y, b.x, b.y, shade);
+      if (got > 0.98) drawTie(b.x, b.y, a.x, a.y, shade);
     });
   }
 

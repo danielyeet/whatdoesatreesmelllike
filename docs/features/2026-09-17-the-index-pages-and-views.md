@@ -100,6 +100,35 @@ in it; the table still being the table with its script blocked; and the research
 the table being numbered, titled and dated, and the first research opening a page that
 is really there.
 
+## The Fragrances view, reworked
+
+The owner asked for this view — and only this one — to be reworked: "minimalist, include
+a table, and be stylized in accordance with the website". It shares `index-page.js` and
+all of its markup with Researches, which is still the four-column drawing-office layout
+it was written for, so **the rework is CSS scoped to `body.view-fragrances`** — the class
+`views.js` already puts on the body. Nothing in it reaches Researches.
+
+The shape: one centred column, one screen tall. A quiet band naming what you are looking
+at, the field ruled across under it, and then the table, which is the whole point of the
+view and is given the room to say so. The two plates and their line stand down here (they
+are drawing-office furniture for the Researches layout, and both are placeholders); the
+sorting note goes, because a heading says what it does by being pressed; the headings are
+sticky, so what a column is never scrolls away.
+
+**The page is still exactly one screen**, and that is a test. The column is a flex column
+of `100svh` with the board and the scroll box each `flex: 1; min-height: 0`, so the table
+takes up whatever is left over and the *page* never grows however many fragrances are
+added. `min-height: 0` is the part that is easy to leave out and the reason a flex child
+otherwise keeps its content's full height. Below 820px the page is allowed to grow and the
+table comes out in full instead.
+
+This view now stands on the contact sheet page's **dark** ground — see
+[the contact sheet](2026-09-13-the-contact-sheet.md) — which it picks up for free, since
+everything here is drawn in the page's own tokens.
+
+The copyright line that stood under the board (*2026 © Your Name, All rights reserved*)
+is gone, from this view and from Researches both: the owner asked for it off the site.
+
 ## Known issues / TODO
 
 - **The dates in the Fragrances table are rolled from a seed** so that sorting has

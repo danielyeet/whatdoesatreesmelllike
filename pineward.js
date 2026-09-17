@@ -58,21 +58,33 @@
   // and only the part of it that is on the screen is drawn. That is
   // what lets it be six thousand pixels tall without a canvas that
   // size.
-  const TREE_EVERY = 430;      // how far apart the trees stand down the page
-  const TREE_TALL = [420, 760];// and how tall one is
-  // How far in from the edge a trunk may stand, as a share of the
-  // window. The writing runs down the middle of the page in a column
-  // about 940px wide, so a trunk further in than this is a tree
-  // growing through the text.
-  const TREE_IN = 0.14;
+  //
+  // THE WOOD STANDS IN TWO STRIPS AND NOWHERE ELSE. Three things share
+  // this page's width: the reading tree in the left gutter, the writing
+  // in a column 940px wide down the middle, and the wood. What is left
+  // for the wood is the strip between the gutter and the column on each
+  // side, and every tree is placed inside its strip — that is what
+  // keeps the drawing off the writing, off the reading tree, and off
+  // the ends of the page. A strip too narrow to hold a tree carries
+  // none at all rather than a squashed one.
+  const COLUMN = 940;          // the writing's own column, from the stylesheet
+  const COLUMN_PAD = 46;       // how far into that column's own padding the wood may come
+  const GUTTER_LEFT = 88;      // kept clear for the reading tree
+  const GUTTER_RIGHT = 18;     // and a hair kept off the right edge
+  const BAND_MIN = 76;         // a strip narrower than this carries no wood
+  const PAGE_PAD = 96;         // nothing is drawn within this of either end of the page
+  const TREE_TALL = [170, 300];// how tall one tree is
+  const TREE_GAP = [46, 140];  // and the clear air between it and the next one down
+  const TREE_SPREAD = 0.5;     // how wide it may get, against the strip it stands in
+  const EDGE_FADE = 130;       // how far from the window's top and foot the wood fades out
   const WHORLS = [9, 15];      // how many rounds of branches one carries
   const BRANCH_OUT = [0.34, 0.86]; // how far out a branch reaches, against its tree
   const BRANCH_DROOP = 0.42;   // and how far it falls as it goes
   const TWIG_EVERY = 11;       // how far apart the specks along a branch stand
   const SPECK_MIN = 1;         // how big a speck is drawn, in pixels
   const SPECK_MAX = 2.4;
-  const TREE_INK = 0.4;        // how heavily a speck is drawn
-  const BOUGH_INK = 0.11;      // the branch it stands on
+  const TREE_INK = 0.31;       // how heavily a speck is drawn
+  const BOUGH_INK = 0.085;     // the branch it stands on
   const WEB_INK = 0.1;         // and a line between two specks
   const WEB_REACH = 26;        // two specks nearer than this are joined
   const WEB_EACH = 2;          // and no speck carries more lines than this
@@ -91,11 +103,11 @@
   // move to meet the hand; it is only more itself where the hand is.
   const IDLE = 0.9;            // how far a speck drifts from its own place, in pixels
   const IDLE_RATE = [0.12, 0.5]; // and how slowly, in turns a second
-  const BLOOM_REACH = 150;     // how near the hand a speck blooms, in pixels
+  const BLOOM_REACH = 104;     // how near the hand a speck blooms, in pixels
   const BLOOM_INK = 0.5;       // how much more plainly it is drawn
   const BLOOM_NEEDLES = 3;     // how many needles it puts out
   const BLOOM_LONG = 7;        // and how long they are, in pixels
-  const BLOOM_EASE = 2.6;      // how quickly the bloom comes and goes
+  const BLOOM_EASE = 3.4;      // how quickly the bloom comes and goes
 
 
   // --- the parts arriving
@@ -170,8 +182,11 @@
     }
   }
 
-  /** One tree, from its foot up. */
-  function treeAt(x, foot, tall, specks, runs) {
+  /** One tree, from its foot up. `spread` is the furthest a branch of
+      it may reach to either side — the tree is grown to fit the strip
+      it stands in rather than to fit its own height, which is what
+      stops it reaching across the writing. */
+  function treeAt(x, foot, tall, spread, specks, runs) {
     const whorls = Math.round(WHORLS[0] + random() * (WHORLS[1] - WHORLS[0]));
     // The leader: dead straight, which is what a fir has and what
     // keeps the drawing taut.
@@ -191,8 +206,8 @@
       // are a triangle seen from the side.
       const up = (w + 0.6) / whorls;
       const y = foot - tall * up;
-      const left = tall * (BRANCH_OUT[0] + random() * (BRANCH_OUT[1] - BRANCH_OUT[0])) *
-        (1 - up) * 0.5;
+      const left = spread * (BRANCH_OUT[0] + random() * (BRANCH_OUT[1] - BRANCH_OUT[0])) *
+        (1 - up * 0.75);
       const droop = BRANCH_DROOP * (0.6 + random() * 0.8);
       branchOf(x, y, -1, left, droop, specks, runs, tall * up);
       branchOf(x, y, 1, left * (0.75 + random() * 0.5), droop, specks, runs, tall * up);
@@ -209,15 +224,41 @@
     );
     seed = SEED;
     const specks = [], runs = [];
-    // Down both sides, all the way to the foot of the page.
-    for (let foot = tall; foot > -TREE_EVERY; foot -= TREE_EVERY) {
-      [0, 1].forEach((side) => {
-        const inFrom = random() * TREE_IN;
-        const x = side ? wide * (1 - inFrom) : wide * inFrom;
-        const high = TREE_TALL[0] + random() * (TREE_TALL[1] - TREE_TALL[0]);
-        treeAt(x, foot - random() * TREE_EVERY * 0.5, high, specks, runs);
-      });
-    }
+    // The two strips the wood may stand in: between the reading tree's
+    // gutter and the writing's column on the left, and the mirror of
+    // that on the right.
+    const col = Math.min(COLUMN, wide);
+    const edge = (wide - col) / 2 + COLUMN_PAD;
+    const bands = [
+      { from: GUTTER_LEFT, to: edge },
+      { from: wide - edge, to: wide - GUTTER_RIGHT },
+    ];
+    // DOWN EACH STRIP, ONE TREE AT A TIME, each one starting below the
+    // last one's lowest branch. Walking down like this — rather than
+    // dropping a tree every so many pixels and hoping — is what makes
+    // it impossible for two of them to grow through one another, and
+    // keeping the walk inside PAGE_PAD is what stops one hanging off
+    // the top or the foot of the page.
+    bands.forEach((band, side) => {
+      const room = band.to - band.from;
+      if (room < BAND_MIN) return;
+      let y = PAGE_PAD + (side ? between(TREE_GAP) : 0);
+      let guard = 0;
+      while (y < tall - PAGE_PAD && guard++ < 600) {
+        const high = between(TREE_TALL);
+        // A tree is grown to fit its strip: never wider than half of
+        // it, and never so wide for its height that it reads as a bush.
+        const spread = Math.min(room * TREE_SPREAD, high * 0.4);
+        // The lowest branches droop below the foot, so that fall is
+        // part of the room the tree takes up.
+        const droopRoom = spread * BRANCH_DROOP * 1.4;
+        const foot = y + high;
+        if (foot + droopRoom > tall - PAGE_PAD) break;
+        const x = band.from + spread + random() * Math.max(0, room - spread * 2);
+        treeAt(x, foot, high, spread, specks, runs);
+        y = foot + droopRoom + between(TREE_GAP);
+      }
+    });
     // Bucketed by where they stand down the page, so that drawing only
     // what is on the screen is a lookup rather than a search through
     // every speck in the wood.
@@ -265,20 +306,28 @@
     const seen = inView(down - wood.ROW, down + tall + wood.ROW);
     const upTo = wood.reach * grown;
 
-    /** How plainly anything at x is drawn: quiet across the middle of
-        the page, where the writing is. */
-    const lit = (x) => {
+    /** How plainly anything is drawn. Two things quieten it:
+        ACROSS — the middle of the page, where the writing is. A branch
+        that reaches in over the writing is something you only notice if
+        you go looking for it.
+        DOWN — the top and the foot of the WINDOW. Without this a tree
+        that happens to straddle the edge of the screen is cut off by it
+        in a hard line, which is what read as the wood running off the
+        page. Faded, a tree dissolves into the margin instead, and
+        nothing is ever seen sliced. */
+    const lit = (x, y) => {
       const off = Math.min(1, Math.abs(x - wide / 2) / (wide * CLEAR_MID));
-      // Nearly nothing across the middle: a branch that reaches in
-      // over the writing has to be something you only notice if you
-      // look for it.
-      return 0.04 + 0.96 * off * off;
+      const across = 0.04 + 0.96 * off * off;
+      if (y === undefined) return across;
+      const edge = Math.min(y, tall - y) / EDGE_FADE;
+      return across * Math.max(0, Math.min(1, edge));
     };
 
     // The branches, faintly: what the specks are strung along.
     seen.runs.forEach((run) => {
       if (run.from > upTo) return;
-      const at = lit((run.x1 + run.x2) / 2) * BOUGH_INK * (run.leader ? 1.4 : 1);
+      const at = lit((run.x1 + run.x2) / 2, (run.y1 + run.y2) / 2 - down) *
+        BOUGH_INK * (run.leader ? 1.4 : 1);
       if (at < 0.012) return;
       const part = Math.min(1, (upTo - run.from) / Math.max(1, run.to - run.from));
       ink.beginPath();
@@ -307,7 +356,7 @@
       const bloom = handAt > 0
         ? handAt * Math.max(0, 1 - Math.hypot(x - handX, y - handY) / BLOOM_REACH)
         : 0;
-      placed.push({ x: x, y: y, size: one.size, bloom: bloom, of: one, lit: lit(one.x) });
+      placed.push({ x: x, y: y, size: one.size, bloom: bloom, of: one, lit: lit(one.x, y) });
     });
 
     // The web between near neighbours, and never more than `WEB_EACH`
@@ -367,10 +416,65 @@
   // you have scrolled — a part that runs long should not read as more
   // of the piece than a part that runs short.
   // ============================================================
+  // THE READING TREE. How far down the piece you have come is drawn as
+  // the house's own mark — the fir off the Pineward bottle — standing
+  // in the left margin and inked in from the ground up as the parts go
+  // past. It is the whole of this page's progress bar.
+  //
+  // The fir is worked out rather than drawn by hand: a tier at a time
+  // down a straight leader, each one reaching further out than the one
+  // above it and notching back in under itself, which is the silhouette
+  // on the bottle. Working it out means its tiers always fit whatever
+  // height it is given, and means the shape lives with the drawing
+  // rather than in a file nobody will find.
+  const FIR_W = 34;            // the mark's own box, which the stylesheet scales
+  const FIR_H = 208;
+  const FIR_TIERS = 13;        // rounds of branches, tip to foot
+  const FIR_REACH = 0.8;       // how quickly it widens going down (a power)
+  const FIR_NOTCH = 0.42;      // how far back in it comes under each tier
+  const FIR_FOOT = 24;         // the bare stem at the bottom
+  const FIR_STEM = 2.2;        // and how thick that stem is
+
+  function firPath(w, h) {
+    const mid = w / 2;
+    const tip = 1.5;
+    const base = h - FIR_FOOT;
+    const step = (base - tip) / FIR_TIERS;
+    const left = [], right = [];
+    for (let i = 1; i <= FIR_TIERS; i++) {
+      const t = i / FIR_TIERS;
+      const y = tip + (base - tip) * t;
+      const reach = Math.pow(t, FIR_REACH) * (mid - 0.5);
+      const notch = reach * FIR_NOTCH;
+      left.push([mid - reach, y], [mid - notch, y + step * 0.34]);
+      right.push([mid + reach, y], [mid + notch, y + step * 0.34]);
+    }
+    const d = ["M", mid, tip];
+    left.forEach((pt) => d.push("L", pt[0].toFixed(2), pt[1].toFixed(2)));
+    d.push("L", (mid - FIR_STEM).toFixed(2), base.toFixed(2));
+    d.push("L", (mid - FIR_STEM).toFixed(2), h);
+    d.push("L", (mid + FIR_STEM).toFixed(2), h);
+    d.push("L", (mid + FIR_STEM).toFixed(2), base.toFixed(2));
+    // Back up the far side: the same tiers in reverse, so the mark is
+    // symmetrical about its own leader.
+    right.reverse().forEach((pt) => d.push("L", pt[0].toFixed(2), pt[1].toFixed(2)));
+    d.push("Z");
+    return d.join(" ");
+  }
+
   const trunk = document.createElement("div");
   trunk.className = "pine-trunk";
   trunk.setAttribute("aria-hidden", "true");
-  trunk.innerHTML = '<span class="pine-trunk-line"></span>';
+  const firD = firPath(FIR_W, FIR_H);
+  trunk.innerHTML =
+    '<svg class="pine-tree" viewBox="0 0 ' + FIR_W + ' ' + FIR_H + '" ' +
+    'preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
+      '<defs><clipPath id="pine-read-fill">' +
+        '<rect class="pine-tree-rect" x="0" y="' + FIR_H + '" width="' + FIR_W + '" height="0"></rect>' +
+      '</clipPath></defs>' +
+      '<path class="pine-tree-ghost" d="' + firD + '"></path>' +
+      '<path class="pine-tree-ink" d="' + firD + '" clip-path="url(#pine-read-fill)"></path>' +
+    '</svg>';
   const ticks = document.createElement("div");
   ticks.className = "pine-ticks";
   parts.forEach(() => {
@@ -390,6 +494,7 @@
   page.appendChild(readout);
 
   const tickAt = Array.from(ticks.children);
+  const treeRect = trunk.querySelector(".pine-tree-rect");
   const readNo = readout.querySelector(".pine-readout-no");
   const readWhere = readout.querySelector(".pine-readout-where");
 
@@ -430,6 +535,15 @@
       if (parts[n].getBoundingClientRect().top <= line) at = n; else break;
     }
     tickAt.forEach((tick, n) => tick.classList.toggle("passed", n <= at));
+
+    // The mark fills from the ground up, off the same count: the parts
+    // passed, not the scrollbar, so a part that runs long does not read
+    // as more of the piece than a part that runs short.
+    if (treeRect) {
+      const filled = Math.max(0, Math.min(1, (at + 1) / parts.length));
+      treeRect.setAttribute("y", (FIR_H * (1 - filled)).toFixed(2));
+      treeRect.setAttribute("height", (FIR_H * filled).toFixed(2));
+    }
 
     const part = mostOf(parts);
     const stratum = mostOf(intro ? strata.concat([intro]) : strata);

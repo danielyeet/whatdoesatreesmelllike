@@ -13,7 +13,7 @@ const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 // Every page on the site, and how deep it sits, which is what
 // SITE_ROOT has to match.
 const PAGES = [
-  { url: "/index.html", root: "", title: /Portfolio/ },
+  { url: "/index.html", root: "", title: /The Taste of Aldehydes/ },
   { url: "/contact.html", root: "", title: /Contact/ },
   { url: "/search.html", root: "", title: /Search/ },
   { url: "/categories/scent-descriptions.html", root: "../", title: /Scent descriptions/ },

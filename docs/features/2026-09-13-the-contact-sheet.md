@@ -327,6 +327,69 @@ switched on; the page never showing its own contents before the sheet takes over
 pictures being placed rather than slid in; the pictures running in order down the page;
 and the plain grid still being there when the script is blocked.
 
+## The trace, and the dark ground
+
+A later round, on the owner's notes: *"completely rework the connections between the
+different houses. I want the actual squares to keep their place... minimal, futuristic,
+and interesting"*, *"model the page in a more interesting way rather than just blocks on
+white"*, and *"hovering these... the page lags out a lot. Fix that."* The pictures are
+where they were; everything between and behind them is new.
+
+### What a connection is now
+
+A line between two pictures used to be a **truss**: two or three ragged rails of specks
+with rungs across them and a knot of specks crowded at each end, and a tuft of the same
+round every picture where a line tied on. In its place:
+
+| | |
+|---|---|
+| **the trace** | One hairline from picture to picture, broken into even dashes (`DASH`, `DASH_GAP`) — a measured line off a technical drawing rather than a drawn one. **Straight**, because the geometry of the map is the interesting part and an elbow would only hide it. |
+| **the pulse** | A short run of those dashes lit and travelling the length of the trace (`PULSE_*`), each on its own clock off `wobble`, so fourteen of them never fall into step. |
+| **the tie** | A small open square where a trace meets a picture, with a stub of line into the edge — the registration mark the rest of the site uses, doing the job the knot and the tuft used to. |
+
+Pointing at a picture still isolates it, and still without moving it: the traces tied to
+it are drawn more plainly and their pulses run faster (`HOT_LIFT`, `PULSE_HOT`), and
+everything else steps back (`COLD_INK`).
+
+### Why the page used to lag, and what must not come back
+
+Two things, and the first is the one that mattered:
+
+- **`ctx.filter = "blur(...)"` on the canvas.** The hot picture and its lines were drawn
+  through a canvas blur to soften them. A canvas filter is a full offscreen pass *per
+  call*, and there was one call per picture and one per line, every frame — so pointing
+  at a picture dropped the page to a crawl. **There is no `ctx.filter` in this file any
+  more.** If softness is ever wanted again it has to come out of what is drawn, not out
+  of a filter.
+- **Every speck of every rail was rebuilt every frame.** `routeRun` and `edgeChain`
+  generated their arrays inside the paint loop. A trace is a straight line and a phase
+  now, and drawing one is arithmetic — nothing is allocated per frame.
+
+Measured after: **61fps while hovering a picture**, on the same machine that produced the
+complaint.
+
+### The ground
+
+The sheet was white. It is a dark drawing board now, with the squared plan the site's
+other technical pages use laid faintly over it. It is done by **redefining `--bg`,
+`--bg-2`, `--line` and `--muted` on `.sheet-page` alone**: every rule for this page
+already draws in those tokens, so flipping the four turns the whole page over at once and
+changes nothing anywhere else on the site. The menu overlay sets its own colours outright
+and is not touched by it. The canvas's own `INK` had to be flipped to match, and the
+knock-out behind a number, a caption and a date is `var(--bg)` rather than `#fff` — which
+is what keeps a date readable where it crosses its own line.
+
+The page carries `dark-surface` so the cursor can see it.
+
+### What the tests hold to
+
+The two that pin this down are worth reading before touching it again: **a line between
+two pictures is still a run of ink with page showing between** (the dashes satisfy it,
+where a solid stroke would not, which is one reason the trace is dashed rather than
+drawn), and **a picture carries ink only where the map is tied to it** — the tie mark is
+what that measures now, and it was sized up once because the first version of it sat a
+hair under the threshold.
+
 ## Known issues / TODO
 
 - **Every one of the fourteen frames is still a hatched placeholder.** Two of them

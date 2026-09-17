@@ -663,7 +663,31 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
    landing page scrolls inside its own element and must not get a gutter
    it would never use. */
 html:has(.sheet-page) { scrollbar-gutter: stable; }
-.sheet-page { background: #fff; }
+/* THE SHEET'S GROUND. It was white, and the owner asked for the page to
+   be modelled more interestingly than blocks on white. It is a dark
+   drawing board now, with the squared plan of the rest of the site's
+   technical pages laid faintly over it.
+
+   The tokens are redefined FOR THIS PAGE ONLY rather than a second set
+   of rules being written for everything on it: every rule below already
+   draws in --ink, --line, --bg and --muted, so flipping the four of them
+   here turns the whole page over at once and changes nothing anywhere
+   else. The menu overlay sets its own colours outright, so it is not
+   touched by this. */
+.sheet-page {
+  --bg: #101216;
+  --bg-2: #171a20;
+  --line: rgba(226, 228, 234, 0.24);
+  --ink: #e6e8ee;
+  --muted: #8d939d;
+  background:
+    linear-gradient(to right, rgba(226, 228, 234, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 228, 234, 0.032) 1px, transparent 1px),
+    var(--bg);
+  background-size: 46px 46px, 46px 46px, auto;
+  color: var(--ink);
+}
+.sheet-page .menu-trigger { color: #dce6f7; }
 
 /* There is no title on this page any more. The heading stays in the
    markup for anything reading the page rather than looking at it — a
@@ -857,8 +881,11 @@ body.view-fragrances .sheet-search { display: none; }
   font-size: 10px;
   letter-spacing: 0.06em;
   fill: var(--muted);
+  /* The date knocks its own line out behind it, so it stays readable
+     where it crosses one. The halo is the page's own ground, which is
+     what makes this work on the dark sheet as it did on the white. */
   paint-order: stroke;
-  stroke: #fff;
+  stroke: var(--bg);
   stroke-width: 4px;
   stroke-linejoin: round;
   /* Written on rather than faded up: the date is uncovered from its
@@ -923,12 +950,12 @@ body.view-fragrances .sheet-search { display: none; }
   font-size: 10px;
   letter-spacing: 0.08em;
   color: var(--muted);
-  background: #fff;
+  background: var(--bg);
   padding: 1px 4px;
 }
-/* Captions are printed on white so that a line passing behind one is
-   knocked out by it, the way a name on a map knocks out what it
-   crosses. */
+/* Captions are printed on the page's own ground so that a line passing
+   behind one is knocked out by it, the way a name on a map knocks out
+   what it crosses. */
 .sheet-frame .sheet-caption {
   position: absolute;
   left: 0;
@@ -938,7 +965,7 @@ body.view-fragrances .sheet-search { display: none; }
   font-size: 11px;
   line-height: 1.35;
   color: var(--muted);
-  background: #fff;
+  background: var(--bg);
   padding: 2px 5px 2px 0;
 }
 /* A picture comes up as its line reaches it, over a moment rather than
@@ -2249,34 +2276,52 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
    the script's; neither carries anything to read. */
 .pine-trunk {
   position: fixed;
-  left: clamp(14px, 2.4vw, 34px);
+  left: clamp(14px, 2.4vw, 30px);
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   z-index: 3;
   pointer-events: none;
 }
-.pine-trunk-line {
-  width: 1px;
-  height: min(52vh, 460px);
-  background: var(--line);
+/* THE READING TREE. The page's progress, drawn as the house's own mark:
+   the fir stands empty and is inked in from the ground up as the parts
+   go past. The outline is always there, so the mark reads as a tree
+   before it reads as a measure. pineward.js works the shape out. */
+.pine-tree {
+  width: clamp(26px, 2.6vw, 34px);
+  height: min(46vh, 380px);
+  display: block;
+  overflow: visible;
 }
+.pine-tree-ghost {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+}
+.pine-tree-ink { fill: var(--ink); }
+/* The fill is a clip rectangle that grows upward. `y` and `height` are
+   geometry rather than layout, so this transition is a Chromium nicety
+   and the mark simply steps where it is not honoured. */
+.pine-tree-rect { transition: y 0.55s var(--menu-ease), height 0.55s var(--menu-ease); }
+
+/* The scale beside it: one tick per part, kept fine so that the tree is
+   what is read and the count is there to be looked for. */
 .pine-ticks {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: min(52vh, 460px);
-  margin-left: -5px;
+  height: min(46vh, 380px);
 }
 .pine-tick {
-  width: 5px;
+  width: 3px;
   height: 1px;
   background: var(--line);
   transition: width 0.5s var(--menu-ease), background 0.5s var(--menu-ease);
 }
-.pine-tick.passed { width: 11px; background: var(--ink); }
+.pine-tick.passed { width: 8px; background: var(--ink); }
 .pine-readout {
   position: fixed;
   right: clamp(14px, 2.4vw, 34px);
@@ -3209,40 +3254,45 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
 
 /* ==================================================================
    THE SEARCH PAGE — search.html
-   The one place that looks over the whole site. A drawing office's
-   ground: a squared plan behind, sights at the corners, one long field
-   ruled across the page, and the answers as ruled rows — number, name,
+   The one place that looks over the whole site. Dark ground, one long
+   field ruled across it, and the answers as ruled rows — number, name,
    what kind of thing it is, and the trail that says where it lives.
 
-   Everything here is the stylesheet's: there is no drawing script on
-   this page. search-page.js only reads the site and writes the rows.
+   The ground itself is NOT here: find-ground.js draws the squared plan
+   and the two columns of black specks on a canvas, because both of them
+   answer what is being typed and a stylesheet cannot. What is here is
+   the tone they are drawn against and every word on top of them.
+
+   The page is named beside the Menu (`.page-where`, the same as every
+   other page), not on the page proper — there is no heading.
    ================================================================== */
-.find-page { background: var(--bg); }
-/* THE PLAN. A squared ground and four corner sights, at the faintest
-   weight the paper will hold — it is the page's own drawing board, not
-   a pattern to be looked at. */
-.find-plan {
+.find-page {
+  /* This page's own palette. Scoped to the page so that changing it
+     changes nothing anywhere else on the site. */
+  --find-ground: #191c21;
+  --find-ink: #e6e8ee;
+  --find-muted: #8f949e;
+  --find-rule: rgba(226, 228, 234, 0.16);
+  --find-rule-strong: rgba(226, 228, 234, 0.34);
+  background: var(--find-ground);
+  color: var(--find-ink);
+  min-height: 100vh;
+}
+.find-ground {
   position: fixed;
   inset: 0;
   z-index: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  background-image:
-    linear-gradient(to right, rgba(23, 23, 15, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(23, 23, 15, 0.05) 1px, transparent 1px),
-    linear-gradient(to right, rgba(23, 23, 15, 0.09) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(23, 23, 15, 0.09) 1px, transparent 1px);
-  background-size: 48px 48px, 48px 48px, 288px 288px, 288px 288px;
 }
-.find-plan::before,
-.find-plan::after {
-  content: "";
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  border: 1px solid var(--line);
+/* The chrome has to be light on this ground, the way it is on the other
+   dark pages. */
+.find-page .menu-trigger { color: #dce6f7; }
+.find-page .page-where {
+  color: var(--find-muted);
+  border-left-color: var(--find-rule-strong);
 }
-.find-plan::before { left: 28px; top: 28px; border-right: 0; border-bottom: 0; }
-.find-plan::after { right: 28px; bottom: 28px; border-left: 0; border-top: 0; }
 
 .find {
   position: relative;
@@ -3251,18 +3301,16 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   min-height: 100svh;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 88px 28px 28px;
+  padding: 88px 28px 56px;
   display: flex;
   flex-direction: column;
 }
-.find-head {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 0 26px;
-  font-size: 13px;
+.find-head { font-size: 13px; }
+.find-col {
+  margin: 0;
+  color: var(--find-muted);
+  max-width: 46ch;
 }
-.find-name { margin: 0; color: var(--muted); }
-.find-col { margin: 0; color: var(--ink); max-width: 46ch; }
 
 /* THE FIELD. One line ruled across the page, with a mark at its left
    and a count at its right — the same three-part reading the index
@@ -3273,7 +3321,7 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   gap: 14px;
   margin-top: clamp(40px, 9vh, 90px);
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--find-rule-strong);
 }
 .find-label {
   position: absolute;
@@ -3285,7 +3333,7 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
 .find-mark {
   width: 11px;
   height: 11px;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--find-ink);
   flex: none;
 }
 .find-field {
@@ -3296,19 +3344,24 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   font-family: var(--sans);
   font-size: clamp(22px, 3.4vw, 38px);
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: var(--find-ink);
   min-width: 0;
 }
-.find-field::placeholder { color: var(--line); }
+.find-field::placeholder { color: rgba(226, 228, 234, 0.3); }
 .find-field:focus { outline: none; }
-.find-count { font-family: var(--mono); font-size: 12px; color: var(--muted); flex: none; }
+.find-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--find-muted);
+  flex: none;
+}
 
 .find-reading-note {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--find-muted);
   margin: 12px 0 0;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -3320,7 +3373,7 @@ body.find-reading .find-reading-note { opacity: 1; }
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.1em;
-  color: var(--muted);
+  color: var(--find-muted);
   margin: 0 0 10px;
 }
 
@@ -3330,13 +3383,16 @@ body.find-reading .find-reading-note { opacity: 1; }
    than as a list appearing. */
 .find-row {
   display: grid;
-  grid-template-columns: 54px minmax(0, 1fr) 96px minmax(0, 1.1fr);
+  /* The trail is the longest thing on a row — *Scent descriptions ·
+     Houses · Pineward · Trunk* — so it gets the wider of the two
+     flexible columns, or it is cut off mid-word. */
+  grid-template-columns: 52px minmax(0, 1fr) 92px minmax(0, 1.5fr);
   gap: 0 18px;
   align-items: baseline;
   padding: 9px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--find-rule);
   text-decoration: none;
-  color: var(--ink);
+  color: var(--find-ink);
   animation: find-in 0.45s var(--menu-ease) both;
   animation-delay: calc(var(--n, 0) * 26ms);
 }
@@ -3344,48 +3400,157 @@ body.find-reading .find-reading-note { opacity: 1; }
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
-.find-no { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-.find-what { font-size: 17px; }
+.find-no { font-family: var(--mono); font-size: 12px; color: var(--find-muted); }
+.find-what { font-size: 17px; color: var(--find-ink); }
 .find-kind {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--find-muted);
 }
 .find-where {
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--muted);
+  color: var(--find-muted);
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.find-row:hover { background: var(--bg-2); }
-.find-row:hover .find-what { color: var(--ink); }
-.find-row:hover .find-where { color: var(--ink); }
+.find-row:hover { background: rgba(226, 228, 234, 0.06); }
+.find-row:hover .find-what,
+.find-row:hover .find-where { color: #fff; }
 
 .find-nothing {
   margin: 28px 0 0;
   font-size: 19px;
-  color: var(--ink);
+  color: var(--find-ink);
 }
 .find-nothing span {
   display: block;
   margin-top: 8px;
   font-size: 14px;
-  color: var(--muted);
+  color: var(--find-muted);
   max-width: 48ch;
 }
 
-.find-foot {
-  margin-top: 40px;
-  font-size: 13px;
-  color: var(--ink);
-  line-height: 1.45;
+/* ==================================================================
+   THE FRAGRANCES VIEW — categories/scent-descriptions.html only
+
+   The index is shared with Researches, which keeps the four-column
+   drawing-office layout it was written for. The owner asked for THIS
+   view to be reworked: minimalist, table-led, and of a piece with the
+   rest of the site. So it is laid out again here under the class
+   views.js already puts on the body, and nothing below leaves this
+   view — Researches is untouched by all of it.
+
+   The shape: one centred column. A quiet band naming what you are
+   looking at, the field ruled across under it, and then the table,
+   which is the whole point of the view and is given the room to say so.
+   ================================================================== */
+body.view-fragrances .index-page {
+  /* A column exactly one screen tall, with the table taking whatever is
+     left over. The whole point of the board is that the page around it
+     does not grow as the list does — there are a great many more
+     fragrances to come — so the scroll belongs to the table and the
+     page itself never has one. */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100svh;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 84px 28px 28px;
 }
-.find-foot span { display: block; color: var(--muted); }
+/* The naming band: what this is, on the left, and the one line about it
+   on the right — read in that order and then done with. */
+body.view-fragrances .index-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 26px;
+  margin-bottom: clamp(30px, 6vh, 64px);
+}
+body.view-fragrances .index-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+body.view-fragrances .index-col {
+  font-size: clamp(20px, 2.6vw, 30px);
+  line-height: 1.2;
+  color: var(--ink);
+  flex-basis: 100%;
+  letter-spacing: -0.01em;
+}
+body.view-fragrances .index-say { display: contents; }
+body.view-fragrances .index-say-lede {
+  max-width: 52ch;
+  color: var(--muted);
+  font-size: 13px;
+}
+/* The sorting note belongs on the table, not in the preamble — the
+   headings say what they do by being pressed. */
+body.view-fragrances .index-say-head,
+body.view-fragrances .index-say-meta { display: none; }
+
+/* The plates and their line are the drawing-office furniture of the
+   Researches layout. This view is the table, so they stand down. */
+body.view-fragrances .index-right { display: none; }
+
+/* THE BOARD. Full width, and the table given its head: the box it
+   scrolls inside is the tall part of the page rather than a third of
+   it, because a list of every fragrance on the site is what somebody
+   came to this view for. */
+body.view-fragrances .index-board {
+  margin-top: 0;
+  width: 100%;
+  /* min-height:0 is what lets this shrink inside the flex column; without
+     it the board keeps its content's height and pushes the page taller. */
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+body.view-fragrances .index-search {
+  gap: 14px;
+  padding-bottom: 12px;
+  margin-bottom: 0;
+  border-bottom-color: var(--ink);
+}
+body.view-fragrances .index-search-field {
+  font-family: var(--sans);
+  font-size: clamp(17px, 2vw, 22px);
+}
+body.view-fragrances .index-search-mark { width: 11px; height: 11px; border-color: var(--ink); }
+body.view-fragrances .index-count { font-size: 12px; }
+body.view-fragrances .index-scroll {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+  margin-top: 4px;
+}
+body.view-fragrances .index-table { font-size: 14px; }
+body.view-fragrances .index-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  /* The heading row stays put while the table runs under it, so what a
+     column is never scrolls away. It needs its own ground to do that,
+     or the rows show through. */
+  background: var(--bg);
+}
+body.view-fragrances .index-table td { padding: 11px 0; }
+body.view-fragrances .index-table tr:hover td { color: var(--ink); }
+@media (max-width: 820px) {
+  /* Narrow enough that one screen is not worth holding to: the page may
+     grow and the table comes out in full. */
+  body.view-fragrances .index-page { height: auto; padding: 82px 18px 44px; }
+  body.view-fragrances .index-scroll { flex: none; overflow: visible; }
+}
 
 /* WHAT A SEARCH OPENS. A part reached from a result is opened and
    brought to the middle of the window, and says so for a moment — a
@@ -3399,7 +3564,6 @@ body.find-reading .find-reading-note { opacity: 1; }
 }
 
 @media (max-width: 820px) {
-  .find-head { grid-template-columns: 1fr; gap: 10px; }
   .find-row { grid-template-columns: 40px minmax(0, 1fr); }
   .find-kind, .find-where { grid-column: 2; text-align: left; }
 }

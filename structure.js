@@ -65,8 +65,29 @@
   const SEED = 7;              // the same structure every visit
 
   // --- the swarm: the particles hanging in the air
-  const SWARM = 2200;          // how many are in the volume at once
-  const SPREAD = 26;           // how far out to the sides they are scattered
+  //
+  // THE SWARM IS THE SHAPE AND THE SIZE OF THE WINDOW. It used to be a
+  // fixed two thousand specks scattered through a square cross-section,
+  // which meant the air was thin on a wide screen and crowded on a small
+  // one, and the corners of a wide window stood empty while a square of
+  // sky in the middle was full. Both come off the page's own dimensions
+  // now: how many are drawn from its area, so the air is the same
+  // thickness whatever it is shown on, and the cross-section stretched
+  // to its aspect ratio, so the volume you travel through is the shape
+  // of the hole you are looking through.
+  //
+  // THE POOL IS STILL BUILT WHOLE, AND FIRST, and the window only says
+  // how much of it to draw. That is not an optimisation — `random()` is
+  // the one seeded stream this whole drawing is built from, and the
+  // stations are built after the swarm. Building a different number of
+  // specks moves every station on the page, which is how this was first
+  // written and how it broke the test that says a station stays where it
+  // is. Take specks off the end; never build a different number of them.
+  const SWARM_POOL = 2200;     // how many are built with the drawing
+  const SWARM_PER = 2400;      // how many are drawn, per million pixels of window
+  const SWARM_LEAST = 900;     // never fewer than this
+  const SWARM_MOST = 3400;     // and never more, however large the window
+  const SPREAD = 26;           // how far out they are scattered, before the window's shape
   const DEEP = 74;             // the depth they wrap over
   const NEAR = 0.9;            // nothing nearer than this is drawn
   const FADE_NEAR = 4.5;       // and a speck is already out before it wraps
@@ -189,7 +210,7 @@
   // place is worked out from which lap of the volume it is on, so it
   // wraps both ways for free and nothing has to be moved along.
   const swarm = [];
-  for (let n = 0; n < SWARM; n++) {
+  for (let n = 0; n < SWARM_POOL; n++) {
     swarm.push({
       id: n * 2654435761 % 2147483647,
       z: random() * DEEP,
@@ -200,6 +221,32 @@
       rate: 0.4 + random() * 1.5,
       phase: random() * 6.283,
     });
+  }
+
+  // A LARGE WINDOW MAY ASK FOR MORE SPECKS THAN THE POOL HOLDS, and the
+  // pool can be extended for it — but only from a stream of numbers of
+  // its own, and only after everything else has been built. `random()`
+  // is what the stations are built from; drawing a single value from it
+  // here would move them. See the note on the pool above.
+  let poolSeed = 20260917;
+  const morePool = () => {
+    poolSeed = (poolSeed * 1664525 + 1013904223) % 4294967296;
+    return poolSeed / 4294967296;
+  };
+  function growPool(many) {
+    while (swarm.length < many) {
+      const n = swarm.length;
+      swarm.push({
+        id: n * 2654435761 % 2147483647,
+        z: morePool() * DEEP,
+        size: 0.7 + morePool() * morePool() * 2.4,
+        lit: 0.3 + morePool() * morePool() * 0.8,
+        cool: morePool() < 0.24,
+        glow: morePool() < 0.07,
+        rate: 0.4 + morePool() * 1.5,
+        phase: morePool() * 6.283,
+      });
+    }
   }
 
   /** The figure inside an assembly: every particle joined to the few
@@ -475,6 +522,9 @@
   // TRAVELLING
   // ============================================================
   let width = 0, height = 0, lens = 0, midX = 0, midY = 0;
+  /** The swarm's cross-section, and how many of the pool are in the air.
+      Both are worked out from the window, in `resize`. */
+  let spreadX = SPREAD, spreadY = SPREAD, inAir = SWARM_POOL;
   let travel = 0, wantTravel = 0, drifted = 0, eye = 0;
   let clock = 0, last = 0;
   // How far the drawing has set itself up: 0 nothing, 1 finished. With
@@ -496,6 +546,17 @@
     canvas.style.height = height + "px";
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
     lens = Math.min(width, height) * LENS;
+
+    // HOW MANY, AND WHAT SHAPE — both off the window. The spreads are
+    // the square cross-section stretched to the page's aspect ratio,
+    // keeping its area about the same, so widening the window widens the
+    // volume rather than magnifying what is in it.
+    const shape = width / Math.max(1, height);
+    spreadX = SPREAD * Math.sqrt(Math.max(1, shape));
+    spreadY = SPREAD * Math.sqrt(Math.max(1, 1 / shape));
+    inAir = Math.round(Math.max(SWARM_LEAST, Math.min(SWARM_MOST,
+      SWARM_PER * (width * height) / 1000000)));
+    growPool(inAir);
     if (!grain) grain = paint.createPattern(grainTile(), "repeat");
     vignette = paint.createRadialGradient(
       midX, midY, Math.min(width, height) * 0.32,
@@ -673,7 +734,8 @@
     // The air is the first thing there: it fills over the opening
     // frames and everything else is drawn into it.
     const air = Math.min(1, built / INTRO_AIR);
-    for (let n = 0; n < swarm.length; n++) {
+    const many = Math.min(inAir, swarm.length);
+    for (let n = 0; n < many; n++) {
       const speck = swarm[n];
       const depth = speck.z - eye;
       const lap = Math.floor((depth - NEAR) / DEEP);
@@ -681,9 +743,9 @@
       const k = lens / ahead;
 
       const wob = REDUCE_MOTION ? 0 : WOBBLE;
-      const x = (hash2(speck.id, lap * 2 + 1) - 0.5) * 2 * SPREAD +
+      const x = (hash2(speck.id, lap * 2 + 1) - 0.5) * 2 * spreadX +
         Math.sin(clock * speck.rate + speck.phase) * wob;
-      const y = (hash2(speck.id, lap * 2 + 7) - 0.5) * 2 * SPREAD +
+      const y = (hash2(speck.id, lap * 2 + 7) - 0.5) * 2 * spreadY +
         Math.cos(clock * speck.rate * 0.8 + speck.phase) * wob;
 
       const px = midX + x * k, py = midY + y * k;

@@ -1,11 +1,12 @@
 # The search
 
 Date: 2026-09-17 (`0e3b8b4`, *Give the site a search, and answer the hand on the
-sheet*; migrated from CLAUDE.md on 2026-09-17)
+sheet*; migrated from CLAUDE.md on 2026-09-17). The search **page** was redrawn later
+the same day, on the owner's notes — see "The page's own ground" below.
 
-Files: `search.js` (~270 lines), `search-page.js` (~130), `page-search.js` (~110),
-`search.html`, the per-page searches in `contact-sheet.js` and `index-page.js`,
-`tests/search.spec.js`
+Files touched: `search.js` (~270 lines), `search-page.js` (~130), `page-search.js`
+(~110), `find-ground.js` (~200), `search.html`, the `.find-*` block in `style.css`,
+the per-page searches in `contact-sheet.js` and `index-page.js`, `tests/search.spec.js`
 
 It is the newest thing on the site and the first that is not a drawing.
 
@@ -92,6 +93,41 @@ says where it lives; following an answer opening that fragrance rather than only
 scrolling to it; a search with no answers saying so; a page's own search looking over
 that page only and handing on what it cannot answer; and the menu carrying Search above
 Contact (`SITE_LINKS` in `nav.js`).
+
+## The page's own ground
+
+The search page was near-white, with a squared plan painted on it in CSS and a corner
+sight at each end. The owner's notes on it were specific, and all of them were about
+that ground rather than about searching:
+
+- **The sight in the top left landed on the Menu**, and read as a stray square sitting
+  next to it. It is gone with the rest of the CSS plan.
+- **The page named itself twice.** There was a `Search` heading on the page as well as
+  the Menu beside it. The heading has gone and the page is named the way every other
+  page on this site names itself: a `.page-where` beside the Menu.
+- **The plan was a pattern behind the page**, not part of it. The owner asked for the
+  grid to go, and then asked for its *design* to come back "integrated into the
+  searching" so the page did not look plain white.
+- **The ground is dark now** — the owner offered black or grey and it is a dark grey,
+  `--find-ground`, with the page's palette redefined under `.find-page` so that nothing
+  anywhere else on the site is touched by it.
+- The field says `Search anything :)`, in their own words, and the copyright line at the
+  foot of the page is gone.
+
+**`find-ground.js` draws what replaced it**, on one canvas, and everything it draws
+answers the search:
+
+| | |
+|---|---|
+| **the plan** | A squared ground. The verticals gather towards the middle of the field and the horizontals light along the field's own line as you type; each answer rules its own faint line across the plan as it arrives. The page is ruled **by** the search rather than behind it. |
+| **the specks** | A column of black flecks down each margin, drifting slowly, leaning in towards the field while something is being typed and settling back when it stops. Black on dark grey — the owner asked for black particles, and a grey ground is what lets black read as anything at all. |
+
+**It reads the page and nothing else**: the field's value, and the rows in
+`.find-results`, both off the DOM. `search-page.js` does not know it exists and it does
+not know what a search found. Without it the page is the same page — the stylesheet
+gives it its ground and every word is still there.
+
+`prefers-reduced-motion` is honoured: the plan and the specks are drawn once, still.
 
 ## Known issues / TODO
 

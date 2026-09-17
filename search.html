@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Search — Your Name</title>
+<title>Search — The Taste of Aldehydes</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,18 +24,22 @@
   with the question in the address (?q=...), which is why arriving here
   with nothing found is a state this page has rather than an error.
 
-  The ground is a drawing office's: a squared plan, sights at the
-  corners, hairlines and numbers. It is all in the stylesheet — there
-  is no drawing script on this page.
+  THE GROUND is dark, and it is drawn rather than styled: find-ground.js
+  puts a squared plan behind the page and a column of black specks down
+  each margin, and both of them answer the search — the plan lights
+  along the field as you type and rules itself across each answer as it
+  arrives. The page is named beside the Menu, the way every other page
+  on the site names itself; there is no title on the page proper.
 -->
-<body class="find-page">
+<body class="find-page dark-surface">
 
-<div class="find-plan" aria-hidden="true"></div>
+<canvas class="find-ground" aria-hidden="true"></canvas>
+
+<p class="page-where">Search</p>
 
 <div class="find">
 
   <header class="find-head">
-    <p class="find-name">Search</p>
     <p class="find-col">Everything on this site — houses, fragrances, theories, researches, favourites.</p>
   </header>
 
@@ -43,7 +47,7 @@
     <span class="find-mark" aria-hidden="true"></span>
     <label class="find-label" for="find-field">Search</label>
     <input class="find-field" id="find-field" type="search" name="q" autocomplete="off"
-           placeholder="Type a name — murkwood, amber zero, galbanum" aria-label="Search the site">
+           placeholder="Search anything :)" aria-label="Search the site">
     <span class="find-count" aria-hidden="true">000</span>
   </form>
 
@@ -58,16 +62,12 @@
     </p>
   </section>
 
-  <footer class="find-foot">
-    2026 © Your Name
-    <span>All rights reserved.</span>
-  </footer>
-
 </div>
 
 <script>window.SITE_ROOT = "";</script>
 <script src="nav.js"></script>
 <script src="search.js"></script>
 <script src="search-page.js"></script>
+<script src="find-ground.js"></script>
 </body>
 </html>
