@@ -76,6 +76,9 @@
   const SIGIL = "../images/adar-sigil.jpg";
   const LIGHT_IN = 1.25;         // how far past the void's rim the hand lights it
   const LIGHT_EASE = 3.4;        // and how quickly it comes up and goes again
+  const SIGIL_FILL = 0.56;       // how much of the hole the mark stands in
+  const SIGIL_FLOOR = 0.14;      // below this the picture's ground is nothing
+  const SIGIL_FULL = 0.52;       // and above this the mark is fully itself
 
   // --- the log down the left margin
   const LOG_AT = 0.12;           // where it stands, as a share of the width
@@ -185,15 +188,97 @@
   // THE SIGIL. The house's own mark, which the void shows only while
   // the hand is on it — a spotlight rather than a picture hung on the
   // page. It is drawn INSIDE the hole and nowhere else, so it reads as
-  // something the void has rather than something laid over it, and the
-  // picture's own black ground melts into the hole's.
+  // something the void has rather than something laid over it.
+  //
+  // THE MARK IS LIFTED OFF ITS OWN GROUND rather than drawn as the
+  // picture it arrived as. The file is a white mark on black, and the
+  // hole it goes in is the page's own near-black — which is NOT the
+  // same black, and is not a compressed one either, so the picture
+  // laid in whole reads as a slightly different, slightly noisy
+  // rectangle standing in the middle of the void. So it is stamped
+  // once into a canvas of its own with its brightness as its ALPHA and
+  // the page's own ink as its colour: what is drawn after that is the
+  // lettering and nothing else, in the same white as the rest of the
+  // page, with the hole showing through everywhere round it. (The same
+  // trick the halo uses — stamp it once, draw it many times.)
+  //
+  // Reading a picture's pixels back needs it to be from this site,
+  // which it is; if a browser refuses anyway the picture is drawn
+  // plainly instead, which is the old behaviour rather than a blank.
   //
   // If the file is not there the void simply stays empty: nothing on
   // this page waits for it.
   const sigil = new Image();
   let sigilReady = false;
-  sigil.addEventListener("load", () => { sigilReady = true; });
+  let mark = null;               // the lettering, lifted off its ground
+  sigil.addEventListener("load", () => {
+    sigilReady = true;
+    mark = liftMark(sigil);
+  });
   sigil.src = SIGIL;
+
+  /**
+   * The picture's brightness becomes its alpha and its colour becomes
+   * the page's ink, so a white-on-black mark comes out as the mark
+   * alone, on nothing — and then it is CUT DOWN TO THE MARK.
+   *
+   * Two things here are not fussiness. The ground is taken to nothing
+   * BELOW A FLOOR (`SIGIL_FLOOR`) rather than used as it is: the file's
+   * black is a compressed black, a few parts in a hundred rather than
+   * none, and a few parts in a hundred of near-white over a near-black
+   * hole is a visible rectangle standing in the void — which is exactly
+   * what it came out as. And the mark is TRIMMED to its own ink,
+   * because most of this picture is ground: fitted whole, the lettering
+   * came out a third the size the hole could hold with all that empty
+   * black round it.
+   */
+  function liftMark(picture) {
+    const wide = picture.naturalWidth || 0;
+    const tall = picture.naturalHeight || 0;
+    if (!wide || !tall) return null;
+    try {
+      const whole = document.createElement("canvas");
+      whole.width = wide;
+      whole.height = tall;
+      const on = whole.getContext("2d");
+      on.drawImage(picture, 0, 0);
+      const pixels = on.getImageData(0, 0, wide, tall);
+      const d = pixels.data;
+      const ink = INK.split(",").map(Number);
+      let x0 = wide, y0 = tall, x1 = -1, y1 = -1;
+      for (let i = 0; i < d.length; i += 4) {
+        // Rough brightness is plenty here: the mark is white and the
+        // ground is black, and what is between them is the edge of a
+        // stroke, which is exactly where a soft alpha belongs.
+        const bright = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11) / 255;
+        const seen = Math.max(0, Math.min(1,
+          (bright - SIGIL_FLOOR) / (SIGIL_FULL - SIGIL_FLOOR)));
+        d[i] = ink[0];
+        d[i + 1] = ink[1];
+        d[i + 2] = ink[2];
+        d[i + 3] = Math.round(255 * seen);
+        if (seen > 0) {
+          const at = i / 4;
+          const x = at % wide;
+          const y = (at - x) / wide;
+          if (x < x0) x0 = x;
+          if (x > x1) x1 = x;
+          if (y < y0) y0 = y;
+          if (y > y1) y1 = y;
+        }
+      }
+      on.putImageData(pixels, 0, 0);
+      if (x1 < x0 || y1 < y0) return null;       // nothing in it
+      const cut = document.createElement("canvas");
+      cut.width = x1 - x0 + 1;
+      cut.height = y1 - y0 + 1;
+      cut.getContext("2d").drawImage(whole, x0, y0, cut.width, cut.height,
+        0, 0, cut.width, cut.height);
+      return cut;
+    } catch (whatever) {
+      return null;
+    }
+  }
 
   /** Where the hand is, and how far the sigil has come up for it. */
   let handX = -9999, handY = -9999;
@@ -369,12 +454,17 @@
       ink.arc(cx, cy, r, 0, Math.PI * 2);
       ink.clip();
       ink.globalAlpha = spot;
-      // Filled to the circle, keeping the picture's own proportions:
-      // a mark squashed to fit is a different mark.
-      const wide = sigil.naturalWidth || 1;
-      const tall = sigil.naturalHeight || 1;
-      const scale = Math.max((r * 2) / wide, (r * 2) / tall);
-      ink.drawImage(sigil, cx - (wide * scale) / 2, cy - (tall * scale) / 2,
+      // STOOD INSIDE the hole rather than filled to it, and keeping
+      // the picture's own proportions: this mark is twice as wide as
+      // it is tall, so filled to the circle its two ends would be
+      // cropped away by the very rim it is meant to stand inside, and
+      // squashed to fit it would be a different mark. SIGIL_FILL is
+      // the air left round it.
+      const on = mark || sigil;
+      const wide = (mark ? mark.width : sigil.naturalWidth) || 1;
+      const tall = (mark ? mark.height : sigil.naturalHeight) || 1;
+      const scale = Math.min((r * 2) / wide, (r * 2) / tall) * SIGIL_FILL;
+      ink.drawImage(on, cx - (wide * scale) / 2, cy - (tall * scale) / 2,
         wide * scale, tall * scale);
       ink.restore();
     }

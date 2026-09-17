@@ -17,15 +17,15 @@ test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
 });
 
-// The photographs are the owner's to add: the page names the file it
-// wants for each fragrance and works without it, taking the <img> off
-// the page and leaving the hatched placeholder. So a picture that is
-// not there yet is an expected 404 here rather than a fault, and
-// `tests/adar.spec.js` says so in one place.
-const MISSING_PICTURES = ["404 (File not found)"];
-
 test("the house is eleven fragrances in four groups", async ({ page }) => {
-  const errors = collectPageErrors(page, MISSING_PICTURES);
+  // No allowance for a missing picture here any more: all eleven
+  // photographs are in the repository, so a 404 from this page is a
+  // renamed or lost file rather than work still to come. The page's
+  // own fallback — take the <img> off, leave the hatched placeholder —
+  // is still there and still right; it just has nothing to do, which
+  // is exactly what "every fragrance carries its photograph" below
+  // watches for.
+  const errors = collectPageErrors(page);
   await page.goto(ADAR);
 
   const parts = page.locator(".adar-part");
@@ -111,6 +111,84 @@ test("the void is a hole, with the drawing standing round it", async ({ page }) 
   });
   expect(read.inside, "nothing is drawn inside the void").toBe(0);
   expect(read.around, "and the drawing stands round it").toBeGreaterThan(0);
+});
+
+test("the void shows the house's mark under the hand, and nothing round it", async ({ page }) => {
+  // A REGRESSION TEST, for two faults that came with the real picture.
+  // The file is a white mark on a black field, and drawn as it stands
+  // its field came out as a lighter rectangle sitting in the hole —
+  // a compressed black is not the page's black. And the field is most
+  // of the file, so fitted whole the lettering came out a third the
+  // size the hole could hold. adar.js lifts the mark off its field and
+  // cuts it down to its own ink, so what stands in the hole is the
+  // lettering alone.
+  await page.goto(ADAR);
+  await page.waitForTimeout(1200);
+
+  const where = await page.evaluate(() => {
+    const canvas = document.querySelector(".adar-void");
+    const wide = parseFloat(canvas.style.width);
+    const tall = parseFloat(canvas.style.height);
+    const small = Math.min(wide, tall);
+    return { cx: wide * 0.8, cy: tall * 0.46, r: small * 0.13 };
+  });
+
+  await page.mouse.move(where.cx, where.cy);
+  await page.waitForTimeout(900);
+
+  const read = await page.evaluate(({ cx, cy, r }) => {
+    const canvas = document.querySelector(".adar-void");
+    const paint = canvas.getContext("2d");
+    const ratio = canvas.width / parseFloat(canvas.style.width);
+    const ink = (x, y, box) => {
+      const shot = paint.getImageData(
+        Math.round((x - box / 2) * ratio), Math.round((y - box / 2) * ratio),
+        Math.round(box * ratio), Math.round(box * ratio)).data;
+      let sum = 0;
+      for (let i = 3; i < shot.length; i += 4) sum += shot[i];
+      return sum;
+    };
+    return {
+      middle: ink(cx, cy, r * 0.3),
+      // Inside the hole, but well to the side of the standing mark —
+      // which is where the field's rectangle used to show.
+      beside: ink(cx + r * 0.6, cy, r * 0.2),
+    };
+  }, where);
+
+  expect(read.middle, "the mark stands in the hole").toBeGreaterThan(0);
+  expect(read.beside, "and nothing of its own field comes with it").toBe(0);
+});
+
+test("every fragrance carries its photograph", async ({ page }) => {
+  // All eleven pictures are in the repository now, so a renamed or
+  // lost file is a fault rather than work still to come — and the page
+  // hides exactly that by taking a missing picture off itself.
+  const errors = collectPageErrors(page);
+  await page.goto(ADAR);
+  await page.waitForTimeout(1200);
+
+  const parts = await page.evaluate(() => {
+    const out = [];
+    document.querySelectorAll(".adar-part").forEach((part) => {
+      const pictures = [...part.querySelectorAll("img")];
+      out.push({
+        name: part.querySelector(".adar-title").textContent.trim(),
+        asked: pictures.length,
+        got: pictures.filter((one) => one.naturalWidth > 0).length,
+      });
+    });
+    return out;
+  });
+
+  expect(parts).toHaveLength(11);
+  for (const part of parts) {
+    expect(part.asked, part.name + " asks for a picture").toBeGreaterThan(0);
+    expect(part.got, part.name + " has every picture it asks for").toBe(part.asked);
+  }
+  // ADHD is the one with three.
+  expect(parts.find((one) => one.name === "ADHD").asked).toBe(4);
+  expect(errors).toEqual([]);
 });
 
 test("nothing on the page is drawn in the site's accent colour", async ({ page }) => {

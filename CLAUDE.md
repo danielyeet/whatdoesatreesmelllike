@@ -107,7 +107,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 153 passed, 0 failed, and takes seven to nine minutes.** If you get a
+**A clean run is 155 passed, 0 failed, and takes seven to nine minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -168,7 +168,9 @@ opening a page that is really there;
 and ADAR — the house being eleven fragrances in four groups numbered straight through, a
 fragrance being a title until it is opened and the owner's own writing once it is, the
 sounding counting them off as they are passed, the void being a hole with nothing at all
-drawn inside it, no part of the page being drawn in the site's accent colour, it standing
+drawn inside it, the house's mark standing in that hole under the hand with nothing of its
+own ground coming with it, every one of the eleven carrying the photographs it asks for,
+no part of the page being drawn in the site's accent colour, it standing
 still under `prefers-reduced-motion`, all of its writing being there without its script,
 and the sheet's second picture pointing at it;
 and the search — a fragrance being found by a misspelt name with the trail that says
@@ -1307,6 +1309,19 @@ the site's accent too.
   something already down there rather than a picture hung on the page. It is brightest
   in the middle of the hole and eases off towards the edge, and if the file is not there
   the void simply stays empty.
+  **The mark is lifted off its own ground rather than drawn as the picture it is**
+  (`liftMark`). The file is a white mark on a black field, and two things went wrong with
+  drawing it as it stands. Its black is a *compressed* black — a few parts in a hundred
+  rather than none — and a few parts in a hundred of near-white over a near-black hole is
+  a visible rectangle standing in the middle of the void, which is what it came out as.
+  And most of that file is field: fitted whole, the lettering came out a third the size
+  the hole could hold. So it is stamped once into a canvas of its own with its brightness
+  as its ALPHA (below `SIGIL_FLOOR` it is nothing at all) and the page's own ink as its
+  colour, and then **cut down to its own ink** — after which what is drawn is the
+  lettering and nothing else, with the hole showing through round it. Stamped once and
+  drawn many times, the same way the halo is. It is also **stood inside** the hole
+  (`SIGIL_FILL`) rather than filled to it: filled, a mark wider or taller than it is
+  square has its ends cropped away by the very rim it is meant to stand in.
 - **The left margin carries a LOG and DUST.** The right of the window has the void and
   the left had nothing, which the owner asked to have filled, subtly: a hairline ruled
   down it, ticked like a depth scale and travelling with the page at its own rate
@@ -1342,13 +1357,17 @@ the site's accent too.
   than `NAMES_IT` of the window — the reading names it as well as its group: "Aegis
   Trilogy, Amber Zero". The owner asked for both. Pineward's reading works the same way,
   and is worth keeping in step.
-- **Every fragrance names the photograph it wants** — `amber-zero.jpg` and so on, listed
-  in `images/README.txt` — and shows it the moment that file is in `images/`. Until then
-  the page takes the `<img>` off itself and the hatched placeholder stands, so a house
-  whose pictures are still coming looks unfinished rather than broken. The small picture
-  in the list is cropped to a SQUARE round its subject (`--focus` says which part to
-  keep); opened, a picture keeps its own shape. ADHD carries three, and the second and
-  third stand inside the body, which is what makes them appear only once it is open.
+- **Every fragrance names the photograph it wants** — `amber-zero.png` and so on, listed
+  in `images/README.txt` — and shows it the moment that file is in `images/`. **All
+  eleven are there now**, and the house's mark with them; the page is the one place on
+  the site that is not waiting for a picture. The fallback stays wired up: a picture that
+  is not there is taken off the page and the hatched placeholder stands in its place, so
+  a house whose photographs are still coming looks unfinished rather than broken. The
+  small picture in the list is cropped to a SQUARE round its subject (`--focus` says
+  which part to keep, and each of the eleven is set on its own bottle rather than on one
+  shared number); opened, a picture keeps its own shape. ADHD carries three, and the
+  second and third stand inside the body, which is what makes them appear only once it
+  is open.
 - A **stage** — top, mid, base, a sidenote — is a `<p class="adar-stage">` label above
   the paragraphs it belongs to, because that is how the owner writes.
 - **ADAR Effect™ is the owner's own coinage** for this house's turpentine quality, and
@@ -1750,14 +1769,15 @@ questioned.
   every page including the chamber. The owner asked for "the orange accents" gone from
   the favorites page and the chamber's own block was cleared; the shared chrome was left
   because changing it changes the chrome on every page of the site. They know this.
-- **The photographs.** ADAR names the file it wants for each of its eleven fragrances
-  (`images/README.txt` lists them) and shows it the moment it is there; the owner sent
-  the pictures as attachments, which arrive as pictures rather than as files, so the
-  names are what was agreed and the files are theirs to drop in. Every other plate on the
-  site is still a hatched placeholder.
+- **The photographs. ADAR's have arrived** — the owner put them in `images/` themselves,
+  under their own names, and they were renamed to the ones the page asks for
+  (`images/README.txt` lists them). All eleven fragrances and the house's mark are
+  printed now. **Every other plate on the site is still a hatched placeholder**, the
+  contact sheet's thirteen houses included, with their `<img>` tags commented out in the
+  markup waiting for a file and a name.
 - **The placeholders in the new pages are marked as placeholders.** ADAR's introduction,
-  the three theory pages, the standfirsts and every plate on the site are waiting for
-  the owner. The dates in the Fragrances table are rolled from a seed so the
+  the three theory pages, the standfirsts and every plate on the site but ADAR's are
+  waiting for the owner. The dates in the Fragrances table are rolled from a seed so the
   sorting has something to work on; they say nothing. The one thing that was not
   guessed at is a fragrance's own writing, which is theirs throughout.
 
