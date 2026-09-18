@@ -430,3 +430,9 @@ list coming back when the script is blocked.
 - `images/Favorites/` is empty but for its README.
 - This page has had more rounds than anything else here and should be treated as a live
   subject.
+- **`pointing at a row swells the orbit level with it` is flaky under a loaded full
+  run**, and passes on its own every time. It measures how far the orbit has swelled and
+  then relaxed, both eased over time, and this is the heaviest page in the site to draw —
+  under load the relaxation has not finished by the time it is measured. Nothing about
+  the page is wrong when it fails. Re-run `tests/chamber.spec.js` alone before believing
+  it.

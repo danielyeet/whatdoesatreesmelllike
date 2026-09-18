@@ -80,23 +80,54 @@
   opened.add(showing);
   document.body.classList.toggle("view-fragrances", showing === "fragrances");
 
-  /** THE SWIPE. Both views are stood on top of one another for the
-      length of it, so the box has to be held at the height it already
-      has — let go of, it would collapse to nothing the moment they are
-      taken out of the flow, and the page would jump under the pointer.
+  /** THE SWIPE. Both views travel across the window together, and the
+      whole of the difficulty is that they must travel in the WINDOW's
+      coordinates rather than the page's.
 
-      Which way round the two are placed is the whole of the effect: the
-      one being left goes off towards `-way`, and the one arriving is put
-      that far out on the other side and brought in to nothing. */
+      WHY. The two views are wildly different heights — the sheet is
+      several screens of scattered pictures, the index is exactly one —
+      and the buttons that switch them are fixed, so a switch can happen
+      from anywhere down the page. Taken out of the flow and left at the
+      top of the box, as the first version did, the arriving view was
+      anchored to the top of the DOCUMENT: switch while scrolled 700px
+      down and it came in 700px above the window, so what slid in was its
+      bottom edge and empty page. Then the document changed height as the
+      views swapped, the browser clamped the scroll, and the page lurched.
+      That was the owner's "things appear on the upper side of the page
+      or blink".
+
+      SO: the one being left is pinned exactly where it appears at this
+      moment, so it does not move a pixel vertically as it goes; the one
+      arriving is put at its own top, which is where the page will be
+      scrolled to when this is over; and the box is held at its height
+      throughout so the document never changes size mid-travel. The
+      scroll is set to the top at the very end, while both are still
+      pinned to the window and nothing on screen can move. */
   function swipe(going, coming, name, way) {
-    const held = box.getBoundingClientRect().height;
-    box.style.height = held + "px";
+    const y = window.scrollY || window.pageYOffset || 0;
+    const at = box.getBoundingClientRect();
+    const boxTop = Math.round(at.top + y);
+
+    box.style.height = Math.round(at.height) + "px";
     box.classList.add("swiping");
+    // The views are pinned to the window, so the box's own overflow
+    // cannot clip them: one of them a full width off to the side would
+    // be a horizontal scrollbar for half a second. Clipped at the root
+    // instead, and only while this is running.
+    document.documentElement.classList.add("view-swiping");
 
     document.body.classList.toggle("view-fragrances", name === "fragrances");
-    coming.hidden = false;
+
+    // `sliding` goes on BEFORE the view is shown, and that order matters:
+    // index-page.js watches its own view for being un-hidden so it can
+    // play the arrival it has when you switch to it normally, and reads
+    // this class to know not to. The swipe is the arrival.
     going.classList.add("sliding");
     coming.classList.add("sliding");
+    coming.hidden = false;
+
+    going.style.top = (boxTop - y) + "px";
+    coming.style.top = boxTop + "px";
     coming.style.transform = "translateX(" + (way * 100) + "%)";
 
     // A frame for the browser to take both of those as where they are
@@ -107,18 +138,23 @@
         going.classList.add("travelling");
         coming.classList.add("travelling");
         going.style.transform = "translateX(" + (-way * 100) + "%)";
-        going.style.opacity = "0";
         coming.style.transform = "translateX(0)";
 
         setTimeout(() => {
+          // The page goes to the top before anything is put back, so the
+          // view that has arrived is in the same place afterwards as it
+          // was during the travel. Both are still pinned to the window
+          // here, so nothing on screen moves when the scroll changes.
+          window.scrollTo(0, 0);
           [going, coming].forEach((view) => {
             view.classList.remove("sliding", "travelling");
             view.style.transform = "";
-            view.style.opacity = "";
+            view.style.top = "";
           });
           going.hidden = true;
           box.classList.remove("swiping");
           box.style.height = "";
+          document.documentElement.classList.remove("view-swiping");
           moving = false;
         }, SWIPE_MS);
       });

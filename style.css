@@ -784,13 +784,21 @@ body.sheet-named .sheet-filters { opacity: 1; transition: opacity 1.1s var(--men
    in starts a full width off to one side, and without it that would be
    a horizontal scrollbar for half a second. */
 .views { position: relative; }
-.views.swiping { overflow: hidden; }
+/* PINNED TO THE WINDOW, not to the page. views.js sets each one's `top`
+   from where it actually appears at the moment the swipe starts — see
+   the long note there for why the page's own coordinates will not do.
+   `z-index: 1` keeps them under the chrome, which sits at 30. */
 .views.swiping .view.sliding {
-  position: absolute;
+  position: fixed;
   left: 0;
-  top: 0;
-  width: 100%;
+  right: 0;
+  z-index: 1;
 }
+/* Fixed children escape the box's overflow, so the clipping has to
+   happen at the root. `clip` rather than `hidden` on purpose: `hidden`
+   would make the root a scroll container for the half-second this is on,
+   and the scroll is being set at the end of it. */
+html.view-swiping { overflow-x: clip; }
 /* The travel is put on only once both are in their starting places, so
    that neither of them transitions into position from wherever it
    happened to be. */

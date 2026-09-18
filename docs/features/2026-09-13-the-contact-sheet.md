@@ -420,6 +420,38 @@ The originals are kept exactly as they arrived and nothing points at them; the p
 says so, and says to do the same for the next one. **If that test ever starts failing
 after a picture is added, this is the first thing to check.**
 
+## The reel, and the picture that was shown three times
+
+The owner, after the photographs went in: *"when I restart the page, the Pineward
+fragrance flashes twice."* They were right, and it had been true since the flick was
+written — it only became visible when a frame stopped being a hatch.
+
+The flick used to walk the pictures by index, wrapping with a modulo, starting at
+whichever index made the arithmetic come out. So the first picture was shown **three
+times** on every load, which a frame-by-frame recording of the opening makes plain:
+
+| | |
+|---|---|
+| ~850–1100ms | held at the start, on purpose (`FLIP_HOLD_MS`) |
+| ~1383–1449ms | **66 milliseconds in the middle of the run** — the bug |
+| ~3980ms on | landed on |
+
+With a hatch in all fourteen frames nobody could tell one from another. With a photograph
+in the first one, that 66ms appearance reads as the page flashing it.
+
+**The reel is now worked out in full before the first cut**: every picture *but* the one
+it will land on, cycling, and then that one last. Two things fall out of it, and both
+are the point — the landing picture is seen at the start and at the end and never in
+between, and because the reel *ends* on it, `settle` showing it is not a cut, so there is
+no last blink either. That second property used to depend on modular arithmetic that did
+not quite hold: the run actually ended on the last picture and settling cut to the first.
+
+The opening hold stays, and should. It is 250ms of the picture it will land on before
+anything moves, and it is **the owner's own request** — "a quarter of a second of the
+first picture before anything moves reads as a projector being started rather than as a
+page loading". If they ever ask for the reel to start cold, that is the constant to
+change, and `tests/contact-sheet.spec.js` guards it.
+
 ## Known issues / TODO
 
 - **Frames 01 and 02 carry photographs; the other twelve are still hatched

@@ -963,31 +963,48 @@
   }
 
   function flick() {
-    // How many cuts there will be, worked out before any of them run,
-    // so the flick can be STARTED at whichever picture makes it END on
-    // the first one. Cutting to that picture after the flicking has
-    // finished is one blink too many: it has to simply stop.
+    // How many cuts there will be, worked out before any of them run.
     let steps = 0;
     for (let held = FLIP_FIRST_MS; held <= FLIP_LAST_MS; held *= FLIP_SLOW) steps++;
-    let index = ((-steps % frames.length) + frames.length) % frames.length;
+
+    // THE REEL: the order the pictures go past in, worked out in full
+    // before the first cut. It is every picture BUT the one it will land
+    // on, cycling, and then that one last.
+    //
+    // THE LANDING PICTURE MUST NOT COME ROUND IN THE MIDDLE OF THE RUN.
+    // The reel used to be the whole list cycling by index, so the first
+    // picture was shown three times: held at the start, flicked past for
+    // about sixty milliseconds somewhere in the middle, and landed on at
+    // the end. With a hatch in every frame nobody could tell. With a
+    // photograph in the first one the owner saw the page flash it twice
+    // on every load, which is exactly what it was doing.
+    //
+    // Ending the reel ON the landing picture is the other half of it:
+    // `settle` shows that same picture, so settling is not a cut and
+    // there is no last blink.
+    const reel = [];
+    for (let n = 0; n < Math.max(1, steps - 1); n++) {
+      // frames.length - 1 pictures to choose from, all but the first.
+      reel.push(frames.length > 1 ? 1 + (n % (frames.length - 1)) : 0);
+    }
+    reel.push(0);
+
+    let at = 0;
     let hold = FLIP_FIRST_MS;
     // The picture it will land on, held for a beat — see FLIP_HOLD_MS.
     show(0);
 
     const step = () => {
-      index = (index + 1) % frames.length;
-      show(index);
+      show(reel[at]);
+      at++;
       hold *= FLIP_SLOW;
-      if (hold > FLIP_LAST_MS) {
+      if (at >= reel.length) {
         setTimeout(settle, Math.round(hold));
         return;
       }
       setTimeout(step, Math.round(hold));
     };
-    setTimeout(() => {
-      show(index);
-      setTimeout(step, Math.round(hold));
-    }, FLIP_HOLD_MS);
+    setTimeout(step, FLIP_HOLD_MS);
   }
 
   // ============================================================

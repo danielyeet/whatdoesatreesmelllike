@@ -169,6 +169,41 @@ the second swipes with both on the page *but never overlapping* — measured as 
 between their two boxes, which is zero all the way across. That is a stronger statement of
 the original rule, not a weaker one.
 
+## The swipe travels in the window, not in the page
+
+The first swipe worked from the top of the page and nowhere else. The owner: *"the swipe
+transition has some errors. Some things appear on the upper side of the page or blink."*
+
+Three faults, and the first is the one that matters:
+
+- **The arriving view was anchored to the document.** Both views were taken out of the
+  flow and left at `top: 0` of the box, which is the top of the *page*. The two views are
+  wildly different heights — the sheet is several screens, the index is exactly one — and
+  the buttons that switch them are fixed, so a switch can happen from anywhere down the
+  page. Switch while scrolled 700px down and the index came in 700px **above the window**:
+  what slid in was its bottom edge and empty page above it.
+- **The document changed height as they swapped** (1893px → 900px in the case measured),
+  so the browser clamped the scroll and the page lurched at the end.
+- **The index played its own arrival on top of the slide.** `index-page.js` watches its
+  view for being un-hidden and animates its parts in; during a swipe that ran *while* the
+  view was travelling — two movements at once.
+
+**The swipe happens in the window's coordinates now.** The one being left is pinned
+exactly where it appears at that moment, so it does not move a pixel vertically as it
+goes; the one arriving is pinned at its own top, which is where the page will be scrolled
+to when it is over; the box is held at its height throughout so the document never
+changes size mid-travel; and the scroll is set to the top at the very end, **while both
+are still pinned and nothing on screen can move**. The order of those last two is the
+whole trick: scroll first, then put them back.
+
+Two smaller things that go with it. The pinned views escape the box's own `overflow`, so
+the clipping is done at the root (`html.view-swiping`) and with `clip` rather than
+`hidden` — `hidden` would make the root a scroll container for the half-second the swipe
+is on, and the scroll is being set inside that window. And `views.js` puts `sliding` on a
+view **before** un-hiding it, which is what lets `index-page.js` tell a swipe from an
+ordinary switch and hold its arrival back. That class is the contract between the two
+files; nothing else passes between them.
+
 ## Known issues / TODO
 
 - **The dates in the Fragrances table are rolled from a seed** so that sorting has

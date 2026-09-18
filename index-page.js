@@ -166,6 +166,12 @@
     const page = board.closest(".index-page");
     if (view && page) {
       const arrive = () => {
+        // NOT WHEN IT IS BEING SWIPED IN. views.js puts `sliding` on the
+        // view before it un-hides it, and a view arriving that way is
+        // already being animated across the window — playing this on top
+        // of it is two movements at once, which is what the owner saw as
+        // the swipe blinking. The swipe is the arrival.
+        if (view.classList.contains("sliding")) return;
         page.classList.remove("index-arriving");
         // The frame after, so the animation starts from nothing rather
         // than from wherever the last one left it.

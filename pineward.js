@@ -640,10 +640,10 @@
       moving = false;
     };
 
-    summary.addEventListener("click", (event) => {
-      if (REDUCE_MOTION) return;
-      event.preventDefault();
-      if (moving) return;
+    /** Whether a click arrived while the last one was still running. */
+    let pending = false;
+    /** Everything a click does, so that a remembered one can do it too. */
+    const act = () => {
       moving = true;
 
       if (!part.open) {
@@ -671,7 +671,7 @@
           body.style.opacity = "1";
           body.style.transform = "none";
         });
-        window.setTimeout(() => { settle(); reckon(); }, OPEN_MS + 60);
+        window.setTimeout(() => { settle(); reckon(); drain(); }, OPEN_MS + 60);
         return;
       }
 
@@ -698,7 +698,28 @@
         settle();
         say();
         reckon();
+        drain();
       }, SHUT_MS + 40);
+    };
+
+    /** Do the click that was remembered, if there was one. */
+    const drain = () => {
+      if (!pending) return;
+      pending = false;
+      act();
+    };
+
+    summary.addEventListener("click", (event) => {
+      if (REDUCE_MOTION) return;
+      event.preventDefault();
+      // A CLICK THAT LANDS WHILE THE BOX IS STILL MOVING IS REMEMBERED,
+      // NOT DROPPED. This used to return and do nothing at all, so
+      // opening a part and changing your mind inside the next
+      // three-quarters of a second swallowed the second click and you
+      // had to click again. Only ONE is kept, so hammering the summary
+      // does at most one more thing rather than queueing up a pile.
+      if (moving) { pending = true; return; }
+      act();
     });
   });
 
