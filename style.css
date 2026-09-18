@@ -3570,11 +3570,16 @@ body.find-reading .find-reading-note { opacity: 1; }
   /* THE WAVE CUTS THE PAGE OUT OF THE BLACK. It is not faded up
      underneath the explosion — it is opened from the point the
      particles met, which is what makes the shockwave read as having
-     made the page rather than as having been drawn over it. */
-  clip-path: circle(0% at 50% 50%);
-  transition: clip-path 1.1s cubic-bezier(0.12, 0.66, 0.24, 1);
+     made the page rather than as having been drawn over it.
+
+     THE CUT IS WRITTEN FROM `chamber.js`, frame by frame, and is an
+     ELLIPSE LYING IN THE RING'S OWN PLANE rather than a circle square
+     to the screen. It is not set here because it cannot be: a CSS
+     `ellipse()` cannot be turned, and this one is turned by
+     definition — it is whatever angle the orbit is standing at. So
+     what the page is cut with is a polygon, written out each frame. */
+  clip-path: none;
 }
-.chapter-page.here { clip-path: circle(150% at 50% 50%); }
 .chapter-page[hidden] { display: none; }
 
 .chapter-sheet {
@@ -3664,12 +3669,19 @@ body.find-reading .find-reading-note { opacity: 1; }
   pointer-events: none;
   overflow: hidden;
 }
+/* AND ALL OF IT LIES IN THE RING'S PLANE. `--wave-x` and `--wave-y` are
+   where the middle of the orbit lands on the window, `--wave-turn` the
+   angle its long axis is standing at, and `--wave-flat` how flat it is
+   drawn — all four measured off the orbit itself and written here by
+   `chamber.js` at the moment the wave goes out. `rotate() scale()
+   scaleY()` in that order turns a circle into that ellipse. */
 .chapter-wave span {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: var(--wave-x, 50%);
+  top: var(--wave-y, 50%);
   border-radius: 50%;
-  transform: translate(-50%, -50%) scale(0.02);
+  transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
+             scale(0.02) scaleY(var(--wave-flat, 1));
 }
 /* The inner shell: nearer the core, and the heavier of the two. */
 .chapter-shell-in {
@@ -3693,10 +3705,18 @@ body.find-reading .find-reading-note { opacity: 1; }
   animation: chapter-shell 1.15s cubic-bezier(0.12, 0.66, 0.24, 1) both;
 }
 @keyframes chapter-shell {
-  0% { transform: translate(-50%, -50%) scale(0.02); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
+               scale(0.02) scaleY(var(--wave-flat, 1));
+    opacity: 0;
+  }
   8% { opacity: 1; }
   70% { opacity: 0.7; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
+               scale(1) scaleY(var(--wave-flat, 1));
+    opacity: 0;
+  }
 }
 /* The seed: the core before it has anywhere to go. */
 .chapter-core {
@@ -3709,9 +3729,17 @@ body.find-reading .find-reading-note { opacity: 1; }
   animation: chapter-seed 0.5s cubic-bezier(0.3, 0.7, 0.3, 1) both;
 }
 @keyframes chapter-seed {
-  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
+               scale(0.2) scaleY(var(--wave-flat, 1));
+    opacity: 0;
+  }
   22% { opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(5); opacity: 0; }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
+               scale(5) scaleY(var(--wave-flat, 1));
+    opacity: 0;
+  }
 }
 
 /* THE CARDS. One per favourite, ruled in silver with a mark at two
@@ -3811,12 +3839,17 @@ body.find-reading .find-reading-note { opacity: 1; }
    particles begin to close rather than a beat before or after — the
    whole point of the second round on this was that it be one movement.
 
-   What goes: the word and its cue and crop marks, the menu, this page's
-   own search, and the drawing's own labels and corner sights on the
-   front canvas. What stays is the particles, which are the movement. */
+   What goes: the word and its cue and crop marks, the menu, and this
+   page's own search. What stays is the particles, which are the
+   movement.
+
+   THE FRONT CANVAS IS NOT FADED HERE, and must not be. It carries the
+   drawing's labels, but it also carries every particle nearer than the
+   middle of the chamber — half the disc — so fading it took half the
+   ring away on the way in. The labels are faded in `chamber.js`
+   instead, where the particles can be told apart from the chrome. */
 .favorites-page.bursting .chamber-plate,
-.favorites-page.bursting .page-find,
-.chamber.bursting .chamber-front {
+.favorites-page.bursting .page-find {
   opacity: 0;
   pointer-events: none;
   transition: opacity 1.25s var(--menu-ease);
@@ -3832,12 +3865,10 @@ body.find-reading .find-reading-note { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .chapter-page { transition: none; clip-path: none; }
-  .chapter-page.here { clip-path: none; }
   .chapter-card { animation: none; }
   .chapter-wave { display: none; }
   .favorites-page.bursting .chamber-plate,
   .favorites-page.bursting .page-find,
-  .chamber.bursting .chamber-front,
   .chamber.burst-wave .chamber-field { transition: none; }
 }
 

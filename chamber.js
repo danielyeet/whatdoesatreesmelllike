@@ -791,27 +791,42 @@
   const BURST_WIND = 2.3;      // closing on the middle, and fading with it
   const BURST_WAVE = 1.15;     // the hub going out, and the page it opens
   const BURST_CLOSE = 2.6;     // how sharply it gains on the middle (a power)
-  const BURST_TURNS = 1.15;    // turns the ring makes on the way in
+  const BURST_TURNS = 1.15;    // turns the ring ADDS on the way in, over its own
   const BURST_SPIN = 2.5;      // and how much of that is saved for the end (a power)
   const RING_NEAR = 0.3;       // how near the orbit a particle counts as part of the ring
-  const LOOSE_LAG = 0.45;      // the share of the wind a loose one may wait before falling
-  const LOOSE_DROP = 2.2;      // and how sharply it gains once it does (a power)
+  const SPIN_MOST = 3.4;       // the fastest a read-off turn is believed (radians a second)
+  const SPIN_ELSE = -0.55;     // and what is used when there is no ring to read
+  const LOOSE_LAG = 0.5;       // the share of the wind a loose one may wait before falling
+  const LOOSE_SPAN = [0.3, 0.62];  // and how long its own fall then takes
+  const LOOSE_DROP = [1.5, 3.0];   // each gaining at a rate of its own (a power)
+  const MARKS_FADE = 1.25;     // the drawing's own chrome going, with the rest of it
+  const CLIP_ROUND = 56;       // corners in the ellipse the page is cut out with
 
   /** Null, or the burst that is running / the chapter that is open. */
   let burst = null;
   const chapterShowing = () => Boolean(burst);
 
-  /** WHICH WAY THE RING IS ALREADY TURNING, read off the particles rather
-      than worked out from the geometry. The owner asked for the spin not
-      to change direction, and the only way to be sure of that is to ask
-      what it is doing now.
+  /** HOW FAST THE RING IS TURNING, AND WHICH WAY — read off the
+      particles rather than worked out from the geometry, because what
+      it is doing now is the only thing the wind can be made to carry
+      on from. Radians a second, signed.
 
-      Asked IN THE ORBIT'S OWN PLANE, because that is the plane the ring
-      turns in. `PLANE.u` and `PLANE.w` are the two directions it is
-      drawn along; a particle's turn is its angular velocity in those. */
-  function spinNow() {
+      IT IS THE RATE, NOT ONLY THE DIRECTION, and that is the whole
+      point of it. The wind used to turn as a power of how far through
+      it was, which is nothing at all at the start — so the ring came
+      to a dead stop on the frame the chapter was pressed and then got
+      going again. `windIn` starts it at exactly this rate instead, and
+      adds its own turn on top, so the press does not show.
+
+      Asked of the particles standing ON the orbit and no others: one
+      still crossing the window in a stream is travelling fast and not
+      round anything, and a few hundred of those drown out the ring.
+      And asked IN THE ORBIT'S OWN PLANE, because that is the plane it
+      turns in — `PLANE.u` and `PLANE.w` are the two directions it is
+      drawn along. */
+  function spinNow(orbit) {
     const u = PLANE.u, w = PLANE.w;
-    let sum = 0;
+    let sum = 0, count = 0;
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
       if (speck.wait > 0) continue;
@@ -820,16 +835,98 @@
       const pw = x * w[0] + y * w[1] + z * w[2];
       const r2 = pu * pu + pw * pw;
       if (r2 < 0.25) continue;
+      if (Math.abs(Math.sqrt(r2) - orbit) > orbit * RING_NEAR) continue;
       const vu = speck.vx * u[0] + speck.vy * u[1] + speck.vz * u[2];
       const vw = speck.vx * w[0] + speck.vy * w[1] + speck.vz * w[2];
       sum += (pu * vw - pw * vu) / r2;
+      count++;
     }
-    return sum >= 0 ? 1 : -1;
+    // A chamber only just filled can have no ring to read at all, and
+    // one caught mid-arrival can read a good deal faster than it looks.
+    const rate = count > 8 ? sum / count : 0;
+    if (!(Math.abs(rate) > 0.02)) return SPIN_ELSE;
+    return Math.max(-SPIN_MOST, Math.min(SPIN_MOST, rate));
+  }
+
+  /** THE RING'S OWN SHAPE ON THE WINDOW — where its middle lands, which
+      way its long axis lies, and how flat it is drawn.
+
+      The orbit is a circle standing at a tilt, so what you actually see
+      of it is an ellipse, and the owner asked for the explosion to go
+      out in THAT rather than as a circle square to the screen. This is
+      what tells the wave what shape to be.
+
+      Measured rather than worked out: the orbit is sampled the whole
+      way round, each point projected onto the window, and the spread of
+      those points taken. The long and short axes of that spread are the
+      ellipse's own axes. Doing it this way costs one pass of 72 points,
+      once, and comes out right whatever the tilt is and wherever the
+      middle of the chamber has been moved to — neither of which is a
+      constant in this file. */
+  function ringOnScreen() {
+    const at0 = to(core[0], core[1], core[2]);
+    const out = { x: at0 ? at0.x : midX, y: at0 ? at0.y : midY, turn: 0, flat: 1 };
+    const r = Math.max(0.6, burst && burst.orbit0 ? burst.orbit0 : orbitNow());
+    const xs = [], ys = [];
+    for (let n = 0; n < 72; n++) {
+      onOrbit((n / 72) * Math.PI * 2, r, spot);
+      const p = to(spot[0], spot[1], spot[2]);
+      if (p) { xs.push(p.x); ys.push(p.y); }
+    }
+    if (xs.length < 12) return out;
+    let cx = 0, cy = 0;
+    for (let n = 0; n < xs.length; n++) { cx += xs[n]; cy += ys[n]; }
+    cx /= xs.length; cy /= xs.length;
+    let sxx = 0, syy = 0, sxy = 0;
+    for (let n = 0; n < xs.length; n++) {
+      const dx = xs[n] - cx, dy = ys[n] - cy;
+      sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+    }
+    sxx /= xs.length; syy /= xs.length; sxy /= xs.length;
+    // The two axes of that spread. For a two-by-two this is closed form.
+    const half = (sxx + syy) / 2;
+    const gap = Math.sqrt(Math.max(0, (sxx - syy) * (sxx - syy) / 4 + sxy * sxy));
+    const big = half + gap, small = Math.max(1e-6, half - gap);
+    out.turn = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+    // Floored, because a ring seen exactly edge-on would give a wave
+    // with no width at all and nothing to look at.
+    out.flat = Math.max(0.16, Math.min(1, Math.sqrt(small / big)));
+    return out;
+  }
+
+  /** The page cut out to `p` of the way open, as an ellipse lying in the
+      ring's own plane. A polygon and not `ellipse()`, because a CSS
+      ellipse cannot be turned and this one is turned by definition. */
+  function clipTo(p) {
+    const ring = burst.ring;
+    const wide = Math.max(ring.x, width - ring.x);
+    const tall = Math.max(ring.y, height - ring.y);
+    // Far enough that the SHORT axis clears the furthest corner: it is
+    // the short one that decides when the window is covered.
+    const reach = (Math.hypot(wide, tall) + 40) * p;
+    const a = reach / ring.flat, b = reach;
+    const c = Math.cos(ring.turn), s = Math.sin(ring.turn);
+    const pts = [];
+    for (let n = 0; n < CLIP_ROUND; n++) {
+      const at = (n / CLIP_ROUND) * Math.PI * 2;
+      const ax = Math.cos(at) * a, ay = Math.sin(at) * b;
+      pts.push(Math.round(ring.x + ax * c - ay * s) + "px " +
+               Math.round(ring.y + ax * s + ay * c) + "px");
+    }
+    chapterPage.style.clipPath = "polygon(" + pts.join(",") + ")";
   }
 
   function openChapter(i) {
     if (burst) return;
-    burst = { chapter: i, phase: "wind", at: 0, way: spinNow(), spot: [0, 0, 0] };
+    const orbit0 = orbitNow();
+    const rate = spinNow(orbit0);
+    burst = {
+      chapter: i, phase: "wind", at: 0, since: 0, spot: [0, 0, 0],
+      orbit0: orbit0,
+      rate: rate,                      // radians a second, as it is turning now
+      way: rate >= 0 ? 1 : -1,         // and which way that is
+      ring: null,                      // the shape of it on the window, at the wave
+    };
 
     // THE CHAMBER IS IN TWO PARTS WHEN THE PRESS LANDS, and the owner
     // asked for them to behave as two:
@@ -846,8 +943,7 @@
     // Told apart by how near the orbit a particle is standing, measured
     // in the orbit's own plane.
     const u = PLANE.u, w = PLANE.w;
-    const orbit = orbitNow();
-    burst.orbit0 = orbit;
+    const orbit = orbit0;
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
       if (speck.wait > 0) { launch(speck); speck.wait = 0; }
@@ -871,8 +967,18 @@
         speck.rR = round;
         speck.rOff = x * AXIS[0] + y * AXIS[1] + z * AXIS[2];
       } else {
+        // EACH LOOSE ONE FALLS ON ITS OWN CLOCK ENTIRELY: its own moment
+        // to start, its own length of fall, and its own rate of gaining.
+        // A shared start was never there, but a shared ARRIVAL was —
+        // every one of them was scaled to reach the middle on the same
+        // frame as the ring — and a crowd landing together is the thing
+        // that reads as marshalled. The span is drawn first and the wait
+        // fitted inside what is left, so nothing is still falling when
+        // the wave goes out.
         speck.wx = x; speck.wy = y; speck.wz = z;
-        speck.lag = random() * LOOSE_LAG;
+        speck.span = between(LOOSE_SPAN);
+        speck.lag = random() * Math.max(0.05, Math.min(LOOSE_LAG, 0.97 - speck.span));
+        speck.drop = between(LOOSE_DROP);
       }
     }
 
@@ -894,6 +1000,7 @@
     shell.classList.remove("bursting", "burst-wave");
     page.classList.remove("bursting", "chapter-open");
     chapterPage.classList.remove("here");
+    chapterPage.style.clipPath = "";
     chapterPage.hidden = true;
     // Back into the physics' hands: every particle is fired again from
     // its own injector, staggered, so the chamber fills the way it does
@@ -931,7 +1038,13 @@
     // anything, and costs nothing: the menu was shutting anyway.
     const shrink = burst.orbit0 > 0 ? orbitNow() / burst.orbit0 : 1;
     const held = Math.max(0, 1 - Math.pow(p, BURST_CLOSE));
-    const turn = burst.way * BURST_TURNS * Math.PI * 2 * Math.pow(p, BURST_SPIN);
+    // THE TURN PICKS UP EXACTLY WHERE THE ORBIT LEFT OFF. The first term
+    // is the ring's own rate, carried straight through the press — at
+    // p = 0 the whole turn is moving at precisely that, so there is no
+    // seam to see. The second is the burst's own winding, which starts
+    // at nothing and rushes at the end, added on top of it.
+    const turn = burst.rate * BURST_WIND * p +
+                 burst.way * BURST_TURNS * Math.PI * 2 * Math.pow(p, BURST_SPIN);
     const spot = burst.spot;
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
@@ -946,8 +1059,8 @@
         // A LOOSE ONE FALLS IN ON ITS OWN. It waits its own moment and
         // then gains on the middle, so the ring is not joined by a
         // marshalled crowd but by particles arriving one after another.
-        const q = Math.max(0, Math.min(1, (p - speck.lag) / Math.max(0.05, 1 - speck.lag)));
-        const left = 1 - Math.pow(q, LOOSE_DROP);
+        const q = Math.max(0, Math.min(1, (p - speck.lag) / speck.span));
+        const left = 1 - Math.pow(q, speck.drop);
         speck.x = core[0] + speck.wx * left;
         speck.y = core[1] + speck.wy * left;
         speck.z = core[2] + speck.wz * left;
@@ -987,29 +1100,41 @@
       chapterCards.appendChild(card);
     });
 
+    // THE WAVE GOES OUT IN THE RING'S OWN PLANE, not square to the
+    // screen. The shape is measured off the orbit as it stands and
+    // handed to the CSS as four numbers — where its middle is on the
+    // window, which way its long axis lies, and how flat it is drawn —
+    // and the shells are turned and pressed to match. The page itself
+    // is cut out with the same ellipse, by `clipTo`.
+    if (burst && !burst.ring) burst.ring = ringOnScreen();
+    const ring = (burst && burst.ring) || ringOnScreen();
+    chapterPage.style.setProperty("--wave-x", ring.x.toFixed(1) + "px");
+    chapterPage.style.setProperty("--wave-y", ring.y.toFixed(1) + "px");
+    chapterPage.style.setProperty("--wave-turn", ring.turn.toFixed(4) + "rad");
+    chapterPage.style.setProperty("--wave-flat", ring.flat.toFixed(4));
+
+    // Shut before it is shown, so the black is never on the window at
+    // full size for even one frame.
+    if (REDUCE_MOTION || !burst) chapterPage.style.clipPath = "none";
+    else clipTo(0);
+
     chapterPage.hidden = false;
     page.classList.add("chapter-open");
+    chapterPage.classList.add("here");
     // THE WAVE IS RE-CUT EVERY TIME. Its shells are CSS animations on
     // elements that are built once, and an animation only plays once
     // unless it is given back to the browser as new — so reopening a
     // chapter showed the page with no wave at all. Replacing the box's
     // contents is what starts them again.
     chapterWave.innerHTML = chapterWave.innerHTML;
-
-    // AND THE PAGE HAS TO BE MADE TO TRANSITION. It has just come off
-    // `display: none`, and a browser has no previous value to travel
-    // from in that case — it simply jumps to the finished state, which
-    // is what made the wave look instant however long it was given.
-    // Reading a layout property forces the starting state to be settled
-    // before the class that moves it is put on.
-    void chapterPage.offsetWidth;
-    requestAnimationFrame(() => chapterPage.classList.add("here"));
   }
 
   /** One step of the burst. Returns true while it is running the
       particles itself, so `frame` knows to leave `move` alone. */
   function stepBurst(dt) {
-    if (!burst || burst.phase === "open") return Boolean(burst);
+    if (!burst) return false;
+    burst.since += dt;
+    if (burst.phase === "open") return true;
     burst.at += dt;
 
     if (burst.phase === "wind") {
@@ -1020,14 +1145,23 @@
         burst.at = 0;
         // The wave goes out from the point they met, and cuts the
         // chapter out of the black as it goes.
+        burst.ring = ringOnScreen();
         shell.classList.add("burst-wave");
         layChapter(burst.chapter);
       }
       return true;
     }
 
-    // wave
-    if (burst.at >= BURST_WAVE) { burst.phase = "open"; burst.at = 0; }
+    // THE WAVE. The page is cut open by hand rather than by a CSS
+    // transition, because what cuts it is a turned ellipse and CSS has
+    // no turned ellipse to transition to — see `clipTo`.
+    const q = Math.min(1, burst.at / BURST_WAVE);
+    clipTo(1 - Math.pow(1 - q, 3));
+    if (burst.at >= BURST_WAVE) {
+      burst.phase = "open";
+      burst.at = 0;
+      chapterPage.style.clipPath = "none";
+    }
     return true;
   }
 
@@ -1808,7 +1942,23 @@
     paint.save();
     paintFront.save();
 
-    drawMarks();
+    // THE DRAWING'S OWN CHROME FADES HERE, not by fading the canvas it
+    // is on. For one round the front canvas was taken to nothing for
+    // the length of the burst — and the front canvas is not only
+    // chrome: everything nearer than the middle of the chamber is drawn
+    // on it, which is HALF THE DISC. The near half of the ring went
+    // invisible on the way in, and what closed was a crescent again.
+    // What fades is what is chrome — the orbit's path, its ticks, the
+    // injectors and their leaders and labels — and every particle is
+    // left alone.
+    const marks = burst ? Math.max(0, 1 - burst.since / MARKS_FADE) : 1;
+    if (marks > 0.01) {
+      paint.globalAlpha = marks;
+      paintFront.globalAlpha = marks;
+      drawMarks();
+      paint.globalAlpha = 1;
+      paintFront.globalAlpha = 1;
+    }
     for (let b = 0; b < behind.length; b++) {
       behind[b].tails.length = 0; behind[b].dots.length = 0;
       ahead[b].tails.length = 0; ahead[b].dots.length = 0;
@@ -1885,7 +2035,9 @@
       }
     });
 
-    drawWeb();
+    // The web is the cursor's answer, and there is nothing to answer
+    // once the chamber is on its way out.
+    if (!burst) drawWeb();
     near.length = 0;
 
     paint.restore();

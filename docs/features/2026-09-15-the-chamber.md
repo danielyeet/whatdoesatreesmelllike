@@ -405,7 +405,7 @@ class in its own `<head>`.
 npm test -- tests/chamber.spec.js
 ```
 
-Seventeen tests: the menu being grown from that page's own favourites and carrying
+Twenty tests: the menu being grown from that page's own favourites and carrying
 number, date, name and link; the word opening the menu and a chapter opening its own
 favourites with Escape stepping back out one level at a time; the two injectors standing
 at opposite corners with nothing fired from the other two; the orbit standing round the
@@ -419,6 +419,25 @@ what pressing it does and saying the other thing once it is open; the cursor str
 web between the specks it is near and letting go again; no part of it ever being drawn in
 the site's accent colour; it standing still under `prefers-reduced-motion`; and the plain
 list coming back when the script is blocked.
+
+Three of them are about the burst, and two of those are regressions for faults the owner
+reported:
+
+- **`the ring closes as a ring while the loose particles fall in after it`** — one pass
+  down the wind answering two questions at once, because both answers live inside the same
+  two seconds and a scan looking for the first consumes the window the second needed. It
+  keeps the frame where the *smaller* of "near the middle" and "far out" is largest (the
+  two populations drawn together), and separately the frame where "near" is fullest (they
+  all met). Scanned rather than sampled at fixed moments: which frame shows what now moves
+  with how full the chamber was when the press landed.
+- **`the near half of the disc is still drawn while the ring winds in`** — the owner's
+  *"half of the disk turns invisible on the collapse"*. It takes **two** readings, and it
+  needs both: the near half's share of the ink (is it being drawn) and the front canvas's
+  own computed opacity (is it being shown). The second is the one that catches this: see
+  failure 6 above for why a canvas read alone cannot.
+- **`the explosion is an ellipse lying in the ring's plane, not a circle`** — reads the
+  polygon the page is cut out with and measures its bounding box. A circle's box is
+  square; this one must not be.
 
 ## The burst, and a chapter's own page
 
@@ -451,9 +470,19 @@ measured in the orbit's own plane (`RING_NEAR`):
   turns along its own plane. Nothing is marshalled into position first, and nothing is
   re-spread: it is the ellipse you were already looking at, closing.
 - **The loose** — everything still crossing the window in the two streams. These stay
-  their own particles. Each waits its own moment (`LOOSE_LAG`) and then falls in, gaining
-  as it goes (`LOOSE_DROP`), so the ring is joined by particles arriving one after
-  another rather than by a marshalled crowd.
+  their own particles, and each falls on a clock entirely its own: its own moment to
+  start (`LOOSE_LAG`), its own length of fall (`LOOSE_SPAN`) and its own rate of gaining
+  (`LOOSE_DROP`). The ring is joined by particles arriving one after another rather than
+  by a marshalled crowd.
+
+**The arrivals were synchronised for a round, and the owner caught it.** The starts were
+staggered from the beginning, but every loose particle was scaled to reach the middle on
+the same frame as the ring — so however differently they set off, they all landed
+together, and a crowd landing together is the thing that reads as marshalled. Each one is
+now given its own span as well as its own wait, and the wait is drawn from what is left
+after the span so that nothing is still falling when the wave goes out. Measured: the
+first arrives about 0.7s into a 2.3s wind and the last at about 2.2s, spread right across
+it rather than piling up at the end.
 
 Midway through the wind there is therefore ink near the middle **and** ink far out at the
 corners, in the same frame. That is the whole effect, and it is what the test pins.
@@ -469,6 +498,29 @@ the angle turns as `p^n`, so it barely moves at first and rushes at the end, tur
 fastest when it is tightest. A plain exponential does the opposite of both, and that is
 what this replaced.
 
+**The turn starts at the rate the orbit was already turning at**, which is the owner's
+own note: *"the particles will begin the animation at the rotational speed they were
+rotating when orbing the page... this way the transition is seamless"*. A power of `p` is
+**nothing at all** at `p = 0`, so for a round the ring came to a dead stop on the frame
+the chapter was pressed and then got going again — a seam exactly where there must not be
+one. `spinNow` now reads the ring's angular velocity off the particles in radians a
+second, and `windIn` adds the two together:
+
+```
+turn = rate · WIND · p   +   way · TURNS · 2π · p^SPIN
+```
+
+The first term is the orbit's own rate carried straight through the press — differentiate
+it at `p = 0` and you get exactly `rate` — and the second is the burst's own winding, laid
+on top. Measured across a press: **−0.652 rad/s** before, **−0.649** carried in, **−0.709**
+on the first frame after, accelerating smoothly to −2.46 by 900ms.
+
+Two things about that reading. It is taken **only from the particles standing on the
+orbit** (the same `RING_NEAR` test): one still crossing the window in a stream is
+travelling fast and not round anything, and a few hundred of those drown out what the ring
+is doing. And it is **clamped and floored** (`SPIN_MOST`, `SPIN_ELSE`) — a chamber only
+just filled can have no ring to read at all.
+
 ### The wave is the home page's centre
 
 The owner asked for the shockwave to be *"the same effect as the central node in the home
@@ -482,23 +534,59 @@ are taken straight from `node-scene.js`:
 | **the outer shell** | 5.15× its radius, `#8d8a80` at 0.09 |
 
 Here the **core is the chapter's own black**, opened out by the wave — it is the page's
-`clip-path` circle rather than an element, so the page *is* the core rather than something
+own `clip-path` rather than an element, so the page *is* the core rather than something
 drawn underneath it. The two shells go out ahead of it and fade as they widen, drawn as
 soft-edged bands rather than hairlines, because a shell is a sphere seen through and what
 passes is a thickness. A **seed** — a small dark disc at the point they meet — is the core
 before it has anywhere to go; without it the wave starts from nothing visible and the
 meeting has no moment to it.
 
-**Two things this needs and neither is obvious.** The page has just come off
-`display: none`, and a browser has no previous value to transition from in that case — it
-jumps straight to the finished state, which made the wave look instant however long it
-was given; reading a layout property first settles the starting state. And the shells are
-CSS animations on elements built once, so they only play once — reopening a chapter showed
-the page with no wave at all until the wave's contents were replaced to start them again.
+**One thing this needs that is not obvious.** The shells are CSS animations on elements
+built once, so they only play once — reopening a chapter showed the page with no wave at
+all until the wave's contents were replaced to start them again.
+
+### The wave lies in the ring's plane
+
+The owner's note: *"let the expansion also be in the way that the ring is made, with that
+dimension. i dont want it to be a circle parallel to the dimension of the screen, i want
+that explosion to be parallel to the ring."*
+
+The orbit is a circle standing at a tilt, so what you actually see of it is an **ellipse**
+— at a particular angle, and a particular flatness. The wave now goes out in that ellipse
+rather than as a circle square to the screen, which means it looks like the ring blowing
+open rather than like a ring being replaced by something unrelated.
+
+**The shape is measured, not worked out.** `ringOnScreen()` samples the orbit 72 times
+round, projects each point onto the window, and takes the spread of those points; the long
+and short axes of that spread are the ellipse's own axes, which for a two-by-two comes out
+in closed form. It costs one pass, once, at the moment the wave goes out, and it comes out
+right whatever the tilt is and wherever the middle of the chamber has been moved to —
+neither of which is a constant in this file. It yields four numbers, handed to the CSS as
+custom properties: `--wave-x`, `--wave-y` (where the middle of the orbit lands on the
+window), `--wave-turn` (the angle) and `--wave-flat` (how flat). Typical reading on a
+1280×860 window: **−0.23 rad, 0.50 flat** — half as tall as it is wide, tilted about 13°.
+
+- **The shells and the seed** take it as a transform: `rotate() scale() scaleY()`, in that
+  order, turns their circle into that ellipse. The flatness is floored at 0.16 so a ring
+  seen almost edge-on still leaves something to look at.
+- **The page itself is cut out with the same ellipse**, and that one could not be done in
+  CSS. `clip-path: ellipse()` **cannot be turned**, and this one is turned by definition —
+  it is whatever angle the orbit is standing at. So `clipTo()` writes the cut out as a
+  56-corner polygon, frame by frame, driven from the burst's own clock. The CSS
+  `clip-path` transition that used to open the page is gone with it.
+
+The cut grows until its **short** axis clears the furthest corner of the window — it is
+the short one that decides when the window is covered.
+
+That change also removed the second of the two non-obvious things this used to need: the
+page came off `display: none` with no previous value for the browser to transition from,
+so it jumped straight to the finished state and the wave looked instant however long it
+was given. Driving the cut by hand each frame has no start state to settle, so there is no
+forced reflow any more.
 
 ### What was tried and was wrong
 
-Four goes, and the failures are worth keeping because three of them looked plausible and
+Six goes, and the failures are worth keeping because most of them looked plausible and
 two produced the *same* wrong picture — a crescent closing on the middle instead of a ring.
 
 1. **Winding the arrangement in as it stood.** Most of the particles are in the two
@@ -516,6 +604,26 @@ two produced the *same* wrong picture — a crescent closing on the middle inste
    and draws at nothing — so a good half of the chamber took no part in the wind. Every
    particle is **held fully lit** for the length of the burst, and given its ages back
    when the chapter is closed.
+
+5. **Fading the front canvas to take the labels with the chrome.** The owner's report:
+   *"half of the disk turns invisible on the collapse"* — and it was exactly that. One CSS
+   rule, `.chamber.bursting .chamber-front { opacity: 0 }`, put in so the drawing's own
+   labels and the near half of the orbit's path would fade with the word and the menu. But
+   **the front canvas is not only chrome**: everything nearer than the middle of the
+   chamber is drawn on it (see "Where the orbit stands, and the two canvases"), which is
+   half the disc. So the near half of the ring faded away over the first 1.25s of every
+   wind and what closed was a crescent — for the third time, by a completely different
+   route. The chrome is faded in `chamber.js` now, inside `draw`, where a particle can be
+   told apart from a label: `MARKS_FADE` runs a plain alpha down over `drawMarks` alone
+   and the canvas is left alone.
+6. **A canvas read cannot see that fault, and for a round no test could.** `getImageData`
+   returns what was *drawn*, and a canvas sitting at `opacity: 0` still has every pixel of
+   it — `chamber.js` was drawing the near half perfectly the whole time. The first version
+   of the regression test measured the near half's share of the ink and **passed with the
+   bug deliberately put back**. It reads the canvas's own computed opacity as well now,
+   which is the reading the eye takes, and fails with the rule restored (0.78 → 0.37 →
+   0.13 → 0). The same blind spot was in `spread()`, the helper the older burst test uses:
+   it read only the back canvas, so it could not have caught this either. It reads both.
 
 One more thing that is not a bug but will look like one: **how much of the chamber is a
 ring depends on how long the page has been open.** Particles are fired from the injectors

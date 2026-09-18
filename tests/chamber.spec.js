@@ -265,18 +265,28 @@ test("the ring closes as a ring while the loose particles fall in after it",
       how much is near the middle, how much is still far out, and the
       average. Shares rather than a single distance, because the whole
       point of the wind is that there are TWO populations doing two
-      different things at the same time. */
+      different things at the same time.
+
+      BOTH CANVASES, and that matters: this read only the back one for a
+      round, and the bug it therefore could not see was the front one
+      being faded to nothing for the length of the burst — taking half
+      the disc with it, since everything nearer than the middle of the
+      chamber is drawn there. Anything asking what the drawing looks
+      like has to ask both. */
   const spread = () =>
     page.evaluate(() => {
-      const canvas = document.querySelector(".chamber-field");
-      const shot = canvas.getContext("2d")
-        .getImageData(0, 0, canvas.width, canvas.height).data;
+      const both = [".chamber-field", ".chamber-front"]
+        .map((pick) => document.querySelector(pick));
+      const canvas = both[0];
+      const shots = both.map((c) =>
+        c.getContext("2d").getImageData(0, 0, c.width, c.height).data);
       const midX = canvas.width / 2, midY = canvas.height / 2;
       const ref = Math.hypot(midX, midY);
       let ink = 0, sum = 0, near = 0, far = 0;
       for (let y = 0; y < canvas.height; y += 2) {
         for (let x = 0; x < canvas.width; x += 2) {
-          if (shot[(y * canvas.width + x) * 4 + 3] < 40) continue;
+          const at = (y * canvas.width + x) * 4 + 3;
+          if (shots[0][at] < 40 && shots[1][at] < 40) continue;
           const r = Math.hypot(x - midX, y - midY) / ref;
           ink++; sum += r;
           if (r < 0.3) near++;
@@ -303,38 +313,41 @@ test("the ring closes as a ring while the loose particles fall in after it",
     parseFloat(getComputedStyle(el).opacity));
   expect(fading, "the word fades from the press, not after it").toBeLessThan(0.95);
 
-  // MIDWAY: BOTH POPULATIONS AT ONCE, which is what the owner asked for.
-  // What the orbit already had hold of is closing on the middle AS a
-  // ring, while what was still crossing the window in the two streams is
-  // out at the corners waiting its own turn to fall in. So there is ink
-  // near the middle and ink far out, in the same frame.
-  await page.waitForTimeout(500);
-  const both = await spread();
-  expect(both.near, `the ring should be closing: ${JSON.stringify(both)}`)
-    .toBeGreaterThan(0.18);
-  expect(both.far, `while the loose ones are still out: ${JSON.stringify(both)}`)
-    .toBeGreaterThan(0.3);
-
-  // AND BY THE END OF THE WIND they have all arrived at the middle.
-  // Read by watching rather than by waiting a fixed time: the last
-  // reading taken while the chapter is still shut is the end of the
-  // wind, whatever the machine's timing did to get there. A fixed wait
-  // lands after the wave has started on a slow run, and by then the
-  // particles are being taken off the page.
-  // Watched rather than sampled at a fixed moment, and the FULLEST
-  // reading is the one kept. Two things make a single late sample
-  // useless: on a slow run a fixed wait lands after the wave has
-  // started, and at the very last frame of the wind every particle is
-  // inside a few pixels of one point, so what is left to measure is
-  // mostly the drawing behind them. The moment most of the ink is near
-  // the middle is the moment they met.
+  // ONE PASS DOWN THE WIND, ANSWERING TWO QUESTIONS — and it has to be
+  // one pass, because both answers are somewhere inside the same two
+  // seconds and a scan looking for the first consumes the window the
+  // second needed.
+  //
+  //   BOTH POPULATIONS AT ONCE   what the orbit already had hold of is
+  //     closing on the middle AS a ring, while what was still crossing
+  //     the window in the two streams is out at the corners waiting its
+  //     own turn — so there is ink near the middle and ink far out in
+  //     the SAME frame. The frame where the SMALLER of those two
+  //     readings is largest is the one that proves it.
+  //   AND THEY ALL MEET      by the end of the wind everything is in
+  //     the middle. The FULLEST near reading is the one kept.
+  //
+  // SCANNED, NOT SAMPLED AT FIXED MOMENTS, for both. Each loose
+  // particle now has its own moment to start, its own length of fall
+  // and its own rate of gaining, so they arrive spread right across the
+  // wind rather than all landing at the end — which frame shows what
+  // therefore moves with how full the chamber was when the press
+  // landed. A fixed wait picks a different part of the picture every
+  // run, and on a slow one lands after the wave has started, by which
+  // time the particles are being taken off the page.
+  let both = await spread();
+  let seen = Math.min(both.near, both.far);
   let met = both;
-  for (let n = 0; n < 18; n++) {
+  for (let n = 0; n < 24; n++) {
+    await page.waitForTimeout(90);
     if (!(await page.locator(".chapter-page").isHidden())) break;
     const now = await spread();
+    const at = Math.min(now.near, now.far);
+    if (at > seen) { seen = at; both = now; }
     if (now.near > met.near) met = now;
-    await page.waitForTimeout(80);
   }
+  expect(seen, `the ring and the loose ones should be drawn at once: ${JSON.stringify(both)}`)
+    .toBeGreaterThan(0.12);
   expect(met.near, `everything should have met in the middle: ${JSON.stringify(met)}`)
     .toBeGreaterThan(0.6);
   expect(met.mean, `and nothing left out at the edges: ${met.mean} vs ${before.mean}`)
@@ -353,6 +366,110 @@ test("the ring closes as a ring while the loose particles fall in after it",
   // plain circle wipe again.
   expect(await page.locator(".chapter-shell-in").count()).toBe(1);
   expect(await page.locator(".chapter-shell-out").count()).toBe(1);
+});
+
+/* THE NEAR HALF OF THE DISC IS STILL DRAWN WHILE IT WINDS IN.
+   A regression, and the owner's own report: "half of the disk turns
+   invisible on the collapse". Everything nearer than the middle of the
+   chamber is drawn on `.chamber-front`, and that canvas was being faded
+   to nothing for the length of the burst so that the drawing's labels
+   would go with the rest of the chrome. The labels went; so did half the
+   ring. What fades now is the marks, faded in `chamber.js` where a
+   particle can be told from a label, and the canvas is left alone. */
+test("the near half of the disc is still drawn while the ring winds in",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await page.waitForTimeout(3000);
+  await openMenu(page);
+
+  const whole = [0, 0, 1280, 720];
+  expect((await inkOn(page, ".chamber-front", whole)).ink,
+    "there is a near half to begin with").toBeGreaterThan(0);
+
+  await page.locator(".chamber-chapter").first().click();
+
+  // TWO READINGS, AND IT NEEDS BOTH, because neither one alone can see
+  // this fault.
+  //
+  //   WHAT IS DRAWN     the near half's SHARE of all the ink, rather
+  //     than how much it has of its own: its own falls the whole way in
+  //     because the ring is closing, and away to nothing at the end when
+  //     everything has met, both of which are right.
+  //   WHAT IS SHOWN     the front canvas's own opacity. THE FAULT WAS
+  //     NEVER IN THE DRAWING. `chamber.js` went on drawing the near half
+  //     perfectly; a CSS rule faded the canvas it was drawn on. Asking
+  //     the canvas for its pixels cannot see that — `getImageData`
+  //     returns what was drawn, and a canvas at `opacity: 0` still has
+  //     every pixel of it. The reading that catches it is the one the
+  //     eye takes: is the canvas carrying half the disc being shown at
+  //     all. (This was checked by putting the rule back: with only the
+  //     ink reading, the test passed with the bug in place.)
+  const run = [];
+  for (let n = 0; n < 18; n++) {
+    await page.waitForTimeout(100);
+    if (!(await page.locator(".chapter-page").isHidden())) break;
+    const back = await inkOn(page, ".chamber-field", whole);
+    const front = await inkOn(page, ".chamber-front", whole);
+    const shown = await page.locator(".chamber-front")
+      .evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+    run.push({ back: back.ink, front: front.ink, shown: shown });
+  }
+  expect(run.length, "the wind should have been caught").toBeGreaterThan(4);
+
+  // Only the wind proper: the last readings are the particles meeting,
+  // and both canvases empty together there, which is right.
+  const most = Math.max.apply(null, run.map((one) => one.back));
+  const winding = run.filter((one) => one.back > most * 0.4);
+
+  const shares = winding.map((one) => one.front / (one.front + one.back));
+  expect(Math.min.apply(null, shares),
+    `the near half stopped being drawn: ${JSON.stringify(shares.map((one) => +one.toFixed(3)))}`)
+    .toBeGreaterThan(0.1);
+
+  const shown = winding.map((one) => one.shown);
+  expect(Math.min.apply(null, shown),
+    `the canvas carrying the near half was faded out: ${JSON.stringify(shown)}`)
+    .toBeGreaterThan(0.9);
+});
+
+/* THE WAVE GOES OUT IN THE RING'S OWN PLANE. The owner asked for the
+   explosion to be "parallel to the ring" rather than a circle square to
+   the screen, so the page is cut out with an ellipse at the orbit's own
+   angle and flatness. Measured off the cut itself: a circle's bounding
+   box is square, and this one must not be. */
+test("the explosion is an ellipse lying in the ring's plane, not a circle",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await page.waitForTimeout(3000);
+  await openMenu(page);
+  await page.locator(".chamber-chapter").first().click();
+
+  let cut = null;
+  for (let n = 0; n < 60; n++) {
+    await page.waitForTimeout(120);
+    const now = await page.locator(".chapter-page")
+      .evaluate((el) => el.style.clipPath);
+    if (now && now.indexOf("polygon") === 0) { cut = now; break; }
+  }
+  expect(cut, "the page should be cut out by a polygon").toBeTruthy();
+
+  const box = cut.slice(8, -1).split(",")
+    .map((one) => one.trim().split(/\s+/).map(parseFloat));
+  const xs = box.map((one) => one[0]), ys = box.map((one) => one[1]);
+  const wide = Math.max.apply(null, xs) - Math.min.apply(null, xs);
+  const tall = Math.max.apply(null, ys) - Math.min.apply(null, ys);
+  expect(wide, "the cut has a width").toBeGreaterThan(20);
+  expect(Math.min(wide, tall) / Math.max(wide, tall),
+    `a circle would come out square: ${Math.round(wide)}x${Math.round(tall)}`)
+    .toBeLessThan(0.85);
+
+  // And the flatness it was given is the orbit's own, not a made-up one.
+  const flat = await page.locator(".chapter-page")
+    .evaluate((el) => parseFloat(el.style.getPropertyValue("--wave-flat")));
+  expect(flat).toBeGreaterThan(0.15);
+  expect(flat).toBeLessThan(0.95);
 });
 
 test("a chapter's page carries its writing, and its favourites as cards",
