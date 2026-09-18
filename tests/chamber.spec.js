@@ -248,63 +248,111 @@ test("the word opens the menu, and a chapter opens a page of its own",
   await expect(page.locator(".chapter-page")).toBeHidden();
 });
 
-test("the burst gathers the particles into a wheel and winds it into the middle",
+test("the ring closes as a ring while the loose particles fall in after it",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
+  // LET THE CHAMBER FILL FIRST. How much of it is a ring and how much is
+  // still crossing the window depends on how long the page has been
+  // open — particles are fired from the injectors and take a few seconds
+  // to reach the orbit. Pressing a chapter a second after the page loads
+  // is a real thing a reader can do, and the wind copes with it, but it
+  // is not the state this test is about.
+  await page.waitForTimeout(3000);
   await openMenu(page);
 
-  /** How far the drawn particles stand from the middle of the window,
-      and how much is drawn at all. The wind gathers them onto one wheel
-      and closes that wheel on the middle, so the distance is what says
-      it is working — a box in the middle would read empty for most of
-      it, because a closing ring is hollow until the last moment. */
-  const readRing = () =>
+  /** Where the drawn particles stand, as shares of the half-diagonal:
+      how much is near the middle, how much is still far out, and the
+      average. Shares rather than a single distance, because the whole
+      point of the wind is that there are TWO populations doing two
+      different things at the same time. */
+  const spread = () =>
     page.evaluate(() => {
       const canvas = document.querySelector(".chamber-field");
       const shot = canvas.getContext("2d")
         .getImageData(0, 0, canvas.width, canvas.height).data;
       const midX = canvas.width / 2, midY = canvas.height / 2;
-      let sum = 0, ink = 0;
+      const ref = Math.hypot(midX, midY);
+      let ink = 0, sum = 0, near = 0, far = 0;
       for (let y = 0; y < canvas.height; y += 2) {
         for (let x = 0; x < canvas.width; x += 2) {
           if (shot[(y * canvas.width + x) * 4 + 3] < 40) continue;
-          sum += Math.hypot(x - midX, y - midY);
-          ink++;
+          const r = Math.hypot(x - midX, y - midY) / ref;
+          ink++; sum += r;
+          if (r < 0.3) near++;
+          if (r > 0.6) far++;
         }
       }
-      return { far: ink ? sum / ink : 0, ink: ink };
+      return {
+        ink: ink,
+        mean: sum / Math.max(1, ink),
+        near: near / Math.max(1, ink),
+        far: far / Math.max(1, ink),
+      };
     });
 
-  const before = await readRing();
+  const before = await spread();
   expect(before.ink, "there are particles to begin with").toBeGreaterThan(300);
 
   await page.locator(".chamber-chapter").first().click();
 
   // NOTHING WAITS FOR ANYTHING: the chrome starts fading and the
-  // particles start closing on the same frame the press lands. A
-  // second in, the word should already be going.
-  await page.waitForTimeout(800);
+  // particles start closing on the same frame the press lands.
+  await page.waitForTimeout(900);
   const fading = await page.locator(".chamber-plate").evaluate((el) =>
     parseFloat(getComputedStyle(el).opacity));
   expect(fading, "the word fades from the press, not after it").toBeLessThan(0.95);
 
-  // ...and near the end of the wind the wheel is well inside where the
-  // particles began.
-  await page.waitForTimeout(1000);
-  const wound = await readRing();
-  expect(wound.ink, "the particles are still drawn as they close").toBeGreaterThan(200);
-  expect(wound.far,
-    `the wheel should have closed on the middle: ${Math.round(before.far)} -> ${Math.round(wound.far)}`)
-    .toBeLessThan(before.far * 0.75);
+  // MIDWAY: BOTH POPULATIONS AT ONCE, which is what the owner asked for.
+  // What the orbit already had hold of is closing on the middle AS a
+  // ring, while what was still crossing the window in the two streams is
+  // out at the corners waiting its own turn to fall in. So there is ink
+  // near the middle and ink far out, in the same frame.
+  await page.waitForTimeout(500);
+  const both = await spread();
+  expect(both.near, `the ring should be closing: ${JSON.stringify(both)}`)
+    .toBeGreaterThan(0.18);
+  expect(both.far, `while the loose ones are still out: ${JSON.stringify(both)}`)
+    .toBeGreaterThan(0.3);
 
-  // And then the wave goes out, and the chapter is cut out of the black.
+  // AND BY THE END OF THE WIND they have all arrived at the middle.
+  // Read by watching rather than by waiting a fixed time: the last
+  // reading taken while the chapter is still shut is the end of the
+  // wind, whatever the machine's timing did to get there. A fixed wait
+  // lands after the wave has started on a slow run, and by then the
+  // particles are being taken off the page.
+  // Watched rather than sampled at a fixed moment, and the FULLEST
+  // reading is the one kept. Two things make a single late sample
+  // useless: on a slow run a fixed wait lands after the wave has
+  // started, and at the very last frame of the wind every particle is
+  // inside a few pixels of one point, so what is left to measure is
+  // mostly the drawing behind them. The moment most of the ink is near
+  // the middle is the moment they met.
+  let met = both;
+  for (let n = 0; n < 18; n++) {
+    if (!(await page.locator(".chapter-page").isHidden())) break;
+    const now = await spread();
+    if (now.near > met.near) met = now;
+    await page.waitForTimeout(80);
+  }
+  expect(met.near, `everything should have met in the middle: ${JSON.stringify(met)}`)
+    .toBeGreaterThan(0.6);
+  expect(met.mean, `and nothing left out at the edges: ${met.mean} vs ${before.mean}`)
+    .toBeLessThan(before.mean * 0.65);
+
+  // Then the wave goes out and cuts the chapter out of the black.
   await expect(page.locator(".chapter-page")).toBeVisible({ timeout: 15000 });
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1500);
   const open = await page.locator(".chapter-page").evaluate((el) =>
     getComputedStyle(el).clipPath);
   expect(open, `the wave should have opened the page right out: ${open}`)
     .not.toMatch(/circle\(0%|circle\(0px/);
+
+  // The wave is the home page's own centre: a dark core with two
+  // translucent halo shells. Both shells have to be there, or it is a
+  // plain circle wipe again.
+  expect(await page.locator(".chapter-shell-in").count()).toBe(1);
+  expect(await page.locator(".chapter-shell-out").count()).toBe(1);
 });
 
 test("a chapter's page carries its writing, and its favourites as cards",

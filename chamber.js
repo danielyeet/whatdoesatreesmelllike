@@ -622,10 +622,18 @@
   chapterPage.className = "chapter-page dark-surface";
   chapterPage.hidden = true;
   chapterPage.innerHTML =
-    // THE RIPPLE, over the page the wave has just cut open: three rings
-    // going out from the point the particles met, one behind another.
+    // THE HUB, GOING OUT. The owner asked for the shockwave to be the
+    // centre of the home page's map spread across the whole window, and
+    // that centre is three things: a solid near-black core with two
+    // translucent halo shells round it, at 2.37 and 5.15 times its
+    // radius and at a quarter and a tenth of its weight (see the node
+    // map's report). Here the core is the chapter's own black, opened
+    // out by the wave, and these two are the shells going out ahead of
+    // it — the same colours, the same ratios, the same look.
     '<div class="chapter-wave" aria-hidden="true">' +
-      "<span></span><span></span><span></span>" +
+      '<span class="chapter-shell-in"></span>' +
+      '<span class="chapter-shell-out"></span>' +
+      '<span class="chapter-core"></span>' +
     "</div>" +
     '<div class="chapter-sheet">' +
       '<button type="button" class="chapter-back">' +
@@ -641,6 +649,7 @@
   const chapterSpec = chapterPage.querySelector(".chapter-spec");
   const chapterNote = chapterPage.querySelector(".chapter-note");
   const chapterCards = chapterPage.querySelector(".chapter-cards");
+  const chapterWave = chapterPage.querySelector(".chapter-wave");
   chapterPage.querySelector(".chapter-back")
     .addEventListener("click", () => closeChapter());
   // Inside the chamber rather than loose in the page. Every direct child
@@ -780,92 +789,91 @@
   // launched again from the injectors.
   // ============================================================
   const BURST_WIND = 2.3;      // closing on the middle, and fading with it
-  const BURST_WAVE = 0.95;     // the shockwave going out, and the page it cuts
-  const BURST_GATHER = 0.42;   // the share of the wind spent drawing into one ring
+  const BURST_WAVE = 1.15;     // the hub going out, and the page it opens
   const BURST_CLOSE = 2.6;     // how sharply it gains on the middle (a power)
-  const BURST_TURNS = 1.15;    // turns it makes on the way in
+  const BURST_TURNS = 1.15;    // turns the ring makes on the way in
   const BURST_SPIN = 2.5;      // and how much of that is saved for the end (a power)
-  const BURST_RING = 6.2;      // how wide the wheel is when they have gathered onto it
-  const BURST_BAND = 0.1;      // and the width of the band they stand in, against that
+  const RING_NEAR = 0.3;       // how near the orbit a particle counts as part of the ring
+  const LOOSE_LAG = 0.45;      // the share of the wind a loose one may wait before falling
+  const LOOSE_DROP = 2.2;      // and how sharply it gains once it does (a power)
 
   /** Null, or the burst that is running / the chapter that is open. */
   let burst = null;
-
   const chapterShowing = () => Boolean(burst);
 
-  /** WHICH WAY IT ALREADY APPEARS TO TURN, read off the particles
-      rather than worked out from the geometry. The owner asked for the
-      spin not to change direction as it winds in, and the only way to
-      be sure of that is to ask what it is doing now.
+  /** WHICH WAY THE RING IS ALREADY TURNING, read off the particles rather
+      than worked out from the geometry. The owner asked for the spin not
+      to change direction, and the only way to be sure of that is to ask
+      what it is doing now.
 
-      Asked in the plane of the WINDOW, because that is the plane it
-      winds in and the only one an eye can see it turn in. The depth
-      falls out of it: a particle's place on the screen is its x and y
-      scaled by the same number, so the angle between them is the angle
-      you actually see. */
+      Asked IN THE ORBIT'S OWN PLANE, because that is the plane the ring
+      turns in. `PLANE.u` and `PLANE.w` are the two directions it is
+      drawn along; a particle's turn is its angular velocity in those. */
   function spinNow() {
+    const u = PLANE.u, w = PLANE.w;
     let sum = 0;
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
       if (speck.wait > 0) continue;
-      const x = speck.x - core[0], y = speck.y - core[1];
-      const r2 = x * x + y * y;
+      const x = speck.x - core[0], y = speck.y - core[1], z = speck.z - core[2];
+      const pu = x * u[0] + y * u[1] + z * u[2];
+      const pw = x * w[0] + y * w[1] + z * w[2];
+      const r2 = pu * pu + pw * pw;
       if (r2 < 0.25) continue;
-      sum += (x * speck.vy - y * speck.vx) / r2;
+      const vu = speck.vx * u[0] + speck.vy * u[1] + speck.vz * u[2];
+      const vw = speck.vx * w[0] + speck.vy * w[1] + speck.vz * w[2];
+      sum += (pu * vw - pw * vu) / r2;
     }
     return sum >= 0 ? 1 : -1;
   }
 
   function openChapter(i) {
     if (burst) return;
-    burst = { chapter: i, phase: "wind", at: 0, way: spinNow() };
+    burst = { chapter: i, phase: "wind", at: 0, way: spinNow(), spot: [0, 0, 0] };
 
-    // Every particle is taken from where it stands at this moment, and
-    // goes to the middle from there. One that has not been fired yet is
-    // fired now, so the whole chamber goes in rather than most of it.
+    // THE CHAMBER IS IN TWO PARTS WHEN THE PRESS LANDS, and the owner
+    // asked for them to behave as two:
     //
-    // AND EACH IS GIVEN A PLACE ON ONE RING, spread evenly round it.
-    // Most of the particles on this page at any moment are in the two
-    // streams, which are narrow lines running in from opposite corners
-    // — wind THAT in as it stands and what closes on the middle is a
-    // streak, not an implosion. Drawing them onto a ring first turns the
-    // two streams into one wheel, and it is the wheel that collapses.
-    // THE WHEEL THEY GATHER ONTO FACES THE WINDOW, and is not the
-    // orbit's own tilted ring. Two goes were spent on making it the
-    // orbit: its plane is very nearly the x–z one, so it stands almost
-    // edge-on to the eye, and a ring that lies edge-on cannot be watched
-    // closing — it comes out as a line sweeping about, which is what
-    // read as a crescent both times. A wheel square to the window
-    // collapses the way an implosion has to look, and there is nothing
-    // left of the orbit by then to be untrue to.
-    const ring = BURST_RING;
+    //   THE RING   what the orbit already has hold of. It comes in AS a
+    //              ring — every particle keeps the place on the orbit it
+    //              already had, and the ring itself narrows and turns.
+    //              Nothing is marshalled into position first.
+    //   THE LOOSE  everything still crossing the window in the two
+    //              streams. These stay their own particles: they fall in
+    //              towards the middle independently, each after a wait of
+    //              its own, and join what is there when they arrive.
+    //
+    // Told apart by how near the orbit a particle is standing, measured
+    // in the orbit's own plane.
+    const u = PLANE.u, w = PLANE.w;
+    const orbit = orbitNow();
+    burst.orbit0 = orbit;
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
       if (speck.wait > 0) { launch(speck); speck.wait = 0; }
-      // EVERY PARTICLE IS HELD FULLY LIT FOR THE LENGTH OF THE BURST.
-      // How brightly one is drawn is worked out from its age against
-      // its life — it fades up when it is fired and out again as it
-      // runs out — and a particle that was waiting to be fired has just
-      // been given an age of nothing, which draws at nothing. Left
-      // alone, a good half of the chamber took no part in the wind and
-      // what closed on the middle was a crescent rather than a wheel.
-      // Ages start again when the chapter is closed and they are fired
-      // out of the injectors properly.
+      // Every particle is held fully lit for the length of the burst.
+      // How brightly one is drawn is worked out from its age against its
+      // life, and one just fired has an age of nothing, which draws at
+      // nothing — left alone, a good half of the chamber took no part in
+      // the wind at all. Ages start again when the chapter is closed.
       speck.age = 1;
       speck.life = 60;
-      // Where it stands now, from the middle...
-      speck.wx = speck.x - core[0];
-      speck.wy = speck.y - core[1];
-      speck.wz = speck.z - core[2];
-      // ...and its own place on the orbit, spread evenly round it and
-      // kept in the band the disc already has, so what gathers is the
-      // chamber's own wheel — tilted, with a width to it — rather than
-      // a flat circle of evenly spaced dots.
-      // Its own place round the wheel, spread evenly, in a band with a
-      // width to it rather than on a hairline.
-      speck.aT = (n / specks.length) * Math.PI * 2;
-      speck.rT = ring * (1 + speck.band * BURST_BAND);
-      speck.zT = speck.lift * 8;
+
+      const x = speck.x - core[0], y = speck.y - core[1], z = speck.z - core[2];
+      const pu = x * u[0] + y * u[1] + z * u[2];
+      const pw = x * w[0] + y * w[1] + z * w[2];
+      const round = Math.hypot(pu, pw);
+      speck.onRing = Math.abs(round - orbit) < orbit * RING_NEAR;
+
+      if (speck.onRing) {
+        // Its own place on the orbit, kept exactly as it stands.
+        speck.rA = Math.atan2(pw, pu);
+        speck.rR = round;
+        speck.rOff = x * AXIS[0] + y * AXIS[1] + z * AXIS[2];
+      } else {
+        speck.wx = x; speck.wy = y; speck.wz = z;
+        speck.lag = random() * LOOSE_LAG;
+      }
     }
 
     // THE CHROME GOES WITH IT, ALL OF IT — the word, the cue, the crop
@@ -891,6 +899,7 @@
     // its own injector, staggered, so the chamber fills the way it does
     // when the page opens rather than snapping back into a finished ring.
     specks.forEach((speck) => {
+      speck.onRing = false;
       launch(speck);
       speck.wait = random() * between(LIFE);
     });
@@ -900,34 +909,49 @@
 
   /** Winding in. `p` runs 0 to 1 across the whole wind.
 
-      BOTH OF THESE GAIN AS IT GOES, which is the owner's "gain momentum
-      as they get closer to the center": the radius falls as `1 - p^n`,
-      so it barely moves at first and rushes at the end, and the angle
-      turns as `p^n`, so it is turning fastest when it is closest. A
-      plain exponential does the opposite of both — quickest at the start
-      and creeping in at the end — which is what this replaced. */
+      THE RING NARROWS AS A RING. Each of its particles keeps the angle
+      it already had on the orbit and is put back on the orbit at a
+      smaller radius, so what closes is the ellipse you were already
+      looking at rather than a new shape assembled out of it. Turning it
+      about the WINDOW's axis instead — which two earlier goes did — tips
+      it out of its own plane and sweeps it edge-on, and that came out as
+      a crescent both times.
+
+      BOTH THE NARROWING AND THE TURN GAIN AS THEY GO: the radius falls
+      as `1 - p^n` and the angle turns as `p^n`, so it barely moves at
+      first and rushes at the end, turning fastest when it is tightest. A
+      plain exponential does the opposite of both. */
   function windIn(p) {
-    // Three things at once, and all three leave every particle exactly
-    // where it already is at p = 0 — which is what makes the press
-    // itself invisible. Nothing jumps.
-    //
-    //   GATHER  out of the two streams and onto the orbit's own wheel
-    //   HOLD    the wheel closing on the middle, gaining the whole way
-    //   TURN    and turning faster the closer it gets, the way it was
-    //           already turning
-    const gather = Math.min(1, p / BURST_GATHER);
-    const ease = gather * gather * (3 - 2 * gather);
+    // THE RING FOLLOWS THE ORBIT IN AS THE MENU SHUTS, and then narrows
+    // on top of that. The menu is open when a chapter is pressed, so the
+    // orbit is at its widest — wide enough that a good part of the ring
+    // stands behind the eye and is clipped away, which came out as the
+    // top of an arc and nothing else. Riding the orbit's own closing
+    // carries it back inside the window before the winding has to do
+    // anything, and costs nothing: the menu was shutting anyway.
+    const shrink = burst.orbit0 > 0 ? orbitNow() / burst.orbit0 : 1;
     const held = Math.max(0, 1 - Math.pow(p, BURST_CLOSE));
     const turn = burst.way * BURST_TURNS * Math.PI * 2 * Math.pow(p, BURST_SPIN);
+    const spot = burst.spot;
     for (let n = 0; n < specks.length; n++) {
       const speck = specks[n];
-      if (speck.rT === undefined) continue;
-      const a = speck.aT + turn;
-      const tx = Math.cos(a) * speck.rT;
-      const ty = Math.sin(a) * speck.rT;
-      speck.x = core[0] + (speck.wx + (tx - speck.wx) * ease) * held;
-      speck.y = core[1] + (speck.wy + (ty - speck.wy) * ease) * held;
-      speck.z = core[2] + (speck.wz + (speck.zT - speck.wz) * ease) * held;
+
+      if (speck.onRing) {
+        onOrbit(speck.rA + turn, speck.rR * shrink * held, spot, core);
+        const off = speck.rOff * shrink * held;
+        speck.x = spot[0] + AXIS[0] * off;
+        speck.y = spot[1] + AXIS[1] * off;
+        speck.z = spot[2] + AXIS[2] * off;
+      } else if (speck.wx !== undefined) {
+        // A LOOSE ONE FALLS IN ON ITS OWN. It waits its own moment and
+        // then gains on the middle, so the ring is not joined by a
+        // marshalled crowd but by particles arriving one after another.
+        const q = Math.max(0, Math.min(1, (p - speck.lag) / Math.max(0.05, 1 - speck.lag)));
+        const left = 1 - Math.pow(q, LOOSE_DROP);
+        speck.x = core[0] + speck.wx * left;
+        speck.y = core[1] + speck.wy * left;
+        speck.z = core[2] + speck.wz * left;
+      }
       speck.vx = 0; speck.vy = 0; speck.vz = 0;
     }
   }
@@ -965,8 +989,20 @@
 
     chapterPage.hidden = false;
     page.classList.add("chapter-open");
-    // The frame after it joins the page, so the wave has something to
-    // cut it out of.
+    // THE WAVE IS RE-CUT EVERY TIME. Its shells are CSS animations on
+    // elements that are built once, and an animation only plays once
+    // unless it is given back to the browser as new — so reopening a
+    // chapter showed the page with no wave at all. Replacing the box's
+    // contents is what starts them again.
+    chapterWave.innerHTML = chapterWave.innerHTML;
+
+    // AND THE PAGE HAS TO BE MADE TO TRANSITION. It has just come off
+    // `display: none`, and a browser has no previous value to travel
+    // from in that case — it simply jumps to the finished state, which
+    // is what made the wave look instant however long it was given.
+    // Reading a layout property forces the starting state to be settled
+    // before the class that moves it is put on.
+    void chapterPage.offsetWidth;
     requestAnimationFrame(() => chapterPage.classList.add("here"));
   }
 

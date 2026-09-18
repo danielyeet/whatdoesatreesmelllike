@@ -435,41 +435,93 @@ wind runs straight into the wave.
 
 | | |
 |---|---|
-| **the wind** (`BURST_WIND`) | The chrome fades — the word, its cue and crop marks, the menu, this page's search, and the drawing's own labels and sights. The particles gather out of the two streams onto one wheel (`BURST_GATHER`), and that wheel closes on the middle, **gaining the whole way** and **turning faster the closer it gets**. |
-| **the wave** (`BURST_WAVE`) | They meet, and a shockwave goes out from the point with a ripple of three rings behind it. The chapter is **cut out of the black by that wave** — an expanding `clip-path` circle — rather than faded up underneath it. |
+| **the wind** (`BURST_WIND`) | The chrome fades — the word, its cue and crop marks, the menu, this page's search, and the drawing's own labels and sights. The chamber's **two populations** close on the middle, each in its own way (below). |
+| **the wave** (`BURST_WAVE`) | They meet, and the home page's own centre goes out from that point: a dark core with two translucent halo shells. The chapter is **cut out of the black** by it. |
 
-Three things about the wind are the owner's own notes and are worth keeping:
+### Two populations, and why they are not one
 
-- **It gains as it closes.** The radius falls as `1 - p^n` and the angle turns as `p^n`,
-  so both are slow at the start and rushing at the end. A plain exponential does the
-  opposite of both — quickest at the start, creeping in at the end — which is what this
-  replaced.
-- **The spin does not change direction.** Which way it is already turning is read off the
-  particles at the moment of the press (`spinNow`), in the plane of the *window*, and
-  that sign is what it winds with.
-- **Everything fades, the word included.** Not a beat before or after the particles start
-  to move.
+The owner's second note: the ring should *"converge while it is still in its ring form,
+with all the particles that are present in the ring"*, and the rest should *"become
+independent particles that would only join independently once there is the implosion"*.
+So the chamber is told apart at the press, by how near the orbit a particle is standing,
+measured in the orbit's own plane (`RING_NEAR`):
 
-### Three goes at the wheel, and why it is square to the window
+- **The ring** — what the orbit already has hold of. It comes in **as a ring**: every
+  particle keeps the place on the orbit it already had, and the ring itself narrows and
+  turns along its own plane. Nothing is marshalled into position first, and nothing is
+  re-spread: it is the ellipse you were already looking at, closing.
+- **The loose** — everything still crossing the window in the two streams. These stay
+  their own particles. Each waits its own moment (`LOOSE_LAG`) and then falls in, gaining
+  as it goes (`LOOSE_DROP`), so the ring is joined by particles arriving one after
+  another rather than by a marshalled crowd.
 
-Worth writing down, because two of them looked plausible and were wrong, and the failure
-looked the same each time — a **crescent** closing on the middle instead of a wheel.
+Midway through the wind there is therefore ink near the middle **and** ink far out at the
+corners, in the same frame. That is the whole effect, and it is what the test pins.
 
-1. **Winding the arrangement in as it stood.** Most of the particles on this page at any
-   moment are in the two streams, which are narrow lines running in from opposite
-   corners. Scaling that down keeps it a line. So they are drawn onto a ring first, and
-   it is the ring that collapses.
-2. **Making that ring the orbit's own.** The orbit's plane is very nearly the x–z one —
-   it stands almost **edge-on to the eye** — and a ring lying edge-on cannot be watched
-   closing: it comes out as a line sweeping about. Worse, rotating it about the window's
-   axis turns it *out of* its own plane. The wheel is square to the window now
-   (`BURST_RING`, `BURST_BAND`), which is the only way an implosion reads as one, and by
-   then there is nothing left of the orbit to be untrue to.
-3. **A particle's brightness is worked out from its age against its life.** Any particle
-   that was still waiting to be fired when the press landed has just been given an age of
-   nothing, and draws at nothing — so a good half of the chamber took no part in the wind.
-   Every particle is **held fully lit** for the length of the burst, and given its ages
-   back when the chapter is closed.
+**The ring rides the orbit in as the menu shuts.** The menu is open when a chapter is
+pressed, so the orbit is at its widest — wide enough that a good part of the ring stands
+behind the eye and is clipped away, which came out as the top of an arc and nothing else.
+Following the orbit's own closing (`burst.orbit0`) carries it back inside the window
+before the winding has to do anything, and costs nothing: the menu was shutting anyway.
+
+**Both the narrowing and the turn gain as they go** — the radius falls as `1 - p^n` and
+the angle turns as `p^n`, so it barely moves at first and rushes at the end, turning
+fastest when it is tightest. A plain exponential does the opposite of both, and that is
+what this replaced.
+
+### The wave is the home page's centre
+
+The owner asked for the shockwave to be *"the same effect as the central node in the home
+page... spread throughout the entire page"*. That centre is three things, and the numbers
+are taken straight from `node-scene.js`:
+
+| | |
+|---|---|
+| **the core** | a solid near-black sphere, `#1c1c14` |
+| **the inner shell** | 2.37× its radius, `#8d8a80` at 0.24 |
+| **the outer shell** | 5.15× its radius, `#8d8a80` at 0.09 |
+
+Here the **core is the chapter's own black**, opened out by the wave — it is the page's
+`clip-path` circle rather than an element, so the page *is* the core rather than something
+drawn underneath it. The two shells go out ahead of it and fade as they widen, drawn as
+soft-edged bands rather than hairlines, because a shell is a sphere seen through and what
+passes is a thickness. A **seed** — a small dark disc at the point they meet — is the core
+before it has anywhere to go; without it the wave starts from nothing visible and the
+meeting has no moment to it.
+
+**Two things this needs and neither is obvious.** The page has just come off
+`display: none`, and a browser has no previous value to transition from in that case — it
+jumps straight to the finished state, which made the wave look instant however long it
+was given; reading a layout property first settles the starting state. And the shells are
+CSS animations on elements built once, so they only play once — reopening a chapter showed
+the page with no wave at all until the wave's contents were replaced to start them again.
+
+### What was tried and was wrong
+
+Four goes, and the failures are worth keeping because three of them looked plausible and
+two produced the *same* wrong picture — a crescent closing on the middle instead of a ring.
+
+1. **Winding the arrangement in as it stood.** Most of the particles are in the two
+   streams, which are narrow lines running in from opposite corners; scaling that down
+   keeps it a line.
+2. **Gathering everything onto one ring first.** It worked, and it was wrong for a
+   different reason: it marshalled the streams into the ring, which is exactly what the
+   owner then asked not to happen.
+3. **Turning the ring about the WINDOW's axis.** The orbit's plane is nearly the x–z one,
+   so it stands almost edge-on; rotating it about the window's axis tips it out of its own
+   plane and sweeps it edge-on. The turn has to be taken **along the orbit** — by asking
+   where on the orbit a particle's own place has got to.
+4. **A particle's brightness is worked out from its age against its life.** Any particle
+   still waiting to be fired when the press landed has just been given an age of nothing,
+   and draws at nothing — so a good half of the chamber took no part in the wind. Every
+   particle is **held fully lit** for the length of the burst, and given its ages back
+   when the chapter is closed.
+
+One more thing that is not a bug but will look like one: **how much of the chamber is a
+ring depends on how long the page has been open.** Particles are fired from the injectors
+and take a few seconds to reach the orbit, so pressing a chapter a second after the page
+loads winds in mostly loose particles and a thin ring. That is honest, and the wind copes
+with it; the test lets the chamber fill first because it is testing the settled state.
 
 ### The page it opens
 
