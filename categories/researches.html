@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Researches — The Taste of Aldehydes</title>
+<title>Works — The Taste of Aldehydes</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,10 +23,13 @@
   everything else is the hairlines, the mono readings and the numbers
   the rest of the site is made of.
 
-  TO ADD A RESEARCH: copy one whole <tr> below. What a row carries is
-  written ON the row (data-no, data-name, data-date) and not read off
-  the lettering, so sorting by date still sorts by date; the number is
-  the research's own and does not change when the table is sorted.
+  TO ADD A WORK: copy one whole <tr> below. What a row carries is
+  written ON the row (data-no, data-name, data-kind, data-date) and not
+  read off the lettering, so sorting by date still sorts by date; the
+  number is the work's own and does not change when the table is sorted.
+  data-kind is either "Research" (gone and found out, written up) or
+  "Exploration" (gone and had a look), and it is what the third column
+  reads.
   A row with data-open="no" is one that hasn't been written yet: it is
   drawn quieter and is not a link.
 
@@ -39,13 +42,15 @@
 <div class="index-page">
 
   <header class="index-head">
-    <p class="index-name">Researches</p>
+    <p class="index-name">Works</p>
     <p class="index-col">Information</p>
     <div class="index-say">
       <p class="index-say-lede">
-        Pieces where I go and find out rather than describe: a material
-        at a time, where it comes from, what it is called, and what it
-        actually smells like on a strip.
+        Pieces where I go and find out rather than describe — a
+        <strong>research</strong> is a material at a time, where it comes
+        from, what it is called and what it actually smells like on a
+        strip; an <strong>exploration</strong> is going out after a smell
+        and writing down what is there.
       </p>
       <p class="index-say-head">New research &amp; corrections</p>
       <p class="index-say-meta">you@example.com</p>
@@ -72,8 +77,8 @@
   <div class="index-board">
     <div class="index-search">
       <span class="index-search-mark" aria-hidden="true"></span>
-      <input class="index-search-field" type="search" placeholder="Search researches" aria-label="Search the researches">
-      <span class="index-count" aria-hidden="true">006</span>
+      <input class="index-search-field" type="search" placeholder="Search works" aria-label="Search the works">
+      <span class="index-count" aria-hidden="true">008</span>
     </div>
 
     <div class="index-scroll" tabindex="0">
@@ -81,39 +86,58 @@
         <thead>
           <tr>
             <th scope="col"><button class="index-sort sorted" type="button" data-key="no">No.</button></th>
-            <th scope="col"><button class="index-sort" type="button" data-key="name">Research</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="name">Work</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="kind">Research/Exploration</button></th>
             <th scope="col"><button class="index-sort" type="button" data-key="date">Date</button></th>
           </tr>
         </thead>
         <tbody>
-          <tr data-no="1" data-name="Resins in Perfumery" data-date="2026-02-14">
+          <tr data-no="1" data-name="Resins in Perfumery" data-kind="Research" data-date="2026-02-14">
             <td class="index-no">001</td>
             <td class="index-what"><a href="../works/resins-in-perfumery.html">Resins in Perfumery</a></td>
+            <td class="index-kind">Research</td>
             <td class="index-date">14.02.2026</td>
           </tr>
-          <tr data-no="2" data-name="Untitled" data-date="" data-open="no">
+          <tr data-no="2" data-name="Exploring the smell of a forest part 1" data-kind="Exploration" data-date="" data-open="no">
             <td class="index-no">002</td>
-            <td class="index-what">Untitled</td>
+            <td class="index-what">Exploring the smell of a forest part 1</td>
+            <td class="index-kind">Exploration</td>
             <td class="index-date">—</td>
           </tr>
-          <tr data-no="3" data-name="Untitled" data-date="" data-open="no">
+          <tr data-no="3" data-name="Exploring the smell of rain part 1" data-kind="Exploration" data-date="" data-open="no">
             <td class="index-no">003</td>
-            <td class="index-what">Untitled</td>
+            <td class="index-what">Exploring the smell of rain part 1</td>
+            <td class="index-kind">Exploration</td>
             <td class="index-date">—</td>
           </tr>
-          <tr data-no="4" data-name="Untitled" data-date="" data-open="no">
+          <tr data-no="4" data-name="Untitled" data-kind="" data-date="" data-open="no">
             <td class="index-no">004</td>
             <td class="index-what">Untitled</td>
+            <td class="index-kind">—</td>
             <td class="index-date">—</td>
           </tr>
-          <tr data-no="5" data-name="Untitled" data-date="" data-open="no">
+          <tr data-no="5" data-name="Untitled" data-kind="" data-date="" data-open="no">
             <td class="index-no">005</td>
             <td class="index-what">Untitled</td>
+            <td class="index-kind">—</td>
             <td class="index-date">—</td>
           </tr>
-          <tr data-no="6" data-name="Untitled" data-date="" data-open="no">
+          <tr data-no="6" data-name="Untitled" data-kind="" data-date="" data-open="no">
             <td class="index-no">006</td>
             <td class="index-what">Untitled</td>
+            <td class="index-kind">—</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="7" data-name="Untitled" data-kind="" data-date="" data-open="no">
+            <td class="index-no">007</td>
+            <td class="index-what">Untitled</td>
+            <td class="index-kind">—</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="8" data-name="Untitled" data-kind="" data-date="" data-open="no">
+            <td class="index-no">008</td>
+            <td class="index-what">Untitled</td>
+            <td class="index-kind">—</td>
             <td class="index-date">—</td>
           </tr>
         </tbody>

@@ -19,7 +19,8 @@
 //   IT SORTS. Every heading is a button. Pressing one sorts the rows
 //   by that column and pressing it again turns the sort round. What it
 //   sorts on is written on the row itself (`data-no`, `data-name`,
-//   `data-house`, `data-date`) rather than read off the lettering, so
+//   `data-house`, `data-kind`, `data-date`) rather than read off the
+//   lettering, so
 //   a date reading "14.03.2026" still sorts as a date and a number
 //   still sorts as a number.
 //
@@ -57,6 +58,10 @@
       no: (row) => Number(row.dataset.no || 0),
       name: (row) => (row.dataset.name || "").toLowerCase(),
       house: (row) => (row.dataset.house || "").toLowerCase(),
+      // Research or Exploration, on the Works page. A row that is
+      // neither yet sorts to the END, the same way an unwritten date
+      // does and for the same reason.
+      kind: (row) => (row.dataset.kind || "zzz").toLowerCase(),
       // A row with no date is one that hasn't been written yet. It
       // sorts to the END rather than the beginning, because an empty
       // string is the earliest thing there is and nothing unwritten

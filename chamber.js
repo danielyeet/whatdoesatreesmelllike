@@ -622,19 +622,6 @@
   chapterPage.className = "chapter-page dark-surface";
   chapterPage.hidden = true;
   chapterPage.innerHTML =
-    // THE HUB, GOING OUT. The owner asked for the shockwave to be the
-    // centre of the home page's map spread across the whole window, and
-    // that centre is three things: a solid near-black core with two
-    // translucent halo shells round it, at 2.37 and 5.15 times its
-    // radius and at a quarter and a tenth of its weight (see the node
-    // map's report). Here the core is the chapter's own black, opened
-    // out by the wave, and these two are the shells going out ahead of
-    // it — the same colours, the same ratios, the same look.
-    '<div class="chapter-wave" aria-hidden="true">' +
-      '<span class="chapter-shell-in"></span>' +
-      '<span class="chapter-shell-out"></span>' +
-      '<span class="chapter-core"></span>' +
-    "</div>" +
     '<div class="chapter-sheet">' +
       '<button type="button" class="chapter-back">' +
         '<span aria-hidden="true">&#8592;</span> Favourites' +
@@ -649,7 +636,6 @@
   const chapterSpec = chapterPage.querySelector(".chapter-spec");
   const chapterNote = chapterPage.querySelector(".chapter-note");
   const chapterCards = chapterPage.querySelector(".chapter-cards");
-  const chapterWave = chapterPage.querySelector(".chapter-wave");
   chapterPage.querySelector(".chapter-back")
     .addEventListener("click", () => closeChapter());
   // Inside the chamber rather than loose in the page. Every direct child
@@ -658,6 +644,35 @@
   // style.css says so and it has caught features before. In here it is
   // dimmed with the rest of the page, which is what should happen.
   shell.appendChild(chapterPage);
+
+  // THE HUB, GOING OUT — AND IT STANDS OUTSIDE THE PAGE IT OPENS.
+  //
+  // The owner asked for the shockwave to be the centre of the home
+  // page's map spread across the whole window, and that centre is three
+  // things: a solid near-black core with two translucent halo shells
+  // round it, at 2.37 and 5.15 times its radius and at a quarter and a
+  // tenth of its weight (see the node map's report). Here the core is
+  // the chapter's own black, opened out by the wave, and these two are
+  // the shells going out ahead of it.
+  //
+  // AHEAD OF IT is the point, and it is why this is its own element
+  // rather than the first thing inside `chapterPage`. The owner asked
+  // for the centre's effect "on the background emitted just before the
+  // black explosion" — and for a round it could not be, because the
+  // shells lived INSIDE the page and the page is cut open from nothing:
+  // whatever the shells did in the first moments was clipped away with
+  // everything else, so the two could only ever arrive together. Out
+  // here they go out over the chamber's own white, and the black
+  // follows them (`WAVE_LEAD`).
+  const chapterWave = document.createElement("div");
+  chapterWave.className = "chapter-wave";
+  chapterWave.setAttribute("aria-hidden", "true");
+  chapterWave.hidden = true;
+  chapterWave.innerHTML =
+    '<span class="chapter-shell-in"></span>' +
+    '<span class="chapter-shell-out"></span>' +
+    '<span class="chapter-core"></span>';
+  shell.appendChild(chapterWave);
 
   const front = document.createElement("canvas");
   front.className = "chamber-front";
@@ -789,7 +804,8 @@
   // launched again from the injectors.
   // ============================================================
   const BURST_WIND = 2.3;      // closing on the middle, and fading with it
-  const BURST_WAVE = 1.15;     // the hub going out, and the page it opens
+  const BURST_WAVE = 1.65;     // the hub going out, and the page it opens
+  const WAVE_LEAD = 0.34;      // the share of that the hub has to itself first
   const BURST_CLOSE = 2.6;     // how sharply it gains on the middle (a power)
   const BURST_TURNS = 1.15;    // turns the ring ADDS on the way in, over its own
   const BURST_SPIN = 2.5;      // and how much of that is saved for the end (a power)
@@ -798,9 +814,9 @@
   const SPIN_ELSE = -0.55;     // and what is used when there is no ring to read
   const LOOSE_LAG = 0.5;       // the share of the wind a loose one may wait before falling
   const LOOSE_SPAN = [0.3, 0.62];  // and how long its own fall then takes
-  const LOOSE_DROP = [1.5, 3.0];   // each gaining at a rate of its own (a power)
+  const LOOSE_COAST = 0.55;    // how long it keeps going the way it was, in seconds
   const MARKS_FADE = 1.25;     // the drawing's own chrome going, with the rest of it
-  const CLIP_ROUND = 56;       // corners in the ellipse the page is cut out with
+  const CLIP_ROUND = 96;       // corners in the ellipse the page is cut out with
 
   /** Null, or the burst that is running / the chapter that is open. */
   let burst = null;
@@ -976,9 +992,15 @@
         // fitted inside what is left, so nothing is still falling when
         // the wave goes out.
         speck.wx = x; speck.wy = y; speck.wz = z;
+        // AND THE WAY IT WAS ALREADY GOING. A loose particle is in the
+        // middle of crossing the window when the press lands, and the
+        // owner asked for it to keep going that way — "they dont have to
+        // take a direct path... find out their direction as you press
+        // the button, and then continue that path as if there is a
+        // center of gravity at the center of the screen".
+        speck.wvx = speck.vx; speck.wvy = speck.vy; speck.wvz = speck.vz;
         speck.span = between(LOOSE_SPAN);
         speck.lag = random() * Math.max(0.05, Math.min(LOOSE_LAG, 0.97 - speck.span));
-        speck.drop = between(LOOSE_DROP);
       }
     }
 
@@ -1002,6 +1024,7 @@
     chapterPage.classList.remove("here");
     chapterPage.style.clipPath = "";
     chapterPage.hidden = true;
+    chapterWave.hidden = true;
     // Back into the physics' hands: every particle is fired again from
     // its own injector, staggered, so the chamber fills the way it does
     // when the page opens rather than snapping back into a finished ring.
@@ -1056,14 +1079,37 @@
         speck.y = spot[1] + AXIS[1] * off;
         speck.z = spot[2] + AXIS[2] * off;
       } else if (speck.wx !== undefined) {
-        // A LOOSE ONE FALLS IN ON ITS OWN. It waits its own moment and
-        // then gains on the middle, so the ring is not joined by a
-        // marshalled crowd but by particles arriving one after another.
+        // A LOOSE ONE FALLS IN ON ITS OWN, AND ON A CURVE.
+        //
+        // It used to be drawn straight down its own radius, which is the
+        // one path a thing crossing a room never takes. What it does now
+        // is carry on the way it was already going and be bent out of it
+        // by the middle — two terms, multiplied:
+        //
+        //   COAST   where it would have got to on the heading it had
+        //           when the press landed, had nothing pulled at it.
+        //   LEFT    how much of the way out it still has, falling as
+        //           `1 - q^n` — flat at the start and rushing at the
+        //           end, which is a thing gathering speed as it nears
+        //           a centre of gravity.
+        //
+        // Multiplied rather than blended, and that is what makes the
+        // path a curve: at q = 0 `left` is 1 and its slope is 0, so the
+        // particle leaves at EXACTLY the velocity it had — no kink at
+        // the press — and the pull only tells later, by which time it
+        // has already swung wide of its own radius.
+        //
+        // `n` is BURST_CLOSE, the same power the ring narrows on, which
+        // is the owner's "acceleration matching the particles of the
+        // ring". They still arrive independently: what differs between
+        // two of them is when they set off and how long they take, not
+        // how they gather.
         const q = Math.max(0, Math.min(1, (p - speck.lag) / speck.span));
-        const left = 1 - Math.pow(q, speck.drop);
-        speck.x = core[0] + speck.wx * left;
-        speck.y = core[1] + speck.wy * left;
-        speck.z = core[2] + speck.wz * left;
+        const left = 1 - Math.pow(q, BURST_CLOSE);
+        const coast = LOOSE_COAST * q;
+        speck.x = core[0] + (speck.wx + speck.wvx * coast) * left;
+        speck.y = core[1] + (speck.wy + speck.wvy * coast) * left;
+        speck.z = core[2] + (speck.wz + speck.wvz * coast) * left;
       }
       speck.vx = 0; speck.vy = 0; speck.vz = 0;
     }
@@ -1100,19 +1146,6 @@
       chapterCards.appendChild(card);
     });
 
-    // THE WAVE GOES OUT IN THE RING'S OWN PLANE, not square to the
-    // screen. The shape is measured off the orbit as it stands and
-    // handed to the CSS as four numbers — where its middle is on the
-    // window, which way its long axis lies, and how flat it is drawn —
-    // and the shells are turned and pressed to match. The page itself
-    // is cut out with the same ellipse, by `clipTo`.
-    if (burst && !burst.ring) burst.ring = ringOnScreen();
-    const ring = (burst && burst.ring) || ringOnScreen();
-    chapterPage.style.setProperty("--wave-x", ring.x.toFixed(1) + "px");
-    chapterPage.style.setProperty("--wave-y", ring.y.toFixed(1) + "px");
-    chapterPage.style.setProperty("--wave-turn", ring.turn.toFixed(4) + "rad");
-    chapterPage.style.setProperty("--wave-flat", ring.flat.toFixed(4));
-
     // Shut before it is shown, so the black is never on the window at
     // full size for even one frame.
     if (REDUCE_MOTION || !burst) chapterPage.style.clipPath = "none";
@@ -1121,6 +1154,26 @@
     chapterPage.hidden = false;
     page.classList.add("chapter-open");
     chapterPage.classList.add("here");
+  }
+
+  /** THE HUB, CAST OUT FROM THE POINT THEY MET — and on its own, a beat
+      before the black follows it.
+
+      IN THE RING'S OWN PLANE, not square to the screen: the shape is
+      measured off the orbit as it stands (`ringOnScreen`) and handed to
+      the stylesheet as four numbers — where its middle is on the window,
+      which way its long axis lies, and how flat it is drawn. The shells
+      are turned and pressed to match, and `clipTo` cuts the page out
+      with the same ellipse afterwards. */
+  function castWave() {
+    if (REDUCE_MOTION) return;
+    if (burst && !burst.ring) burst.ring = ringOnScreen();
+    const ring = (burst && burst.ring) || ringOnScreen();
+    chapterWave.style.setProperty("--wave-x", ring.x.toFixed(1) + "px");
+    chapterWave.style.setProperty("--wave-y", ring.y.toFixed(1) + "px");
+    chapterWave.style.setProperty("--wave-turn", ring.turn.toFixed(4) + "rad");
+    chapterWave.style.setProperty("--wave-flat", ring.flat.toFixed(4));
+    chapterWave.hidden = false;
     // THE WAVE IS RE-CUT EVERY TIME. Its shells are CSS animations on
     // elements that are built once, and an animation only plays once
     // unless it is given back to the browser as new — so reopening a
@@ -1143,24 +1196,44 @@
       if (p >= 1) {
         burst.phase = "wave";
         burst.at = 0;
-        // The wave goes out from the point they met, and cuts the
-        // chapter out of the black as it goes.
+        // The hub goes out from the point they met. The chapter is not
+        // laid yet — it follows a beat later, cut out by the same wave
+        // (see `WAVE_LEAD` below).
         burst.ring = ringOnScreen();
         shell.classList.add("burst-wave");
-        layChapter(burst.chapter);
+        castWave();
       }
       return true;
     }
 
-    // THE WAVE. The page is cut open by hand rather than by a CSS
-    // transition, because what cuts it is a turned ellipse and CSS has
-    // no turned ellipse to transition to — see `clipTo`.
-    const q = Math.min(1, burst.at / BURST_WAVE);
-    clipTo(1 - Math.pow(1 - q, 3));
+    // THE WAVE, IN TWO BEATS.
+    //
+    //   THE HUB      goes out first, over the chamber's own white, for
+    //                `WAVE_LEAD` of the wave. This is the owner's
+    //                "effect from the central node on the background
+    //                emitted just before the black explosion", and it
+    //                only reads as before if there is nothing black
+    //                under it yet.
+    //   THE BLACK    follows it out, cut with the same ellipse.
+    //
+    // The page is cut open by hand rather than by a CSS transition,
+    // because what cuts it is a turned ellipse and CSS has no turned
+    // ellipse to transition to — see `clipTo`.
+    const lead = BURST_WAVE * WAVE_LEAD;
+    if (burst.at >= lead) {
+      if (chapterPage.hidden) layChapter(burst.chapter);
+      const q = Math.min(1, (burst.at - lead) / (BURST_WAVE - lead));
+      // SMOOTHER THAN A CUBIC OUT, which the owner asked for. This is
+      // smootherstep: flat at both ends rather than only at the far one,
+      // so the black neither jumps away from the middle nor stops dead
+      // at the edge of the window — it is one breath out.
+      clipTo(q * q * q * (q * (q * 6 - 15) + 10));
+    }
     if (burst.at >= BURST_WAVE) {
       burst.phase = "open";
       burst.at = 0;
       chapterPage.style.clipPath = "none";
+      chapterWave.hidden = true;
     }
     return true;
   }

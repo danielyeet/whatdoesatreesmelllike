@@ -1007,6 +1007,42 @@ body.view-fragrances .sheet-search { display: none; }
   background: var(--bg);
   padding: 2px 5px 2px 0;
 }
+/* A CAPTION IS THE NAME, AND THE LINE ABOUT IT ONLY WHEN POINTED AT.
+   The owner asked for the sheet to read as names — "Pineward", "ADAR" —
+   with the rest kept back until you ask for it, and for the writing to
+   stop getting in the way of the lines. Both come out of the same
+   arrangement: the say is taken OUT OF THE FLOW, so the box the caption
+   measures (and therefore the room every line is routed around) is the
+   name's alone. A long say cost the map a line before this; now it
+   costs it nothing, because as far as the layout is concerned it is not
+   there until it is wanted. */
+.sheet-frame .sheet-name { display: block; }
+.sheet-frame .sheet-say {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 3px);
+  width: max-content;
+  max-width: 220px;
+  color: var(--ink);
+  background: var(--bg);
+  padding: 2px 5px 2px 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s var(--menu-ease);
+}
+/* `hot` is the drawing's own word for the picture under the pointer;
+   :hover and :focus-within are what answers when the script is not
+   running, so the say still works on the plain page. */
+.sheet-frame:hover .sheet-say,
+.sheet-frame:focus-within .sheet-say,
+.sheet-frame.hot .sheet-say { opacity: 1; }
+/* On the settled picture the caption is printed INSIDE its own bottom
+   corner, so the say goes above the name rather than below it — below
+   is off the bottom of the print. */
+.sheet.scripted .sheet-frame.is-plate .sheet-say {
+  top: auto;
+  bottom: calc(100% + 3px);
+}
 /* A picture comes up as its line reaches it, over a moment rather than
    in one frame: the map draws itself rather than switching itself on.
    ONLY once the sheet has settled, though. Every picture takes its turn
@@ -2110,7 +2146,12 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
    the hand. It is scoped to this page, so no other page on the site
    spends it, and pineward.js keeps its own copy of the same value for
    the canvas (GREEN). Change one and change the other. */
-.pineward-page { --pine-green: #1a4a2c; }
+/* THE HOUSE'S TWO COLOURS. --pine-green is the accent, spent nowhere
+   else on the site; --pine-bark is the brown of a trunk, and the wood
+   in the margins is drawn between the two — bark at the trunk, green
+   out at the needles. pineward.js keeps the same pair as GREEN and
+   BARK for the canvas: change one and change the other. */
+.pineward-page { --pine-green: #1a4a2c; --pine-bark: #4a3422; }
 
 .pine-canopy {
   position: fixed;
@@ -2417,6 +2458,222 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
    go next on the right. Both are the same small mono as the rest of
    the chrome; the difference between them is only which way they
    point. */
+/* ==================================================================
+   THE PINEWARD GALLERY — works/pineward.html only
+
+   The pictures the owner took for that page, at the foot of it: small
+   squares in a strip that cycles on its own, and a viewer that opens
+   any of them over a darkened page. pineward-gallery.js.
+
+   It stands above the wood (z-index 1) like everything else that is
+   read on this page — the canvas behind is decoration and must never
+   come over the reading.
+================================================================== */
+.pine-gallery {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 56px 64px 10px;
+}
+.pine-gallery-head {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pine-green);
+  margin: 0 0 22px;
+}
+/* THE STRIP. The arrows stand outside the window the pictures travel
+   in, so a picture is never half under one. */
+.pine-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pine-reel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.pine-run {
+  display: flex;
+  gap: 14px;
+  will-change: transform;
+}
+/* SMALL, AND SQUARE. The picture files are cut square already, so
+   nothing here has to crop: the box is square and the picture fills
+   it. `flex: 0 0 auto` is what keeps them their own size rather than
+   being shared out across the window. */
+.pine-shot {
+  flex: 0 0 auto;
+  display: block;
+  width: 150px;
+  height: 150px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
+}
+.pine-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s var(--menu-ease);
+}
+.pine-shot:hover, .pine-shot:focus-visible {
+  border-color: var(--pine-green);
+  transform: translateY(-2px);
+}
+.pine-shot:hover img { opacity: 0.86; }
+
+/* THE ARROWS, on the page and in the viewer both — the owner asked for
+   the strip to carry the same pair the viewer does. Drawn as this
+   site draws everything: a hairline square with a mark in it. */
+.pine-arrow, .pine-viewer-arrow, .pine-viewer-shut {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.25s var(--menu-ease), border-color 0.25s var(--menu-ease),
+              opacity 0.25s var(--menu-ease);
+}
+.pine-arrow:hover, .pine-arrow:focus-visible {
+  color: var(--pine-green);
+  border-color: var(--pine-green);
+}
+/* An arrow at the end of the strip is drawn back rather than taken
+   away: the strip still rounds the ends, so it is not off — it is the
+   reading that says which way there is more. */
+.pine-arrow:disabled { opacity: 0.35; cursor: default; }
+
+.pine-gallery-say {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 18px 0 0;
+}
+
+/* ==================================================================
+   THE VIEWER — the whole page darkened, one picture standing in the
+   middle of it, its number in the top right corner of that picture,
+   and an arrow either side.
+================================================================== */
+html.pine-viewing, html.pine-viewing body { overflow: hidden; }
+.pine-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 3vw, 34px);
+  padding: clamp(16px, 5vh, 54px) clamp(12px, 4vw, 48px);
+  background: rgba(12, 12, 8, 0.93);
+  opacity: 0;
+  transition: opacity 0.26s var(--menu-ease);
+}
+.pine-viewer.here { opacity: 1; }
+.pine-viewer[hidden] { display: none; }
+
+.pine-viewer-plate {
+  position: relative;
+  margin: 0;
+  display: flex;
+  min-width: 0;
+  max-width: min(1100px, 100%);
+  max-height: 100%;
+}
+.pine-viewer-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - clamp(32px, 10vh, 108px));
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid rgba(232, 232, 224, 0.22);
+  background: #14140e;
+}
+/* THE NUMBER, in the top right corner OF THE PICTURE — not of the
+   window. It says where this one stands in the strip and nothing
+   else. */
+.pine-viewer-no {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #e8e8e0;
+  background: rgba(12, 12, 8, 0.72);
+  padding: 4px 8px;
+}
+/* THE SWAP. Out the way it is going and in from the other side, both
+   halves short: 150ms out and 240ms back, which is the "smooth and
+   fast" the owner asked for. A cross-fade between two photographs is
+   neither — it is a moment of mud. */
+.pine-viewer-plate { transition: transform 0.15s ease-in, opacity 0.15s ease-in; }
+.pine-viewer-plate.leaving-on { transform: translateX(-36px); opacity: 0; }
+.pine-viewer-plate.leaving-back { transform: translateX(36px); opacity: 0; }
+.pine-viewer-plate.going-on,
+.pine-viewer-plate.going-back {
+  animation: pine-swap 0.24s cubic-bezier(0.18, 0.7, 0.26, 1) both;
+}
+.pine-viewer-plate.going-back { animation-name: pine-swap-back; }
+@keyframes pine-swap {
+  from { transform: translateX(42px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes pine-swap-back {
+  from { transform: translateX(-42px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.pine-viewer-arrow, .pine-viewer-shut {
+  border-color: rgba(232, 232, 224, 0.3);
+  background: rgba(12, 12, 8, 0.6);
+  color: #e8e8e0;
+}
+.pine-viewer-arrow:hover, .pine-viewer-arrow:focus-visible,
+.pine-viewer-shut:hover, .pine-viewer-shut:focus-visible {
+  border-color: #e8e8e0;
+  background: rgba(232, 232, 224, 0.12);
+}
+.pine-viewer-shut {
+  position: absolute;
+  top: clamp(12px, 3vh, 26px);
+  right: clamp(12px, 3vw, 26px);
+}
+
+@media (max-width: 720px) {
+  .pine-gallery { padding: 44px 22px 10px; }
+  .pine-shot { width: 108px; height: 108px; }
+  .pine-viewer { gap: 8px; padding: 14px 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pine-run { transition: none !important; }
+  .pine-shot, .pine-shot img, .pine-viewer { transition: none; }
+  .pine-shot:hover, .pine-shot:focus-visible { transform: none; }
+  .pine-viewer-plate { transition: none; animation: none !important; }
+  .pine-viewer-plate.leaving-on, .pine-viewer-plate.leaving-back {
+    transform: none;
+    opacity: 1;
+  }
+}
+
 .pine-foot {
   position: relative;
   z-index: 1;
@@ -3277,6 +3534,18 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
 .index-table .index-date { font-family: var(--mono); font-size: 12px; }
 .index-table .index-no { width: 64px; max-width: none; }
 .index-table .index-date { width: 92px; max-width: none; }
+/* WHAT KIND OF WORK IT IS — Research or Exploration — on the Works
+   page. Set in the mono the rest of the readings on this page use, and
+   in small capitals, so it reads as a classification rather than as a
+   second title. */
+.index-table .index-kind {
+  width: 150px;
+  max-width: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .index-table .index-of { width: 30%; }
 .index-table td a { color: inherit; text-decoration: none; display: block; }
 .index-table tr:hover .index-what { color: var(--ink); }
@@ -3663,12 +3932,22 @@ body.find-reading .find-reading-note { opacity: 1; }
                 is the core before it has anywhere to go. Without it the
                 wave starts from nothing visible and the meeting has no
                 moment to it. */
+/* IT STANDS OUTSIDE THE PAGE IT OPENS, and over the whole window. For
+   a round it was the first thing inside .chapter-page — and .chapter-page
+   is cut open from nothing, so whatever the shells did in the first
+   moments was clipped away with everything else and the hub could only
+   ever arrive at the same instant as the black. The owner asked for it
+   "just before the black explosion", which means it has to be able to go
+   out over the chamber's own white first. Its z-index puts it under the
+   page (4) and over the drawing (3). */
 .chapter-wave {
-  position: absolute;
+  position: fixed;
   inset: 0;
+  z-index: 3;
   pointer-events: none;
   overflow: hidden;
 }
+.chapter-wave[hidden] { display: none; }
 /* AND ALL OF IT LIES IN THE RING'S PLANE. `--wave-x` and `--wave-y` are
    where the middle of the orbit lands on the window, `--wave-turn` the
    angle its long axis is standing at, and `--wave-flat` how flat it is
@@ -3692,7 +3971,7 @@ body.find-reading .find-reading-note { opacity: 1; }
     rgba(141, 138, 128, 0.24) 68%,
     rgba(141, 138, 128, 0.07) 86%,
     rgba(141, 138, 128, 0) 100%);
-  animation: chapter-shell 1.15s cubic-bezier(0.12, 0.66, 0.24, 1) both;
+  animation: chapter-shell 1.65s cubic-bezier(0.14, 0.62, 0.22, 1) both;
 }
 /* The outer shell: 5.15/2.37 of the inner, and a tenth of the weight. */
 .chapter-shell-out {
@@ -3702,7 +3981,7 @@ body.find-reading .find-reading-note { opacity: 1; }
     rgba(141, 138, 128, 0) 60%,
     rgba(141, 138, 128, 0.09) 76%,
     rgba(141, 138, 128, 0) 96%);
-  animation: chapter-shell 1.15s cubic-bezier(0.12, 0.66, 0.24, 1) both;
+  animation: chapter-shell 1.65s cubic-bezier(0.14, 0.62, 0.22, 1) both;
 }
 @keyframes chapter-shell {
   0% {

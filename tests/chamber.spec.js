@@ -446,14 +446,20 @@ test("the explosion is an ellipse lying in the ring's plane, not a circle",
   await openMenu(page);
   await page.locator(".chamber-chapter").first().click();
 
+  // Caught once it has OPENED, not merely once it exists: the cut is
+  // written at nothing first — that is what keeps the black off the
+  // window until the hub has gone out ahead of it — and a polygon with
+  // no width has no shape to measure.
   let cut = null;
-  for (let n = 0; n < 60; n++) {
-    await page.waitForTimeout(120);
+  for (let n = 0; n < 80; n++) {
+    await page.waitForTimeout(90);
     const now = await page.locator(".chapter-page")
       .evaluate((el) => el.style.clipPath);
-    if (now && now.indexOf("polygon") === 0) { cut = now; break; }
+    if (!now || now.indexOf("polygon") !== 0) continue;
+    const wide = now.match(/-?\d+(?=px)/g) || [];
+    if (new Set(wide).size > 4) { cut = now; break; }
   }
-  expect(cut, "the page should be cut out by a polygon").toBeTruthy();
+  expect(cut, "the page should be cut out by a polygon that has opened").toBeTruthy();
 
   const box = cut.slice(8, -1).split(",")
     .map((one) => one.trim().split(/\s+/).map(parseFloat));
@@ -466,7 +472,9 @@ test("the explosion is an ellipse lying in the ring's plane, not a circle",
     .toBeLessThan(0.85);
 
   // And the flatness it was given is the orbit's own, not a made-up one.
-  const flat = await page.locator(".chapter-page")
+  // Read off the WAVE, which stands outside the page it opens so that it
+  // can go out over the chamber's white a beat before the black does.
+  const flat = await page.locator(".chapter-wave")
     .evaluate((el) => parseFloat(el.style.getPropertyValue("--wave-flat")));
   expect(flat).toBeGreaterThan(0.15);
   expect(flat).toBeLessThan(0.95);

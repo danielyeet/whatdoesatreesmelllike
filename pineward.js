@@ -90,13 +90,28 @@
   const WEB_EACH = 2;          // and no speck carries more lines than this
   const CLEAR_MID = 0.42;      // the share of the width kept quiet for the writing
   const GROW_MS = 2100;        // how long the forest takes to grow when the page opens
-  const INK = "23,23,15";      // --ink
   // THE HOUSE'S GREEN. The owner asked for dark green accents on this
   // page, and for the wood to answer the hand by turning green as well
   // as by the bloom it already had. Kept in step with --pine-green in
   // the stylesheet; nothing else on the site spends it.
   const GREEN = [26, 74, 44];
-  const INK_RGB = [23, 23, 15];
+  // THE BARK. The owner asked for the wood to be drawn in its own two
+  // colours rather than in ink: "let the bark to be brown, and the
+  // leaves and branches of these trees to be green", and for the lines
+  // between them to run from one to the other — "the closer they are to
+  // the actual bark, they should take its colour, and as they get
+  // closer to the branches, they should be more green".
+  //
+  // So every speck and every length of branch in this wood carries a
+  // `green` of its own, 0 for bark and 1 for foliage, and `tone()`
+  // mixes the two. The leader — the trunk — is 0 the whole way up. A
+  // branch runs 0 at the trunk to 1 at its tip, which is the gradient
+  // that was asked for, and it is made of the branch's OWN length
+  // rather than of where it is on the page, so it is right on every
+  // tree whatever size it came out.
+  //
+  // Kept in step with --pine-bark in the stylesheet.
+  const BARK = [74, 52, 34];
 
   // --- and what it does while it stands there
   //
@@ -134,15 +149,16 @@
     return seed / 4294967296;
   };
   const between = (pair) => pair[0] + random() * (pair[1] - pair[0]);
-  const rgba = (a) => "rgba(" + INK + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
-  /** Ink, carried `green` of the way towards the house's green. What the
-      bloom uses: a speck under the hand is drawn more plainly AND more
-      green, and both come and go together. */
-  const rgbaGreen = (a, green) => {
+  /** THE WOOD'S OWN COLOUR: bark carried `green` of the way to foliage.
+      0 is the brown of the trunk, 1 the house's dark green. Everything
+      the canopy draws goes through this — a speck, a length of branch,
+      a line of the web — so there is one place the wood's colour is
+      decided rather than three. */
+  const tone = (a, green) => {
     const t = Math.max(0, Math.min(1, green));
-    const r = Math.round(INK_RGB[0] + (GREEN[0] - INK_RGB[0]) * t);
-    const g = Math.round(INK_RGB[1] + (GREEN[1] - INK_RGB[1]) * t);
-    const b = Math.round(INK_RGB[2] + (GREEN[2] - INK_RGB[2]) * t);
+    const r = Math.round(BARK[0] + (GREEN[0] - BARK[0]) * t);
+    const g = Math.round(BARK[1] + (GREEN[1] - BARK[1]) * t);
+    const b = Math.round(BARK[2] + (GREEN[2] - BARK[2]) * t);
     return "rgba(" + r + "," + g + "," + b + "," +
       Math.max(0, Math.min(1, a)).toFixed(3) + ")";
   };
@@ -187,12 +203,23 @@
         x: x + side * len * at,
         y: y + droop * len * at * at,
       };
-      runs.push({ x1: was.x, y1: was.y, x2: to.x, y2: to.y, from: from + len * (at - 1 / many), to: from + len * at });
+      runs.push({
+        x1: was.x, y1: was.y, x2: to.x, y2: to.y,
+        from: from + len * (at - 1 / many), to: from + len * at,
+        // How far out along ITS OWN branch this length stands: 0 where
+        // it leaves the trunk, 1 at the tip. The whole of the gradient.
+        green: at,
+      });
       specks.push({
         x: to.x + (random() - 0.5) * 2.2,
         y: to.y + (random() - 0.5) * 2.2,
         size: SPECK_MIN + random() * (SPECK_MAX - SPECK_MIN) * (1 - at * 0.5),
         at: from + len * at,
+        // A needle is foliage wherever it stands, so it starts well
+        // along towards green and only finishes the journey at the tip.
+        // Running it 0 to 1 like the branch does turns the inner
+        // needles into bark, which they are not.
+        green: 0.5 + 0.5 * at,
         rate: IDLE_RATE[0] + random() * (IDLE_RATE[1] - IDLE_RATE[0]),
         phase: random() * Math.PI * 2,
       });
@@ -208,13 +235,17 @@
     const whorls = Math.round(WHORLS[0] + random() * (WHORLS[1] - WHORLS[0]));
     // The leader: dead straight, which is what a fir has and what
     // keeps the drawing taut.
-    runs.push({ x1: x, y1: foot, x2: x, y2: foot - tall, from: 0, to: tall, leader: true });
+    runs.push({
+      x1: x, y1: foot, x2: x, y2: foot - tall, from: 0, to: tall,
+      leader: true, green: 0,
+    });
     for (let n = 0; n <= tall; n += TWIG_EVERY) {
       specks.push({
         x: x + (random() - 0.5) * 1.6,
         y: foot - n,
         size: SPECK_MIN + random() * (SPECK_MAX - SPECK_MIN),
         at: n,
+        green: 0,
         rate: IDLE_RATE[0] + random() * (IDLE_RATE[1] - IDLE_RATE[0]),
         phase: random() * Math.PI * 2,
       });
@@ -352,7 +383,7 @@
       ink.moveTo(run.x1, run.y1 - down);
       ink.lineTo(run.x1 + (run.x2 - run.x1) * part, (run.y1 + (run.y2 - run.y1) * part) - down);
       ink.lineWidth = 1;
-      ink.strokeStyle = rgba(at);
+      ink.strokeStyle = tone(at, run.green || 0);
       ink.stroke();
     });
 
@@ -374,7 +405,13 @@
       const bloom = handAt > 0
         ? handAt * Math.max(0, 1 - Math.hypot(x - handX, y - handY) / BLOOM_REACH)
         : 0;
-      placed.push({ x: x, y: y, size: one.size, bloom: bloom, of: one, lit: lit(one.x, y) });
+      placed.push({
+        x: x, y: y, size: one.size, bloom: bloom, of: one, lit: lit(one.x, y),
+        // Its own colour, carried the rest of the way towards green by
+        // the bloom — so the hand still greens the wood where it rests,
+        // on top of the colour the wood already has.
+        green: Math.min(1, (one.green || 0) + bloom * GREEN_LIFT * (1 - (one.green || 0))),
+      });
     });
 
     // The web between near neighbours, and never more than `WEB_EACH`
@@ -395,7 +432,10 @@
         ink.beginPath();
         ink.moveTo(one.x, one.y);
         ink.lineTo(two.x, two.y);
-        ink.strokeStyle = rgba(at);
+        // A line between two specks is drawn in what they average to,
+        // so the web runs brown among the trunks and green out in the
+        // needles without being told which is which.
+        ink.strokeStyle = tone(at, (one.green + two.green) / 2);
         ink.stroke();
         carried[a]++; carried[b]++;
       }
@@ -411,12 +451,12 @@
       // towards the house's green a fully bloomed speck is carried — not
       // all the way, or the wood reads as a different drawing under the
       // pointer rather than the same one answering.
-      ink.fillStyle = rgbaGreen(at, one.bloom * GREEN_LIFT);
+      ink.fillStyle = tone(at, one.green);
       ink.fillRect(Math.round(one.x - size / 2), Math.round(one.y - size / 2), size, size);
       if (one.bloom < 0.08) return;
       // NEEDLES. A conifer blooming is not a flower opening: it is the
       // needles standing out from the twig, so that is what is drawn.
-      ink.strokeStyle = rgbaGreen(at * 0.7, one.bloom * GREEN_LIFT);
+      ink.strokeStyle = tone(at * 0.7, Math.min(1, one.green + 0.2));
       ink.beginPath();
       for (let n = 0; n < BLOOM_NEEDLES; n++) {
         const way = one.of.phase + (n / BLOOM_NEEDLES) * Math.PI * 2;
