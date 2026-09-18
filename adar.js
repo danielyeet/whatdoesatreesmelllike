@@ -571,6 +571,20 @@
     for (let n = 0; n < parts.length; n++) {
       if (parts[n].getBoundingClientRect().top <= line) at = n; else break;
     }
+    // AT THE FOOT OF THE PAGE, EVERYTHING HAS BEEN PASSED.
+    // A fragrance counts as passed when its top crosses a line a third
+    // of the way down the window — but the last few never get that far
+    // up the screen, because the page runs out before they can. So
+    // scrolling all the way down left the sounding short of its end and
+    // the reading short of eleven, which is what the owner reported.
+    // Pineward had the same fault and has the same rule: once the page
+    // itself has been passed, so has everything on it. The two are
+    // worth keeping in step.
+    const down = window.scrollY || window.pageYOffset || 0;
+    const room = Math.max(0,
+      document.documentElement.scrollHeight - window.innerHeight);
+    if (room > 0 && down >= room - 2) at = parts.length - 1;
+
     tickAt.forEach((tick, n) => tick.classList.toggle("passed", n <= at));
 
     const part = mostOf(parts);

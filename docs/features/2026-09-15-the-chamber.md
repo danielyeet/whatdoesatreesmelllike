@@ -422,33 +422,54 @@ list coming back when the script is blocked.
 
 ## The burst, and a chapter's own page
 
-Opening a chapter used to put its favourites in the column in the chapters' place — a
-second level in the same menu. The owner asked for a page of its own instead, and for
-the way into it to be the chamber turning itself inside out:
+Opening a chapter used to put its favourites in the column in the chapters' place. The
+owner asked for a page of its own instead, and for the way into it to be the chamber
+turning itself inside out. It took two rounds, and the second one is the one to read.
 
-> after you click on chapter one, the table shuts down, and then after a 1 second delay,
-> the particles will start turning more closely to the center and closer and closer, and
-> then they will meet all together in the middle and then they will explode outwards
+**It is one continuous movement.** The first version ran in steps — the menu shut, a
+second passed, the particles wound in, then they were thrown out — and it read, in the
+owner's words, as though *"you just collapsed the favorites menu, and then there was the
+explosion"*. Nothing waits for anything now. From the press, **every piece of chrome on
+the page begins to fade and the particles begin to close, on the same frame**, and the
+wind runs straight into the wave.
 
-Which is what it does, in five phases driven from `stepBurst`:
-
-| phase | |
+| | |
 |---|---|
-| **shut** | the menu fades back into the word on its own step (`SHUT_MS`) |
-| **wait** | `BURST_WAIT`, one still second — counted from the end of the shut, not from the press, so it is a second of a *still page* |
-| **in** | `BURST_IN`, winding towards the middle and turning faster the nearer it gets (`BURST_SPIN`, `BURST_CLOSE`) |
-| **met** | `BURST_MET`, together there for an instant — and the throw's directions are rolled here, so what comes apart is not the pattern that went in |
-| **out** | `BURST_OUT`, every particle along its own line out (`BURST_THROW`), the canvases going with them |
+| **the wind** (`BURST_WIND`) | The chrome fades — the word, its cue and crop marks, the menu, this page's search, and the drawing's own labels and sights. The particles gather out of the two streams onto one wheel (`BURST_GATHER`), and that wheel closes on the middle, **gaining the whole way** and **turning faster the closer it gets**. |
+| **the wave** (`BURST_WAVE`) | They meet, and a shockwave goes out from the point with a ripple of three rings behind it. The chapter is **cut out of the black by that wave** — an expanding `clip-path` circle — rather than faded up underneath it. |
 
-**Why it is driven by the clock and not by the physics, which is the part not to undo.**
-Every other movement on this page comes out of `move()`, which holds particles on the
-orbit with a spring. **A spring cannot be made to meet at a point** — that is precisely
-what it exists to prevent. So for the length of the burst `move()` is not called at all
-and the particles are placed outright; `stepBurst` returns whether it has them, and
-`frame` leaves `move` alone while it does. They are handed back to the physics when the
-chapter is closed, by being launched again from the injectors with staggered waits, so
-the chamber fills the way it does when the page opens rather than snapping back into a
-finished ring.
+Three things about the wind are the owner's own notes and are worth keeping:
+
+- **It gains as it closes.** The radius falls as `1 - p^n` and the angle turns as `p^n`,
+  so both are slow at the start and rushing at the end. A plain exponential does the
+  opposite of both — quickest at the start, creeping in at the end — which is what this
+  replaced.
+- **The spin does not change direction.** Which way it is already turning is read off the
+  particles at the moment of the press (`spinNow`), in the plane of the *window*, and
+  that sign is what it winds with.
+- **Everything fades, the word included.** Not a beat before or after the particles start
+  to move.
+
+### Three goes at the wheel, and why it is square to the window
+
+Worth writing down, because two of them looked plausible and were wrong, and the failure
+looked the same each time — a **crescent** closing on the middle instead of a wheel.
+
+1. **Winding the arrangement in as it stood.** Most of the particles on this page at any
+   moment are in the two streams, which are narrow lines running in from opposite
+   corners. Scaling that down keeps it a line. So they are drawn onto a ring first, and
+   it is the ring that collapses.
+2. **Making that ring the orbit's own.** The orbit's plane is very nearly the x–z one —
+   it stands almost **edge-on to the eye** — and a ring lying edge-on cannot be watched
+   closing: it comes out as a line sweeping about. Worse, rotating it about the window's
+   axis turns it *out of* its own plane. The wheel is square to the window now
+   (`BURST_RING`, `BURST_BAND`), which is the only way an implosion reads as one, and by
+   then there is nothing left of the orbit to be untrue to.
+3. **A particle's brightness is worked out from its age against its life.** Any particle
+   that was still waiting to be fired when the press landed has just been given an age of
+   nothing, and draws at nothing — so a good half of the chamber took no part in the wind.
+   Every particle is **held fully lit** for the length of the burst, and given its ages
+   back when the chapter is closed.
 
 ### The page it opens
 

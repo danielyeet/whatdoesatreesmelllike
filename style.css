@@ -3567,11 +3567,14 @@ body.find-reading .find-reading-note { opacity: 1; }
   overflow-y: auto;
   background: #000;
   color: var(--silver);
-  opacity: 0;
-  /* Arrives with the throw, not after it. */
-  transition: opacity 0.5s var(--menu-ease);
+  /* THE WAVE CUTS THE PAGE OUT OF THE BLACK. It is not faded up
+     underneath the explosion — it is opened from the point the
+     particles met, which is what makes the shockwave read as having
+     made the page rather than as having been drawn over it. */
+  clip-path: circle(0% at 50% 50%);
+  transition: clip-path 0.95s cubic-bezier(0.22, 0.61, 0.25, 1);
 }
-.chapter-page.here { opacity: 1; }
+.chapter-page.here { clip-path: circle(150% at 50% 50%); }
 .chapter-page[hidden] { display: none; }
 
 .chapter-sheet {
@@ -3635,6 +3638,35 @@ body.find-reading .find-reading-note { opacity: 1; }
   color: #aeb3bc;
 }
 .chapter-note[hidden] { display: none; }
+
+/* THE RIPPLE. Three rings going out from the point the particles met,
+   one behind another, each fading as it widens. They are inside the
+   chapter page, so they are cut open by the same wave that opens it. */
+.chapter-wave {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.chapter-wave span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 1px solid var(--silver);
+  border-radius: 50%;
+  opacity: 0;
+  animation: chapter-ripple 1.15s cubic-bezier(0.16, 0.74, 0.3, 1) both;
+}
+.chapter-wave span:nth-child(2) { animation-delay: 0.11s; }
+.chapter-wave span:nth-child(3) { animation-delay: 0.23s; }
+@keyframes chapter-ripple {
+  0% { transform: scale(1); opacity: 0.85; border-width: 2px; }
+  70% { opacity: 0.16; }
+  100% { transform: scale(190); opacity: 0; border-width: 1px; }
+}
 
 /* THE CARDS. One per favourite, ruled in silver with a mark at two
    corners — the same registration mark the rest of the site uses,
@@ -3728,26 +3760,39 @@ body.find-reading .find-reading-note { opacity: 1; }
 }
 .chapter-card:hover .chapter-card-go { color: var(--silver); }
 
-/* While a chapter is open the chamber's own chrome is not there to be
-   reached: the word and the menu are behind a black page. */
+/* EVERYTHING GOES AS THE WINDING STARTS. The owner asked for all of it
+   to fade, "including the favorites text", and on the same frame the
+   particles begin to close rather than a beat before or after — the
+   whole point of the second round on this was that it be one movement.
+
+   What goes: the word and its cue and crop marks, the menu, this page's
+   own search, and the drawing's own labels and corner sights on the
+   front canvas. What stays is the particles, which are the movement. */
+.favorites-page.bursting .chamber-plate,
+.favorites-page.bursting .page-find,
+.chamber.bursting .chamber-front {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.25s var(--menu-ease);
+}
+/* And the particles themselves, once the wave has gone out past them. */
+.chamber.burst-wave .chamber-field {
+  opacity: 0;
+  transition: opacity 0.4s var(--menu-ease);
+}
 .chapter-open .chamber-plate,
 .chapter-open .page-find { opacity: 0; pointer-events: none; }
 .chapter-open .menu-trigger { color: #c8ccd4; }
 
-/* THE THROW. The particles are drawn right up until they are thrown,
-   and go with the explosion rather than being switched off at the end
-   of it. */
-.chamber.burst-out .chamber-field,
-.chamber.burst-out .chamber-front {
-  opacity: 0;
-  transition: opacity 0.55s var(--menu-ease);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .chapter-page { transition: none; }
+  .chapter-page { transition: none; clip-path: none; }
+  .chapter-page.here { clip-path: none; }
   .chapter-card { animation: none; }
-  .chamber.burst-out .chamber-field,
-  .chamber.burst-out .chamber-front { transition: none; }
+  .chapter-wave { display: none; }
+  .favorites-page.bursting .chamber-plate,
+  .favorites-page.bursting .page-find,
+  .chamber.bursting .chamber-front,
+  .chamber.burst-wave .chamber-field { transition: none; }
 }
 
 @media (max-width: 720px) {
