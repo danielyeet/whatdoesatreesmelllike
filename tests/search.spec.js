@@ -90,10 +90,11 @@ test("the theories page searches theories and nothing else", async ({ page }) =>
   await page.goto("/categories/theories.html");
   await page.waitForTimeout(1200);
   await page.locator(".page-find-trigger").click();
-  await page.locator(".page-find-field").fill("secnd");
+  await page.locator(".page-find-field").fill("sweat");
 
   const rows = page.locator(".page-find-row");
-  await expect(rows.first().locator(".page-find-what")).toHaveText("Second theory");
+  await expect(rows.first().locator(".page-find-what"))
+    .toHaveText("The Architecture of Sweat");
   const wheres = await page.$$eval(".page-find-where", (all) => all.map((w) => w.textContent));
   wheres.forEach((where) => expect(where).toContain("Theories"));
 });

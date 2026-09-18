@@ -284,5 +284,5 @@ test("the house is what the sheet's second picture points at", async ({ page }) 
   const second = page.locator(".sheet-frame").nth(1);
   await expect(second).toHaveAttribute("href", "../works/adar.html");
   await expect(second.locator(".sheet-caption"))
-    .toHaveText("ADAR: the house that you have never heard of");
+    .toHaveText("ADAR the house that you have never heard of");
 });

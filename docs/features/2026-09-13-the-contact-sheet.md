@@ -489,6 +489,11 @@ Three details that make it work rather than merely look right:
 A caption written as plain text with no spans inside it — which is what the empty frames
 have — is simply always printed.
 
+**Keep the space between the two spans.** `contact-sheet.js` searches on the caption's
+own `textContent`, and butted together they read `Pinewardthe house that smells like
+trees` — which no search for "Pineward the" can match. Three tests caught this, which is
+the only reason it is written down here rather than shipped.
+
 ## Known issues / TODO
 
 - **Frames 01 and 02 carry photographs; the other twelve are still hatched

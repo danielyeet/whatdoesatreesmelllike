@@ -298,5 +298,10 @@ test("the piece is what the sheet's first picture points at", async ({ page }) =
   const first = page.locator(".sheet-frame").first();
   await expect(first).toHaveAttribute("href", "../works/pineward.html");
   await expect(first.locator(".sheet-caption"))
-    .toHaveText("Pineward: the house that smells like trees");
+    .toHaveText("Pineward the house that smells like trees");
+  // The name is what is printed; the line about it waits to be pointed
+  // at — see the contact sheet's report.
+  await expect(first.locator(".sheet-name")).toHaveText("Pineward");
+  await expect(first.locator(".sheet-say"))
+    .toHaveText("the house that smells like trees");
 });

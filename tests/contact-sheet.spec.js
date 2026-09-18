@@ -467,7 +467,7 @@ test("the search finds a picture by what it is called", async ({ page }) => {
   const frames = await page.$$eval(".sheet-frame", (els) => els.length);
   expect(dimmed, "everything that doesn't match should step back").toBe(frames - 1);
   await expect(page.locator(".sheet-frame:not(.dimmed) .sheet-caption")).toHaveText(
-    "ADAR: the house that you have never heard of"
+    "ADAR the house that you have never heard of"
   );
 
   // Escape clears it and puts the sheet back.
