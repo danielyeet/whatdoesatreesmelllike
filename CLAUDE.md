@@ -76,7 +76,7 @@ which talk through five `window` globals; see the landing page's report).
 | `index.html` | three scroll-snapped **slides**: the title, the italic line, the 3D **node map** | `landing.js`, `node-scene.js`, `paper.js`, `thread.js`, `extras.js` (and Three.js from a CDN — the only page that uses it) | [node map](docs/features/2026-09-11-the-node-map.md), [slides](docs/features/2026-09-11-the-landing-slides-and-exit.md), [paper](docs/features/2026-09-11-the-paper.md), [thread](docs/features/2026-09-11-the-thread.md), [chromatogram](docs/features/2026-09-11-the-chromatogram.md) |
 | `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **contact sheet** of pictures scattered and joined by dated lines, all of it drawn in specks — and the **fragrances**, an **index** of every fragrance written up on the site | `search.js`, `contact-sheet.js`, `index-page.js`, `views.js` | [contact sheet](docs/features/2026-09-13-the-contact-sheet.md), [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
 | `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `search.js`, `page-search.js`, `structure.js` | [structure](docs/features/2026-09-14-the-structure.md) |
-| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu | `search.js`, `page-search.js`, `chamber.js` | [chamber](docs/features/2026-09-15-the-chamber.md) |
+| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu of **chapters** — and opening one **bursts** into that chapter's own page, black and silver | `search.js`, `page-search.js`, `chamber.js` | [chamber](docs/features/2026-09-15-the-chamber.md) |
 | `categories/researches.html` | the **researches**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left | `search.js`, `index-page.js` | [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
 | `categories/other-2.html` | a plain **row list** of works | none | — |
 | `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 54 compacted parts — one per fragrance — in four forest **strata**, with a **wood** grown down both margins and a ticked **trunk** | `search.js`, `pineward.js` | [Pineward](docs/features/2026-09-16-pineward.md) |
@@ -148,7 +148,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 155 passed, 0 failed, and takes six to nine minutes.** If you get a
+**A clean run is 156 passed, 0 failed, and takes six to nine minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -249,7 +249,10 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
 - A favourite on the **chamber** page (`favorites`) is an `<a class="gallery-entry">`
   block with a `data-chapter` and a `data-date` — the chapters are the different
   `data-chapter` values in the order they first appear, and the chapters standing in the
-  chamber's column are made from them.
+  chamber's column are made from them. **What a chapter is** is written in its own
+  `<section class="gallery-chapter" data-chapter="...">` further down that page, and is
+  what its page shows above the cards; a chapter with nothing written for it shows its
+  cards and no description.
 - **A part of Pineward** (`works/pineward.html`) is a `<details class="pine-part">` block:
   a number, a small picture and a title in its `<summary>`, and the full picture and the
   writing inside. Copy a whole block to add one, and renumber the ones after it — the
@@ -384,7 +387,10 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the word** | `FAVOURITES`, standing in the middle of the chamber's orbit: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the orbit so the orbit's rims cross the ends of the lettering, one in front and one behind — so its size and `RING` are one decision. Bracketed by **crop marks**, which run out towards each other as the hand comes on to it, with the **cue** under it. |
 | **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
 | **the hold** / **the frame** | What the chamber used to do when the menu was opened: every particle took a seat on the border of the window and the whole rectangle travelled round it. Removed — the orbit simply widens now. Nothing of it is in the code (no `EDGE`, no seat, no `FLOW`). |
+| **the burst** | What opening a chapter in the chamber does: the menu shuts, a second passes, the particles wind in towards the middle turning faster as they close, meet there, and are thrown out — leaving that chapter's own page standing on black. `BURST_*` in `chamber.js`. For the length of it the particle physics is not run at all; see the chamber's report for why that is the only way to make them meet at a point. |
+| **a chapter's page** | What the burst opens into: the chapter named, the reading over it, what that chapter is (written in `categories/favorites.html`, one block per chapter), and its favourites as **cards**. Black, with **silver** — no accent anywhere on it, which keeps the chamber's promise of spending none. |
 | **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it swells outward, and the rule under the row draws back from the right. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
+| **the level** (chamber) | **Removed.** A chapter used to open a second level of rows inside the same menu, listing its favourites. It opens a page of its own now: there is no `.chamber-item` and no back button in the menu head any more. |
 | **leader** (chamber) | The line that used to be run from each end of a pointed-at row out to the side of the window, with a tick where it landed — the "selection lines" the owner asked to have taken off the menu. Gone from `chamber.js` entirely; the orbit's swell is the whole of the read now. (Not to be confused with the short leader still drawn at each **injector**, along the way its own stream leaves.) |
 | **the disc** | What the chamber's orbit is made of: a band with a width and a thickness rather than a single line of specks. Each particle stands at its own radius within `DISC` of the orbit either way, and a little off its plane (`DISC_LIFT`). |
 | **the web** | What the chamber's cursor does: the specks near it are joined up with fine lines, each coming and going on its own clock and drawn a hair off the two it joins, so the net is always a slightly different net. `WEB_*` in `chamber.js`. |

@@ -479,6 +479,17 @@
   // it is filed under. Naming them, ordering them and adding to them
   // are all HTML edits.
   // ============================================================
+  /** The dates a chapter covers, earliest first. They are written
+      dd.mm.yyyy, which does not sort as text, so they are turned round
+      to compare. Read in page order the range came out backwards —
+      "14.03.2024 – 27.06.2023" — which is not a range at all. */
+  function spanOf(items) {
+    const dates = items.map((item) => item.date).filter(Boolean).slice();
+    const key = (d) => d.split(".").reverse().join("");
+    dates.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+    return dates.length ? dates[0] + " – " + dates[dates.length - 1] : "";
+  }
+
   const chapters = [];
   entries.forEach((entry) => {
     const name = (entry.dataset.chapter || "Unsorted").trim();
@@ -492,6 +503,15 @@
       date: (entry.dataset.date || "").trim(),
       href: entry.getAttribute("href"),
     });
+  });
+
+  // WHAT EACH CHAPTER IS, in the page's own markup — one block per
+  // chapter, matched by `data-chapter`. A chapter with nothing written
+  // for it simply shows its cards, so this is optional and the page
+  // works without any of it.
+  const notes = {};
+  document.querySelectorAll(".gallery-chapter[data-chapter]").forEach((block) => {
+    notes[(block.dataset.chapter || "").trim()] = block.innerHTML.trim();
   });
 
   // ============================================================
@@ -558,13 +578,11 @@
 
   const head = document.createElement("div");
   head.className = "chamber-head";
-  head.innerHTML =
-    '<button type="button" class="chamber-back">' +
-    '<span aria-hidden="true">&#8592;</span> <span class="chamber-back-name"></span>' +
-    "</button>" +
-    '<p class="chamber-spec"></p>';
+  // The column only ever holds the chapters now — opening one opens a
+  // page of its own rather than a second level in here — so there is
+  // nothing in this menu to step back FROM, and no back button in it.
+  head.innerHTML = '<p class="chamber-spec"></p>';
   panel.appendChild(head);
-  const back = head.querySelector(".chamber-back");
   const spec = head.querySelector(".chamber-spec");
 
   const column = document.createElement("div");
@@ -577,7 +595,7 @@
   column.appendChild(chapterList);
 
   chapters.forEach((chapter, i) => {
-    const dates = chapter.items.map((item) => item.date).filter(Boolean);
+    const span = spanOf(chapter.items);
     const row = document.createElement("button");
     row.type = "button";
     row.className = "chamber-row chamber-chapter";
@@ -589,33 +607,43 @@
     row.querySelector(".chamber-no").textContent = numbered(i);
     row.querySelector(".chamber-of").textContent =
       numbered(chapter.items.length - 1) + " ENTRIES" +
-      (dates.length ? "   ·   " + dates[0] + " – " + dates[dates.length - 1] : "");
+      (span ? "   ·   " + span : "");
     row.querySelector(".chamber-name").textContent = chapter.name;
     chapterList.appendChild(row);
     chapter.row = row;
 
-    // And that chapter's own favourites, in the same column, shown in
-    // the chapters' place once one is opened.
-    const level = document.createElement("div");
-    level.className = "chamber-level";
-    level.hidden = true;
-    chapter.items.forEach((item, n) => {
-      const link = document.createElement("a");
-      link.className = "chamber-row chamber-item";
-      link.href = item.href;
-      link.innerHTML =
-        '<span class="chamber-file"><span class="chamber-no"></span>' +
-        '<span class="chamber-date"></span></span>' +
-        '<span class="chamber-name"></span>' +
-        '<span class="chamber-go" aria-hidden="true">&#8594;</span>';
-      link.querySelector(".chamber-no").textContent = numbered(n);
-      link.querySelector(".chamber-date").textContent = item.date;
-      link.querySelector(".chamber-name").textContent = item.name;
-      level.appendChild(link);
-    });
-    column.appendChild(level);
-    chapter.level = level;
   });
+
+  // A CHAPTER'S OWN PAGE. Built once and empty; `layChapter` fills it.
+  // It stands over the whole window rather than inside the chamber, so
+  // the black it brings is the page's and the chamber underneath is
+  // left exactly as it was to come back to.
+  const chapterPage = document.createElement("div");
+  chapterPage.className = "chapter-page dark-surface";
+  chapterPage.hidden = true;
+  chapterPage.innerHTML =
+    '<div class="chapter-sheet">' +
+      '<button type="button" class="chapter-back">' +
+        '<span aria-hidden="true">&#8592;</span> Favourites' +
+      "</button>" +
+      '<p class="chapter-kicker">Favourites</p>' +
+      '<h2 class="chapter-name"></h2>' +
+      '<p class="chapter-spec"></p>' +
+      '<div class="chapter-note"></div>' +
+      '<div class="chapter-cards"></div>' +
+    "</div>";
+  const chapterName = chapterPage.querySelector(".chapter-name");
+  const chapterSpec = chapterPage.querySelector(".chapter-spec");
+  const chapterNote = chapterPage.querySelector(".chapter-note");
+  const chapterCards = chapterPage.querySelector(".chapter-cards");
+  chapterPage.querySelector(".chapter-back")
+    .addEventListener("click", () => closeChapter());
+  // Inside the chamber rather than loose in the page. Every direct child
+  // of <body> is caught by the rule that dims the page behind the menu,
+  // which outranks anything written for a new element — the note in
+  // style.css says so and it has caught features before. In here it is
+  // dimmed with the rest of the page, which is what should happen.
+  shell.appendChild(chapterPage);
 
   const front = document.createElement("canvas");
   front.className = "chamber-front";
@@ -637,7 +665,6 @@
   // happens while the page is still being built, and it reaches both.
   let opened = false;          // is the menu open at all
   let spread = 0;              // 0 the ring turning, 1 held at the borders
-  let open = -1;               // which chapter is showing, or -1 for the list
   let hotRow = null;           // the row under the pointer, if any
   // The timed step between the two states — see OPEN_MS.
   let stepFrom = 0, stepTo = 0, stepAt = -1;
@@ -707,22 +734,194 @@
   const STEP_EASE = easing(0.45, 0, 0.45, 1);   // = --chamber-step in style.css
 
   function showLevel() {
-    chapterList.hidden = open >= 0;
-    chapters.forEach((chapter, i) => { chapter.level.hidden = i !== open; });
-    const inside = open >= 0 ? chapters[open] : null;
-    back.hidden = !inside;
-    if (inside) {
-      const dates = inside.items.map((item) => item.date).filter(Boolean);
-      back.querySelector(".chamber-back-name").textContent = "Favourites";
-      spec.textContent =
-        inside.name.toUpperCase() + "   ·   " + numbered(inside.items.length - 1) + " ENTRIES" +
-        (dates.length ? "   ·   " + dates[0] + " – " + dates[dates.length - 1] : "");
-    } else {
-      spec.textContent =
-        "FAVOURITES   ·   " + numbered(chapters.length - 1) + " CHAPTERS   ·   " +
-        numbered(entries.length - 1) + " TOTAL ENTRIES";
-    }
+    chapterList.hidden = false;
+    spec.textContent =
+      "FAVOURITES   ·   " + numbered(chapters.length - 1) + " CHAPTERS   ·   " +
+      numbered(entries.length - 1) + " TOTAL ENTRIES";
     hotRow = null;
+  }
+
+  // ============================================================
+  // THE BURST, AND A CHAPTER'S OWN PAGE
+  //
+  // Opening a chapter used to put its favourites in the column in the
+  // chapters' place. The owner asked for a page of its own, and for the
+  // way into it to be the chamber turning itself inside out:
+  //
+  //   the menu shuts, a second passes, the particles wind in towards
+  //   the middle — turning faster the closer they get — meet there,
+  //   and are thrown out again. The page is black behind them, and the
+  //   chapter is standing on it.
+  //
+  // WHY IT IS DRIVEN BY THE CLOCK AND NOT BY THE PHYSICS. Every other
+  // movement on this page comes out of `move()`, which holds particles
+  // on the orbit with a spring. A spring cannot be made to meet at a
+  // point — that is what it exists to prevent — so for the length of
+  // the burst `move()` is not called at all and the particles are
+  // placed outright. They are put back in the physics' hands when the
+  // chapter is closed, by being launched again from the injectors.
+  // ============================================================
+  const BURST_WAIT = 1.0;      // the still second after the menu has gone
+  const BURST_IN = 1.5;        // winding in to the middle
+  const BURST_MET = 0.14;      // met there, for an instant
+  const BURST_OUT = 0.62;      // and thrown out again
+  const BURST_SPIN = 2.6;      // how much it turns as it winds in
+  const BURST_CLOSE = 0.01;    // how much of its distance is left at the end of that
+  const BURST_THROW = 42;      // how far it is thrown
+
+  /** Null, or the burst that is running / the chapter that is open. */
+  let burst = null;
+  const chapterShowing = () => Boolean(burst);
+
+  function openChapter(i) {
+    if (burst) return;
+    burst = { chapter: i, phase: "shut", at: 0 };
+    shell.classList.add("bursting");
+    // The menu goes first, on its own step, and the second of stillness
+    // the owner asked for is counted from the end of THAT rather than
+    // from the press — so it is a second of a still page, which is what
+    // makes it read as a pause rather than as a wait.
+    if (opened) setOpen(false, false);
+    if (REDUCE_MOTION) { burst.phase = "open"; layChapter(i); return; }
+  }
+
+  function closeChapter() {
+    if (!burst) return;
+    const was = burst;
+    burst = null;
+    shell.classList.remove("bursting", "burst-out");
+    page.classList.remove("chapter-open");
+    chapterPage.hidden = true;
+    // Back into the physics' hands: every particle is fired again from
+    // its own injector, staggered, so the chamber fills the way it does
+    // when the page opens rather than snapping back into a finished
+    // ring.
+    specks.forEach((speck) => {
+      launch(speck);
+      speck.wait = random() * between(LIFE);
+    });
+    const row = chapters[was.chapter] && chapters[was.chapter].row;
+    if (row) { setOpen(true, false); row.focus(); }
+  }
+
+  /** Winding in: turning about the middle and closing on it, and
+      turning faster the nearer it gets — `p` runs 0 to 1. */
+  function burstIn(dt, p) {
+    const shrink = Math.pow(BURST_CLOSE, dt / BURST_IN);
+    const turn = BURST_SPIN * dt * (0.3 + p * p * 2.4);
+    const cos = Math.cos(turn), sin = Math.sin(turn);
+    for (let n = 0; n < specks.length; n++) {
+      const speck = specks[n];
+      // A particle still waiting to be fired joins this one rather than
+      // arriving in the middle of it.
+      if (speck.wait > 0) { speck.wait = 0; launch(speck); speck.wait = 0; }
+      const x = speck.x - core[0], y = speck.y - core[1], z = speck.z - core[2];
+      speck.x = core[0] + (x * cos - y * sin) * shrink;
+      speck.y = core[1] + (x * sin + y * cos) * shrink;
+      speck.z = core[2] + z * shrink;
+      speck.vx = 0; speck.vy = 0; speck.vz = 0;
+    }
+  }
+
+  /** Thrown out: every particle along its own line out of the middle,
+      which is rolled once when they meet so that what comes apart is
+      not the pattern that went in. */
+  function burstOut(p) {
+    const far = BURST_THROW * (1 - Math.pow(1 - p, 2.2));
+    for (let n = 0; n < specks.length; n++) {
+      const speck = specks[n];
+      if (!speck.out) continue;
+      speck.x = core[0] + speck.out[0] * far;
+      speck.y = core[1] + speck.out[1] * far;
+      speck.z = core[2] + speck.out[2] * far;
+    }
+  }
+
+  function throwLines() {
+    for (let n = 0; n < specks.length; n++) {
+      const a = random() * Math.PI * 2;
+      const b = Math.acos(2 * random() - 1);
+      specks[n].out = [
+        Math.sin(b) * Math.cos(a),
+        Math.sin(b) * Math.sin(a),
+        Math.cos(b) * 0.55,
+      ];
+    }
+  }
+
+  /** The chapter, on the page. Built from the page's own markup every
+      time, so a chapter renamed or re-filed in the HTML is right here
+      without anything else being touched. */
+  function layChapter(i) {
+    const chapter = chapters[i];
+    const span = spanOf(chapter.items);
+    chapterName.textContent = chapter.name;
+    chapterSpec.textContent =
+      numbered(chapter.items.length - 1) + " ENTRIES" + (span ? "   ·   " + span : "");
+
+    const note = notes[chapter.name];
+    chapterNote.innerHTML = "";
+    if (note) chapterNote.innerHTML = note;
+    chapterNote.hidden = !note;
+
+    chapterCards.innerHTML = "";
+    chapter.items.forEach((item, n) => {
+      const card = document.createElement("a");
+      card.className = "chapter-card";
+      card.href = item.href;
+      card.innerHTML =
+        '<span class="chapter-card-no"></span>' +
+        '<span class="chapter-card-name"></span>' +
+        '<span class="chapter-card-date"></span>' +
+        '<span class="chapter-card-go" aria-hidden="true">OPEN &#8594;</span>';
+      card.querySelector(".chapter-card-no").textContent = numbered(n);
+      card.querySelector(".chapter-card-name").textContent = item.name;
+      card.querySelector(".chapter-card-date").textContent = item.date;
+      card.style.setProperty("--n", String(n));
+      chapterCards.appendChild(card);
+    });
+
+    chapterPage.hidden = false;
+    page.classList.add("chapter-open");
+    // The frame after it joins the page, so the cards have something to
+    // arrive from.
+    requestAnimationFrame(() => chapterPage.classList.add("here"));
+  }
+
+  /** One step of the burst. Returns true while it is running the
+      particles itself, so `frame` knows to leave `move` alone. */
+  function stepBurst(dt) {
+    if (!burst || burst.phase === "open") return Boolean(burst);
+    burst.at += dt;
+    if (burst.phase === "shut") {
+      // As long as the menu takes to fade back into the word.
+      if (burst.at >= SHUT_MS / 1000) { burst.phase = "wait"; burst.at = 0; }
+      return false;
+    }
+    if (burst.phase === "wait") {
+      if (burst.at >= BURST_WAIT) { burst.phase = "in"; burst.at = 0; }
+      return false;
+    }
+    if (burst.phase === "in") {
+      const p = Math.min(1, burst.at / BURST_IN);
+      burstIn(dt, p);
+      if (p >= 1) { burst.phase = "met"; burst.at = 0; throwLines(); }
+      return true;
+    }
+    if (burst.phase === "met") {
+      if (burst.at >= BURST_MET) {
+        burst.phase = "out";
+        burst.at = 0;
+        shell.classList.add("burst-out");
+        layChapter(burst.chapter);
+      }
+      return true;
+    }
+    // out
+    const p = Math.min(1, burst.at / BURST_OUT);
+    burstOut(p);
+    if (p >= 1) { burst.phase = "open"; burst.at = 0; }
+    return true;
   }
 
   // The menu is not taken off the page the moment it is closed — it
@@ -765,11 +964,6 @@
         shutting = 0;
         plate.classList.remove("shutting");
         panel.hidden = true;
-        // And the column is put back to the chapters only once it is
-        // out of sight: stepping back a level is something to watch
-        // when it is asked for, not something to catch sight of in a
-        // panel that is leaving.
-        open = -1;
         showLevel();
       };
       panel.inert = true;
@@ -794,19 +988,12 @@
   }
 
   word.addEventListener("click", () => setOpen(!opened, true));
-  back.addEventListener("click", () => {
-    open = -1;
-    showLevel();
-    const row = chapters[0] && chapters[0].row;
-    if (row) row.focus();
-  });
   chapters.forEach((chapter, i) => {
-    chapter.row.addEventListener("click", () => {
-      open = i;
-      showLevel();
-      const first = chapter.level.querySelector(".chamber-row");
-      if (first) first.focus();
-    });
+    // OPENING A CHAPTER IS THE BURST. It used to put that chapter's
+    // favourites in the column in place of the chapters; the owner
+    // asked for a page of its own instead, arrived at by the chamber
+    // imploding and exploding. See "THE BURST" below.
+    chapter.row.addEventListener("click", () => openChapter(i));
   });
 
   // Every row in the column answers the pointer the same way, whether
@@ -828,15 +1015,21 @@
   column.addEventListener("focusout", () => { hotRow = null; });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape" || !opened) return;
-    if (open >= 0) { open = -1; showLevel(); }
-    else setOpen(false, true);
+    if (e.key !== "Escape") return;
+    // Out of a chapter first, then out of the menu.
+    if (chapterShowing()) { closeChapter(); return; }
+    if (!opened) return;
+    setOpen(false, true);
   });
 
   // Anywhere off the writing puts it back, the same way the theories
   // drawing puts a set-out station back — the ring is the rest of the
   // page and pressing it is how you leave the menu.
   document.addEventListener("pointerdown", (e) => {
+    // Nothing off the writing closes anything while a chapter is being
+    // arrived at or is standing open — the page belongs to the chapter
+    // then, and the way out of it is its own way back.
+    if (burst) return;
     if (!opened) return;
     if (plate.contains(e.target)) return;
     if (e.target.closest && e.target.closest(".menu-trigger, .menu-overlay")) return;
@@ -1711,7 +1904,9 @@
       clock += dt;
       core[0] = coreOpen[0] * spread;
       core[1] = coreOpen[1] * spread;
-      move(dt);
+      // While the burst has the particles, `move` is left alone — see
+      // the note above `stepBurst`.
+      if (!stepBurst(dt)) move(dt);
     }
     draw();
   }

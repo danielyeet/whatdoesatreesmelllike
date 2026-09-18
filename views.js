@@ -68,6 +68,16 @@
   const order = buttons.map((b) => b.dataset.view);
   /** Which views have been opened. The swipe waits for both. */
   const opened = new Set();
+  /** A view asked for while one was still arriving, to be gone to next. */
+  let wanted = null;
+
+  /** Do whatever was asked for while the last change was running. */
+  function drain() {
+    if (!wanted) return;
+    const next = wanted;
+    wanted = null;
+    show(next);
+  }
 
   const viewOf = (name) => views.find((view) => view.dataset.view === name);
   let showing = buttons.find((b) => b.classList.contains("is-on"));
@@ -156,13 +166,24 @@
           box.style.height = "";
           document.documentElement.classList.remove("view-swiping");
           moving = false;
+          drain();
         }, SWIPE_MS);
       });
     });
   }
 
   function show(name) {
-    if (moving || name === showing) return;
+    // A PRESS THAT LANDS MID-TRAVEL IS REMEMBERED, NOT DROPPED — the
+    // same rule the two houses follow for opening a part. This used to
+    // return and do nothing, so pressing the other button while a swipe
+    // was running swallowed it. Only the latest is kept: pressing three
+    // buttons during one swipe goes to the last one asked for, not
+    // through all of them.
+    if (moving) {
+      wanted = name === showing ? null : name;
+      return;
+    }
+    if (name === showing) return;
     const going = viewOf(showing);
     const coming = viewOf(name);
     if (!going || !coming) return;
@@ -201,6 +222,7 @@
         requestAnimationFrame(() => {
           coming.classList.remove("leaving");
           moving = false;
+          drain();
         });
       });
     }, FADE_MS);

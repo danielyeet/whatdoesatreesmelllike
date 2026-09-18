@@ -104,7 +104,7 @@ const spreadOfInk = (page) =>
 async function waitForChamber(page) {
   await page.waitForSelector(".chamber-field", { timeout: 15000 });
   await page.waitForFunction(
-    () => document.querySelectorAll(".chamber-item").length > 0,
+    () => document.querySelectorAll(".chamber-chapter").length > 0,
     null,
     { timeout: 15000 }
   );
@@ -195,7 +195,15 @@ test("the menu is grown from the page's own favourites", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test("the word opens the menu, a chapter opens its own favourites, and there is a way back",
+/** Press a chapter and sit through the burst: the menu shutting, the
+    still second, the winding in, and the throw. */
+async function openChapter(page, which) {
+  await page.locator(".chamber-chapter").nth(which || 0).click();
+  await expect(page.locator(".chapter-page")).toBeVisible({ timeout: 15000 });
+  await page.waitForTimeout(700);
+}
+
+test("the word opens the menu, and a chapter opens a page of its own",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
@@ -203,61 +211,130 @@ test("the word opens the menu, a chapter opens its own favourites, and there is 
   // Closed, the word is the whole of the page's chrome.
   await expect(page.locator(".chamber-panel")).toBeHidden();
   await expect(page.locator(".chamber-word")).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".chapter-page")).toBeHidden();
 
   await openMenu(page);
   await expect(page.locator(".chamber-word")).toHaveAttribute("aria-expanded", "true");
-  // The chapters stand in the column, and nothing else does: no strip
-  // across the top, one central column.
+  // The chapters stand in the column, and nothing else does: one
+  // central column, and no second level of favourites inside it any
+  // more — a chapter opens a page now.
   const chapters = page.locator(".chamber-level:not([hidden]) .chamber-chapter");
   expect(await chapters.count()).toBeGreaterThan(1);
-  expect(await page.locator(".chamber-level:not([hidden]) .chamber-item").count(),
-    "the favourites are not shown until a chapter is opened").toBe(0);
-  await expect(page.locator(".chamber-back")).toBeHidden();
+  expect(await page.locator(".chamber-item").count(),
+    "a chapter's favourites are not a level in the menu any more").toBe(0);
 
   const name = (await chapters.first().locator(".chamber-name").textContent()).trim();
-  await chapters.first().click();
-  await expect(page.locator(".chamber-level:not([hidden]) .chamber-chapter")).toHaveCount(0);
-  expect(await page.locator(".chamber-level:not([hidden]) .chamber-item").count(),
-    "that chapter's favourites take their place in the same column").toBeGreaterThan(0);
-  await expect(page.locator(".chamber-spec")).toContainText(name.toUpperCase());
+  await openChapter(page, 0);
 
-  // Escape steps back out one level at a time: the chapter first, then
-  // the menu itself.
+  // THE CHAPTER IS STANDING ON A BLACK PAGE, and it is that chapter.
+  await expect(page.locator(".chapter-name")).toHaveText(name);
+  const ground = await page.locator(".chapter-page").evaluate((el) =>
+    getComputedStyle(el).backgroundColor);
+  expect(ground, "the chapter stands on black").toMatch(/rgba?\(0, 0, 0/);
+  // A full-bleed dark region has to say so, or the cursor is invisible
+  // over it.
+  await expect(page.locator(".chapter-page")).toHaveClass(/dark-surface/);
+
+  // And the way back puts the chamber back, with the menu open at the
+  // chapters again.
+  await page.locator(".chapter-back").click();
+  await expect(page.locator(".chapter-page")).toBeHidden();
+  await expect(page.locator(".chamber-level:not([hidden]) .chamber-chapter").first())
+    .toBeVisible();
+
+  // Escape does the same from inside a chapter.
+  await openChapter(page, 0);
   await page.keyboard.press("Escape");
-  expect(await page.locator(".chamber-level:not([hidden]) .chamber-chapter").count())
-    .toBeGreaterThan(1);
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".chamber-panel")).toBeHidden();
-  await expect(page.locator(".chamber-word")).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".chapter-page")).toBeHidden();
 });
 
-test("every favourite carries its number, date, name and link",
+test("the burst winds the particles into the middle before it throws them out",
   async ({ page }) => {
   await page.goto(PAGE);
   await waitForChamber(page);
   await openMenu(page);
-  await page.locator(".chamber-chapter").first().click();
 
-  const rows = await page.$$eval(".chamber-level:not([hidden]) .chamber-item", (all) =>
-    all.map((row) => ({
-      no: row.querySelector(".chamber-no").textContent.trim(),
-      date: row.querySelector(".chamber-date").textContent.trim(),
-      name: row.querySelector(".chamber-name").textContent.trim(),
-      href: row.getAttribute("href"),
+  /** Two readings off the particle canvas: how much is drawn in the
+      middle of the window, and how much is drawn on it altogether.
+
+      Measured as ink and not as an average distance, and the middle box
+      is read at full resolution rather than sampled. Winding in ends
+      with every particle inside a few pixels of one point — a sampling
+      grid steps clean over that and reports the drawing as spread out
+      when it is the most gathered it will ever be. */
+  const readInk = () =>
+    page.evaluate(() => {
+      const canvas = document.querySelector(".chamber-field");
+      const paint = canvas.getContext("2d");
+      const half = Math.round(canvas.width * 0.05);
+      const midX = Math.round(canvas.width / 2), midY = Math.round(canvas.height / 2);
+      const box = paint.getImageData(midX - half, midY - half, half * 2, half * 2).data;
+      let middle = 0;
+      for (let i = 3; i < box.length; i += 4) middle += box[i];
+      const all = paint.getImageData(0, 0, canvas.width, canvas.height).data;
+      let total = 0;
+      for (let i = 3; i < all.length; i += 4) total += all[i];
+      return { middle: Math.round(middle / 255), total: Math.round(total / 255) };
+    });
+
+  const before = await readInk();
+  expect(before.total, "there are particles to begin with").toBeGreaterThan(400);
+
+  await page.locator(".chamber-chapter").first().click();
+  // The menu shuts (SHUT_MS, 1250ms), then the still second the owner
+  // asked for, and only then does it wind in (1500ms). Read halfway
+  // through that winding, which is where it is most gathered — by the
+  // end of it they are inside one another.
+  await page.waitForTimeout(1250 + 1000 + 780);
+  const wound = await readInk();
+
+  expect(wound.middle,
+    `the particles should have wound into the middle: ${before.middle} -> ${wound.middle}`)
+    .toBeGreaterThan(before.middle * 4);
+  expect(wound.total,
+    `and off the rest of the window with it: ${before.total} -> ${wound.total}`)
+    .toBeLessThan(before.total * 0.7);
+
+  // And then they are thrown out, and the chapter is standing there.
+  await expect(page.locator(".chapter-page")).toBeVisible({ timeout: 15000 });
+});
+
+test("a chapter's page carries its writing, and its favourites as cards",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapter(page, 0);
+
+  // What the chapter is, taken off the page's own markup.
+  await expect(page.locator(".chapter-note")).toBeVisible();
+  expect((await page.locator(".chapter-note").textContent()).trim().length)
+    .toBeGreaterThan(20);
+
+  const cards = await page.$$eval(".chapter-card", (all) =>
+    all.map((card) => ({
+      no: card.querySelector(".chapter-card-no").textContent.trim(),
+      date: card.querySelector(".chapter-card-date").textContent.trim(),
+      name: card.querySelector(".chapter-card-name").textContent.trim(),
+      href: card.getAttribute("href"),
     }))
   );
-  expect(rows.length).toBeGreaterThan(1);
-  rows.forEach((row, n) => {
-    expect(row.no, "numbered in order").toBe(String(n + 1).padStart(2, "0"));
-    expect(row.date, `${row.name} should carry the date it is filed under`)
+  expect(cards.length).toBeGreaterThan(1);
+  cards.forEach((card, n) => {
+    expect(card.no, "numbered in order").toBe(String(n + 1).padStart(2, "0"));
+    expect(card.date, `${card.name} should carry the date it is filed under`)
       .toMatch(/^\d{2}\.\d{2}\.\d{4}$/);
-    expect(row.name.length).toBeGreaterThan(0);
-    expect(row.href, `${row.name} should point at a piece`).toMatch(/works\//);
+    expect(card.name.length).toBeGreaterThan(0);
+    expect(card.href, `${card.name} should point at a piece`).toMatch(/works\//);
   });
 
-  // And the reading the sheet's plate carries, set as one line.
-  expect(await page.locator(".chamber-spec").textContent())
-    .toMatch(/ENTRIES.+\d{2}\.\d{2}\.\d{4} – \d{2}\.\d{2}\.\d{4}/);
+  // The reading over them, and its dates the right way round: read in
+  // page order this came out latest-first, which is not a range.
+  const spec = await page.locator(".chapter-spec").textContent();
+  expect(spec).toMatch(/ENTRIES.+\d{2}\.\d{2}\.\d{4} – \d{2}\.\d{2}\.\d{4}/);
+  const [from, to] = spec.match(/\d{2}\.\d{2}\.\d{4}/g);
+  const key = (d) => d.split(".").reverse().join("");
+  expect(key(from) <= key(to), `the range should read earliest first: ${spec}`).toBe(true);
 });
 
 test("the two injectors stand at opposite corners, and nothing is fired from the other two",

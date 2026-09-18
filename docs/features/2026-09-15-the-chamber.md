@@ -420,6 +420,67 @@ web between the specks it is near and letting go again; no part of it ever being
 the site's accent colour; it standing still under `prefers-reduced-motion`; and the plain
 list coming back when the script is blocked.
 
+## The burst, and a chapter's own page
+
+Opening a chapter used to put its favourites in the column in the chapters' place — a
+second level in the same menu. The owner asked for a page of its own instead, and for
+the way into it to be the chamber turning itself inside out:
+
+> after you click on chapter one, the table shuts down, and then after a 1 second delay,
+> the particles will start turning more closely to the center and closer and closer, and
+> then they will meet all together in the middle and then they will explode outwards
+
+Which is what it does, in five phases driven from `stepBurst`:
+
+| phase | |
+|---|---|
+| **shut** | the menu fades back into the word on its own step (`SHUT_MS`) |
+| **wait** | `BURST_WAIT`, one still second — counted from the end of the shut, not from the press, so it is a second of a *still page* |
+| **in** | `BURST_IN`, winding towards the middle and turning faster the nearer it gets (`BURST_SPIN`, `BURST_CLOSE`) |
+| **met** | `BURST_MET`, together there for an instant — and the throw's directions are rolled here, so what comes apart is not the pattern that went in |
+| **out** | `BURST_OUT`, every particle along its own line out (`BURST_THROW`), the canvases going with them |
+
+**Why it is driven by the clock and not by the physics, which is the part not to undo.**
+Every other movement on this page comes out of `move()`, which holds particles on the
+orbit with a spring. **A spring cannot be made to meet at a point** — that is precisely
+what it exists to prevent. So for the length of the burst `move()` is not called at all
+and the particles are placed outright; `stepBurst` returns whether it has them, and
+`frame` leaves `move` alone while it does. They are handed back to the physics when the
+chapter is closed, by being launched again from the injectors with staggered waits, so
+the chamber fills the way it does when the page opens rather than snapping back into a
+finished ring.
+
+### The page it opens
+
+Black, and silver — the chamber is the one page on this site that spends no accent at
+all, and this keeps that promise: there is no brass anywhere on it. What it has instead
+is `--silver` and `--silver-dim`, on the hairlines, the corner marks and the lettering
+that is doing the work. The chapter's name catches the light across itself, which is the
+whole of what silver means on a screen.
+
+It carries the chapter's name, the reading over it, **what that chapter is**, and its
+favourites as cards. The writing comes off the page's own markup —
+`.gallery-chapter[data-chapter]` in `categories/favorites.html`, one block per chapter,
+placeholder words that are the owner's to replace. A chapter with nothing written for it
+simply shows its cards.
+
+**It stands inside `.chamber`, not loose in the page.** Every direct child of `<body>` is
+caught by the rule that dims the page behind the menu, and that rule outranks anything
+written for a new element — the note in `style.css` says so and it has caught features
+before. In here it is dimmed along with everything else, which is what should happen.
+
+### Two things this took out, and one it put right
+
+- **The second level in the menu is gone**, and with it the back button in the menu head
+  and the `open` index: the column only ever holds the chapters now. There is no
+  `.chamber-item` and no `chapter.level` in the file.
+- **The dates over a chapter read as a range now.** They were written in page order,
+  which gave "14.03.2024 – 27.06.2023" — later first, which is not a range. `spanOf`
+  sorts them, turning `dd.mm.yyyy` round to compare, and both the menu row and the
+  chapter page use it.
+- The way out is the chapter's own back, or Escape. Escape steps out of a chapter first
+  and out of the menu second, the way it always stepped out one level at a time.
+
 ## Known issues / TODO
 
 - **This page spends no accent of its own, but the shared chrome still does** — the Menu

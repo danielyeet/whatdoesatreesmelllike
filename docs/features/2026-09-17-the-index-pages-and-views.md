@@ -151,6 +151,13 @@ the category's name beside it, the two buttons and the search all live **outside
 `.views`, so sliding what is inside that box leaves every one of them where it is. If
 something new ought to stay put during a swipe, put it outside the box.
 
+**A press that lands mid-travel is remembered, not dropped.** `show()` used to return
+and do nothing while a change was running, so pressing the other button during a swipe
+swallowed it. Only the latest is kept, so pressing about during one swipe goes to the
+last view asked for rather than walking through all of them. The two houses follow the
+same rule for opening a part — see [ADAR's report](2026-09-17-adar.md), where the same
+bug was found first.
+
 Two things `swipe()` has to do and both are easy to miss: **hold the box's height** while
 the two views are out of the flow (they are absolutely positioned, so the box would
 otherwise collapse to nothing and the page would jump under the pointer), and **wait a

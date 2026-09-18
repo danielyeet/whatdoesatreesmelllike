@@ -3539,6 +3539,223 @@ body.find-reading .find-reading-note { opacity: 1; }
 }
 
 /* ==================================================================
+   A CHAPTER'S OWN PAGE — categories/favorites.html
+
+   Opening a chapter in the chamber implodes the particles into the
+   middle of the window and throws them out again, and this is what is
+   standing there when they have gone: the chapter named, what it is,
+   and its favourites as cards.
+
+   BLACK, WITH SILVER. The chamber itself is the one page on this site
+   that spends no accent at all, and this keeps that promise — there is
+   no brass anywhere below. What it has instead is silver: a cool grey
+   that catches, used for the hairlines, the corner marks on the cards
+   and the lettering that is doing the work. `--silver-dim` is the same
+   colour with the shine taken off, for everything that is only there to
+   be read past.
+
+   It stands INSIDE the chamber, not loose in the page — see the note
+   where chamber.js builds it.
+   ================================================================== */
+.chapter-page {
+  --silver: #c8ccd4;
+  --silver-dim: #7b8089;
+  --silver-line: rgba(200, 204, 212, 0.26);
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  overflow-y: auto;
+  background: #000;
+  color: var(--silver);
+  opacity: 0;
+  /* Arrives with the throw, not after it. */
+  transition: opacity 0.5s var(--menu-ease);
+}
+.chapter-page.here { opacity: 1; }
+.chapter-page[hidden] { display: none; }
+
+.chapter-sheet {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: clamp(84px, 14vh, 150px) 28px 80px;
+}
+
+.chapter-back {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0 0 clamp(36px, 8vh, 76px);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--silver-dim);
+  cursor: pointer;
+  transition: color 0.3s var(--menu-ease);
+}
+.chapter-back:hover { color: var(--silver); }
+
+.chapter-kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--silver-dim);
+  margin: 0 0 14px;
+}
+.chapter-name {
+  font-size: clamp(38px, 7vw, 82px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0;
+  /* The one flourish: the lettering catches the light across itself,
+     which is the whole of what "silver" means on a screen. */
+  background: linear-gradient(100deg, #6f747d 0%, #eef1f6 42%, #9aa0aa 62%, #dfe3ea 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.chapter-spec {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--silver-dim);
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--silver-line);
+}
+.chapter-note {
+  max-width: 56ch;
+  margin-top: clamp(26px, 5vh, 48px);
+}
+.chapter-note p {
+  margin: 0 0 14px;
+  font-size: 17px;
+  line-height: 1.62;
+  color: #aeb3bc;
+}
+.chapter-note[hidden] { display: none; }
+
+/* THE CARDS. One per favourite, ruled in silver with a mark at two
+   corners — the same registration mark the rest of the site uses,
+   opened out to the size of a card. */
+.chapter-cards {
+  margin-top: clamp(40px, 8vh, 76px);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+.chapter-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "no   no"
+    "name name"
+    "date go";
+  gap: 18px 14px;
+  min-height: 190px;
+  padding: 20px;
+  text-decoration: none;
+  color: var(--silver);
+  border: 1px solid var(--silver-line);
+  background: linear-gradient(160deg, rgba(200, 204, 212, 0.05), rgba(200, 204, 212, 0) 60%);
+  transition: border-color 0.35s var(--menu-ease), background 0.35s var(--menu-ease),
+    transform 0.35s var(--menu-ease);
+  /* They arrive one after another, the way every list on this site
+     does — the explosion puts the page there, and the cards settle
+     onto it. */
+  animation: chapter-card-in 0.6s var(--menu-ease) both;
+  animation-delay: calc(0.18s + var(--n, 0) * 70ms);
+}
+@keyframes chapter-card-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+/* The corner marks: two hairlines at the top left and the bottom right,
+   drawn in and not on — they run out to meet the card's own rule as the
+   hand comes on to it. */
+.chapter-card::before,
+.chapter-card::after {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--silver);
+  opacity: 0.55;
+  transition: width 0.35s var(--menu-ease), height 0.35s var(--menu-ease),
+    opacity 0.35s var(--menu-ease);
+}
+.chapter-card::before { left: 7px; top: 7px; border-right: 0; border-bottom: 0; }
+.chapter-card::after { right: 7px; bottom: 7px; border-left: 0; border-top: 0; }
+.chapter-card:hover {
+  border-color: rgba(200, 204, 212, 0.5);
+  background: linear-gradient(160deg, rgba(200, 204, 212, 0.1), rgba(200, 204, 212, 0) 60%);
+}
+.chapter-card:hover::before,
+.chapter-card:hover::after { width: 24px; height: 24px; opacity: 1; }
+
+.chapter-card-no {
+  grid-area: no;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--silver-dim);
+}
+.chapter-card-name {
+  grid-area: name;
+  font-size: 20px;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+}
+.chapter-card-date {
+  grid-area: date;
+  align-self: end;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--silver-dim);
+}
+.chapter-card-go {
+  grid-area: go;
+  align-self: end;
+  justify-self: end;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--silver-dim);
+  transition: color 0.35s var(--menu-ease);
+}
+.chapter-card:hover .chapter-card-go { color: var(--silver); }
+
+/* While a chapter is open the chamber's own chrome is not there to be
+   reached: the word and the menu are behind a black page. */
+.chapter-open .chamber-plate,
+.chapter-open .page-find { opacity: 0; pointer-events: none; }
+.chapter-open .menu-trigger { color: #c8ccd4; }
+
+/* THE THROW. The particles are drawn right up until they are thrown,
+   and go with the explosion rather than being switched off at the end
+   of it. */
+.chamber.burst-out .chamber-field,
+.chamber.burst-out .chamber-front {
+  opacity: 0;
+  transition: opacity 0.55s var(--menu-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-page { transition: none; }
+  .chapter-card { animation: none; }
+  .chamber.burst-out .chamber-field,
+  .chamber.burst-out .chamber-front { transition: none; }
+}
+
+@media (max-width: 720px) {
+  .chapter-sheet { padding: 76px 18px 60px; }
+  .chapter-cards { grid-template-columns: 1fr; }
+}
+
+/* ==================================================================
    THE FRAGRANCES VIEW — categories/scent-descriptions.html only
 
    The index is shared with Researches, which keeps the four-column
