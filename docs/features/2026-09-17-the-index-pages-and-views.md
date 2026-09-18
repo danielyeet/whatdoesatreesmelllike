@@ -211,6 +211,26 @@ view **before** un-hiding it, which is what lets `index-page.js` tell a swipe fr
 ordinary switch and hold its arrival back. That class is the contract between the two
 files; nothing else passes between them.
 
+## Researches is Works, and carries a third column
+
+The owner renamed the category and asked for a column saying which kind each piece is:
+**Research** or **Exploration**. A row carries `data-kind` the way it already carries
+`data-no`, `data-name` and `data-date`, so the column sorts on what a row *is* rather
+than on the lettering in the cell — and a row that is neither yet sorts to the **end**,
+the same way an unwritten date does and for the same reason: nothing unfinished should
+head a list.
+
+*Resins in Perfumery* is a research. Two new entries — *Exploring the smell of a forest
+part 1* and *Exploring the smell of rain part 1* — are explorations with no page yet, so
+they are written the way this page already writes one of those: `data-open="no"`, drawn
+quieter, and not a link.
+
+The name changed in five places, which is the count worth knowing if it is ever renamed
+again: the page's `<h1>` reading and its `<title>`, the menu (`SITE_LINKS`), the map
+(`REAL_NODES`), and the search's trail (`PAGES` in `search-page.js`). The **file** is
+still `categories/researches.html` — renaming it would break every link into it for no
+gain.
+
 ## Known issues / TODO
 
 - **The dates in the Fragrances table are rolled from a seed** so that sorting has

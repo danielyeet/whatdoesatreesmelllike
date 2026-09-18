@@ -4508,3 +4508,325 @@ body.theories-page.lit .page-find { opacity: 1; }
 @media (max-width: 640px) {
   .page-find-word { display: none; }
 }
+
+/* ==================================================================
+   PHOTOGRAPHY — categories/other-2.html only
+
+   The second "Other" page is the photographs now, and it is laid out
+   the way a photographer lays out work: sets rather than one long run,
+   a grid that a wide frame breaks, frame numbers down the margin where
+   a roll carries them, and a caption that says what a photographer
+   writes on the back of a print.
+
+   It spends no accent and draws nothing on a canvas: what carries it is
+   the hairline, the mono reading and the registration mark the rest of
+   the site is made of.
+================================================================== */
+.photo-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(84px, 13vh, 150px) clamp(22px, 5vw, 64px) 0;
+}
+
+/* --- the head ---------------------------------------------------- */
+.photo-head {
+  max-width: 720px;
+  margin-bottom: clamp(56px, 10vh, 104px);
+}
+.photo-kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+.photo-page h1 {
+  font-size: clamp(42px, 7vw, 82px);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  margin: 0 0 26px;
+}
+.photo-lede {
+  font-size: clamp(15px, 1.5vw, 18px);
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 0 40px;
+  max-width: 54ch;
+}
+/* THE READINGS. The same row of small facts the index pages carry,
+   which is what a portfolio puts under its own name. */
+.photo-readings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+.photo-readings > div {
+  padding: 14px 28px 14px 0;
+  margin-right: 28px;
+  border-right: 1px solid var(--line);
+}
+.photo-readings > div:last-child { border-right: 0; margin-right: 0; }
+.photo-readings dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+.photo-readings dd {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* --- a set ------------------------------------------------------- */
+.photo-set { margin-bottom: clamp(62px, 11vh, 118px); }
+.photo-set-head {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 0 24px;
+  align-items: start;
+  padding-bottom: 22px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--line);
+}
+/* The number stands in the margin and the writing in the column beside
+   it, both said outright: left to flow, the third child comes back
+   round to column one and the set's line is set in the margin at
+   96px wide. */
+.photo-set-no {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+.photo-set-head h2 { grid-column: 2; }
+.photo-set-say { grid-column: 2; }
+.photo-set-head h2 {
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.15;
+  margin: 0 0 10px;
+}
+.photo-set-say {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+  max-width: 62ch;
+}
+
+/* --- the sheet --------------------------------------------------- */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+  gap: clamp(22px, 3vw, 40px);
+}
+/* THE ONE YOU HAVE CHOSEN OUT OF THE SHEET. It takes two columns and
+   stands wider than tall, which is the frame ringed on a contact sheet
+   and then printed. */
+.photo-frame.photo-wide { grid-column: span 2; }
+@media (max-width: 620px) {
+  .photo-frame.photo-wide { grid-column: span 1; }
+}
+
+.photo-frame { margin: 0; }
+.photo-plate {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  /* Hatched while there is no picture, the way every plate on this
+     site waits for its file. */
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--line) 0px, var(--line) 1px,
+    transparent 1px, transparent 11px
+  );
+  overflow: hidden;
+  text-decoration: none;
+  transition: border-color 0.35s var(--menu-ease);
+}
+.photo-wide .photo-plate { aspect-ratio: 16 / 10; }
+.photo-plate img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s var(--menu-ease), opacity 0.35s var(--menu-ease);
+}
+/* A plate with a picture in it has no hatch showing, so the hatch is
+   covered rather than switched off. */
+.photo-plate:hover { border-color: var(--ink); }
+.photo-plate:hover img { transform: scale(1.02); opacity: 0.92; }
+
+/* THE REGISTRATION MARK in the corner of an empty plate — the same
+   hollow square the rest of the site marks things with, and what says
+   this is a frame waiting rather than a frame that failed to load. */
+.photo-mark {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--muted);
+}
+.photo-plate img ~ .photo-mark { display: none; }
+
+/* --- what is written under a frame ------------------------------- */
+.photo-frame figcaption {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 2px 8px;
+  padding-top: 12px;
+}
+.photo-no {
+  grid-row: span 2;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding-top: 1px;
+}
+.photo-say { font-size: 14px; line-height: 1.35; color: var(--ink); }
+.photo-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* --- the foot ---------------------------------------------------- */
+.photo-foot {
+  border-top: 1px solid var(--line);
+  padding: 26px 0 96px;
+}
+.photo-foot p {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* --- arriving ---------------------------------------------------- */
+/* Set by photography.js, and only by it: without the script nothing
+   carries `photo-waiting` and every frame is simply there. */
+.photo-waiting .photo-frame {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.photo-waiting .photo-frame.here {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s var(--menu-ease), transform 0.7s var(--menu-ease);
+  transition-delay: calc(var(--n, 0) * 70ms);
+}
+
+/* ==================================================================
+   THE PHOTOGRAPHY VIEWER — one plate over the darkened page, its
+   reading under it, an arrow either side.
+================================================================== */
+html.photo-viewing, html.photo-viewing body { overflow: hidden; }
+.photo-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 3vw, 34px);
+  padding: clamp(16px, 5vh, 54px) clamp(12px, 4vw, 48px);
+  background: rgba(12, 12, 8, 0.94);
+  opacity: 0;
+  transition: opacity 0.26s var(--menu-ease);
+}
+.photo-viewer.here { opacity: 1; }
+.photo-viewer[hidden] { display: none; }
+
+.photo-viewer-plate {
+  position: relative;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  max-width: min(1180px, 100%);
+  max-height: 100%;
+}
+.photo-viewer-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - clamp(86px, 18vh, 168px));
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid rgba(232, 232, 224, 0.22);
+  background: #14140e;
+}
+.photo-viewer-read {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(232, 232, 224, 0.68);
+}
+.photo-viewer-say { color: #e8e8e0; letter-spacing: 0.02em; font-size: 12px; }
+
+.photo-viewer-plate { transition: transform 0.15s ease-in, opacity 0.15s ease-in; }
+.photo-viewer-plate.leaving-on { transform: translateX(-36px); opacity: 0; }
+.photo-viewer-plate.leaving-back { transform: translateX(36px); opacity: 0; }
+.photo-viewer-plate.going-on,
+.photo-viewer-plate.going-back {
+  animation: pine-swap 0.24s cubic-bezier(0.18, 0.7, 0.26, 1) both;
+}
+.photo-viewer-plate.going-back { animation-name: pine-swap-back; }
+
+.photo-viewer-arrow, .photo-viewer-shut {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(232, 232, 224, 0.3);
+  background: rgba(12, 12, 8, 0.6);
+  color: #e8e8e0;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.25s var(--menu-ease), background 0.25s var(--menu-ease);
+}
+.photo-viewer-arrow:hover, .photo-viewer-arrow:focus-visible,
+.photo-viewer-shut:hover, .photo-viewer-shut:focus-visible {
+  border-color: #e8e8e0;
+  background: rgba(232, 232, 224, 0.12);
+}
+.photo-viewer-shut {
+  position: absolute;
+  top: clamp(12px, 3vh, 26px);
+  right: clamp(12px, 3vw, 26px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-waiting .photo-frame { opacity: 1; transform: none; }
+  .photo-plate, .photo-plate img, .photo-viewer { transition: none; }
+  .photo-plate:hover img { transform: none; }
+  .photo-viewer-plate { transition: none; animation: none !important; }
+  .photo-viewer-plate.leaving-on, .photo-viewer-plate.leaving-back {
+    transform: none;
+    opacity: 1;
+  }
+}

@@ -452,6 +452,43 @@ first picture before anything moves reads as a projector being started rather th
 page loading". If they ever ask for the reel to start cold, that is the constant to
 change, and `tests/contact-sheet.spec.js` guards it.
 
+## A caption is a name, and the rest only when pointed at
+
+The owner: *"I want it to only display the house name, and only when hovered, it would
+display the rest, such that without hobering it would display 'Pineward', with hovering
+'the house that smells like trees'"* — and, in the same note, that the writing must stop
+getting in the way: *"currently, the ADAR page description overlaps with the line
+connecting ADAR and 05"*.
+
+Both come out of one arrangement. A caption is now two spans:
+
+```html
+<span class="sheet-caption"><span class="sheet-name">Pineward</span><span
+  class="sheet-say">the house that smells like trees</span></span>
+```
+
+and **the say is taken out of the flow**. That is the whole of it. `.sheet-say` is
+`position: absolute`, so `getBoundingClientRect()` on the caption measures the **name**
+alone — and that rect is what `captionBox()` reserves and what every line on the map is
+routed around. A long say used to cost the map a line; now it costs it nothing, because
+as far as the layout is concerned it is not there until it is wanted.
+
+Three details that make it work rather than merely look right:
+
+- **It answers `hot` as well as `:hover`.** `hot` is the drawing's own word for the
+  picture under the pointer; `:hover` and `:focus-within` are what answer when the script
+  is not running, so the say still works on the plain page.
+- **It prints on the page's own ground**, like the caption above it, so a line passing
+  behind it is knocked out the way a name on a map knocks out what it crosses. While a
+  picture is being pointed at the sheet is `holding` anyway, which already takes the
+  lines back to 0.4.
+- **On the settled picture the say goes above the name, not below.** That caption is
+  printed inside the print's own bottom corner, and below it is off the bottom of the
+  picture.
+
+A caption written as plain text with no spans inside it — which is what the empty frames
+have — is simply always printed.
+
 ## Known issues / TODO
 
 - **Frames 01 and 02 carry photographs; the other twelve are still hatched

@@ -19,8 +19,8 @@ const PAGES = [
   { url: "/categories/scent-descriptions.html", root: "../", title: /Scent descriptions/ },
   { url: "/categories/theories.html", root: "../", title: /Theories/ },
   { url: "/categories/favorites.html", root: "../", title: /Favourites/ },
-  { url: "/categories/researches.html", root: "../", title: /Researches/ },
-  { url: "/categories/other-2.html", root: "../", title: /Other/ },
+  { url: "/categories/researches.html", root: "../", title: /Works/ },
+  { url: "/categories/other-2.html", root: "../", title: /Photography/ },
   { url: "/works/example-gallery-work.html", root: "../", title: /Vetiver/ },
   { url: "/works/example-article-work.html", root: "../", title: /vetiver/ },
   // ADAR names the photograph it wants for each fragrance and works
@@ -28,9 +28,9 @@ const PAGES = [
   // shown — so a picture the owner has not added yet is an expected
   // 404 rather than a fault. See images/README.txt.
   { url: "/works/adar.html", root: "../", title: /ADAR/ },
-  { url: "/works/theory-01.html", root: "../", title: /First theory/ },
-  { url: "/works/theory-02.html", root: "../", title: /Second theory/ },
-  { url: "/works/theory-03.html", root: "../", title: /Third theory/ },
+  { url: "/works/theory-01.html", root: "../", title: /Architecture of Sunscreen/ },
+  { url: "/works/theory-02.html", root: "../", title: /Architecture of Sweat/ },
+  { url: "/works/theory-03.html", root: "../", title: /Note Dissemination Framework/ },
   { url: "/works/resins-in-perfumery.html", root: "../", title: /Resins/ },
   { url: "/works/test-node-a.html", root: "../", title: /Test node/ },
   { url: "/works/test-node-b.html", root: "../", title: /Test node/ },

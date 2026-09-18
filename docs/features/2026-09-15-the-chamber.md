@@ -470,10 +470,29 @@ measured in the orbit's own plane (`RING_NEAR`):
   turns along its own plane. Nothing is marshalled into position first, and nothing is
   re-spread: it is the ellipse you were already looking at, closing.
 - **The loose** — everything still crossing the window in the two streams. These stay
-  their own particles, and each falls on a clock entirely its own: its own moment to
-  start (`LOOSE_LAG`), its own length of fall (`LOOSE_SPAN`) and its own rate of gaining
-  (`LOOSE_DROP`). The ring is joined by particles arriving one after another rather than
-  by a marshalled crowd.
+  their own particles, and each falls on a clock of its own: its own moment to start
+  (`LOOSE_LAG`) and its own length of fall (`LOOSE_SPAN`). The ring is joined by
+  particles arriving one after another rather than by a marshalled crowd.
+
+**And a loose one falls on a CURVE, not down its own radius.** For a round it was drawn
+straight at the middle, which is the one path a thing crossing a room never takes. The
+owner: *"they dont have to take a direct path, so i want you to find out their direction
+as you press the button, and then continue that path as if there is a center of gravity
+at the center of the screen, along with acceleration matching the particles of the
+ring."* So a particle's velocity is kept at the press along with its place, and its path
+is two terms multiplied:
+
+```
+pos = (where it would have coasted to)  ×  (how much of the way out it still has)
+```
+
+The second falls as `1 - q^n`. Multiplied rather than blended, and that is what makes it
+a curve: at `q = 0` the pull's slope is zero, so the particle leaves at **exactly** the
+velocity it had — no kink at the press — and the middle only tells later, by which time
+it has already swung wide of its own radius. `n` is `BURST_CLOSE`, the same power the
+ring narrows on, which is the owner's *"acceleration matching the particles of the
+ring"*. They still arrive independently: what differs between two of them is when they
+set off and how long they take, not how they gather.
 
 **The arrivals were synchronised for a round, and the owner caught it.** The starts were
 staggered from the beginning, but every loose particle was scaled to reach the middle on
@@ -535,7 +554,22 @@ are taken straight from `node-scene.js`:
 
 Here the **core is the chapter's own black**, opened out by the wave — it is the page's
 own `clip-path` rather than an element, so the page *is* the core rather than something
-drawn underneath it. The two shells go out ahead of it and fade as they widen, drawn as
+drawn underneath it.
+
+**The hub goes out BEFORE the black, and that took moving it.** The owner asked twice for
+*"the effect from the central node on the background emitted just before the black
+explosion"*, and for a round it could not be, for a reason that is worth keeping: the
+shells lived **inside** `.chapter-page`, and that page is cut open from nothing — so
+whatever the shells did in their first moments was clipped away along with everything
+else, and the two could only ever arrive together. The wave is its own element over the
+window now (`z-index` 3, under the page and over the drawing), `castWave()` casts it, and
+the black follows it by `WAVE_LEAD` — a third of the wave, about 560ms — cut with the
+same ellipse.
+
+**And the black is smoother**, which was the third note. It is longer (`BURST_WAVE` 1.15s
+→ 1.65s), it opens on **smootherstep** rather than a cubic ease-out — flat at *both* ends,
+so it neither jumps away from the middle nor stops dead at the edge of the window — and
+the polygon it is cut with has 96 corners rather than 56. The two shells go out ahead of it and fade as they widen, drawn as
 soft-edged bands rather than hairlines, because a shell is a sphere seen through and what
 passes is a thickness. A **seed** — a small dark disc at the point they meet — is the core
 before it has anywhere to go; without it the wave starts from nothing visible and the

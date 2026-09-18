@@ -77,9 +77,9 @@ which talk through five `window` globals; see the landing page's report).
 | `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **contact sheet** of pictures scattered and joined by dated lines, all of it drawn in specks — and the **fragrances**, an **index** of every fragrance written up on the site | `search.js`, `contact-sheet.js`, `index-page.js`, `views.js` | [contact sheet](docs/features/2026-09-13-the-contact-sheet.md), [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
 | `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `search.js`, `page-search.js`, `structure.js` | [structure](docs/features/2026-09-14-the-structure.md) |
 | `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu of **chapters** — and opening one **bursts** into that chapter's own page, black and silver | `search.js`, `page-search.js`, `chamber.js` | [chamber](docs/features/2026-09-15-the-chamber.md) |
-| `categories/researches.html` | the **researches**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left | `search.js`, `index-page.js` | [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
-| `categories/other-2.html` | a plain **row list** of works | none | — |
-| `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 54 compacted parts — one per fragrance — in four forest **strata**, with a **wood** grown down both margins and a ticked **trunk** | `search.js`, `pineward.js` | [Pineward](docs/features/2026-09-16-pineward.md) |
+| `categories/researches.html` | **Works**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left, each row saying whether it is a research or an exploration | `search.js`, `index-page.js` | [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
+| `categories/other-2.html` | **Photography**: the frames in sets, a grid a wide one breaks, numbered down the margin | `search.js`, `page-search.js`, `photography.js` | [photography](docs/features/2026-09-18-the-photography-page.md) |
+| `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 54 compacted parts — one per fragrance — in four forest **strata**, with a **wood** grown down both margins, a ticked **trunk**, and the **gallery** at the foot of it | `search.js`, `pineward.js`, `pineward-gallery.js` | [Pineward](docs/features/2026-09-16-pineward.md), [gallery](docs/features/2026-09-18-the-pineward-gallery.md) |
 | `works/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window that shows the house's mark under the pointer — with a ruled **log** and falling **dust** down the left and a **sounding** down the side | `search.js`, `adar.js` | [ADAR](docs/features/2026-09-17-adar.md) |
 | `works/theory-01.html`, `-02`, `-03`, `works/resins-in-perfumery.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages | none | — |
@@ -89,9 +89,10 @@ which talk through five `window` globals; see the landing page's report).
 Four of those page scripts are elaborate: `chamber.js` (~1,740 lines), `node-scene.js`
 (~1,470), `structure.js` (~1,360) and `contact-sheet.js` (~1,360). The rest are smaller:
 `adar.js` (~820), `pineward.js` (~690), `paper.js` (~570), `essay.js` (~380),
-`index-page.js` (~290), `thread.js` (~290), `search.js` (~270), `extras.js` (~250),
-`nav.js` (~200), `find-ground.js` (~200), `landing.js` (~230), `search-page.js` (~130),
-`page-search.js` (~110) and `views.js` (~85).
+`index-page.js` (~290), `thread.js` (~290), `search.js` (~270), `pineward-gallery.js`
+(~260), `extras.js` (~250), `landing.js` (~230), `nav.js` (~200), `find-ground.js`
+(~200), `photography.js` (~180), `search-page.js` (~130), `page-search.js` (~110) and
+`views.js` (~85).
 
 **Read the matching report in `docs/features/` before editing one of them.**
 
@@ -203,6 +204,8 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| The Photography page | `photography.js` | [report](docs/features/2026-09-18-the-photography-page.md) |
+| The Pineward gallery | `pineward-gallery.js` | [report](docs/features/2026-09-18-the-pineward-gallery.md) |
 | A folder of pictures per house | `images/` | [report](docs/features/2026-09-17-images-folder-per-house.md) |
 | The search | `search.js`, `search-page.js`, `page-search.js`, `find-ground.js` | [report](docs/features/2026-09-17-the-search.md) |
 | ADAR | `adar.js` | [report](docs/features/2026-09-17-adar.md) |
@@ -269,10 +272,27 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   It is the only list of the site's pages anywhere, and the only thing the search needs
   kept up to date; everything *inside* a page is read off the page itself.
 - **New category**: duplicate any `categories/` page, change its `<h1>` and lede, add a
-  line to `SITE_LINKS` in `nav.js`, and optionally add a `REAL_NODES` entry so it also
-  appears in the map. The first of the two **Other** pages became **Researches** at the
-  owner's request: `categories/other-1.html` is gone, and `categories/researches.html`
-  is an index page rather than a row list.
+  line to `SITE_LINKS` in `nav.js`, and add a `REAL_NODES` entry — **the map and the menu
+  are meant to match**, which the owner asked for outright; `REAL_NODES` is `SITE_LINKS`
+  less Home. The first of the two **Other** pages became **Researches** and then
+  **Works**: `categories/other-1.html` is gone, and `categories/researches.html` is an
+  index page rather than a row list. The second became **Photography**.
+- **Renaming a category is five places**: the page's `<h1>` reading and its `<title>`,
+  `SITE_LINKS` in `nav.js`, `REAL_NODES` in `node-scene.js`, and the trail in `PAGES` in
+  `search-page.js`. The *file* keeps its old name — `researches.html` is Works, and
+  `other-2.html` is Photography — because renaming it breaks every link into it for no
+  gain.
+- **A row on the Works page** also carries `data-kind`: `"Research"` or `"Exploration"`,
+  which is what the third column reads and sorts on. A row that is neither yet leaves it
+  empty and sorts to the end.
+- **A frame on the Photography page** is one `<figure class="photo-frame">` inside a
+  set's `.photo-grid`, with its `<img>` commented out until the picture arrives. Adding
+  `photo-wide` gives it two columns — one or two a set, or it stops meaning anything.
+- **A picture in the Pineward gallery** is one `<a class="pine-shot">` at the foot of
+  `works/pineward.html`, pointing at two web copies in `images/Pineward/gallery-web/`
+  (a 1600px long edge and a 520px square thumbnail) made from the original in
+  `images/Pineward/The Pinewards Gallery Page/`. The order they stand in is the order
+  they are shown and numbered in.
 - Images live in `images/`, **one folder per house or category** — `images/ADAR/`,
   `images/Pineward/`, `images/Favorites/`, `images/Individual Fragrances/`,
   `images/Theories/` — referenced from the `<img>` tags left commented out in the
@@ -283,8 +303,9 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   fine; prefer hyphens over spaces in any you add, since a space becomes `%20` in the
   address (`Individual Fragrances` predates that advice and is kept because the owner
   named it).
-- `works/test-node-a.html` / `test-node-b.html` are sandbox pages reached from the two
-  "Test node" entries in `REAL_NODES`; safe to repurpose or delete together.
+- `works/test-node-a.html` / `test-node-b.html` are sandbox pages. They used to be the
+  two "Test node" entries in `REAL_NODES` and are not on the map any more — nothing
+  points at them; safe to repurpose or delete together.
 - The HTML comments inside each template say which block to copy for another entry —
   they are the site's real documentation for its author. Keep them accurate when
   changing a template's structure.
@@ -353,6 +374,14 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the ADAR Effect™** | The owner's own coinage for this house's turpentine quality — the menthol-like trigeminal lift without the dense forest behind it. Written as **ADAR DNA** in exactly three places on purpose (the introduction, and two entries where they said they meant it); leave those. |
 | **essay page** | A page for a long piece of writing on the theories drawing's ground: a swarm of particles behind it, sights at the corners, and the **rule** down the left. `essay.js`; the three theory templates and the resins research. |
 | **the rule** (essay) | The scroll indicator down the left of an essay page: a hairline filled in as far as you have read, one tick per section, the section you are in named under it, and a percentage. Every tick is a link. |
+| **the gallery** (Pineward) | The owner's own photographs at the foot of `works/pineward.html`: a strip of small squares that cycles on its own and stops while it is being looked at, and a **viewer** that stands one of them over the darkened page with its number in its own top right corner. `pineward-gallery.js`. The number is **where it stands in the strip**, not what its file is called. |
+| **the viewer** | The darkened page with one picture standing in the middle of it and an arrow either side — Pineward's gallery has one and the Photography page has one, and they are separate scripts that behave the same way. |
+| **Photography** | What the second **Other** page is now (`categories/other-2.html`): the frames in **sets**, in a grid that a **wide** one breaks, numbered down the margin, each with what a photographer writes on the back of a print. `photography.js`. If the owner says "Other", they mean this page before it was that. |
+| **set** (Photography) | One grouping of frames on that page, with its own number, title and line. The unit the page is read in — which is why a frame's arrival is staggered within its set rather than down the whole page. |
+| **Works** | What the **Researches** category is called now (`categories/researches.html`, which keeps its filename). Same index layout, with a third column saying whether each piece is a **research** or an **exploration**. |
+| **exploration** | One of the two kinds of thing on the Works page: going out after a smell and writing down what is there, as against a **research**, which is a material at a time. A row says which on itself, in `data-kind`. |
+| **the bark** / **the two colours** | Pineward's wood is drawn in `--pine-bark` (`#4a3422`) and `--pine-green` (`#1a4a2c`) rather than in ink: the trunk is bark the whole way up, a branch runs bark at the trunk to green at its tip, and a needle is mostly green wherever it stands. One `tone()` in `pineward.js` mixes them; `BARK` and `GREEN` there keep the same pair as the stylesheet. |
+| **the say** (the sheet) | The line about a house on the contact sheet — "the house that smells like trees" — shown only while its picture is pointed at. Taken out of the flow, so the room every line on the map is routed around is the **name's** alone. |
 | **index** | The way `categories/researches.html` is laid out: readings across the top, plates on the right, and a sortable, searchable table in the bottom left corner. `index-page.js`. The contact sheet's **Fragrances** view is built from the same markup and script but laid out again for itself — one centred column, the table given the room — under `body.view-fragrances`. The copyright line that used to sit under the board is gone from both. |
 | **the board** | That table and the search above it, taken together (`.index-board`). It scrolls inside its own box so the page around it does not grow. |
 | **the search page** | `search.html`: the one place that looks over the whole site. One field ruled across a dark ground of drifting specks, a row of filters under it, and the answers as rows carrying a number, a name, what kind of thing it is and the **trail**. |
@@ -387,7 +416,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the word** | `FAVOURITES`, standing in the middle of the chamber's orbit: the whole of that page's chrome when it is closed, and the button that opens the menu. Set wider than the orbit so the orbit's rims cross the ends of the lettering, one in front and one behind — so its size and `RING` are one decision. Bracketed by **crop marks**, which run out towards each other as the hand comes on to it, with the **cue** under it. |
 | **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
 | **the hold** / **the frame** | What the chamber used to do when the menu was opened: every particle took a seat on the border of the window and the whole rectangle travelled round it. Removed — the orbit simply widens now. Nothing of it is in the code (no `EDGE`, no seat, no `FLOW`). |
-| **the burst** | What opening a chapter in the chamber does, in **one continuous movement**: from the press every piece of chrome fades, and the chamber closes on the middle as **two populations** — the ring narrows as a ring along its own orbit, **carrying on at exactly the speed it was already turning at**, while the particles still crossing the window fall in independently, each on a clock of its own. They meet, and the **home page's own centre** goes out from that point — a dark core with its two halo shells — cutting that chapter's page out of the black. All of that expansion lies **in the ring's own plane**, as a turned ellipse rather than a circle square to the screen. `BURST_*` in `chamber.js`. For the length of it the particle physics is not run at all; the chamber's report says why, and lists six things that were tried and were wrong. |
+| **the burst** | What opening a chapter in the chamber does, in **one continuous movement**: from the press every piece of chrome fades, and the chamber closes on the middle as **two populations** — the ring narrows as a ring along its own orbit, **carrying on at exactly the speed it was already turning at**, while everything still crossing the window keeps the heading it had and is **bent in by the middle** on a curve, each on a clock of its own. They meet; the **home page's own centre** goes out from that point — a dark core with its two halo shells — and a beat later (`WAVE_LEAD`) the black follows it and cuts that chapter's page out. All of that expansion lies **in the ring's own plane**, as a turned ellipse rather than a circle square to the screen. `BURST_*` in `chamber.js`. For the length of it the particle physics is not run at all; the chamber's report says why, and lists six things that were tried and were wrong. |
 | **a chapter's page** | What the burst opens into: the chapter named, the reading over it, what that chapter is (written in `categories/favorites.html`, one block per chapter), and its favourites as **cards**. Black, with **silver** — no accent anywhere on it, which keeps the chamber's promise of spending none. |
 | **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it swells outward, and the rule under the row draws back from the right. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
 | **the level** (chamber) | **Removed.** A chapter used to open a second level of rows inside the same menu, listing its favourites. It opens a page of its own now: there is no `.chamber-item` and no back button in the menu head any more. |

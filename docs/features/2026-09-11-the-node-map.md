@@ -131,6 +131,19 @@ error, not a loading failure. Then check portrait (a narrow window) for the left
 nodes still being on screen, and check that a vertical swipe scrolls the page while a
 horizontal drag turns the map.
 
+## What is on the map is what is in the menu
+
+The owner asked for the two to match. `REAL_NODES` is now `SITE_LINKS` from `nav.js` less
+**Home** — which is this page, and is the middle of the map rather than a branch off it.
+Add a page to one and add it to the other; there is a browserless test that every link in
+either points at a file that exists, but nothing checks that the two lists agree, so that
+part is a habit rather than a guard.
+
+Two of the seven changed name with their pages — **Researches → Works** and **Other →
+Photography** — and the two **Test node** sandboxes are no longer branches at all. Their
+pages, `works/test-node-a.html` and `-b.html`, are still in the repository and are still
+safe to repurpose; nothing points at them now.
+
 ## Known issues / TODO
 
 - `SWAY` and `CLOUD_COUNT` are deliberately at zero with their machinery intact — the

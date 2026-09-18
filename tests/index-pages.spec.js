@@ -57,11 +57,22 @@ test("the researches are a numbered, dated table, and the first one opens",
   expect(rows.length, "the table should have rows").toBeGreaterThan(1);
   expect(rows[0].name, "the first research is the owner's own").toBe("Resins in Perfumery");
 
-  // Three columns, in the order asked for: the number, the research,
-  // and the date it was made.
+  // Four columns, in the order asked for: the number, the work, which
+  // KIND of work it is, and the date it was made. The third was added
+  // when Researches became Works and the page started carrying
+  // explorations beside the researches.
   await expect(page.locator(".index-table thead th")).toHaveText([
-    "No.", "Research", "Date",
+    "No.", "Work", "Research/Exploration", "Date",
   ]);
+
+  // And the kind is on the row rather than only in the lettering, so
+  // the column sorts on it like every other.
+  const kinds = await page.$$eval(".index-table tbody tr",
+    (all) => all.map((row) => row.dataset.kind));
+  expect(kinds.filter((k) => k === "Research").length,
+    "Resins in Perfumery is a research").toBeGreaterThan(0);
+  expect(kinds.filter((k) => k === "Exploration").length,
+    "and the two new pieces are explorations").toBe(2);
 
   // And the first one is a link to a page that is really there.
   const href = await page.locator(".index-table tbody tr a").first().getAttribute("href");
