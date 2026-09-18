@@ -446,29 +446,44 @@ test("the explosion is an ellipse lying in the ring's plane, not a circle",
   await openMenu(page);
   await page.locator(".chamber-chapter").first().click();
 
-  // Caught once it has OPENED, not merely once it exists: the cut is
-  // written at nothing first — that is what keeps the black off the
-  // window until the hub has gone out ahead of it — and a polygon with
-  // no width has no shape to measure.
-  let cut = null;
-  for (let n = 0; n < 80; n++) {
-    await page.waitForTimeout(90);
-    const now = await page.locator(".chapter-page")
-      .evaluate((el) => el.style.clipPath);
-    if (!now || now.indexOf("polygon") !== 0) continue;
-    const wide = now.match(/-?\d+(?=px)/g) || [];
-    if (new Set(wide).size > 4) { cut = now; break; }
-  }
-  expect(cut, "the page should be cut out by a polygon that has opened").toBeTruthy();
+  /** The bounding box of a `polygon(...)` cut, or null if it is not one. */
+  const boxOf = (clip) => {
+    if (!clip || clip.indexOf("polygon") !== 0) return null;
+    const pts = clip.slice(8, -1).split(",")
+      .map((one) => one.trim().split(/\s+/).map(parseFloat));
+    if (pts.length < 8) return null;
+    const xs = pts.map((one) => one[0]), ys = pts.map((one) => one[1]);
+    return {
+      wide: Math.max.apply(null, xs) - Math.min.apply(null, xs),
+      tall: Math.max.apply(null, ys) - Math.min.apply(null, ys),
+    };
+  };
 
-  const box = cut.slice(8, -1).split(",")
-    .map((one) => one.trim().split(/\s+/).map(parseFloat));
-  const xs = box.map((one) => one[0]), ys = box.map((one) => one[1]);
-  const wide = Math.max.apply(null, xs) - Math.min.apply(null, xs);
-  const tall = Math.max.apply(null, ys) - Math.min.apply(null, ys);
-  expect(wide, "the cut has a width").toBeGreaterThan(20);
-  expect(Math.min(wide, tall) / Math.max(wide, tall),
-    `a circle would come out square: ${Math.round(wide)}x${Math.round(tall)}`)
+  // CAUGHT ONCE IT HAS ACTUALLY OPENED, and the gate is the cut's own
+  // EXTENT. The cut is written at nothing first — that is what keeps the
+  // black off the window until the hub has gone out ahead of it — and it
+  // grows from there, so for the first frames it is a polygon with a
+  // real shape and almost no size. An earlier gate counted how many
+  // distinct coordinates the polygon had, which a cut a few pixels
+  // across can pass; it let one through that was too small to measure
+  // and the test failed only under the load of a full run. What is
+  // wanted is a cut wide enough to have a shape, and the widest reading
+  // seen is the one kept, so a slow run that samples it late is no worse
+  // off than a quick one.
+  let box = null;
+  for (let n = 0; n < 90; n++) {
+    await page.waitForTimeout(80);
+    const now = boxOf(await page.locator(".chapter-page")
+      .evaluate((el) => el.style.clipPath));
+    if (!now) continue;
+    if (!box || now.wide > box.wide) box = now;
+    if (box.wide > 400) break;
+  }
+  expect(box, "the page should be cut out by a polygon").toBeTruthy();
+  expect(box.wide, "the cut should have opened far enough to have a shape")
+    .toBeGreaterThan(120);
+  expect(Math.min(box.wide, box.tall) / Math.max(box.wide, box.tall),
+    `a circle would come out square: ${Math.round(box.wide)}x${Math.round(box.tall)}`)
     .toBeLessThan(0.85);
 
   // And the flatness it was given is the orbit's own, not a made-up one.
