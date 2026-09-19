@@ -3396,7 +3396,30 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
   z-index: 2;
   pointer-events: none;
 }
-.adar-sounding-line { width: 1px; height: 34vh; background: rgba(232, 232, 238, 0.16); }
+/* The scale, and the part of it you have read. The line is the whole
+   of the page; the fill grows down it from the very top, so it starts
+   moving on the first pixel of scroll rather than waiting for the first
+   fragrance. Pineward's trunk does the same thing in green. */
+.adar-sounding-line {
+  position: relative;
+  width: 1px;
+  height: 34vh;
+  background: rgba(232, 232, 238, 0.16);
+}
+.adar-sounding-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: rgba(232, 232, 238, 0.5);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.25s var(--menu-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .adar-sounding-fill { transition: none; }
+}
 .adar-ticks { display: flex; flex-direction: column; gap: 6px; }
 .adar-tick {
   width: 8px;

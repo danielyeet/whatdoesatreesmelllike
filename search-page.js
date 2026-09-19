@@ -32,8 +32,8 @@
     { url: "works/theory-02.html", trail: ["Theories", "The Architecture of Sweat"] },
     { url: "works/theory-03.html", trail: ["Theories", "The Note Dissemination Framework"] },
     { url: "categories/favorites.html", trail: ["Favourites"] },
-    { url: "categories/researches.html", trail: ["Works"] },
-    { url: "works/resins-in-perfumery.html", trail: ["Works", "Resins in Perfumery"] },
+    { url: "categories/researches.html", trail: ["Explorations & Researches"] },
+    { url: "works/resins-in-perfumery.html", trail: ["Explorations & Researches", "Resins in Perfumery"] },
     { url: "categories/other-2.html", trail: ["Photography"] },
   ];
 

@@ -19,7 +19,7 @@ const PAGES = [
   { url: "/categories/scent-descriptions.html", root: "../", title: /Scent descriptions/ },
   { url: "/categories/theories.html", root: "../", title: /Theories/ },
   { url: "/categories/favorites.html", root: "../", title: /Favourites/ },
-  { url: "/categories/researches.html", root: "../", title: /Works/ },
+  { url: "/categories/researches.html", root: "../", title: /Explorations/ },
   { url: "/categories/other-2.html", root: "../", title: /Photography/ },
   { url: "/works/example-gallery-work.html", root: "../", title: /Vetiver/ },
   { url: "/works/example-article-work.html", root: "../", title: /vetiver/ },

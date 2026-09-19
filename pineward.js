@@ -565,11 +565,22 @@
     if (room > 0 && down >= room - 2) at = parts.length - 1;
     tickAt.forEach((tick, n) => tick.classList.toggle("passed", n <= at));
 
-    // The rule fills behind the ticks off the same count: the parts
-    // passed, not the scrollbar, so a part that runs long does not read
-    // as more of the piece than a part that runs short.
+    // THE RULE READS THE WHOLE PAGE, FROM THE VERY TOP OF IT.
+    //
+    // It used to fill off the count of parts passed, on the reasoning
+    // that a part running long should not read as more of the piece
+    // than a part running short. That reasoning is sound and it was the
+    // wrong call: it left the rule sitting at nothing for the whole of
+    // the title and the introduction, so the page could be scrolled for
+    // a screen or two with no sign of it moving. The owner asked for it
+    // to start from the very top, and a bar that does not move while
+    // you are scrolling is a broken bar whatever it is measuring.
+    //
+    // So the FILL is the page's own scroll and the TICKS are still the
+    // parts passed. They say two different things on purpose: how far
+    // down you are, and how many you have been past.
     if (trunkFill) {
-      const filled = Math.max(0, Math.min(1, (at + 1) / parts.length));
+      const filled = room > 0 ? Math.max(0, Math.min(1, down / room)) : 0;
       trunkFill.style.transform = "scaleY(" + filled.toFixed(4) + ")";
     }
 

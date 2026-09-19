@@ -103,6 +103,16 @@ Adding this section pushed Notes to 05 and Footnotes to 06, ids and all. The rul
 left is built from the sections themselves, so it picked the new one up with nothing else
 changed — which is the whole reason it is built that way.
 
+## The resin list links into the page
+
+The fourteen resins the research is going to cover are an ordered list at the top of it,
+and each is now a link to that resin's own section. The links are **matched to the
+headings at build time, not typed**: the section ids are read off the page and each name
+is matched against them, falling back to the head of a compound name (`Frankincense` for
+`Frankincense/Olibanum`, `Benzoin` for `Benzoin (Resinoid)`). All fourteen found their
+section. If a resin is ever added to the list before its section is written, it renders as
+plain text rather than as a link to nowhere.
+
 ## Known issues / TODO
 
 - **The three theory pages are templates** — real structure, placeholder writing, six

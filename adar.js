@@ -502,7 +502,15 @@
   const sounding = document.createElement("div");
   sounding.className = "adar-sounding";
   sounding.setAttribute("aria-hidden", "true");
-  sounding.innerHTML = '<span class="adar-sounding-line"></span>';
+  // THE SOUNDING READS THE PAGE FROM THE VERY TOP OF IT, the way
+  // Pineward's trunk does. It was ticks alone, which meant nothing on
+  // it moved at all until the first fragrance had been passed — the
+  // owner asked for both pages to start from the top, and the two are
+  // worth keeping in step.
+  sounding.innerHTML =
+    '<span class="adar-sounding-line">' +
+      '<span class="adar-sounding-fill"></span>' +
+    "</span>";
   const ticks = document.createElement("div");
   ticks.className = "adar-ticks";
   parts.forEach(() => {
@@ -522,6 +530,7 @@
   page.appendChild(readout);
 
   const tickAt = Array.from(ticks.children);
+  const soundFill = sounding.querySelector(".adar-sounding-fill");
   const readNo = readout.querySelector(".adar-readout-no");
   const readWhere = readout.querySelector(".adar-readout-where");
 
@@ -586,6 +595,14 @@
     if (room > 0 && down >= room - 2) at = parts.length - 1;
 
     tickAt.forEach((tick, n) => tick.classList.toggle("passed", n <= at));
+
+    // The fill is the page's own scroll; the ticks are the fragrances
+    // passed. Two readings, said separately: how far down you are, and
+    // how many you have been past.
+    if (soundFill) {
+      const filled = room > 0 ? Math.max(0, Math.min(1, down / room)) : 0;
+      soundFill.style.transform = "scaleY(" + filled.toFixed(4) + ")";
+    }
 
     const part = mostOf(parts);
     const group = mostOf(intro ? groups.concat([intro]) : groups);

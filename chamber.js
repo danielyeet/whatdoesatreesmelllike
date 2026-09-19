@@ -828,15 +828,34 @@
   const LOOSE_SPAN = [0.3, 0.62];  // and how long its own fall then takes
   const LOOSE_COAST = 0.55;    // how long it keeps going the way it was, in seconds
   const MARKS_FADE = 1.25;     // the drawing's own chrome going, with the rest of it
-  const CLIP_ROUND = 12;       // corners in the figure the page is cut out with
+  // CORNERS IN THE FIGURE THE PAGE IS CUT OUT WITH. It was twelve, and
+  // twelve straight sides opening across a whole window is the one
+  // thing in this burst that read as CHOPPY — the owner asked for it
+  // smoother while the geometry got more complex, and those are not in
+  // conflict: the geometry is the ink, and the ink is a lattice now.
+  // The cut is what the black arrives on, and it should arrive
+  // smoothly. Forty-eight still is not a circle — the facets are there
+  // if you look — but nothing in it steps.
+  const CLIP_ROUND = 48;
   // THE RINGS — the drawn half of the wave. A train of faceted figures
   // going out one behind another, not one ring on its own.
-  const RING_MANY = 7;         // how many are in the train
-  const RING_LAG = 0.062;      // and how far behind one another they set off
-  const RING_SIDES = 12;       // facets, the same count the page is cut with
-  const RING_TURN = 0.13;      // each one stood a little off the last, in turns
-  const RING_SPOKE = 12;       // spokes struck out through the train
-  const RING_INK = 0.5;        // how plainly the leading figure is drawn
+  const RING_MANY = 14;        // how many figures are in the train
+  const RING_LAG = 0.031;      // and how far behind one another they set off
+  const RING_SIDES = 24;       // facets, twice the count the page is cut with
+  const RING_TURN = 0.021;     // each one stood a little off the last, in turns
+  const RING_SPOKE = 24;       // spokes struck out through the train
+  const RING_INK = 0.62;       // how plainly the leading figure is drawn
+  // THE NODES. A corner of a figure is a node, and the nodes of
+  // neighbouring figures are strung together — which is what turns a
+  // set of rings into a lattice. The owner asked for "way more
+  // nodes/particles and lines... complex AND SMOOTH", and the smooth
+  // half of that is why the figures are drawn as SPLINES through their
+  // corners rather than as straight runs between them: at twenty-four
+  // sides a polygon reads as a slightly lumpy circle, and a spline
+  // through the same corners reads as a shape.
+  const RING_NODE = 1.7;       // how big a node is drawn, in pixels
+  const RING_TIE = 5;          // every nth figure is tied to the one behind it
+  const RING_BOW = 0.055;      // how far a figure's sides bow out, as a share of it
 
   /** Null, or the burst that is running / the chapter that is open. */
   let burst = null;
@@ -960,57 +979,119 @@
     const full = Math.hypot(wide, tall) + 60;
     const dark = page.classList.contains("chapter-open");
     const tone = dark ? "200,204,212" : "23,23,15";
+    const reach = full / ring.flat;
 
     paintRings.save();
     paintRings.translate(ring.x, ring.y);
     paintRings.rotate(ring.turn);
     paintRings.scale(1, ring.flat);
+    paintRings.lineJoin = "round";
+    paintRings.lineCap = "round";
 
-    // The spokes: struck from the middle out to the leading figure, so
-    // the train reads as one thing travelling rather than as rings that
-    // happen to be near each other.
+    // WHERE EVERY FIGURE STANDS, AND HOW HARD, worked out once so the
+    // lattice below can tie one to another without doing it twice.
+    const at = [];
+    for (let n = 0; n < RING_MANY; n++) {
+      const own = (p - n * RING_LAG) / Math.max(0.05, 1 - n * RING_LAG);
+      if (own <= 0 || own >= 1) { at.push(null); continue; }
+      at.push({
+        r: reach * ease(own),
+        ink: RING_INK * (1 - own) * (1 - n / (RING_MANY + 2)),
+        turn: n * RING_TURN * Math.PI * 2 + burst.way * own * 0.22,
+      });
+    }
+
+    // A figure's corner, in the plane. The bow is what stops
+    // twenty-four straight sides reading as a lumpy circle.
+    const corner = (one, k) => {
+      const a = (k / RING_SIDES) * Math.PI * 2 + one.turn;
+      const r = one.r * (1 + Math.sin(a * 3 + one.turn * 2) * RING_BOW);
+      return [Math.cos(a) * r, Math.sin(a) * r];
+    };
+
+    // THE SPOKES, struck from the middle out through the whole train.
     const lead = Math.max(0, Math.min(1, p));
-    const out = (full / ring.flat) * ease(lead);
+    const out = reach * ease(lead);
     if (out > 12) {
-      paintRings.globalAlpha = 0.16 * (1 - lead);
+      paintRings.globalAlpha = 0.17 * (1 - lead);
       paintRings.strokeStyle = "rgba(" + tone + ",1)";
       paintRings.lineWidth = 1;
       paintRings.beginPath();
       for (let n = 0; n < RING_SPOKE; n++) {
-        const at = (n / RING_SPOKE) * Math.PI * 2 + burst.way * lead * 0.35;
-        paintRings.moveTo(Math.cos(at) * out * 0.26, Math.sin(at) * out * 0.26);
-        paintRings.lineTo(Math.cos(at) * out, Math.sin(at) * out);
+        const a = (n / RING_SPOKE) * Math.PI * 2 + burst.way * lead * 0.3;
+        paintRings.moveTo(Math.cos(a) * out * 0.2, Math.sin(a) * out * 0.2);
+        paintRings.lineTo(Math.cos(a) * out, Math.sin(a) * out);
       }
       paintRings.stroke();
     }
 
-    for (let n = 0; n < RING_MANY; n++) {
-      const own = (p - n * RING_LAG) / Math.max(0.05, 1 - n * RING_LAG);
-      if (own <= 0 || own >= 1) continue;
-      const r = (full / ring.flat) * ease(own);
-      if (r < 4) continue;
-      // Fading as it widens, and the ones behind lighter than the lead.
-      paintRings.globalAlpha = RING_INK * (1 - own) * (1 - n / (RING_MANY + 1));
+    // THE LATTICE: every RING_TIE-th figure joined corner to corner
+    // with the one behind it, so the train reads as one structure
+    // travelling rather than as rings that happen to be near each
+    // other.
+    paintRings.lineWidth = 1;
+    for (let n = RING_TIE; n < RING_MANY; n += RING_TIE) {
+      const one = at[n], two = at[n - RING_TIE];
+      if (!one || !two) continue;
+      paintRings.globalAlpha = Math.min(one.ink, two.ink) * 0.5;
       paintRings.strokeStyle = "rgba(" + tone + ",1)";
-      paintRings.lineWidth = n === 0 ? 1.6 : 1;
       paintRings.beginPath();
-      const off = n * RING_TURN * Math.PI * 2;
-      for (let k = 0; k <= RING_SIDES; k++) {
-        const at = (k / RING_SIDES) * Math.PI * 2 + off;
-        const x = Math.cos(at) * r, y = Math.sin(at) * r;
-        if (k === 0) paintRings.moveTo(x, y); else paintRings.lineTo(x, y);
+      for (let k = 0; k < RING_SIDES; k++) {
+        const a = corner(one, k), b = corner(two, k);
+        paintRings.moveTo(a[0], a[1]);
+        paintRings.lineTo(b[0], b[1]);
       }
       paintRings.stroke();
-      // A tick at every corner of the leading figure — the instrument
-      // mark the rest of this site measures things with.
+    }
+
+    // THE FIGURES, drawn as a smooth curve THROUGH their corners
+    // rather than as straight runs between them — the midpoint of two
+    // corners is the on-curve point and the corner itself is the
+    // control, which is the cheapest way there is to round a polygon
+    // without rounding away its facets.
+    for (let n = 0; n < RING_MANY; n++) {
+      const one = at[n];
+      if (!one || one.r < 3) continue;
+      paintRings.globalAlpha = one.ink;
+      paintRings.strokeStyle = "rgba(" + tone + ",1)";
+      paintRings.lineWidth = n === 0 ? 1.5 : 1;
+      paintRings.beginPath();
+      let was = corner(one, RING_SIDES - 1);
+      let here = corner(one, 0);
+      paintRings.moveTo((was[0] + here[0]) / 2, (was[1] + here[1]) / 2);
+      for (let k = 0; k < RING_SIDES; k++) {
+        here = corner(one, k);
+        const next = corner(one, k + 1);
+        paintRings.quadraticCurveTo(here[0], here[1],
+          (here[0] + next[0]) / 2, (here[1] + next[1]) / 2);
+      }
+      paintRings.stroke();
+
+      // THE NODES — a mark at every corner of every figure. This is
+      // most of what the owner meant by more particles: fourteen
+      // figures of twenty-four corners is three hundred and thirty-six
+      // of them on the window at once.
+      paintRings.globalAlpha = one.ink * 1.25;
+      paintRings.fillStyle = "rgba(" + tone + ",1)";
+      paintRings.beginPath();
+      for (let k = 0; k < RING_SIDES; k++) {
+        const c = corner(one, k);
+        paintRings.moveTo(c[0] + RING_NODE, c[1]);
+        paintRings.arc(c[0], c[1], RING_NODE, 0, Math.PI * 2);
+      }
+      paintRings.fill();
+
+      // And a tick out past every corner of the leading figure — the
+      // instrument mark the rest of this site measures things with.
       if (n === 0) {
-        paintRings.globalAlpha *= 0.8;
+        paintRings.globalAlpha = one.ink * 0.85;
+        paintRings.lineWidth = 1;
         paintRings.beginPath();
         for (let k = 0; k < RING_SIDES; k++) {
-          const at = (k / RING_SIDES) * Math.PI * 2 + off;
-          const c = Math.cos(at), sn = Math.sin(at);
-          paintRings.moveTo(c * r, sn * r);
-          paintRings.lineTo(c * (r + 11), sn * (r + 11));
+          const c = corner(one, k);
+          const far = Math.hypot(c[0], c[1]) || 1;
+          paintRings.moveTo(c[0], c[1]);
+          paintRings.lineTo(c[0] * (1 + 9 / far), c[1] * (1 + 9 / far));
         }
         paintRings.stroke();
       }

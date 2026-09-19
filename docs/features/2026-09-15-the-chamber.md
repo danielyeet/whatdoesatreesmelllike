@@ -728,6 +728,49 @@ frame is drawn. You come back to the chamber as full as if you had watched it fi
 Capped at `CATCH_MOST` — twenty seconds — because the chamber settles well inside that, so
 a tab left for an hour and one left for twenty seconds come back the same.
 
+### The wave is a lattice, and the cut is smooth
+
+*"make it smoother, less choppy, and make the geometry part of it contain way more
+nodes/particles and lines or whatever. make it complex AND SMOOTH!"* Those two are not in
+conflict once you see which half is which: **the geometry is the ink, and the cut is what
+the black arrives on.**
+
+**The ink got denser.** Seven figures became **fourteen**, twelve facets became
+**twenty-four**, and every corner of every figure now carries a **node** — 336 of them on
+the window at once — with every fifth figure tied corner-to-corner to the one behind it,
+which is what turns a set of rings into a lattice. Twenty-four spokes are struck through
+the whole train from the middle.
+
+**And it got smoother at the same time**, which is the part worth writing down. A
+twenty-four-sided polygon reads as a *lumpy circle* — worse than twelve, not better — so
+the figures are drawn as a **spline through their corners** rather than as straight runs
+between them: the midpoint of two corners is the on-curve point and the corner itself is
+the control. That is the cheapest way there is to round a polygon without rounding away
+its facets. Each figure's sides also **bow** slightly (`RING_BOW`), so no two of the
+fourteen are the same outline.
+
+**The chop was the cut, not the rings.** `CLIP_ROUND` was 12, and twelve straight sides
+opening across a whole window is a stepping edge. It is **48** now: still not a circle —
+the facets are there if you look for them — but nothing in it steps. The mechanical
+character moved into the ink, where it can be complex without being coarse.
+
+### Both scales read the page, not the contents
+
+The owner asked for Pineward's trunk and ADAR's sounding to *"start scrolling from the
+very top of the page, not just contents"*.
+
+Pineward's rule used to fill off the **count of parts passed**, on the reasoning that a
+part running long should not read as more of the piece than a part running short. The
+reasoning is sound and it was the wrong call: it left the rule at nothing for the whole of
+the title and the introduction, so you could scroll a screen or two with no sign of it
+moving. A bar that does not move while you are scrolling is a broken bar whatever it is
+measuring.
+
+So the **fill** is the page's own scroll and the **ticks** are still the parts passed. They
+say two different things on purpose: how far down you are, and how many you have been
+past. ADAR's sounding had no fill at all — ticks only — so it gained one, in silver, and
+the two pages are in step again.
+
 ### What was tried and was wrong
 
 Seven goes, and the failures are worth keeping because most of them looked plausible and

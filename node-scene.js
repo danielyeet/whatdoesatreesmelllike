@@ -53,7 +53,7 @@ const REAL_NODES = [
     preview: { description: "The ones I keep coming back to, kept by chapter." },
   },
   {
-    label: "Works", sub: "things I looked into properly and wrote up",
+    label: "Explorations & Researches", sub: "things I looked into properly and wrote up",
     href: "categories/researches.html", pos: [1.78, 1.0, 2.33],
     preview: { description: "Researches and explorations: where I go and find out, rather than describe." },
   },
