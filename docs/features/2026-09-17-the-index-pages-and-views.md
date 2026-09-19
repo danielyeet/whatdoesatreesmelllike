@@ -231,6 +231,32 @@ again: the page's `<h1>` reading and its `<title>`, the menu (`SITE_LINKS`), the
 still `categories/researches.html` — renaming it would break every link into it for no
 gain.
 
+## The anchors into a house, and the bug that hid behind them
+
+A fragrance in the Fragrances table points at that fragrance **where it stands in its
+house's own page** — `../works/pineward.html#part-37` — so the index and the houses are
+two ways into the same writing rather than two copies of it. That is the right design and
+it has one sharp edge: those anchors are the part's *number*, and the numbers are in the
+house's markup rather than counted, because they are the owner's.
+
+So when two parts were removed from Pineward and the remaining fifty-two renumbered
+straight through behind them, every anchor in this table went on pointing at the number
+its fragrance used to have. Following **Murkwood** from the search opened **Noki**. The
+table's own numbering was stale with it.
+
+Nothing would have caught that. The repository's link test asks whether
+`works/pineward.html` exists — it cannot see the `#part-37` on the end. One browser test
+failed, by accident, because it happened to follow that one search answer.
+
+**There is a test for it now**, in `repository.spec.js`: every `#part-NN` link anywhere in
+the site must land on the part whose title the link is written with. It reads both houses'
+pages for their parts and checks every anchor against them, browserless, in a few
+milliseconds. It was confirmed against the real bug — pointing Murkwood back at `#part-39`
+makes it fail and name both fragrances.
+
+**If a house is ever renumbered again**, the index has to be re-pointed in the same turn.
+The anchors are the part's number, not its name.
+
 ## Known issues / TODO
 
 - **The dates in the Fragrances table are rolled from a seed** so that sorting has

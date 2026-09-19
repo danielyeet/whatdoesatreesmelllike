@@ -249,6 +249,10 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
 - **A fragrance in the Fragrances table** points at that fragrance where it
   stands in its house's own page — `../works/pineward.html#part-06` — so the index and
   the houses are two ways into the same writing rather than two copies of it.
+  **Renumbering a house means re-pointing that table in the same turn**: the anchor is
+  the part's number, not its name, so a part removed from the middle of a house silently
+  sends every link after it to the wrong fragrance. That happened; there is a test for it
+  now in `repository.spec.js`.
 - A favourite on the **chamber** page (`favorites`) is an `<a class="gallery-entry">`
   block with a `data-chapter` and a `data-date` — the chapters are the different
   `data-chapter` values in the order they first appear, and the chapters standing in the
