@@ -1036,12 +1036,27 @@ body.view-fragrances .sheet-search { display: none; }
 .sheet-frame:hover .sheet-say,
 .sheet-frame:focus-within .sheet-say,
 .sheet-frame.hot .sheet-say { opacity: 1; }
-/* On the settled picture the caption is printed INSIDE its own bottom
-   corner, so the say goes above the name rather than below it — below
-   is off the bottom of the print. */
+/* THE SAY IS ALWAYS BELOW THE NAME, AND ALWAYS OUTSIDE THE PICTURE.
+   For one round the settled picture's say was put ABOVE its name, on
+   the reasoning that that caption is printed inside the print's own
+   bottom corner so below would fall off it. The owner saw what that
+   actually looks like — the line about the house set over the top of
+   the photograph, above its own name — and asked for it below, out of
+   the frame. So the plate's say is taken out of the corner and hung
+   under the picture entirely, where every other frame's already is.
+
+   `left: 0` on the say would put it under the caption, which on the
+   plate is inset 9px; it is anchored to the FRAME instead, so it lines
+   up with the picture's own left edge. */
+.sheet.scripted .sheet-frame.is-plate .sheet-caption { overflow: visible; }
 .sheet.scripted .sheet-frame.is-plate .sheet-say {
+  position: absolute;
   top: auto;
-  bottom: calc(100% + 3px);
+  bottom: -9px;
+  left: -9px;
+  transform: translateY(100%);
+  max-width: min(420px, 90vw);
+  padding: 4px 7px;
 }
 /* A picture comes up as its line reaches it, over a moment rather than
    in one frame: the map draws itself rather than switching itself on.
@@ -1576,6 +1591,55 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
 @keyframes chamber-shut {
   from { opacity: 1; translate: -50% 0; }
   to { opacity: 0; translate: -50% -8px; }
+}
+
+/* SHUTTING BECAUSE A CHAPTER WAS PRESSED IS NOT THE SAME AS SHUTTING.
+   Closing the menu is a step back to the word, and rising into it is
+   right for that. Pressing a CHAPTER is the start of the burst, and the
+   owner said the menu leaving looked like neither — "just goes down and
+   fades away", against a movement that is everything closing on the
+   middle.
+
+   So on a burst the rows are drawn INTO it. Each one collapses towards
+   the middle of the panel and shrinks as it goes, staggered from the
+   outside in — the row nearest the middle is the last to be taken —
+   with the panel's rule and head going the same way. It is the
+   implosion, said in writing.
+
+   `--n` is the row's place from the top and `--of` how many there are,
+   both set by chamber.js; `--mid` is how far this row is from the
+   middle, so the stagger is symmetrical about it rather than running
+   top to bottom. */
+.chamber-plate.drawn-in .chamber-panel {
+  pointer-events: none;
+  animation: none;
+  opacity: 1;
+}
+.chamber-plate.drawn-in .chamber-row {
+  animation: chamber-drawn-in 0.62s cubic-bezier(0.55, 0, 0.78, 0.4) both;
+  animation-delay: calc((1 - var(--mid, 0)) * 0.3s);
+}
+.chamber-plate.drawn-in .chamber-head,
+.chamber-plate.drawn-in .chamber-rule {
+  animation: chamber-drawn-in 0.62s cubic-bezier(0.55, 0, 0.78, 0.4) both;
+}
+@keyframes chamber-drawn-in {
+  from {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    letter-spacing: normal;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--pull, 0px) * -1)) scaleY(0.62);
+    letter-spacing: -0.06em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chamber-plate.drawn-in .chamber-row,
+  .chamber-plate.drawn-in .chamber-head,
+  .chamber-plate.drawn-in .chamber-rule { animation-duration: 0.01s; }
 }
 /* WITH ANIMATION TURNED OFF there is nothing to watch the step
    happening: chamber.js settles the drawing into whichever state the
@@ -2129,7 +2193,47 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
    reading, and brings the parts up as they are reached; without it the
    page is all of its writing and nothing is hidden.
    ================================================================== */
-.pineward-page { background: var(--bg); }
+/* THE GROUND OF THIS PAGE IS PINE GREEN, very faintly.
+
+   The owner asked for "some background elements in pine green colours".
+   What is here is three things, and all three are the page's ground
+   rather than anything drawn over the reading:
+
+     THE WASH    the paper turned a hair towards the green, so white is
+                 not quite white. At 2% it is below the point where you
+                 would call it a colour, and above the point where you
+                 would call it white.
+     THE LIGHT   two very soft pools of green, one high on each side,
+                 where the wood stands. They sit under the margins and
+                 not under the column, so the writing is still on paper.
+     THE FLOOR   the green gathering towards the foot of the page, which
+                 is the Roots stratum — the page reads down from the
+                 light into the ground, and its ground goes with it.
+
+   All of it is `--pine-green` at single-figure percentages. It must
+   stay that faint: this page's accent is worth something because it is
+   spent in so few places, and a green page would spend it everywhere.
+   The canopy canvas draws over this and is unaffected. */
+.pineward-page {
+  background-color: color-mix(in srgb, var(--pine-green) 2%, var(--bg));
+  background-image:
+    radial-gradient(60% 42% at 8% 4%,
+      color-mix(in srgb, var(--pine-green) 7%, transparent) 0%,
+      transparent 72%),
+    radial-gradient(56% 38% at 94% 12%,
+      color-mix(in srgb, var(--pine-green) 6%, transparent) 0%,
+      transparent 70%),
+    linear-gradient(to bottom,
+      transparent 52%,
+      color-mix(in srgb, var(--pine-green) 5%, transparent) 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+/* A browser without color-mix() gets the plain paper it always had,
+   which is the right thing to fall back to. */
+@supports not (background-color: color-mix(in srgb, red 2%, white)) {
+  .pineward-page { background: var(--bg); background-image: none; }
+}
 
 /* THE CANOPY, standing behind the title and fading out before the
    writing starts. It is drawn by the script; there is nothing in it
@@ -2588,29 +2692,70 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
 .pine-viewer.here { opacity: 1; }
 .pine-viewer[hidden] { display: none; }
 
+/* THE PLATE IS A FIXED WINDOW, and the pictures are fitted inside it.
+   It used to be sized to whatever picture was in it, which meant every
+   change of picture was also a change of the box's shape — the arrows
+   either side jumped, and the whole thing resized under the movement.
+   That was half of what the owner called choppy. The window is the same
+   size whatever is standing in it now, and a portrait picture simply
+   stands in the middle of it. */
 .pine-viewer-plate {
   position: relative;
   margin: 0;
-  display: flex;
-  min-width: 0;
-  max-width: min(1100px, 100%);
-  max-height: 100%;
+  flex: 0 1 auto;
+  width: min(1100px, 100%);
+  height: calc(100vh - clamp(32px, 10vh, 108px));
+  overflow: hidden;
 }
+/* TWO LAYERS, ONE ON TOP OF THE OTHER. One goes out as the next comes
+   in, both in the same movement — see `show()` in pineward-gallery.js.
+   A single layer had to empty itself between the two, and the gap is
+   what you could see. */
 .pine-viewer-img {
+  position: absolute;
+  inset: 0;
+  margin: auto;
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - clamp(32px, 10vh, 108px));
+  max-height: 100%;
   width: auto;
   height: auto;
   object-fit: contain;
-  border: 1px solid rgba(232, 232, 224, 0.22);
   background: #14140e;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.pine-viewer-img:not([src]) { display: none; }
+/* Where each layer stands: on show, waiting to come in from one side,
+   or on its way out to the other. The eased curve is the same one the
+   strip travels on, so the two movements on this page are one
+   movement. */
+.pine-viewer-img.is-on {
+  opacity: 1;
+  transform: none;
+  transition: transform 0.42s cubic-bezier(0.22, 0.61, 0.24, 1),
+              opacity 0.26s var(--menu-ease);
+}
+.pine-viewer-img.from-on { transform: translateX(46px); opacity: 0; transition: none; }
+.pine-viewer-img.from-back { transform: translateX(-46px); opacity: 0; transition: none; }
+.pine-viewer-img.to-back {
+  transform: translateX(-46px);
+  opacity: 0;
+  transition: transform 0.42s cubic-bezier(0.22, 0.61, 0.24, 1),
+              opacity 0.3s var(--menu-ease);
+}
+.pine-viewer-img.to-on {
+  transform: translateX(46px);
+  opacity: 0;
+  transition: transform 0.42s cubic-bezier(0.22, 0.61, 0.24, 1),
+              opacity 0.3s var(--menu-ease);
 }
 /* THE NUMBER, in the top right corner OF THE PICTURE — not of the
    window. It says where this one stands in the strip and nothing
    else. */
 .pine-viewer-no {
   position: absolute;
+  z-index: 2;
   top: 10px;
   right: 10px;
   font-family: var(--mono);
@@ -2620,27 +2765,6 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
   background: rgba(12, 12, 8, 0.72);
   padding: 4px 8px;
 }
-/* THE SWAP. Out the way it is going and in from the other side, both
-   halves short: 150ms out and 240ms back, which is the "smooth and
-   fast" the owner asked for. A cross-fade between two photographs is
-   neither — it is a moment of mud. */
-.pine-viewer-plate { transition: transform 0.15s ease-in, opacity 0.15s ease-in; }
-.pine-viewer-plate.leaving-on { transform: translateX(-36px); opacity: 0; }
-.pine-viewer-plate.leaving-back { transform: translateX(36px); opacity: 0; }
-.pine-viewer-plate.going-on,
-.pine-viewer-plate.going-back {
-  animation: pine-swap 0.24s cubic-bezier(0.18, 0.7, 0.26, 1) both;
-}
-.pine-viewer-plate.going-back { animation-name: pine-swap-back; }
-@keyframes pine-swap {
-  from { transform: translateX(42px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-@keyframes pine-swap-back {
-  from { transform: translateX(-42px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
 .pine-viewer-arrow, .pine-viewer-shut {
   border-color: rgba(232, 232, 224, 0.3);
   background: rgba(12, 12, 8, 0.6);
@@ -2667,11 +2791,7 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
   .pine-run { transition: none !important; }
   .pine-shot, .pine-shot img, .pine-viewer { transition: none; }
   .pine-shot:hover, .pine-shot:focus-visible { transform: none; }
-  .pine-viewer-plate { transition: none; animation: none !important; }
-  .pine-viewer-plate.leaving-on, .pine-viewer-plate.leaving-back {
-    transform: none;
-    opacity: 1;
-  }
+  .pine-viewer-img { transition: none !important; transform: none !important; }
 }
 
 .pine-foot {
@@ -3915,72 +4035,91 @@ body.find-reading .find-reading-note { opacity: 1; }
 
 /* THE WAVE — the home page's own centre, spread over the whole window.
 
-   The middle of the node map is a solid near-black core with two
-   translucent halo shells round it, at 2.37 and 5.15 times its radius
-   and at 0.24 and 0.09 opacity, in #1c1c14 and #8d8a80. The owner asked
-   for that to be what the shockwave is made of, so those are the numbers
-   below, kept as they are in `node-scene.js`.
+   IT IS DISTORTION, NOT COLOUR, and that is the owner's own correction:
+   "i wanted it to have that effect of causing distortion like the
+   central node of the main page, not colour". For two rounds each shell
+   was a soft grey fill at a fraction of an opacity, which is a thing
+   painted over the page rather than a thing the page is seen THROUGH.
+   Nothing here has a colour any more. What each shell has is a
+   `backdrop-filter`, so what passes over the window bends and smears
+   what is behind it the way the map's translucent shells bend what is
+   behind them.
 
-   What each part is here:
-     THE CORE   the chapter's own black, opened out by the wave — it is
-                the page's clip-path circle, not an element, so the page
-                IS the core rather than something drawn under it.
-     THE SHELLS these two, going out ahead of the core and fading as they
-                widen. Soft-edged bands rather than hairlines: a shell is
-                a sphere seen through, so what passes is a thickness.
-     THE SEED   a small dark disc at the point the particles meet, which
-                is the core before it has anywhere to go. Without it the
-                wave starts from nothing visible and the meeting has no
-                moment to it. */
-/* IT STANDS OUTSIDE THE PAGE IT OPENS, and over the whole window. For
-   a round it was the first thing inside .chapter-page — and .chapter-page
-   is cut open from nothing, so whatever the shells did in the first
+   AND IT IS GEOMETRIC, which is the other half of the note — "more
+   geometrical, and not so circular smooth... more mechanical". Every
+   edge here is a POLYGON of twelve sides, not a circle: the shells, the
+   hairline that leads them, and the cut the page is opened with
+   (`CLIP_ROUND` in chamber.js). At this size twelve sides read as
+   facets rather than as a circle, which is the difference between a
+   ripple and a machine.
+
+   IT STANDS OUTSIDE THE PAGE IT OPENS, and over the whole window. For
+   a round it was the first thing inside .chapter-page — and that page is
+   cut open from nothing, so whatever the shells did in their first
    moments was clipped away with everything else and the hub could only
    ever arrive at the same instant as the black. The owner asked for it
    "just before the black explosion", which means it has to be able to go
-   out over the chamber's own white first. Its z-index puts it under the
-   page (4) and over the drawing (3). */
+   out over the chamber's own white first.
+
+   IT PASSES OVER THE PAGE, NOT UNDER IT — z-index 5, above the page's
+   4. That is what gives the distortion anything to work on. A
+   backdrop-filter bends what is BEHIND it, and what is behind a wave
+   sitting under the page is a white window with almost nothing left on
+   it: the particles have met in the middle and the chrome has gone, so
+   the filter bit on nothing and the wave was invisible for the half of
+   its travel that mattered. Above the page it passes over the black
+   coming open and over the silver on it, and there the bend reads. It
+   is `pointer-events: none`, so nothing on the page is harder to press
+   for it being there. */
 .chapter-wave {
   position: fixed;
   inset: 0;
-  z-index: 3;
+  z-index: 5;
   pointer-events: none;
   overflow: hidden;
 }
 .chapter-wave[hidden] { display: none; }
-/* AND ALL OF IT LIES IN THE RING'S PLANE. `--wave-x` and `--wave-y` are
+/* ALL OF IT LIES IN THE RING'S PLANE. `--wave-x` and `--wave-y` are
    where the middle of the orbit lands on the window, `--wave-turn` the
    angle its long axis is standing at, and `--wave-flat` how flat it is
    drawn — all four measured off the orbit itself and written here by
    `chamber.js` at the moment the wave goes out. `rotate() scale()
-   scaleY()` in that order turns a circle into that ellipse. */
+   scaleY()` in that order turns the twelve-sided figure into that same
+   ellipse, facets and all. */
 .chapter-wave span {
   position: absolute;
   left: var(--wave-x, 50%);
   top: var(--wave-y, 50%);
-  border-radius: 50%;
   transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
              scale(0.02) scaleY(var(--wave-flat, 1));
+  /* A twelve-sided ring: the outer figure with the inner one cut back
+     out of it, so the filter only bites in the band between them. */
+  clip-path: polygon(evenodd,
+    100% 50%, 86.6% 75%, 50% 93.3%, 13.4% 75%, 0% 50%, 13.4% 25%,
+    50% 6.7%, 86.6% 25%,
+    88% 50%, 77% 70.6%, 50% 85.6%, 23% 70.6%, 12% 50%, 23% 29.4%,
+    50% 14.4%, 77% 29.4%);
 }
-/* The inner shell: nearer the core, and the heavier of the two. */
+/* The inner shell: nearer the core, and the heavier bite of the two. */
 .chapter-shell-in {
   width: 150vmax;
   height: 150vmax;
-  background: radial-gradient(circle,
-    rgba(141, 138, 128, 0) 46%,
-    rgba(141, 138, 128, 0.24) 68%,
-    rgba(141, 138, 128, 0.07) 86%,
-    rgba(141, 138, 128, 0) 100%);
+  /* Nearly all blur, and only a touch of contrast. An earlier go had
+     brightness in it as well, which on a near-white ground came out as
+     a pale WASH travelling over the page — a colour by another name,
+     and the one thing the owner asked to be rid of. Blur bends; it does
+     not paint. */
+  backdrop-filter: blur(11px) contrast(1.1);
+  -webkit-backdrop-filter: blur(11px) contrast(1.1);
   animation: chapter-shell 1.65s cubic-bezier(0.14, 0.62, 0.22, 1) both;
 }
-/* The outer shell: 5.15/2.37 of the inner, and a tenth of the weight. */
+/* The outer shell: 5.15/2.37 of the inner, as on the map, and a far
+   lighter touch — it is the edge of the same thing, further out. */
 .chapter-shell-out {
   width: 326vmax;
   height: 326vmax;
-  background: radial-gradient(circle,
-    rgba(141, 138, 128, 0) 60%,
-    rgba(141, 138, 128, 0.09) 76%,
-    rgba(141, 138, 128, 0) 96%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   animation: chapter-shell 1.65s cubic-bezier(0.14, 0.62, 0.22, 1) both;
 }
 @keyframes chapter-shell {
@@ -3990,36 +4129,49 @@ body.find-reading .find-reading-note { opacity: 1; }
     opacity: 0;
   }
   8% { opacity: 1; }
-  70% { opacity: 0.7; }
+  70% { opacity: 0.8; }
   100% {
     transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
                scale(1) scaleY(var(--wave-flat, 1));
     opacity: 0;
   }
 }
-/* The seed: the core before it has anywhere to go. */
+/* THE LEADING EDGE — a hairline twelve-sided figure running ahead of
+   the shells. It is the one thing here that is drawn rather than
+   distorted, and it is what makes the wave read as mechanical: a
+   measured figure opening out, the way everything else on this site is
+   ruled. It carries no fill. */
 .chapter-core {
-  width: 3vmax;
-  height: 3vmax;
-  background: radial-gradient(circle,
-    #1c1c14 46%,
-    rgba(28, 28, 20, 0.6) 70%,
-    rgba(28, 28, 20, 0) 100%);
-  animation: chapter-seed 0.5s cubic-bezier(0.3, 0.7, 0.3, 1) both;
+  width: 150vmax;
+  height: 150vmax;
+  border: 1.5px solid rgba(23, 23, 15, 0.62);
+  clip-path: polygon(evenodd,
+    100% 50%, 86.6% 75%, 50% 93.3%, 13.4% 75%, 0% 50%, 13.4% 25%,
+    50% 6.7%, 86.6% 25%,
+    99.2% 50%, 86% 74.5%, 50% 92.5%, 14% 74.5%, 0.8% 50%, 14% 25.5%,
+    50% 7.5%, 86% 25.5%);
+  animation: chapter-edge 0.92s cubic-bezier(0.1, 0.72, 0.2, 1) both;
 }
-@keyframes chapter-seed {
+@keyframes chapter-edge {
   0% {
     transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
-               scale(0.2) scaleY(var(--wave-flat, 1));
+               scale(0.01) scaleY(var(--wave-flat, 1));
     opacity: 0;
   }
-  22% { opacity: 1; }
+  14% { opacity: 1; }
   100% {
     transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
-               scale(5) scaleY(var(--wave-flat, 1));
+               scale(1.15) scaleY(var(--wave-flat, 1));
     opacity: 0;
   }
 }
+/* On the black the hairline has to be silver, or it is a black line on
+   black. It is the same line; it is only that the wave crosses from one
+   ground to the other halfway through its travel. */
+.chapter-open .chapter-core { border-color: rgba(200, 204, 212, 0.5); }
+/* A browser with no backdrop-filter gets the hairline figure and
+   nothing painted over the page, which is the right thing to fall back
+   to: the wave is quieter, and it is still the same shape. */
 
 /* THE CARDS. One per favourite, ruled in silver with a mark at two
    corners — the same registration mark the rest of the site uses,
@@ -4788,11 +4940,23 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 .photo-viewer-plate { transition: transform 0.15s ease-in, opacity 0.15s ease-in; }
 .photo-viewer-plate.leaving-on { transform: translateX(-36px); opacity: 0; }
 .photo-viewer-plate.leaving-back { transform: translateX(36px); opacity: 0; }
+/* Its own keyframes. It shared Pineward's for a round, and Pineward's
+   went when that viewer was rebuilt to cross-slide two layers — a
+   shared name between two pages' scripts is exactly the coupling this
+   site does not have anywhere else. */
 .photo-viewer-plate.going-on,
 .photo-viewer-plate.going-back {
-  animation: pine-swap 0.24s cubic-bezier(0.18, 0.7, 0.26, 1) both;
+  animation: photo-swap 0.24s cubic-bezier(0.18, 0.7, 0.26, 1) both;
 }
-.photo-viewer-plate.going-back { animation-name: pine-swap-back; }
+.photo-viewer-plate.going-back { animation-name: photo-swap-back; }
+@keyframes photo-swap {
+  from { transform: translateX(42px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes photo-swap-back {
+  from { transform: translateX(-42px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
 
 .photo-viewer-arrow, .photo-viewer-shut {
   flex: 0 0 auto;

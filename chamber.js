@@ -816,7 +816,7 @@
   const LOOSE_SPAN = [0.3, 0.62];  // and how long its own fall then takes
   const LOOSE_COAST = 0.55;    // how long it keeps going the way it was, in seconds
   const MARKS_FADE = 1.25;     // the drawing's own chrome going, with the rest of it
-  const CLIP_ROUND = 96;       // corners in the ellipse the page is cut out with
+  const CLIP_ROUND = 12;       // corners in the figure the page is cut out with
 
   /** Null, or the burst that is running / the chapter that is open. */
   let burst = null;
@@ -1011,8 +1011,35 @@
     // frame the winding does.
     shell.classList.add("bursting");
     page.classList.add("bursting");
+    drawMenuIn();
     if (opened) setOpen(false, false);
     if (REDUCE_MOTION) { burst.phase = "open"; layChapter(i); }
+  }
+
+  /** THE MENU IS DRAWN INTO THE BURST RATHER THAN SHUT.
+      Closing the menu is a step back to the word and rises into it;
+      pressing a chapter is the start of everything closing on the
+      middle, and the owner said the menu leaving looked like neither.
+      Each row is given how far it stands from the MIDDLE of the column
+      and how far it has to travel to get there, and the stylesheet
+      collapses them inwards from the outside in. Measured here because
+      it is a measurement — a stylesheet cannot ask how tall a panel
+      came out. */
+  function drawMenuIn() {
+    const rows = [...column.querySelectorAll(".chamber-row")];
+    if (!rows.length) return;
+    const box = panel.getBoundingClientRect();
+    const mid = box.top + box.height / 2;
+    rows.forEach((row, n) => {
+      const own = row.getBoundingClientRect();
+      row.style.setProperty("--pull", Math.round(own.top + own.height / 2 - mid) + "px");
+      // 1 at the middle of the column, 0 at either end: the outermost
+      // rows go first and the middle one last.
+      const half = Math.max(1, (rows.length - 1) / 2);
+      row.style.setProperty("--mid",
+        (1 - Math.abs(n - (rows.length - 1) / 2) / half).toFixed(3));
+    });
+    plate.classList.add("drawn-in");
   }
 
   function closeChapter() {
@@ -1021,6 +1048,11 @@
     burst = null;
     shell.classList.remove("bursting", "burst-wave");
     page.classList.remove("bursting", "chapter-open");
+    plate.classList.remove("drawn-in");
+    column.querySelectorAll(".chamber-row").forEach((row) => {
+      row.style.removeProperty("--pull");
+      row.style.removeProperty("--mid");
+    });
     chapterPage.classList.remove("here");
     chapterPage.style.clipPath = "";
     chapterPage.hidden = true;

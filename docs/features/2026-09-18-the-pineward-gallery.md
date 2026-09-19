@@ -42,12 +42,36 @@ whole pictures rather than by pixels. Both come off the page itself: one step is
 distance between two real neighbours' left edges, read live. Writing the width and the
 gap into the script as numbers would mean two copies of them, and the gap is a `clamp()`.
 
-## The swap is a wipe, not a cross-fade
+## The swap: two layers, decoded first
 
-The owner asked for *"a smooth and fast animation between the pictures"*. The picture
-leaves the way it is going and the next comes in from the other side — 150ms out, 240ms
-back. A cross-fade between two photographs is neither smooth nor fast: it is a moment of
-mud where both are half there.
+The owner asked for *"a smooth and fast animation between the pictures"*, looked at what
+arrived, and said it was **choppy**. They were right, and there were two separate reasons.
+
+**The plate was sized to its picture.** Every change of picture was therefore also a
+change of the box's shape: the arrows either side jumped, and the whole thing resized
+underneath the movement. The plate is a **fixed window** now, the same size whatever is
+standing in it, and a picture is fitted inside it.
+
+**And one layer cannot hand over to another.** The first version slid the picture out,
+swapped its `src`, and slid it back in — so there was a gap in the middle where the plate
+held nothing at all, and the decode of a two-megapixel photograph landed inside that gap.
+Setting an `src` and animating in the same breath asks the browser to decode the picture
+inside the first frame of the movement, and it does not: it drops frames until the picture
+is ready.
+
+There are **two layers** now, cross-slid. The next picture is fetched and `decode()`d
+first; only once it is ready does one go out the way you are going while the other comes
+in from the other side, in one movement, with nothing left to do but move something that
+is already there. The two either side are warmed in the background, so stepping through at
+speed never waits at all. A press that lands mid-decode wins over the one in flight.
+
+It is still a slide and not a cross-**fade**: two photographs dissolved through each other
+are a moment of mud.
+
+**The number is placed on the picture, not the window.** With a fixed window wider than an
+upright photograph, the window's top-right corner is not the picture's. `markNumber()`
+works out where the picture lands the way `object-fit: contain` works it out, and puts the
+number there.
 
 ## The pictures themselves
 
@@ -65,8 +89,26 @@ times. Largest web copy 494KB, largest thumbnail 86KB, and every thumbnail is
 `loading="lazy"`.
 
 Four of the photographs were sitting loose in the repository **root** rather than in the
-gallery folder; they were moved in with the rest, which is why the set is thirty and not
-twenty-six.
+gallery folder; they were moved in with the rest, which made the set thirty.
+
+**It is twenty-eight now, and three of them are turned.** The owner went through the set
+and asked for two out, one moved to the end, and three turned a quarter turn. All of those
+were given as **positions in the strip**, not filenames, and were read against the
+numbering as it stood before any of them were done; the renumbering is what falls out at
+the end.
+
+The turn lives in the **web copy**, not in the original — the originals in
+`The Pinewards Gallery Page` are untouched, the way every original on this site is. So if
+the web copies are ever rebuilt, these three have to be turned again:
+
+| file | turn |
+|---|---|
+| `pineward-15` | a quarter turn clockwise |
+| `pineward-39` | a quarter turn clockwise |
+| `pineward-42` | a quarter turn anticlockwise |
+
+Nothing in the page says so. That table and the comment above the strip in
+`works/pineward.html` are the only record of it.
 
 ## Without the script
 

@@ -26,15 +26,16 @@
 // If you move one by hand, keep it roughly 3.2 to 3.7 from the centre,
 // and keep its y clear of 0 — a node sitting on the equator slides
 // straight across the middle of the screen on every rotation.
-// WHAT IS ON THIS MAP IS WHAT IS IN THE MENU. The owner asked for the
-// two to match, so these are `SITE_LINKS` in nav.js less Home — which is
-// this page, and is the middle of the map rather than a branch off it.
-// Add a page to one and add it to the other.
+// WHAT IS ON THIS MAP is a CHOSEN FEW of what is in the menu, and the
+// owner chooses them. It was briefly every menu entry but Home; they
+// then asked for Contact off it, and Photography with it. So the rule
+// is not "the map is the menu" — it is that everything here must BE in
+// the menu, and which of them are here is theirs to say. Nothing breaks
+// when a page is only in the menu; it simply is not a branch.
 //
-// The two "Test node" sandboxes were branches here until then. They are
-// not any more; works/test-node-a.html and -b.html are still in the
-// repository and are still safe to repurpose, but nothing points at
-// them.
+// Off the map and still in the site: Photography, Contact, and the two
+// "Test node" sandboxes (works/test-node-a.html and -b.html, which
+// nothing points at at all now and are safe to repurpose).
 const REAL_NODES = [
   {
     label: "Scent descriptions", sub: "notes on things I've smelled and tried to describe",
@@ -57,18 +58,9 @@ const REAL_NODES = [
     preview: { description: "Researches and explorations: where I go and find out, rather than describe." },
   },
   {
-    label: "Photography", sub: "pictures taken alongside the writing",
-    href: "categories/other-2.html", pos: [-3.25, -0.99, -0.57],
-    preview: { description: "Pictures taken alongside the writing, here as their own work." },
-  },
-  {
     label: "Search", sub: "one field over the whole site",
-    href: "search.html", pos: [2.26, -1.86, -1.43],
+    href: "search.html", pos: [-0.4, -2.62, 1.52],
     preview: { description: "One field over everything written here, and where each answer lives." },
-  },
-  {
-    label: "Contact", sub: "how to reach me", href: "contact.html",
-    pos: [-0.4, -2.62, 1.52],
   },
 ];
 

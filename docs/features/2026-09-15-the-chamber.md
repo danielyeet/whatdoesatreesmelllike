@@ -618,6 +618,63 @@ so it jumped straight to the finished state and the wave looked instant however 
 was given. Driving the cut by hand each frame has no start state to settle, so there is no
 forced reflow any more.
 
+### The wave is distortion, and it is geometric
+
+Two more notes on it, and they pull in the same direction.
+
+**"Not colour."** The owner: *"remove that first explosion colour (gray or black with
+reduced opacity. idk what it is but remove it), i wanted it to have that effect of causing
+distortion like the central node of the main page, not colour."* For two rounds each shell
+was a soft grey fill at a fraction of an opacity — a thing **painted over** the page
+rather than a thing the page is seen **through**. Nothing in the wave has a colour any
+more. Each shell is a `backdrop-filter` — nearly all blur, a touch of contrast — so what
+passes over the window bends what is behind it the way the map's translucent shells bend
+what is behind them.
+
+**And it passes OVER the page, not under it.** This is the part that made the difference,
+and it is not obvious: a backdrop-filter bends what is *behind* it, and what is behind a
+wave sitting under the chapter page is a white window with nothing left on it — the
+particles have met in the middle and the chrome has gone. The filter bit on nothing and
+the wave was invisible for the half of its travel that mattered. At `z-index: 5`, above
+the page's 4, it passes over the black coming open and over the silver on it, and there
+the bend reads. It is `pointer-events: none`, so nothing is harder to press for it being
+there.
+
+An earlier go had `brightness()` in the filter as well, which on a near-white ground came
+out as a pale **wash** travelling over the page — a colour by another name, and the one
+thing that was asked to go. Blur bends; it does not paint.
+
+**"More geometrical... more mechanical."** Every edge in the wave is a **twelve-sided
+figure** now, not a circle: the two shells, the hairline that leads them, and the cut the
+page is opened with (`CLIP_ROUND`, 96 → 12). At this size twelve sides read as facets
+rather than as a circle, which is the difference between a ripple and a machine. The
+timing is unchanged — it still opens on smootherstep — because *smooth* was about the
+travel and *geometric* is about the shape, and the two notes are not in conflict.
+
+The hairline edge (`.chapter-core`, which was the dark seed) is the one thing here that is
+drawn rather than distorted. It is silver once the black is under it (`.chapter-open`) and
+ink before that, because the wave crosses from one ground to the other halfway through its
+travel.
+
+### The menu is drawn into the burst, not shut
+
+The owner: *"when you click on any chapter, I want the table to disappear in a smoother
+way, and in a way that agrees with the transition itself, not just goes down and fades
+away."*
+
+Closing the menu and pressing a chapter had been the same movement — the panel rising
+back into the word (`chamber-shut`). That is right for closing, and wrong for this: the
+burst is everything closing on the middle, and the menu was the one thing going up.
+
+`drawMenuIn()` measures each row's distance from the middle of the panel and writes two
+custom properties on it — `--pull`, how far it has to travel to get there, and `--mid`,
+how near the middle it already is. The stylesheet then collapses the rows **inwards from
+the outside in**: the top and bottom rows go first, the middle one last, each shrinking
+and tightening its letter-spacing as it goes. It is the implosion, said in writing.
+
+Measured in the script because it is a measurement: a stylesheet cannot ask how tall a
+panel came out.
+
 ### What was tried and was wrong
 
 Six goes, and the failures are worth keeping because most of them looked plausible and

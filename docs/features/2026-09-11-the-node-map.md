@@ -131,18 +131,26 @@ error, not a loading failure. Then check portrait (a narrow window) for the left
 nodes still being on screen, and check that a vertical swipe scrolls the page while a
 horizontal drag turns the map.
 
-## What is on the map is what is in the menu
+## What is on the map is a chosen few of what is in the menu
 
-The owner asked for the two to match. `REAL_NODES` is now `SITE_LINKS` from `nav.js` less
-**Home** — which is this page, and is the middle of the map rather than a branch off it.
-Add a page to one and add it to the other; there is a browserless test that every link in
-either points at a file that exists, but nothing checks that the two lists agree, so that
-part is a habit rather than a guard.
+The owner asked for the two to match, and then, the round after, asked for **Contact** off
+the map and **Photography** with it. So the rule is **not** "the map is the menu". It is:
 
-Two of the seven changed name with their pages — **Researches → Works** and **Other →
-Photography** — and the two **Test node** sandboxes are no longer branches at all. Their
-pages, `works/test-node-a.html` and `-b.html`, are still in the repository and are still
-safe to repurpose; nothing points at them now.
+> everything on the map must be in the menu; which of them are on it is the owner's to
+> say.
+
+Nothing breaks when a page is only in the menu — it simply is not a branch. There is a
+browserless test that every link in either list points at a file that exists, but nothing
+checks the two lists against each other, and after this round nothing should.
+
+Five branches now: Scent descriptions, Theories, Favourites, Works, Search. Off the map and
+still in the site: **Photography**, **Contact**, and the two **Test node** sandboxes
+(`works/test-node-a.html` and `-b.html`, which nothing points at at all now and are safe to
+repurpose). Two changed name with their pages on the way here — Researches → Works and
+Other → Photography.
+
+**A node with no `preview` navigates instead of opening a modal**, which is worth knowing
+if one is added: Search carries a preview, and the removed Contact node did not.
 
 ## Known issues / TODO
 

@@ -20,9 +20,7 @@ const EXPECTED_LABELS = [
   "Theories",
   "Favourites",
   "Works",
-  "Photography",
   "Search",
-  "Contact",
 ];
 
 test.describe("the map itself", () => {

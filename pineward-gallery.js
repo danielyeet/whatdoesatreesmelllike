@@ -167,51 +167,116 @@
     '<button class="pine-viewer-arrow pine-viewer-back" type="button" aria-label="Previous picture">' +
       '<span aria-hidden="true">&#8592;</span></button>' +
     '<figure class="pine-viewer-plate">' +
-      '<img class="pine-viewer-img" alt="">' +
+      // TWO LAYERS, NOT ONE. See `show()`.
+      '<img class="pine-viewer-img is-on" alt="">' +
+      '<img class="pine-viewer-img" alt="" aria-hidden="true">' +
       '<span class="pine-viewer-no" aria-hidden="true"></span>' +
     '</figure>' +
     '<button class="pine-viewer-arrow pine-viewer-on" type="button" aria-label="Next picture">' +
       '<span aria-hidden="true">&#8594;</span></button>';
   document.body.appendChild(viewer);
 
-  const shown = viewer.querySelector(".pine-viewer-img");
+  const layers = [...viewer.querySelectorAll(".pine-viewer-img")];
   const number = viewer.querySelector(".pine-viewer-no");
   const plate = viewer.querySelector(".pine-viewer-plate");
   let viewing = false;
   let showing = 0;
   let wasOn = null;
+  let front = 0;       // which of the two layers is the one on show
+  let swapping = null; // the change in flight, so a fast press cancels it
 
   const numbered = (n) => String(n).padStart(2, "0");
+  const fullOf = (shot) => shot.dataset.full || shot.getAttribute("href");
+
+  /** PUT THE NUMBER ON THE PICTURE'S OWN CORNER, not on the window's.
+      The owner asked for it "on the top right of that picture", and the
+      plate is a fixed window now — wider than an upright photograph — so
+      the two corners are not the same corner. Where the picture
+      actually lands inside that window is worked out the way
+      `object-fit: contain` works it out, and the number is put there. */
+  function markNumber() {
+    const img = layers[front];
+    const box = plate.getBoundingClientRect();
+    const nw = img.naturalWidth, nh = img.naturalHeight;
+    if (!nw || !nh || !box.width) { number.style.right = ""; number.style.top = ""; return; }
+    const fit = Math.min(box.width / nw, box.height / nh);
+    number.style.right = Math.round((box.width - nw * fit) / 2 + 10) + "px";
+    number.style.top = Math.round((box.height - nh * fit) / 2 + 10) + "px";
+  }
+
+  /** Have the browser fetch and DECODE a picture before anything has to
+      draw it. This is the whole of the difference between the change
+      the owner called choppy and the one that is here now: setting an
+      `src` and animating in the same breath asks the browser to decode
+      a two-megapixel photograph inside the first frame of the movement,
+      and it simply does not — it drops frames until the picture is
+      ready. Decoding first means the animation has nothing left to do
+      but move something that is already there. */
+  function ready(src) {
+    const img = new Image();
+    img.src = src;
+    return img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+  }
+
+  /** The two either side, fetched quietly, so stepping through the
+      gallery at speed never waits for a decode at all. */
+  function warm(n) {
+    [n - 1, n + 1].forEach((at) => {
+      const shot = shots[(at + shots.length) % shots.length];
+      if (shot) ready(fullOf(shot));
+    });
+  }
 
   /** Show picture `n`, travelling `way` (-1 back, 1 on, 0 arriving).
-      The picture is swapped under a short wipe rather than faded
-      through white: what the owner asked for is "a smooth and fast
-      animation", and a cross-fade between two photographs is neither —
-      it is a moment of mud. */
+
+      TWO LAYERS, CROSS-SLID. One picture goes out the way you are
+      going while the next comes in from the other side, both in the
+      same movement and both already decoded. The version before this
+      had ONE layer and did it in two halves — slide out, swap the
+      `src`, slide in — which meant a gap in the middle where the plate
+      held nothing at all, and a decode landing inside it. That gap is
+      what read as choppy.
+
+      A cross-FADE is still not what this is: two photographs dissolved
+      through each other are a moment of mud. They slide. */
   function show(n, way) {
     showing = (n + shots.length) % shots.length;
-    const shot = shots[showing];
-    const full = shot.dataset.full || shot.getAttribute("href");
+    const full = fullOf(shots[showing]);
     const going = REDUCE_MOTION ? 0 : (way || 0);
+    number.textContent = numbered(showing + 1);
 
-    const paint = () => {
-      shown.src = full;
-      number.textContent = numbered(showing + 1);
-      plate.classList.remove("going-back", "going-on");
-      void plate.offsetWidth;
-      if (going < 0) plate.classList.add("going-back");
-      if (going > 0) plate.classList.add("going-on");
-    };
+    if (!going) {
+      layers[front].src = full;
+      layers[front].classList.add("is-on");
+      layers[1 - front].classList.remove("is-on");
+      layers[1 - front].removeAttribute("src");
+      ready(full).then(() => { markNumber(); warm(showing); });
+      return;
+    }
 
-    if (!going) { paint(); return; }
-    // Out the way it is going, in from the other side. Both halves are
-    // short on purpose — 150ms out, 240ms back — so it reads as one
-    // movement rather than as a transition you have to wait through.
-    plate.classList.add(going > 0 ? "leaving-on" : "leaving-back");
-    window.setTimeout(() => {
-      plate.classList.remove("leaving-on", "leaving-back");
-      paint();
-    }, 150);
+    const mine = {};
+    swapping = mine;
+    const out = layers[front], into = layers[1 - front];
+    into.src = full;
+    ready(full).then(() => {
+      // A press that landed while this one was being decoded wins.
+      if (swapping !== mine || !viewing) return;
+      front = 1 - front;
+      into.classList.remove("from-back", "from-on");
+      into.classList.add(going > 0 ? "from-on" : "from-back");
+      void into.offsetWidth;
+      into.classList.add("is-on");
+      into.classList.remove("from-back", "from-on");
+      markNumber();
+      out.classList.remove("is-on");
+      out.classList.add(going > 0 ? "to-back" : "to-on");
+      window.setTimeout(() => {
+        if (swapping !== mine) return;
+        out.classList.remove("to-back", "to-on");
+        out.removeAttribute("src");
+        warm(showing);
+      }, 420);
+    });
   }
 
   function open(n, from) {
@@ -272,7 +337,10 @@
   let sizing = 0;
   window.addEventListener("resize", () => {
     window.clearTimeout(sizing);
-    sizing = window.setTimeout(() => place(false), SETTLE);
+    sizing = window.setTimeout(() => {
+      place(false);
+      if (viewing) markNumber();
+    }, SETTLE);
   });
 
   place(false);
