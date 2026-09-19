@@ -76,6 +76,33 @@ and not drifting while nothing is touched; travelling back giving exactly the dr
 left; the field standing still under `prefers-reduced-motion`; all of the writing being
 there without the script; and the theories and the researches reaching their own pieces.
 
+## The sweat theory's combination table
+
+Three lists of three, three and two make **eighteen** combinations, and the owner asked
+for every one of them written out with a blank beside it to fill in later. So the table on
+`works/theory-02.html` is a **form**, not a finding: eighteen rows in the order every
+combination is counted off — first letter changing slowest, last fastest — each carrying
+its code, the three words that code stands for, and an empty cell.
+
+**The blank is the point of it.** A row with nothing in it draws a dashed **rule** rather
+than nothing at all (`.sweat-who:empty::after`), because a rule reads as *waiting* where a
+gap reads as broken; the moment anything is typed between the tags the rule goes and the
+name stands on its own. And a combination that stays empty is itself worth something — it
+says nobody has made that.
+
+**Filling one in is one edit**: find the row by its code and put the name between its
+`<td class="sweat-who">` tags. The markup carries that instruction above the table, along
+with the one warning that matters — the rows must not be renumbered or reordered, because
+the codes are the framework's own and the order is the counting.
+
+On a narrow window the three spelled-out columns are dropped and the code is kept: the
+code carries the same information and the page has just finished explaining how to read
+it.
+
+Adding this section pushed Notes to 05 and Footnotes to 06, ids and all. The rule down the
+left is built from the sections themselves, so it picked the new one up with nothing else
+changed — which is the whole reason it is built that way.
+
 ## Known issues / TODO
 
 - **The three theory pages are templates** — real structure, placeholder writing, six

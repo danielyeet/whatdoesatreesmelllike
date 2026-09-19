@@ -5294,3 +5294,85 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   .essay-section ol.essay-order { columns: 1; }
   .tri-pole { font-size: 19px; }
 }
+
+/* ==================================================================
+   THE SWEAT THEORY'S COMBINATION TABLE — works/theory-02.html
+
+   Eighteen rows, one per combination of the framework's three lists,
+   with a blank column the owner fills in as they find a fragrance that
+   sits there. The blank is the point of it: a row left empty says that
+   combination is still waiting, and drawing it as a RULE rather than as
+   nothing is what makes that read as waiting rather than as broken.
+================================================================== */
+.sweat-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 26px;
+  font-size: 15px;
+}
+.sweat-caption {
+  caption-side: top;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8f98a8;
+  padding-bottom: 14px;
+}
+.sweat-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8f98a8;
+  padding: 0 14px 10px 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.4);
+  white-space: nowrap;
+}
+.sweat-list-no {
+  color: var(--brass, #b98a3e);
+  margin-right: 6px;
+}
+.sweat-table td {
+  padding: 11px 14px 11px 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.16);
+  color: #aab2c1;
+  vertical-align: baseline;
+}
+.sweat-table tr:hover td { color: #dbe1ea; }
+/* The code is the framework's own shorthand, so it is set in the mono
+   the rest of the site keeps for a reading. */
+.sweat-code {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: #dbe1ea;
+  width: 72px;
+}
+/* THE COLUMN THAT IS WAITING. Empty, it draws a rule to write on;
+   filled, it is just the name. */
+.sweat-who { width: 34%; color: #dbe1ea; }
+.sweat-who:empty::after {
+  content: "";
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  border-bottom: 1px dashed rgba(150, 160, 176, 0.42);
+  height: 0;
+  transform: translateY(-4px);
+}
+
+@media (max-width: 720px) {
+  /* The three spelled-out columns are what a narrow window has to lose:
+     the code carries the same information, and the page has just
+     explained how to read it. */
+  .sweat-table th:nth-child(2), .sweat-table th:nth-child(3),
+  .sweat-table th:nth-child(4), .sweat-table td:nth-child(2),
+  .sweat-table td:nth-child(3), .sweat-table td:nth-child(4) {
+    display: none;
+  }
+  .sweat-who { width: auto; }
+}
