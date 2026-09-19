@@ -282,6 +282,36 @@
 
     rule.append(line, list, hereName, readout);
     document.body.appendChild(rule);
+    holdName();
+  }
+
+  // THE RULE MUST NOT MOVE WHEN THE NAME UNDER IT CHANGES.
+  //
+  // The rule is a fixed column standing in the middle of the window, so
+  // it is centred on its OWN height — and the name under it wraps to a
+  // second line when a section is called something long. A name going
+  // from one line to two used to make the whole ladder, the hairline
+  // and everything on it, hop half a line up the window, and back down
+  // again at the next section. On The Architecture of Sweat that was a
+  // visible jump between "Applying the Framework" and "Every
+  // Combination", which is where the owner found it.
+  //
+  // So the room is reserved once, and it is the room the TALLEST name
+  // this page actually has needs — measured off the page rather than
+  // guessed at, so a long heading is never clipped and the rule never
+  // moves whatever the piece is called. It is measured again when the
+  // window changes width, since that is what changes the wrapping.
+  function holdName() {
+    if (!hereName || !sections.length) return;
+    const was = hereName.textContent;
+    hereName.style.height = "auto";
+    let tallest = 0;
+    sections.forEach((section) => {
+      hereName.textContent = nameOf(section);
+      tallest = Math.max(tallest, hereName.getBoundingClientRect().height);
+    });
+    hereName.textContent = was;
+    hereName.style.height = Math.ceil(tallest) + "px";
   }
 
   // WHICH SECTION IS BEING READ.
@@ -380,6 +410,14 @@
 
   window.addEventListener("resize", () => {
     resize();
+    holdName();
     drawField(window.scrollY, REDUCE_MOTION ? 0 : (performance.now() - began) / 1000);
   });
+
+  // The page's own face arrives after the page does, and it wraps the
+  // names differently from the one the browser starts with, so the room
+  // is measured again once it is actually in.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(holdName).catch(() => {});
+  }
 })();

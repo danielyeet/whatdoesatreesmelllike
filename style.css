@@ -11,6 +11,12 @@
 
   --sans: "Archivo", -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  /* The third face, and the only place it is spent is the notation on
+     works/theory-03.html. It is a serif the machine already has rather
+     than a fourth thing fetched over the network: maths is set in a
+     serif everywhere else, and the point of it here is only that it is
+     not the writing and not one of the site's readings. */
+  --math: Georgia, "Iowan Old Style", "Times New Roman", Times, serif;
 
   /* The squared paper and the static are drawn on canvases now, by
      paper.js — their sizes and strengths are the tuning block at the
@@ -5398,4 +5404,296 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
     display: none;
   }
   .sweat-who { width: auto; }
+}
+
+/* ==================================================================
+   THE NOTE DISSEMINATION FRAMEWORK — works/theory-03.html
+
+   That piece argues in DIAGRAMS: a circle standing for the zone of
+   indistinguishability, and an arrow for every note, lying on a radius
+   through it. All of them are inline SVG in the page itself, so they
+   are drawn in the page's own ink — they take the essay's colours,
+   they scale with it, and they are all still there with the script
+   switched off.
+
+   THE ONE PLACE ON THIS SITE SET IN A SERIF is the maths on that page.
+   The owner asked for the notation to be in a different face from the
+   writing, and the site only has two: Archivo for the reading and IBM
+   Plex Mono for its readings and numbers. Setting a variable in the
+   mono would make it look like one of those readings, so the maths
+   takes a serif instead — which is what maths is set in anyway, and
+   needs no third font fetched to say so.
+================================================================== */
+.zone-figure {
+  margin: 34px 0 30px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.zone {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  overflow: visible;
+}
+.zone-figure-wide .zone { max-width: 760px; }
+.zone-figure figcaption,
+.zone-row-figure figcaption {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #8d94a3;
+  text-align: center;
+  max-width: 560px;
+  line-height: 1.6;
+}
+.zone-figure-no {
+  color: #dbe1ea;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* THE PARTS OF A DIAGRAM. The ring is the zone; an arrow is a note;
+   the head says which way that note is going. */
+.zone-ring {
+  fill: rgba(150, 160, 176, 0.05);
+  stroke: rgba(170, 178, 193, 0.55);
+  stroke-width: 1.25;
+}
+.zone-arrow {
+  stroke: rgba(190, 198, 212, 0.75);
+  stroke-width: 1.15;
+  stroke-linecap: round;
+}
+.zone-head { fill: rgba(190, 198, 212, 0.9); }
+/* The leader that points from a legend diagram at the words. */
+.zone-lead {
+  stroke: rgba(150, 160, 176, 0.5);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+/* THE CONNECTOR between two diagrams is deliberately NOT the arrow a
+   note is drawn with — an open chevron on a plain line, so a reader
+   never takes the passage of time for another note. */
+.zone-link {
+  stroke: rgba(185, 138, 62, 0.75);
+  stroke-width: 1.1;
+}
+.zone-link-head {
+  fill: none;
+  stroke: rgba(185, 138, 62, 0.9);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.zone-name {
+  font-family: var(--mono);
+  font-size: 19px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-anchor: middle;
+  fill: #aab2c1;
+}
+
+/* THE LEGEND — a small diagram with its leader running into the words
+   beside it, so the line lands on what it is naming. */
+.zone-legend-figure { margin: 30px 0; padding: 0; }
+.zone-legend {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 20px;
+}
+.zone-legend .zone-small { max-width: 190px; flex: none; }
+.zone-legend-say {
+  margin: 0;
+  color: #aab2c1;
+  font-size: 16.5px;
+  line-height: 1.66;
+}
+.zone-legend-say strong { color: #dbe1ea; }
+
+/* A ROW OF THREE DIAGRAMS, each carrying its own working underneath —
+   the complication examples. */
+.zone-row-figure {
+  margin: 34px 0 30px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.zone-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px;
+  width: 100%;
+}
+.zone-cell { display: flex; flex-direction: column; align-items: center; }
+.zone-cell .zone { max-width: 200px; }
+.zone-cell-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #dbe1ea;
+  margin: 10px 0 12px;
+  text-align: center;
+}
+.zone-cell .math-block { width: 100%; }
+/* A third of the column is not enough room for a formula on one line,
+   so inside a cell the maths wraps and is set a shade smaller. */
+.zone-cell .math-line { white-space: normal; font-size: 15px; }
+.zone-cell .math-cont { padding-left: 1.4em; }
+.zone-cell .math-aside { font-size: 12px; }
+.zone-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+  margin: 0 0 26px;
+}
+.zone-pair-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #dbe1ea;
+  margin: 0 0 8px;
+}
+
+/* THE MATHS. Serif, because it is not the writing and it is not one of
+   the site's readings either. A worked answer is a first line and then
+   the lines that carry on under it, indented to stand under its own
+   equals sign. */
+.math-block { margin: 0 0 22px; }
+/* .essay-section p sets the reading's paragraph spacing and outranks a
+   plain class, so every line of a worked answer would stand a
+   paragraph apart. The working is one block, not five paragraphs. */
+/* And the reading is JUSTIFIED, which maths must not be: a formula
+   stretched to the measure puts gaps between its own symbols. */
+.essay-section .math-line {
+  margin: 0 0 2px;
+  text-align: left;
+  hyphens: none;
+}
+.essay-section .math-standalone { margin: 22px 0; text-align: center; hyphens: none; }
+.essay-section .essay-claim { text-align: center; hyphens: none; }
+.essay-section .zone-legend-say,
+.essay-section .zone-cell-name,
+.essay-section .zone-pair-name { margin-bottom: 0; }
+.essay-section .zone-cell-name { margin: 10px 0 12px; }
+.essay-section .zone-pair-name { margin: 0 0 8px; }
+.math-line {
+  font-family: var(--math);
+  font-size: 16.5px;
+  line-height: 1.5;
+  color: #cfd6e1;
+  margin: 0 0 2px;
+  white-space: nowrap;
+}
+.math-cont { padding-left: 3.2em; }
+.math-standalone {
+  font-family: var(--math);
+  font-size: 18px;
+  color: #dbe1ea;
+  text-align: center;
+  margin: 22px 0;
+}
+.mv { font-style: italic; }
+/* A RECURRING DIGIT, with the bar over it. Drawn as an overline rather
+   than with a combining character, which not every face carries. */
+.mrec { text-decoration: overline; text-decoration-thickness: 1px; }
+.math-aside {
+  font-family: var(--sans);
+  font-style: normal;
+  font-size: 13px;
+  color: #8d94a3;
+  white-space: normal;
+}
+.essay-section .math-line sub { font-size: 0.68em; }
+
+/* THE CLAIM the whole first half of the piece is built towards. */
+.essay-claim {
+  font-weight: 600;
+  text-align: center;
+  color: #e8ecf3;
+  font-size: 19px;
+  line-height: 1.6;
+  margin: 30px auto 30px;
+  max-width: 34em;
+}
+/* A SUBHEADING inside a section. The rule down the left is built from
+   sections, so these are not ticks — they are the piece's own smaller
+   joints. */
+.essay-sub {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8eb4e2;
+  margin: 34px 0 14px;
+  font-weight: 500;
+}
+/* The owner's own note to themselves, left in the page on purpose. */
+.essay-check {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--brass, #b98a3e);
+  white-space: nowrap;
+}
+.essay-assumptions > li { margin-bottom: 26px; }
+.essay-assumptions p { margin-bottom: 14px; }
+
+/* THE GRAPH — the modified IBR across the three stages. */
+.graph { max-width: 640px; }
+.graph-axis { stroke: rgba(170, 178, 193, 0.7); stroke-width: 1.25; }
+.graph-grid { stroke: rgba(150, 160, 176, 0.16); stroke-width: 1; }
+.graph-hold {
+  stroke: rgba(185, 138, 62, 0.65);
+  stroke-width: 1;
+  stroke-dasharray: 5 5;
+}
+.graph-hold-name {
+  font-family: var(--math);
+  font-size: 15px;
+  fill: var(--brass, #b98a3e);
+  text-anchor: end;
+}
+.graph-tick {
+  font-family: var(--math);
+  font-size: 15px;
+  fill: #8d94a3;
+  text-anchor: end;
+}
+.graph-mid { text-anchor: middle; }
+.graph-run { fill: none; stroke: #8eb4e2; stroke-width: 1.6; }
+.graph-dot { fill: #8eb4e2; }
+.graph-read {
+  font-family: var(--math);
+  font-size: 15px;
+  fill: #dbe1ea;
+}
+.graph-read-end { text-anchor: end; }
+.graph-axis-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: #aab2c1;
+}
+
+@media (max-width: 720px) {
+  /* Three diagrams abreast do not survive a phone: they go one under
+     the other, each still carrying its own working. */
+  .zone-row { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .zone-cell .zone { max-width: 240px; }
+  .zone-pair { grid-template-columns: minmax(0, 1fr); }
+  .zone-legend { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .zone-legend .zone-small { max-width: 150px; }
+  .math-line { white-space: normal; }
+  .math-cont { padding-left: 1.6em; }
+  .zone-name { font-size: 24px; }
 }
