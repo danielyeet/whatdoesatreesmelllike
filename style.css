@@ -5046,3 +5046,229 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   .pine-waiting { padding: 0 22px; }
   .pine-waiting-list { columns: 1; }
 }
+
+/* ==================================================================
+   READING: JUSTIFIED, LARGER, AND LESS DENSE
+
+   The owner asked for three things together — "the text generally
+   should be justified", the reading pages "bigger by 1 or 2", and "less
+   compact... I dont want it to look so dense". They are one change,
+   because doing any one of them alone makes the other two worse: a
+   justified column at 16px with tight leading is the densest thing on
+   a page, and a bigger font in a narrow column justifies badly.
+
+   JUSTIFIED TEXT NEEDS HYPHENATION. Without it a justified column opens
+   rivers of white space wherever a long word will not fit — which is
+   worse than the ragged edge it replaced. Every rule here that sets
+   `text-align: justify` sets `hyphens: auto` with it; keep them
+   together.
+
+   WHAT IS NOT JUSTIFIED: anything set in the mono face (readings,
+   captions, trails, table cells), anything one line long, and the
+   landing page's own sentence. Justifying a line of six words only
+   stretches it.
+================================================================== */
+.essay-section p,
+.pine-text p,
+.pine-intro p,
+.adar-part .adar-body p,
+.chapter-note p,
+.index-say-lede,
+.photo-set-say,
+.photo-lede,
+.category-lede {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* THE ESSAY PAGES — the theories and the researches, which is what the
+   owner meant by "theories, researches and explorations". */
+.essay-body { font-size: 17.5px; line-height: 1.78; }
+/* THE COLUMN RUNS TO THE PLATE'S OWN EDGE. It was capped at 66ch, which
+   on this page came out 225px narrower than the picture above it — the
+   owner asked for the two to line up, and they were right that it read
+   as a mistake rather than as a measure. The body's own max-width is
+   the measure now. */
+.essay-section { max-width: none; padding-top: clamp(38px, 6vh, 68px); }
+.essay-section p { margin: 0 0 26px; font-size: 17.5px; line-height: 1.78; }
+.essay-section p.essay-lead { font-size: 19.5px; line-height: 1.7; }
+.essay-section ul { margin: 0 0 26px; line-height: 1.78; font-size: 17.5px; }
+.essay-section ul li { margin-bottom: 9px; }
+.essay-section h2 { margin-bottom: 20px; }
+
+/* THE INDEX PAGES — their lede and their table, which are the only
+   reading on them. */
+.index-say-lede { font-size: 16.5px; line-height: 1.7; }
+.index-table td { font-size: 15px; }
+.index-table .index-what { line-height: 1.5; }
+
+/* PINEWARD AND ADAR — the writing inside a part. */
+.pine-text p, .adar-part .adar-body p { font-size: 16.5px; line-height: 1.75; margin: 0 0 20px; }
+
+@media (max-width: 720px) {
+  /* A justified column this narrow is all rivers, whatever the
+     hyphenation does. */
+  .essay-section p, .pine-text p, .adar-part .adar-body p,
+  .index-say-lede, .photo-set-say, .photo-lede, .category-lede {
+    text-align: left;
+  }
+  .essay-body, .essay-section p { font-size: 16.5px; }
+}
+
+/* ==================================================================
+   WHAT A THEORY IS WRITTEN WITH — the blocks the owner's own theories
+   needed that the essay template did not have: a triangle, a key, a
+   run of worked cases, an ordered list and footnotes.
+================================================================== */
+
+/* THE TRIANGLE. Drawn as inline SVG rather than as a picture, so it is
+   the page's own ink: it takes the page's colours, it stays sharp at
+   any size, and it is in the markup where it can be read. The three
+   poles are the three characteristics, and a fragrance is a dot placed
+   in the body of it. */
+.tri-figure {
+  margin: 34px 0 30px;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+}
+.tri {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  overflow: visible;
+}
+.tri-edge {
+  fill: rgba(150, 160, 176, 0.05);
+  stroke: rgba(170, 178, 193, 0.55);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+}
+.tri-pole {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: #aab2c1;
+}
+.tri-pole-top { text-anchor: middle; }
+.tri-pole-left { text-anchor: start; }
+.tri-pole-right { text-anchor: end; }
+.tri-mark circle { fill: var(--brass, #b98a3e); }
+.tri-mark text {
+  font-family: var(--mono);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  fill: #dbe1ea;
+}
+
+/* A KEY — a term and what it means, which is how the sweat theory
+   explains its own lists. */
+.essay-key { margin: 0 0 26px; }
+.essay-key > div {
+  display: grid;
+  grid-template-columns: minmax(0, 210px) minmax(0, 1fr);
+  gap: 6px 24px;
+  padding: 13px 0;
+  border-top: 1px solid rgba(150, 160, 176, 0.22);
+}
+.essay-key dt {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #dbe1ea;
+}
+.essay-key dd { margin: 0; color: #aab2c1; font-size: 16.5px; line-height: 1.7; }
+
+/* THE WORKED CASES — one fragrance, read against the framework. */
+.essay-cases {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 18px;
+  margin: 6px 0 26px;
+}
+.essay-case {
+  border: 1px solid rgba(150, 160, 176, 0.24);
+  padding: 18px 20px 16px;
+}
+.essay-case-name {
+  margin: 0 0 10px !important;
+  font-size: 15.5px !important;
+  color: #dbe1ea;
+  text-align: left !important;
+}
+.essay-case ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #aab2c1;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+
+.essay-section ol.essay-lists,
+.essay-section ol.essay-order,
+.essay-section ol.essay-footnotes {
+  margin: 0 0 26px;
+  padding-left: 24px;
+  color: #aab2c1;
+  font-size: 17.5px;
+  line-height: 1.78;
+}
+.essay-section ol.essay-lists li,
+.essay-section ol.essay-order li { margin-bottom: 9px; }
+.essay-section ol.essay-order {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  columns: 2;
+  column-gap: 40px;
+}
+.essay-section ol.essay-order li { break-inside: avoid; margin-bottom: 7px; }
+
+/* FOOTNOTES, and the marks that lead to them. A mark is a link down
+   and the note carries a link back, so the reading can be followed
+   both ways without losing your place. */
+.essay-fn {
+  font-family: var(--mono);
+  font-size: 11px;
+  vertical-align: super;
+  line-height: 0;
+  margin-left: 2px;
+  padding: 0 2px;
+  color: var(--brass, #b98a3e);
+  text-decoration: none;
+}
+.essay-fn:hover, .essay-fn:focus-visible { text-decoration: underline; }
+.essay-section ol.essay-footnotes { font-size: 15.5px; line-height: 1.7; }
+.essay-section ol.essay-footnotes li { margin-bottom: 14px; }
+.essay-fn-back { color: var(--brass, #b98a3e); text-decoration: none; margin-left: 6px; }
+
+/* ON TO THE NEXT THEORY, opposite the way back — the owner asked for
+   one at the foot of every theory page. The foot was a single link, so
+   it is a row of two now. */
+.essay-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.essay-on {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #aab2c1;
+  text-decoration: none;
+  text-align: right;
+  transition: color 0.3s var(--menu-ease);
+}
+.essay-on:hover, .essay-on:focus-visible { color: #dbe1ea; }
+
+@media (max-width: 720px) {
+  .essay-key > div { grid-template-columns: minmax(0, 1fr); }
+  .essay-section ol.essay-order { columns: 1; }
+  .tri-pole { font-size: 19px; }
+}

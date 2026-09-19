@@ -64,6 +64,11 @@
 
   const SIGHT = 26;            // how long a corner sight's arms are
   const SIGHT_IN = 34;         // and how far in from the corner it stands
+  // EXCEPT THE TOP LEFT ONE, which stands further in because the Menu
+  // is there. At 34 its arms ran straight through the word — the owner
+  // asked for them not to — and the Menu is not something to move: it
+  // is in the same place on every page of the site.
+  const SIGHT_IN_MENU = 76;
 
   const WHITE = "238,241,246";
   const STEEL = "150,160,176";
@@ -199,7 +204,7 @@
     paint.strokeStyle = "rgba(" + ACCENT + ",0.5)";
     paint.lineWidth = 1;
     paint.beginPath();
-    [[SIGHT_IN, SIGHT_IN, 1, 1], [width - SIGHT_IN, SIGHT_IN, -1, 1],
+    [[SIGHT_IN_MENU, SIGHT_IN_MENU, 1, 1], [width - SIGHT_IN, SIGHT_IN, -1, 1],
      [SIGHT_IN, height - SIGHT_IN, 1, -1], [width - SIGHT_IN, height - SIGHT_IN, -1, -1]]
       .forEach(([x, y, ax, ay]) => {
         paint.moveTo(x + ax * SIGHT, y);
