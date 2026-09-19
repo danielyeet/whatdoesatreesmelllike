@@ -484,7 +484,10 @@ from that and are worth matching:
 **The writing is the owner's.** The site began as drawings with placeholder text in them;
 the writing for two houses and the first research has since arrived. Their words are
 theirs — spelling, punctuation and all, including the notes to themselves. Never tidy
-them.
+them. **The one exception is when they ask**: they asked for Pineward's capitalisation
+and basic spelling to be fixed, and that was done once, on the rule that a correction
+turns a word into *the same word* and never into a better one. `idk`, `ngl`, `lmao`,
+`v wet` and the run-on sentences are voice, not spelling, and were left.
 
 **What is still open** is recorded in the report of the feature it belongs to. Two are
 worth knowing before touching anything shared:

@@ -675,9 +675,62 @@ and tightening its letter-spacing as it goes. It is the implosion, said in writi
 Measured in the script because it is a measurement: a stylesheet cannot ask how tall a
 panel came out.
 
+### The wave, redone as a train
+
+The owner looked at the first go and said the idea was right and the execution was not:
+*"make the explosion more complex. It looked pretty bad right now... especially keep the
+dimensions of the explosion and implosion, those are perfect (as in the angle)."* So the
+plane, the tilt and the sizes are untouched — `ringOnScreen()` is the same measurement —
+and what changed is what is drawn in them.
+
+**One ring going out on its own reads as a ripple in a pond**, which is the opposite of
+mechanical. What is there now is a **train**: seven faceted figures set off one behind
+another (`RING_MANY`, `RING_LAG`), each stood a little off the one before so their corners
+never line up (`RING_TURN`), with twelve **spokes** struck through them from the middle and
+a **tick at every corner** of the leading one — the instrument mark the rest of this site
+measures things with.
+
+It is drawn on a **canvas**, not built out of elements, for two reasons: seven turned
+polygons with a rotation each is seven transforms and seven repaints a frame, and the
+spokes run *between* the figures, which no arrangement of boxes can do.
+
+**And the shells are pure blur now.** They had `contrast()` in them, which on a near-white
+ground pushed the page to white inside the band — a pale wash travelling over the window,
+which is a colour however it is made, and a colour is the one thing the owner asked the
+wave not to have. Blur alone shows nothing where there is nothing and bends what there is.
+
+### The menu is sucked into the middle
+
+*"make the window disappearance smoother and actually somehow apply it to suit the
+transition. if it gets distorted and sucked into the middle, and it looks good then do
+that."* It does. `drawMenuIn()` measures how far the panel's own middle is from the point
+everything else is closing on — the orbit's centre, projected onto the window — and writes
+it as `--suck-x` / `--suck-y`. The panel travels there, shrinking to a fifth and blurring
+as it goes, while its rows collapse inwards inside it. Two movements, one direction: the
+writing goes where the drawing goes.
+
+The blur is what makes it read as being *pulled* rather than merely moved — a thing going
+that fast should not stay sharp — and it is the same blur the wave's shells bend the page
+with, so the whole burst distorts in one language.
+
+### The chamber goes on filling while the tab is away
+
+The owner asked for the page to keep working when they are looking at something else. A
+browser stops calling `requestAnimationFrame` in a tab that is not in front, and there is
+nothing a page can do about that — nor should there be; drawing to a window nobody is
+looking at is work for no one. But **filling is not drawing**.
+
+So the time is paid back. `dt` is capped at a twentieth of a second (it has to be, or one
+long gap flings every particle across the window in a single step), which meant a tab left
+for a minute came back exactly as it was left. On becoming visible again, the seconds that
+passed are run through the physics in ordinary-sized steps, all at once, before the first
+frame is drawn. You come back to the chamber as full as if you had watched it fill.
+Capped at `CATCH_MOST` — twenty seconds — because the chamber settles well inside that, so
+a tab left for an hour and one left for twenty seconds come back the same.
+
 ### What was tried and was wrong
 
-Six goes, and the failures are worth keeping because most of them looked plausible and
+Seven goes, and the failures are worth keeping because most of them looked plausible and
 two produced the *same* wrong picture — a crescent closing on the middle instead of a ring.
 
 1. **Winding the arrangement in as it stood.** Most of the particles are in the two
@@ -696,7 +749,14 @@ two produced the *same* wrong picture — a crescent closing on the middle inste
    particle is **held fully lit** for the length of the burst, and given its ages back
    when the chapter is closed.
 
-5. **Fading the front canvas to take the labels with the chrome.** The owner's report:
+5. **Replacing the wave's `innerHTML` with a canvas inside it.** The shells are CSS
+   animations on elements built once, so they are restarted by replacing their box's
+   contents — and replacing contents *replaces elements*. With the rings' canvas in that
+   box it was destroyed and rebuilt on every burst, while the script went on drawing to
+   the detached one it first got hold of. The rings were drawn perfectly, onto a canvas
+   that was no longer in the page, and the wave came up empty. The shells have a box of
+   their own now (`.chapter-shells`) and only that is replaced.
+6. **Fading the front canvas to take the labels with the chrome.** The owner's report:
    *"half of the disk turns invisible on the collapse"* — and it was exactly that. One CSS
    rule, `.chamber.bursting .chamber-front { opacity: 0 }`, put in so the drawing's own
    labels and the near half of the orbit's path would fade with the word and the menu. But
@@ -707,7 +767,7 @@ two produced the *same* wrong picture — a crescent closing on the middle inste
    route. The chrome is faded in `chamber.js` now, inside `draw`, where a particle can be
    told apart from a label: `MARKS_FADE` runs a plain alpha down over `drawMarks` alone
    and the canvas is left alone.
-6. **A canvas read cannot see that fault, and for a round no test could.** `getImageData`
+7. **A canvas read cannot see that fault, and for a round no test could.** `getImageData`
    returns what was *drawn*, and a canvas sitting at `opacity: 0` still has every pixel of
    it — `chamber.js` was drawing the near half perfectly the whole time. The first version
    of the regression test measured the near half's share of the ink and **passed with the

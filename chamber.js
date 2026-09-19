@@ -668,11 +668,23 @@
   chapterWave.className = "chapter-wave";
   chapterWave.setAttribute("aria-hidden", "true");
   chapterWave.hidden = true;
+  // THE SHELLS ARE IN A BOX OF THEIR OWN, and the canvas is outside it.
+  // `castWave` restarts the shells by replacing their box's contents —
+  // a CSS animation on an element built once only plays once — and
+  // replacing contents REPLACES ELEMENTS. With the canvas in there it
+  // was destroyed and rebuilt on every burst, while the script went on
+  // drawing to the detached one it first got hold of: the rings were
+  // drawn perfectly, onto a canvas that was no longer in the page.
   chapterWave.innerHTML =
-    '<span class="chapter-shell-in"></span>' +
-    '<span class="chapter-shell-out"></span>' +
-    '<span class="chapter-core"></span>';
+    '<div class="chapter-shells">' +
+      '<span class="chapter-shell-in"></span>' +
+      '<span class="chapter-shell-out"></span>' +
+    "</div>" +
+    '<canvas class="chapter-rings" aria-hidden="true"></canvas>';
   shell.appendChild(chapterWave);
+  const shells = chapterWave.querySelector(".chapter-shells");
+  const rings = chapterWave.querySelector(".chapter-rings");
+  const paintRings = rings.getContext("2d");
 
   const front = document.createElement("canvas");
   front.className = "chamber-front";
@@ -817,6 +829,14 @@
   const LOOSE_COAST = 0.55;    // how long it keeps going the way it was, in seconds
   const MARKS_FADE = 1.25;     // the drawing's own chrome going, with the rest of it
   const CLIP_ROUND = 12;       // corners in the figure the page is cut out with
+  // THE RINGS — the drawn half of the wave. A train of faceted figures
+  // going out one behind another, not one ring on its own.
+  const RING_MANY = 7;         // how many are in the train
+  const RING_LAG = 0.062;      // and how far behind one another they set off
+  const RING_SIDES = 12;       // facets, the same count the page is cut with
+  const RING_TURN = 0.13;      // each one stood a little off the last, in turns
+  const RING_SPOKE = 12;       // spokes struck out through the train
+  const RING_INK = 0.5;        // how plainly the leading figure is drawn
 
   /** Null, or the burst that is running / the chapter that is open. */
   let burst = null;
@@ -908,6 +928,101 @@
     // with no width at all and nothing to look at.
     out.flat = Math.max(0.16, Math.min(1, Math.sqrt(small / big)));
     return out;
+  }
+
+  /** THE RINGS, DRAWN. `p` runs 0 to 1 across the whole wave.
+
+      This is the half of the wave that is ink rather than distortion,
+      and it is what the owner meant by "more complex... more
+      mechanical". One ring going out on its own reads as a ripple in a
+      pond; what is here is a TRAIN of them — seven faceted figures set
+      off one behind another, each stood a little off the one before it
+      so their corners never line up — with spokes struck through the
+      train from the middle, and the whole thing lying in the orbit's
+      own plane. The angle and the flatness are the ones already
+      measured for the wave; the owner said those were right, so nothing
+      here recomputes them.
+
+      Drawn rather than built out of elements because seven turned
+      polygons with a rotation each is seven transforms and seven
+      repaints a frame, and because a canvas can carry the spokes
+      between them, which no arrangement of boxes can. */
+  function drawRings(p) {
+    const ring = burst.ring;
+    if (!ring || !width || !height) return;
+    // No setTransform here: `size()` sets this canvas's scale with every
+    // other one's and it persists, and `ratio` is that function's own.
+    paintRings.clearRect(0, 0, width, height);
+    if (p <= 0) return;
+
+    const wide = Math.max(ring.x, width - ring.x);
+    const tall = Math.max(ring.y, height - ring.y);
+    const full = Math.hypot(wide, tall) + 60;
+    const dark = page.classList.contains("chapter-open");
+    const tone = dark ? "200,204,212" : "23,23,15";
+
+    paintRings.save();
+    paintRings.translate(ring.x, ring.y);
+    paintRings.rotate(ring.turn);
+    paintRings.scale(1, ring.flat);
+
+    // The spokes: struck from the middle out to the leading figure, so
+    // the train reads as one thing travelling rather than as rings that
+    // happen to be near each other.
+    const lead = Math.max(0, Math.min(1, p));
+    const out = (full / ring.flat) * ease(lead);
+    if (out > 12) {
+      paintRings.globalAlpha = 0.16 * (1 - lead);
+      paintRings.strokeStyle = "rgba(" + tone + ",1)";
+      paintRings.lineWidth = 1;
+      paintRings.beginPath();
+      for (let n = 0; n < RING_SPOKE; n++) {
+        const at = (n / RING_SPOKE) * Math.PI * 2 + burst.way * lead * 0.35;
+        paintRings.moveTo(Math.cos(at) * out * 0.26, Math.sin(at) * out * 0.26);
+        paintRings.lineTo(Math.cos(at) * out, Math.sin(at) * out);
+      }
+      paintRings.stroke();
+    }
+
+    for (let n = 0; n < RING_MANY; n++) {
+      const own = (p - n * RING_LAG) / Math.max(0.05, 1 - n * RING_LAG);
+      if (own <= 0 || own >= 1) continue;
+      const r = (full / ring.flat) * ease(own);
+      if (r < 4) continue;
+      // Fading as it widens, and the ones behind lighter than the lead.
+      paintRings.globalAlpha = RING_INK * (1 - own) * (1 - n / (RING_MANY + 1));
+      paintRings.strokeStyle = "rgba(" + tone + ",1)";
+      paintRings.lineWidth = n === 0 ? 1.6 : 1;
+      paintRings.beginPath();
+      const off = n * RING_TURN * Math.PI * 2;
+      for (let k = 0; k <= RING_SIDES; k++) {
+        const at = (k / RING_SIDES) * Math.PI * 2 + off;
+        const x = Math.cos(at) * r, y = Math.sin(at) * r;
+        if (k === 0) paintRings.moveTo(x, y); else paintRings.lineTo(x, y);
+      }
+      paintRings.stroke();
+      // A tick at every corner of the leading figure — the instrument
+      // mark the rest of this site measures things with.
+      if (n === 0) {
+        paintRings.globalAlpha *= 0.8;
+        paintRings.beginPath();
+        for (let k = 0; k < RING_SIDES; k++) {
+          const at = (k / RING_SIDES) * Math.PI * 2 + off;
+          const c = Math.cos(at), sn = Math.sin(at);
+          paintRings.moveTo(c * r, sn * r);
+          paintRings.lineTo(c * (r + 11), sn * (r + 11));
+        }
+        paintRings.stroke();
+      }
+    }
+    paintRings.restore();
+    paintRings.globalAlpha = 1;
+  }
+
+  /** Flat at both ends — the same shape the black opens on, so the ink
+      and the cut travel together rather than merely at once. */
+  function ease(q) {
+    return q * q * q * (q * (q * 6 - 15) + 10);
   }
 
   /** The page cut out to `p` of the way open, as an ellipse lying in the
@@ -1030,6 +1145,20 @@
     if (!rows.length) return;
     const box = panel.getBoundingClientRect();
     const mid = box.top + box.height / 2;
+
+    // AND THE PANEL ITSELF IS PULLED INTO THE MIDDLE OF THE CHAMBER.
+    // The owner: "if it gets distorted and sucked into the middle, and
+    // it looks good then do that." It does. `--suck-x` and `--suck-y`
+    // are how far the panel's own middle is from the point everything
+    // else is closing on — the orbit's centre, projected onto the
+    // window — so the writing goes where the particles go rather than
+    // merely going away.
+    const at = to(core[0], core[1], core[2]);
+    if (at) {
+      panel.style.setProperty("--suck-x", Math.round(at.x - (box.left + box.width / 2)) + "px");
+      panel.style.setProperty("--suck-y", Math.round(at.y - mid) + "px");
+    }
+
     rows.forEach((row, n) => {
       const own = row.getBoundingClientRect();
       row.style.setProperty("--pull", Math.round(own.top + own.height / 2 - mid) + "px");
@@ -1049,6 +1178,8 @@
     shell.classList.remove("bursting", "burst-wave");
     page.classList.remove("bursting", "chapter-open");
     plate.classList.remove("drawn-in");
+    panel.style.removeProperty("--suck-x");
+    panel.style.removeProperty("--suck-y");
     column.querySelectorAll(".chamber-row").forEach((row) => {
       row.style.removeProperty("--pull");
       row.style.removeProperty("--mid");
@@ -1209,9 +1340,11 @@
     // THE WAVE IS RE-CUT EVERY TIME. Its shells are CSS animations on
     // elements that are built once, and an animation only plays once
     // unless it is given back to the browser as new — so reopening a
-    // chapter showed the page with no wave at all. Replacing the box's
-    // contents is what starts them again.
-    chapterWave.innerHTML = chapterWave.innerHTML;
+    // chapter showed the page with no wave at all. Replacing their
+    // box's contents is what starts them again. It is `shells` and not
+    // `chapterWave`, so the canvas beside them is left where it is —
+    // see the note where they are built.
+    shells.innerHTML = shells.innerHTML;
   }
 
   /** One step of the burst. Returns true while it is running the
@@ -1251,6 +1384,7 @@
     // The page is cut open by hand rather than by a CSS transition,
     // because what cuts it is a turned ellipse and CSS has no turned
     // ellipse to transition to — see `clipTo`.
+    drawRings(Math.min(1, burst.at / BURST_WAVE));
     const lead = BURST_WAVE * WAVE_LEAD;
     if (burst.at >= lead) {
       if (chapterPage.hidden) layChapter(burst.chapter);
@@ -1259,13 +1393,14 @@
       // smootherstep: flat at both ends rather than only at the far one,
       // so the black neither jumps away from the middle nor stops dead
       // at the edge of the window — it is one breath out.
-      clipTo(q * q * q * (q * (q * 6 - 15) + 10));
+      clipTo(ease(q));
     }
     if (burst.at >= BURST_WAVE) {
       burst.phase = "open";
       burst.at = 0;
       chapterPage.style.clipPath = "none";
       chapterWave.hidden = true;
+      paintRings.clearRect(0, 0, width, height);
     }
     return true;
   }
@@ -1523,6 +1658,11 @@
     });
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
     paintFront.setTransform(ratio, 0, 0, ratio, 0, 0);
+    rings.width = Math.round(width * ratio);
+    rings.height = Math.round(height * ratio);
+    rings.style.width = width + "px";
+    rings.style.height = height + "px";
+    paintRings.setTransform(ratio, 0, 0, ratio, 0, 0);
     lens = Math.min(width, height) * LENS;
 
     nearestSource = 99;
@@ -2242,6 +2382,48 @@
     paintFront.strokeStyle = rgba(INK, WEB_INK);
     paintFront.stroke();
   }
+
+  // ============================================================
+  // WHILE THE TAB IS AWAY
+  //
+  // A browser stops calling requestAnimationFrame in a tab that is not
+  // in front — there is nothing a page can do about that, and nothing
+  // it should: drawing to a window nobody is looking at is work for
+  // no one. But the owner asked for the chamber to go on FILLING while
+  // they are elsewhere, and that is a different thing from drawing.
+  //
+  // So the time is paid back. `dt` is capped at a twentieth of a second
+  // — it has to be, or one long gap would fling every particle across
+  // the window in a single step — which means a tab left for a minute
+  // comes back exactly as it was left. Instead the seconds that passed
+  // are run through the physics in ordinary-sized steps, all at once,
+  // before the first frame is drawn. You come back to the chamber as
+  // full as if you had watched it fill.
+  //
+  // Capped at CATCH_MOST because there is no point past it: the
+  // chamber reaches its settled state in well under that, so a tab left
+  // for an hour and a tab left for twenty seconds come back the same.
+  const CATCH_STEP = 1 / 40;   // the size of a caught-up step, in seconds
+  const CATCH_MOST = 20;       // and the most that is ever paid back
+  let wentAway = 0;
+
+  document.addEventListener("visibilitychange", () => {
+    if (REDUCE_MOTION) return;
+    if (document.hidden) { wentAway = now(); return; }
+    if (!wentAway) return;
+    let owed = Math.min(CATCH_MOST, (now() - wentAway) / 1000);
+    wentAway = 0;
+    while (owed > 0) {
+      const step = Math.min(CATCH_STEP, owed);
+      if (!stepBurst(step)) move(step);
+      owed -= step;
+      clock += step;
+    }
+    // And the next frame measures from NOW, not from whenever the last
+    // one was drawn — otherwise it pays the same time twice.
+    last = window.performance && window.performance.now
+      ? window.performance.now() : Date.now();
+  });
 
   function frame(now) {
     requestAnimationFrame(frame);

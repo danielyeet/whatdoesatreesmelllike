@@ -1620,10 +1620,35 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
    both set by chamber.js; `--mid` is how far this row is from the
    middle, so the stagger is symmetrical about it rather than running
    top to bottom. */
+/* THE PANEL IS SUCKED INTO THE MIDDLE, and distorted on the way. It
+   travels to the point the particles are closing on (`--suck-x`,
+   `--suck-y`, measured in chamber.js), shrinking and blurring as it
+   goes, while its rows collapse inwards inside it. Two movements, one
+   direction: the writing goes where the drawing goes.
+
+   The blur is what makes it read as being pulled rather than merely
+   moved — a thing going that fast should not stay sharp — and it is the
+   same blur the wave's own shells bend the page with, so the whole
+   burst distorts in one language. */
 .chamber-plate.drawn-in .chamber-panel {
   pointer-events: none;
-  animation: none;
-  opacity: 1;
+  animation: chamber-suck 0.92s cubic-bezier(0.52, 0, 0.74, 0.25) both;
+  transform-origin: 50% 50%;
+}
+@keyframes chamber-suck {
+  0% {
+    opacity: 1;
+    translate: -50% 0;
+    transform: none;
+    filter: blur(0px);
+  }
+  60% { opacity: 0.55; }
+  100% {
+    opacity: 0;
+    translate: -50% 0;
+    transform: translate(var(--suck-x, 0px), var(--suck-y, 0px)) scale(0.18);
+    filter: blur(7px);
+  }
 }
 .chamber-plate.drawn-in .chamber-row {
   animation: chamber-drawn-in 0.62s cubic-bezier(0.55, 0, 0.78, 0.4) both;
@@ -1647,6 +1672,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .chamber-plate.drawn-in .chamber-panel,
   .chamber-plate.drawn-in .chamber-row,
   .chamber-plate.drawn-in .chamber-head,
   .chamber-plate.drawn-in .chamber-rule { animation-duration: 0.01s; }
@@ -4117,8 +4143,12 @@ body.find-reading .find-reading-note { opacity: 1; }
      a pale WASH travelling over the page — a colour by another name,
      and the one thing the owner asked to be rid of. Blur bends; it does
      not paint. */
-  backdrop-filter: blur(11px) contrast(1.1);
-  -webkit-backdrop-filter: blur(11px) contrast(1.1);
+  /* PURE BLUR. Contrast was in here, and on a near-white ground it
+     pushed the page to white inside the band — a pale wash travelling
+     over the window, which is a colour however it is made. Blur alone
+     shows nothing where there is nothing, and bends what there is. */
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
   animation: chapter-shell 1.65s cubic-bezier(0.14, 0.62, 0.22, 1) both;
 }
 /* The outer shell: 5.15/2.37 of the inner, as on the map, and a far
@@ -4144,39 +4174,31 @@ body.find-reading .find-reading-note { opacity: 1; }
     opacity: 0;
   }
 }
-/* THE LEADING EDGE — a hairline twelve-sided figure running ahead of
-   the shells. It is the one thing here that is drawn rather than
-   distorted, and it is what makes the wave read as mechanical: a
-   measured figure opening out, the way everything else on this site is
-   ruled. It carries no fill. */
-.chapter-core {
-  width: 150vmax;
-  height: 150vmax;
-  border: 1.5px solid rgba(23, 23, 15, 0.62);
-  clip-path: polygon(evenodd,
-    100% 50%, 86.6% 75%, 50% 93.3%, 13.4% 75%, 0% 50%, 13.4% 25%,
-    50% 6.7%, 86.6% 25%,
-    99.2% 50%, 86% 74.5%, 50% 92.5%, 14% 74.5%, 0.8% 50%, 14% 25.5%,
-    50% 7.5%, 86% 25.5%);
-  animation: chapter-edge 0.92s cubic-bezier(0.1, 0.72, 0.2, 1) both;
+/* THE DRAWN HALF OF THE WAVE — a canvas, and everything ruled on it is
+   drawn by `drawRings` in chamber.js.
+
+   It was a single hairline figure made out of a bordered box for a
+   round, and the owner was right that the execution was poor: one ring
+   going out on its own reads as a ripple in a pond, which is the
+   opposite of mechanical. What is on this canvas is a TRAIN of seven
+   faceted figures set off one behind another, each stood a little off
+   the one before so their corners never line up, with spokes struck
+   through them from the middle and a tick at every corner of the
+   leading one. A canvas rather than boxes because seven turned polygons
+   is seven transforms and seven repaints a frame — and because the
+   spokes run BETWEEN the figures, which no arrangement of boxes can
+   do. */
+/* The shells' own box. It exists so that restarting their animations —
+   which is done by replacing its contents — cannot touch the canvas
+   beside it. */
+.chapter-shells { position: absolute; inset: 0; }
+.chapter-rings {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
 }
-@keyframes chapter-edge {
-  0% {
-    transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
-               scale(0.01) scaleY(var(--wave-flat, 1));
-    opacity: 0;
-  }
-  14% { opacity: 1; }
-  100% {
-    transform: translate(-50%, -50%) rotate(var(--wave-turn, 0rad))
-               scale(1.15) scaleY(var(--wave-flat, 1));
-    opacity: 0;
-  }
-}
-/* On the black the hairline has to be silver, or it is a black line on
-   black. It is the same line; it is only that the wave crosses from one
-   ground to the other halfway through its travel. */
-.chapter-open .chapter-core { border-color: rgba(200, 204, 212, 0.5); }
 /* A browser with no backdrop-filter gets the hairline figure and
    nothing painted over the page, which is the right thing to fall back
    to: the wave is quieter, and it is still the same shape. */

@@ -107,6 +107,22 @@ the landing page; every menu link on every page pointing at a page that exists; 
 cursor. `tests/menu.spec.js` includes the regression for arrow keys leaking behind the
 menu.
 
+## The cursor reads the colour under it, and `color()` is a colour
+
+The cursor goes light on a dark ground by reading the actual background underneath rather
+than trusting a class: walk up from whatever is under the pointer until something is
+painting an opaque background, and go light if that colour is dark.
+
+**It only understood `rgb()`.** Pineward's ground was mixed with `color-mix()` for a
+round, which computes to `color(srgb 0.96 0.97 0.96)` — components running **0 to 1**, not
+0 to 255. The parser pulled the numbers out and read 0.96 as very nearly black, so the
+cursor went white on a white page and could not be seen at all. That shipped.
+
+`colourOf()` handles both forms now: if the string starts with `color(`, its components
+are scaled by 255. Anything that computes a background to a modern colour function —
+`color-mix()`, `lab()`, `oklch()` — goes through the same door, so this cannot happen
+again for a different function.
+
 ## Known issues / TODO
 
 - **The accent is still spent on this shared chrome.** The Menu trigger and the menu
