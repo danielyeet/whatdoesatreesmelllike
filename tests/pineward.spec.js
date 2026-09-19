@@ -2,7 +2,7 @@
 // PINEWARD (works/pineward.html)
 //
 // The first piece in Scent descriptions, and a long one: an
-// introduction and fifty-two parts, each of which is a fragrance: a picture and a
+// introduction and forty-seven parts, each of which is a fragrance: a picture and a
 // few paragraphs. Fifty-two of anything listed straight down a page is
 // a wall, so a part is COMPACTED — only its number, a small picture
 // and its title until it is opened — and they are grouped into four
@@ -25,7 +25,7 @@ test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
 });
 
-test("the piece is an introduction and fifty-two parts in four strata",
+test("the piece is an introduction and forty-seven parts in five groups",
   async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(PAGE);
@@ -35,23 +35,36 @@ test("the piece is an introduction and fifty-two parts in four strata",
   await expect(page.locator("#introduction h2")).toHaveText("Introduction");
 
   const parts = page.locator(".pine-part");
-  await expect(parts).toHaveCount(52);
+  await expect(parts).toHaveCount(47);
 
-  // Four strata, named for a section through a forest.
+  // FIVE GROUPINGS, AND THEY ARE THE OWNER'S OWN. They were Canopy,
+  // Understorey, Trunk and Roots — a section through a forest, which
+  // was a made-up arrangement — until the owner sent a spreadsheet
+  // saying which fragrance belongs where. The counts are uneven because
+  // they are however many happen to smell of that.
   const strata = page.locator(".pine-stratum");
-  await expect(strata).toHaveCount(4);
+  await expect(strata).toHaveCount(5);
   expect(await strata.evaluateAll((all) =>
     all.map((one) => one.querySelector("h2").textContent.trim())))
-    .toEqual(["Canopy", "Understorey", "Trunk", "Roots"]);
+    .toEqual(["Foresty", "Hay-y", "Wine/Christmas", "Sea", "Others"]);
   expect(await strata.evaluateAll((all) =>
     all.map((one) => one.querySelectorAll(".pine-part").length)))
-    .toEqual([14, 12, 13, 13]);
+    .toEqual([14, 6, 4, 4, 19]);
 
-  // Numbered straight through, 01 to 52, in the markup rather than
+  // AND WHAT HAS NOT BEEN SMELLED IS A NAME, NOT A PART. No number, no
+  // picture, no writing — there is nothing yet to number, show or
+  // write. It must not be a .pine-part, or the trunk would tick for it.
+  const waiting = page.locator(".pine-waiting-list li");
+  await expect(waiting).toHaveCount(8);
+  expect(await page.locator(".pine-waiting").evaluate((el) =>
+    el.querySelectorAll("img, .pine-part").length),
+    "the waiting list carries no pictures and no parts").toBe(0);
+
+  // Numbered straight through, 01 to 47, in the markup rather than
   // counted — so the numbers are the owner's to renumber.
   expect(await parts.evaluateAll((all) =>
     all.map((one) => one.querySelector(".pine-no").textContent.trim())))
-    .toEqual(Array.from({ length: 52 }, (v, n) => String(n + 1).padStart(2, "0")));
+    .toEqual(Array.from({ length: 47 }, (v, n) => String(n + 1).padStart(2, "0")));
 
   // And every one of them carries its picture and its writing. The
   // pictures arrived with the owner's own upload of the house's
@@ -61,7 +74,7 @@ test("the piece is an introduction and fifty-two parts in four strata",
     all.filter((one) => one.querySelector(".pine-plate img") &&
                         one.querySelector(".pine-thumb img") &&
                         one.querySelector(".pine-text")).length))
-    .toBe(52);
+    .toBe(47);
 
   expect(errors).toEqual([]);
 });
@@ -111,10 +124,10 @@ test("the trunk has one tick per part, and the reading counts them",
   await page.goto(PAGE);
   await page.waitForTimeout(600);
 
-  await expect(page.locator(".pine-tick")).toHaveCount(52);
+  await expect(page.locator(".pine-tick")).toHaveCount(47);
 
   // At the top of the piece nothing has been passed: the reading says
-  // where you are in the FIFTY-TWO, not how far down the document you
+  // where you are in the FORTY-SEVEN, not how far down the document you
   // have scrolled.
   const reading = () => page.locator(".pine-readout-no").textContent();
   const where = () => page.locator(".pine-readout-where").textContent();
@@ -127,15 +140,18 @@ test("the trunk has one tick per part, and the reading counts them",
   // coming up the window has not been reached yet, which is the whole
   // point of reading against a line rather than against the scrollbar.
   await page.evaluate(() => {
-    const part = document.querySelectorAll("#trunk .pine-part")[1];
+    // The groups are numbered rather than named now — they carry the
+    // owner's own names, which are theirs to change, so the id cannot
+    // be one of them.
+    const part = document.querySelectorAll("#stratum-5 .pine-part")[1];
     window.scrollTo(0, window.scrollY + part.getBoundingClientRect().top
       - window.innerHeight * 0.2);
   });
   await page.waitForTimeout(600);
   const at = Number(await reading());
   expect(at, "the reading should have counted the parts passed").toBeGreaterThan(20);
-  expect(at, "and not run past them").toBeLessThanOrEqual(52);
-  expect(await where()).toBe("Trunk");
+  expect(at, "and not run past them").toBeLessThanOrEqual(47);
+  expect(await where()).toBe("Others");
   const inked = await page.locator(".pine-tick.passed").count();
   expect(inked, "the ticks behind you should be inked in").toBe(at);
 
@@ -289,7 +305,7 @@ test("without its script the page is still all of its writing", async ({ page })
 
   // ...and everything anyone came to read is on the page and works:
   // <details> opens and closes on its own.
-  await expect(page.locator(".pine-part")).toHaveCount(52);
+  await expect(page.locator(".pine-part")).toHaveCount(47);
   const part = page.locator(".pine-part").nth(1);
   await expect(part.locator(".pine-title")).toBeVisible();
   await expect(part.locator(".pine-text")).toBeHidden();

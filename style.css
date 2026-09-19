@@ -1264,8 +1264,18 @@ body.favorites-page .gallery-entry {
 body.chambered { background: var(--bg); }
 body.chambered .page-content { padding: 0; margin: 0; max-width: none; }
 /* The list is still in the page for anything reading rather than
-   looking — it is the menu's own index — but it is not drawn. */
+   looking — it is the menu's own index — but it is not drawn.
+
+   `.gallery-chapters` BELONGS IN THIS LIST and was left out of it when
+   the chapter descriptions were added. It is source, the same as
+   everything else here: chamber.js reads what a chapter IS out of it
+   and writes it onto that chapter's own page. Left drawn, it sat under
+   the chamber where you could not quite see it — until the menu was
+   opened, which takes the whole page to a tenth of its opacity, and
+   there it was: three paragraphs of placeholder writing across the
+   drawing. That is the stray text the owner photographed. */
 body.chambered .work-list,
+body.chambered .gallery-chapters,
 body.chambered .page-content > h1,
 body.chambered .page-content > .category-lede {
   position: absolute;
@@ -2215,25 +2225,23 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
    spent in so few places, and a green page would spend it everywhere.
    The canopy canvas draws over this and is unaffected. */
 .pineward-page {
-  background-color: color-mix(in srgb, var(--pine-green) 2%, var(--bg));
+  background-color: #eef1ea;
   background-image:
-    radial-gradient(60% 42% at 8% 4%,
-      color-mix(in srgb, var(--pine-green) 7%, transparent) 0%,
-      transparent 72%),
-    radial-gradient(56% 38% at 94% 12%,
-      color-mix(in srgb, var(--pine-green) 6%, transparent) 0%,
-      transparent 70%),
-    linear-gradient(to bottom,
-      transparent 52%,
-      color-mix(in srgb, var(--pine-green) 5%, transparent) 100%);
+    radial-gradient(64% 46% at 6% 2%, rgba(26, 74, 44, 0.20) 0%, transparent 72%),
+    radial-gradient(58% 40% at 96% 10%, rgba(26, 74, 44, 0.17) 0%, transparent 70%),
+    radial-gradient(70% 34% at 50% 100%, rgba(26, 74, 44, 0.16) 0%, transparent 76%),
+    linear-gradient(to bottom, rgba(26, 74, 44, 0.03) 0%, rgba(26, 74, 44, 0.10) 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
 }
-/* A browser without color-mix() gets the plain paper it always had,
-   which is the right thing to fall back to. */
-@supports not (background-color: color-mix(in srgb, red 2%, white)) {
-  .pineward-page { background: var(--bg); background-image: none; }
-}
+/* WRITTEN AS PLAIN rgba(), NOT color-mix(). It was mixed for one round,
+   and that broke the cursor everywhere on this page: a background
+   written with color-mix() computes to `color(srgb 0.96 0.97 0.96)`,
+   whose components run 0 to 1 — and nav.js read them as 0 to 255, saw a
+   white page as nearly black, and drew the cursor WHITE ON WHITE. The
+   parser handles both forms now (see `colourOf` there), but there is
+   no reason for this page to be the one that tests it. The numbers are
+   --pine-green's own (#1a4a2c) written out. */
 
 /* THE CANOPY, standing behind the title and fading out before the
    writing starts. It is drawn by the script; there is nothing in it
@@ -4993,4 +5001,48 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
     transform: none;
     opacity: 1;
   }
+}
+
+/* ==================================================================
+   NOT SMELLED YET — the list at the foot of Pineward.
+
+   Names only. The owner asked for "JUST TEXT (NO IMAGES OR ANYTHING)",
+   and that is also the honest thing: a fragrance that has not been
+   smelled has no writing and no picture, so giving it the full part's
+   furniture would be furniture around nothing. It carries the strata's
+   own head so it reads as one more group, which is what it is.
+================================================================== */
+.pine-waiting {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 64px;
+}
+.pine-waiting-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 48px;
+}
+.pine-waiting-list li {
+  break-inside: avoid;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+.pine-waiting-name { font-size: 15px; color: var(--muted); }
+.pine-waiting-say {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--pine-green);
+}
+@media (max-width: 720px) {
+  .pine-waiting { padding: 0 22px; }
+  .pine-waiting-list { columns: 1; }
 }

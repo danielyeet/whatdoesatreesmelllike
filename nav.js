@@ -128,18 +128,34 @@ const SITE_LINKS = [
   // is still honoured, as a shortcut for panels whose own background
   // is transparent. Only re-checked when the element underneath
   // changes, so getComputedStyle isn't called on every mouse move.
+  /** A computed background colour as three 0-255 numbers and an alpha,
+      or null if there is no colour there.
+
+      IT HAS TO READ `color()` AS WELL AS `rgb()`, and that is not
+      fussiness. A background written with `color-mix()` — which is how
+      Pineward's ground is mixed — computes to `color(srgb 0.96 0.97
+      0.96)`, whose components run 0 to 1 rather than 0 to 255. Pulling
+      the numbers out and treating them as 0-255 reads a white page as
+      very nearly black, so the cursor went WHITE ON WHITE and could not
+      be seen at all. That shipped; this is the fix. */
+  function colourOf(computed) {
+    const parts = computed && computed.match(/[\d.]+/g);
+    if (!parts || parts.length < 3) return null;
+    const nums = parts.map(Number);
+    const scale = /^color\(/.test(computed.trim()) ? 255 : 1;
+    return {
+      r: nums[0] * scale, g: nums[1] * scale, b: nums[2] * scale,
+      a: nums.length > 3 ? nums[3] : 1,
+    };
+  }
+
   function isDark(el) {
     let node = el;
     while (node && node.nodeType === 1) {
       if (node.classList && node.classList.contains("dark-surface")) return true;
-      const colour = getComputedStyle(node).backgroundColor;
-      const parts = colour && colour.match(/[\d.]+/g);
-      if (parts && parts.length >= 3) {
-        const alpha = parts.length > 3 ? parseFloat(parts[3]) : 1;
-        if (alpha > 0.5) {
-          const luminance = 0.2126 * +parts[0] + 0.7152 * +parts[1] + 0.0722 * +parts[2];
-          return luminance < 115;
-        }
+      const found = colourOf(getComputedStyle(node).backgroundColor);
+      if (found && found.a > 0.5) {
+        return 0.2126 * found.r + 0.7152 * found.g + 0.0722 * found.b < 115;
       }
       node = node.parentElement;
     }
