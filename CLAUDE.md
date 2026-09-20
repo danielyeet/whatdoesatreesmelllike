@@ -82,15 +82,16 @@ which talk through five `window` globals; see the landing page's report).
 | `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 52 compacted parts — one per fragrance, each with its own photograph — in four forest **strata**, with a **wood** grown down both margins, a ticked **trunk**, a faint pine-green ground, and the **gallery** at the foot of it | `search.js`, `pineward.js`, `pineward-gallery.js` | [Pineward](docs/features/2026-09-16-pineward.md), [gallery](docs/features/2026-09-18-the-pineward-gallery.md) |
 | `works/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window that shows the house's mark under the pointer — with a ruled **log** and falling **dust** down the left and a **sounding** down the side | `search.js`, `adar.js` | [ADAR](docs/features/2026-09-17-adar.md) |
 | `works/almost-human.html` | **Almost Human**, the third house: five fragrances standing in a **crowd** — people down both margins drawn entirely in specks, each of them nearly a person and never quite one, resolving under the pointer — with a ticked **rank** down the side | `search.js`, `almost-human.js` | [Almost Human](docs/features/2026-09-20-almost-human.md) |
-| `works/theory-01.html`, `-02`, `-03`, `works/resins-in-perfumery.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
+| `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
+| `works/theory-03.html` | the same, and the longest piece on the site: **The Note Dissemination Framework**, which argues in **diagrams** and carries a **calculator** standing in the same page | `essay.js`, `calculator.js` | [the framework](docs/features/2026-09-20-the-note-dissemination-framework.md) |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages | none | — |
 | `search.html` | the **search page**: one field over the whole site on a dark ground of drifting specks, the answers as ruled rows carrying the trail that says where each lives, and a row of **filters** narrowing them by kind | `search.js`, `search-page.js`, `find-ground.js` | [search](docs/features/2026-09-17-the-search.md) |
 | `contact.html` | a plain page | none | — |
 
 Four of those page scripts are elaborate: `chamber.js` (~1,740 lines), `node-scene.js`
 (~1,470), `structure.js` (~1,360) and `contact-sheet.js` (~1,360). The rest are smaller:
-`adar.js` (~820), `pineward.js` (~690), `paper.js` (~570), `almost-human.js` (~545),
-`essay.js` (~380),
+`adar.js` (~820), `calculator.js` (~600), `pineward.js` (~690), `paper.js` (~570),
+`almost-human.js` (~570), `essay.js` (~400),
 `index-page.js` (~290), `thread.js` (~290), `search.js` (~270), `pineward-gallery.js`
 (~260), `extras.js` (~250), `landing.js` (~230), `nav.js` (~200), `find-ground.js`
 (~200), `photography.js` (~180), `search-page.js` (~130), `page-search.js` (~110) and
@@ -151,7 +152,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 169 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 178 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -189,7 +190,8 @@ Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
   `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
-  `adar.js`, `almost-human.js`, `essay.js`, `index-page.js` and `style.css`, each degrading to a still
+  `adar.js`, `almost-human.js`, `essay.js`, `calculator.js`, `index-page.js` and
+  `style.css`, each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
   fade to nothing) do *not* check it beyond that; if you add motion there, add the guard
   too.
@@ -213,7 +215,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 | Almost Human | `almost-human.js` | [report](docs/features/2026-09-20-almost-human.md) |
 | ADAR | `adar.js` | [report](docs/features/2026-09-17-adar.md) |
 | The index pages, and the two views | `index-page.js`, `views.js` | [report](docs/features/2026-09-17-the-index-pages-and-views.md) |
-| The Note Dissemination Framework | `works/theory-03.html` | [report](docs/features/2026-09-20-the-note-dissemination-framework.md) |
+| The Note Dissemination Framework, and its calculator | `works/theory-03.html`, `calculator.js` | [report](docs/features/2026-09-20-the-note-dissemination-framework.md) |
 | The essay pages | `essay.js` | [report](docs/features/2026-09-17-the-essay-pages.md) |
 | Pineward | `pineward.js` | [report](docs/features/2026-09-16-pineward.md) |
 | The chamber | `chamber.js` | [report](docs/features/2026-09-15-the-chamber.md) |
@@ -280,6 +282,13 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   in it, whose number is a `<span class="essay-no">` inside that heading. The rule down
   the left is built from those, so adding a section adds a tick and nothing else needs
   changing.
+- **A worked equation** on an essay page is a `<div class="math-block">` of
+  `<p class="math-line">` rows, each three cells — `.mlhs`, `.meq`, `.mrhs`. The block is
+  a grid, so **every `=` in it stands in one column**; a line that carries on from the one
+  above has an empty `.mlhs`. Do not go back to indenting continuation lines by hand.
+- **A station on the theories page may carry a picture**: `data-plate` on its
+  `<a class="work-row">` is the image its card shows when the station is set out, with
+  `data-plate-alt` for the description. A row without one simply has no picture.
 - **A NEW PAGE HAS TO BE ADDED TO THE SEARCH'S MANIFEST** — the `PAGES` list at the top
   of `search-page.js`, one line with the trail that says where things found in it live.
   It is the only list of the site's pages anywhere, and the only thing the search needs
@@ -382,15 +391,18 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **Pineward** | The first house in Scent descriptions: `works/pineward.html`, "the house that smells like trees". An introduction and fifty-two parts, one per fragrance, in alphabetical order. It was fifty-four until the owner removed Fanghorn I and Gelatto. |
 | **part** (Pineward) | One of Pineward's fifty-two: a `<details>` showing its number, a small picture and its title until it is opened, and its full picture and writing inside. The pictures are the owner's own, one per fragrance, matched to the parts **by name**. |
 | **ADAR** | The second house in Scent descriptions: `works/adar.html`, "the house that you have never heard of". Eleven fragrances in four groups, on a **void**. |
-| **Almost Human** | The third house in Scent descriptions: `works/almost-human.html`, "the house that nearly gets there". Five fragrances, standing in a **crowd**. Only one of the five has a name yet — Desert Hope, which the owner placed in The Architecture of Sweat — and none of them has its writing. |
+| **Almost Human** | The third house in Scent descriptions: `works/almost-human.html`, "the house that nearly gets there". Five fragrances — Burning Bridges, Dear Future, Desert Hope, Ritual Code, Silent Rain — standing in a **crowd**. All five are named; none of them is written yet. |
 | **the crowd** | That page's ground: people standing down both margins the whole length of it, every one of them drawn entirely in specks, built out of capsules rather than traced from an outline. |
-| **the stray** | What makes the crowd *almost* human, and the house's name said as a behaviour: every speck knows exactly where it belongs and stands a twentieth of the figure's height away from it, fixed for the life of that figure. Bring the pointer near and the specks come home — the figure resolves under your hand and comes apart again when you leave. It never resolves completely (`STRAY_NEAR`); one that came exactly home would be the wrong drawing. |
+| **the stray** | What makes the crowd *almost* human, and the house's name said as a behaviour: every speck knows exactly where it belongs and stands up to a FIFTH of the figure's height away from it, fixed for the life of that figure. At rest a figure is a cloud that gives no hint of a person; the person is entirely the pointer's doing. Bring the pointer near and the specks come home — the figure resolves under your hand and comes apart again when you leave. It never resolves completely (`STRAY_NEAR`); one that came exactly home would be the wrong drawing. |
+| **the fault** | What is wrong with each figure on Almost Human, and it shows **only after the figure has been held formed for a moment**: a head that comes apart in slices, a torso that slips and loses specks, one arm on its own, or every part of it each on a clock of its own. Four of them, running in order down the page. `FAULTS`, `GLITCH_*` in `almost-human.js`. |
 | **the rank** (Almost Human) | The scale down the side of that page: Pineward's **trunk** and ADAR's **sounding** by a third name, in plain ink. (Not the chromatogram's **rank / ridge**, above.) The fill is how far down the page you are, from its very first pixel; the ticks are how many fragrances you have been past. |
 | **the void** | ADAR's ground: a hole standing off to one side of the window with soundings ringing out from it and specks falling round its rim. Drawn by taking the disc back out of the finished drawing, not by painting one over it. |
 | **the sounding** | Two things on that page, and they go together: one of the ringed scales drawn out from the void, and the scale down the side of the page with one tick per fragrance — Pineward's **trunk** by another name. |
 | **stage** | Top, mid, base, a sidenote: the label above a run of paragraphs about one part of how a fragrance develops. `<p class="adar-stage">`. |
 | **the ADAR Effect™** | The owner's own coinage for this house's turpentine quality — the menthol-like trigeminal lift without the dense forest behind it. Written as **ADAR DNA** in exactly three places on purpose (the introduction, and two entries where they said they meant it); leave those. |
 | **essay page** | A page for a long piece of writing on the theories drawing's ground: a swarm of particles behind it, sights at the corners, and the **rule** down the left. `essay.js`; the three theories and the resins research. |
+| **the calculator** | The theory's own arithmetic, done for you: a screen-wide button at the foot of `works/theory-03.html` opens it, and it stands **in that same page** rather than in one of its own — the owner asked for the field of stars behind it to stay exactly where it is, which a second page could not do. Three models (Default `IBR`, Modified var. 1 and var. 2), each drawing the theory's own diagram from the numbers as you type. `calculator.js`; `calc-*` in `style.css`. |
+| **the summary plate** | `images/Theories/note-dissemination-summary.png`: the whole of the theory on one sheet, which stands at the top of the piece and is what its **card** shows on the theories page. Generated rather than drawn, from the same script that made the piece's diagrams. |
 | **the zone** | Short for the *zone of indistinguishability* on `works/theory-03.html`: the circle a note has to stand outside of to be told apart from the others. Every diagram on that page is that circle with arrows on its radii, and a diagram says what it says through two numbers only — how much of an arrow's body is inside, and which end the head is on. `zone-*` in `style.css`. |
 | **the maths** (theory-03) | The notation on that page, and the **only serif on the site**: the owner asked for it in a face of its own, and setting a variable in the mono would have made it look like one of the site's readings. `--math` on `:root`; `math-*` and `.mv` / `.mrec` in `style.css`. |
 | **the rule** (essay) | The scroll indicator down the left of an essay page: a hairline filled in as far as you have read, one tick per section, the section you are in named under it, and a percentage. Every tick is a link. |
@@ -438,7 +450,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the cue** | The small boxed label under the chamber's word saying what pressing it does — `EXPAND`, and `COLLAPSE` once it is open — with a chevron pointing the way it will go. |
 | **the hold** / **the frame** | What the chamber used to do when the menu was opened: every particle took a seat on the border of the window and the whole rectangle travelled round it. Removed — the orbit simply widens now. Nothing of it is in the code (no `EDGE`, no seat, no `FLOW`). |
 | **the burst** | What opening a chapter in the chamber does, in **one continuous movement**: from the press every piece of chrome fades — the menu being **drawn into it**, distorted and tipped towards the middle while its rows collapse from the outside in rather than rising back into the word — and the chamber closes on the middle as **two populations**: the ring narrows as a ring along its own orbit, **carrying on at exactly the speed it was already turning at**, while everything still crossing the window keeps the heading it had and is **bent in by the middle** on a curve, each on a clock of its own. They meet, and **the mesh** goes out from that point. `BURST_*` and `MESH_*` in `chamber.js`. For the length of it the particle physics is not run at all; the chamber's report says why, and lists the things that were tried and were wrong. |
-| **the mesh** | What goes out when the two populations meet, and the whole of the second half of the burst: a **lattice** standing in the ring's own plane — rings crossed by spokes — with a front travelling outward through it, and the home page's own two halo shells riding out with it, bending what is behind them rather than painting a colour over it. Nothing in it has a colour. It is the owner's *"more weblike"*; it is called the mesh here only because **the web** was already this page's cursor. |
+| **the mesh** | What goes out when the two populations meet, and the whole of the second half of the burst: a **lattice** standing in the ring's own plane — rings crossed by spokes — with a front travelling outward through it, **spinning about its own axis** rather than turning on the window (the ellipse stands where the orbit stands and the pattern turns inside it), and the home page's own two halo shells riding out with it, bending what is behind them rather than painting a colour over it. Nothing in it has a colour. It is the owner's *"more weblike"*; it is called the mesh here only because **the web** was already this page's cursor. |
 | **panel** (the mesh) | One cell of that lattice, between two of its rings and two of its spokes. Behind the front every panel darkens on a clock slightly its own until it is the chapter page's own black — which is how the window turns over now. |
 | **the black part** | **Removed.** For several rounds a black ellipse was cut open from the same point a beat behind the drawing (`clipTo`, `CLIP_ROUND`, `WAVE_LEAD`, a `clip-path` on `.chapter-page`), and it was catching the drawing up half way across the window. The owner asked for it gone and for the panels to darken in its place. Nothing of it is in the code. |
 | **a chapter's page** | What the burst opens into: the chapter named, the reading over it, what that chapter is (written in `categories/favorites.html`, one block per chapter), and its favourites as **cards**. Black, with **silver** — no accent anywhere on it, which keeps the chamber's promise of spending none. |

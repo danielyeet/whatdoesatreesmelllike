@@ -831,6 +831,32 @@ function, which ignores its argument and draws nothing. The canvas came up compl
 empty with no error of any kind. The burst's one is `drawMesh` and the cursor's is
 `drawWeb`; do not let those two names meet again.
 
+### It spins about its own axis, not on the window
+
+*"I do not want the geometric shapes to rotate around like that, I want them to spin on
+their axis of the donut/ring/ellipse instead."*
+
+The spin was being added to `ring.turn` — the angle the whole canvas is turned by before
+anything is drawn. That turns the **figure on the window**: the flattened ellipse's own
+long axis swings away from the angle the orbit is standing at, and the mesh reads as
+tumbling.
+
+It is an offset on the **angle round the disc** now. The ellipse stands exactly where the
+orbit stands, and the pattern — the spokes, the nodes, the bow in every ring — turns
+inside it. That is what spinning about the axis through the middle of a ring looks like
+from where you are standing, and it let the spin be raised (`MESH_SPIN` 0.17 → 0.3)
+because it no longer fights the shape.
+
+### And the shells were most of why it was not smooth
+
+The two halo shells are `backdrop-filter` elements, and **a backdrop-filter costs the
+whole of its own box however little of it is on screen**. They were 150vmax and 326vmax —
+the outer one three windows across — which is why the first frames of every burst were
+spent compositing two enormous blurred layers and the whole thing started at a crawl.
+
+They are 116vmax and 252vmax now, which keeps the pair's ratio (5.15/2.37, as on the map)
+at a size that crosses the window and stops.
+
 ### The menu is distorted into the middle, not shrunk
 
 Same note, first clause: *"the table disappears in a not so smooth fashion. i think it

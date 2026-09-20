@@ -331,6 +331,13 @@
       name: title ? title.textContent.trim() : "Untitled",
       meta: meta ? meta.textContent.trim() : "",
       note: (row.dataset.note || "").trim(),
+      // A PLATE, when the piece has one: `data-plate` on the row is a
+      // picture summing the theory up, and the card shows it above the
+      // writing. It is the row's own and read off the page like
+      // everything else here, so a theory that has no picture yet
+      // simply does not get one.
+      plate: (row.dataset.plate || "").trim(),
+      plateSay: (row.dataset.plateAlt || "").trim(),
       href: row.getAttribute("href"),
       number: String(i + 1).padStart(2, "0"),
       ring: random() * 6.283,
@@ -431,6 +438,7 @@
       '<span class="structure-name"></span><span class="structure-meta"></span></span>' +
       '<span class="structure-card">' +
       '<span class="structure-card-kicker" aria-hidden="true"></span>' +
+      '<span class="structure-card-plate"><img alt=""></span>' +
       // The name and the line under it are said once: they are already
       // in the mark's own lettering above, which stays in the page when
       // the card takes over the showing of them.
@@ -453,6 +461,18 @@
     const note = mark.querySelector(".structure-card-note");
     note.textContent = stop.note;
     if (!stop.note) note.hidden = true;
+    const plate = mark.querySelector(".structure-card-plate");
+    if (stop.plate) {
+      const picture = plate.querySelector("img");
+      picture.src = stop.plate;
+      picture.alt = stop.plateSay;
+      // A picture that is not there is taken off rather than left as a
+      // browser's own broken-image mark, the way every other plate on
+      // this site behaves.
+      picture.addEventListener("error", () => { plate.hidden = true; });
+    } else {
+      plate.hidden = true;
+    }
     mark.querySelector(".structure-card-spec").textContent =
       "DEPTH " + String(Math.round(stop.at.z)).padStart(3, "0") + "   \u00b7   " +
       String(Math.round((stop.at.z / ROAD) * 100)).padStart(3, "0") + "% ALONG";

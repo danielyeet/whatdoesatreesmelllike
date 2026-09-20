@@ -2,11 +2,11 @@ ALMOST HUMAN — the pictures for works/almost-human.html.
 
 One picture per fragrance, named after the fragrance:
 
-  desert-hope.jpg      part 01
-  part-02.jpg          part 02  (rename to the fragrance once it has a name,
-  part-03.jpg          part 03   and change both <img> tags in the part)
-  part-04.jpg          part 04
-  part-05.jpg          part 05
+  burning-bridges.jpg  part 01
+  dear-future.jpg      part 02
+  desert-hope.jpg      part 03
+  ritual-code.jpg      part 04
+  silent-rain.jpg      part 05
 
 Each part names its file in TWO places — the small square in the list
 and the full picture inside it — so change both together.

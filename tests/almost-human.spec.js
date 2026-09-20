@@ -109,12 +109,11 @@ test("the crowd is drawn, and it keeps out of the writing's way",
   expect(errors).toEqual([]);
 });
 
-/* THE HOUSE'S NAME, AS A BEHAVIOUR. Every speck stands a little way
-   from where it belongs, so a figure is always nearly a person; bring
-   the pointer near and they come home. Measured as the SPREAD of the
-   ink about its own middle, which is the thing that changes: a figure
-   that has resolved is narrower and taller-edged than the same figure
-   scattered. */
+/* THE HOUSE'S NAME, AS A BEHAVIOUR — and the whole of what that page
+   is. At rest a figure is a CLOUD: the owner asked for the crowd to
+   "indicate in no way shape or form that they are going to converge on
+   a humanoid body" until the pointer arrives. Bring it near and the
+   specks come home; take it away and they go again. */
 test("a figure comes home under the pointer and comes apart again",
   async ({ page }) => {
   await page.goto(HOUSE);
@@ -187,14 +186,14 @@ test("a figure comes home under the pointer and comes apart again",
   // fraction of a percent different, and `toBeLessThan(away.spread)`
   // alone passed with the resolving switched off entirely. What is
   // being claimed is that the crowd visibly draws together.
+  // A MEASURED SHARE, not merely "smaller". The ink also brightens as a
+  // figure comes home, which changes which of its faintest specks are
+  // drawn at all — so a figure that never resolves still reads a
+  // fraction of a percent different, and `toBeLessThan(away.spread)`
+  // alone passed with the resolving switched off entirely.
   expect(near.spread,
-    `the figure should draw together under the pointer: ${away.spread.toFixed(1)} -> ${near.spread.toFixed(1)}`)
-    .toBeLessThan(away.spread * 0.96);
-
-  // AND IT NEVER FULLY RESOLVES. The house is called Almost Human; a
-  // figure that came exactly home would be the wrong drawing.
-  expect(near.spread / away.spread,
-    "it should still be almost, not exactly").toBeGreaterThan(0.75);
+    `the cloud should draw together into a figure: ${away.spread.toFixed(1)} -> ${near.spread.toFixed(1)}`)
+    .toBeLessThan(away.spread * 0.8);
 
   // And it comes apart again when the pointer goes. Taken to the far
   // corner of the window rather than a little way down the page: this

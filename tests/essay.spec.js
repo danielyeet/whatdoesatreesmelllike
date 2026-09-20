@@ -153,3 +153,42 @@ test("the theories and the researches reach their own pieces", async ({ page }) 
   await expect(page.locator(".essay-section").first()).toContainText("insoluble in water");
   await expect(page.locator(".essay-section").nth(1)).toContainText("turpentine");
 });
+
+/* THE RULE MUST NOT MOVE. It is a fixed column centred on its own
+   height, and the name under it wraps to a second line when a section
+   is called something long — so going from a one-line name to a
+   two-line one shifted the whole ladder, hairline and all, half a line
+   up the window and back down again at the next section.
+
+   THIS IS A REGRESSION. The owner found it on The Architecture of
+   Sweat, between "Applying the Framework" and "Every Combination": a
+   jump of exactly 8px, measured. `holdName()` reserves the room the
+   tallest name the page actually has needs. */
+test("the rule stands still all the way down a piece, whatever a section is called",
+  async ({ page }) => {
+  await page.goto("/works/theory-02.html");
+  await page.waitForTimeout(700);
+  await expect(page.locator(".essay-rule")).toBeVisible();
+
+  const room = await page.evaluate(() =>
+    document.documentElement.scrollHeight - window.innerHeight);
+  const seen = new Set();
+  const names = new Set();
+  for (let f = 0; f <= 1.0001; f += 0.04) {
+    await page.evaluate((y) => window.scrollTo(0, y), Math.round(room * f));
+    await page.waitForTimeout(70);
+    const read = await page.evaluate(() => ({
+      top: Math.round(document.querySelector(".essay-rule-line").getBoundingClientRect().top),
+      name: document.querySelector(".essay-here").textContent,
+    }));
+    seen.add(read.top);
+    names.add(read.name);
+  }
+
+  // The reading has to have changed, or this would pass by never
+  // having asked the rule to do anything.
+  expect(names.size, "the rule should have named several sections")
+    .toBeGreaterThan(3);
+  expect([...seen], `the rule moved down the page: ${[...seen].join(", ")}`)
+    .toHaveLength(1);
+});

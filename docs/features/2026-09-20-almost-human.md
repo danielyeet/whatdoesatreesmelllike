@@ -32,17 +32,55 @@ thickness, and the specks are scattered *through* them so a figure is a shape a 
 happens to be making.
 
 And then every one of those specks is put **somewhere else**. Each knows exactly where it
-belongs and stands up to `STRAY` — a twentieth of the figure's own height — away from it,
-fixed for the life of the figure. So a figure is always nearly a person and never quite
-one.
+belongs and stands up to `STRAY` — a **fifth** of the figure's own height — away from it,
+fixed for the life of the figure.
+
+It was a twentieth at first, and at a twentieth a figure standing on its own still read
+as a person. The owner asked for the opposite: the crowd should *"indicate in no way
+shape or form that they are going to converge on a humanoid body"* until the hand
+arrives. At a fifth it is a cloud, and the person is entirely the pointer's doing.
 
 **Bring the pointer near and the specks come home.** The figure resolves under your hand
 and comes apart again when you leave. That is the house's name, said as a behaviour
 rather than written on the page, and it is the whole idea: it is what Pineward's
 **bloom** and ADAR's **spotlight** are to those pages.
 
-It never resolves *completely* — `STRAY_NEAR` keeps an eighth of the stray whatever
+It never resolves *completely* — `STRAY_NEAR` keeps a tenth of the stray whatever
 happens. A figure that came exactly home would be the wrong drawing.
+
+## Something is wrong with every one of them
+
+The owner asked for each figure to carry a fault of its own, and for it to show **only
+once the figure has been held together for a moment**: *"the glitching will only happen
+when hovered and after a short delay of being fully formed."* So it is the HOLDING that
+is counted (`HELD_FOR`), and letting go of a figure puts the count straight back to
+nothing along with the fault. A thing that had just worked and then fails reads as a
+fault; noise does not.
+
+Four of them, running in order down the page so no two neighbours are alike:
+
+| | |
+|---|---|
+| **head** | the head comes apart and re-forms in slices |
+| **torso** | the torso slips *and loses specks outright* — the owner asked for one with particles missing from it |
+| **arm** | one arm, left or right, and nothing else on the figure |
+| **all** | every part of it, each on a clock of its own, so the head and the legs never go at the same moment |
+
+**A speck knows which part of a person it is**, which is the whole of what this needs: a
+head that comes apart is the specks whose part is the head, and nothing else moves.
+`makeBody` returns `[x, y, part]` and the fault asks `faulty(part)`.
+
+**The fault is a PATTERN, not a fizz.** A band of the figure a twentieth of its height
+tall is pushed sideways, and some bands are not drawn at all; which band does what is a
+stable hash of `(band, tick, the figure's own seed)`, so it holds for a frame and then
+jumps, the way a broken picture does. A per-frame random number would shimmer, which is
+the opposite.
+
+## No two of them are the same crowd
+
+Height, pose, how many specks (`FIG_SPECKS`, 420 to 620), how heavily they are drawn
+(`FIG_INK`) and how far they stray (`STRAY_VARY`) are all a figure's own, so the margin
+reads as a row of different people rather than one person printed over and over.
 
 The resolving is asked of the **figure's own middle**, not of each speck, so a figure
 comes together as a person rather than a patch of one sharpening under the pointer. And
@@ -99,15 +137,18 @@ spend none, after the chamber. There is a test.
 
 ## What is the owner's, and what is waiting
 
-**Almost nothing here is written.** Only one fragrance of this house has a name anywhere
-on the site — **Desert Hope**, which the owner placed in
-[The Architecture of Sweat](2026-09-17-the-essay-pages.md) (`works/theory-02.html`) as cumin-y,
-dark and natural, adding that it could be argued it is carnal. That is the one thing part
-01 says, and it says it as a quotation of their own page rather than as new prose.
+**All five are named and none of them is written.** The owner gave the names:
+**Burning Bridges**, **Dear Future**, **Desert Hope**, **Ritual Code**, **Silent Rain**,
+in that order — which is alphabetical, as Pineward's are.
 
-The other four are `Untitled`, and every unwritten paragraph on the page says so in a
-dashed box (`p.human-waiting`) rather than standing in as writing. An unfinished house
-should read as unfinished, not as thin — and nothing here has been invented for them.
+The one thing said about any of them is Desert Hope, which the owner placed in
+[The Architecture of Sweat](2026-09-17-the-essay-pages.md) (`works/theory-02.html`) as
+cumin-y, dark and natural, adding that it could be argued it is carnal. Part 03 says that,
+and says it as a quotation of their own page rather than as new prose.
+
+Every unwritten paragraph says so in a dashed box (`p.human-waiting`) rather than standing
+in as writing. An unfinished house should read as unfinished, not as thin — and nothing
+here has been invented.
 
 ## How to test it
 
@@ -149,12 +190,12 @@ Put the pointer on a figure and take it away again. That is the page.
 
 ## Known issues / TODO
 
-- **Four of the five fragrances have no name yet**, and none of the five has its writing.
-  The introduction and the standfirst are waiting too.
+- **None of the five has its writing yet.** The introduction and the standfirst are
+  waiting too.
 - **No photographs.** `images/Almost-Human/` holds only its README. The page's own answer
   — take the `<img>` off, leave the hatch — is what is showing.
-- **Only Desert Hope is in the Fragrances table.** The other four rows go in as they are
-  named, pointing at `#part-02` to `#part-05`.
+- All five are in the Fragrances table, pointing at `#part-01` to `#part-05`. Renumbering
+  the house means re-pointing them in the same turn; there is a test.
 - **No groups.** ADAR's eleven are in four groups and Pineward's fifty-two in four strata;
   five fragrances did not obviously want dividing, and what the groups would be is the
   owner's to say. The markup takes a group wrapper without anything else changing.

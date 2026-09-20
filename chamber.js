@@ -875,7 +875,7 @@
   const MESH_HELD = 2.1;        // how far the panels are held back early on (a power)
   const MESH_NODE = 1.7;        // a mark at every crossing, in pixels
   const MESH_BOW = 0.05;        // how far a ring bows off true, as a share of it
-  const MESH_SPIN = 0.17;       // turns the whole lattice makes on the way out
+  const MESH_SPIN = 0.3;        // turns the lattice makes ABOUT ITS OWN AXIS on the way out
   const MESH_STEPS = 24;        // panels are filled in this many bands of one weight
   const PAGE_LAID = 0.82;      // when the chapter page goes under the web
   // The two ends the panels travel between: the chamber's own ink on
@@ -1049,9 +1049,21 @@
     // below rather than with `scale(1, flat)` on the context: a scaled
     // context squashes the STROKES too, so every line came out thinner
     // across the ring than along it.
+    //
+    // AND THE SPIN IS NOT IN HERE. It used to be added to `ring.turn`
+    // on this line, which turns the whole FIGURE on the window — the
+    // flattened ellipse's own long axis swinging away from the angle
+    // the orbit is standing at. The owner saw that for what it was:
+    // "I do not want the geometric shapes to rotate around like that,
+    // I want them to spin on their axis of the donut/ring/ellipse
+    // instead." So the spin is an offset on the ANGLE ROUND THE DISC
+    // (see `spin` below): the ellipse stands exactly where the orbit
+    // stands and the pattern turns inside it, which is what spinning
+    // about the axis through the middle of a ring looks like from
+    // where you are standing.
     paintRings.save();
     paintRings.translate(ring.x, ring.y);
-    paintRings.rotate(ring.turn + burst.way * eased * MESH_SPIN * Math.PI * 2);
+    paintRings.rotate(ring.turn);
     paintRings.lineJoin = "round";
     paintRings.lineCap = "round";
 
@@ -1061,11 +1073,13 @@
     // seams — which they would not if each ring bowed on its own.
     const flat = ring.flat;
     const bow = (a) => 1 + Math.sin(a * 3) * MESH_BOW;
-    const ang = [];
+    // THE SPIN, as an angle round the disc. Eased rather than linear so
+    // it arrives and leaves without a step, like everything else here.
+    const spin = burst.way * eased * MESH_SPIN * Math.PI * 2;
     const cosA = [], sinA = [], bowA = [];
     for (let k = 0; k <= MESH_SIDES; k++) {
-      const a = (k / MESH_SIDES) * Math.PI * 2;
-      ang.push(a); cosA.push(Math.cos(a)); sinA.push(Math.sin(a)); bowA.push(bow(a));
+      const a = (k / MESH_SIDES) * Math.PI * 2 + spin;
+      cosA.push(Math.cos(a)); sinA.push(Math.sin(a)); bowA.push(bow(a));
     }
     const rAt = [];
     for (let i = 0; i <= MESH_RINGS; i++) {

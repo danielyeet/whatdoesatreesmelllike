@@ -81,11 +81,17 @@ six). The theories category's first three rows point at the three theory pages.
 npm test -- tests/essay.spec.js
 ```
 
-Six tests: the rule being built from the piece's own sections and naming them without
-their numbers; every tick being a link to its own section; the reading being the scroll
-and not drifting while nothing is touched; travelling back giving exactly the drawing you
-left; the field standing still under `prefers-reduced-motion`; all of the writing being
-there without the script; and the theories and the researches reaching their own pieces.
+The rule being built from the piece's own sections and naming them without their numbers;
+every tick being a link to its own section; the reading being the scroll and not drifting
+while nothing is touched; travelling back giving exactly the drawing you left; the field
+standing still under `prefers-reduced-motion`; all of the writing being there without the
+script; and the theories and the researches reaching their own pieces.
+
+One of them is a regression, and it was **proved against the real fault** before being
+trusted: **`the rule stands still all the way down a piece, whatever a section is
+called`** walks The Architecture of Sweat from top to bottom and fails if the hairline's
+own top ever changes. With `holdName`'s last line taken out it reads two positions, 133
+and 125 — the 8px jump the owner reported, exactly.
 
 ## The sweat theory's combination table
 

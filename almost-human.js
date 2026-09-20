@@ -65,11 +65,12 @@
   const COLUMN = 940;         // the writing's own measure — style.css keeps the same
   const FIG_EVERY = 330;      // how far apart they stand down the page, in pixels
   const FIG_TALL = [170, 290];   // how tall one is drawn, in pixels
-  const FIG_SPECKS = 340;     // how many specks one is made of
+  const FIG_SPECKS = [420, 620]; // how many specks one is made of
   const EDGE = 0.085;         // where they stand when there is no margin to stand in
   const SPECK = [1, 2.2];     // how big a speck is drawn
-  const INK_MIN = 0.2;        // how plainly one is drawn at its faintest
-  const INK_MAX = 0.55;       // and at its plainest
+  const INK_MIN = 0.16;       // how plainly one is drawn at its faintest
+  const INK_MAX = 0.5;        // and at its plainest
+  const FIG_INK = [0.72, 1.2];   // and a weight of its own for the whole figure
   const IDLE = 1.3;           // the pixel or so of drift each keeps about its place
   const IDLE_EVERY = [5, 17]; // and how long it takes over it, in seconds
 
@@ -78,12 +79,42 @@
   // IT IS A SHARE OF THE FIGURE'S OWN HEIGHT and not a number of
   // pixels: a fixed twenty-six pixels is a soft edge on a tall figure
   // and a cloud with no shape at all on a short one, which is what the
-  // first go looked like. At a twentieth of its height a figure is
-  // plainly a person who has not quite settled.
-  const STRAY = 0.052;        // how far from home a speck stands, as a share of the height
-  const STRAY_NEAR = 0.12;    // and the share of it kept even when fully resolved
+  // first go looked like.
+  //
+  // AND IT IS FAR BIGGER THAN IT WAS. At a twentieth of the height a
+  // figure standing on its own still read as a person, and the owner
+  // asked for the opposite: the crowd should "indicate in no way shape
+  // or form that they are going to converge on a humanoid body" until
+  // the hand arrives. At a fifth of the height it is a cloud, and the
+  // person is entirely the pointer's doing.
+  const STRAY = 0.2;          // how far from home a speck stands, as a share of the height
+  const STRAY_VARY = [0.75, 1.3]; // and a figure's own share of that
+  const STRAY_NEAR = 0.1;     // what is kept even when fully resolved
   const HAND = 210;           // how near the hand has to be to resolve a figure
   const HAND_EASE = 2.6;      // how quickly a figure comes home and comes apart again
+
+  // --- and what is wrong with each of them
+  //
+  // EVERY FIGURE HAS SOMETHING THE MATTER WITH IT, and it only shows
+  // once the figure has been HELD together for a moment: the owner
+  // asked for the glitching to start after a short delay of being fully
+  // formed, so it reads as something failing in a thing that had just
+  // worked rather than as noise.
+  //
+  // The four faults run in order down the page, so no two neighbours
+  // have the same one:
+  //
+  //   head    the head comes apart and re-forms in slices
+  //   torso   the torso loses specks as well as slipping
+  //   arm     one arm, and nothing else
+  //   all     every part of it, each on a clock of its own
+  const FAULTS = ["head", "torso", "arm", "all"];
+  const HELD_FOR = 0.55;      // how long it must stand formed first, in seconds
+  const GLITCH_IN = 0.45;     // and how long the fault takes to come up
+  const GLITCH_RATE = 11;     // how many times a second it re-rolls
+  const GLITCH_BAND = 0.045;  // how tall a slipped slice is, as a share of the figure
+  const GLITCH_PUSH = 0.3;    // how far a slice slips, as a share of the figure's width
+  const GLITCH_DROP = 0.28;   // and the share of slices that go missing outright
 
   // --- the ground
   const INK = "26,26,24";
@@ -137,15 +168,21 @@
   const BODY_TOTAL = BODY.reduce((sum, one) => sum + one.of, 0);
 
   /** One figure's worth of specks, in its own unit box. `lean` tips the
-      arms and legs a little so no two people stand exactly alike. */
-  function makeBody(lean) {
+      arms and legs a little so no two people stand exactly alike.
+
+      Each speck comes back as [x, y, part] — WHICH PART OF A PERSON IT
+      BELONGS TO, which is the whole of what the faults need: a head
+      that comes apart is the specks whose part is the head, and nothing
+      else on the figure moves. */
+  function makeBody(lean, howMany) {
     const out = [];
-    for (let n = 0; n < FIG_SPECKS; n++) {
+    for (let n = 0; n < howMany; n++) {
       let pick = random() * BODY_TOTAL;
       let limb = BODY[BODY.length - 1];
+      let part = BODY.length - 1;
       for (let i = 0; i < BODY.length; i++) {
         pick -= BODY[i].of;
-        if (pick <= 0) { limb = BODY[i]; break; }
+        if (pick <= 0) { limb = BODY[i]; part = i; break; }
       }
       // Arms and legs swing about their own top end; the head, neck and
       // torso are the part of a person that does not.
@@ -163,6 +200,7 @@
       out.push([
         limb.a[0] + (bx - limb.a[0]) * t + Math.cos(turn) * away,
         limb.a[1] + (by - limb.a[1]) * t + Math.sin(turn) * away,
+        part,
       ]);
     }
     return out;
@@ -197,7 +235,17 @@
       const mid = side === 0
         ? stand + between(-0.022, 0.026)
         : 1 - stand + between(-0.026, 0.022);
-      const body = makeBody(between(-0.22, 0.22));
+      // NO TWO OF THEM ARE THE SAME CROWD. Height, pose, how many
+      // specks, how heavily they are drawn and how far they stray are
+      // all their own, so the margin reads as a row of different people
+      // rather than one person printed over and over.
+      const howMany = Math.round(between(FIG_SPECKS[0], FIG_SPECKS[1]));
+      const weight = between(FIG_INK[0], FIG_INK[1]);
+      const wander = STRAY * between(STRAY_VARY[0], STRAY_VARY[1]);
+      const fault = FAULTS[crowd.length % FAULTS.length];
+      // For the "arm" fault, which arm — left (3) or right (4).
+      const armPart = random() < 0.5 ? 3 : 4;
+      const body = makeBody(between(-0.22, 0.22), howMany);
       const specks = body.map((one) => ({
         // Where it belongs, as a share of the width across and pixels
         // down the document.
@@ -207,14 +255,25 @@
         // figure, so the crowd is always wrong in the same way — a
         // stray that re-rolled would read as a fizz rather than as a
         // shape that has not settled.
-        sx: between(-STRAY, STRAY) * tall,
-        sy: between(-STRAY, STRAY) * tall,
+        sx: between(-wander, wander) * tall,
+        sy: between(-wander, wander) * tall,
         size: Math.max(1, Math.round(between(SPECK[0], SPECK[1]))),
-        ink: between(INK_MIN, INK_MAX),
+        ink: between(INK_MIN, INK_MAX) * weight,
         every: between(IDLE_EVERY[0], IDLE_EVERY[1]),
         phase: random() * Math.PI * 2,
+        part: one[2],
+        // Where it stands down the figure, 0 at the crown and 1 at the
+        // feet. A slipped slice is a band of this.
+        down: one[1],
       }));
-      crowd.push({ y: y, tall: tall, mid: mid, specks: specks, home: 0 });
+      crowd.push({
+        y: y, tall: tall, mid: mid, specks: specks,
+        home: 0, held: 0, glitch: 0,
+        fault: fault, armPart: armPart,
+        // Its own place in the fault's clock, so two figures with the
+        // same fault never come apart on the same frame.
+        seed: Math.floor(random() * 9973),
+      });
     }
   }
 
@@ -250,10 +309,20 @@
     return 0.05 + 0.95 * Math.max(0, 1 - Math.min(1, inside));
   }
 
+  /** A stable number between 0 and 1 for a whole handful of integers.
+      The same slice of the same figure on the same tick always answers
+      the same way, which is what makes a fault a PATTERN that holds for
+      a frame rather than a fizz that changes under itself. */
+  function hash(a, b, c) {
+    const v = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453;
+    return v - Math.floor(v);
+  }
+
   function draw(down, clock) {
     if (!ink || !width) return;
     ink.clearRect(0, 0, width, height);
     const idle = REDUCE_MOTION ? 0 : IDLE;
+    const tick = Math.floor(clock * GLITCH_RATE);
 
     crowd.forEach((figure) => {
       const top = figure.y - down;
@@ -275,16 +344,53 @@
         Math.min(1, HAND_EASE * (REDUCE_MOTION ? 1 : 0.016));
       const held = STRAY_NEAR + (1 - STRAY_NEAR) * (1 - figure.home);
 
+      // HOW LONG IT HAS STOOD FORMED, and from that how far its fault
+      // has come up. The owner asked for the glitching to start "after
+      // a short delay of being fully formed" — so it is the HOLDING
+      // that is counted, and letting go of a figure puts the count
+      // straight back to nothing along with the fault.
+      const step = REDUCE_MOTION ? 0 : 0.016;
+      if (figure.home > 0.82) figure.held += step; else figure.held = 0;
+      const wantGlitch = REDUCE_MOTION ? 0
+        : Math.max(0, Math.min(1, (figure.held - HELD_FOR) / GLITCH_IN));
+      figure.glitch += (wantGlitch - figure.glitch) * (step === 0 ? 1 : 0.22);
+
+      /** Whether this part of this figure is the part that is wrong. */
+      const faulty = (part) => {
+        if (figure.fault === "all") return true;
+        if (figure.fault === "head") return part === 0 || part === 1;
+        if (figure.fault === "torso") return part === 2;
+        return part === figure.armPart;
+      };
+      const wide = figure.tall * GLITCH_PUSH;
+
       figure.specks.forEach((one) => {
         const wander = idle === 0 ? 0 : idle *
           Math.sin((clock / one.every) * Math.PI * 2 + one.phase);
-        const x = one.hx * width + one.sx * held + wander;
-        const y = one.hy - down + one.sy * held + wander * 0.7;
+        let x = one.hx * width + one.sx * held + wander;
+        let y = one.hy - down + one.sy * held + wander * 0.7;
+        let shown = one.ink * (0.78 + 0.34 * figure.home) * lit(x);
+
+        // THE FAULT. A slice of the figure — a band of it a fortieth of
+        // its height tall — is pushed sideways, and some slices are not
+        // drawn at all. Each part keeps its own place in the clock, so
+        // on the figure whose fault is "all" the head, the arms and the
+        // legs come apart at different moments rather than together.
+        if (figure.glitch > 0.02 && faulty(one.part)) {
+          const band = Math.floor(one.down / GLITCH_BAND);
+          const beat = tick + (figure.fault === "all" ? one.part * 3 : 0);
+          const roll = hash(band, beat, figure.seed);
+          if (roll < GLITCH_DROP * figure.glitch) return;
+          x += (hash(band, beat, figure.seed + 41) - 0.5) * 2 * wide * figure.glitch;
+          y += (hash(band, beat, figure.seed + 97) - 0.5) * 6 * figure.glitch;
+          // The torso does not only slip, it LOSES specks — the owner
+          // asked for one with particles missing from it.
+          if (figure.fault === "torso" &&
+              hash(band, beat, figure.seed + 7) < 0.3 * figure.glitch) return;
+          shown *= 0.55 + 0.75 * roll;
+        }
+
         if (y < -8 || y > height + 8) return;
-        // A speck that has come home is drawn a shade more plainly than
-        // one still out in the scatter: resolving is something you can
-        // see as well as something you can make out.
-        const shown = one.ink * (0.78 + 0.34 * figure.home) * lit(x);
         if (shown < 0.012) return;
         ink.fillStyle = rgba(shown);
         ink.fillRect(Math.round(x), Math.round(y), one.size, one.size);

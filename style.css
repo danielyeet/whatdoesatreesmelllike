@@ -4210,8 +4210,8 @@ body.find-reading .find-reading-note { opacity: 1; }
 }
 /* The inner shell: nearer the core, and the heavier bite of the two. */
 .chapter-shell-in {
-  width: 150vmax;
-  height: 150vmax;
+  width: 116vmax;
+  height: 116vmax;
   /* Nearly all blur, and only a touch of contrast. An earlier go had
      brightness in it as well, which on a near-white ground came out as
      a pale WASH travelling over the page — a colour by another name,
@@ -4230,8 +4230,15 @@ body.find-reading .find-reading-note { opacity: 1; }
 /* The outer shell: 5.15/2.37 of the inner, as on the map, and a far
    lighter touch — it is the edge of the same thing, further out. */
 .chapter-shell-out {
-  width: 326vmax;
-  height: 326vmax;
+  /* 5.15/2.37 of the inner, as on the map. It was 326vmax against the
+     inner's 150, which is three windows across — and a backdrop-filter
+     costs the whole of its own box however little of it is on screen.
+     The pair keeps its ratio at a size that crosses the window and
+     stops. This is most of what the owner meant by "make it smoother":
+     the first frames of the burst were spent compositing two enormous
+     blurred layers. */
+  width: 252vmax;
+  height: 252vmax;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: chapter-shell var(--wave-ms, 2450ms) cubic-bezier(0.14, 0.62, 0.22, 1) both;
@@ -5597,7 +5604,6 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 /* A third of the column is not enough room for a formula on one line,
    so inside a cell the maths wraps and is set a shade smaller. */
 .zone-cell .math-line { white-space: normal; font-size: 15px; }
-.zone-cell .math-cont { padding-left: 1.4em; }
 .zone-cell .math-aside { font-size: 12px; }
 .zone-pair {
   display: grid;
@@ -5618,17 +5624,48 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
    the site's readings either. A worked answer is a first line and then
    the lines that carry on under it, indented to stand under its own
    equals sign. */
-.math-block { margin: 0 0 22px; }
+/* A WORKED ANSWER IS A GRID, so that every `=` in it stands in the
+   same column. It was a first line and then continuation lines pushed
+   right by a guessed 3.2em, which lines nothing up the moment a label
+   is longer than the guess — and on the three-across examples the
+   longest label (IBR with a "Dry Down" subscript) wrapped its first
+   line and threw the rest of the block out with it. The owner asked
+   for the equations neat and organised.
+
+   Three cells a row: what is left of the equals, the equals itself,
+   and what is right of it. A continuation line has an empty first
+   cell, which is what puts it under the one above. `display: contents`
+   on the row is what lets the <p> hold three cells that belong to the
+   block's own grid rather than to a grid of its own. */
+.math-block {
+  margin: 0 0 22px;
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  column-gap: 0.38em;
+  row-gap: 3px;
+  align-items: baseline;
+  justify-content: start;
+}
+.math-line { display: contents; }
+.mlhs { text-align: right; white-space: nowrap; }
+.meq { text-align: center; }
+.mrhs { text-align: left; }
+/* THE ABSOLUTE BARS, spent only where a reading is put against a
+   threshold. The bars are drawn a shade quieter than what they hold,
+   so IBR still reads as the thing being said. */
+.mabs { color: #9aa3b1; padding: 0 0.06em; }
 /* .essay-section p sets the reading's paragraph spacing and outranks a
    plain class, so every line of a worked answer would stand a
    paragraph apart. The working is one block, not five paragraphs. */
 /* And the reading is JUSTIFIED, which maths must not be: a formula
    stretched to the measure puts gaps between its own symbols. */
-.essay-section .math-line {
-  margin: 0 0 2px;
-  text-align: left;
-  hyphens: none;
-}
+.essay-section .math-line { hyphens: none; }
+.essay-section .mlhs,
+.essay-section .meq,
+.essay-section .mrhs { text-align: inherit; hyphens: none; }
+.essay-section .mlhs { text-align: right; }
+.essay-section .meq { text-align: center; }
+.essay-section .mrhs { text-align: left; }
 .essay-section .math-standalone { margin: 22px 0; text-align: center; hyphens: none; }
 .essay-section .essay-claim { text-align: center; hyphens: none; }
 .essay-section .zone-legend-say,
@@ -5644,7 +5681,6 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   margin: 0 0 2px;
   white-space: nowrap;
 }
-.math-cont { padding-left: 3.2em; }
 .math-standalone {
   font-family: var(--math);
   font-size: 18px;
@@ -5695,6 +5731,15 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   color: var(--brass, #b98a3e);
   white-space: nowrap;
 }
+/* A LINE THE PIECE COINS A NAME IN — the owner's "will be further
+   referred to as". Set apart from the reasoning round it, because
+   everything after it uses the name. */
+.essay-coin {
+  border-left: 2px solid rgba(142, 180, 226, 0.5);
+  padding-left: 18px;
+  color: #dbe1ea;
+}
+.essay-section p.essay-coin { text-align: left; hyphens: none; }
 .essay-assumptions > li { margin-bottom: 26px; }
 .essay-assumptions p { margin-bottom: 14px; }
 
@@ -5745,7 +5790,6 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   .zone-legend { flex-direction: column; align-items: flex-start; gap: 6px; }
   .zone-legend .zone-small { max-width: 150px; }
   .math-line { white-space: normal; }
-  .math-cont { padding-left: 1.6em; }
   .zone-name { font-size: 24px; }
 }
 
@@ -6101,4 +6145,447 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   .human-foot { padding-left: 24px; padding-right: 24px; }
   .human-body { flex-direction: column; padding-left: 0; gap: 20px; }
   .human-plate { width: 100%; }
+}
+
+/* ==================================================================
+   THE NOTE DISSEMINATION CALCULATOR — works/theory-03.html
+
+   It stands in the SAME page as the theory rather than in one of its
+   own: the owner asked for the stars behind it to "remain where they
+   are and on screen", and a second page would throw that field away
+   and roll a different one. So the reading fades out, the calculator
+   fades in, and essay.js goes on drawing behind both without being
+   told anything.
+
+   Everything on it is built by calculator.js, which is why there is
+   nothing of it in the markup — with the script blocked the button
+   that opens it does nothing and the theory is unharmed.
+================================================================== */
+/* THE WAY IN — a button the width of the reading, because the owner
+   asked for a BIG screen-wide one. */
+.calc-enter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  margin: 34px 0 10px;
+  padding: clamp(22px, 4vh, 38px) clamp(20px, 4vw, 40px);
+  background: rgba(142, 180, 226, 0.06);
+  border: 1px solid rgba(142, 180, 226, 0.4);
+  color: #e8ecf3;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
+}
+.calc-enter:hover, .calc-enter:focus-visible {
+  background: rgba(142, 180, 226, 0.13);
+  border-color: rgba(142, 180, 226, 0.75);
+}
+.calc-enter-word {
+  font-size: clamp(28px, 5vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.calc-enter-cue {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8eb4e2;
+  flex: none;
+}
+
+/* THE CHANGE-OVER. Two fades that never both run: the reading goes,
+   then the calculator comes. The field is not in either of them. */
+.essay-page.calc-going .essay-head,
+.essay-page.calc-going .essay-body,
+.essay-page.calc-going .essay-foot {
+  opacity: 0;
+  transition: opacity 0.4s var(--menu-ease);
+  pointer-events: none;
+}
+/* HIDING THE READING IS A CLASS AND NOT THE `hidden` ATTRIBUTE.
+   `[hidden]` is a user-agent rule with almost no weight, and every one
+   of these three carries a `display` of its own further up this file —
+   so setting `hidden` on them did nothing at all and the essay's foot
+   and its rule stayed on the window over the calculator. */
+.essay-page.calc-on .essay-head,
+.essay-page.calc-on .essay-body,
+.essay-page.calc-on .essay-foot,
+.essay-page.calc-on .essay-rule { display: none; }
+
+.calc {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(110px, 18vh, 190px) 64px 90px;
+  animation: calc-in 0.5s var(--menu-ease) both;
+}
+.calc[hidden] { display: none; }
+.calc.calc-going-out { animation: calc-out 0.32s var(--menu-ease) both; }
+@keyframes calc-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes calc-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* Focused by the script when the calculator opens, so that a reader
+   using the keyboard lands on it rather than back at the top of a page
+   that has changed under them. It is not a control, so it does not
+   wear the site's focus ring. */
+.calc-head h1:focus { outline: none; }
+.calc-head h1 {
+  font-size: clamp(28px, 4.6vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 26px;
+  color: #f1f4f8;
+}
+.calc-lede {
+  max-width: 62ch;
+  color: #aab2c1;
+  font-size: 17px;
+  line-height: 1.7;
+  margin: 0 0 16px;
+}
+.calc-review {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(142, 180, 226, 0.6);
+  color: #8eb4e2;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+.calc-review:hover, .calc-review:focus-visible { color: #dbe1ea; }
+
+/* THE THREE MODELS. */
+.calc-models {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 34px 0 10px;
+  align-items: flex-start;
+}
+.calc-model-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 320px; }
+.calc-model {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  padding: 13px 20px;
+  background: none;
+  border: 1px solid rgba(150, 160, 176, 0.45);
+  color: #aab2c1;
+  cursor: pointer;
+  transition: color 0.25s var(--menu-ease), border-color 0.25s var(--menu-ease),
+              background-color 0.25s var(--menu-ease);
+}
+.calc-model:hover, .calc-model:focus-visible { color: #e8ecf3; border-color: #8eb4e2; }
+.calc-model.chosen {
+  color: #0d1016;
+  background: #8eb4e2;
+  border-color: #8eb4e2;
+}
+.calc-model.chosen .mv { color: inherit; }
+/* The owner's own caveat on the second variation, which has to be
+   read BEFORE the rest of it arrives. */
+.calc-caveat {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #8d94a3;
+  max-width: 34ch;
+}
+
+.calc-body[hidden] { display: none; }
+.calc-part { margin: 46px 0 0; }
+.calc-part h2 {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8eb4e2;
+  font-weight: 500;
+  margin: 0 0 18px;
+}
+/* IT ARRIVES FROM THE TOP DOWN, one part behind the last — the owner
+   asked for the page to fade in that way once a model is chosen. */
+.calc-arriving { animation: calc-part-in 0.5s var(--menu-ease) both; animation-delay: calc(var(--n, 0) * 0.09s); }
+@keyframes calc-part-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* THE BIG EQUATION, and the line under it that says what a term is. */
+.calc-equation-part { text-align: center; }
+.calc-equation {
+  font-family: var(--math);
+  font-size: clamp(30px, 5.4vw, 58px);
+  color: #f1f4f8;
+  margin: 0 0 20px;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.12em;
+}
+.calc-eq-op { color: #8d94a3; padding: 0 0.06em; }
+.calc-term {
+  font: inherit;
+  font-style: italic;
+  background: none;
+  border: 0;
+  border-bottom: 1px dashed rgba(142, 180, 226, 0.45);
+  color: inherit;
+  padding: 0 0.05em;
+  cursor: help;
+  line-height: 1;
+}
+.calc-term:hover, .calc-term:focus-visible {
+  color: #8eb4e2;
+  border-bottom-color: #8eb4e2;
+}
+.calc-say {
+  min-height: 3.4em;
+  max-width: 58ch;
+  margin: 0 auto;
+  color: #8d94a3;
+  font-size: 15.5px;
+  line-height: 1.66;
+  transition: color 0.2s ease;
+}
+.calc-say-on { color: #dbe1ea; }
+.calc-note {
+  max-width: 62ch;
+  color: #aab2c1;
+  font-size: 15.5px;
+  line-height: 1.7;
+  margin: 30px 0 0;
+  border-left: 1px solid var(--line, rgba(150,160,176,0.3));
+  border-left-color: rgba(150, 160, 176, 0.3);
+  padding-left: 18px;
+}
+
+/* THE INPUTS, and the diagram that answers them. */
+.calc-common {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px;
+  align-items: flex-end;
+  margin: 0 0 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.18);
+}
+/* ONE STAGE: its numbers on the left, its diagram beside them, and its
+   answer under the numbers. Laid out by AREA rather than by counting
+   rows, so the diagram can stand level with the middle of the numbers
+   however many of them a model asks for — var. 2 has three where var. 1
+   has two. */
+.calc-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 250px);
+  grid-template-areas: "fields zone" "out zone";
+  grid-template-rows: auto auto;
+  gap: 18px 34px;
+  align-content: start;
+  padding: 26px 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.14);
+}
+.calc-stage-fields { grid-area: fields; display: flex; flex-direction: column; gap: 12px; }
+.calc-stage-zone { grid-area: zone; align-self: center; }
+.calc-stage-zone .zone { max-width: 220px; }
+.calc-zone-figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.calc-stage-out { grid-area: out; align-self: start; }
+.calc-field {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--math);
+  font-size: 17px;
+  color: #dbe1ea;
+}
+.calc-field-name { min-width: 7.5em; text-align: right; }
+.calc-field-unit { color: #8d94a3; }
+.calc-input {
+  width: 8em;
+  background: rgba(150, 160, 176, 0.08);
+  border: 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.5);
+  color: #f1f4f8;
+  font-family: var(--math);
+  font-size: 17px;
+  padding: 5px 8px;
+}
+.calc-input:focus { outline: none; border-bottom-color: #8eb4e2; background: rgba(142, 180, 226, 0.1); }
+.calc-sign { display: flex; align-items: baseline; gap: 10px; }
+.calc-sign .calc-field-name { font-family: var(--math); font-size: 17px; color: #dbe1ea; min-width: 0; }
+.calc-sign-pick {
+  font-family: var(--math);
+  font-size: 19px;
+  width: 2.2em;
+  padding: 4px 0;
+  background: none;
+  border: 1px solid rgba(150, 160, 176, 0.45);
+  color: #aab2c1;
+  cursor: pointer;
+}
+.calc-sign-pick.chosen { background: #8eb4e2; border-color: #8eb4e2; color: #0d1016; }
+
+/* THE ANSWER, and the working behind it — which the owner asked to be
+   shown on hover rather than always. */
+.calc-result {
+  font-family: var(--math);
+  font-size: 21px;
+  color: #f1f4f8;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+}
+.calc-result-eq { color: #8d94a3; }
+.calc-result-value { color: #8eb4e2; font-weight: 600; }
+.calc-steps {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s var(--menu-ease), opacity 0.3s var(--menu-ease);
+}
+.calc-stage-out:hover .calc-steps,
+.calc-stage-out:focus-within .calc-steps { max-height: 300px; opacity: 1; }
+.calc-steps .math-block { margin: 12px 0 0; font-size: 15px; }
+.calc-steps .math-line { font-size: 15px; }
+
+/* THE TABLE of the three readings against the thresholds. */
+.calc-table-wrap { overflow-x: auto; }
+.calc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.calc-table th {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8d94a3;
+  font-weight: 400;
+  text-align: left;
+  padding: 0 16px 10px 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.3);
+  white-space: nowrap;
+}
+.calc-table td {
+  padding: 13px 16px 13px 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.14);
+  color: #aab2c1;
+  vertical-align: top;
+}
+.calc-table td:nth-child(1), .calc-table td:nth-child(2), .calc-table td:nth-child(3) {
+  font-family: var(--math);
+  color: #dbe1ea;
+  white-space: nowrap;
+}
+.calc-table td:nth-child(2) { color: #8eb4e2; }
+
+.calc-graph { display: flex; justify-content: center; }
+.calc-graph .graph { max-width: 640px; }
+.calc-verdict {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #aab2c1;
+  max-width: 62ch;
+  margin: 0;
+}
+.calc-verdict strong { color: #8eb4e2; }
+
+.calc-foot { margin: 70px 0 0; padding-top: 26px; border-top: 1px solid rgba(150, 160, 176, 0.2); }
+.calc-back {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  background: none;
+  border: 0;
+  color: #aab2c1;
+  cursor: pointer;
+  padding: 0;
+}
+.calc-back:hover, .calc-back:focus-visible { color: #e8ecf3; }
+
+/* THE WINDOW that reviews complication 3. */
+.calc-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(8, 10, 14, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: calc-out 0.25s var(--menu-ease) reverse both;
+}
+.calc-modal[hidden] { display: none; }
+.calc-modal-sheet {
+  max-width: 62ch;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #11141a;
+  border: 1px solid rgba(150, 160, 176, 0.35);
+  padding: clamp(26px, 5vw, 46px);
+}
+.calc-modal-sheet h3 {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8eb4e2;
+  font-weight: 500;
+  margin: 0 0 18px;
+}
+.calc-modal-sheet p { color: #aab2c1; font-size: 16px; line-height: 1.72; margin: 0 0 16px; }
+.calc-modal-sheet i { font-family: var(--math); }
+.calc-modal-shut {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid rgba(150, 160, 176, 0.45);
+  color: #aab2c1;
+  padding: 9px 18px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+.calc-modal-shut:hover, .calc-modal-shut:focus-visible { color: #e8ecf3; border-color: #8eb4e2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .calc, .calc-arriving, .calc-modal { animation: none; }
+  .calc-steps { transition: none; }
+  .essay-page.calc-going .essay-head,
+  .essay-page.calc-going .essay-body,
+  .essay-page.calc-going .essay-foot { transition: none; }
+}
+
+@media (max-width: 860px) {
+  .calc { padding-left: 24px; padding-right: 24px; }
+  .calc-stage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "fields" "zone" "out";
+  }
+  .calc-stage-zone { justify-self: center; }
+  .calc-field-name { min-width: 6em; }
+}
+
+/* THE PICTURE ON A STATION'S CARD. A theory that carries `data-plate`
+   on its row shows it above the writing when the station is set out —
+   see the note in structure.js. It is the one picture on this drawing,
+   so it is ruled like everything else rather than floated. */
+.structure-card-plate {
+  display: block;
+  margin: 0 0 16px;
+  border: 1px solid rgba(150, 160, 176, 0.28);
+  background: #0b0e13;
+  overflow: hidden;
+}
+.structure-card-plate[hidden] { display: none; }
+.structure-card-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
