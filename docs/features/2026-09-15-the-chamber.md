@@ -420,7 +420,7 @@ web between the specks it is near and letting go again; no part of it ever being
 the site's accent colour; it standing still under `prefers-reduced-motion`; and the plain
 list coming back when the script is blocked.
 
-Three of them are about the burst, and two of those are regressions for faults the owner
+Four of them are about the burst, and two of those are regressions for faults the owner
 reported:
 
 - **`the ring closes as a ring while the loose particles fall in after it`** — one pass
@@ -435,9 +435,18 @@ reported:
   needs both: the near half's share of the ink (is it being drawn) and the front canvas's
   own computed opacity (is it being shown). The second is the one that catches this: see
   failure 6 above for why a canvas read alone cannot.
-- **`the explosion is an ellipse lying in the ring's plane, not a circle`** — reads the
-  polygon the page is cut out with and measures its bounding box. A circle's box is
-  square; this one must not be.
+- **`the explosion is an ellipse lying in the ring's plane, not a circle`** — measures the
+  bounding box of what is actually **inked on the mesh's canvas**. A circle's box is
+  square; this one must not be. It used to read the polygon the page was cut out with;
+  there is no cut any more, so it reads the drawing instead — the same claim about the
+  same shape. The reading is kept only while the mesh is still comfortably inside the
+  window, because once it has covered everything its bounding box is the window's and
+  says nothing about its shape.
+- **`the chapter page is never cut open, it is laid under the mesh`** — a regression for
+  this round's removal. It watches `.chapter-page` frame by frame from the press until it
+  is shown and fails on any `clip-path`, inline or computed; then it checks the mesh has
+  the **top of the window** black by the time the page arrives, so the test cannot pass by
+  the page simply never being laid.
 
 ## The burst, and a chapter's own page
 
@@ -455,7 +464,7 @@ wind runs straight into the wave.
 | | |
 |---|---|
 | **the wind** (`BURST_WIND`) | The chrome fades — the word, its cue and crop marks, the menu, this page's search, and the drawing's own labels and sights. The chamber's **two populations** close on the middle, each in its own way (below). |
-| **the wave** (`BURST_WAVE`) | They meet, and the home page's own centre goes out from that point: a dark core with two translucent halo shells. The chapter is **cut out of the black** by it. |
+| **the mesh** (`BURST_WEB`) | They meet, and a **lattice** goes out from that point in the orbit's own plane, with the home page's own halo shells riding out with it. The cells of that lattice — its **panels** — darken behind the front until they are the chapter page's own black, and the page is laid underneath once they have the window. |
 
 ### Two populations, and why they are not one
 
@@ -753,6 +762,93 @@ fourteen are the same outline.
 opening across a whole window is a stepping edge. It is **48** now: still not a circle —
 the facets are there if you look for them — but nothing in it steps. The mechanical
 character moved into the ink, where it can be complex without being coarse.
+
+### The black is gone, and the mesh turns the window over
+
+*"the table disappears in a not so smooth fashion. i think it needs to be distorted into
+the center during the transition. then the actual geometry and stuff, I want it to be
+complete, instead of now — where it just goes through half of the page before the black
+part of the explosion takes place. Id like to remove the black part, and then make the
+whole page more weblike emphasizing the first part of the explosion. and then the panels
+will start turning blacker and blacker until they match the colour of the page that
+results at the end of the explosion."*
+
+Four notes, and the last one is the design. **The drawing does not get covered up by the
+page any more; the drawing becomes the page.**
+
+**What went.** `clipTo()`, `CLIP_ROUND`, `WAVE_LEAD`, `BURST_WAVE` and the `clip-path` on
+`.chapter-page` are all out of the code. For several rounds the burst had been two things
+arriving one behind the other — a train of rings travelling out, and a black ellipse cut
+open from the same point a beat later — and the second was eating the first. That is why
+the geometry only ever got half way across the window: it was still travelling when the
+black caught it up.
+
+**What replaced it.** A **standing lattice** in the orbit's plane — `MESH_RINGS` rings
+crossed by `MESH_SIDES` spokes, 19 by 40 — with a **front** travelling outward through it.
+Ahead of the front there is nothing; the front itself is the brightest of it; behind the
+front every **panel** it has passed darkens on a clock slightly its own until it is `#000`,
+which is exactly what `.chapter-page` is. The page is laid underneath at `PAGE_LAID`,
+by which time the panels have the window covered, and the canvas is taken away at the
+end — both are black by then, so there is nothing to see in the swap.
+
+Why a *standing* lattice rather than the travelling train: **a travelling ring has no
+inside and no outside to fill.** A standing lattice has cells, and cells can be filled one
+at a time, which is the whole of what the owner asked for. It is turned bodily as it goes
+(`MESH_SPIN`) so it is not a fixed thing merely being lit up.
+
+**The first part is the emphasis, and that is a power.** A panel's weight is taken to
+`1 + MESH_HELD × (1 − 1.55p)`, which starts at about three and comes back to one: for the
+first half of the burst the lattice is **lines on white with the panels barely there**,
+and the black gathers in the second half. It still ends flat black, because the power ends
+at one and `MESH_SETTLE` carries the last of it — from 86% through, every panel finishes
+together whatever its own clock said, so the window is certainly one colour at the end.
+Then `MESH_GO` fades the lattice's own lines off that black over the last quarter, so the
+silver web dissolves into the page rather than being switched off with the canvas.
+
+**A line is never drawn in a colour the ground cannot show.** The lattice crosses a window
+that is white at one end of the burst and black at the other, so every line and node takes
+its colour from `toneAt()` — mixed between the chamber's ink `23,23,15` and the chapter
+page's silver `200,204,212` by **how dark the panel under it has gone**. The same line is
+dark on white as the front reaches it and silver on black behind it.
+
+#### Three things that were wrong on the way, and are worth not repeating
+
+- **`reach = full / flat` overshoots sideways by the whole of `1/flat`.** The old rings
+  used a circle of that radius under a `scale(1, flat)` context, which at a flat ring is
+  six times further out than the window needs — so the lattice was nowhere near arriving
+  when the burst was already half over. It is measured off the **four corners** now: turn
+  each one into the ellipse's own frame and ask how big an ellipse of that shape has to be
+  to hold it.
+- **`scale(1, flat)` on the context squashes the strokes too.** Every line came out
+  thinner across the ring than along it. The flattening is done point by point instead.
+- **A spoke drawn whole runs ahead of the front that is drawing it**, because a band is
+  lit as soon as its *inner* ring is passed. Each spoke is cut at the front.
+
+And one that cost an hour: **`drawWeb` was already taken.** Renaming the new burst
+drawing to `drawWeb` quietly renamed the cursor's own web as well, and because function
+declarations hoist, the *later* definition won — so the burst was calling the cursor's
+function, which ignores its argument and draws nothing. The canvas came up completely
+empty with no error of any kind. The burst's one is `drawMesh` and the cursor's is
+`drawWeb`; do not let those two names meet again.
+
+### The menu is distorted into the middle, not shrunk
+
+Same note, first clause: *"the table disappears in a not so smooth fashion. i think it
+needs to be distorted into the center."* It had been travelling to the suck point and
+scaling to 0.18 with a blur, which is a **shrink** — the shape stayed the same shape the
+whole way. Three things make it a distortion instead, and none of them alone is enough:
+
+- it is **tipped** into a vanishing point (`perspective()` as the first function of its own
+  transform, with a `rotate3d`), so the near edge grows as the far edge goes;
+- it is **drawn out** along the way it is going before it is let go — `scaleX` runs a
+  little over one while `scaleY` is already well under it;
+- the **blur is late and hard** rather than even, so it reads as speed and not as a fade.
+
+**And it takes as long as the wind does.** It ran for 0.92s against a wind of 2.3, so the
+menu had been gone for a second and a half before anything met in the middle — which is
+the other half of why it never read as being pulled in by it. It is 2.1s now, with the
+rows given 1.2s and a stagger of 0.55s, and the rows are squeezed sideways as well as up
+so the table narrows to a line.
 
 ### Both scales read the page, not the contents
 

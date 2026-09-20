@@ -27,6 +27,17 @@ ground.
   is not part of the name**: read whole, every tick came out as "01PREMISE".
 - **Every tick is a link to its own section**, so the rule is a way of getting about and
   not only a readout.
+- **It does not move when the name under it changes.** The rule is a fixed column centred
+  on its *own* height, and the name under it (`.essay-here`) wraps to a second line when a
+  section is called something long — so going from a one-line name to a two-line one used
+  to shift the whole ladder, hairline and all, half a line up the window, and back down
+  again at the next section. The owner found it on The Architecture of Sweat, between
+  *Applying the Framework* and *Every Combination*: a jump of exactly 8px, measured.
+  `holdName()` now reserves the room **the tallest name this page actually has** needs,
+  measured off the page rather than guessed at, so no heading is ever clipped and the rule
+  never moves whatever the piece is called. It is measured again on resize (width is what
+  changes the wrapping) and again on `document.fonts.ready`, since the page's own face
+  arrives after the page does and wraps differently from the one the browser starts with.
 
 ## Which section the rule says you are in
 
@@ -113,10 +124,22 @@ is matched against them, falling back to the head of a compound name (`Frankince
 section. If a resin is ever added to the list before its section is written, it renders as
 plain text rather than as a link to nowhere.
 
+## The third theory has a report of its own
+
+`works/theory-03.html` outgrew this one. It is the longest piece on the site and it
+argues in **diagrams** as much as in writing — twenty-two of them, all inline SVG — and it
+is the only place on the site set in a serif. See
+[The Note Dissemination Framework](2026-09-20-the-note-dissemination-framework.md).
+
 ## Known issues / TODO
 
-- **The three theory pages are templates** — real structure, placeholder writing, six
-  sections each. Only `works/resins-in-perfumery.html` carries the owner's own writing
-  (sixteen sections). The standfirsts are placeholders too.
+- **None of the theory pages is a template any more.** `works/theory-01.html`,
+  `works/theory-02.html`, `works/theory-03.html` and `works/resins-in-perfumery.html` all
+  carry the owner's own writing. The two `example-*` files in `works/` are still the
+  templates a new piece is copied from.
+- **Only two of the four carry a standfirst** — the resins research and theory-03. The
+  first two theories have none at all, which is the owner's to write or to leave.
+- **Every plate on all four is still a hatched placeholder**, with its `<img>` commented
+  out waiting for a file.
 - The rule is built from the sections in the markup, so a page whose writing arrives
   with a different number of sections needs nothing done to it.

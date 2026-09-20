@@ -11,6 +11,7 @@ was undone later by someone who didn't know why it was made.
 
 | date | entry | what it covers |
 |---|---|---|
+| 2026-09-20 | [The Note Dissemination Framework](features/2026-09-20-the-note-dissemination-framework.md) | the third theory: twenty-two inline-SVG diagrams, a graph, and the only serif on the site |
 | 2026-09-18 | [The Photography page](features/2026-09-18-the-photography-page.md) | the second Other page, laid out the way a photographer lays out work |
 | 2026-09-18 | [The Pineward gallery](features/2026-09-18-the-pineward-gallery.md) | the owner's own photographs at the foot of Pineward, and the viewer they open into |
 | 2026-09-17 | [A folder of pictures per house and category](features/2026-09-17-images-folder-per-house.md) | how `images/` is laid out, and why the link test won't catch a broken picture path |

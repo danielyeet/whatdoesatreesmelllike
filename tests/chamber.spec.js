@@ -433,11 +433,19 @@ test("the near half of the disc is still drawn while the ring winds in",
     .toBeGreaterThan(0.9);
 });
 
-/* THE WAVE GOES OUT IN THE RING'S OWN PLANE. The owner asked for the
-   explosion to be "parallel to the ring" rather than a circle square to
-   the screen, so the page is cut out with an ellipse at the orbit's own
-   angle and flatness. Measured off the cut itself: a circle's bounding
-   box is square, and this one must not be. */
+/* THE EXPLOSION GOES OUT IN THE RING'S OWN PLANE. The owner asked for
+   it to be "parallel to the ring" rather than a circle square to the
+   screen, so the mesh is a family of ellipses at the orbit's own angle
+   and flatness. Measured off the INK: a circle's bounding box is
+   square, and this one must not be.
+
+   IT USED TO BE MEASURED OFF THE CUT — the page was opened out of
+   black with a polygon clip-path, and this test read that polygon's
+   corners. The owner then asked for the black part of the explosion to
+   be removed, so there is no clip-path and no `clipTo` any more: what
+   turns the window over is the mesh's own panels darkening. So the
+   reading is taken from the canvas the mesh is drawn on, which is the
+   same claim about the same shape. */
 test("the explosion is an ellipse lying in the ring's plane, not a circle",
   async ({ page }) => {
   await page.goto(PAGE);
@@ -446,53 +454,97 @@ test("the explosion is an ellipse lying in the ring's plane, not a circle",
   await openMenu(page);
   await page.locator(".chamber-chapter").first().click();
 
-  /** The bounding box of a `polygon(...)` cut, or null if it is not one. */
-  const boxOf = (clip) => {
-    if (!clip || clip.indexOf("polygon") !== 0) return null;
-    const pts = clip.slice(8, -1).split(",")
-      .map((one) => one.trim().split(/\s+/).map(parseFloat));
-    if (pts.length < 8) return null;
-    const xs = pts.map((one) => one[0]), ys = pts.map((one) => one[1]);
-    return {
-      wide: Math.max.apply(null, xs) - Math.min.apply(null, xs),
-      tall: Math.max.apply(null, ys) - Math.min.apply(null, ys),
-    };
-  };
+  // THE BOUNDING BOX OF WHAT IS ACTUALLY INKED on the mesh's canvas.
+  // Sampled on a coarse grid because this runs ninety times and reading
+  // every pixel of a full-window canvas ninety times is the test, not
+  // the page.
+  const inkBox = async () => page.locator(".chapter-rings").evaluate((el) => {
+    const g = el.getContext("2d");
+    if (!el.width || !el.height) return null;
+    const im = g.getImageData(0, 0, el.width, el.height).data;
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, seen = 0;
+    const step = 4;
+    for (let y = 0; y < el.height; y += step) {
+      for (let x = 0; x < el.width; x += step) {
+        if (im[(y * el.width + x) * 4 + 3] > 8) {
+          seen++;
+          if (x < x0) x0 = x;
+          if (x > x1) x1 = x;
+          if (y < y0) y0 = y;
+          if (y > y1) y1 = y;
+        }
+      }
+    }
+    return seen < 40 ? null : { wide: x1 - x0, tall: y1 - y0 };
+  });
 
-  // CAUGHT ONCE IT HAS ACTUALLY OPENED, and the gate is the cut's own
-  // EXTENT. The cut is written at nothing first — that is what keeps the
-  // black off the window until the hub has gone out ahead of it — and it
-  // grows from there, so for the first frames it is a polygon with a
-  // real shape and almost no size. An earlier gate counted how many
-  // distinct coordinates the polygon had, which a cut a few pixels
-  // across can pass; it let one through that was too small to measure
-  // and the test failed only under the load of a full run. What is
-  // wanted is a cut wide enough to have a shape, and the widest reading
-  // seen is the one kept, so a slow run that samples it late is no worse
-  // off than a quick one.
+  // CAUGHT WHILE IT IS STILL INSIDE THE WINDOW. The mesh starts at
+  // nothing and ends by covering everything, and once it has covered
+  // everything its bounding box is the window's and says nothing about
+  // its shape. So the widest reading that is still comfortably inside
+  // the window is the one kept.
+  const win = await page.evaluate(() => [window.innerWidth, window.innerHeight]);
   let box = null;
   for (let n = 0; n < 90; n++) {
-    await page.waitForTimeout(80);
-    const now = boxOf(await page.locator(".chapter-page")
-      .evaluate((el) => el.style.clipPath));
+    await page.waitForTimeout(60);
+    const now = await inkBox();
     if (!now) continue;
+    if (now.wide > win[0] * 0.92 || now.tall > win[1] * 0.92) break;
     if (!box || now.wide > box.wide) box = now;
-    if (box.wide > 400) break;
   }
-  expect(box, "the page should be cut out by a polygon").toBeTruthy();
-  expect(box.wide, "the cut should have opened far enough to have a shape")
+  expect(box, "the mesh should have inked its canvas").toBeTruthy();
+  expect(box.wide, "the mesh should have opened far enough to have a shape")
     .toBeGreaterThan(120);
   expect(Math.min(box.wide, box.tall) / Math.max(box.wide, box.tall),
     `a circle would come out square: ${Math.round(box.wide)}x${Math.round(box.tall)}`)
-    .toBeLessThan(0.85);
+    .toBeLessThan(0.9);
 
   // And the flatness it was given is the orbit's own, not a made-up one.
-  // Read off the WAVE, which stands outside the page it opens so that it
-  // can go out over the chamber's white a beat before the black does.
+  // Read off the WAVE, which stands outside the page it opens so that
+  // its shells can bend the chamber underneath.
   const flat = await page.locator(".chapter-wave")
     .evaluate((el) => parseFloat(el.style.getPropertyValue("--wave-flat")));
   expect(flat).toBeGreaterThan(0.15);
   expect(flat).toBeLessThan(0.95);
+});
+
+/* AND NOTHING CUTS THE PAGE OPEN ANY MORE. The owner asked for the
+   black part of the explosion to be removed: the mesh's panels darken
+   to the chapter page's own black instead, and the page is laid under
+   them once they have the window. A clip-path back on .chapter-page
+   would be the old behaviour returning. */
+test("the chapter page is never cut open, it is laid under the mesh",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await page.waitForTimeout(3000);
+  await openMenu(page);
+  await page.locator(".chamber-chapter").first().click();
+
+  const cuts = [];
+  for (let n = 0; n < 70; n++) {
+    await page.waitForTimeout(80);
+    cuts.push(await page.locator(".chapter-page").evaluate((el) => ({
+      inline: el.style.clipPath || "",
+      used: getComputedStyle(el).clipPath,
+      shown: !el.hidden,
+    })));
+    if (cuts[cuts.length - 1].shown) break;
+  }
+  const cut = cuts.find((one) => one.inline.indexOf("polygon") === 0 ||
+    (one.used && one.used !== "none"));
+  expect(cut, `the page was cut open: ${JSON.stringify(cut)}`).toBeFalsy();
+
+  // And when it does arrive, the mesh has the window covered — so there
+  // is nothing to see in the swap.
+  await expect(page.locator(".chapter-page")).toBeVisible();
+  const black = await page.locator(".chapter-rings").evaluate((el) => {
+    const g = el.getContext("2d");
+    const im = g.getImageData(Math.round(el.width / 2), Math.round(el.height * 0.08), 1, 1).data;
+    return im[3] / 255;
+  });
+  expect(black, "the mesh should have the top of the window covered by then")
+    .toBeGreaterThan(0.75);
 });
 
 test("a chapter's page carries its writing, and its favourites as cards",

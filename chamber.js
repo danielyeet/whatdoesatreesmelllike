@@ -655,15 +655,16 @@
   // the chapter's own black, opened out by the wave, and these two are
   // the shells going out ahead of it.
   //
-  // AHEAD OF IT is the point, and it is why this is its own element
-  // rather than the first thing inside `chapterPage`. The owner asked
-  // for the centre's effect "on the background emitted just before the
-  // black explosion" — and for a round it could not be, because the
-  // shells lived INSIDE the page and the page is cut open from nothing:
-  // whatever the shells did in the first moments was clipped away with
-  // everything else, so the two could only ever arrive together. Out
-  // here they go out over the chamber's own white, and the black
-  // follows them (`WAVE_LEAD`).
+  // OUTSIDE THE PAGE is the point, and it is why this is its own element
+  // rather than the first thing inside `chapterPage`. It has to bend
+  // the CHAMBER — the white page, its word and its orbit — which it
+  // cannot do from inside a page laid over the top of all that.
+  //
+  // (It was also what made the shells possible at all when the page was
+  // still cut open out of black: inside `chapterPage` everything they
+  // did in the first moments was clipped away with the rest of it. That
+  // cut is gone now — see the note above the mesh constants — but out
+  // here is still where they belong.)
   const chapterWave = document.createElement("div");
   chapterWave.className = "chapter-wave";
   chapterWave.setAttribute("aria-hidden", "true");
@@ -816,8 +817,7 @@
   // launched again from the injectors.
   // ============================================================
   const BURST_WIND = 2.3;      // closing on the middle, and fading with it
-  const BURST_WAVE = 1.65;     // the hub going out, and the page it opens
-  const WAVE_LEAD = 0.34;      // the share of that the hub has to itself first
+  const BURST_WEB = 2.45;      // and the web going out, which is the whole rest of it
   const BURST_CLOSE = 2.6;     // how sharply it gains on the middle (a power)
   const BURST_TURNS = 1.15;    // turns the ring ADDS on the way in, over its own
   const BURST_SPIN = 2.5;      // and how much of that is saved for the end (a power)
@@ -828,34 +828,62 @@
   const LOOSE_SPAN = [0.3, 0.62];  // and how long its own fall then takes
   const LOOSE_COAST = 0.55;    // how long it keeps going the way it was, in seconds
   const MARKS_FADE = 1.25;     // the drawing's own chrome going, with the rest of it
-  // CORNERS IN THE FIGURE THE PAGE IS CUT OUT WITH. It was twelve, and
-  // twelve straight sides opening across a whole window is the one
-  // thing in this burst that read as CHOPPY — the owner asked for it
-  // smoother while the geometry got more complex, and those are not in
-  // conflict: the geometry is the ink, and the ink is a lattice now.
-  // The cut is what the black arrives on, and it should arrive
-  // smoothly. Forty-eight still is not a circle — the facets are there
-  // if you look — but nothing in it steps.
-  const CLIP_ROUND = 48;
-  // THE RINGS — the drawn half of the wave. A train of faceted figures
-  // going out one behind another, not one ring on its own.
-  const RING_MANY = 14;        // how many figures are in the train
-  const RING_LAG = 0.031;      // and how far behind one another they set off
-  const RING_SIDES = 24;       // facets, twice the count the page is cut with
-  const RING_TURN = 0.021;     // each one stood a little off the last, in turns
-  const RING_SPOKE = 24;       // spokes struck out through the train
-  const RING_INK = 0.62;       // how plainly the leading figure is drawn
-  // THE NODES. A corner of a figure is a node, and the nodes of
-  // neighbouring figures are strung together — which is what turns a
-  // set of rings into a lattice. The owner asked for "way more
-  // nodes/particles and lines... complex AND SMOOTH", and the smooth
-  // half of that is why the figures are drawn as SPLINES through their
-  // corners rather than as straight runs between them: at twenty-four
-  // sides a polygon reads as a slightly lumpy circle, and a spline
-  // through the same corners reads as a shape.
-  const RING_NODE = 1.7;       // how big a node is drawn, in pixels
-  const RING_TIE = 5;          // every nth figure is tied to the one behind it
-  const RING_BOW = 0.055;      // how far a figure's sides bow out, as a share of it
+
+  // ============================================================
+  // THE MESH — AND THERE IS NO BLACK BEHIND IT ANY MORE
+  //
+  // The explosion used to be two things arriving one after the other: a
+  // train of rings travelling out, and a black ellipse cut open from
+  // the same point a beat later (`WAVE_LEAD`, `clipTo`, `CLIP_ROUND`).
+  // The owner asked for the black to go, for the geometry to be
+  // COMPLETE rather than covered over half way across the window, and
+  // for the panels of the drawing itself to "start turning blacker and
+  // blacker until they match the colour of the page that results at the
+  // end of the explosion".
+  //
+  // So the two are one thing now. What goes out is a LATTICE standing
+  // in the orbit's plane — rings crossed by spokes, the cells between
+  // them its PANELS — and a front travelling outward through it. Ahead
+  // of the front the lattice is not there at all; the front itself is
+  // the brightest of it; and behind the front every panel it has passed
+  // darkens on a clock of its own until it is the chapter page's own
+  // black. The drawing does not get covered up by the page: the drawing
+  // BECOMES the page.
+  //
+  // That is why nothing here clips anything. The chapter page is laid
+  // underneath once the panels have the window covered (`PAGE_LAID`),
+  // and the canvas is simply taken away at the end — both are black by
+  // then, so there is nothing to see in the swap.
+  //
+  // WHY THE LATTICE STANDS STILL AND THE FRONT MOVES THROUGH IT. A
+  // travelling ring has no inside and no outside to fill; a standing
+  // lattice has cells that can be filled one at a time, which is the
+  // whole of what the owner asked for. It is turned bodily as it goes
+  // (`WEB_SPIN`) so it is not a fixed thing being lit up.
+  // ============================================================
+  const MESH_RINGS = 19;        // rings in the lattice, out to the corner
+  const MESH_SIDES = 40;        // spokes, and so the facets of every ring
+  const MESH_OVER = 1.52;       // how far past the corner the front runs, so nothing is left pale
+  const MESH_SOFT = 0.33;       // how long a panel takes to go black, as a share of the reach
+  const MESH_VARY = 0.15;       // how much a panel's own clock differs from its neighbours'
+  const MESH_SETTLE = 0.86;     // and from here every panel finishes together, whatever its clock
+  const MESH_GO = 0.74;         // and from here the lattice itself fades off the black
+  const MESH_LEAD = 4;          // faceted figures travelling at the front
+  const MESH_LAG = 0.055;       // how far behind one another they run
+  const MESH_LIT = 1;           // how brightly the lattice is struck as the front crosses it
+  const MESH_KEEP = 0.34;       // and how much of it is kept once the front is past
+  const MESH_HELD = 2.1;        // how far the panels are held back early on (a power)
+  const MESH_NODE = 1.7;        // a mark at every crossing, in pixels
+  const MESH_BOW = 0.05;        // how far a ring bows off true, as a share of it
+  const MESH_SPIN = 0.17;       // turns the whole lattice makes on the way out
+  const MESH_STEPS = 24;        // panels are filled in this many bands of one weight
+  const PAGE_LAID = 0.82;      // when the chapter page goes under the web
+  // The two ends the panels travel between: the chamber's own ink on
+  // its white, and the silver of the page the burst opens. A line is
+  // mixed between them by how black the panel under it has gone, so the
+  // lattice is never drawn in a colour the ground cannot show.
+  const MESH_INK = [23, 23, 15];
+  const MESH_SILVER = [200, 204, 212];
 
   /** Null, or the burst that is running / the chapter that is open. */
   let burst = null;
@@ -949,24 +977,34 @@
     return out;
   }
 
-  /** THE RINGS, DRAWN. `p` runs 0 to 1 across the whole wave.
+  /** THE MESH, DRAWN. `p` runs 0 to 1 across the whole of the explosion.
 
-      This is the half of the wave that is ink rather than distortion,
-      and it is what the owner meant by "more complex... more
-      mechanical". One ring going out on its own reads as a ripple in a
-      pond; what is here is a TRAIN of them — seven faceted figures set
-      off one behind another, each stood a little off the one before it
-      so their corners never line up — with spokes struck through the
-      train from the middle, and the whole thing lying in the orbit's
-      own plane. The angle and the flatness are the ones already
-      measured for the wave; the owner said those were right, so nothing
-      here recomputes them.
+      (It is the MESH and not the web: `drawWeb` further down is the
+      cursor's own lines, which this page has had all along.)
 
-      Drawn rather than built out of elements because seven turned
-      polygons with a rotation each is seven transforms and seven
-      repaints a frame, and because a canvas can carry the spokes
-      between them, which no arrangement of boxes can. */
-  function drawRings(p) {
+      One canvas, one movement, three things on it:
+
+        THE PANELS   the cells of the lattice, each going from nothing
+                     to the chapter page's black once the front has
+                     passed it, every one on a clock slightly its own so
+                     the black arrives cell by cell rather than as a
+                     ring. This is what the owner asked for in place of
+                     the black that used to be cut open underneath.
+        THE LINES    the rings and the spokes, struck brightly as the
+                     front crosses them and then kept faintly. Their
+                     colour is mixed from the chamber's ink to the
+                     page's silver by how dark the panel beneath them
+                     has gone, so a line is always visible on whatever
+                     is under it at that moment.
+        THE FRONT    the leading figures, drawn as splines through their
+                     own corners — the explosion proper, and the part
+                     the owner asked to have emphasised.
+
+      Drawn rather than built out of elements because there are four
+      hundred panels and as many crossings on the window at once, and
+      because the spokes run between the rings, which no arrangement of
+      boxes can do. */
+  function drawMesh(p) {
     const ring = burst.ring;
     if (!ring || !width || !height) return;
     // No setTransform here: `size()` sets this canvas's scale with every
@@ -974,128 +1012,264 @@
     paintRings.clearRect(0, 0, width, height);
     if (p <= 0) return;
 
-    const wide = Math.max(ring.x, width - ring.x);
-    const tall = Math.max(ring.y, height - ring.y);
-    const full = Math.hypot(wide, tall) + 60;
-    const dark = page.classList.contains("chapter-open");
-    const tone = dark ? "200,204,212" : "23,23,15";
-    const reach = full / ring.flat;
+    // HOW FAR THE LATTICE HAS TO GO TO COVER THE WINDOW, in its own
+    // plane. It is a family of ellipses lying at `ring.turn` and
+    // pressed to `ring.flat`, so this is asked of the four corners
+    // directly: turn each one into the ellipse's own frame and ask how
+    // big an ellipse of that shape has to be to hold it. Taking a
+    // circle of `full / flat` instead — which is what the old rings
+    // did — overshoots sideways by the whole of 1/flat, and at a flat
+    // ring that is six times further than the window needs, which is
+    // why the lattice used to be a long way from arriving when the
+    // burst was already half over.
+    const cw = Math.cos(ring.turn), sw = Math.sin(ring.turn);
+    let need = 0;
+    for (let i = 0; i < 4; i++) {
+      const dx = (i & 1 ? width : 0) - ring.x;
+      const dy = (i & 2 ? height : 0) - ring.y;
+      const u = dx * cw + dy * sw;
+      const v = -dx * sw + dy * cw;
+      need = Math.max(need, Math.hypot(u, v / ring.flat));
+    }
+    const reach = need * 1.04 + 24;
+    const eased = ease(p);
+    const front = reach * eased * MESH_OVER;
+    // From MESH_SETTLE on, every panel finishes together whatever its own
+    // clock said — so the window is certainly one flat black at the end,
+    // which is what the page underneath is.
+    const settle = Math.max(0, (p - MESH_SETTLE) / (1 - MESH_SETTLE));
+    // THE LATTICE GOES, AND THE BLACK STAYS. Once the panels have the
+    // window the lines are silver on black, which is the chapter page's
+    // own pair — so they are taken off gently over the last of the
+    // burst rather than being switched off with the canvas at the end
+    // of it. The panels are not touched by this: they are the page.
+    const lines = 1 - Math.max(0, Math.min(1, (p - MESH_GO) / (1 - MESH_GO)));
 
+    // TURNED, BUT NOT SQUASHED. The flattening is done point by point
+    // below rather than with `scale(1, flat)` on the context: a scaled
+    // context squashes the STROKES too, so every line came out thinner
+    // across the ring than along it.
     paintRings.save();
     paintRings.translate(ring.x, ring.y);
-    paintRings.rotate(ring.turn);
-    paintRings.scale(1, ring.flat);
+    paintRings.rotate(ring.turn + burst.way * eased * MESH_SPIN * Math.PI * 2);
     paintRings.lineJoin = "round";
     paintRings.lineCap = "round";
 
-    // WHERE EVERY FIGURE STANDS, AND HOW HARD, worked out once so the
-    // lattice below can tie one to another without doing it twice.
-    const at = [];
-    for (let n = 0; n < RING_MANY; n++) {
-      const own = (p - n * RING_LAG) / Math.max(0.05, 1 - n * RING_LAG);
-      if (own <= 0 || own >= 1) { at.push(null); continue; }
-      at.push({
-        r: reach * ease(own),
-        ink: RING_INK * (1 - own) * (1 - n / (RING_MANY + 2)),
-        turn: n * RING_TURN * Math.PI * 2 + burst.way * own * 0.22,
-      });
+    // THE LATTICE ITSELF. The rings stand at fixed radii and the bow is
+    // a function of the ANGLE alone, so two neighbouring rings share
+    // their corners exactly and the cells between them tile with no
+    // seams — which they would not if each ring bowed on its own.
+    const flat = ring.flat;
+    const bow = (a) => 1 + Math.sin(a * 3) * MESH_BOW;
+    const ang = [];
+    const cosA = [], sinA = [], bowA = [];
+    for (let k = 0; k <= MESH_SIDES; k++) {
+      const a = (k / MESH_SIDES) * Math.PI * 2;
+      ang.push(a); cosA.push(Math.cos(a)); sinA.push(Math.sin(a)); bowA.push(bow(a));
     }
-
-    // A figure's corner, in the plane. The bow is what stops
-    // twenty-four straight sides reading as a lumpy circle.
-    const corner = (one, k) => {
-      const a = (k / RING_SIDES) * Math.PI * 2 + one.turn;
-      const r = one.r * (1 + Math.sin(a * 3 + one.turn * 2) * RING_BOW);
-      return [Math.cos(a) * r, Math.sin(a) * r];
+    const rAt = [];
+    for (let i = 0; i <= MESH_RINGS; i++) {
+      // A shade compressed outwards, so a cell near the rim is not four
+      // times the cell at the middle — and the first ring stands a
+      // little way out rather than at nothing, or the innermost cells
+      // are forty long splinters meeting at a point.
+      rAt.push(reach * (0.035 + 0.965 * Math.pow(i / MESH_RINGS, 0.86)));
+    }
+    const at = (i, k) => {
+      const r = rAt[i] * bowA[k];
+      return [cosA[k] * r, sinA[k] * r * flat];
     };
 
-    // THE SPOKES, struck from the middle out through the whole train.
-    const lead = Math.max(0, Math.min(1, p));
-    const out = reach * ease(lead);
-    if (out > 12) {
-      paintRings.globalAlpha = 0.17 * (1 - lead);
-      paintRings.strokeStyle = "rgba(" + tone + ",1)";
+    // HOW BLACK A PANEL HAS GONE. Its own clock is a stable scatter off
+    // its place in the lattice — the same cell answers the same way
+    // every time, so the filling-in has a pattern rather than a fizz.
+    const soft = reach * MESH_SOFT;
+    const clock = (i, k) => {
+      const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    // AND THEY ARE HELD BACK EARLY ON. The owner asked for the first
+    // part of the explosion to be the emphasis and for the black to
+    // arrive afterwards, so a panel's weight is taken to a power that
+    // starts high and comes back to one: for the first half of the
+    // burst the lattice is lines on white with the panels barely there,
+    // and the black gathers in the second half. It still ends at a flat
+    // black, because the power ends at one and `settle` carries the
+    // last of it.
+    const held = 1 + MESH_HELD * Math.max(0, 1 - p * 1.55);
+    const darkAt = (i, k) => {
+      const rm = (rAt[i] + rAt[i + 1]) / 2;
+      const own = (front - rm) / soft - clock(i, k) * MESH_VARY;
+      const d = Math.max(0, Math.min(1, own));
+      return Math.max(settle, Math.pow(d, held));
+    };
+
+    // THE PANELS, in bands of one weight. Four hundred separate fills a
+    // frame is four hundred paths; gathered into MESH_STEPS weights it is
+    // at most twenty-six, and at a twenty-sixth of black nobody can see
+    // the step.
+    const bands = [];
+    for (let n = 0; n <= MESH_STEPS; n++) bands.push(null);
+    for (let i = 0; i < MESH_RINGS; i++) {
+      for (let k = 0; k < MESH_SIDES; k++) {
+        const d = darkAt(i, k);
+        if (d <= 0.004) continue;
+        const n = Math.min(MESH_STEPS, Math.round(d * MESH_STEPS));
+        if (!bands[n]) bands[n] = new Path2D();
+        const c0 = at(i, k), c1 = at(i, k + 1);
+        const c2 = at(i + 1, k + 1), c3 = at(i + 1, k);
+        const path = bands[n];
+        path.moveTo(c0[0], c0[1]);
+        path.lineTo(c1[0], c1[1]);
+        path.lineTo(c2[0], c2[1]);
+        path.lineTo(c3[0], c3[1]);
+        path.closePath();
+      }
+    }
+    paintRings.fillStyle = "#000";
+    for (let n = 1; n <= MESH_STEPS; n++) {
+      if (!bands[n]) continue;
+      paintRings.globalAlpha = n / MESH_STEPS;
+      paintRings.fill(bands[n]);
+    }
+
+    // AND THE MIDDLE OF IT. The first ring stands a little way out from
+    // nothing (see rAt), so without this there is a small clear hole
+    // left at the point the whole burst came from — which is the one
+    // place on the window that should certainly be black.
+    const core0 = darkAt(0, 0);
+    if (core0 > 0.004) {
+      paintRings.globalAlpha = core0;
+      paintRings.beginPath();
+      paintRings.ellipse(0, 0, rAt[0] * 1.06, rAt[0] * 1.06 * flat, 0, 0, Math.PI * 2);
+      paintRings.fill();
+    }
+
+    // HOW BRIGHTLY A RING IS STRUCK, and in what colour — both read off
+    // the front and off the black beneath it.
+    const strike = (r) => {
+      const t = (front - r) / (reach * 0.3);
+      if (t <= 0) return 0;
+      return MESH_LIT * Math.exp(-t * 1.9) + MESH_KEEP * Math.min(1, t * 2);
+    };
+    const toneAt = (d) => {
+      const r = Math.round(MESH_INK[0] + (MESH_SILVER[0] - MESH_INK[0]) * d);
+      const g = Math.round(MESH_INK[1] + (MESH_SILVER[1] - MESH_INK[1]) * d);
+      const b = Math.round(MESH_INK[2] + (MESH_SILVER[2] - MESH_INK[2]) * d);
+      return "rgb(" + r + "," + g + "," + b + ")";
+    };
+    const darkOn = (i) => {
+      const rm = rAt[Math.min(MESH_RINGS - 1, i)];
+      return Math.max(settle, Math.max(0, Math.min(1, (front - rm) / soft)));
+    };
+
+    // THE SPOKES, struck from the middle out as far as the front has
+    // got. Drawn in short runs so each run takes the colour of the
+    // ground it is actually lying on.
+    paintRings.lineWidth = 1;
+    for (let i = 0; i < MESH_RINGS; i++) {
+      const lit = strike(rAt[i]);
+      if (lit <= 0.01) continue;
+      // A spoke stops where the front has got to, and no further: a
+      // band is lit as soon as its INNER ring is passed, so drawing it
+      // whole put lines out ahead of the thing drawing them.
+      const stop = Math.min(rAt[i + 1], front);
+      if (stop <= rAt[i]) continue;
+      const cut = (rAt[i + 1] - rAt[i]) > 0
+        ? (stop - rAt[i]) / (rAt[i + 1] - rAt[i]) : 0;
+      // Forty spokes meeting at a point is a starburst rather than a
+      // web, so the innermost bands are drawn quietly and the lattice
+      // only comes up to weight once there is room between them.
+      const near = Math.min(1, rAt[i] / (reach * 0.2));
+      paintRings.globalAlpha = Math.min(1, lit * 0.62 * (0.22 + 0.78 * near)) * lines;
+      paintRings.strokeStyle = toneAt(darkOn(i));
+      paintRings.beginPath();
+      for (let k = 0; k < MESH_SIDES; k++) {
+        const a = at(i, k), b2 = at(i + 1, k);
+        paintRings.moveTo(a[0], a[1]);
+        paintRings.lineTo(a[0] + (b2[0] - a[0]) * cut, a[1] + (b2[1] - a[1]) * cut);
+      }
+      paintRings.stroke();
+    }
+
+    // THE RINGS, each a smooth curve THROUGH its own crossings rather
+    // than straight runs between them — at thirty-two sides a polygon
+    // reads as a slightly lumpy circle, and a spline through the same
+    // points reads as a shape.
+    for (let i = 1; i <= MESH_RINGS; i++) {
+      const lit = strike(rAt[i]);
+      if (lit <= 0.01) continue;
+      paintRings.globalAlpha = Math.min(1, lit) * lines;
+      paintRings.strokeStyle = toneAt(darkOn(i));
       paintRings.lineWidth = 1;
       paintRings.beginPath();
-      for (let n = 0; n < RING_SPOKE; n++) {
-        const a = (n / RING_SPOKE) * Math.PI * 2 + burst.way * lead * 0.3;
-        paintRings.moveTo(Math.cos(a) * out * 0.2, Math.sin(a) * out * 0.2);
-        paintRings.lineTo(Math.cos(a) * out, Math.sin(a) * out);
-      }
-      paintRings.stroke();
-    }
-
-    // THE LATTICE: every RING_TIE-th figure joined corner to corner
-    // with the one behind it, so the train reads as one structure
-    // travelling rather than as rings that happen to be near each
-    // other.
-    paintRings.lineWidth = 1;
-    for (let n = RING_TIE; n < RING_MANY; n += RING_TIE) {
-      const one = at[n], two = at[n - RING_TIE];
-      if (!one || !two) continue;
-      paintRings.globalAlpha = Math.min(one.ink, two.ink) * 0.5;
-      paintRings.strokeStyle = "rgba(" + tone + ",1)";
-      paintRings.beginPath();
-      for (let k = 0; k < RING_SIDES; k++) {
-        const a = corner(one, k), b = corner(two, k);
-        paintRings.moveTo(a[0], a[1]);
-        paintRings.lineTo(b[0], b[1]);
-      }
-      paintRings.stroke();
-    }
-
-    // THE FIGURES, drawn as a smooth curve THROUGH their corners
-    // rather than as straight runs between them — the midpoint of two
-    // corners is the on-curve point and the corner itself is the
-    // control, which is the cheapest way there is to round a polygon
-    // without rounding away its facets.
-    for (let n = 0; n < RING_MANY; n++) {
-      const one = at[n];
-      if (!one || one.r < 3) continue;
-      paintRings.globalAlpha = one.ink;
-      paintRings.strokeStyle = "rgba(" + tone + ",1)";
-      paintRings.lineWidth = n === 0 ? 1.5 : 1;
-      paintRings.beginPath();
-      let was = corner(one, RING_SIDES - 1);
-      let here = corner(one, 0);
+      let was = at(i, MESH_SIDES - 1), here = at(i, 0);
       paintRings.moveTo((was[0] + here[0]) / 2, (was[1] + here[1]) / 2);
-      for (let k = 0; k < RING_SIDES; k++) {
-        here = corner(one, k);
-        const next = corner(one, k + 1);
+      for (let k = 0; k < MESH_SIDES; k++) {
+        here = at(i, k);
+        const next = at(i, k + 1);
         paintRings.quadraticCurveTo(here[0], here[1],
           (here[0] + next[0]) / 2, (here[1] + next[1]) / 2);
       }
       paintRings.stroke();
 
-      // THE NODES — a mark at every corner of every figure. This is
-      // most of what the owner meant by more particles: fourteen
-      // figures of twenty-four corners is three hundred and thirty-six
-      // of them on the window at once.
-      paintRings.globalAlpha = one.ink * 1.25;
-      paintRings.fillStyle = "rgba(" + tone + ",1)";
+      // A MARK AT EVERY CROSSING. Thirteen rings of thirty-two is four
+      // hundred and sixteen of them, which is most of what the owner
+      // meant by weblike.
+      paintRings.globalAlpha = Math.min(1, lit * 1.3) * lines;
+      paintRings.fillStyle = toneAt(darkOn(i));
       paintRings.beginPath();
-      for (let k = 0; k < RING_SIDES; k++) {
-        const c = corner(one, k);
-        paintRings.moveTo(c[0] + RING_NODE, c[1]);
-        paintRings.arc(c[0], c[1], RING_NODE, 0, Math.PI * 2);
+      for (let k = 0; k < MESH_SIDES; k++) {
+        const c = at(i, k);
+        paintRings.moveTo(c[0] + MESH_NODE, c[1]);
+        paintRings.arc(c[0], c[1], MESH_NODE, 0, Math.PI * 2);
       }
       paintRings.fill();
+    }
+
+    // THE FRONT — the figures actually travelling, drawn over the
+    // lattice they are lighting. This is the part of it the owner asked
+    // to have emphasised, so it is the one thing here drawn at full
+    // weight, and it runs the whole width of the window rather than
+    // being cut off half way.
+    for (let n = 0; n < MESH_LEAD; n++) {
+      const own = eased - n * MESH_LAG;
+      if (own <= 0) continue;
+      const r = reach * own * MESH_OVER;
+      if (r < 6) continue;
+      const d = Math.max(settle, Math.max(0, Math.min(1, (front - r) / soft + 0.35)));
+      paintRings.globalAlpha = Math.max(0, (1 - n / (MESH_LEAD + 1)) * (1 - eased * 0.55)) * lines;
+      paintRings.strokeStyle = toneAt(d);
+      paintRings.lineWidth = n === 0 ? 1.6 : 1;
+      paintRings.beginPath();
+      const edge = (k) => [cosA[k] * r * bowA[k], sinA[k] * r * bowA[k] * flat];
+      let was = edge(MESH_SIDES - 1);
+      let here = edge(0);
+      paintRings.moveTo((was[0] + here[0]) / 2, (was[1] + here[1]) / 2);
+      for (let k = 0; k < MESH_SIDES; k++) {
+        here = edge(k);
+        const next = edge(k + 1);
+        paintRings.quadraticCurveTo(here[0], here[1],
+          (here[0] + next[0]) / 2, (here[1] + next[1]) / 2);
+      }
+      paintRings.stroke();
 
       // And a tick out past every corner of the leading figure — the
       // instrument mark the rest of this site measures things with.
       if (n === 0) {
-        paintRings.globalAlpha = one.ink * 0.85;
+        paintRings.globalAlpha *= 0.85;
         paintRings.lineWidth = 1;
         paintRings.beginPath();
-        for (let k = 0; k < RING_SIDES; k++) {
-          const c = corner(one, k);
+        for (let k = 0; k < MESH_SIDES; k++) {
+          const c = edge(k);
           const far = Math.hypot(c[0], c[1]) || 1;
           paintRings.moveTo(c[0], c[1]);
-          paintRings.lineTo(c[0] * (1 + 9 / far), c[1] * (1 + 9 / far));
+          paintRings.lineTo(c[0] * (1 + 10 / far), c[1] * (1 + 10 / far));
         }
         paintRings.stroke();
       }
     }
+
     paintRings.restore();
     paintRings.globalAlpha = 1;
   }
@@ -1104,28 +1278,6 @@
       and the cut travel together rather than merely at once. */
   function ease(q) {
     return q * q * q * (q * (q * 6 - 15) + 10);
-  }
-
-  /** The page cut out to `p` of the way open, as an ellipse lying in the
-      ring's own plane. A polygon and not `ellipse()`, because a CSS
-      ellipse cannot be turned and this one is turned by definition. */
-  function clipTo(p) {
-    const ring = burst.ring;
-    const wide = Math.max(ring.x, width - ring.x);
-    const tall = Math.max(ring.y, height - ring.y);
-    // Far enough that the SHORT axis clears the furthest corner: it is
-    // the short one that decides when the window is covered.
-    const reach = (Math.hypot(wide, tall) + 40) * p;
-    const a = reach / ring.flat, b = reach;
-    const c = Math.cos(ring.turn), s = Math.sin(ring.turn);
-    const pts = [];
-    for (let n = 0; n < CLIP_ROUND; n++) {
-      const at = (n / CLIP_ROUND) * Math.PI * 2;
-      const ax = Math.cos(at) * a, ay = Math.sin(at) * b;
-      pts.push(Math.round(ring.x + ax * c - ay * s) + "px " +
-               Math.round(ring.y + ax * s + ay * c) + "px");
-    }
-    chapterPage.style.clipPath = "polygon(" + pts.join(",") + ")";
   }
 
   function openChapter(i) {
@@ -1266,7 +1418,6 @@
       row.style.removeProperty("--mid");
     });
     chapterPage.classList.remove("here");
-    chapterPage.style.clipPath = "";
     chapterPage.hidden = true;
     chapterWave.hidden = true;
     // Back into the physics' hands: every particle is fired again from
@@ -1390,25 +1541,26 @@
       chapterCards.appendChild(card);
     });
 
-    // Shut before it is shown, so the black is never on the window at
-    // full size for even one frame.
-    if (REDUCE_MOTION || !burst) chapterPage.style.clipPath = "none";
-    else clipTo(0);
-
+    // NOTHING IS CLIPPED. The page used to be cut open from the point
+    // the particles met, and the whole of that — `clipTo`, CLIP_ROUND,
+    // the clip-path on .chapter-page — is gone: the owner asked for the
+    // black part of the explosion removed, and the web's own panels
+    // turn black in its place. So the page is simply laid under the web
+    // once the web has the window covered, and by then both are black.
     chapterPage.hidden = false;
     page.classList.add("chapter-open");
     chapterPage.classList.add("here");
   }
 
-  /** THE HUB, CAST OUT FROM THE POINT THEY MET — and on its own, a beat
-      before the black follows it.
+  /** THE HUB, CAST OUT FROM THE POINT THEY MET — the first thing out,
+      and the web goes with it.
 
       IN THE RING'S OWN PLANE, not square to the screen: the shape is
       measured off the orbit as it stands (`ringOnScreen`) and handed to
       the stylesheet as four numbers — where its middle is on the window,
       which way its long axis lies, and how flat it is drawn. The shells
-      are turned and pressed to match, and `clipTo` cuts the page out
-      with the same ellipse afterwards. */
+      are turned and pressed to match, and `drawMesh` lays its lattice
+      out in the same plane afterwards. */
   function castWave() {
     if (REDUCE_MOTION) return;
     if (burst && !burst.ring) burst.ring = ringOnScreen();
@@ -1417,6 +1569,10 @@
     chapterWave.style.setProperty("--wave-y", ring.y.toFixed(1) + "px");
     chapterWave.style.setProperty("--wave-turn", ring.turn.toFixed(4) + "rad");
     chapterWave.style.setProperty("--wave-flat", ring.flat.toFixed(4));
+    // The shells ride out with the web rather than on a length of their
+    // own written into the stylesheet, so changing BURST_WEB moves all
+    // of it together.
+    chapterWave.style.setProperty("--wave-ms", (BURST_WEB * 1000).toFixed(0) + "ms");
     chapterWave.hidden = false;
     // THE WAVE IS RE-CUT EVERY TIME. Its shells are CSS animations on
     // elements that are built once, and an animation only plays once
@@ -1440,11 +1596,11 @@
       const p = Math.min(1, burst.at / BURST_WIND);
       windIn(p);
       if (p >= 1) {
-        burst.phase = "wave";
+        burst.phase = "web";
         burst.at = 0;
-        // The hub goes out from the point they met. The chapter is not
-        // laid yet — it follows a beat later, cut out by the same wave
-        // (see `WAVE_LEAD` below).
+        // The web goes out from the point they met, and it is the whole
+        // of the rest of the burst — there is no second beat behind it
+        // any more.
         burst.ring = ringOnScreen();
         shell.classList.add("burst-wave");
         castWave();
@@ -1452,34 +1608,22 @@
       return true;
     }
 
-    // THE WAVE, IN TWO BEATS.
+    // THE WEB, AND NOTHING FOLLOWING IT.
     //
-    //   THE HUB      goes out first, over the chamber's own white, for
-    //                `WAVE_LEAD` of the wave. This is the owner's
-    //                "effect from the central node on the background
-    //                emitted just before the black explosion", and it
-    //                only reads as before if there is nothing black
-    //                under it yet.
-    //   THE BLACK    follows it out, cut with the same ellipse.
-    //
-    // The page is cut open by hand rather than by a CSS transition,
-    // because what cuts it is a turned ellipse and CSS has no turned
-    // ellipse to transition to — see `clipTo`.
-    drawRings(Math.min(1, burst.at / BURST_WAVE));
-    const lead = BURST_WAVE * WAVE_LEAD;
-    if (burst.at >= lead) {
+    // It used to be two beats: the hub going out over the chamber's
+    // white, and then the black cut open behind it (`WAVE_LEAD`). The
+    // owner asked for the black gone, for the geometry to run the whole
+    // way rather than half of it, and for the drawing's own panels to
+    // darken to the colour of the page instead. So there is one
+    // movement now, and the page is laid under it only once the panels
+    // have the window covered.
+    const p = Math.min(1, burst.at / BURST_WEB);
+    drawMesh(p);
+    if (p >= PAGE_LAID && chapterPage.hidden) layChapter(burst.chapter);
+    if (burst.at >= BURST_WEB) {
       if (chapterPage.hidden) layChapter(burst.chapter);
-      const q = Math.min(1, (burst.at - lead) / (BURST_WAVE - lead));
-      // SMOOTHER THAN A CUBIC OUT, which the owner asked for. This is
-      // smootherstep: flat at both ends rather than only at the far one,
-      // so the black neither jumps away from the middle nor stops dead
-      // at the edge of the window — it is one breath out.
-      clipTo(ease(q));
-    }
-    if (burst.at >= BURST_WAVE) {
       burst.phase = "open";
       burst.at = 0;
-      chapterPage.style.clipPath = "none";
       chapterWave.hidden = true;
       paintRings.clearRect(0, 0, width, height);
     }
@@ -2460,7 +2604,7 @@
     }
     if (!drawn) return;
     paintFront.lineWidth = 1;
-    paintFront.strokeStyle = rgba(INK, WEB_INK);
+    paintFront.strokeStyle = rgba(INK, MESH_INK);
     paintFront.stroke();
   }
 
