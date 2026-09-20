@@ -214,9 +214,37 @@ the picture answer the numbers is most of the point of automating them.
 every comparison with a threshold is made on the absolute value. There is a test that
 turns the sign over and checks that nothing but the sign moves.
 
-**It is written `+ / −`, not `±`.** The owner asked for the two halves apart: `±` sets
-them stacked into one glyph and they touch. `.calc-pm` is three characters with air
-between them.
+**The sign's two halves stand apart, and it took two goes.** The owner asked for a
+plus-or-minus "where they don't stick to one another": in the face this page is set in,
+the single `±` character welds its bar to the underside of the plus. The first answer
+was to write it out as `+ / −`, three characters in a row — and that was wrong, because
+they had not asked for a different sign, only for room inside the one they had: *"NO PUT
+IT BACK. I JUST MEANT THAT THE PLUS AND MINUS SHOULD BE SEPARATE."*
+
+What is there now is the plus-or-minus itself, built out of a real `+` set over a real
+`−` in the same face, with the space between them ours to choose. `line-height` is what
+sets that space — both glyphs sit the same height above their own baseline, so the gap
+between them **is** the line height — and `vertical-align` drops the pair back onto the
+maths axis so it sits level with the `=`. It does not depend on any particular font being
+installed, which a face chosen for its `±` would have.
+
+### Nothing is filled in, and nothing goes past a hundred
+
+The calculator opens **completely blank** — no starting numbers in any field, and no
+placeholder standing in for one. Asked for by name. Three things follow from it and all
+three are in the code:
+
+- Every reading, and every line of the working under it, reads `—` until there is
+  something to work with. The signed line of the working is guarded as well, because
+  `+—` is not a thing.
+- **The zone diagram is drawn on its own** rather than filled with a made-up ten notes:
+  `zone()`'s count may now be nought, and an empty circle says "the zone, nothing in it
+  yet" honestly. The default model still draws ten, because there ten is the piece's own
+  illustration rather than a number anybody typed.
+- Every field carries `min="0" max="100"` **and** is clamped in the script as it is typed.
+  The attribute alone is not enough: `max` on a number field only marks it invalid, and
+  the browser will still let a bigger number be typed into it. The clamp is the half that
+  does the work, and the half the test is pointed at.
 
 ### IC and BC are two halves of one hundred
 
@@ -239,7 +267,7 @@ fault.
 npm test -- tests/calculator.spec.js
 ```
 
-Eleven tests. The one worth keeping is **the arithmetic against the owner's own worked
+Twelve tests. The one worth keeping is **the arithmetic against the owner's own worked
 examples**: put Amber Zero's three stages into var. 1 with `n = 13` and the calculator
 has to come back with 0.136, 0.513 and 4.36 — the three numbers the piece works out by
 hand. If the two ever disagree, one of them is wrong and it matters which.
@@ -248,8 +276,15 @@ The others: the change-over being the same page (above); the default model on th
 Xerjoff and Babycat figures; the sign; var. 2 using the stage's own `n`; the review
 window carrying complication 3; a term saying what it is when pointed at; the theory
 being unharmed with the script blocked; **IC and BC pairing to a hundred** (proved against
-the fault); the fractions being stacked and the sign's halves separate; and the number
-fields carrying no steppers.
+the fault); the fractions being stacked and the sign's halves separate; the number
+fields carrying no steppers; and **the fields starting empty and refusing anything above
+a hundred**.
+
+That last one is proved against four separate faults, each put back in turn to watch it
+fail: the welded `±` in place of the two halves (`toHaveCount` 0 instead of 2), the
+halves shut back together (`line-height` 0.28 — measured 0.28 against a floor of 0.45), a
+starting number put back in a field, and the script's clamp taken out so only `max` was
+left holding the ceiling (450 stayed 450).
 
 ## What is the owner's, and what I changed
 

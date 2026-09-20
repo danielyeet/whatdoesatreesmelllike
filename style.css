@@ -6355,15 +6355,23 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   gap: 0.12em;
 }
 .calc-eq-op { color: #8d94a3; padding: 0 0.06em; }
-/* THE SIGN, with its two halves apart. `±` sets the plus and the minus
-   stacked into one glyph and they touch; the owner asked for them
-   separate, so it is three characters with air between them. */
+/* THE SIGN, with its two halves apart. It is a plus-or-minus, but the
+   single `±` character welds its bar to the underside of the plus in
+   the face this page is set in, and the owner asked for them separate.
+   So it is a `+` and a `−` set one over the other in the same face,
+   with the space between them ours to choose. `line-height` is what
+   sets that space: both glyphs sit the same height above their own
+   baseline, so the gap between them IS the line height. Anything near
+   1 reads as two signs stacked; the value below is a plus-or-minus
+   with room in it. */
 .calc-pm {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.1em;
+  line-height: 0.66;
+  vertical-align: -0.08em;
 }
-.calc-pm-or { color: #8d94a3; opacity: 0.8; }
+.calc-pm-half { display: block; }
 /* A TERM SAYS WHAT IT IS WHEN POINTED AT, and the mark that says so is
    an underline UNDER THE LETTERING rather than a border under the box:
    a numerator already has a border under it — the fraction's own rule —

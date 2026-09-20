@@ -244,8 +244,9 @@ test("IC and BC are two halves of one hundred, whichever one is typed in",
 
 /* EVERY FRACTION IS A VERTICAL ONE, and the sign's two halves stand
    apart — both asked for by name. A fraction is a numerator over a rule
-   over a denominator; `±` sets the plus and the minus into one glyph
-   and they touch. */
+   over a denominator; the plus-or-minus is a `+` set over a `−` with
+   air between them, because the single `±` character welds its bar to
+   the underside of the plus in the face this page is set in. */
 test("the fractions are stacked and the sign's halves are separate",
   async ({ page }) => {
   await open(page);
@@ -272,10 +273,24 @@ test("the fractions are stacked and the sign's halves are separate",
   });
   expect(stacked, "the denominator should sit under the numerator").toBe(true);
 
-  // The sign is three glyphs with air between them, not one.
+  // The sign is two characters of its own, not the welded glyph.
   const pm = page.locator('.calc-term[data-say="SIGN"] .calc-pm');
   await expect(pm).toBeVisible();
-  expect((await pm.innerText()).replace(/\s+/g, "")).toBe("+/\u2212");
+  const halves = pm.locator(".calc-pm-half");
+  await expect(halves).toHaveCount(2);
+  expect((await halves.nth(0).innerText()).trim()).toBe("+");
+  expect((await halves.nth(1).innerText()).trim()).toBe("\u2212");
+  expect((await pm.innerText()).indexOf("\u00b1"),
+    "and not the single \u00b1, whose halves touch").toBe(-1);
+  // And they stand apart: the bar's middle sits a good way below the
+  // plus's, measured against the size the sign is set at.
+  const apart = await pm.evaluate((el) => {
+    const two = [...el.querySelectorAll(".calc-pm-half")];
+    const A = two[0].getBoundingClientRect(), B = two[1].getBoundingClientRect();
+    const size = parseFloat(getComputedStyle(el).fontSize);
+    return ((B.top + B.height / 2) - (A.top + A.height / 2)) / size;
+  });
+  expect(apart, "the bar should sit clear of the plus").toBeGreaterThan(0.45);
 
   // The working behind an answer is stacked too.
   expect(await page.locator(".calc-steps .frac").count()).toBeGreaterThan(3);
@@ -291,4 +306,55 @@ test("the number fields carry no up-and-down arrows", async ({ page }) => {
   const look = await page.locator(".calc-input").first()
     .evaluate((el) => getComputedStyle(el).appearance || getComputedStyle(el).MozAppearance);
   expect(look).toBe("textfield");
+});
+
+/* NO NUMBERS UNTIL THEY ARE TYPED, AND NOTHING ABOVE A HUNDRED. Both
+   asked for by name: the calculator opens with every field blank, and
+   no field will take a number past 100.
+
+   `max` on a number input only marks it invalid — the browser still
+   lets a bigger number be typed — so the ceiling is held in the
+   script as well, and that is the half of it worth a test. */
+test("the fields start empty, and nothing above a hundred can be set",
+  async ({ page }) => {
+  await open(page);
+
+  for (const model of ["plain", "v1", "v2"]) {
+    await page.locator('.calc-model[data-model="' + model + '"]').click();
+    await page.waitForTimeout(400);
+    const where = model + ": ";
+
+    const values = await page.$$eval(".calc-input", (all) => all.map((e) => e.value));
+    expect(values.length).toBeGreaterThan(0);
+    expect(values.every((v) => v === ""), where + "every field starts blank").toBe(true);
+    // And nothing stands in for a number that has not been given.
+    const holding = await page.$$eval(".calc-input", (all) => all.map((e) => e.placeholder));
+    expect(holding.every((v) => !v), where + "no placeholder number either").toBe(true);
+    // Nor is anything claimed of the readings.
+    const read = await page.$$eval(".calc-result-value",
+      (all) => all.map((e) => e.textContent.trim()));
+    expect(read.every((v) => v === "\u2014"), where + "every reading is a dash").toBe(true);
+    // The zone is drawn on its own rather than filled with a made-up
+    // count — except on the default model, where ten notes is the
+    // piece's own illustration rather than anything typed.
+    expect(await page.locator(".calc-stage-zone .zone-arrow").count(), where + "arrows")
+      .toBe(model === "plain" ? 10 : 0);
+    // Every field says its own ceiling as well.
+    const caps = await page.$$eval(".calc-input", (all) => all.map((e) => e.max));
+    expect(caps.every((m) => m === "100"), where + "max=100").toBe(true);
+  }
+
+  await page.locator('.calc-model[data-model="v1"]').click();
+  await page.waitForTimeout(400);
+  await put(page, "ic-Top", 450);
+  expect(await page.evaluate(() => [
+    document.querySelector("#ic-Top").value,
+    document.querySelector("#bc-Top").value,
+  ]), "450 is held at 100, and its other half falls to 0").toEqual(["100", "0"]);
+  await put(page, "n-all", 900);
+  expect(await page.evaluate(() => document.querySelector("#n-all").value),
+    "the count is capped too").toBe("100");
+  await put(page, "ic-Mid", -40);
+  expect(await page.evaluate(() => document.querySelector("#ic-Mid").value),
+    "and nothing goes below nought").toBe("0");
 });

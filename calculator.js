@@ -87,7 +87,10 @@
     const side = (R + L) * 2 + 26;
     const c = side / 2;
     const inside = Math.max(0, Math.min(1, 1 - icPct / 100));
-    const count = Math.max(1, Math.min(60, Math.round(n) || 1));
+    // NO ARROWS UNTIL THERE IS A COUNT. With the fields empty there is
+    // no number of notes yet, so the zone is drawn on its own rather
+    // than filled with a made-up ten.
+    const count = Math.max(0, Math.min(60, Math.round(n) || 0));
     const small = count > 14;
     const hl = small ? 6.5 : HEAD_L, hw = small ? 2.8 : HEAD_W;
     const out = ['<circle class="zone-ring" cx="' + c + '" cy="' + c + '" r="' + R + '"/>'];
@@ -113,7 +116,9 @@
     }
     return '<figure class="calc-zone-figure">' +
       '<svg class="zone" viewBox="0 0 ' + side + " " + side + '" role="img" aria-label="' +
-        (label || "The notes against the zone") + ': ' + Math.round(icPct) + '% of each note outside the zone">' +
+        (label || "The notes against the zone") + ': ' +
+        (count ? Math.round(icPct) + '% of each note outside the zone'
+               : 'nothing filled in yet') + '">' +
         out.join("") + "</svg>" +
       (label ? '<figcaption class="zone-cell-name">' + label + "</figcaption>" : "") +
       "</figure>";
@@ -163,12 +168,17 @@
     '<span class="frac"><span class="frac-n">' + top + "</span>" +
     '<span class="frac-d">' + bottom + "</span></span>";
 
-  /** THE SIGN, with its two halves apart. `\u00b1` sets the plus and the
-      minus stacked into one glyph and they touch; the owner asked for
-      them separate. */
+  /** THE SIGN. It is a plus-or-minus and reads as one, but the two
+      halves are drawn as their own characters — a `+` set over a
+      `\u2212` with air between them — rather than as the single
+      `\u00b1` glyph, whose bar is welded to the underside of the plus
+      in the face this page is set in. Same shape, room between the
+      halves, and it does not depend on any particular font being
+      installed. */
   const SIGN_GLYPH =
-    '<span class="calc-pm"><span>+</span><span class="calc-pm-or">/</span>' +
-    "<span>\u2212</span></span>";
+    '<span class="calc-pm" role="img" aria-label="plus or minus">' +
+    '<span class="calc-pm-half">+</span>' +
+    '<span class="calc-pm-half">\u2212</span></span>';
 
   const mv = (x) => '<i class="mv">' + x + "</i>";
   const sub = (x) => "<sub>" + x + "</sub>";
@@ -303,13 +313,33 @@
     });
   });
 
-  /** A field, with its own label. */
-  function field(id, label, suffix, value) {
+  /** NOTHING ABOVE A HUNDRED, AND NOTHING BELOW NOUGHT. The owner
+      asked for a ceiling on every field. IC and BC are shares of one
+      hundred, and the counts are the number of notes in a fragrance,
+      so anything past 100 is a slip in every field here. */
+  const CEILING = 100;
+
+  /** A field, with its own label. It STARTS EMPTY: the owner asked for
+      no numbers in the calculator at all until they are typed, so there
+      is no `value` here and no placeholder standing in for one. */
+  function field(id, label, suffix) {
     return '<label class="calc-field" for="' + id + '">' +
       '<span class="calc-field-name">' + label + "</span>" +
-      '<input class="calc-input" id="' + id + '" type="number" step="any" value="' + value + '">' +
+      '<input class="calc-input" id="' + id + '" type="number" step="any"' +
+        ' min="0" max="' + CEILING + '" value="">' +
       (suffix ? '<span class="calc-field-unit">' + suffix + "</span>" : "") +
       "</label>";
+  }
+
+  /** `max` on the input only marks a number invalid — the browser still
+      lets it be typed — so the ceiling is held here as well, as the
+      number is typed. A part-typed field ("", "-", ".") parses to
+      nothing and is left alone. */
+  function capAt(el) {
+    const v = parseFloat(el.value);
+    if (!isFinite(v)) return;
+    if (v > CEILING) el.value = String(CEILING);
+    else if (v < 0) el.value = "0";
   }
 
   function thresholds() {
@@ -385,9 +415,9 @@
     return '<div class="calc-stage" data-stage="' + key + '">' +
       '<div class="calc-stage-fields">' +
         (which === "v2"
-          ? field("n-" + key, mv("n") + sub(stage), "", "6") : "") +
-        field("ic-" + key, mv("IC") + sub(stage), "%", "30") +
-        field("bc-" + key, mv("BC") + sub(stage), "%", "70") +
+          ? field("n-" + key, mv("n") + sub(stage), "") : "") +
+        field("ic-" + key, mv("IC") + sub(stage), "%") +
+        field("bc-" + key, mv("BC") + sub(stage), "%") +
       "</div>" +
       '<div class="calc-stage-zone"></div>' +
       '<div class="calc-stage-out">' +
@@ -402,8 +432,8 @@
     if (which === "plain") {
       return '<div class="calc-stage" data-stage="One">' +
         '<div class="calc-stage-fields">' +
-          field("ic-One", mv("IC"), "%", "30") +
-          field("bc-One", mv("BC"), "%", "70") +
+          field("ic-One", mv("IC"), "%") +
+          field("bc-One", mv("BC"), "%") +
         "</div>" +
         '<div class="calc-stage-zone"></div>' +
         '<div class="calc-stage-out">' +
@@ -418,7 +448,7 @@
     // reading as one row of controls.
     const common = '<div class="calc-common">' +
       field(which === "v1" ? "n-all" : "x-all",
-            which === "v1" ? mv("n") : mv("x"), "", "13") +
+            which === "v1" ? mv("n") : mv("x"), "") +
       '<div class="calc-sign"><span class="calc-field-name">' + SIGN_GLYPH +
         " (click one)</span>" +
         '<button class="calc-sign-pick chosen" type="button" data-sign="1">+</button>' +
@@ -452,7 +482,7 @@
 
   function wire(which) {
     shell.querySelectorAll(".calc-input").forEach((one) => {
-      one.addEventListener("input", () => { pairUp(one); recalc(which); });
+      one.addEventListener("input", () => { capAt(one); pairUp(one); recalc(which); });
     });
     const picks = [...shell.querySelectorAll(".calc-sign-pick")];
     picks.forEach((one) => {
@@ -507,7 +537,7 @@
         : (which === "v1" ? nAll : num("n-" + key));
 
       box.querySelector(".calc-stage-zone").innerHTML =
-        zone(isFinite(howMany) ? howMany : 10, isFinite(ic) ? ic : 0, heads, label);
+        zone(howMany, isFinite(ic) ? ic : 0, heads, label);
 
       // The working, said the way the piece says it.
       const ratio = (ic / 100) / (bc / 100);
@@ -532,7 +562,11 @@
                     frac(which === "v1" ? "10" : show(xAll), show(bot))]);
         steps.push(["", show(ratio) + " &#215; " + show(scale)]);
         steps.push(["", show(value)]);
-        steps.push(["", (sign > 0 ? "+" : "−") + show(Math.abs(value)) +
+        // NO SIGN IN FRONT OF A BLANK. With the fields empty every line
+        // of the working reads "—", and "+—" is not a thing.
+        steps.push(["", (isFinite(value)
+                      ? (sign > 0 ? "+" : "−") + show(Math.abs(value))
+                      : "—") +
                     ' <span class="math-aside">(accounting for the direction of the arrows)</span>']);
       }
 
