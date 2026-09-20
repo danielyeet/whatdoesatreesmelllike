@@ -155,6 +155,21 @@
     };
   }
 
+  /** A VERTICAL FRACTION — a numerator over a rule over a denominator,
+      which is what a fraction looks like everywhere but in a line of
+      code. The owner asked for all of them to be written this way
+      rather than with a slash. */
+  const frac = (top, bottom) =>
+    '<span class="frac"><span class="frac-n">' + top + "</span>" +
+    '<span class="frac-d">' + bottom + "</span></span>";
+
+  /** THE SIGN, with its two halves apart. `\u00b1` sets the plus and the
+      minus stacked into one glyph and they touch; the owner asked for
+      them separate. */
+  const SIGN_GLYPH =
+    '<span class="calc-pm"><span>+</span><span class="calc-pm-or">/</span>' +
+    "<span>\u2212</span></span>";
+
   const mv = (x) => '<i class="mv">' + x + "</i>";
   const sub = (x) => "<sub>" + x + "</sub>";
   const abs = (x) => '<span class="mabs">&#124;</span>' + x + '<span class="mabs">&#124;</span>';
@@ -310,16 +325,13 @@
   function bigEquation(which) {
     const IBR = term("IBR", "IBR"), IC = term("IC", "IC"), BC = term("BC", "BC");
     if (which === "plain") {
-      return IBR + '<span class="calc-eq-op">=</span>' + IC +
-        '<span class="calc-eq-op">/</span>' + BC;
+      return IBR + '<span class="calc-eq-op">=</span>' + frac(IC, BC);
     }
-    const sign = term("&#177;", "SIGN");
+    const sign = term(SIGN_GLYPH, "SIGN");
     const top = which === "v1" ? term("10", "TEN") : term("x", "X");
     const nn = term("n", which === "v1" ? "N1" : "N2");
-    return sign + IBR + '<span class="calc-eq-op">=</span>' + IC +
-      '<span class="calc-eq-op">/</span>' + BC +
-      '<span class="calc-eq-op">&#215;</span>' + top +
-      '<span class="calc-eq-op">/</span>' + nn;
+    return sign + IBR + '<span class="calc-eq-op">=</span>' + frac(IC, BC) +
+      '<span class="calc-eq-op">&#215;</span>' + frac(top, nn);
   }
 
   function build(which) {
@@ -401,10 +413,14 @@
           '<div class="calc-steps"></div>' +
         "</div></div>";
     }
+    // THE COUNT AND THE SIGN STAND ON LINES OF THEIR OWN, which the
+    // owner asked for: they are two different questions and they were
+    // reading as one row of controls.
     const common = '<div class="calc-common">' +
       field(which === "v1" ? "n-all" : "x-all",
-            which === "v1" ? mv("n") : mv("x"), "", which === "v1" ? "13" : "13") +
-      '<div class="calc-sign"><span class="calc-field-name">&#177; (click one)</span>' +
+            which === "v1" ? mv("n") : mv("x"), "", "13") +
+      '<div class="calc-sign"><span class="calc-field-name">' + SIGN_GLYPH +
+        " (click one)</span>" +
         '<button class="calc-sign-pick chosen" type="button" data-sign="1">+</button>' +
         '<button class="calc-sign-pick" type="button" data-sign="-1">&#8722;</button>' +
       "</div></div>";
@@ -416,9 +432,27 @@
   // ============================================================
   let sign = 1;
 
+  /** IC AND BC ARE TWO HALVES OF ONE HUNDRED. They are the share of a
+      note lying outside the zone and the share lying inside it, so they
+      cannot disagree — the owner asked for changing one to set the
+      other to whatever is left, always. Setting `.value` does not raise
+      another `input`, so there is no loop to guard against. */
+  function pairUp(el) {
+    const id = el.id || "";
+    const other = id.indexOf("ic-") === 0 ? "bc-" + id.slice(3)
+      : (id.indexOf("bc-") === 0 ? "ic-" + id.slice(3) : null);
+    if (!other) return;
+    const mate = shell.querySelector("#" + (window.CSS && CSS.escape ? CSS.escape(other) : other));
+    if (!mate) return;
+    const v = parseFloat(el.value);
+    if (!isFinite(v)) return;
+    const left = Math.round((100 - Math.max(0, Math.min(100, v))) * 1000) / 1000;
+    if (String(left) !== mate.value) mate.value = String(left);
+  }
+
   function wire(which) {
     shell.querySelectorAll(".calc-input").forEach((one) => {
-      one.addEventListener("input", () => recalc(which));
+      one.addEventListener("input", () => { pairUp(one); recalc(which); });
     });
     const picks = [...shell.querySelectorAll(".calc-sign-pick")];
     picks.forEach((one) => {
@@ -480,21 +514,22 @@
       let value = ratio;
       const steps = [];
       const NAME = mv("IBR") + (label ? sub(label) : "");
+      const at = label ? sub(label) : "";
       if (which === "plain") {
-        steps.push([NAME, mv("IC") + " / " + mv("BC")]);
-        steps.push(["", show(ic / 100) + "/" + show(bc / 100)]);
+        steps.push([NAME, frac(mv("IC"), mv("BC"))]);
+        steps.push(["", frac(show(ic / 100), show(bc / 100))]);
         steps.push(["", show(value)]);
       } else {
-        const top = which === "v1" ? nAll : xAll;
         const bot = which === "v1" ? nAll : howMany;
         const scale = which === "v1" ? 10 / nAll : xAll / howMany;
         value = ratio * scale;
-        steps.push([NAME, "(" + mv("IC") + (label ? sub(label) : "") + " / " +
-                    mv("BC") + (label ? sub(label) : "") + ") &#215; " +
-                    (which === "v1" ? "10" : mv("x")) + "/" + mv("n") +
-                    (which === "v2" && label ? sub(label) : "")]);
-        steps.push(["", "(" + show(ic / 100) + "/" + show(bc / 100) + ") &#215; " +
-                    (which === "v1" ? "10" : show(xAll)) + "/" + show(bot)]);
+        steps.push([NAME, frac(mv("IC") + at, mv("BC") + at) +
+                    '<span class="calc-eq-op">&#215;</span>' +
+                    frac(which === "v1" ? "10" : mv("x"),
+                         mv("n") + (which === "v2" ? at : ""))]);
+        steps.push(["", frac(show(ic / 100), show(bc / 100)) +
+                    '<span class="calc-eq-op">&#215;</span>' +
+                    frac(which === "v1" ? "10" : show(xAll), show(bot))]);
         steps.push(["", show(ratio) + " &#215; " + show(scale)]);
         steps.push(["", show(value)]);
         steps.push(["", (sign > 0 ? "+" : "−") + show(Math.abs(value)) +

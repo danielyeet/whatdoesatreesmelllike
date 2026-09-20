@@ -152,7 +152,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 178 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 181 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -286,6 +286,11 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   `<p class="math-line">` rows, each three cells — `.mlhs`, `.meq`, `.mrhs`. The block is
   a grid, so **every `=` in it stands in one column**; a line that carries on from the one
   above has an empty `.mlhs`. Do not go back to indenting continuation lines by hand.
+- **A fraction is written vertically**, as
+  `<span class="frac"><span class="frac-n">…</span><span class="frac-d">…</span></span>`
+  — never with a slash. The rule is the numerator's own bottom border, and a row holding
+  one is centred rather than baselined. Inline mentions inside a running sentence are the
+  one exception, because a stacked fraction pushes the lines apart.
 - **A station on the theories page may carry a picture**: `data-plate` on its
   `<a class="work-row">` is the image its card shows when the station is set out, with
   `data-plate-alt` for the description. A row without one simply has no picture.
@@ -401,7 +406,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **stage** | Top, mid, base, a sidenote: the label above a run of paragraphs about one part of how a fragrance develops. `<p class="adar-stage">`. |
 | **the ADAR Effect™** | The owner's own coinage for this house's turpentine quality — the menthol-like trigeminal lift without the dense forest behind it. Written as **ADAR DNA** in exactly three places on purpose (the introduction, and two entries where they said they meant it); leave those. |
 | **essay page** | A page for a long piece of writing on the theories drawing's ground: a swarm of particles behind it, sights at the corners, and the **rule** down the left. `essay.js`; the three theories and the resins research. |
-| **the calculator** | The theory's own arithmetic, done for you: a screen-wide button at the foot of `works/theory-03.html` opens it, and it stands **in that same page** rather than in one of its own — the owner asked for the field of stars behind it to stay exactly where it is, which a second page could not do. Three models (Default `IBR`, Modified var. 1 and var. 2), each drawing the theory's own diagram from the numbers as you type. `calculator.js`; `calc-*` in `style.css`. |
+| **the calculator** | The theory's own arithmetic, done for you: a screen-wide button at the foot of `works/theory-03.html` opens it, and it stands **in that same page** rather than in one of its own — the owner asked for the field of stars behind it to stay exactly where it is, which a second page could not do. Three models (Default `IBR`, Modified var. 1 and var. 2), each drawing the theory's own diagram from the numbers as you type. **IC and BC are two halves of one hundred** — typing one sets the other — and the sign is written `+ / −` rather than `±`, whose two halves touch. `calculator.js`; `calc-*` in `style.css`. |
 | **the summary plate** | `images/Theories/note-dissemination-summary.png`: the whole of the theory on one sheet, which stands at the top of the piece and is what its **card** shows on the theories page. Generated rather than drawn, from the same script that made the piece's diagrams. |
 | **the zone** | Short for the *zone of indistinguishability* on `works/theory-03.html`: the circle a note has to stand outside of to be told apart from the others. Every diagram on that page is that circle with arrows on its radii, and a diagram says what it says through two numbers only — how much of an arrow's body is inside, and which end the head is on. `zone-*` in `style.css`. |
 | **the maths** (theory-03) | The notation on that page, and the **only serif on the site**: the owner asked for it in a face of its own, and setting a variable in the mono would have made it look like one of the site's readings. `--math` on `:root`; `math-*` and `.mv` / `.mrec` in `style.css`. |

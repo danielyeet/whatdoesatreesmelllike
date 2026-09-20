@@ -204,3 +204,91 @@ test("without the script the theory is unharmed", async ({ page, context }) => {
   await expect(page.locator("#calc-enter")).toBeVisible();
   await expect(page.locator(".calc")).toHaveCount(0);
 });
+
+/* IC AND BC ARE TWO HALVES OF ONE HUNDRED. They are the share of a note
+   outside the zone and the share inside it, so they cannot disagree —
+   the owner asked for changing one to set the other to what is left,
+   always.
+
+   THIS IS A REGRESSION IN THE MAKING: the first go at it was written
+   and then lost when the patch that carried it failed on a later line,
+   so the pairing silently was not there at all and both fields kept
+   their own value. */
+test("IC and BC are two halves of one hundred, whichever one is typed in",
+  async ({ page }) => {
+  await open(page);
+  await page.locator('.calc-model[data-model="v1"]').click();
+  await page.waitForTimeout(400);
+
+  const pair = () => page.evaluate(() => [
+    document.querySelector("#ic-Top").value,
+    document.querySelector("#bc-Top").value,
+  ]);
+
+  await put(page, "ic-Top", 15);
+  expect(await pair()).toEqual(["15", "85"]);
+  await put(page, "bc-Top", 40);
+  expect(await pair(), "and the other way round too").toEqual(["60", "40"]);
+  await put(page, "ic-Top", 0);
+  expect(await pair()).toEqual(["0", "100"]);
+
+  // On the default model as well, which has only the one pair.
+  await page.locator('.calc-model[data-model="plain"]').click();
+  await page.waitForTimeout(400);
+  await put(page, "ic-One", 25);
+  expect(await page.evaluate(() => [
+    document.querySelector("#ic-One").value,
+    document.querySelector("#bc-One").value,
+  ])).toEqual(["25", "75"]);
+});
+
+/* EVERY FRACTION IS A VERTICAL ONE, and the sign's two halves stand
+   apart — both asked for by name. A fraction is a numerator over a rule
+   over a denominator; `±` sets the plus and the minus into one glyph
+   and they touch. */
+test("the fractions are stacked and the sign's halves are separate",
+  async ({ page }) => {
+  await open(page);
+
+  await page.locator('.calc-model[data-model="plain"]').click();
+  await page.waitForTimeout(400);
+  expect(await page.locator(".calc-equation .frac").count(),
+    "IC over BC").toBe(1);
+
+  await page.locator('.calc-model[data-model="v1"]').click();
+  await page.waitForTimeout(400);
+  expect(await page.locator(".calc-equation .frac").count(),
+    "IC over BC, and 10 over n").toBe(2);
+  // The rule is the numerator's own bottom border, so it is always
+  // exactly as wide as the fraction.
+  const ruled = await page.locator(".calc-equation .frac-n").first()
+    .evaluate((el) => getComputedStyle(el).borderBottomWidth);
+  expect(ruled).not.toBe("0px");
+  // And the numerator really is above the denominator.
+  const stacked = await page.locator(".calc-equation .frac").first().evaluate((el) => {
+    const n = el.querySelector(".frac-n").getBoundingClientRect();
+    const d = el.querySelector(".frac-d").getBoundingClientRect();
+    return d.top >= n.bottom - 1;
+  });
+  expect(stacked, "the denominator should sit under the numerator").toBe(true);
+
+  // The sign is three glyphs with air between them, not one.
+  const pm = page.locator('.calc-term[data-say="SIGN"] .calc-pm');
+  await expect(pm).toBeVisible();
+  expect((await pm.innerText()).replace(/\s+/g, "")).toBe("+/\u2212");
+
+  // The working behind an answer is stacked too.
+  expect(await page.locator(".calc-steps .frac").count()).toBeGreaterThan(3);
+});
+
+/* THE NUMBER FIELDS HAVE NO STEPPERS. IC and BC move together, so
+   stepping one of them a percent at a time reads as though they were
+   independent. */
+test("the number fields carry no up-and-down arrows", async ({ page }) => {
+  await open(page);
+  await page.locator('.calc-model[data-model="v1"]').click();
+  await page.waitForTimeout(400);
+  const look = await page.locator(".calc-input").first()
+    .evaluate((el) => getComputedStyle(el).appearance || getComputedStyle(el).MozAppearance);
+  expect(look).toBe("textfield");
+});

@@ -89,6 +89,8 @@ page.
 | `.mv` | a variable, in italic |
 | `.mrec` | a recurring digit, with the bar over it |
 | `.mabs` | the bars round a reading being put against a threshold |
+| `.frac` / `.frac-n` / `.frac-d` | a vertical fraction: numerator, rule, denominator |
+| `.mop` | the `×` between two fractions, which wants air round it |
 | `.math-aside` | the owner's parenthetical, back in the sans so it is not mistaken for notation |
 | `.math-standalone` | a formula given a line of its own, centred |
 
@@ -105,6 +107,30 @@ equals, and the expression. A line that carries on from the one above simply has
 first cell, which is what puts it under the one before. `display: contents` on the row is
 what lets a `<p>` hold three cells belonging to the block's grid rather than to a grid of
 its own.
+
+### Every fraction is a vertical one
+
+*"also make the fractions vertical fractions. all of them."* A fraction written with a
+slash is a fraction written the way code writes it; on a page that is otherwise set like
+maths it was the one thing that still read as typing.
+
+`.frac` is an `inline-grid` of two rows. Three reasons for a grid rather than two stacked
+blocks: it keeps the pair one thing on the line, it sizes itself to whichever of the two
+is wider, and **the rule is the numerator's own bottom border**, so it is always exactly
+as wide as the fraction and can never drift.
+
+Two things had to move with it:
+
+- **A row with a fraction in it is centred, not baselined.** An inline-grid takes its
+  baseline from its first row, so on `align-items: baseline` the numerator sat on the
+  line and the whole fraction hung below it. `.math-block` and `.calc-equation` centre.
+- **A term's "point at me" mark is an underline under the LETTERING**, not a border under
+  the box. A numerator already has a border under it — the fraction's own rule — and two
+  lines a few pixels apart read as a mistake.
+
+Converted: every worked answer on the page, the standalone formula, the calculator's big
+equation and the calculator's own working. **Not** the mentions inside running sentences
+(`an IC/BC of 0.1`), where a stacked fraction would push the lines apart.
 
 ### The bars, and where they are not
 
@@ -188,21 +214,42 @@ the picture answer the numbers is most of the point of automating them.
 every comparison with a threshold is made on the absolute value. There is a test that
 turns the sign over and checks that nothing but the sign moves.
 
+**It is written `+ / −`, not `±`.** The owner asked for the two halves apart: `±` sets
+them stacked into one glyph and they touch. `.calc-pm` is three characters with air
+between them.
+
+### IC and BC are two halves of one hundred
+
+They are the share of a note lying outside the zone and the share lying inside it, so
+they cannot disagree. Typing one sets the other to whatever is left, always. Setting
+`.value` does not raise another `input`, so there is no loop to guard against.
+
+**The number fields have no steppers**, for the same reason: the little up-and-down
+arrows a browser puts on a number field say the two move independently, and they do not.
+
+**This is a near-miss worth recording.** The pairing was written once and then lost: the
+patch carrying it failed an assertion on a *later* line, so the file was never written
+and the behaviour silently was not there at all. It read as working because both fields
+still held sensible numbers. There is a test for it now, proved against exactly that
+fault.
+
 ### What is tested, and what it is tested against
 
 ```bash
 npm test -- tests/calculator.spec.js
 ```
 
-Eight tests. The one worth keeping is **the arithmetic against the owner's own worked
+Eleven tests. The one worth keeping is **the arithmetic against the owner's own worked
 examples**: put Amber Zero's three stages into var. 1 with `n = 13` and the calculator
 has to come back with 0.136, 0.513 and 4.36 — the three numbers the piece works out by
 hand. If the two ever disagree, one of them is wrong and it matters which.
 
 The others: the change-over being the same page (above); the default model on the piece's
 Xerjoff and Babycat figures; the sign; var. 2 using the stage's own `n`; the review
-window carrying complication 3; a term saying what it is when pointed at; and the theory
-being unharmed with the script blocked.
+window carrying complication 3; a term saying what it is when pointed at; the theory
+being unharmed with the script blocked; **IC and BC pairing to a hundred** (proved against
+the fault); the fractions being stacked and the sign's halves separate; and the number
+fields carrying no steppers.
 
 ## What is the owner's, and what I changed
 

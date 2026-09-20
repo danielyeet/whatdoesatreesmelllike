@@ -5654,6 +5654,34 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
    threshold. The bars are drawn a shade quieter than what they hold,
    so IBR still reads as the thing being said. */
 .mabs { color: #9aa3b1; padding: 0 0.06em; }
+
+/* A VERTICAL FRACTION — a numerator over a rule over a denominator,
+   which is what a fraction looks like everywhere but in a line of
+   code. The owner asked for all of them to be written this way rather
+   than with a slash.
+
+   `inline-grid` rather than two stacked blocks: it keeps the pair one
+   thing on the line, it sizes itself to whichever of the two is wider,
+   and the rule is the numerator's own bottom border so it is always
+   exactly as wide as the fraction. `vertical-align: middle` puts the
+   rule about where the slash used to be. */
+.frac {
+  display: inline-grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  vertical-align: middle;
+  margin: 0 0.22em;
+  line-height: 1.16;
+}
+.frac-n {
+  border-bottom: 1px solid currentColor;
+  padding: 0 0.34em 0.12em;
+}
+.frac-d { padding: 0.14em 0.34em 0; }
+/* A fraction is taller than a line of type, so a row that has one in
+   it is centred rather than sat on its own baseline — otherwise the
+   numerator takes the baseline and the whole fraction hangs below it. */
+.math-block { align-items: center; }
 /* .essay-section p sets the reading's paragraph spacing and outranks a
    plain class, so every line of a worked answer would stand a
    paragraph apart. The working is one block, not five paragraphs. */
@@ -6322,25 +6350,40 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   margin: 0 0 20px;
   display: flex;
   justify-content: center;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: 0.12em;
 }
 .calc-eq-op { color: #8d94a3; padding: 0 0.06em; }
+/* THE SIGN, with its two halves apart. `±` sets the plus and the minus
+   stacked into one glyph and they touch; the owner asked for them
+   separate, so it is three characters with air between them. */
+.calc-pm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1em;
+}
+.calc-pm-or { color: #8d94a3; opacity: 0.8; }
+/* A TERM SAYS WHAT IT IS WHEN POINTED AT, and the mark that says so is
+   an underline UNDER THE LETTERING rather than a border under the box:
+   a numerator already has a border under it — the fraction's own rule —
+   and two lines stacked a few pixels apart read as a mistake. */
 .calc-term {
   font: inherit;
   font-style: italic;
   background: none;
   border: 0;
-  border-bottom: 1px dashed rgba(142, 180, 226, 0.45);
   color: inherit;
   padding: 0 0.05em;
   cursor: help;
   line-height: 1;
+  text-decoration: underline dotted rgba(142, 180, 226, 0.5);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
 }
 .calc-term:hover, .calc-term:focus-visible {
   color: #8eb4e2;
-  border-bottom-color: #8eb4e2;
+  text-decoration-color: #8eb4e2;
 }
 .calc-say {
   min-height: 3.4em;
@@ -6364,11 +6407,14 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 }
 
 /* THE INPUTS, and the diagram that answers them. */
+/* THE COUNT AND THE SIGN, on lines of their own. They were a row, and
+   a row read as one control with two halves; they are two different
+   questions. */
 .calc-common {
   display: flex;
-  flex-wrap: wrap;
-  gap: 26px;
-  align-items: flex-end;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
   margin: 0 0 28px;
   padding-bottom: 22px;
   border-bottom: 1px solid rgba(150, 160, 176, 0.18);
@@ -6414,8 +6460,15 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   padding: 5px 8px;
 }
 .calc-input:focus { outline: none; border-bottom-color: #8eb4e2; background: rgba(142, 180, 226, 0.1); }
-.calc-sign { display: flex; align-items: baseline; gap: 10px; }
-.calc-sign .calc-field-name { font-family: var(--math); font-size: 17px; color: #dbe1ea; min-width: 0; }
+/* NO STEPPERS. The little up/down arrows a browser puts on a number
+   field are the wrong control here: IC and BC are two halves of one
+   hundred and move together, so stepping one of them a percent at a
+   time reads as though they were independent. Typing is the way in. */
+.calc-input::-webkit-outer-spin-button,
+.calc-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.calc-input { -moz-appearance: textfield; appearance: textfield; }
+.calc-sign { display: flex; align-items: center; gap: 10px; }
+.calc-sign .calc-field-name { font-family: var(--math); font-size: 17px; color: #dbe1ea; min-width: 7.5em; }
 .calc-sign-pick {
   font-family: var(--math);
   font-size: 19px;
@@ -6436,7 +6489,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   color: #f1f4f8;
   margin: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.4em;
 }
 .calc-result-eq { color: #8d94a3; }
@@ -6589,3 +6642,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   width: 100%;
   height: auto;
 }
+
+/* The multiplication sign between two fractions wants air round it —
+   a bare `×` between two stacked pairs reads as part of the lower one. */
+.mop { color: #8d94a3; padding: 0 0.28em; }
