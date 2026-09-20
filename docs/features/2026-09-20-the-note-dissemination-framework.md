@@ -246,6 +246,44 @@ three are in the code:
   the browser will still let a bigger number be typed into it. The clamp is the half that
   does the work, and the half the test is pointed at.
 
+### The reset, and the log scale
+
+Two buttons, both asked for by name, and both standing on the line of the heading of the
+thing they act on rather than under it — under the fields a button reads as another
+control to fill in.
+
+**Reset** puts the calculator back to how it opens: every field blank and the sign on
+`+`. It does **not** change which model is chosen; that is a different question, and
+choosing a model already rebuilds the fields from nothing. It **goes dim when there is
+nothing to clear**, so the button itself says whether anything has been typed — and the
+half of that easiest to get wrong is that **the sign counts**. It is not one of the
+fields, so a check that looked only at the fields would leave the button dim with the
+calculator sitting on `−`. There is a test pointed at exactly that.
+
+**Log scale** is a toggle on the graph, filled when it is on, in the same blue the models
+and the sign use for "this is the one that is on". It is worth having because the
+thresholds are 0.5 and 2 while a reading can be 18: on a linear axis the whole of the
+part you read *against* is squashed into the bottom fifth of the picture. Three details
+that are not obvious from the code:
+
+- **The scale is whole decades**, and the two thresholds always stand on it whatever the
+  numbers are — a reading is only worth anything read against them, so they are included
+  when the top and bottom of the axis are worked out.
+- **The nine fainter lines inside each decade have to be there.** Without them a
+  logarithmic axis reads as an odd linear one; with them it is unmistakable.
+- **A reading of 0 has no logarithm**, and it is left off that scale rather than pinned
+  to the floor, which would be a lie about where it falls. A line under the picture says
+  so. A reading of 0 is a real input — it means `IC` is 0, every note entirely inside the
+  zone.
+
+The scale is a way of *looking* rather than an input, so it survives both a reset and a
+change of model.
+
+One thing the log scale broke on the way in: the y-axis name is drawn rotated, and
+`, log scale` made it long enough to run off the top of the picture. It was started at
+the axis's middle and grew upwards; it is centred on the middle now (`graph-mid`), which
+fits both names.
+
 ### IC and BC are two halves of one hundred
 
 They are the share of a note lying outside the zone and the share lying inside it, so
@@ -267,7 +305,7 @@ fault.
 npm test -- tests/calculator.spec.js
 ```
 
-Twelve tests. The one worth keeping is **the arithmetic against the owner's own worked
+Fourteen tests. The one worth keeping is **the arithmetic against the owner's own worked
 examples**: put Amber Zero's three stages into var. 1 with `n = 13` and the calculator
 has to come back with 0.136, 0.513 and 4.36 — the three numbers the piece works out by
 hand. If the two ever disagree, one of them is wrong and it matters which.
@@ -277,14 +315,27 @@ Xerjoff and Babycat figures; the sign; var. 2 using the stage's own `n`; the rev
 window carrying complication 3; a term saying what it is when pointed at; the theory
 being unharmed with the script blocked; **IC and BC pairing to a hundred** (proved against
 the fault); the fractions being stacked and the sign's halves separate; the number
-fields carrying no steppers; and **the fields starting empty and refusing anything above
-a hundred**.
+fields carrying no steppers; **the fields starting empty and refusing anything above a
+hundred**; **the reset**; and **the log scale**.
 
 That last one is proved against four separate faults, each put back in turn to watch it
 fail: the welded `±` in place of the two halves (`toHaveCount` 0 instead of 2), the
 halves shut back together (`line-height` 0.28 — measured 0.28 against a floor of 0.45), a
 starting number put back in a field, and the script's clamp taken out so only `max` was
 left holding the ceiling (450 stayed 450).
+
+The reset's and the log scale's tests were proved the same way, against four more:
+the reset leaving the sign where it was (came back `−1`), its dimming ignoring the sign
+(stayed dim on `−`), a reading of 0 pinned to the floor instead of left off (3 dots
+where there should be 2), and — the one worth having — **the log axis relabelled but
+still linear**. That last one is why the test measures the *spacing* of the three
+readings rather than the tick labels: the piece's own Amber Zero numbers are 0.136, 0.513
+and 4.359, which in logs are within about 1.6 of evenly spaced and on a linear axis are a
+ratio of ten apart. The faked axis measured 10.2 against a ceiling of 2.2.
+
+Every graph selector in that test is scoped to `.calc-graph`, because the piece's own
+writing carries a graph in the same markup and it is still in the page behind the
+calculator. Unscoped, the counts are the two graphs added together.
 
 ## What is the owner's, and what I changed
 

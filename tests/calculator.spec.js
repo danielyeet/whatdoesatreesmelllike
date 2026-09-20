@@ -358,3 +358,138 @@ test("the fields start empty, and nothing above a hundred can be set",
   expect(await page.evaluate(() => document.querySelector("#ic-Mid").value),
     "and nothing goes below nought").toBe("0");
 });
+
+/* THE RESET puts the calculator back to how it opens: every field
+   blank and the sign on +. It goes dim when there is nothing to clear,
+   and the half of that easiest to get wrong is the sign — it is not a
+   field, so a check that looked only at the fields would leave the
+   button dim with the calculator sitting on −. */
+test("the reset clears the fields and the sign, and dims when there is nothing to clear",
+  async ({ page }) => {
+  await open(page);
+  await page.locator('.calc-model[data-model="v1"]').click();
+  await page.waitForTimeout(400);
+
+  const reset = page.locator(".calc-reset");
+  await expect(reset).toBeVisible();
+  await expect(reset, "nothing has been typed yet").toBeDisabled();
+
+  await put(page, "n-all", 13);
+  await put(page, "ic-Top", 15);
+  await page.locator('.calc-sign-pick[data-sign="-1"]').click();
+  await page.waitForTimeout(250);
+  await expect(reset).toBeEnabled();
+  // There really is something in there to clear.
+  expect(await page.locator(".calc-stage-zone .zone-arrow").count()).toBe(39);
+
+  await reset.click();
+  await page.waitForTimeout(300);
+  const after = await page.evaluate(() => ({
+    fields: [...document.querySelectorAll(".calc-input")].map((e) => e.value),
+    sign: document.querySelector(".calc-sign-pick.chosen").getAttribute("data-sign"),
+    reads: [...document.querySelectorAll(".calc-result-value")].map(
+      (e) => e.textContent.trim()),
+  }));
+  expect(after.fields.every((v) => v === ""), "every field is blank again").toBe(true);
+  expect(after.sign, "and the sign is back on +").toBe("1");
+  expect(after.reads.every((v) => v === "—"), "and nothing is claimed").toBe(true);
+  expect(await page.locator(".calc-stage-zone .zone-arrow").count(),
+    "and the diagrams are empty again").toBe(0);
+  await expect(reset).toBeDisabled();
+  // It clears the numbers, not the choice of model.
+  await expect(page.locator('.calc-model[data-model="v1"]')).toHaveClass(/chosen/);
+
+  // The sign on its own is something to clear.
+  await page.locator('.calc-sign-pick[data-sign="-1"]').click();
+  await page.waitForTimeout(250);
+  await expect(reset, "the sign alone counts as typed").toBeEnabled();
+
+  // And the default model, which has no sign at all, still has one.
+  await page.locator('.calc-model[data-model="plain"]').click();
+  await page.waitForTimeout(400);
+  await expect(page.locator(".calc-reset")).toBeDisabled();
+  await put(page, "ic-One", 40);
+  await expect(page.locator(".calc-reset")).toBeEnabled();
+  await page.locator(".calc-reset").click();
+  await page.waitForTimeout(250);
+  expect(await page.evaluate(() => [
+    document.querySelector("#ic-One").value,
+    document.querySelector("#bc-One").value,
+  ])).toEqual(["", ""]);
+});
+
+/* THE LOG SCALE, asked for by name. It matters here because the
+   thresholds are 0.5 and 2 while a reading can be 18: on a linear axis
+   the whole of the part you read against is squashed into the bottom of
+   the picture.
+
+   The graph selectors are scoped to `.calc-graph` throughout — the
+   piece's own writing carries a graph of its own in the same markup,
+   and it is still in the page behind the calculator. */
+test("the graph has a logarithmic version, and a reading of 0 is left off it",
+  async ({ page }) => {
+  await open(page);
+  await page.locator('.calc-model[data-model="v1"]').click();
+  await page.waitForTimeout(400);
+  await put(page, "n-all", 13);
+  await put(page, "ic-Top", 15);
+  await put(page, "ic-Mid", 40);
+  await put(page, "ic-DryDown", 85);
+
+  const toggle = page.locator(".calc-scale");
+  const ticks = () => page.$$eval(".calc-graph .graph-tick",
+    (all) => all.map((e) => e.textContent));
+
+  // Linear to begin with: whole numbers up the side, no decade lines.
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  expect(await ticks()).toContain("3");
+  expect(await page.locator(".calc-graph .graph-grid-fine").count(),
+    "a linear axis has no decades in it").toBe(0);
+
+  await toggle.click();
+  await page.waitForTimeout(300);
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  const up = await ticks();
+  ["0.1", "1", "10"].forEach((one) =>
+    expect(up, "powers of ten up the side").toContain(one));
+  expect(up, "and nothing in between them").not.toContain("3");
+  expect(await page.locator(".calc-graph .graph-grid-fine").count(),
+    "with the nine lines inside each decade").toBeGreaterThan(8);
+
+  /* AND IT REALLY IS LOGARITHMIC, not a relabelled linear axis. The
+     three readings are 0.136, 0.513 and 4.359 — ratios of 3.8 and 8.5,
+     so in logs they are within about 1.6 of evenly spaced, where on a
+     linear axis the first two sit almost on top of one another (gaps of
+     0.38 and 3.85, a ratio of ten). */
+  const ys = await page.$$eval(".calc-graph .graph-dot",
+    (all) => all.map((e) => Number(e.getAttribute("cy"))));
+  expect(ys.length).toBe(3);
+  const gapA = ys[0] - ys[1], gapB = ys[1] - ys[2];
+  expect(gapA, "the readings climb up the picture").toBeGreaterThan(0);
+  expect(gapB).toBeGreaterThan(0);
+  expect(Math.max(gapA, gapB) / Math.min(gapA, gapB),
+    "no reading is squashed up against another").toBeLessThan(2.2);
+
+  // A reading of 0 has no logarithm, so it is left off rather than
+  // pinned to the floor — and the picture says so.
+  await put(page, "ic-Mid", 0);
+  await expect(page.locator(".calc-graph-note")).toBeVisible();
+  await expect(page.locator(".calc-graph-note")).toContainText("no logarithm");
+  expect(await page.locator(".calc-graph .graph-dot").count(),
+    "the one that cannot be drawn is left off").toBe(2);
+
+  // Back to linear and it is drawn again, with nothing to explain.
+  await toggle.click();
+  await page.waitForTimeout(300);
+  await expect(page.locator(".calc-graph-note")).toHaveCount(0);
+  expect(await page.locator(".calc-graph .graph-dot").count()).toBe(3);
+
+  // The scale is a way of looking rather than an input, so it survives
+  // a change of model.
+  await toggle.click();
+  await page.waitForTimeout(250);
+  await page.locator('.calc-model[data-model="v2"]').click();
+  await page.waitForTimeout(500);
+  await expect(page.locator(".calc-scale")).toHaveAttribute("aria-pressed", "true");
+});

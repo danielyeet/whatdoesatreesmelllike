@@ -5775,6 +5775,10 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 .graph { max-width: 640px; }
 .graph-axis { stroke: rgba(170, 178, 193, 0.7); stroke-width: 1.25; }
 .graph-grid { stroke: rgba(150, 160, 176, 0.16); stroke-width: 1; }
+/* The nine lines inside each decade of a log scale. They have to be
+   there — without them a log axis reads as an odd linear one — and
+   faint enough not to be read as readings. */
+.graph-grid-fine { stroke: rgba(150, 160, 176, 0.07); }
 .graph-hold {
   stroke: rgba(185, 138, 62, 0.65);
   stroke-width: 1;
@@ -6336,6 +6340,64 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   font-weight: 500;
   margin: 0 0 18px;
 }
+/* THE RESET stands on the line of the heading of the thing it clears,
+   over at the other end of it, rather than under the fields: there it
+   would read as another control to fill in. The heading keeps its own
+   bottom margin, so the row needs none. */
+.calc-part-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.calc-reset {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  margin: 0 0 18px;
+  background: none;
+  border: 1px solid rgba(150, 160, 176, 0.45);
+  color: #aab2c1;
+  cursor: pointer;
+  transition: color 0.25s var(--menu-ease), border-color 0.25s var(--menu-ease),
+              opacity 0.25s var(--menu-ease);
+}
+.calc-reset:hover, .calc-reset:focus-visible,
+.calc-scale:hover, .calc-scale:focus-visible { color: #e8ecf3; border-color: #8eb4e2; }
+/* THE LOG SCALE TOGGLE is the reset's twin, with an on state: filled
+   means you are looking at the logarithmic version. The same filled
+   blue the models and the sign use for "this is the one that is on". */
+.calc-scale {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  margin: 0 0 18px;
+  background: none;
+  border: 1px solid rgba(150, 160, 176, 0.45);
+  color: #aab2c1;
+  cursor: pointer;
+  transition: color 0.25s var(--menu-ease), border-color 0.25s var(--menu-ease),
+              background-color 0.25s var(--menu-ease);
+}
+.calc-scale.chosen {
+  color: #0d1016;
+  background: #8eb4e2;
+  border-color: #8eb4e2;
+}
+.calc-scale.chosen:hover, .calc-scale.chosen:focus-visible { color: #0d1016; }
+/* NOTHING TO CLEAR. It stays in the page at the same size rather than
+   going away, so the heading's line does not jump about as you type. */
+.calc-reset:disabled {
+  opacity: 0.32;
+  cursor: default;
+  color: #aab2c1;
+  border-color: rgba(150, 160, 176, 0.45);
+}
 /* IT ARRIVES FROM THE TOP DOWN, one part behind the last — the owner
    asked for the page to fade in that way once a model is chosen. */
 .calc-arriving { animation: calc-part-in 0.5s var(--menu-ease) both; animation-delay: calc(var(--n, 0) * 0.09s); }
@@ -6545,7 +6607,16 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 }
 .calc-table td:nth-child(2) { color: #8eb4e2; }
 
-.calc-graph { display: flex; justify-content: center; }
+.calc-graph { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.calc-graph-note {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: #8d94a3;
+  text-align: center;
+  max-width: 46ch;
+}
 .calc-graph .graph { max-width: 640px; }
 .calc-verdict {
   font-size: 18px;

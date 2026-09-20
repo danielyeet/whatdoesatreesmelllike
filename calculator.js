@@ -377,7 +377,10 @@
       parts.push('<p class="calc-note">Do note that there will be three equation given the third complication; one for the top, another for the mid and a third and final one for the dry down.</p>');
     }
 
-    parts.push('<div class="calc-part"><h2>Input your values (estimations)</h2>' +
+    parts.push('<div class="calc-part"><div class="calc-part-head">' +
+        "<h2>Input your values (estimations)</h2>" +
+        '<button class="calc-reset" type="button" disabled>Reset</button>' +
+      "</div>" +
       '<div class="calc-inputs">' + inputsFor(which) + "</div></div>");
 
     if (which !== "plain") {
@@ -386,7 +389,10 @@
         '<div class="calc-table-wrap"><table class="calc-table"><thead><tr>' +
         "<th>Reading</th><th>Value</th><th>Against the thresholds</th><th>What that means</th>" +
         "</tr></thead><tbody></tbody></table></div></div>");
-      parts.push('<div class="calc-part"><h2>Across the three stages</h2>' +
+      parts.push('<div class="calc-part"><div class="calc-part-head">' +
+          "<h2>Across the three stages</h2>" +
+          '<button class="calc-scale" type="button" aria-pressed="false">Log scale</button>' +
+        "</div>" +
         '<div class="calc-graph"></div></div>');
     } else {
       parts.push(thresholds());
@@ -408,6 +414,7 @@
         one.classList.remove("calc-arriving"));
     }
     recalc(which);
+    refreshReset();
   }
 
   function stageInputs(which, stage, i) {
@@ -480,9 +487,37 @@
     if (String(left) !== mate.value) mate.value = String(left);
   }
 
+  /** THE RESET goes dim when there is nothing to clear, so the button
+      itself says whether anything has been typed. */
+  function refreshReset() {
+    const button = shell.querySelector(".calc-reset");
+    if (!button) return;
+    const typed = [...shell.querySelectorAll(".calc-input")]
+      .some((one) => one.value !== "");
+    button.disabled = !typed && sign > 0;
+  }
+
+  /** BACK TO HOW IT OPENS: every field blank and the sign on +. It does
+      NOT change which model is chosen — that is a different question,
+      and choosing one already rebuilds the fields from nothing. */
+  function resetAll(which) {
+    shell.querySelectorAll(".calc-input").forEach((one) => { one.value = ""; });
+    shell.querySelectorAll(".calc-sign-pick").forEach((one) =>
+      one.classList.toggle("chosen", one.getAttribute("data-sign") === "1"));
+    sign = 1;
+    recalc(which);
+    refreshReset();
+    // The pointer is on a button that has just gone dim, so the eye is
+    // handed back to the first field — which is where you start again.
+    const first = shell.querySelector(".calc-input");
+    if (first) first.focus();
+  }
+
   function wire(which) {
     shell.querySelectorAll(".calc-input").forEach((one) => {
-      one.addEventListener("input", () => { capAt(one); pairUp(one); recalc(which); });
+      one.addEventListener("input", () => {
+        capAt(one); pairUp(one); recalc(which); refreshReset();
+      });
     });
     const picks = [...shell.querySelectorAll(".calc-sign-pick")];
     picks.forEach((one) => {
@@ -490,9 +525,29 @@
         sign = Number(one.getAttribute("data-sign"));
         picks.forEach((p) => p.classList.toggle("chosen", p === one));
         recalc(which);
+        refreshReset();
       });
     });
     sign = 1;
+
+    const reset = shell.querySelector(".calc-reset");
+    if (reset) reset.addEventListener("click", () => resetAll(which));
+
+    // THE SCALE IS A WAY OF LOOKING, not an input, so it survives a
+    // reset and a change of model rather than going back to linear.
+    const scale = shell.querySelector(".calc-scale");
+    if (scale) {
+      const showScale = () => {
+        scale.classList.toggle("chosen", logY);
+        scale.setAttribute("aria-pressed", logY ? "true" : "false");
+      };
+      showScale();
+      scale.addEventListener("click", () => {
+        logY = !logY;
+        showScale();
+        recalc(which);
+      });
+    }
 
     const say = shell.querySelector(".calc-say");
     shell.querySelectorAll(".calc-term").forEach((one) => {
@@ -613,27 +668,68 @@
 
   // ============================================================
   // THE GRAPH — the same one the piece draws, on your own numbers
+  //
+  // ON EITHER SCALE. A logarithmic y is worth having here because the
+  // thresholds are 0.5 and 2 while a reading can be 18: on a linear
+  // axis the whole of the part you are reading against is squashed
+  // into the bottom fifth of the picture. The owner asked for it.
   // ============================================================
+  let logY = false;
+
+  /** A power of ten written out, rather than as 1e-2. */
+  const decade = (p) => (p >= 0 ? String(Math.pow(10, p))
+    : "0." + "0".repeat(-p - 1) + "1");
+
   function graph(got, which) {
     const W = 720, H = 470;
     const ml = 104, mr = 44, mt = 34, mb = 76;
     const x0 = ml, x1 = W - mr, y0 = H - mb, y1 = mt;
-    const vals = got.map((o) => Math.abs(o.value)).filter(isFinite);
-    const most = Math.max(5, Math.ceil(Math.max.apply(null, vals.concat([2.5])) + 0.5));
     const X = (i) => x0 + ((x1 - x0) * i) / 2;
-    const Y = (v) => y0 + ((y1 - y0) * v) / most;
     const b = [];
-    for (let k = 0; k <= most; k++) {
-      b.push('<line class="graph-grid" x1="' + x0 + '" y1="' + Y(k).toFixed(1) +
-             '" x2="' + x1 + '" y2="' + Y(k).toFixed(1) + '"/>');
-      b.push('<text class="graph-tick" x="' + (x0 - 14) + '" y="' + (Y(k) + 5).toFixed(1) +
-             '">' + k + "</text>");
+    const vals = got.map((o) => Math.abs(o.value)).filter(isFinite);
+
+    // The lines across the picture, and where a value falls between
+    // them. Each entry is [value, what it is labelled, is it a main
+    // one]; the rest of the drawing does not care which scale it is.
+    let Y, lines;
+    if (logY) {
+      // WHOLE DECADES, and the two thresholds always stand on the
+      // scale whatever the numbers are — a reading is only worth
+      // anything read against them.
+      const on = vals.filter((v) => v > 0).concat([0.5, 2]);
+      const lo = Math.floor(Math.log(Math.min.apply(null, on)) / Math.LN10);
+      const hi = Math.ceil(Math.log(Math.max.apply(null, on)) / Math.LN10);
+      Y = (v) => y0 + ((y1 - y0) * (Math.log(v) / Math.LN10 - lo)) / (hi - lo);
+      lines = [];
+      for (let p = lo; p <= hi; p++) {
+        lines.push([Math.pow(10, p), decade(p), true]);
+        // The nine fainter lines inside each decade are what makes a
+        // log axis read as one rather than as an odd linear one.
+        if (p < hi) {
+          for (let m = 2; m <= 9; m++) lines.push([m * Math.pow(10, p), "", false]);
+        }
+      }
+    } else {
+      const most = Math.max(5, Math.ceil(Math.max.apply(null, vals.concat([2.5])) + 0.5));
+      Y = (v) => y0 + ((y1 - y0) * v) / most;
+      lines = [];
+      for (let k = 0; k <= most; k++) lines.push([k, String(k), true]);
     }
-    [[0.5, "0.5"], [2, "2"]].forEach(([v, lab]) => {
-      b.push('<line class="graph-hold" x1="' + x0 + '" y1="' + Y(v).toFixed(1) +
-             '" x2="' + x1 + '" y2="' + Y(v).toFixed(1) + '"/>');
-      b.push('<text class="graph-hold-name" x="' + (x1 - 8) + '" y="' + (Y(v) - 9).toFixed(1) +
-             '">' + lab + "</text>");
+
+    lines.forEach((one) => {
+      const at = Y(one[0]).toFixed(1);
+      b.push('<line class="graph-grid' + (one[2] ? "" : " graph-grid-fine") +
+             '" x1="' + x0 + '" y1="' + at + '" x2="' + x1 + '" y2="' + at + '"/>');
+      if (one[1]) {
+        b.push('<text class="graph-tick" x="' + (x0 - 14) + '" y="' +
+               (Y(one[0]) + 5).toFixed(1) + '">' + one[1] + "</text>");
+      }
+    });
+    [[0.5, "0.5"], [2, "2"]].forEach((one) => {
+      b.push('<line class="graph-hold" x1="' + x0 + '" y1="' + Y(one[0]).toFixed(1) +
+             '" x2="' + x1 + '" y2="' + Y(one[0]).toFixed(1) + '"/>');
+      b.push('<text class="graph-hold-name" x="' + (x1 - 8) + '" y="' +
+             (Y(one[0]) - 9).toFixed(1) + '">' + one[1] + "</text>");
     });
     b.push('<line class="graph-axis" x1="' + x0 + '" y1="' + y0 + '" x2="' + x1 + '" y2="' + y0 + '"/>');
     b.push('<line class="graph-axis" x1="' + x0 + '" y1="' + y0 + '" x2="' + x0 + '" y2="' + y1 + '"/>');
@@ -645,15 +741,20 @@
     });
     // PLOTTED ON THE ABSOLUTE VALUE, because the scale has no negative
     // half: the sign is the direction and the table already carries it.
-    const pts = got.map((o, i) => [X(i), Y(Math.abs(o.value))])
-      .filter((p) => isFinite(p[1]));
+    // A reading of nought has no logarithm, so on that scale it is left
+    // off rather than pinned to the floor, and the line under the
+    // picture says so.
+    const at = (v) => (logY && !(v > 0) ? NaN : Y(v));
+    const pts = got.map((o, i) => [X(i), at(Math.abs(o.value))])
+      .filter((one) => isFinite(one[1]));
     if (pts.length > 1) {
       b.push('<polyline class="graph-run" points="' +
-        pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ") + '"/>');
+        pts.map((one) => one[0].toFixed(1) + "," + one[1].toFixed(1)).join(" ") + '"/>');
     }
     got.forEach((o, i) => {
       if (!isFinite(o.value)) return;
-      const y = Y(Math.abs(o.value));
+      const y = at(Math.abs(o.value));
+      if (!isFinite(y)) return;
       const last = i === got.length - 1;
       b.push('<circle class="graph-dot" cx="' + X(i).toFixed(1) + '" cy="' + y.toFixed(1) + '" r="5"/>');
       b.push('<text class="graph-read' + (last ? " graph-read-end" : "") + '" x="' +
@@ -661,10 +762,16 @@
              show(Math.abs(o.value)) + "</text>");
     });
     b.push('<text class="graph-axis-name graph-mid" x="' + ((x0 + x1) / 2) + '" y="' + (H - 22) + '">Time</text>');
-    b.push('<text class="graph-axis-name" x="28" y="' + ((y0 + y1) / 2) +
+    // CENTRED ON THE AXIS rather than started at its middle: ", log
+    // scale" makes the name long enough to run off the top otherwise.
+    b.push('<text class="graph-axis-name graph-mid" x="28" y="' + ((y0 + y1) / 2) +
            '" transform="rotate(-90 28 ' + ((y0 + y1) / 2) + ')">Modified IBR (var. ' +
-           (which === "v1" ? "1" : "2") + ")</text>");
+           (which === "v1" ? "1" : "2") + ")" + (logY ? ", log scale" : "") + "</text>");
+    const lost = logY && got.some((o) => isFinite(o.value) && Math.abs(o.value) === 0);
     return '<svg class="zone graph" viewBox="0 0 ' + W + " " + H +
-      '" role="img" aria-label="Your readings across the three stages">' + b.join("") + "</svg>";
+      '" role="img" aria-label="Your readings across the three stages' +
+      (logY ? ", on a logarithmic scale" : "") + '">' + b.join("") + "</svg>" +
+      (lost ? '<p class="calc-graph-note">A reading of 0 has no logarithm, so it is left ' +
+        "off this scale. Switch back to see it.</p>" : "");
   }
 })();
