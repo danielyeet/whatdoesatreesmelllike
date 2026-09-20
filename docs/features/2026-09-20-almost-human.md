@@ -108,41 +108,42 @@ second. The owner's word was *subtle*.
 ## The things that are not people
 
 The owner asked for *"other things that are weirdly formed by particles and geometry,
-such as a sun, rain that is animated and falling and maybe add something else"*. There are
-three, and all three are drawn out of the same specks and answer the hand the same way,
-because being almost a thing is what this page is.
+such as a sun, rain that is animated and falling and maybe add something else"*. A sun, an
+empty chair and the rain went in; the round after, they asked for **the sun and the chair
+gone**, the rain kept, and *"particle rays that blast from here and there"* in their place.
+
+So there are two now, and both are weather. Both live in **window space** rather than down
+the document — they fall and fly on the screen, they do not stand in the writing — and
+both go quiet over the reading like everything else here.
 
 | | |
 |---|---|
-| **the sun** | A **ring** rather than a disc — a sun drawn solid at this size is a dot, and it is the ring that says what it is — with thirteen rays of uneven length and slightly uneven spacing out of it. One of them, standing above the crowd. |
 | **the rain** | Falling, the whole length of the page, each drop a short string of five specks rather than a line. |
-| **the chair** | **An empty chair**, which is the something else, and it is chosen rather than arbitrary: an empty chair is the most almost-human thing there is, a shape made by somebody not being in it. A few of them, standing among the figures. |
+| **the rays** | A spray of specks fired out from a point somewhere in the margins, in a direction of its own, thrown wider the further along the ray they sit, brightest at the head and gone at the tail. One goes off every second or two, from nowhere in particular. Four can be travelling at once. |
 
-Four things about them are not obvious from the code:
+Three things about the rays that are not obvious from the code:
 
-- **They stray far less than a person does** (`PROP_STRAY` 0.022 against the crowd's 0.2).
-  A figure is *meant* to give no hint of what it is until the hand arrives; that is
-  deliberate and the owner asked for it by name. These are not. At a fifth of its height,
-  as a person strays, the sun's ring — 67 pixels across — came apart into a cloud and
-  there was nothing on the page at all.
-- **The sun stands above the crowd, not among it.** It was first put a share of the way
-  down the *document*, which landed it squarely on top of a figure in the same margin. It
-  stands a tenth of the way down the **window** now, and the crowd starts at half of that.
-- **It is sized to the margin it stands in.** It stands in the middle of that margin, so
-  anything wider than twice the distance from there to the edge of the window hangs off
-  it — at 1280 across, a quarter of the sun was cut away.
-- **A chair is placed against the crowd rather than on a ruler of its own.** It was one
-  every 1500 pixels, which on a page whose parts are all still shut — which is every page
-  here, until somebody opens one — is past the foot of the document, so there were no
-  chairs at all. It is one for every three figures now, standing half a pace further down
-  and in the **other** margin, which puts it clear of the figure it is counted from and
-  clear of the next one.
+- **A ray is a thing travelling, not a fizz.** Where each of its 140 specks sits along it,
+  how far it is thrown off the line of it and how big it is drawn are all rolled **once,
+  when it is armed**, and held for that firing. Rolling them per frame would be static.
+- **It goes out rather than being switched off.** The head travels fast and slows
+  (`1 - (1-p)^2.2`), and the whole thing fades over its own life, so it ends by being
+  gone rather than by disappearing.
+- **Eighteen specks was not a blast.** The first go had `RAY_BEADS` at 18 travelling up to
+  1100 pixels, which is a thin dotted line nobody would notice; it is 140 specks over 150
+  to 660 pixels now, which reads as a spray.
 
-The rain is the one thing on the page that travels of its own accord rather than standing
-and straying, so it lives in **window space** and wraps at the foot of the screen — it is
-weather, not something standing in the writing. It is wrapped rather than re-rolled on
-purpose: `random()` here is the seeded run the crowd is built from, and taking numbers out
-of it in the draw loop would change the crowd.
+Both roll their own numbers from an LCG of their own (`roll`), **not** from the seeded
+`random()` the crowd is built from: taking numbers out of that run anywhere else would
+move every figure on the page.
+
+**What went with the sun and the chair.** `SUN_*`, `CHAIR`, `PROP_INK`, `PROP_STRAY`,
+`makeSun`, the whole `props` population and its drawing loop, and the test that checked
+the sun was round. `cloud()` stayed — it was a refactor the crowd uses too — and so did
+`sample()`, which `makeBody` calls. Why they were there is worth keeping: a figure is
+meant to give no hint of what it is until the hand arrives, but a sun that strays that far
+is nothing at all, so the props had a stray a tenth of the crowd's. The rays have no stray
+to speak of; they are a thing in flight.
 
 ## No two of them are the same crowd
 
@@ -263,10 +264,12 @@ being trusted:
   test compared each sample against the ninetieth percentile *of the samples themselves*,
   which is self-referential: with the fault running on it read 30.6% against a ceiling of
   30% and only just failed.
-- **`a sun stands above the crowd, and it is round`** — the one prop worth a test,
-  because ROUND is what nothing else in these margins is: a person is half as wide as
-  they are tall. It also checks the sun stands clear of where the crowd starts, which is
-  where it landed the first time.
+- **`rays go off in the margins, from here and there`** — a ray is a thing that goes
+  off, which is what this measures: the ink on the whole canvas swings as one fires and
+  goes out. Said as a **share** of the ink rather than a count of pixels, because how many
+  there are at all depends on the window and on the screen's own scale, and the suite runs
+  at neither of the sizes it was measured at. With the rays it is 14.6%; with them off —
+  the rain wrapping and the figures drifting their pixel — it is 1.5%. The floor is 7%.
 - **`the rain falls`** and **`the rain does not fall when motion is turned off`** —
   measured at the very edge of the window, in a strip no figure reaches even at its
   strayest, so what is counted there is the rain and nothing else. With the falling taken

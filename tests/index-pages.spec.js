@@ -284,3 +284,48 @@ test("without the script the table is still the table", async ({ page }) => {
   await expect(page.locator(".index-table tbody tr a").first()).toBeVisible();
   expect(errors, "no errors beyond the blocked file").toEqual([]);
 });
+
+/* A VIEW'S OWN LAYOUT BELONGS TO THE VIEW, NOT TO THE PAGE IT STANDS
+   ON. The fragrances index lays itself out one way as this page's
+   view — one centred column, the table given the room — and another
+   as the Researches page, with readings across the top and a plates
+   column down the right. That used to be asked of
+   `body.view-fragrances`, which is toggled the moment a swipe starts:
+   going from this view back to the sheet took its layout away while it
+   was still on screen travelling off, so for half a second it was
+   drawn in the Researches layout instead, with a plate the size of the
+   window. The owner photographed it. */
+test("the fragrances view keeps its own layout all the way through a swipe",
+  async ({ page }) => {
+  await page.goto("/categories/scent-descriptions.html");
+  await page.waitForFunction(() => document.querySelector(".sheet.settled"),
+    null, { timeout: 20000 });
+
+  const go = async (which) => {
+    await page.locator(".sheet-filter", { hasText: which }).click();
+  };
+  // The swipe waits for both views to have been opened at least once.
+  await go("Fragrances");
+  await page.waitForTimeout(1200);
+  await go("Houses");
+  await page.waitForTimeout(1800);
+  await go("Fragrances");
+  await page.waitForTimeout(1400);
+
+  // The plates column is the tell: it is the one thing this view hides
+  // and the Researches layout shows, and it is what carried the plate
+  // the size of the window.
+  const plates = () => page.evaluate(() => {
+    const view = document.querySelector('.view[data-view="fragrances"]');
+    const right = view ? view.querySelector(".index-right") : null;
+    return right ? getComputedStyle(right).display : "gone";
+  });
+  expect(await plates(), "hidden while the view is simply showing").toBe("none");
+
+  // And now the swipe back, watched while it runs.
+  await go("Houses");
+  for (let n = 0; n < 4; n++) {
+    await page.waitForTimeout(110);
+    expect(await plates(), "and hidden all the way through the swipe").toBe("none");
+  }
+});

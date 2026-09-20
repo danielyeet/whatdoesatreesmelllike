@@ -18,9 +18,11 @@ const {
 const EXPECTED_LABELS = [
   "Scent descriptions",
   "Theories",
-  "Favourites",
   "Explorations & Researches",
+  "Favourites",
+  "Photography",
   "Search",
+  "Contact",
 ];
 
 test.describe("the map itself", () => {
@@ -314,4 +316,65 @@ test("the trace has ranks of itself receding behind it", async ({ page }) => {
   steps.slice(1).forEach((step, i) => {
     expect(step, "each step towards the front should be the larger").toBeGreaterThan(steps[i]);
   });
+});
+
+/* EVERY PAGE IN THE MENU IS ON THE MAP, AND THEY ARE SPREAD EVENLY.
+   Both asked for by name. The positions are a Fibonacci sphere rather
+   than seven hand-placed points, and this is what that buys: every
+   node the same distance from the hub, and no two of them crowded. */
+test("the seven nodes stand evenly over the sphere", async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/index.html");
+  await page.waitForTimeout(600);
+
+  const spread = await page.evaluate(() => {
+    const at = REAL_NODES.map((one) => one.pos);
+    const len = (p) => Math.sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+    const far = at.map(len);
+    let closest = 180;
+    for (let i = 0; i < at.length; i++) {
+      for (let k = i + 1; k < at.length; k++) {
+        const dot = at[i][0] * at[k][0] + at[i][1] * at[k][1] + at[i][2] * at[k][2];
+        const c = Math.max(-1, Math.min(1, dot / (far[i] * far[k])));
+        closest = Math.min(closest, (Math.acos(c) * 180) / Math.PI);
+      }
+    }
+    return { n: at.length, near: Math.min.apply(null, far),
+             out: Math.max.apply(null, far), closest: closest };
+  });
+
+  expect(spread.n, "one per page in the menu").toBe(7);
+  // The same distance from the hub, so no branch is obviously longer.
+  expect(spread.out - spread.near,
+    `every branch the same length — ${spread.near.toFixed(3)} to ${spread.out.toFixed(3)}`)
+    .toBeLessThan(0.05);
+  // And no two crowded. Seven points placed by hand came out at about
+  // 35 degrees at the closest; the sphere gives 71.5.
+  expect(spread.closest,
+    `no two branches crowded — closest ${spread.closest.toFixed(1)} degrees`)
+    .toBeGreaterThan(60);
+});
+
+/* THE OWNER ASKED FOR PHOTOGRAPHY TO SAY SO. Clicking it opens the
+   preview rather than the page, and the window carries a line of its
+   own saying the page is unfinished. */
+test("the Photography node says it is a work in progress", async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/index.html");
+  await jumpToSlide(page, "slide-3");
+  await waitForMapSettled(page);
+
+  await page.locator(".node3d-label", { hasText: "Photography" }).click({ force: true });
+  await expect(page.locator(".node-preview-modal")).toBeVisible();
+  await expect(page.locator(".node-preview-note")).toBeVisible();
+  await expect(page.locator(".node-preview-note")).toContainText(/work in progress/i);
+  expect(page.url(), "and it opens the window rather than the page")
+    .toContain("index.html");
+
+  // Only the page that has something to say gets one.
+  await page.locator(".node-preview-close").click();
+  await page.waitForTimeout(700);
+  await page.locator(".node3d-label", { hasText: "Theories" }).click({ force: true });
+  await expect(page.locator(".node-preview-modal")).toBeVisible();
+  await expect(page.locator(".node-preview-note")).toHaveCount(0);
 });

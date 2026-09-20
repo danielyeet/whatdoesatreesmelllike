@@ -520,11 +520,12 @@ test("a picture is ruled, with specks only where the map is tied to it",
   // The classic border is back — it was taken off for a round, when
   // the chain of specks round a picture was the whole of its edge, and
   // the owner asked for it back with the specks kept only where a line
-  // meets one.
+  // meets one. Two pixels rather than one: they asked for an edge that
+  // stands out more than a hairline in `--line` does on this paper.
   const border = await page.$$eval(".sheet.scripted .sheet-frame.landed", (frames) =>
     frames.map((f) => getComputedStyle(f).borderTopWidth));
   expect(border.length).toBeGreaterThan(3);
-  expect(new Set(border), "every picture should be ruled").toEqual(new Set(["1px"]));
+  expect(new Set(border), "every picture should be ruled").toEqual(new Set(["2px"]));
 
   // Where a line is tied to a picture there are specks; where nothing
   // is tied to it there are none.
@@ -916,6 +917,7 @@ test("every line carries a date, and no date lands on a picture", async ({ page 
   // The last lines drawn are the ones that close loops: they only set
   // off once both of the pictures they join have arrived, so the sheet
   // can be finished while a couple of dates are still being written.
+  //
   await expect
     .poll(
       () =>
@@ -1002,4 +1004,117 @@ test("every line carries a date, and no date lands on a picture", async ({ page 
   // ...and a short line is written smaller rather than left bare, so no
   // date reaches past the end of its own line onto what it joins.
   expect(read.over, `dates landing on the pictures: ${read.over.join(", ")}`).toEqual([]);
+});
+
+/* THE MAP STANDS IN THREE DIMENSIONS. Asked for by name, along with
+   bigger pictures and pictures of different sizes — which is the same
+   answer, since how big one is drawn is now mostly how far away it is
+   standing. Every picture is given a depth and then projected: what is
+   further back is smaller, fainter and nearer the vanishing point, and
+   what is in front of it is drawn over it. */
+test("the pictures stand at depths of their own, and the near ones are drawn over the far",
+  async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+
+  const seen = await page.$$eval(".sheet.scripted .sheet-frame.landed", (frames) =>
+    frames.map((f) => ({
+      deep: Number(f.style.getPropertyValue("--depth")),
+      z: Number(f.style.zIndex),
+      wide: Math.round(f.getBoundingClientRect().width),
+      ink: Number(getComputedStyle(f).opacity),
+    })));
+  expect(seen.length).toBeGreaterThan(4);
+
+  // They really do stand at different depths.
+  const deeps = seen.map((one) => one.deep);
+  expect(Math.max.apply(null, deeps) - Math.min.apply(null, deeps),
+    `the pictures should stand at depths of their own — ${JSON.stringify(deeps)}`)
+    .toBeGreaterThan(0.4);
+
+  // WHAT IS IN FRONT IS DRAWN OVER WHAT IS BEHIND. Without this the
+  // map has depth in its sizes and none in its stacking, which reads
+  // as a mistake rather than as distance.
+  const byDepth = [...seen].sort((a, b) => a.deep - b.deep);
+  for (let n = 1; n < byDepth.length; n++) {
+    expect(byDepth[n].z,
+      "a picture further back should stand behind a nearer one")
+      .toBeLessThanOrEqual(byDepth[n - 1].z);
+  }
+
+  // And what is further away is drawn fainter.
+  const near = byDepth[0], far = byDepth[byDepth.length - 1];
+  expect(far.ink, `the far one should be fainter — ${near.ink} vs ${far.ink}`)
+    .toBeLessThan(near.ink);
+
+  // BIGGER, AND NOT ALL ONE SIZE. Both asked for: they were a ninth of
+  // the sheet across and never over 152px, all within a third of each
+  // other.
+  const wides = seen.map((one) => one.wide).filter((w) => w < 260);
+  expect(Math.min.apply(null, wides), "bigger than they were").toBeGreaterThan(120);
+  expect(Math.max.apply(null, wides) / Math.min.apply(null, wides),
+    `and of different sizes — ${JSON.stringify(wides)}`).toBeGreaterThan(1.2);
+});
+
+/* A DATE ABOUT NOTHING IS NOT A DATE. A frame marked `data-open="no"`
+   has no page of its own yet, so the dates on the lines reaching it
+   are printed as crosses rather than as a date that says nothing. The
+   owner asked for it. */
+test("a line reaching a picture with no page carries crosses, not a date",
+  async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await page.waitForTimeout(9000);
+
+  const read = await page.evaluate(() => {
+    const frames = [...document.querySelectorAll(".sheet-frame")];
+    const out = [];
+    document.querySelectorAll(".sheet-route").forEach((line) => {
+      const a = frames[Number(line.dataset.from)], b = frames[Number(line.dataset.to)];
+      const label = [...document.querySelectorAll(".sheet-date")]
+        .find((d) => d.dataset.for === line.dataset.from + "-" + line.dataset.to);
+      out.push({
+        blank: (a && a.dataset.open === "no") || (b && b.dataset.open === "no"),
+      });
+    });
+    return {
+      links: out,
+      dates: [...document.querySelectorAll(".sheet-date")].map((d) => d.textContent),
+      unwritten: frames.filter((f) => f.dataset.open === "no").length,
+    };
+  });
+
+  expect(read.unwritten, "most of this sheet is still to be written")
+    .toBeGreaterThan(4);
+  const crosses = read.dates.filter((d) => /^x+$/.test(d));
+  expect(crosses.length, "a line to an unwritten picture should carry crosses")
+    .toBeGreaterThan(0);
+  crosses.forEach((one) => expect(one).toBe("xxxxxxxxxxxxx"));
+  // And nothing that is neither a date nor crosses.
+  read.dates.forEach((one) => {
+    expect(one, `a date should be a date or crosses — ${one}`)
+      .toMatch(/^(\d\d\.\d\d\.\d{4}|x+)$/);
+  });
+});
+
+/* THE FLICK IS HALF WHAT IT WAS, AND IN NO ORDER, AND NOTHING CAN BE
+   PRESSED WHILE IT RUNS. All three asked for. The last is the one
+   worth a test: what is under the pointer changes nine times a second,
+   so a press would land on whatever happened to be showing. */
+test("nothing on the sheet can be pressed while the pictures are cycling",
+  async ({ page }) => {
+  await page.goto(SHEET);
+  // Caught while it is still going: the flick is about a second and a
+  // quarter now, so this is well inside it.
+  await page.waitForFunction(() => document.querySelector(".sheet.flicking"),
+    { timeout: 8000 });
+  const shut = await page.locator(".sheet-frame").first()
+    .evaluate((el) => getComputedStyle(el).pointerEvents);
+  expect(shut, "the pictures should not take a press while they cycle").toBe("none");
+
+  await waitForSheet(page);
+  await expect(page.locator(".sheet.flicking")).toHaveCount(0);
+  const open = await page.locator(".sheet-frame").first()
+    .evaluate((el) => getComputedStyle(el).pointerEvents);
+  expect(open, "and should once it has settled").not.toBe("none");
 });

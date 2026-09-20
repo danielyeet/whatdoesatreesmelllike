@@ -151,41 +151,23 @@
   // ============================================================
   // AND THE THINGS THAT ARE NOT PEOPLE
   //
-  // The owner asked for "other things that are weirdly formed by
-  // particles and geometry" standing among the crowd. There are three,
-  // and they are all drawn out of the same specks and answer the hand
-  // the same way, because being almost a thing is what this page is:
+  // Two of them, and they are both weather. A sun and an empty chair
+  // stood here for a round; the owner asked for both of them gone and
+  // for the rain to stay, and the rays are what they asked for in
+  // their place — "particle rays that blast from here and there".
   //
-  //   the sun     a RING rather than a disc, with rays of uneven
-  //               length out of it. One of them, standing high.
   //   the rain    falling, the whole length of the page, each drop a
   //               short string of specks rather than a line.
-  //   the chair   an empty chair — which is the most almost-human
-  //               thing there is, a shape made by somebody not being
-  //               in it. A few of them, standing among the figures.
+  //   the rays    a spray of specks fired out from a point, somewhere
+  //               in the margins, in a direction of its own, thrown
+  //               wider the further along it they sit and fading as
+  //               the whole thing goes out. One every second or two,
+  //               from nowhere in particular.
+  //
+  // Both live in WINDOW space rather than down the document — they are
+  // weather, not something standing in the writing — and both go quiet
+  // over the reading like everything else here.
   // ============================================================
-  // ABOVE THE CROWD, not among it. As a share of the window's own
-  // height, and the crowd starts at half of that — so the sun stands
-  // clear of the first figure rather than landing on top of one, which
-  // is what a share of the whole document did.
-  const SUN_AT = 0.10;           // how far down the WINDOW it stands, as a share
-  const SUN_SIZE = [200, 250];   // how big it is drawn, in pixels
-  const SUN_SPECKS = 1000;       // and how many specks it is made of
-  const SUN_RAYS = 13;           // rays out of the ring
-  const SUN_DISC = 0.58;         // the share of its specks that are the ring
-  const CHAIR_EVERY = 3;         // one empty chair for every this many figures
-  const CHAIR_TALL = [130, 175];
-  const CHAIR_SPECKS = [520, 680];
-  const PROP_INK = [0.88, 1.25]; // and a weight of their own
-  // AND THEY STRAY FAR LESS THAN A PERSON DOES. A figure is meant to
-  // give no hint of what it is until the hand arrives — that is the
-  // house's name said as a behaviour, and it is deliberate. These are
-  // not: the owner asked for things "weirdly formed by particles and
-  // geometry", which means you have to be able to see that they are a
-  // sun and a chair. At a fifth of their height, as a person strays,
-  // a ring 67 pixels across came apart into a cloud and there was
-  // nothing on the page at all.
-  const PROP_STRAY = 0.022;
   const RAIN_DROPS = 170;        // how many are falling at once
   const RAIN_BEADS = 5;          // the specks one drop is strung from
   const RAIN_FALL = [230, 520];  // how fast one falls, in pixels a second
@@ -193,19 +175,14 @@
   const RAIN_SLANT = 0.16;       // how far it leans as it falls
   const RAIN_INK = [0.13, 0.34];
 
-  // A chair, face on, with a hint of depth in the two back legs.
-  const CHAIR = [
-    { a: [0.245, 0.120], b: [0.755, 0.120], r: 0.022, of: 12 },  // the top rail
-    { a: [0.245, 0.125], b: [0.255, 0.520], r: 0.016, of: 10 },  // the left post
-    { a: [0.755, 0.125], b: [0.745, 0.520], r: 0.016, of: 10 },  // the right post
-    { a: [0.225, 0.545], b: [0.775, 0.545], r: 0.029, of: 20 },  // the seat
-    { a: [0.255, 0.580], b: [0.235, 0.965], r: 0.018, of: 12 },  // front left leg
-    { a: [0.745, 0.580], b: [0.765, 0.965], r: 0.018, of: 12 },  // front right leg
-    { a: [0.350, 0.570], b: [0.335, 0.905], r: 0.012, of: 7 },   // back left leg
-    { a: [0.650, 0.570], b: [0.665, 0.905], r: 0.012, of: 7 },   // back right leg
-  ];
-  const CHAIR_TOTAL = CHAIR.reduce((sum, one) => sum + one.of, 0);
-
+  const RAY_COUNT = 4;           // how many can be travelling at once
+  const RAY_BEADS = 140;         // the specks one ray is strung from
+  const RAY_SPEED = [430, 920];  // how fast the head of one travels
+  const RAY_LONG = [90, 240];    // how far the tail trails behind it
+  const RAY_LIVE = [0.38, 0.72]; // how long one lasts, in seconds
+  const RAY_WAIT = [0.4, 2.6];   // and how long before the next goes off
+  const RAY_FAN = 0.13;          // how far it spreads as it goes
+  const RAY_INK = [0.34, 0.72];
   // ============================================================
   // WHAT A PERSON IS, AS A HANDFUL OF CAPSULES
   //
@@ -286,40 +263,6 @@
     return out;
   }
 
-  /** THE SUN, in the same unit box. It is a RING and not a disc — a sun
-      drawn solid at this size is a dot, and it is the ring that says
-      what it is — with rays of uneven length and slightly uneven
-      spacing out of it, so it is a drawn sun rather than a compass
-      rose. */
-  function makeSun(howMany) {
-    const rays = [];
-    for (let k = 0; k < SUN_RAYS; k++) {
-      rays.push({
-        a: (k / SUN_RAYS) * Math.PI * 2 + (random() - 0.5) * 0.18,
-        from: 0.340 + random() * 0.022,
-        to: 0.395 + random() * 0.105,
-      });
-    }
-    const out = [];
-    for (let n = 0; n < howMany; n++) {
-      if (random() < SUN_DISC) {
-        const a = random() * Math.PI * 2;
-        const r = 0.30 + (random() - 0.5) * 0.028;
-        out.push([0.5 + Math.cos(a) * r, 0.5 + Math.sin(a) * r, 0]);
-      } else {
-        const ray = rays[Math.floor(random() * rays.length)];
-        const r = ray.from + (ray.to - ray.from) * random();
-        const off = (random() - 0.5) * 0.011;
-        out.push([
-          0.5 + Math.cos(ray.a) * r - Math.sin(ray.a) * off,
-          0.5 + Math.sin(ray.a) * r + Math.cos(ray.a) * off,
-          1,
-        ]);
-      }
-    }
-    return out;
-  }
-
   // ============================================================
   // THE CROWD
   //
@@ -331,8 +274,8 @@
   const ink = canvas ? canvas.getContext("2d") : null;
   let width = 0, height = 0, docTall = 0;
   let crowd = [];
-  let props = [];   // the sun and the chairs
   let rain = [];
+  let rays = [];
 
   /** One cloud of specks standing somewhere down the page: the same
       shape for a person, a sun and a chair, so all three stray, come
@@ -364,7 +307,6 @@
   function build() {
     seed = SEED;
     crowd = [];
-    props = [];
     if (!width || !docTall) return;
     // The middle of each margin, or the edge of the window when the
     // window is too narrow to have one.
@@ -403,77 +345,72 @@
       }));
     }
 
-    // ---- AND THE THINGS THAT ARE NOT PEOPLE --------------------------
-    // The sun, once, standing high in whichever margin the first figure
-    // is not in; then an empty chair every so often, alternating sides.
-    const sunSide = crowd.length && crowd[0].mid < 0.5 ? 1 : 0;
-    // AND IT IS SIZED TO THE MARGIN IT STANDS IN. It stands in the
-    // middle of that margin, so anything wider than twice the distance
-    // from there to the edge of the window hangs off it — which at
-    // 1280 across cut a quarter of the sun away.
-    const sunTall = Math.min(between(SUN_SIZE[0], SUN_SIZE[1]), stand * width * 1.9);
-    props.push(Object.assign(
-      cloud(makeSun(SUN_SPECKS), window.innerHeight * SUN_AT, sunTall,
-            sunSide === 0 ? stand : 1 - stand,
-            PROP_STRAY * between(STRAY_VARY[0], STRAY_VARY[1]),
-            between(PROP_INK[0], PROP_INK[1])),
-      { kind: "sun" }));
-
-    // A CHAIR IS PLACED AGAINST THE CROWD rather than on a ruler of its
-    // own. It was every 1500 pixels, which on a page whose parts are
-    // all still shut — which is every page here, until somebody opens
-    // one — is past the foot of the document, so there were no chairs
-    // at all. One for every CHAIR_EVERY figures, standing half a pace
-    // further down and in the OTHER margin, puts them among the crowd
-    // on a page of any length and never on top of anybody.
-    crowd.forEach((figure, n) => {
-      if (n % CHAIR_EVERY !== CHAIR_EVERY - 1) return;
-      const tall = between(CHAIR_TALL[0], CHAIR_TALL[1]);
-      const side = figure.mid < 0.5 ? 1 : 0;
-      // Half a pace further down and in the OTHER margin, which puts it
-      // clear of the figure it is counted from and clear of the next
-      // one, which stands in this margin a whole pace on.
-      const y = figure.y + FIG_EVERY * 0.42;
-      const mid = side === 0
-        ? stand + between(-0.03, 0.018)
-        : 1 - stand + between(-0.018, 0.03);
-      props.push(Object.assign(
-        cloud(sample(CHAIR, CHAIR_TOTAL, Math.round(between(CHAIR_SPECKS[0], CHAIR_SPECKS[1])), 0),
-              y, tall, mid,
-              PROP_STRAY * between(STRAY_VARY[0], STRAY_VARY[1]),
-              between(PROP_INK[0], PROP_INK[1])),
-        { kind: "chair" }));
-    });
   }
+
 
   /** THE RAIN. It falls on the WINDOW rather than down the document —
       it is weather, not something standing in the writing — so it is
       built with the canvas and wraps at the foot of the screen. Each
       drop is a short string of specks rather than a line, because
       everything on this page is specks. */
+  let drip = 7741;
+  const roll = () => {
+    drip = (drip * 1103515245 + 12345) % 2147483648;
+    return drip / 2147483648;
+  };
+  const among = (pair) => pair[0] + (pair[1] - pair[0]) * roll();
+
   function buildRain() {
     rain = [];
     if (!width || !height) return;
-    let drip = 7741;
-    const roll = () => {
-      drip = (drip * 1103515245 + 12345) % 2147483648;
-      return drip / 2147483648;
-    };
     for (let n = 0; n < RAIN_DROPS; n++) {
-      const long = RAIN_LONG[0] + (RAIN_LONG[1] - RAIN_LONG[0]) * roll();
+      const long = among(RAIN_LONG);
       const beads = [];
       for (let k = 0; k < RAIN_BEADS; k++) beads.push(roll());
       beads.sort((a, b) => a - b);
       rain.push({
         x: roll() * width,
         y: roll() * (height + long * 2) - long,
-        fall: RAIN_FALL[0] + (RAIN_FALL[1] - RAIN_FALL[0]) * roll(),
+        fall: among(RAIN_FALL),
         long: long,
-        lean: (RAIN_SLANT * 0.6 + RAIN_SLANT * 0.8 * roll()),
-        ink: RAIN_INK[0] + (RAIN_INK[1] - RAIN_INK[0]) * roll(),
+        lean: RAIN_SLANT * 0.6 + RAIN_SLANT * 0.8 * roll(),
+        ink: among(RAIN_INK),
         beads: beads,
       });
     }
+  }
+
+  /** A RAY, ARMED AND WAITING. Every one of them starts part way
+      through its own wait the first time, so they do not all go off
+      together on the first second of the page. */
+  function armRay(ray, first) {
+    const margin = Math.max(110, (width - COLUMN) / 2 + EASED_IN);
+    // FROM HERE AND THERE, which is what the owner asked for — but
+    // out of the margins, because the middle of the window is the
+    // reading. Left side or right, and anywhere down the window.
+    ray.x = roll() < 0.5 ? roll() * margin : width - roll() * margin;
+    ray.y = roll() * height;
+    ray.ang = roll() * Math.PI * 2;
+    ray.speed = among(RAY_SPEED);
+    ray.long = among(RAY_LONG);
+    ray.live = among(RAY_LIVE);
+    ray.ink = among(RAY_INK);
+    ray.wait = among(RAY_WAIT) * (first ? roll() : 1);
+    ray.at = 0;
+    ray.beads = [];
+    for (let k = 0; k < RAY_BEADS; k++) {
+      // Where a speck sits along the ray, how far it is thrown off the
+      // line of it and how big it is drawn — all three fixed for this
+      // firing, so a ray is a thing travelling rather than a fizz.
+      ray.beads.push([Math.pow(roll(), 0.7), (roll() - 0.5) * 2, roll()]);
+    }
+    return ray;
+  }
+
+  function buildRays() {
+    rays = [];
+    if (!width || !height) return;
+    for (let n = 0; n < RAY_COUNT; n++) rays.push(armRay({}, true));
   }
 
   function size() {
@@ -489,7 +426,7 @@
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
     ink.setTransform(ratio, 0, 0, ratio, 0, 0);
-    if (!same) { build(); buildRain(); }
+    if (!same) { build(); buildRain(); buildRays(); }
   }
 
   let handX = -99999, handY = -99999;
@@ -546,28 +483,7 @@
     wasAt = clock;
 
     drawRain(dt);
-
-    // THE THINGS THAT ARE NOT PEOPLE, drawn behind the crowd: the sun
-    // and the empty chairs. They stray and come home exactly as a
-    // figure does — being almost a thing is what this page is — but
-    // nothing is WRONG with them. The faults belong to the people.
-    props.forEach((prop) => {
-      const top = prop.y - down;
-      if (top > height + 80 || top + prop.tall < -80) return;
-      prop.home += (reach(prop, top) - prop.home) * ease;
-      const held = STRAY_NEAR + (1 - STRAY_NEAR) * (1 - prop.home);
-      prop.specks.forEach((one) => {
-        const wander = idle === 0 ? 0 : idle *
-          Math.sin((clock / one.every) * Math.PI * 2 + one.phase);
-        const x = one.hx * width + one.sx * held + wander;
-        const y = one.hy - down + one.sy * held + wander * 0.7;
-        if (y < -8 || y > height + 8) return;
-        const shown = one.ink * (0.78 + 0.34 * prop.home) * lit(x);
-        if (shown < 0.012) return;
-        ink.fillStyle = rgba(shown);
-        ink.fillRect(Math.round(x), Math.round(y), one.size, one.size);
-      });
-    });
+    drawRays(dt);
 
     crowd.forEach((figure) => {
       const top = figure.y - down;
@@ -642,6 +558,44 @@
         if (shown < 0.012) return;
         ink.fillStyle = rgba(shown);
         ink.fillRect(Math.round(x), Math.round(y), one.size, one.size);
+      });
+    });
+  }
+
+  /** THE RAYS. A spray of specks fired out from a point, thrown wider
+      the further along the ray they sit, brightest at the head and
+      gone at the tail — and fading as a whole over its own life, so it
+      goes OUT rather than being switched off. Under
+      `prefers-reduced-motion` a ray that has not gone off yet stays
+      where it is and nothing fires. */
+  function drawRays(dt) {
+    rays.forEach((ray) => {
+      if (dt > 0) {
+        if (ray.wait > 0) { ray.wait -= dt; return; }
+        ray.at += dt;
+        if (ray.at >= ray.live) { armRay(ray, false); return; }
+      } else if (ray.wait > 0) {
+        return;
+      }
+      const p = ray.live ? Math.min(1, ray.at / ray.live) : 0;
+      // Out fast and slowing, and fading over the whole of its life.
+      const going = ray.speed * ray.live * (1 - Math.pow(1 - p, 2.2));
+      const fade = Math.min(1, p * 6) * (1 - Math.pow(p, 1.7));
+      if (fade <= 0.01) return;
+      const ux = Math.cos(ray.ang), uy = Math.sin(ray.ang);
+      const px = -uy, py = ux;
+      ray.beads.forEach((bead) => {
+        const along = going - bead[0] * ray.long;
+        if (along < 0) return;
+        const fan = bead[1] * RAY_FAN * along;
+        const x = ray.x + ux * along + px * fan;
+        const y = ray.y + uy * along + py * fan;
+        if (x < -6 || x > width + 6 || y < -6 || y > height + 6) return;
+        const shown = ray.ink * fade * (1 - bead[0] * 0.85) * lit(x);
+        if (shown < 0.012) return;
+        const big = bead[2] < 0.45 ? 2 : 1;
+        ink.fillStyle = rgba(shown);
+        ink.fillRect(Math.round(x), Math.round(y), big, big);
       });
     });
   }

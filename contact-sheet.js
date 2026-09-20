@@ -32,6 +32,9 @@
   if (!sheet) return; // not a page with a contact sheet on it
 
   const frames = Array.from(sheet.querySelectorAll(".sheet-frame"));
+  /** Whether the picture at this place has a page of its own yet. The
+      page says so on the frame; nothing here guesses at it. */
+  const unwritten = (i) => !!(frames[i] && frames[i].dataset.open === "no");
   if (!frames.length) return;
 
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -48,23 +51,57 @@
   // beat before the flicking starts. Going straight into the cuts from
   // a blank page is a jolt; a moment of the piece itself first reads
   // as a projector being started rather than as a page loading.
+  // HALF THE TIME AND HALF THE CUTS, which the owner asked for: it was
+  // 18 cuts over about three seconds and it is 9 over about one and a
+  // quarter. Each cut is a little quicker as well (FLIP_FIRST_MS), and
+  // they slow more steeply (FLIP_SLOW), so it still ends by coming to
+  // rest rather than stopping.
+  // The BEAT BEFORE IT STARTS is not part of what the owner asked to
+  // be halved — that was the cycling — and it is what makes the page
+  // read as a projector being started. Left where it was.
   const FLIP_HOLD_MS = 250;
-  const FLIP_FIRST_MS = 42;
-  const FLIP_SLOW = 1.14;
-  const FLIP_LAST_MS = 430;
+  const FLIP_FIRST_MS = 32;
+  const FLIP_SLOW = 1.29;
+  const FLIP_LAST_MS = 250;
 
   // The map. Sizes are shares of the sheet's own width, so the whole
   // arrangement scales rather than being pinned to one screen.
   const PLATE_SHARE = 0.44, PLATE_MIN = 270, PLATE_MAX = 500;
-  const CHILD_SHARE = 0.125, CHILD_MIN = 92, CHILD_MAX = 152;
+  // BIGGER, which the owner asked for: they were a ninth of the sheet
+  // across and never more than 152px, which on a wide window is a page
+  // of stamps.
+  const CHILD_SHARE = 0.175, CHILD_MIN = 130, CHILD_MAX = 236;
   const CELL_SPREAD = 1.6;    // how much room each picture is given, as a multiple of itself
   // ...and a little more of it the further down the page it is, so the
   // sheet opens out as it goes rather than bunching up towards the
   // bottom. Gently: at 0.16 the map became a third empty.
   const ROW_OPEN = 0.07;      // each row this much roomier than the one above
   const CELL_JITTER = 0.85;   // how much of the room left over it may wander in
-  const SIZE_VARY = 0.34;     // how much the pictures differ in size
-  const PLATE_CLEAR = 34;     // space kept clear around the middle window
+  const SIZE_VARY = 0.2;      // how much the pictures differ in size before depth
+
+  // THE MAP STANDS IN THREE DIMENSIONS. Every picture but the middle
+  // window is given a depth of its own and then PROJECTED: what is
+  // further back is drawn smaller, fainter and nearer the vanishing
+  // point, and what is in front of it is drawn over it. The owner asked
+  // for the map to be 3D, with depth, and for the pictures to be
+  // different sizes — which this is the same answer to, since how big
+  // one is drawn is now mostly how far away it is standing.
+  //
+  // It is done HERE rather than with a CSS `perspective`, and that is
+  // the whole reason it works: the lines between the pictures are drawn
+  // on a canvas from these same numbers, so projecting the numbers
+  // moves the pictures and their lines together. A transform in the
+  // stylesheet would move the pictures and leave every line behind.
+  const DEPTH_MAX = 430;      // how far back a picture may stand
+  const FOCAL = 1500;         // how strongly it recedes; lower is stronger
+  const DEPTH_FADE = 0.42;    // how much of its ink the furthest one gives up
+  // ROOM ROUND THE MIDDLE WINDOW, and more of it than there was. The
+  // cells are kept clear of the plate by this much, and then every
+  // picture is projected TOWARDS the plate's own middle by however
+  // far back it stands — so at 34 the nearest ones ended up all but
+  // touching it, and the line between them had a dozen pixels to
+  // run in, which is not a line on a map.
+  const PLATE_CLEAR = 130;    // space kept clear around the middle window
 
   // How the pictures are joined up. Not everything reaches back to the
   // middle: each picture links to one of its nearer neighbours, some
@@ -76,7 +113,12 @@
   const LINK_EXTRA = 3;       // cross links added back
   const LINE_GAP = 8;         // clear space between a line and the pictures it joins
   const DATE_SIZE = 10;       // how big a date is set on a line with room for it
-  const LABEL_MIN = 34;       // and the shortest line that can carry one at all
+  // What stands in for a date on a line reaching a picture that has
+  // nothing written behind it yet. The owner's own, and thirteen of
+  // them on purpose: it is the width of a date, so a line that can
+  // carry one can carry this.
+  const NO_DATE = "xxxxxxxxxxxxx";
+  const LABEL_MIN = 26;       // and the shortest line that can carry one at all
   const CAPTION_ROOM = 30;    // the strip under a picture its caption is printed on
 
   // The map draws itself outwards from the middle, and is meant to be
@@ -177,6 +219,26 @@
 
   function distance(a, b) { return Math.hypot(a.cx - b.cx, a.cy - b.cy); }
 
+  /** How long the line between these two would actually be drawn — the
+      run left once it has cleared both frames. */
+  function runBetween(a, b) {
+    const from = edgePoint(a, b), to = edgePoint(b, a);
+    return Math.hypot(to.x - from.x, to.y - from.y);
+  }
+
+  /** AND LONG ENOUGH TO CARRY ITS DATE. Two pictures standing at
+      different depths can come out close together on the window even
+      though the scatter kept them in cells of their own — that is what
+      depth looks like — and a run of a dozen pixels between them is
+      not a line on a map, it is a nick. Every line here carries a date
+      and there is a test that says so, so a pair this close is simply
+      not joined: one of them links to something further off instead. */
+  // The floor is LABEL_MIN with room to spare on top of it: the line
+  // is drawn a little shorter than the run measured here, because it
+  // stops clear of the tie marks at each end.
+  const LINK_MIN = LABEL_MIN + 16;
+  const farEnough = (a, b) => runBetween(nodes[a], nodes[b]) >= LINK_MIN;
+
   /**
    * Does a straight line between these two points cut through the box?
    * The standard clipping test: walk in from each of the four sides in
@@ -275,7 +337,8 @@
         .map((j) => ({ j: j, d: distance(nodes[j], node) }))
         .sort((a, b) => a.d - b.d)
         .slice(0, LINK_NEAREST)
-        .filter((candidate) => clearBetween(candidate.j, entry.i));
+        .filter((candidate) => farEnough(candidate.j, entry.i) &&
+                               clearBetween(candidate.j, entry.i));
       if (!near.length) return;  // everything near it is behind something else
       links.push({ a: near[Math.floor(random() * near.length)].j, b: entry.i, tree: true });
       linked.push(entry.i);
@@ -293,7 +356,8 @@
         .map((j) => ({ j: j, d: distance(nodes[j], nodes[a]) }))
         .sort((x, y) => x.d - y.d)
         .slice(0, LINK_NEAREST)
-        .filter((candidate) => clearBetween(a, candidate.j));
+        .filter((candidate) => farEnough(a, candidate.j) &&
+                               clearBetween(a, candidate.j));
       if (!near.length) continue;
       links.push({ a: a, b: near[Math.floor(random() * near.length)].j, tree: false });
     }
@@ -331,11 +395,22 @@
       }
     }
     pairs.sort((a, b) => a.d - b.d);
-    pairs.forEach((pair) => {
-      if (partOf(pair.i) === partOf(pair.j)) return;
-      if (!clearBetween(pair.i, pair.j)) return;
-      links.push({ a: pair.i, b: pair.j, tree: true });
-      sew(pair.i, pair.j);
+    // SHORTEST FIRST, BUT NOT TOO SHORT. This pass takes whatever joins
+    // two parts that cannot otherwise reach each other, and since it
+    // works shortest first it is exactly where a run of twenty pixels
+    // comes from — which carries no date, and a line without one reads
+    // as unfinished beside the ones that have them. So it is made
+    // twice: once over the runs long enough to carry a date, and then,
+    // only for anything still cut off, once more over all of them. An
+    // island joined by a short line is better than an island.
+    [true, false].forEach((mind) => {
+      pairs.forEach((pair) => {
+        if (partOf(pair.i) === partOf(pair.j)) return;
+        if (mind && !farEnough(pair.i, pair.j)) return;
+        if (!clearBetween(pair.i, pair.j)) return;
+        links.push({ a: pair.i, b: pair.j, tree: true });
+        sew(pair.i, pair.j);
+      });
     });
 
     // And nothing is left hanging off the end of a single line either.
@@ -368,7 +443,14 @@
           entry.j !== i && already.indexOf(entry.j) < 0 &&
           clearBetween(entry.j, i, mayCross))
         .sort((a, b) => a.d - b.d);
-      const reachable = near(-1).length ? near(-1) : near(i);
+      // And the same rule as the sewing pass: a second line long enough
+      // to carry a date first, and any second line at all rather than
+      // leave the picture a dead end.
+      const pick = (list) => list.filter((entry) => farEnough(entry.j, i));
+      const plain = near(-1), crossing = near(i);
+      const reachable = pick(plain).length ? pick(plain)
+        : (pick(crossing).length ? pick(crossing)
+          : (plain.length ? plain : crossing));
       if (reachable.length) links.push({ a: reachable[0].j, b: i, tree: false });
     });
 
@@ -404,11 +486,19 @@
       // A date on the line, the way a road on a map carries its number.
       // Random for now: real ones would be written onto the frames in
       // the page and read from there instead.
+      //
+      // EXCEPT WHERE THERE IS NOTHING BEHIND THE PICTURE YET. A frame
+      // marked `data-open="no"` is one with no page of its own, so a
+      // date on the line reaching it would be a date about nothing; the
+      // owner asked for those to read as crosses instead. The roll
+      // still happens either way, so which pictures are written up does
+      // not change where anything else on the map ends up.
       const day = 1 + Math.floor(random() * 28);
       const month = 1 + Math.floor(random() * 12);
       const year = 2016 + Math.floor(random() * 10);
-      link.date =
-        String(day).padStart(2, "0") + "." + String(month).padStart(2, "0") + "." + year;
+      link.date = (unwritten(link.a) || unwritten(link.b))
+        ? NO_DATE
+        : String(day).padStart(2, "0") + "." + String(month).padStart(2, "0") + "." + year;
       // Lines leaving different pictures can still happen to finish at
       // the same moment, and two pictures landing together is the one
       // thing the spread is meant not to do. A fixed nudge each, rolled
@@ -484,22 +574,46 @@
     const taken = open.slice(0, rest.length);
     taken.sort((a, b) => (a.y - b.y) || (a.x - b.x));
 
+    // THE VANISHING POINT is the middle window's own middle: the plate
+    // stands at the front of the volume (depth 0) and everything else
+    // recedes towards where it is.
+    const vanX = plateX + plateSize / 2;
+    const vanY = plateSize / 2;
+    /** Where a picture of this size, at this place, standing this far
+        back, is actually drawn. */
+    function project(x, y, size, z) {
+      const k = FOCAL / (FOCAL + z);
+      const drawn = Math.max(24, Math.round(size * k));
+      const midX = vanX + (x + size / 2 - vanX) * k;
+      const midY = vanY + (y + size / 2 - vanY) * k;
+      return { x: Math.round(midX - drawn / 2), y: Math.round(midY - drawn / 2),
+               size: drawn, k: k };
+    }
+
     nodes = [{
-      x: plateX, y: 0, size: plateSize,
+      x: plateX, y: 0, size: plateSize, z: 0,
       cx: plateX + plateSize / 2, cy: plateSize / 2,
     }];
+    plate.style.zIndex = "1000";
+    plate.style.setProperty("--depth", "0");
 
-    rest.forEach((frame, i) => {
-      const spot = taken[i] || { x: 0, y: 0, h: cell + CAPTION_ROOM };
+    // EVERY PLACE WORKED OUT BEFORE ANY PICTURE IS PUT IN ONE, and then
+    // sorted by where it comes out ON THE WINDOW. The owner asked for
+    // the pictures to run 01, 02, 03 down the page, and with depth in
+    // the map that is no longer the order their cells stand in: a
+    // picture standing far back is drawn nearer the vanishing point, so
+    // a low cell at depth can come out above a high one at the front.
+    // Sorting the PROJECTED places is what keeps the reading order the
+    // reading order.
+    const plan = taken.map((spot) => {
       const cellH = spot.h;
       // Pictures differ a little in size, and none of them sits dead
       // centre in its own square — both are what keep the scatter from
-      // resolving back into the grid it was built on.
+      // resolving back into the grid it was built on. (Most of the
+      // difference in size is depth now; this is the rest of it.)
       const size = Math.round(childBase * (1 - SIZE_VARY / 2 + random() * SIZE_VARY));
       // Wandering, but never out of its own square: the room left over
-      // inside the square is the whole of what it has to wander in, so
-      // two pictures can never end up on top of each other however far
-      // the scatter throws them.
+      // inside the square is the whole of what it has to wander in.
       const roomX = Math.max(0, (cellW - size) / 2) * CELL_JITTER;
       // Its caption is printed underneath it, so the room it may wander
       // down into is what is left once that is allowed for.
@@ -508,10 +622,26 @@
       const y = Math.round(
         spot.y + (cellH - CAPTION_ROOM - size) / 2 + (random() - 0.5) * 2 * roomY
       );
-      frame.style.width = (placed ? size : plateSize) + "px";
-      frame.style.height = (placed ? size : plateSize) + "px";
-      frame.style.setProperty("--x", (placed ? x : plateX) + "px");
-      frame.style.setProperty("--y", (placed ? y : 0) + "px");
+      // HOW FAR BACK IT STANDS, and everything that follows from it.
+      // What is in front is drawn over what is behind (`zIndex`), and
+      // what is behind gives up some of its ink (`--depth`, which the
+      // stylesheet reads).
+      const z = random() * DEPTH_MAX;
+      return { put: project(x, y, size, z), z: z };
+    });
+    plan.sort((a, b) => (a.put.y - b.put.y) || (a.put.x - b.put.x));
+
+    rest.forEach((frame, i) => {
+      const one = plan[i] || plan[plan.length - 1] ||
+        { put: { x: 0, y: 0, size: childBase }, z: 0 };
+      const put = one.put;
+      const deep = one.z / DEPTH_MAX;
+      frame.style.width = (placed ? put.size : plateSize) + "px";
+      frame.style.height = (placed ? put.size : plateSize) + "px";
+      frame.style.setProperty("--x", (placed ? put.x : plateX) + "px");
+      frame.style.setProperty("--y", (placed ? put.y : 0) + "px");
+      frame.style.setProperty("--depth", deep.toFixed(3));
+      frame.style.zIndex = String(1000 - Math.round(one.z));
 
       // How much room its caption actually takes up, measured off the
       // page rather than guessed at. A guess had to allow for the
@@ -533,10 +663,11 @@
       // to once the picture is its own size.
       const words = frame.querySelector(".sheet-caption");
       const printed = words ? words.getBoundingClientRect() : null;
-      const room = size * 1.5;    // the same max-width the stylesheet gives it
+      const room = put.size * 1.5;   // the same max-width the stylesheet gives it
       const lines = printed ? Math.max(1, Math.ceil((printed.width + 2) / room)) : 2;
       nodes.push({
-        x: x, y: y, size: size, cx: x + size / 2, cy: y + size / 2,
+        x: put.x, y: put.y, size: put.size, z: one.z, deep: deep,
+        cx: put.x + put.size / 2, cy: put.y + put.size / 2,
         captionW: printed ? Math.min(printed.width + 2, room) : room,
         captionH: printed ? lines * printed.height + 4 : CAPTION_ROOM,
       });
@@ -595,7 +726,12 @@
       // smaller rather than left bare, and how wide the words actually
       // come out is measured rather than guessed at: that depends on
       // the font, and the font is not ours to predict.
-      let size = Math.min(DATE_SIZE, length / 6.9);
+      // ...and how many characters it actually is, rather than the ten a
+      // date comes to: the crosses that stand in for a date nobody has
+      // written yet are thirteen, and at a date's own size two of them
+      // no longer fitted the shortest lines on the map.
+      const chars = Math.max(10, (link.date || "").length);
+      let size = Math.min(DATE_SIZE, (length / 6.9) * (10 / chars));
       label.style.fontSize = size.toFixed(1) + "px";
       const room = length * 0.84;
       const written = label.getComputedTextLength ? label.getComputedTextLength() : 0;
@@ -927,6 +1063,18 @@
   function settle() {
     show(0);
     placed = true;
+    sheet.classList.remove("flicking");
+    // THE LINKS ARE PLANNED AGAINST THE SETTLED MAP, not against the one
+    // that existed while the pictures were still stacked in the middle
+    // window. `planLinks` plans once and then never again — a map that
+    // rearranged itself on a resize would read as a fault — and until
+    // now that once was the first layout, which runs during the flick.
+    // Since the map was given depth that matters: a line refused for
+    // being too short to carry its date was being measured against
+    // places the pictures had not taken yet. Cleared here and nowhere
+    // else, so it is still planned exactly once.
+    links = [];
+    if (lines) lines.replaceChildren();
     // The picture it settled on keeps its own caption, printed in its
     // bottom corner the way a caption is written on a print.
     plate.classList.add("landed");
@@ -1037,15 +1185,36 @@
     // Ending the reel ON the landing picture is the other half of it:
     // `settle` shows that same picture, so settling is not a cut and
     // there is no last blink.
+    // AND IN NO ORDER. It used to run straight down the list, which on
+    // a page whose pictures are mostly hatching read as a counter
+    // ticking rather than as a reel; the owner asked for it random.
+    // `Math.random` rather than the map's own seeded one, on purpose:
+    // the ARRANGEMENT has to come out the same every visit and the reel
+    // has to not, and drawing from the seeded run here would shift
+    // every picture on the page.
     const reel = [];
+    let last = -1;
     for (let n = 0; n < Math.max(1, steps - 1); n++) {
-      // frames.length - 1 pictures to choose from, all but the first.
-      reel.push(frames.length > 1 ? 1 + (n % (frames.length - 1)) : 0);
+      let pick = 0;
+      if (frames.length > 1) {
+        // Never twice running: the same picture held for two cuts is a
+        // stall, not a cut.
+        do {
+          pick = 1 + Math.floor(Math.random() * (frames.length - 1));
+        } while (pick === last && frames.length > 2);
+      }
+      last = pick;
+      reel.push(pick);
     }
     reel.push(0);
 
     let at = 0;
     let hold = FLIP_FIRST_MS;
+    // NOTHING IS CLICKABLE WHILE IT IS CYCLING. The owner asked for it,
+    // and it is the right answer anyway: what is under the pointer
+    // changes nine times in a second, so a press lands on whatever
+    // happened to be showing. `settle` takes it off again.
+    sheet.classList.add("flicking");
     // The picture it will land on, held for a beat — see FLIP_HOLD_MS.
     show(0);
 

@@ -522,6 +522,93 @@ own `textContent`, and butted together they read `Pinewardthe house that smells 
 trees` — which no search for "Pineward the" can match. Three tests caught this, which is
 the only reason it is written down here rather than shipped.
 
+## The map stands in three dimensions
+
+The owner asked for the map to be 3D and to have depth, for the pictures to be bigger, and
+for them to be different sizes rather than one standard one. Those are the same answer:
+**how big a picture is drawn is now mostly how far away it is standing.**
+
+Every picture but the middle window is given a depth of its own and then **projected**.
+What is further back is drawn smaller, fainter and nearer the vanishing point — which is
+the middle window's own middle, since the plate stands at the front of the volume — and
+what is in front of it is drawn over it (`zIndex` from the depth, `--depth` on the frame
+for the stylesheet to fade by). `DEPTH_MAX`, `FOCAL` and `DEPTH_FADE`.
+
+**The projection is done in the script, not with a CSS `perspective`, and that is the
+whole reason it works.** The lines between the pictures are drawn on a canvas from the
+same numbers the frames are placed by, so projecting the numbers moves the pictures and
+their lines together. A transform in the stylesheet would move the pictures and leave
+every line behind.
+
+Four things went wrong on the way in, and all four are worth keeping written down:
+
+- **The reading order broke.** The owner asked for the pictures to run 01, 02, 03 down the
+  page, and with depth in the map that is no longer the order their cells stand in: a
+  picture standing far back is drawn nearer the vanishing point, so a low cell at depth
+  came out above a high one at the front. Every place is worked out **before** any picture
+  is put in one now, and the places are sorted by where they come out **on the window**.
+- **The middle window was crowded.** Every picture is projected *towards* the plate's own
+  middle, so at `PLATE_CLEAR` 34 the nearest ones ended up all but touching it and the
+  line between them had a dozen pixels to run in. It is 130.
+- **Lines too short to carry a date.** Two pictures at different depths can come out close
+  together on the window even though the scatter kept them in cells of their own — that is
+  what depth looks like — and a run of twenty pixels cannot carry ten characters. A line
+  without a date reads as unfinished beside the ones that have them, so a pair that close
+  is simply not joined (`farEnough`, `LINK_MIN`). **The sewing pass was the one that kept
+  making them**: it takes whatever joins two parts that cannot otherwise reach each other,
+  shortest first, which is exactly where a twenty-pixel run comes from. It is made twice
+  now — once over the runs long enough to carry a date, and then, only for anything still
+  cut off, once more over all of them. An island joined by a short line is better than an
+  island.
+- **The links were planned against a map that did not exist yet.** `planLinks` plans once
+  and then never again — a map that rearranged itself on a resize would read as a fault —
+  and until now that once was the *first* layout, which runs during the flick while every
+  picture is still stacked in the middle window. With depth that matters: a line refused
+  for being too short was being measured against places the pictures had not taken yet.
+  `settle` clears the links, so they are planned exactly once and against the settled map.
+
+**The border stands out more**, which was asked for in the same note: it was a hairline in
+`--line`, which on this paper is barely there, and it is two pixels of the page's own ink
+at a third of its weight. What is further back gives some of it up with the rest of its
+ink.
+
+## The flick is half what it was, and in no order
+
+Three notes in one: *faster*, *half the time*, *half the images*, and **not clickable while
+it runs**.
+
+It was 18 cuts over about three seconds; it is 9 over about one and a quarter. Each cut is
+quicker to begin with (`FLIP_FIRST_MS` 42 — 32) and they slow more steeply
+(`FLIP_SLOW` 1.14 — 1.29), so it still ends by coming to rest rather than stopping. **The
+beat before it starts is not part of that** — `FLIP_HOLD_MS` stays at 250, because that is
+what makes the page read as a projector being started rather than as a page loading, and
+there is a test that watches for it.
+
+**And in no order.** The reel ran straight down the list, which on a page whose pictures
+are mostly hatching read as a counter ticking; it is a random pick now, never twice
+running. It draws from `Math.random` rather than the map's own seeded generator on
+purpose: the *arrangement* has to come out the same every visit and the reel has to not,
+and taking numbers out of the seeded run here would shift every picture on the page.
+
+**Nothing on the sheet can be pressed while it cycles** (`.sheet.flicking`). What is under
+the pointer changes nine times a second, so a press would land on whatever happened to be
+showing.
+
+## A date about nothing is not a date
+
+A frame carrying `data-open="no"` has no page of its own yet, and the dates on the lines
+reaching it are printed as **xxxxxxxxxxxxx** rather than as a date that says nothing. The
+owner asked for it. Thirteen crosses is about the width of a date, and the lettering is
+set from the label's own length rather than the ten characters a date comes to, so a line
+that can carry a date can carry this.
+
+Eleven of the fourteen pictures are unwritten at the moment, so most of the map's dates
+are crosses. That is the truth of the page rather than a fault of it: three houses are
+written and the rest are placeholders.
+
+The roll still happens whether or not the date is used, so which pictures are written up
+does not change where anything else on the map ends up.
+
 ## Known issues / TODO
 
 - **Frames 01 and 02 carry photographs; the other twelve are still hatched

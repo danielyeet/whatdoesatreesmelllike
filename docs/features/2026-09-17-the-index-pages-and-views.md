@@ -257,6 +257,27 @@ makes it fail and name both fragrances.
 **If a house is ever renumbered again**, the index has to be re-pointed in the same turn.
 The anchors are the part's number, not its name.
 
+## A view's own layout belongs to the view
+
+The fragrances index lays itself out one way as the contact sheet page's view — one
+centred column, the table given the room — and another as the Researches page, with
+readings across the top and a plates column down the right. That was asked of
+**`body.view-fragrances`** for a round, and `views.js` toggles that class the moment a
+swipe starts.
+
+So going from this view back to the sheet took its layout away **while it was still on
+screen travelling off**, and for the length of the swipe it was drawn in the Researches
+layout instead: readings across the top, a plates column on the right, and a plate the
+size of the window. The owner photographed it.
+
+All twenty-one of those rules are asked of **`.view[data-view="fragrances"]`** now. A
+view's own layout belongs to the view, not to the page it is standing on. The one rule
+left on the body is the one that hides the *sheet's* search, which is chrome outside the
+box that travels and belongs to the page.
+
+There is a regression for it, proved against the old selector: it watches the plates
+column through a swipe and fails with `display: block` half way across.
+
 ## Known issues / TODO
 
 - **The dates in the Fragrances table are rolled from a seed** so that sorting has

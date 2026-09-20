@@ -449,34 +449,42 @@ test("a held figure glitches in beats, and stands whole between them",
     .toBeGreaterThan(14);
 });
 
-/* THE THINGS THAT ARE NOT PEOPLE. The owner asked for "other things
-   that are weirdly formed by particles and geometry, such as a sun,
-   rain that is animated and falling" and one of my own — an empty
-   chair, which is the most almost-human thing there is.
+/* THE THINGS THAT ARE NOT PEOPLE. A sun and an empty chair stood in
+   these margins for a round and the owner asked for both of them gone,
+   the rain kept, and "particle rays that blast from here and there" in
+   their place. So there are two now, and both are weather.
 
-   The sun is the one worth a test: it is ROUND, where everything else
-   in these margins is a person and half as wide as it is tall. And it
-   stands ABOVE the crowd rather than among it, which is where it ended
-   up the first time and where it sat on top of a figure. */
-test("a sun stands above the crowd, and it is round", async ({ page }) => {
+   A RAY IS A THING THAT GOES OFF, which is what this measures: with
+   them the amount of ink on the whole canvas swings by well over a
+   thousand pixels as one fires and goes out, and without them — the rain
+   wrapping and the figures drifting their pixel — it barely moves at
+   all. Measured both ways: 1460 against 252. */
+test("rays go off in the margins, from here and there", async ({ page }) => {
   await page.goto(HOUSE);
-  await page.waitForTimeout(1300);
-  await page.mouse.move(700, 880);
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(1500);
+  await page.mouse.move(700, 4);
 
-  // The right margin, measured off the window rather than assumed:
-  // this page lays itself out against the window's own width.
-  const room = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
-  const sun = await inkIn(page, { x: Math.round(room.w * 0.72), y: 16,
-                                  w: Math.round(room.w * 0.28), h: Math.round(room.h * 0.46) });
-  expect(sun.n, "there should be something drawn above the crowd").toBeGreaterThan(400);
-  const wide = sun.x1 - sun.x0, tall = sun.y1 - sun.y0;
-  const say = `${Math.round(wide)} x ${Math.round(tall)}`;
-  expect(wide, `it should be as wide as it is tall — ${say}`)
-    .toBeGreaterThan(tall * 0.72);
-  expect(wide, `and no wider — ${say}`).toBeLessThan(tall * 1.4);
-  // And it stands clear of the first figure, which is half a window down.
-  expect(sun.y1, "it should stand above the crowd").toBeLessThan(room.h * 0.5);
+  const allInk = () => page.evaluate(() => {
+    const el = document.querySelector(".human-field");
+    const g = el.getContext("2d", { willReadFrequently: true });
+    const im = g.getImageData(0, 0, el.width, el.height).data;
+    let n = 0;
+    for (let i = 3; i < im.length; i += 4) if (im[i] > 10) n += 1;
+    return n;
+  });
+
+  const seen = [];
+  for (let n = 0; n < 26; n++) {
+    seen.push(await allInk());
+    await page.waitForTimeout(130);
+  }
+  // Said as a SHARE of the ink rather than a count of pixels: how many
+  // there are at all depends on the window and on the screen's own
+  // scale, and this runs at neither of the sizes it was measured at.
+  const lo = Math.min.apply(null, seen), hi = Math.max.apply(null, seen);
+  const swing = (hi - lo) / hi;
+  expect(swing, `the ink should swing as rays fire — ${lo} to ${hi}` +
+    ` (${(swing * 100).toFixed(1)}%)`).toBeGreaterThan(0.07);
 });
 
 /* THE RAIN FALLS. Measured at the very edge of the window, where no

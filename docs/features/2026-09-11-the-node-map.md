@@ -152,6 +152,30 @@ Other → Photography.
 **A node with no `preview` navigates instead of opening a modal**, which is worth knowing
 if one is added: Search carries a preview, and the removed Contact node did not.
 
+## Every page in the menu is on the map, and they stand evenly
+
+The owner asked for all seven — Scent descriptions, Theories, Explorations & Researches,
+Favourites, Photography, Search and Contact — and for them to be evenly distributed. Both
+are in `REAL_NODES`.
+
+**`pos` is a Fibonacci sphere**, not seven points placed by hand: each one's height is a
+seventh of the way down from the top, and each is turned the golden angle
+(π(3−√5) ≈ 137.5°) further round than the last, at a radius of 3.2. That is the arrangement
+that leaves no two of them crowded. The closest pair of branches is **71.5°** apart and
+every one of them is the same distance from the hub, which is what "equally distributed"
+buys: no branch obviously longer than another and no two bunched.
+
+**To add an eighth, recompute the whole list rather than squeezing one more in.** A
+hand-placed extra would undo the spacing, and there is a test that would catch it.
+
+**Photography says it is a work in progress.** A node's `preview` may carry a `note`
+besides its `description`, set as its own line in the window — it is a state of the page
+rather than a line about it, and only a page with something to say gets one. Photography
+is the only one at the moment: its frames are in place and most of its pictures are not.
+
+Contact has no `preview` at all, so pressing it simply goes there. That is the difference
+the field is for.
+
 ## Known issues / TODO
 
 - `SWAY` and `CLOUD_COUNT` are deliberately at zero with their machinery intact — the

@@ -37,30 +37,58 @@
 // "Test node" sandboxes (works/test-node-a.html and -b.html, which
 // nothing points at at all now and are safe to repurpose).
 const REAL_NODES = [
+  // EVERY PAGE IN THE MENU IS ON THE MAP, and the seven of them are
+  // spread EVENLY over the sphere rather than placed by hand. The
+  // owner asked for both. `pos` is a Fibonacci sphere of seven points
+  // at a radius of 3.2: each one's height is one seventh of the way
+  // down from the top, and each is turned the golden angle
+  // (π(3−√5) ≈ 137.5°) further round than the last, which is the
+  // arrangement that leaves no two of them crowded. The closest pair
+  // of branches is 71.5° apart and every one of them is the same
+  // distance from the hub.
+  //
+  // So to add a page here: put it in SITE_LINKS, add a line below, and
+  // recompute the whole list rather than squeezing one more in — a
+  // hand-placed eighth would undo the spacing.
   {
     label: "Scent descriptions", sub: "notes on things I've smelled and tried to describe",
-    href: "categories/scent-descriptions.html", pos: [1.57, 2.62, 0.0],
+    href: "categories/scent-descriptions.html", pos: [1.65, 2.74, 0.0],
     preview: { description: "Here I describe things, from scents to houses to notes to anything else." },
   },
   {
     label: "Theories", sub: "half-formed ideas I keep coming back to",
-    href: "categories/theories.html", pos: [-2.09, 1.97, 1.91],
+    href: "categories/theories.html", pos: [-1.94, 1.83, 1.77],
     preview: { description: "Half-formed ideas, written down before I lose them." },
   },
   {
-    label: "Favourites", sub: "things I like, no other reason needed",
-    href: "categories/favorites.html", pos: [0.27, 0.93, -3.1],
-    preview: { description: "The ones I keep coming back to, kept by chapter." },
-  },
-  {
     label: "Explorations & Researches", sub: "things I looked into properly and wrote up",
-    href: "categories/researches.html", pos: [1.78, 1.0, 2.33],
+    href: "categories/researches.html", pos: [0.27, 0.91, -3.05],
     preview: { description: "Researches and explorations: where I go and find out, rather than describe." },
   },
   {
+    label: "Favourites", sub: "things I like, no other reason needed",
+    href: "categories/favorites.html", pos: [1.95, 0.0, 2.54],
+    preview: { description: "The ones I keep coming back to, kept by chapter." },
+  },
+  {
+    label: "Photography", sub: "frames in sets, and what is written on the back",
+    href: "categories/other-2.html", pos: [-3.02, -0.91, -0.53],
+    preview: {
+      description: "The frames stand in sets, numbered down the margin, each with what a photographer writes on the back of a print.",
+      // THE OWNER ASKED FOR THIS ONE TO SAY SO. It is a `note` rather
+      // than part of the description because it is a state of the page
+      // rather than a line about it, and the window sets it apart.
+      note: "Work in progress — the frames are in place and most of the pictures are not.",
+    },
+  },
+  {
     label: "Search", sub: "one field over the whole site",
-    href: "search.html", pos: [-0.4, -2.62, 1.52],
+    href: "search.html", pos: [2.22, -1.83, -1.41],
     preview: { description: "One field over everything written here, and where each answer lives." },
+  },
+  {
+    label: "Contact", sub: "the ways to reach me",
+    href: "contact.html", pos: [-0.43, -2.74, 1.59],
   },
 ];
 
@@ -760,6 +788,16 @@ const REAL_NODES = [
     desc.className = "node-preview-desc";
     desc.textContent = node.preview.description;
 
+    // A NODE MAY SAY WHAT STATE ITS PAGE IS IN. Set as its own line
+    // rather than folded into the description: it is a state of the
+    // page rather than a line about it, and it is only there on a page
+    // that has one to say.
+    const note = node.preview.note ? document.createElement("p") : null;
+    if (note) {
+      note.className = "node-preview-note";
+      note.textContent = node.preview.note;
+    }
+
     const enter = document.createElement("a");
     enter.className = "node-preview-button";
     enter.href = node.href;
@@ -776,7 +814,9 @@ const REAL_NODES = [
     title.className = "node-preview-title";
     title.textContent = node.label;
 
-    modal.append(desc, enter, title);
+    modal.append(desc);
+    if (note) modal.append(note);
+    modal.append(enter, title);
     modal.style.left = originX + "px";
     modal.style.top = originY + "px";
     modal.style.transform = "translate(-50%, -50%) scale(0.06)";
