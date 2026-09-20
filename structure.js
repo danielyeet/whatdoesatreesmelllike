@@ -338,6 +338,12 @@
       // simply does not get one.
       plate: (row.dataset.plate || "").trim(),
       plateSay: (row.dataset.plateAlt || "").trim(),
+      // A SECOND WAY IN, for a piece that carries something of its own
+      // worth going straight to: `data-calc` on the row is that
+      // address, and the card puts it at its foot. Read off the page
+      // like everything else here, so a theory without one simply does
+      // not get the button.
+      calc: (row.dataset.calc || "").trim(),
       href: row.getAttribute("href"),
       number: String(i + 1).padStart(2, "0"),
       ring: random() * 6.283,
@@ -447,6 +453,13 @@
       '<span class="structure-card-note"></span>' +
       '<span class="structure-card-spec" aria-hidden="true"></span>' +
       '<span class="structure-card-open">Open<span aria-hidden="true"> \u2192</span></span>' +
+      // NOT AN ANCHOR, because the whole card is already inside the
+      // station's own one and an anchor cannot stand inside an anchor.
+      // It is given a link's role, a link's keys and a link's
+      // middle-click below, and the station stays the only real link
+      // on the drawing.
+      '<span class="structure-card-calc" role="link" tabindex="0">' +
+        'Open calculator<span aria-hidden="true"> \u2192</span></span>' +
       "</span>";
     mark.querySelector(".structure-no").textContent = stop.number;
     mark.querySelector(".structure-name").textContent = stop.name;
@@ -472,6 +485,27 @@
       picture.addEventListener("error", () => { plate.hidden = true; });
     } else {
       plate.hidden = true;
+    }
+    const calc = mark.querySelector(".structure-card-calc");
+    if (stop.calc) {
+      calc.dataset.href = stop.calc;
+      const go = (e, away) => {
+        // The station is open by the time this can be pressed, so the
+        // click that reaches the card would otherwise be the one the
+        // link is waiting for and it would open the piece instead.
+        e.preventDefault();
+        e.stopPropagation();
+        if (away) window.open(stop.calc, "_blank", "noopener");
+        else window.location.href = stop.calc;
+      };
+      calc.addEventListener("click", (e) => go(e, e.ctrlKey || e.metaKey || e.shiftKey));
+      calc.addEventListener("auxclick", (e) => { if (e.button === 1) go(e, true); });
+      calc.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") go(e, false);
+      });
+    } else {
+      calc.hidden = true;
+      calc.removeAttribute("tabindex");
     }
     mark.querySelector(".structure-card-spec").textContent =
       "DEPTH " + String(Math.round(stop.at.z)).padStart(3, "0") + "   \u00b7   " +

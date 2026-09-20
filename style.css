@@ -2153,6 +2153,35 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
 }
 .structure-stop.open:hover .structure-card-open,
 .structure-stop.open:focus-visible .structure-card-open { color: #9ecbff; }
+/* A SECOND WAY IN, at the foot of the card and over to the right, for
+   a piece that carries something of its own worth going straight to.
+   It is boxed where "OPEN →" is bare, because they lead to two
+   different places and the card would otherwise read as two lines
+   saying the same thing. `width: fit-content` with `margin-left: auto`
+   is what puts it at the right-hand end of a block. */
+.structure-card-calc {
+  margin: 0 0 18px auto;
+  width: fit-content;
+  padding: 8px 13px;
+  border: 1px solid rgba(142, 180, 226, 0.55);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(142, 180, 226, 0.9);
+  cursor: pointer;
+  transition: color 0.25s var(--menu-ease), border-color 0.25s var(--menu-ease),
+              background-color 0.25s var(--menu-ease);
+}
+.structure-card-calc[hidden] { display: none; }
+.structure-card-calc:hover, .structure-card-calc:focus-visible {
+  color: #0d1016;
+  background: #9ecbff;
+  border-color: #9ecbff;
+}
+/* The card's own bottom padding belongs to whichever of the two is
+   last: with the button there, "OPEN →" gives its up. */
+.structure-card-open:has(+ .structure-card-calc:not([hidden])) { padding-bottom: 14px; }
 
 /* One name, one place: the station's name is in the card while it is
    open, so the copy under the figure goes — and the names of the
@@ -4078,6 +4107,28 @@ body.find-reading .find-reading-note { opacity: 1; }
      chamber.js. */
 }
 .chapter-page[hidden] { display: none; }
+/* THE HANDOVER, in two states. `laid` is the page standing UNDER the
+   mesh — it has to be there before the drawing goes, or the chamber's
+   white shows through for a frame — with nothing written on it yet.
+   `here` is the drawing gone, and everything on the sheet comes in on
+   that.
+
+   It used to arrive underneath. The page was laid four hundred-odd
+   milliseconds before the drawing was taken off and its cards started
+   their entrance there, so by the time you could see anything the
+   heading was simply present and the cards were half way in: the end
+   of the burst read as a cut to a page already part built. Now the
+   drawing goes first and the page writes itself in after it. */
+.chapter-page.laid .chapter-sheet > *,
+.chapter-page.laid .chapter-card { opacity: 0; }
+.chapter-page.here .chapter-sheet > *:not(.chapter-cards) {
+  animation: chapter-in 0.55s var(--menu-ease) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes chapter-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
 
 .chapter-sheet {
   max-width: 1040px;
@@ -4317,6 +4368,11 @@ body.find-reading .find-reading-note { opacity: 1; }
   /* They arrive one after another, the way every list on this site
      does — the explosion puts the page there, and the cards settle
      onto it. */
+  opacity: 0;
+}
+/* A card comes in with the rest of the sheet, once the drawing is off
+   it — never underneath it. */
+.chapter-page.here .chapter-card {
   animation: chapter-card-in 0.6s var(--menu-ease) both;
   animation-delay: calc(0.18s + var(--n, 0) * 70ms);
 }
@@ -4410,7 +4466,10 @@ body.find-reading .find-reading-note { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .chapter-page { transition: none; clip-path: none; }
-  .chapter-card { animation: none; }
+  .chapter-page.here .chapter-card,
+  .chapter-page.here .chapter-sheet > *:not(.chapter-cards) { animation: none; }
+  .chapter-page.here .chapter-card,
+  .chapter-page.here .chapter-sheet > * { opacity: 1; }
   .chapter-wave { display: none; }
   .favorites-page.bursting .chamber-plate,
   .favorites-page.bursting .page-find,

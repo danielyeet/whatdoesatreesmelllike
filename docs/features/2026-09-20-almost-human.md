@@ -45,6 +45,20 @@ and comes apart again when you leave. That is the house's name, said as a behavi
 rather than written on the page, and it is the whole idea: it is what Pineward's
 **bloom** and ADAR's **spotlight** are to those pages.
 
+**Anywhere on the figure will do.** The hand used to be answered by a circle drawn round
+the figure's own middle, which meant it came all the way home at the navel and only part
+of the way at the crown or the soles. The owner asked to be able to *"hover anywhere on
+them"*, so the distance is measured to the **box the figure actually stands in** —
+inside it is all the way home, and outside it eases off over `HAND` pixels. The box's
+half-width is measured off the figure's own specks at build time rather than guessed, so
+a figure that leans hard is reached at its elbow like any other. Measured: crown, middle
+and soles used to give 69 / 63 / 75 against a width of 95 apart; they give 63 / 63 / 68
+now.
+
+**And there are half as many specks again.** `FIG_SPECKS` went from 420—620 to
+760—1080, which the owner asked for; each one carries a little less of the ink
+(`FIG_INK`) so the figure comes out fuller rather than heavier.
+
 It never resolves *completely* — `STRAY_NEAR` keeps a tenth of the stray whatever
 happens. A figure that came exactly home would be the wrong drawing.
 
@@ -75,6 +89,60 @@ tall is pushed sideways, and some bands are not drawn at all; which band does wh
 stable hash of `(band, tick, the figure's own seed)`, so it holds for a frame and then
 jumps, the way a broken picture does. A per-frame random number would shimmer, which is
 the opposite.
+
+### It is a beat, and it is subtle
+
+Both asked for in the same note, and both are corrections to how it first went in.
+
+**It comes and goes.** It used to arrive once the figure had been held long enough and
+then simply stay, for as long as your hand was there. The owner asked for *"1 second
+glitched, and 5 seconds not"*: so from the moment it has been held long enough there is a
+beat of `GLITCH_FOR` in every `GLITCH_CYCLE` — one second in six — easing in and out
+over `GLITCH_EDGE` at each end, and the figure stands whole in between.
+
+**And every part of it is about half what it was.** `GLITCH_PUSH` 0.3 — 0.14 (how far a
+slice slips), `GLITCH_DROP` 0.28 — 0.12 (the share that go missing), the torso's extra
+loss 0.3 — 0.15, the vertical slip 6px — 3px, and `GLITCH_RATE` 11 — 8 re-rolls a
+second. The owner's word was *subtle*.
+
+## The things that are not people
+
+The owner asked for *"other things that are weirdly formed by particles and geometry,
+such as a sun, rain that is animated and falling and maybe add something else"*. There are
+three, and all three are drawn out of the same specks and answer the hand the same way,
+because being almost a thing is what this page is.
+
+| | |
+|---|---|
+| **the sun** | A **ring** rather than a disc — a sun drawn solid at this size is a dot, and it is the ring that says what it is — with thirteen rays of uneven length and slightly uneven spacing out of it. One of them, standing above the crowd. |
+| **the rain** | Falling, the whole length of the page, each drop a short string of five specks rather than a line. |
+| **the chair** | **An empty chair**, which is the something else, and it is chosen rather than arbitrary: an empty chair is the most almost-human thing there is, a shape made by somebody not being in it. A few of them, standing among the figures. |
+
+Four things about them are not obvious from the code:
+
+- **They stray far less than a person does** (`PROP_STRAY` 0.022 against the crowd's 0.2).
+  A figure is *meant* to give no hint of what it is until the hand arrives; that is
+  deliberate and the owner asked for it by name. These are not. At a fifth of its height,
+  as a person strays, the sun's ring — 67 pixels across — came apart into a cloud and
+  there was nothing on the page at all.
+- **The sun stands above the crowd, not among it.** It was first put a share of the way
+  down the *document*, which landed it squarely on top of a figure in the same margin. It
+  stands a tenth of the way down the **window** now, and the crowd starts at half of that.
+- **It is sized to the margin it stands in.** It stands in the middle of that margin, so
+  anything wider than twice the distance from there to the edge of the window hangs off
+  it — at 1280 across, a quarter of the sun was cut away.
+- **A chair is placed against the crowd rather than on a ruler of its own.** It was one
+  every 1500 pixels, which on a page whose parts are all still shut — which is every page
+  here, until somebody opens one — is past the foot of the document, so there were no
+  chairs at all. It is one for every three figures now, standing half a pace further down
+  and in the **other** margin, which puts it clear of the figure it is counted from and
+  clear of the next one.
+
+The rain is the one thing on the page that travels of its own accord rather than standing
+and straying, so it lives in **window space** and wraps at the foot of the screen — it is
+weather, not something standing in the writing. It is wrapped rather than re-rolled on
+purpose: `random()` here is the seeded run the crowd is built from, and taking numbers out
+of it in the draw loop would change the crowd.
 
 ## No two of them are the same crowd
 
@@ -156,14 +224,14 @@ here has been invented.
 npm test -- tests/almost-human.spec.js
 ```
 
-Nine tests: the five being really five and numbered in the markup; a fragrance being a
-title until it is opened; the crowd being drawn and keeping out of the writing's column;
+Fourteen tests: the five being really five and numbered in the markup; a fragrance being
+a title until it is opened; the crowd being drawn and keeping out of the writing's column;
 the rank filling from the first pixel and finishing full; no accent colour anywhere; the
-crowd standing still under `prefers-reduced-motion`; and all of the writing being there
-with the script blocked.
+crowd standing still under `prefers-reduced-motion`; all of the writing being there with
+the script blocked; and the five below.
 
-Two of them are regressions, and both were **proved against the real fault** before being
-trusted:
+Five of them are regressions, and every one was **proved against the real fault** before
+being trusted:
 
 - **`a photograph that is not there yet leaves the hatch showing`** — the first go added an
   `error` listener and nothing else, which never fired: a missing picture has usually
@@ -179,6 +247,30 @@ trusted:
   the figure is narrow, so the stray is most of what decides it — and it asks for a
   measured share rather than merely "smaller". With the resolving off it reads 66 → 67 and
   fails, as it should.
+
+- **`a figure comes home from the pointer anywhere on it`** — the crown, the middle and
+  the soles, and all three have to draw the figure together by the same amount. The two
+  ends rather than near them, because the old circle was generous enough that a point
+  part way up still came most of the way home. With the circle put back it reads
+  67 / 63 / 73 against a floor of 8.2 and fails.
+- **`a held figure glitches in beats, and stands whole between them`** — it holds a
+  figure for fifteen seconds and measures the **longest stretch it stands still for**.
+  Between beats a figure moves only its pixel of idle drift, so its ink count barely
+  changes from one sample to the next; during a beat the pattern re-rolls eight times a
+  second and it changes every time. With the fault running on, that longest run is 4
+  samples; with the beat it is 24 to 59 depending on how fast the machine can sample.
+  The floor is 14, set between the two rather than near either. The first version of this
+  test compared each sample against the ninetieth percentile *of the samples themselves*,
+  which is self-referential: with the fault running on it read 30.6% against a ceiling of
+  30% and only just failed.
+- **`a sun stands above the crowd, and it is round`** — the one prop worth a test,
+  because ROUND is what nothing else in these margins is: a person is half as wide as
+  they are tall. It also checks the sun stands clear of where the crowd starts, which is
+  where it landed the first time.
+- **`the rain falls`** and **`the rain does not fall when motion is turned off`** —
+  measured at the very edge of the window, in a strip no figure reaches even at its
+  strayest, so what is counted there is the rain and nothing else. With the falling taken
+  out the count is the same twelve times over and it fails.
 
 By hand:
 

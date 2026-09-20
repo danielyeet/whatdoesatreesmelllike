@@ -1103,3 +1103,69 @@ test("without the script the page is the plain list of favourites", async ({ pag
   expect(await page.locator(".chamber").count(), "nothing is drawn").toBe(0);
   await expect(page.locator(".page-content h1")).toBeVisible();
 });
+
+/* THE PAGE WRITES ITSELF IN AFTER THE DRAWING, NOT UNDERNEATH IT.
+   The page has to be laid under the mesh before the mesh goes — or the
+   chamber's white shows through for a frame — but its writing used to
+   start there too, four hundred-odd milliseconds early. By the time you
+   could see anything the heading was simply present and the cards were
+   half way in, so the end of the burst read as a cut to a page already
+   part built. That is what the owner meant by the handover not being
+   smooth, and this is the regression for it. */
+test("the chapter page's writing waits for the drawing to be taken off",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await page.waitForTimeout(3000);
+  await openMenu(page);
+
+  // Watched frame by frame from inside the page: sampling it over the
+  // wire is far too coarse for a handover this short.
+  await page.evaluate(() => {
+    window.__seen = [];
+    const tick = () => {
+      const sheet = document.querySelector(".chapter-page");
+      const wave = document.querySelector(".chapter-wave");
+      const name = document.querySelector(".chapter-name");
+      const card = document.querySelector(".chapter-card");
+      if (sheet && !sheet.hidden) {
+        window.__seen.push({
+          laid: sheet.classList.contains("laid"),
+          here: sheet.classList.contains("here"),
+          over: wave ? !wave.hidden : false,
+          name: name ? Number(getComputedStyle(name).opacity) : 0,
+          card: card ? Number(getComputedStyle(card).opacity) : 0,
+        });
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
+
+  await page.locator(".chamber-chapter").first().click();
+  await expect(page.locator(".chapter-page")).toBeVisible({ timeout: 15000 });
+  await page.waitForTimeout(2200);
+  const seen = await page.evaluate(() => window.__seen);
+
+  // It really is laid under the drawing first.
+  const under = seen.filter((one) => one.over);
+  expect(under.length, "the page should stand under the mesh for a while")
+    .toBeGreaterThan(3);
+  under.forEach((one) => {
+    expect(one.laid, "and be `laid` rather than `here` while it is").toBe(true);
+  });
+
+  // NOTHING IS WRITTEN ON IT WHILE THE DRAWING IS STILL THERE. This is
+  // the assertion: with the old behaviour the cards were already past
+  // half way by the last of these frames.
+  const most = Math.max.apply(null, under.map((one) => Math.max(one.name, one.card)));
+  expect(most, "nothing on the sheet should arrive under the drawing").toBeLessThan(0.02);
+
+  // And afterwards it does arrive.
+  const after = seen.filter((one) => one.here);
+  expect(after.length).toBeGreaterThan(3);
+  expect(Math.max.apply(null, after.map((one) => one.name)),
+    "the heading comes in once the drawing is off").toBeGreaterThan(0.9);
+  expect(Math.max.apply(null, after.map((one) => one.card)),
+    "and so do the cards").toBeGreaterThan(0.9);
+});

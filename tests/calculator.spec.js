@@ -439,10 +439,16 @@ test("the graph has a logarithmic version, and a reading of 0 is left off it",
   const toggle = page.locator(".calc-scale");
   const ticks = () => page.$$eval(".calc-graph .graph-tick",
     (all) => all.map((e) => e.textContent));
+  // `innerText` is not a thing on an SVG text node.
+  const axisName = () => page.locator(".calc-graph .graph-axis-name").last()
+    .evaluate((e) => e.textContent);
 
   // Linear to begin with: whole numbers up the side, no decade lines.
   await expect(toggle).toBeVisible();
+  // The owner named both of these; they are not ours to reword.
+  await expect(toggle).toHaveText(/Logarithmic Scale/i);
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  expect(await axisName()).toBe("Modified IBR (var. 1)");
   expect(await ticks()).toContain("3");
   expect(await page.locator(".calc-graph .graph-grid-fine").count(),
     "a linear axis has no decades in it").toBe(0);
@@ -450,6 +456,8 @@ test("the graph has a logarithmic version, and a reading of 0 is left off it",
   await toggle.click();
   await page.waitForTimeout(300);
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  expect(await axisName(), "the whole name goes inside a Log(\u2026)")
+    .toBe("Log(Modified IBR [var. 1])");
   const up = await ticks();
   ["0.1", "1", "10"].forEach((one) =>
     expect(up, "powers of ten up the side").toContain(one));

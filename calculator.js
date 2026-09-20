@@ -391,7 +391,8 @@
         "</tr></thead><tbody></tbody></table></div></div>");
       parts.push('<div class="calc-part"><div class="calc-part-head">' +
           "<h2>Across the three stages</h2>" +
-          '<button class="calc-scale" type="button" aria-pressed="false">Log scale</button>' +
+          '<button class="calc-scale" type="button" aria-pressed="false">' +
+            "Logarithmic Scale</button>" +
         "</div>" +
         '<div class="calc-graph"></div></div>');
     } else {
@@ -762,11 +763,17 @@
              show(Math.abs(o.value)) + "</text>");
     });
     b.push('<text class="graph-axis-name graph-mid" x="' + ((x0 + x1) / 2) + '" y="' + (H - 22) + '">Time</text>');
-    // CENTRED ON THE AXIS rather than started at its middle: ", log
-    // scale" makes the name long enough to run off the top otherwise.
+    // THE NAME SAYS WHAT IS PLOTTED, so on the logarithmic scale the
+    // whole of it goes inside a Log(…) — the owner's own wording. The
+    // brackets inside it turn square so there are not two rounds
+    // nested. It is CENTRED on the axis rather than started at its
+    // middle, or a name this long runs off the top.
+    const vn = which === "v1" ? "1" : "2";
+    const axisName = logY
+      ? "Log(Modified IBR [var. " + vn + "])"
+      : "Modified IBR (var. " + vn + ")";
     b.push('<text class="graph-axis-name graph-mid" x="28" y="' + ((y0 + y1) / 2) +
-           '" transform="rotate(-90 28 ' + ((y0 + y1) / 2) + ')">Modified IBR (var. ' +
-           (which === "v1" ? "1" : "2") + ")" + (logY ? ", log scale" : "") + "</text>");
+           '" transform="rotate(-90 28 ' + ((y0 + y1) / 2) + ')">' + axisName + "</text>");
     const lost = logY && got.some((o) => isFinite(o.value) && Math.abs(o.value) === 0);
     return '<svg class="zone graph" viewBox="0 0 ' + W + " " + H +
       '" role="img" aria-label="Your readings across the three stages' +

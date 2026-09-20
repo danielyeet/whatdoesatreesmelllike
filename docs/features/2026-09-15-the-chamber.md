@@ -763,6 +763,37 @@ opening across a whole window is a stepping edge. It is **48** now: still not a 
 the facets are there if you look for them — but nothing in it steps. The mechanical
 character moved into the ink, where it can be complex without being coarse.
 
+### The page writes itself in AFTER the drawing, not underneath it
+
+The owner asked for the handover at the end of the burst to be smoother, and what was
+wrong with it was measurable. The page has to be laid under the mesh before the mesh
+goes — at `PAGE_LAID`, or the chamber's white shows through for a frame — but its
+**writing** used to start there too. Measured: the page was laid at t+6967ms and the
+canvas was not cleared until t+7457ms, and by then the first card was already at 0.48
+opacity. So the whole of the page's arrival was spent behind a black canvas, and what you
+finally saw was a page already part built, with its heading simply present.
+
+There are two states now. **`laid`** is the page standing under the mesh — black under
+black, with nothing on it — and **`here`** is the mesh gone; everything on the sheet
+comes in on `here`, one behind the other on a `--i` counted per visible child (counted in
+the script rather than with `nth-child`, because the note is not always there).
+
+Two smaller things went in with it:
+
+- **The mesh is handed over rather than switched off.** From `MESH_HAND` the canvas's own
+  opacity eases to nothing before it is cleared. On a good frame this shows nothing — by
+  then the window is the drawing's black and the page under it is the same black — and it
+  is there for the bad one, where a dropped frame or two near the end leaves a panel short
+  of black and clearing the canvas in one go would show the step.
+- Under `prefers-reduced-motion` both classes go on at once, so the page is simply there.
+
+**The test is `the chapter page's writing waits for the drawing to be taken off`**, and it
+watches the handover frame by frame from inside the page — sampling it over the wire is
+far too coarse for something this short. It checks the page really does stand under the
+mesh for a while, that nothing on the sheet is above 0.02 opacity while it does, and that
+everything arrives afterwards. Proved against the old behaviour: the cards read 0.785
+under the drawing.
+
 ### The black is gone, and the mesh turns the window over
 
 *"the table disappears in a not so smooth fashion. i think it needs to be distorted into

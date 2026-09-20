@@ -876,6 +876,7 @@
   const MESH_NODE = 1.7;        // a mark at every crossing, in pixels
   const MESH_BOW = 0.05;        // how far a ring bows off true, as a share of it
   const MESH_SPIN = 0.3;        // turns the lattice makes ABOUT ITS OWN AXIS on the way out
+  const MESH_HAND = 0.92;       // where the drawing starts being handed to the page under it
   const MESH_STEPS = 24;        // panels are filled in this many bands of one weight
   const PAGE_LAID = 0.82;      // when the chapter page goes under the web
   // The two ends the panels travel between: the chamber's own ink on
@@ -1432,6 +1433,7 @@
       row.style.removeProperty("--mid");
     });
     chapterPage.classList.remove("here");
+    chapterPage.classList.remove("laid");
     chapterPage.hidden = true;
     chapterWave.hidden = true;
     // Back into the physics' hands: every particle is fired again from
@@ -1561,8 +1563,37 @@
     // black part of the explosion removed, and the web's own panels
     // turn black in its place. So the page is simply laid under the web
     // once the web has the window covered, and by then both are black.
+    // AND ITS WRITING WAITS FOR THE DRAWING TO GO. `laid` is the page
+    // standing under the mesh — black under black, with nothing on it
+    // yet — and `here` is the mesh gone. Everything on the sheet comes
+    // in on `here`.
+    //
+    // It used to arrive underneath: the page was laid at PAGE_LAID and
+    // its cards started their entrance there, four hundred-odd
+    // milliseconds before the drawing was taken off. By the time you
+    // could see anything the heading was simply there and the cards
+    // were half way in, so the end of the burst read as a cut to a page
+    // already part built. That is what the owner meant by the handover
+    // not being smooth.
     chapterPage.hidden = false;
     page.classList.add("chapter-open");
+    chapterPage.classList.add("laid");
+    // One number per thing on the sheet, so they come in one behind the
+    // other. Counted here rather than in CSS because the note is not
+    // always there.
+    let place = 0;
+    [...chapterPage.querySelectorAll(".chapter-sheet > *")].forEach((one) => {
+      if (one.hidden) return;
+      one.style.setProperty("--i", String(place));
+      place += 1;
+    });
+    if (REDUCE_MOTION) settleChapter();
+  }
+
+  /** The drawing is off: the page has the window, and its writing can
+      come in. */
+  function settleChapter() {
+    chapterPage.classList.remove("laid");
     chapterPage.classList.add("here");
   }
 
@@ -1634,12 +1665,23 @@
     const p = Math.min(1, burst.at / BURST_WEB);
     drawMesh(p);
     if (p >= PAGE_LAID && chapterPage.hidden) layChapter(burst.chapter);
+    // THE DRAWING IS HANDED OVER RATHER THAN SWITCHED OFF. By here the
+    // whole window is the drawing's own black and the page under it is
+    // the same black, so this shows nothing on a good frame — it is
+    // there for the bad one, where a dropped frame or two near the end
+    // leaves a panel short of black and clearing the canvas would show
+    // the step. Fading it costs nothing and cannot.
+    rings.style.opacity = p >= MESH_HAND
+      ? (1 - (p - MESH_HAND) / (1 - MESH_HAND)).toFixed(3) : "";
     if (burst.at >= BURST_WEB) {
       if (chapterPage.hidden) layChapter(burst.chapter);
       burst.phase = "open";
       burst.at = 0;
       chapterWave.hidden = true;
+      rings.style.opacity = "";
       paintRings.clearRect(0, 0, width, height);
+      // And only now does the page write itself in.
+      settleChapter();
     }
     return true;
   }

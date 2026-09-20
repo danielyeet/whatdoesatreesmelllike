@@ -65,12 +65,16 @@
   const COLUMN = 940;         // the writing's own measure — style.css keeps the same
   const FIG_EVERY = 330;      // how far apart they stand down the page, in pixels
   const FIG_TALL = [170, 290];   // how tall one is drawn, in pixels
-  const FIG_SPECKS = [420, 620]; // how many specks one is made of
+  const FIG_SPECKS = [760, 1080]; // how many specks one is made of
   const EDGE = 0.085;         // where they stand when there is no margin to stand in
   const SPECK = [1, 2.2];     // how big a speck is drawn
   const INK_MIN = 0.16;       // how plainly one is drawn at its faintest
   const INK_MAX = 0.5;        // and at its plainest
-  const FIG_INK = [0.72, 1.2];   // and a weight of its own for the whole figure
+  // DENSER, AND A LITTLE LIGHTER EACH. The owner asked for more
+  // particles; at the old weight nearly twice as many of them came out
+  // as a heavier figure rather than a fuller one, so a speck carries a
+  // little less of the ink and the figure weighs about the same.
+  const FIG_INK = [0.60, 1.0];   // and a weight of its own for the whole figure
   const IDLE = 1.3;           // the pixel or so of drift each keeps about its place
   const IDLE_EVERY = [5, 17]; // and how long it takes over it, in seconds
 
@@ -90,7 +94,7 @@
   const STRAY = 0.2;          // how far from home a speck stands, as a share of the height
   const STRAY_VARY = [0.75, 1.3]; // and a figure's own share of that
   const STRAY_NEAR = 0.1;     // what is kept even when fully resolved
-  const HAND = 210;           // how near the hand has to be to resolve a figure
+  const HAND = 160;           // how far OUTSIDE a figure the hand still reaches
   const HAND_EASE = 2.6;      // how quickly a figure comes home and comes apart again
 
   // --- and what is wrong with each of them
@@ -110,11 +114,22 @@
   //   all     every part of it, each on a clock of its own
   const FAULTS = ["head", "torso", "arm", "all"];
   const HELD_FOR = 0.55;      // how long it must stand formed first, in seconds
-  const GLITCH_IN = 0.45;     // and how long the fault takes to come up
-  const GLITCH_RATE = 11;     // how many times a second it re-rolls
+  // IT COMES AND GOES RATHER THAN RUNNING ON. The owner asked for
+  // "1 second glitched, and 5 seconds not" instead of a fault that,
+  // once it arrived, simply stayed. So it is a beat on a clock of its
+  // own, counted from the moment the figure has been held long enough,
+  // and the figure stands whole in between.
+  const GLITCH_CYCLE = 6;     // seconds from the start of one fault to the next
+  const GLITCH_FOR = 1;       // how long one lasts, in seconds
+  const GLITCH_EDGE = 0.2;    // and how long it takes to come up and go again
+  const GLITCH_RATE = 8;      // how many times a second it re-rolls
   const GLITCH_BAND = 0.045;  // how tall a slipped slice is, as a share of the figure
-  const GLITCH_PUSH = 0.3;    // how far a slice slips, as a share of the figure's width
-  const GLITCH_DROP = 0.28;   // and the share of slices that go missing outright
+  // AND IT IS SUBTLE. Every one of these was roughly twice what it is
+  // now; the owner asked for the faults to be gentler as well as rarer.
+  const GLITCH_PUSH = 0.14;   // how far a slice slips, as a share of the figure's width
+  const GLITCH_DROP = 0.12;   // and the share of slices that go missing outright
+  const GLITCH_LOSE = 0.15;   // what the torso loses on top of that
+  const GLITCH_LIFT = 3;      // how far a slice slips up or down, in pixels
 
   // --- the ground
   const INK = "26,26,24";
@@ -132,6 +147,64 @@
   };
   const between = (a, b) => a + (b - a) * random();
   const rgba = (a) => "rgba(" + INK + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
+
+  // ============================================================
+  // AND THE THINGS THAT ARE NOT PEOPLE
+  //
+  // The owner asked for "other things that are weirdly formed by
+  // particles and geometry" standing among the crowd. There are three,
+  // and they are all drawn out of the same specks and answer the hand
+  // the same way, because being almost a thing is what this page is:
+  //
+  //   the sun     a RING rather than a disc, with rays of uneven
+  //               length out of it. One of them, standing high.
+  //   the rain    falling, the whole length of the page, each drop a
+  //               short string of specks rather than a line.
+  //   the chair   an empty chair — which is the most almost-human
+  //               thing there is, a shape made by somebody not being
+  //               in it. A few of them, standing among the figures.
+  // ============================================================
+  // ABOVE THE CROWD, not among it. As a share of the window's own
+  // height, and the crowd starts at half of that — so the sun stands
+  // clear of the first figure rather than landing on top of one, which
+  // is what a share of the whole document did.
+  const SUN_AT = 0.10;           // how far down the WINDOW it stands, as a share
+  const SUN_SIZE = [200, 250];   // how big it is drawn, in pixels
+  const SUN_SPECKS = 1000;       // and how many specks it is made of
+  const SUN_RAYS = 13;           // rays out of the ring
+  const SUN_DISC = 0.58;         // the share of its specks that are the ring
+  const CHAIR_EVERY = 3;         // one empty chair for every this many figures
+  const CHAIR_TALL = [130, 175];
+  const CHAIR_SPECKS = [520, 680];
+  const PROP_INK = [0.88, 1.25]; // and a weight of their own
+  // AND THEY STRAY FAR LESS THAN A PERSON DOES. A figure is meant to
+  // give no hint of what it is until the hand arrives — that is the
+  // house's name said as a behaviour, and it is deliberate. These are
+  // not: the owner asked for things "weirdly formed by particles and
+  // geometry", which means you have to be able to see that they are a
+  // sun and a chair. At a fifth of their height, as a person strays,
+  // a ring 67 pixels across came apart into a cloud and there was
+  // nothing on the page at all.
+  const PROP_STRAY = 0.022;
+  const RAIN_DROPS = 170;        // how many are falling at once
+  const RAIN_BEADS = 5;          // the specks one drop is strung from
+  const RAIN_FALL = [230, 520];  // how fast one falls, in pixels a second
+  const RAIN_LONG = [24, 64];    // how long one is, in pixels
+  const RAIN_SLANT = 0.16;       // how far it leans as it falls
+  const RAIN_INK = [0.13, 0.34];
+
+  // A chair, face on, with a hint of depth in the two back legs.
+  const CHAIR = [
+    { a: [0.245, 0.120], b: [0.755, 0.120], r: 0.022, of: 12 },  // the top rail
+    { a: [0.245, 0.125], b: [0.255, 0.520], r: 0.016, of: 10 },  // the left post
+    { a: [0.755, 0.125], b: [0.745, 0.520], r: 0.016, of: 10 },  // the right post
+    { a: [0.225, 0.545], b: [0.775, 0.545], r: 0.029, of: 20 },  // the seat
+    { a: [0.255, 0.580], b: [0.235, 0.965], r: 0.018, of: 12 },  // front left leg
+    { a: [0.745, 0.580], b: [0.765, 0.965], r: 0.018, of: 12 },  // front right leg
+    { a: [0.350, 0.570], b: [0.335, 0.905], r: 0.012, of: 7 },   // back left leg
+    { a: [0.650, 0.570], b: [0.665, 0.905], r: 0.012, of: 7 },   // back right leg
+  ];
+  const CHAIR_TOTAL = CHAIR.reduce((sum, one) => sum + one.of, 0);
 
   // ============================================================
   // WHAT A PERSON IS, AS A HANDFUL OF CAPSULES
@@ -175,14 +248,21 @@
       that comes apart is the specks whose part is the head, and nothing
       else on the figure moves. */
   function makeBody(lean, howMany) {
+    return sample(BODY, BODY_TOTAL, howMany, lean);
+  }
+
+  /** The same for any set of capsules, so the chair is built the way a
+      person is. `lean` swings the parts marked `swings`; nothing on a
+      chair does. */
+  function sample(capsules, total, howMany, lean) {
     const out = [];
     for (let n = 0; n < howMany; n++) {
-      let pick = random() * BODY_TOTAL;
-      let limb = BODY[BODY.length - 1];
-      let part = BODY.length - 1;
-      for (let i = 0; i < BODY.length; i++) {
-        pick -= BODY[i].of;
-        if (pick <= 0) { limb = BODY[i]; part = i; break; }
+      let pick = random() * total;
+      let limb = capsules[capsules.length - 1];
+      let part = capsules.length - 1;
+      for (let i = 0; i < capsules.length; i++) {
+        pick -= capsules[i].of;
+        if (pick <= 0) { limb = capsules[i]; part = i; break; }
       }
       // Arms and legs swing about their own top end; the head, neck and
       // torso are the part of a person that does not.
@@ -206,6 +286,40 @@
     return out;
   }
 
+  /** THE SUN, in the same unit box. It is a RING and not a disc — a sun
+      drawn solid at this size is a dot, and it is the ring that says
+      what it is — with rays of uneven length and slightly uneven
+      spacing out of it, so it is a drawn sun rather than a compass
+      rose. */
+  function makeSun(howMany) {
+    const rays = [];
+    for (let k = 0; k < SUN_RAYS; k++) {
+      rays.push({
+        a: (k / SUN_RAYS) * Math.PI * 2 + (random() - 0.5) * 0.18,
+        from: 0.340 + random() * 0.022,
+        to: 0.395 + random() * 0.105,
+      });
+    }
+    const out = [];
+    for (let n = 0; n < howMany; n++) {
+      if (random() < SUN_DISC) {
+        const a = random() * Math.PI * 2;
+        const r = 0.30 + (random() - 0.5) * 0.028;
+        out.push([0.5 + Math.cos(a) * r, 0.5 + Math.sin(a) * r, 0]);
+      } else {
+        const ray = rays[Math.floor(random() * rays.length)];
+        const r = ray.from + (ray.to - ray.from) * random();
+        const off = (random() - 0.5) * 0.011;
+        out.push([
+          0.5 + Math.cos(ray.a) * r - Math.sin(ray.a) * off,
+          0.5 + Math.sin(ray.a) * r + Math.cos(ray.a) * off,
+          1,
+        ]);
+      }
+    }
+    return out;
+  }
+
   // ============================================================
   // THE CROWD
   //
@@ -217,10 +331,40 @@
   const ink = canvas ? canvas.getContext("2d") : null;
   let width = 0, height = 0, docTall = 0;
   let crowd = [];
+  let props = [];   // the sun and the chairs
+  let rain = [];
+
+  /** One cloud of specks standing somewhere down the page: the same
+      shape for a person, a sun and a chair, so all three stray, come
+      home under the hand and go quiet over the reading alike. */
+  function cloud(points, at, tall, mid, wander, weight) {
+    let half = 0;
+    const specks = points.map((one) => {
+      const hx = mid + (one[0] - 0.5) * tall / width;
+      half = Math.max(half, Math.abs(hx - mid) * width);
+      return {
+        hx: hx,
+        hy: at + one[1] * tall,
+        sx: between(-wander, wander) * tall,
+        sy: between(-wander, wander) * tall,
+        size: Math.max(1, Math.round(between(SPECK[0], SPECK[1]))),
+        ink: between(INK_MIN, INK_MAX) * weight,
+        every: between(IDLE_EVERY[0], IDLE_EVERY[1]),
+        phase: random() * Math.PI * 2,
+        part: one[2],
+        down: one[1],
+      };
+    });
+    // HOW WIDE IT ACTUALLY STANDS, measured off the specks themselves
+    // rather than guessed. The hand is answered against this box, so a
+    // figure that leans hard is reached at its elbow like any other.
+    return { y: at, tall: tall, mid: mid, half: half, specks: specks, home: 0 };
+  }
 
   function build() {
     seed = SEED;
     crowd = [];
+    props = [];
     if (!width || !docTall) return;
     // The middle of each margin, or the edge of the window when the
     // window is too narrow to have one.
@@ -245,34 +389,89 @@
       const fault = FAULTS[crowd.length % FAULTS.length];
       // For the "arm" fault, which arm — left (3) or right (4).
       const armPart = random() < 0.5 ? 3 : 4;
+      // AND WHERE EACH SPECK ACTUALLY STANDS is fixed for the life of
+      // the figure (`wander`, inside `cloud`), so the crowd is always
+      // wrong in the same way — a stray that re-rolled would read as a
+      // fizz rather than as a shape that has not settled.
       const body = makeBody(between(-0.22, 0.22), howMany);
-      const specks = body.map((one) => ({
-        // Where it belongs, as a share of the width across and pixels
-        // down the document.
-        hx: mid + (one[0] - 0.5) * tall / width,
-        hy: y + one[1] * tall,
-        // AND WHERE IT ACTUALLY STANDS. Fixed for the life of the
-        // figure, so the crowd is always wrong in the same way — a
-        // stray that re-rolled would read as a fizz rather than as a
-        // shape that has not settled.
-        sx: between(-wander, wander) * tall,
-        sy: between(-wander, wander) * tall,
-        size: Math.max(1, Math.round(between(SPECK[0], SPECK[1]))),
-        ink: between(INK_MIN, INK_MAX) * weight,
-        every: between(IDLE_EVERY[0], IDLE_EVERY[1]),
-        phase: random() * Math.PI * 2,
-        part: one[2],
-        // Where it stands down the figure, 0 at the crown and 1 at the
-        // feet. A slipped slice is a band of this.
-        down: one[1],
-      }));
-      crowd.push({
-        y: y, tall: tall, mid: mid, specks: specks,
-        home: 0, held: 0, glitch: 0,
+      crowd.push(Object.assign(cloud(body, y, tall, mid, wander, weight), {
+        held: 0, glitch: 0,
         fault: fault, armPart: armPart,
         // Its own place in the fault's clock, so two figures with the
         // same fault never come apart on the same frame.
         seed: Math.floor(random() * 9973),
+      }));
+    }
+
+    // ---- AND THE THINGS THAT ARE NOT PEOPLE --------------------------
+    // The sun, once, standing high in whichever margin the first figure
+    // is not in; then an empty chair every so often, alternating sides.
+    const sunSide = crowd.length && crowd[0].mid < 0.5 ? 1 : 0;
+    // AND IT IS SIZED TO THE MARGIN IT STANDS IN. It stands in the
+    // middle of that margin, so anything wider than twice the distance
+    // from there to the edge of the window hangs off it — which at
+    // 1280 across cut a quarter of the sun away.
+    const sunTall = Math.min(between(SUN_SIZE[0], SUN_SIZE[1]), stand * width * 1.9);
+    props.push(Object.assign(
+      cloud(makeSun(SUN_SPECKS), window.innerHeight * SUN_AT, sunTall,
+            sunSide === 0 ? stand : 1 - stand,
+            PROP_STRAY * between(STRAY_VARY[0], STRAY_VARY[1]),
+            between(PROP_INK[0], PROP_INK[1])),
+      { kind: "sun" }));
+
+    // A CHAIR IS PLACED AGAINST THE CROWD rather than on a ruler of its
+    // own. It was every 1500 pixels, which on a page whose parts are
+    // all still shut — which is every page here, until somebody opens
+    // one — is past the foot of the document, so there were no chairs
+    // at all. One for every CHAIR_EVERY figures, standing half a pace
+    // further down and in the OTHER margin, puts them among the crowd
+    // on a page of any length and never on top of anybody.
+    crowd.forEach((figure, n) => {
+      if (n % CHAIR_EVERY !== CHAIR_EVERY - 1) return;
+      const tall = between(CHAIR_TALL[0], CHAIR_TALL[1]);
+      const side = figure.mid < 0.5 ? 1 : 0;
+      // Half a pace further down and in the OTHER margin, which puts it
+      // clear of the figure it is counted from and clear of the next
+      // one, which stands in this margin a whole pace on.
+      const y = figure.y + FIG_EVERY * 0.42;
+      const mid = side === 0
+        ? stand + between(-0.03, 0.018)
+        : 1 - stand + between(-0.018, 0.03);
+      props.push(Object.assign(
+        cloud(sample(CHAIR, CHAIR_TOTAL, Math.round(between(CHAIR_SPECKS[0], CHAIR_SPECKS[1])), 0),
+              y, tall, mid,
+              PROP_STRAY * between(STRAY_VARY[0], STRAY_VARY[1]),
+              between(PROP_INK[0], PROP_INK[1])),
+        { kind: "chair" }));
+    });
+  }
+
+  /** THE RAIN. It falls on the WINDOW rather than down the document —
+      it is weather, not something standing in the writing — so it is
+      built with the canvas and wraps at the foot of the screen. Each
+      drop is a short string of specks rather than a line, because
+      everything on this page is specks. */
+  function buildRain() {
+    rain = [];
+    if (!width || !height) return;
+    let drip = 7741;
+    const roll = () => {
+      drip = (drip * 1103515245 + 12345) % 2147483648;
+      return drip / 2147483648;
+    };
+    for (let n = 0; n < RAIN_DROPS; n++) {
+      const long = RAIN_LONG[0] + (RAIN_LONG[1] - RAIN_LONG[0]) * roll();
+      const beads = [];
+      for (let k = 0; k < RAIN_BEADS; k++) beads.push(roll());
+      beads.sort((a, b) => a - b);
+      rain.push({
+        x: roll() * width,
+        y: roll() * (height + long * 2) - long,
+        fall: RAIN_FALL[0] + (RAIN_FALL[1] - RAIN_FALL[0]) * roll(),
+        long: long,
+        lean: (RAIN_SLANT * 0.6 + RAIN_SLANT * 0.8 * roll()),
+        ink: RAIN_INK[0] + (RAIN_INK[1] - RAIN_INK[0]) * roll(),
+        beads: beads,
       });
     }
   }
@@ -290,7 +489,7 @@
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
     ink.setTransform(ratio, 0, 0, ratio, 0, 0);
-    if (!same) build();
+    if (!same) { build(); buildRain(); }
   }
 
   let handX = -99999, handY = -99999;
@@ -318,41 +517,89 @@
     return v - Math.floor(v);
   }
 
+  /** HOW FAR HOME A THING HAS COME, and it is asked of the box the
+      thing actually stands in rather than of a point in the middle of
+      it. It used to be a circle drawn round the figure's own middle,
+      which meant the hand resolved it fully at the navel and only part
+      way at the head or the feet — the owner asked to be able to
+      "hover anywhere on them". Inside the box is all the way home;
+      outside it eases off over HAND pixels. */
+  function reach(thing, top) {
+    if (handX < -9000) return 0;
+    const cx = thing.mid * width;
+    const dx = Math.max(0, Math.abs(handX - cx) - thing.half);
+    const dy = Math.max(0, Math.abs(handY - (top + thing.tall * 0.5)) - thing.tall * 0.5);
+    return Math.max(0, Math.min(1, 1 - Math.hypot(dx, dy) / HAND));
+  }
+
+  let wasAt = 0;
+
   function draw(down, clock) {
     if (!ink || !width) return;
     ink.clearRect(0, 0, width, height);
     const idle = REDUCE_MOTION ? 0 : IDLE;
     const tick = Math.floor(clock * GLITCH_RATE);
+    const step = REDUCE_MOTION ? 0 : 0.016;
+    const ease = Math.min(1, HAND_EASE * (REDUCE_MOTION ? 1 : 0.016));
+    // Seconds since the last frame, for the one thing here that travels.
+    const dt = REDUCE_MOTION ? 0 : Math.max(0, Math.min(0.05, clock - wasAt));
+    wasAt = clock;
+
+    drawRain(dt);
+
+    // THE THINGS THAT ARE NOT PEOPLE, drawn behind the crowd: the sun
+    // and the empty chairs. They stray and come home exactly as a
+    // figure does — being almost a thing is what this page is — but
+    // nothing is WRONG with them. The faults belong to the people.
+    props.forEach((prop) => {
+      const top = prop.y - down;
+      if (top > height + 80 || top + prop.tall < -80) return;
+      prop.home += (reach(prop, top) - prop.home) * ease;
+      const held = STRAY_NEAR + (1 - STRAY_NEAR) * (1 - prop.home);
+      prop.specks.forEach((one) => {
+        const wander = idle === 0 ? 0 : idle *
+          Math.sin((clock / one.every) * Math.PI * 2 + one.phase);
+        const x = one.hx * width + one.sx * held + wander;
+        const y = one.hy - down + one.sy * held + wander * 0.7;
+        if (y < -8 || y > height + 8) return;
+        const shown = one.ink * (0.78 + 0.34 * prop.home) * lit(x);
+        if (shown < 0.012) return;
+        ink.fillStyle = rgba(shown);
+        ink.fillRect(Math.round(x), Math.round(y), one.size, one.size);
+      });
+    });
 
     crowd.forEach((figure) => {
       const top = figure.y - down;
       if (top > height + 60 || top + figure.tall < -60) return;
 
-      // HOW FAR HOME THIS ONE HAS COME. Asked of the figure's own
-      // middle rather than of each speck, so a figure resolves as a
-      // person — which is the point of it — instead of a patch of one
-      // sharpening under the pointer.
-      const cx = figure.mid * width;
-      const cy = top + figure.tall * 0.45;
-      const away = Math.hypot(handX - cx, handY - cy);
-      const want = handX < -9000
-        ? 0
-        : Math.max(0, Math.min(1, 1 - away / (HAND + figure.tall * 0.5)));
       // Eased towards rather than set, so it comes home and comes apart
       // again at a pace rather than snapping between the two.
-      figure.home += (want - figure.home) *
-        Math.min(1, HAND_EASE * (REDUCE_MOTION ? 1 : 0.016));
+      figure.home += (reach(figure, top) - figure.home) * ease;
       const held = STRAY_NEAR + (1 - STRAY_NEAR) * (1 - figure.home);
 
-      // HOW LONG IT HAS STOOD FORMED, and from that how far its fault
-      // has come up. The owner asked for the glitching to start "after
-      // a short delay of being fully formed" — so it is the HOLDING
-      // that is counted, and letting go of a figure puts the count
-      // straight back to nothing along with the fault.
-      const step = REDUCE_MOTION ? 0 : 0.016;
+      // HOW LONG IT HAS STOOD FORMED, and from that where it is in its
+      // fault's own clock. The owner asked for the glitching to start
+      // "after a short delay of being fully formed" — so it is the
+      // HOLDING that is counted, and letting go of a figure puts the
+      // count straight back to nothing along with the fault.
+      //
+      // AND THE FAULT COMES AND GOES. It used to arrive and then simply
+      // stay for as long as you kept your hand there. The owner asked
+      // for "1 second glitched, and 5 seconds not": so from the moment
+      // it has been held long enough there is a beat of GLITCH_FOR in
+      // every GLITCH_CYCLE, easing in and out over GLITCH_EDGE at each
+      // end, and the figure stands whole in between.
       if (figure.home > 0.82) figure.held += step; else figure.held = 0;
-      const wantGlitch = REDUCE_MOTION ? 0
-        : Math.max(0, Math.min(1, (figure.held - HELD_FOR) / GLITCH_IN));
+      const since = figure.held - HELD_FOR;
+      let wantGlitch = 0;
+      if (!REDUCE_MOTION && since > 0) {
+        const at = since % GLITCH_CYCLE;
+        if (at < GLITCH_FOR) {
+          wantGlitch = Math.max(0, Math.min(1,
+            Math.min(at, GLITCH_FOR - at) / GLITCH_EDGE));
+        }
+      }
       figure.glitch += (wantGlitch - figure.glitch) * (step === 0 ? 1 : 0.22);
 
       /** Whether this part of this figure is the part that is wrong. */
@@ -382,18 +629,44 @@
           const roll = hash(band, beat, figure.seed);
           if (roll < GLITCH_DROP * figure.glitch) return;
           x += (hash(band, beat, figure.seed + 41) - 0.5) * 2 * wide * figure.glitch;
-          y += (hash(band, beat, figure.seed + 97) - 0.5) * 6 * figure.glitch;
+          y += (hash(band, beat, figure.seed + 97) - 0.5) * 2 *
+               GLITCH_LIFT * figure.glitch;
           // The torso does not only slip, it LOSES specks — the owner
           // asked for one with particles missing from it.
           if (figure.fault === "torso" &&
-              hash(band, beat, figure.seed + 7) < 0.3 * figure.glitch) return;
-          shown *= 0.55 + 0.75 * roll;
+              hash(band, beat, figure.seed + 7) < GLITCH_LOSE * figure.glitch) return;
+          shown *= 0.72 + 0.5 * roll;
         }
 
         if (y < -8 || y > height + 8) return;
         if (shown < 0.012) return;
         ink.fillStyle = rgba(shown);
         ink.fillRect(Math.round(x), Math.round(y), one.size, one.size);
+      });
+    });
+  }
+
+  /** THE RAIN, falling. It is the one thing on this page that travels
+      of its own accord rather than standing and straying, and it goes
+      quiet over the reading like everything else. Under
+      `prefers-reduced-motion` it is drawn where it stands and does not
+      fall. */
+  function drawRain(dt) {
+    rain.forEach((drop) => {
+      if (dt > 0) {
+        drop.y += drop.fall * dt;
+        // Wrapped rather than re-rolled: re-rolling here would take
+        // numbers out of the seeded run the crowd is built from.
+        if (drop.y - drop.long > height) drop.y = -drop.long;
+      }
+      const shown = drop.ink * lit(drop.x);
+      if (shown < 0.012) return;
+      ink.fillStyle = rgba(shown);
+      drop.beads.forEach((at) => {
+        const y = drop.y - drop.long * at;
+        if (y < -4 || y > height + 4) return;
+        ink.fillRect(Math.round(drop.x + drop.long * at * drop.lean),
+                     Math.round(y), 1, 1 + (at < 0.25 ? 1 : 0));
       });
     });
   }

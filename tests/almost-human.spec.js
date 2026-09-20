@@ -304,3 +304,211 @@ test("without the script the page is all of its writing", async ({ page, context
   // The drawing carries nothing to read, so nothing is lost with it.
   await expect(page.locator(".human-rank")).toHaveCount(0);
 });
+
+/** The ink inside a box: how much of it there is, and where its third
+    and ninety-seventh percentiles lie across and down — which is the
+    shape it makes, without one far speck deciding it. */
+const inkIn = (page, box) => page.evaluate((b) => {
+  const el = document.querySelector(".human-field");
+  const g = el.getContext("2d");
+  const r = el.width / window.innerWidth;
+  const w = Math.round(b.w * r), h = Math.round(b.h * r);
+  const im = g.getImageData(Math.round(b.x * r), Math.round(b.y * r), w, h).data;
+  const cols = new Array(w).fill(0), rows = new Array(h).fill(0);
+  let n = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (im[(y * w + x) * 4 + 3] > 10) { n += 1; cols[x] += 1; rows[y] += 1; }
+    }
+  }
+  const band = (arr) => {
+    const tot = arr.reduce((a, c) => a + c, 0);
+    if (!tot) return [0, 0];
+    let run = 0, lo = 0, hi = arr.length - 1;
+    for (let i = 0; i < arr.length; i++) { run += arr[i]; if (run >= tot * 0.03) { lo = i; break; } }
+    run = 0;
+    for (let i = arr.length - 1; i >= 0; i--) { run += arr[i]; if (run >= tot * 0.03) { hi = i; break; } }
+    return [lo / r, hi / r];
+  };
+  const bx = band(cols), by = band(rows);
+  return { n: n, x0: b.x + bx[0], x1: b.x + bx[1], y0: b.y + by[0], y1: b.y + by[1] };
+}, box);
+
+/* HOVER ANYWHERE ON A FIGURE. It used to be a circle drawn round the
+   figure's own middle, so the hand brought it all the way home at the
+   navel and only part of the way at the head or the feet. The owner
+   asked to be able to "hover anywhere on them"; the hand is answered
+   against the box the figure actually stands in now. */
+test("a figure comes home from the pointer anywhere on it", async ({ page }) => {
+  await page.goto(HOUSE);
+  await page.waitForTimeout(1200);
+  const far = [12, 12];
+  await page.mouse.move(far[0], far[1]);
+  await page.waitForTimeout(700);
+
+  // Found rather than assumed: the figure in the left margin, and then
+  // its own box rather than the rough one it was found in.
+  const rough = await inkIn(page, { x: 0, y: 380, w: 260, h: 320 });
+  expect(rough.n, "there should be a figure in the left margin").toBeGreaterThan(400);
+  const box = { x: Math.round(rough.x0 - 60), y: Math.round(rough.y0 - 16),
+                w: Math.round(rough.x1 - rough.x0 + 120),
+                h: Math.round(rough.y1 - rough.y0 + 32) };
+  const apart = await inkIn(page, box);
+  const wideApart = apart.x1 - apart.x0;
+
+  // THE CROWN, THE MIDDLE AND THE SOLES — the two ends rather than
+  // near them, because the old circle was generous enough that a point
+  // part way up still came most of the way home. The ends are where it
+  // fell short.
+  const got = [];
+  for (const at of [0, 0.5, 1]) {
+    await page.mouse.move(far[0], far[1]);
+    await page.waitForTimeout(800);
+    await page.mouse.move(Math.round((apart.x0 + apart.x1) / 2),
+                          Math.round(apart.y0 + (apart.y1 - apart.y0) * at));
+    await page.waitForTimeout(1200);
+    const home = await inkIn(page, box);
+    got.push(home.x1 - home.x0);
+  }
+
+  const [head, middle, feet] = got;
+  const where = `head ${head}, middle ${middle}, feet ${feet}, apart ${wideApart}`;
+  // Every one of the three draws it together.
+  got.forEach((wide) => {
+    expect(wide, `it should come home from anywhere on it — ${where}`)
+      .toBeLessThan(wideApart * 0.82);
+  });
+  // AND BY THE SAME AMOUNT, which is the assertion. Measured against
+  // the old circle: it gave 69 / 63 / 75 on an apart width of 95, where
+  // the box gives 63 / 63 / 68 — so the two ends came home about half
+  // as far as the middle did, which is what the owner was complaining
+  // about.
+  const most = Math.max.apply(null, got), least = Math.min.apply(null, got);
+  expect(most - least, `the three should agree — ${where}`)
+    .toBeLessThan(wideApart * 0.085);
+  expect(feet, `the soles should come home like the middle — ${where}`)
+    .toBeLessThan(middle * 1.1);
+  expect(head, `and so should the crown — ${where}`)
+    .toBeLessThan(middle * 1.1);
+});
+
+/* THE FAULT IS A BEAT, NOT A DRONE. It used to arrive once the figure
+   had been held long enough and then simply stay for as long as your
+   hand was there. The owner asked for "1 second glitched, and 5 seconds
+   not", so there is a beat of one second in every six and the figure
+   stands whole in between. */
+test("a held figure glitches in beats, and stands whole between them",
+  async ({ page }) => {
+  await page.goto(HOUSE);
+  await page.waitForTimeout(1200);
+  await page.mouse.move(12, 12);
+  await page.waitForTimeout(600);
+  const rough = await inkIn(page, { x: 0, y: 380, w: 260, h: 320 });
+  expect(rough.n).toBeGreaterThan(400);
+  const box = { x: Math.round(rough.x0 - 45), y: Math.round(rough.y0 - 10),
+                w: Math.round(rough.x1 - rough.x0 + 90),
+                h: Math.round(rough.y1 - rough.y0 + 20) };
+
+  await page.mouse.move(Math.round(box.x + box.w / 2), Math.round(box.y + box.h / 2));
+  // Held long enough to come home AND to be past the first beat.
+  await page.waitForTimeout(2400);
+  const seen = [];
+  const from = Date.now();
+  while (Date.now() - from < 15000) {
+    seen.push((await inkIn(page, box)).n);
+    await page.waitForTimeout(95);
+  }
+  const sorted = [...seen].sort((a, b) => a - b);
+  const whole = sorted[Math.floor(sorted.length * 0.9)];
+  const least = sorted[0];
+  // THE LONGEST STRETCH IT STANDS STILL FOR. Between beats a figure
+  // moves only its pixel of idle drift, so its count barely changes
+  // from one sample to the next; during a beat the pattern re-rolls
+  // eight times a second and it changes every time.
+  let run = 0, longest = 0;
+  for (let i = 1; i < seen.length; i++) {
+    if (Math.abs(seen[i] - seen[i - 1]) <= whole * 0.01) {
+      run += 1;
+      if (run > longest) longest = run;
+    } else {
+      run = 0;
+    }
+  }
+  const say = `whole ${whole}, least ${least}, longest still run ${longest}` +
+    ` of ${seen.length}`;
+
+  // It does glitch: at some point specks are plainly missing.
+  expect(least, `the fault should show at all — ${say}`).toBeLessThan(whole * 0.97);
+  // AND IT STANDS WHOLE IN BETWEEN, which is the assertion. Measured
+  // both ways: a fault that runs on for as long as you hold the figure
+  // gives a longest still run of about 6 samples, where the beat gives
+  // 24 to 59 depending on how fast this machine can sample — which is
+  // the five seconds the owner asked for. The floor is set between the
+  // two rather than near either.
+  expect(longest, `it should stand whole between the beats — ${say}`)
+    .toBeGreaterThan(14);
+});
+
+/* THE THINGS THAT ARE NOT PEOPLE. The owner asked for "other things
+   that are weirdly formed by particles and geometry, such as a sun,
+   rain that is animated and falling" and one of my own — an empty
+   chair, which is the most almost-human thing there is.
+
+   The sun is the one worth a test: it is ROUND, where everything else
+   in these margins is a person and half as wide as it is tall. And it
+   stands ABOVE the crowd rather than among it, which is where it ended
+   up the first time and where it sat on top of a figure. */
+test("a sun stands above the crowd, and it is round", async ({ page }) => {
+  await page.goto(HOUSE);
+  await page.waitForTimeout(1300);
+  await page.mouse.move(700, 880);
+  await page.waitForTimeout(700);
+
+  // The right margin, measured off the window rather than assumed:
+  // this page lays itself out against the window's own width.
+  const room = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  const sun = await inkIn(page, { x: Math.round(room.w * 0.72), y: 16,
+                                  w: Math.round(room.w * 0.28), h: Math.round(room.h * 0.46) });
+  expect(sun.n, "there should be something drawn above the crowd").toBeGreaterThan(400);
+  const wide = sun.x1 - sun.x0, tall = sun.y1 - sun.y0;
+  const say = `${Math.round(wide)} x ${Math.round(tall)}`;
+  expect(wide, `it should be as wide as it is tall — ${say}`)
+    .toBeGreaterThan(tall * 0.72);
+  expect(wide, `and no wider — ${say}`).toBeLessThan(tall * 1.4);
+  // And it stands clear of the first figure, which is half a window down.
+  expect(sun.y1, "it should stand above the crowd").toBeLessThan(room.h * 0.5);
+});
+
+/* THE RAIN FALLS. Measured at the very edge of the window, where no
+   figure reaches even at its strayest — so what is counted there is
+   the rain and nothing else. */
+test("the rain falls, and stands still when motion is turned off",
+  async ({ page }) => {
+  await page.goto(HOUSE);
+  await page.waitForTimeout(1300);
+  await page.mouse.move(700, 4);
+  await page.waitForTimeout(600);
+
+  const edge = { x: 0, y: 40, w: 40, h: 700 };
+  const seen = [];
+  for (let n = 0; n < 12; n++) {
+    seen.push((await inkIn(page, edge)).n);
+    await page.waitForTimeout(110);
+  }
+  expect(Math.max.apply(null, seen), "there should be rain at the edge").toBeGreaterThan(3);
+  const still = seen.every((v) => v === seen[0]);
+  expect(still, `it should be falling — ${JSON.stringify(seen)}`).toBe(false);
+});
+
+test("the rain does not fall when motion is turned off", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(HOUSE);
+  await page.waitForTimeout(1300);
+  await page.mouse.move(700, 4);
+  await page.waitForTimeout(600);
+  const edge = { x: 0, y: 40, w: 40, h: 700 };
+  const first = await inkIn(page, edge);
+  await page.waitForTimeout(700);
+  const then = await inkIn(page, edge);
+  expect(then.n, "nothing should have moved").toBe(first.n);
+});

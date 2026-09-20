@@ -247,6 +247,26 @@ the count had quietly dropped by a quarter. It passed alone and failed in a load
 run. If a swarm change ever makes that test flaky, this is why — look at how many specks
 are actually being drawn before looking anywhere else.
 
+## A second way in, at the foot of a card
+
+`data-calc` on a row is an address the card puts a boxed **OPEN CALCULATOR** at its foot,
+over to the right, for a piece that carries something of its own worth going straight to.
+Only `works/theory-03.html` has one. It is read off the page like `data-note` and
+`data-plate`, so a theory without one simply does not get the button.
+
+**It is not an anchor**, and it cannot be: the whole card already stands inside the
+station's own `<a>`, and an anchor cannot stand inside an anchor. It is a `<span>` with a
+link's role, a link's keys (Enter and Space) and a link's middle-click and
+ctrl/cmd-click, and it stops the click from reaching the station — which by then is open,
+so that click would otherwise be the one that opens the theory. The trade for doing it
+that way is that the station stays **the only real link on the drawing**, which the
+fixtures depend on and which there is a test for.
+
+**The Note Dissemination Framework's card no longer shows the summary plate.** The owner
+asked for the picture off that card; the plate still stands at the top of the piece
+itself. `data-plate` and the machinery behind it are untouched — it is a content
+convention any row may use — and no row uses it at the moment.
+
 ## Known issues / TODO
 
 - The three theory pages the stations point at are **templates** — real structure,
