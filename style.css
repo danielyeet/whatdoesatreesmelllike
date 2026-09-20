@@ -6784,3 +6784,147 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 /* The multiplication sign between two fractions wants air round it —
    a bare `×` between two stacked pairs reads as part of the lower one. */
 .mop { color: #8d94a3; padding: 0 0.28em; }
+
+/* ==================================================================
+   THE IMAGE DEMONSTRATION — works/theory-04.html
+   ==================================================================
+   TEMPORARY, and self-contained: nothing outside that one page uses a
+   demo-* class, so this whole block goes when the page does.
+
+   It sits on the essay pages' own ground, so a figure here is ruled
+   and captioned exactly the way .essay-plate is — one border, one
+   caption bar, no shadow anywhere. The only thing it adds is a way of
+   standing two or six pictures beside each other, which a piece of
+   writing never needed before.
+   ================================================================== */
+.demo-figure {
+  margin: 0 0 30px;
+  padding: 0;
+  border: 1px solid rgba(150, 160, 176, 0.4);
+  background: #101218;
+}
+.demo-figure img,
+.demo-figure svg { display: block; width: 100%; height: auto; }
+.demo-figure figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  line-height: 1.65;
+  color: #8d94a3;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(150, 160, 176, 0.25);
+  background: #0a0b0e;
+}
+.demo-figure figcaption code { color: #cdd4df; font-size: 12px; }
+.demo-figure figcaption strong { color: #dbe1ea; font-weight: 500; }
+.demo-figure figcaption a { color: #cfe0f5; border-bottom: 1px solid rgba(142, 180, 226, 0.6); text-decoration: none; }
+
+/* A SQUARE PICTURE beside a wide one would stand taller than it and
+   pull the pair out of line, so the square is held to its own height
+   and the picture inside it fitted. */
+.demo-figure-square img { max-height: 340px; object-fit: contain; background: #0a0b0e; }
+
+/* AN UPRIGHT PICTURE STANDING ON ITS OWN would be half as tall again
+   as the window at the column's full width, so it is given a width of
+   its own and centred. In a pair they are already half-width and this
+   is not needed. */
+.demo-figure-tall { max-width: 430px; margin-left: auto; margin-right: auto; }
+
+/* Two pictures side by side, and as many as fit for the six plain
+   transforms. Both fall back to one column on a narrow window, where
+   side by side would make each of them too small to read. */
+.demo-pair,
+.demo-grid {
+  display: grid;
+  gap: 18px;
+  margin: 0 0 30px;
+}
+.demo-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.demo-grid { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+.demo-pair .demo-figure,
+.demo-grid .demo-figure { margin: 0; }
+.demo-pair .demo-figure { display: flex; flex-direction: column; }
+.demo-pair .demo-figure figcaption { margin-top: auto; }
+@media (max-width: 720px) {
+  .demo-pair { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* THE HISTOGRAM. Drawn from the numbers the script measured, not from
+   the picture — so it is an SVG in the page rather than another file.
+   The three lines are tinted towards the channel they count, which is
+   the one place on this site a colour means a value; they are held
+   well back from full red, green and blue so the page still reads as
+   near-white on gray-black. */
+.demo-figure-chart { background: #0a0b0e; }
+.demo-chart { padding: 6px 0 0; }
+.demo-axis { stroke: rgba(150, 160, 176, 0.45); stroke-width: 1; }
+.demo-axis-tick { stroke: rgba(150, 160, 176, 0.45); stroke-width: 1; }
+.demo-axis-no {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: #767e8d;
+  text-anchor: middle;
+}
+.demo-line { fill: none; stroke-width: 1.4; stroke-linejoin: round; }
+.demo-line-r { stroke: #c98d8d; }
+.demo-line-g { stroke: #8fc39a; }
+.demo-line-b { stroke: #8eb4e2; }
+
+/* THE PALETTE. Each colour is shown as itself, with the share of the
+   picture that fell into it — so the row is read left to right as
+   "this much of the photograph is this". */
+.demo-swatches {
+  list-style: none;
+  margin: 0 0 30px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+.demo-swatch {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(150, 160, 176, 0.28);
+  background: #0a0b0e;
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.demo-chip {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 1px solid rgba(150, 160, 176, 0.3);
+}
+.demo-swatch code { color: #cdd4df; }
+.demo-swatch em { color: #767e8d; font-style: normal; margin-left: auto; }
+
+/* THE TABLES. Hairlines and mono figures, the way every reading on
+   this site is set. */
+.demo-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 30px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #aab2c1;
+}
+.demo-table th {
+  text-align: left;
+  font-weight: 400;
+  color: #767e8d;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  padding: 0 12px 8px 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.4);
+}
+.demo-table td {
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.16);
+}
+.demo-table tbody tr:last-child td { border-bottom: none; }
+.demo-table td:first-child { color: #dbe1ea; }
+.demo-table-tight { max-width: 520px; }

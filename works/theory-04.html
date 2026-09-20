@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Photograph, Taken Apart &mdash; The Taste of Aldehydes</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  THIS PAGE IS TEMPORARY, and it is not a theory. It is a
+  demonstration of what an image library (image-js) can do to the
+  site's own photographs, standing in the fourth theory's place
+  because that is where it was asked to stand.
+
+  NOTHING ON THIS PAGE IS DRAWN BY THE BROWSER. Every picture below
+  is a file, made by tools/image-js-demo.js from the pictures in the
+  Pineward gallery, and every number quoted was measured by that same
+  script. To remake them:
+
+      npm install image-js --no-save
+      node tools/image-js-demo.js
+
+  TO TAKE THE WHOLE THING OFF THE SITE, five deletions and nothing
+  else: this file, tools/image-js-demo.js,
+  images/Theories/image-js-demo/, the demo-* block at the foot of
+  style.css, the row on categories/theories.html that points here and
+  the line in search-page.js. Nothing else knows about any of it.
+
+  IT IS AN ESSAY PAGE otherwise, exactly like the three theories: the
+  same ground, and essay.js builds the rule down the left out of the
+  sections below.
+-->
+<body class="essay-page dark-surface">
+
+<canvas class="essay-field" aria-hidden="true"></canvas>
+
+<header class="essay-head">
+  <p class="essay-kicker">Theories &middot; 04 &middot; temporary</p>
+  <h1>A Photograph, Taken Apart</h1>
+  <p class="essay-standfirst">Not a theory &mdash; a demonstration. What a program can do to a photograph without being told anything about what is in it, done on your own pictures from the Pineward gallery.</p>
+  <dl class="essay-facts">
+    <div><dt>Made</dt><dd>2026</dd></div>
+    <div><dt>Reading</dt><dd>9 min</dd></div>
+    <div><dt>Filed under</dt><dd>Theories &middot; 04</dd></div>
+  </dl>
+</header>
+
+<article class="essay-body">
+
+  <section class="essay-section" id="section-01">
+    <h2><span class="essay-no">01</span>What this is</h2>
+    <p class="essay-lead">Every picture on this page is a <em>file</em>. Not one of them is drawn in the browser, and not one of them was touched by hand: a script read your photographs, worked on them, and wrote new ones out. This page only shows them.</p>
+    <p>The tool is a library called <code>image-js</code> &mdash; a set of ready-made operations for opening a picture, measuring it, changing it and writing it back out again. It runs on a machine rather than in a browser, which is the important limit: <strong>nothing here could be done by a page on this site</strong>. It is work done <em>behind</em> the site, and what ships is the pictures it produced.</p>
+    <p>Three photographs from the Pineward gallery do all the work below. I will call them by where they stand in the gallery strip, the way that page numbers them: <strong>picture 5</strong>, the blue spruce; <strong>picture 3</strong>, white flowers against dark leaves; and the original of <strong>picture 4</strong>, straight out of your own folder at 7728&thinsp;&times;&thinsp;5152 &mdash; 39.8 megapixels, 4,102KB.</p>
+    <p class="essay-note">This page stands in the fourth theory&rsquo;s place temporarily. It is five deletions away from being gone, and the list of them is in the comment at the top of this file.</p>
+  </section>
+
+  <section class="essay-section" id="section-02">
+    <h2><span class="essay-no">02</span>The thing it already did</h2>
+    <p>Start with the least interesting operation, because it is the one that has already earned its keep here: <strong>making the web copies</strong>. The gallery at the foot of Pineward shows twenty-eight photographs. The originals are around four megabytes each; the page shows a 1600-pixel viewing copy and a 520-pixel square thumbnail. That is exactly the recipe below, run again here on a real original so the numbers are real ones.</p>
+    <div class="demo-pair">
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/copy-shown.jpg" alt="A spruce branch in low sun, the viewing copy" width="760" height="507">
+        <figcaption><code>resize</code> &mdash; long edge to 1600px. <a href="../images/Theories/image-js-demo/copy-1600.jpg">338KB</a>, down from 4,102KB: 12.1&times; smaller, and you cannot see the difference at this size.</figcaption>
+      </figure>
+      <figure class="demo-figure demo-figure-square">
+        <img src="../images/Theories/image-js-demo/copy-520.jpg" alt="The middle of the same photograph, cut square" width="520" height="520" loading="lazy">
+        <figcaption><code>crop</code> then <code>resize</code> &mdash; a square cut from the middle, 70KB. The strip is squares, so the cut is made once here rather than by the browser twenty-eight times.</figcaption>
+      </figure>
+    </div>
+    <p>Three lines of instruction, and the whole set is rebuilt in about a minute. Worth saying plainly: the originals are never written to. Every one of these is a new file beside them.</p>
+  </section>
+
+  <section class="essay-section" id="section-03">
+    <h2><span class="essay-no">03</span>What it can tell you without being told</h2>
+    <p>Before changing anything, a picture can simply be <em>read</em>. These are picture 5&rsquo;s own numbers, measured rather than guessed:</p>
+    <table class="demo-table demo-table-tight">
+      <thead><tr><th>channel</th><th>darkest</th><th>brightest</th><th>average</th><th>middle</th><th>spread</th></tr></thead>
+      <tbody>
+        <tr><td>red</td><td>0</td><td>255</td><td>78</td><td>64</td><td>824</td></tr>
+        <tr><td>green</td><td>0</td><td>255</td><td>86</td><td>74</td><td>924</td></tr>
+        <tr><td>blue</td><td>0</td><td>255</td><td>61</td><td>42</td><td>686</td></tr>
+      </tbody>
+    </table>
+    <p>Green averages highest and blue lowest, which is a photograph of a tree saying so in numbers. The <em>middle</em> value sitting below the <em>average</em> in all three says the same thing another way: most of the frame is darker than the average, and a few bright patches of sky are dragging that average up.</p>
+    <p>Drawn out fully, that is a <strong>histogram</strong> &mdash; how many pixels fall at each brightness, counted separately for red, green and blue. The chart below is the script&rsquo;s own reading of picture 5, sixty-four steps from black on the left to white on the right:</p>
+    <figure class="demo-figure demo-figure-chart">
+      <svg class="demo-chart" viewBox="0 0 640 210" role="img"
+           aria-label="How many pixels of the spruce photograph fall at each brightness, red green and blue counted separately">
+        <line class="demo-axis" x1="34" y1="184" x2="632" y2="184"/>
+        <line class="demo-axis" x1="34" y1="10" x2="34" y2="184"/>
+        <line class="demo-axis-tick" x1="34.0" y1="184" x2="34.0" y2="189"/>
+        <text class="demo-axis-no" x="34.0" y="201">0</text>
+        <line class="demo-axis-tick" x1="184.1" y1="184" x2="184.1" y2="189"/>
+        <text class="demo-axis-no" x="184.1" y="201">64</text>
+        <line class="demo-axis-tick" x1="334.2" y1="184" x2="334.2" y2="189"/>
+        <text class="demo-axis-no" x="334.2" y="201">128</text>
+        <line class="demo-axis-tick" x1="484.3" y1="184" x2="484.3" y2="189"/>
+        <text class="demo-axis-no" x="484.3" y="201">192</text>
+        <line class="demo-axis-tick" x1="632.0" y1="184" x2="632.0" y2="189"/>
+        <text class="demo-axis-no" x="632.0" y="201">255</text>
+        <polyline class="demo-line demo-line-r" points="34.0,181.3 43.5,163.3 53.0,140.9 62.5,105.7 72.0,68.2 81.5,73.5 91.0,90.4 100.4,101.5 109.9,106.2 119.4,112.1 128.9,112.7 138.4,114.1 147.9,118.6 157.4,123.9 166.9,129.1 176.4,129.8 185.9,129.8 195.4,128.3 204.9,128.4 214.3,127.8 223.8,129.3 233.3,133.3 242.8,137.5 252.3,143.3 261.8,148.4 271.3,152.0 280.8,153.3 290.3,155.0 299.8,157.2 309.3,156.7 318.8,157.0 328.3,157.8 337.7,158.3 347.2,158.8 356.7,159.8 366.2,159.5 375.7,159.7 385.2,159.9 394.7,161.2 404.2,161.8 413.7,164.3 423.2,166.0 432.7,167.9 442.2,169.2 451.7,170.2 461.1,170.8 470.6,171.8 480.1,171.8 489.6,172.9 499.1,173.2 508.6,172.7 518.1,173.6 527.6,173.5 537.1,174.2 546.6,174.2 556.1,174.4 565.6,175.2 575.0,176.3 584.5,176.9 594.0,178.3 603.5,179.5 613.0,181.0 622.5,181.9 632.0,181.6"/>
+        <polyline class="demo-line demo-line-g" points="34.0,182.2 43.5,167.7 53.0,145.5 62.5,115.3 72.0,86.8 81.5,80.1 91.0,93.9 100.4,110.4 109.9,119.1 119.4,123.8 128.9,124.0 138.4,124.8 147.9,125.1 157.4,128.3 166.9,130.2 176.4,134.4 185.9,135.9 195.4,138.3 204.9,138.5 214.3,137.2 223.8,136.4 233.3,134.2 242.8,132.2 252.3,132.0 261.8,130.5 271.3,133.8 280.8,139.9 290.3,145.7 299.8,150.2 309.3,153.4 318.8,156.1 328.3,157.0 337.7,158.0 347.2,158.2 356.7,158.7 366.2,159.3 375.7,160.6 385.2,160.7 394.7,160.9 404.2,161.3 413.7,161.4 423.2,162.1 432.7,162.2 442.2,162.4 451.7,164.3 461.1,165.6 470.6,167.1 480.1,169.5 489.6,170.5 499.1,171.7 508.6,171.6 518.1,171.9 527.6,172.9 537.1,173.0 546.6,173.2 556.1,173.1 565.6,173.3 575.0,173.3 584.5,173.8 594.0,173.9 603.5,174.3 613.0,175.7 622.5,178.2 632.0,180.9"/>
+        <polyline class="demo-line demo-line-b" points="34.0,151.1 43.5,137.7 53.0,85.8 62.5,21.7 72.0,10.0 81.5,43.0 91.0,66.9 100.4,78.9 109.9,93.9 119.4,107.9 128.9,120.6 138.4,127.1 147.9,131.8 157.4,134.2 166.9,135.4 176.4,136.2 185.9,137.1 195.4,139.1 204.9,141.7 214.3,145.1 223.8,147.3 233.3,150.4 242.8,152.3 252.3,153.0 261.8,154.2 271.3,156.5 280.8,158.4 290.3,159.4 299.8,159.6 309.3,160.5 318.8,162.1 328.3,162.5 337.7,162.7 347.2,163.3 356.7,163.9 366.2,165.3 375.7,166.1 385.2,166.8 394.7,168.5 404.2,169.5 413.7,171.1 423.2,172.1 432.7,172.9 442.2,173.4 451.7,173.8 461.1,174.4 470.6,174.8 480.1,175.3 489.6,175.4 499.1,176.2 508.6,176.3 518.1,176.7 527.6,177.5 537.1,178.6 546.6,179.0 556.1,179.8 565.6,180.7 575.0,181.7 584.5,182.1 594.0,182.9 603.5,183.3 613.0,183.7 622.5,183.8 632.0,183.9"/>
+      </svg>
+      <figcaption><code>histogram</code> &mdash; the hump on the left is the shadow the whole picture sits in; the green line standing above the others through the middle is the tree. Nothing is changed to draw this; it is only counting.</figcaption>
+    </figure>
+    <p>The same reading of picture 3 comes out completely differently: its middle value is 6 out of 255 against picture 5&rsquo;s 70. More than half of that frame is nearly black. That single number is enough to tell the two pictures apart without looking at either of them, and section 08 uses exactly that.</p>
+  </section>
+
+  <section class="essay-section" id="section-04">
+    <h2><span class="essay-no">04</span>The colours it is made of</h2>
+    <p>Every pixel dropped into one of sixty-four boxes of colour, the boxes counted, and the eight fullest given back &mdash; each one shown as the average of everything that landed in it rather than the box&rsquo;s own middle. A palette, taken off the photograph rather than chosen.</p>
+    <ul class="demo-swatches">
+        <li class="demo-swatch"><span class="demo-chip" style="background:#1d2114"></span><code>#1d2114</code><em>43.5%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#50592f"></span><code>#50592f</code><em>12.7%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#5c6b50"></span><code>#5c6b50</code><em>12.7%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#9dad90"></span><code>#9dad90</code><em>6%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#909b6e"></span><code>#909b6e</code><em>5.7%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#394628"></span><code>#394628</code><em>5.7%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#778864"></span><code>#778864</code><em>4%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#dfebd2"></span><code>#dfebd2</code><em>2.9%</em></li>
+    </ul>
+    <p>Forty-three per cent of picture 5 is within a shade of <code>#1d2114</code> &mdash; the deep green-black between the needles. The same reading of picture 3 puts 78.9% of the frame in <code>#090905</code>, which is very nearly black:</p>
+    <ul class="demo-swatches">
+        <li class="demo-swatch"><span class="demo-chip" style="background:#090905"></span><code>#090905</code><em>78.9%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#a8a193"></span><code>#a8a193</code><em>8.2%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#6d6555"></span><code>#6d6555</code><em>4.1%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#928976"></span><code>#928976</code><em>3.9%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#564a31"></span><code>#564a31</code><em>1.7%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#857a65"></span><code>#857a65</code><em>1.5%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#453a26"></span><code>#453a26</code><em>0.9%</em></li>
+        <li class="demo-swatch"><span class="demo-chip" style="background:#c3bbac"></span><code>#c3bbac</code><em>0.5%</em></li>
+    </ul>
+  </section>
+
+  <section class="essay-section" id="section-05">
+    <h2><span class="essay-no">05</span>The plain changes</h2>
+    <p>The operations everyone expects. Worth having on one page because the library does them in a line each, on any picture, without opening anything.</p>
+    <div class="demo-grid">
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/spruce.jpg" alt="The spruce photograph as it is" width="760" height="507" loading="lazy">
+        <figcaption>picture 5, as it stands</figcaption>
+      </figure>
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/grey.jpg" alt="The same photograph with its colour taken out" width="760" height="507" loading="lazy">
+        <figcaption><code>grey</code> &mdash; colour discarded, brightness kept</figcaption>
+      </figure>
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/contrast.jpg" alt="The same photograph with its contrast pushed out to the full range" width="760" height="507" loading="lazy">
+        <figcaption><code>increaseContrast</code> &mdash; the darkest pixel pushed to black and the brightest to white, everything else stretched between them</figcaption>
+      </figure>
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/gamma.jpg" alt="The same photograph with the shadows opened up" width="760" height="507" loading="lazy">
+        <figcaption><code>level</code> &mdash; gamma 0.45: the shadows opened up without touching the highlights, which is what pulls the branch out of the dark</figcaption>
+      </figure>
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/invert.jpg" alt="The same photograph with every value inverted" width="760" height="507" loading="lazy">
+        <figcaption><code>invert</code> &mdash; every value turned round. A negative, and the fastest way to see what a picture&rsquo;s shadows are actually holding</figcaption>
+      </figure>
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/pixelate.jpg" alt="The same photograph reduced to blocks of twelve pixels" width="760" height="507" loading="lazy">
+        <figcaption><code>pixelate</code> &mdash; twelve-pixel cells, each taking the colour of its middle</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="essay-section" id="section-06">
+    <h2><span class="essay-no">06</span>Two ways of softening</h2>
+    <p>These two look alike and are not. A <strong>blur</strong> averages each pixel with its neighbours, so everything goes &mdash; grain, edges, detail, all of it. A <strong>median filter</strong> takes the middle value of each neighbourhood instead of the average, which throws out speckle while leaving an edge standing where it was. It is the one to reach for when a picture is noisy but you still want it to look like a photograph.</p>
+    <div class="demo-pair">
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/blur.jpg" alt="The spruce photograph blurred" width="760" height="507" loading="lazy">
+        <figcaption><code>gaussianBlur</code> &mdash; sigma 4. 32KB against the original&rsquo;s 108KB, because there is so much less left to store</figcaption>
+      </figure>
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/median.jpg" alt="The spruce photograph with a median filter over it" width="760" height="507" loading="lazy">
+        <figcaption><code>medianFilter</code> &mdash; seven-pixel cells. The needles keep their edges; what goes is the speckle between them</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="essay-section" id="section-07">
+    <h2><span class="essay-no">07</span>Edges</h2>
+    <p>Here it starts doing something you could not do by hand. A <strong>gradient filter</strong> measures how fast the brightness is changing at every point &mdash; across the picture and down it &mdash; and draws that instead of the picture. Flat areas come out black; anywhere the picture changes quickly comes out bright.</p>
+    <figure class="demo-figure">
+      <img src="../images/Theories/image-js-demo/gradient.jpg" alt="The spruce photograph redrawn as the rate its brightness changes" width="760" height="507" loading="lazy">
+      <figcaption><code>gradientFilter</code> &mdash; a Sobel pair. Not an outline yet: every edge is a wide smear, as wide as the change is gradual</figcaption>
+    </figure>
+    <p><strong>Canny</strong> takes that further, in four steps: soften the picture, measure the gradient, throw away everything that is not the very top of its own ridge, and then keep only the lines that are either strong or joined on to something strong. What comes back is a line drawing &mdash; every needle on the branch, one pixel wide.</p>
+    <figure class="demo-figure">
+      <img src="../images/Theories/image-js-demo/edges.png" alt="The spruce photograph as a line drawing, every needle traced" width="760" height="507" loading="lazy">
+      <figcaption><code>cannyEdgeDetector</code> &mdash; 22.8% of the frame is lit; the other 77.2% is thrown away. Nobody told it what a needle is</figcaption>
+    </figure>
+  </section>
+
+  <section class="essay-section" id="section-08">
+    <h2><span class="essay-no">08</span>Where the light stops</h2>
+    <p>Picture 3 is white flowers on dark leaves, which is about as clean a division as a photograph offers. A <strong>threshold</strong> divides a picture in two at some brightness: in, or out. The question is always <em>which</em> brightness, and the good answer is not to choose one &mdash; <strong>Otsu&rsquo;s method</strong> reads the picture&rsquo;s own histogram (section 03) and picks the cut that separates it most cleanly into two groups.</p>
+    <p>On this photograph it chose <strong>74</strong> out of 255, and 19.1% of the frame came back as &ldquo;in&rdquo;.</p>
+    <div class="demo-pair">
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/flowers.jpg" alt="White flowers against dark leaves" width="507" height="760" loading="lazy">
+        <figcaption>picture 3, as it stands</figcaption>
+      </figure>
+      <figure class="demo-figure">
+        <img src="../images/Theories/image-js-demo/mask.png" alt="The same photograph as pure black and white, the flowers white" width="507" height="760" loading="lazy">
+        <figcaption><code>threshold</code>, Otsu &mdash; a <strong>mask</strong>: every pixel either in or out, nothing in between</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="essay-section" id="section-09">
+    <h2><span class="essay-no">09</span>Counting what it found</h2>
+    <p>A mask is not a picture any more &mdash; it is a set of <em>regions</em>, and regions can be counted and measured. Tidy the mask up first (shave off the specks, close the small holes), then gather every island of touching pixels bigger than 400 of them. There were <strong>8</strong>. Drawn back onto the photograph:</p>
+    <figure class="demo-figure demo-figure-tall">
+      <img src="../images/Theories/image-js-demo/regions.jpg" alt="The flower photograph with boxes drawn round each bloom the script found" width="507" height="760" loading="lazy">
+      <figcaption><code>fromMask</code>, <code>getRois</code>, <code>drawRectangle</code> &mdash; the boxes are drawn by the script onto the picture, not laid over it in the page</figcaption>
+    </figure>
+    <p>And each one can be measured. <em>Roundness</em> is 1 for a circle and falls away as a shape gets ragged; <em>solidity</em> is how much of the shape&rsquo;s own convex hull it actually fills, so a blob with bays bitten out of it scores low.</p>
+    <table class="demo-table">
+      <thead><tr><th>region</th><th>area, px</th><th>box</th><th>roundness</th><th>solidity</th></tr></thead>
+      <tbody>
+          <tr><td>01</td><td>25,912</td><td>269&thinsp;&times;&thinsp;174</td><td>0.44</td><td>0.77</td></tr>
+          <tr><td>02</td><td>25,700</td><td>233&thinsp;&times;&thinsp;257</td><td>0.48</td><td>0.64</td></tr>
+          <tr><td>03</td><td>11,981</td><td>151&thinsp;&times;&thinsp;151</td><td>0.6</td><td>0.74</td></tr>
+          <tr><td>04</td><td>6,781</td><td>103&thinsp;&times;&thinsp;95</td><td>0.74</td><td>0.89</td></tr>
+          <tr><td>05</td><td>879</td><td>41&thinsp;&times;&thinsp;44</td><td>0.38</td><td>0.71</td></tr>
+          <tr><td>06</td><td>587</td><td>33&thinsp;&times;&thinsp;42</td><td>0.39</td><td>0.71</td></tr>
+      </tbody>
+    </table>
+    <p class="essay-note"><strong>What it did not do is understand the picture.</strong> It found bright regions, not flowers. The two biggest are one cluster of blooms that the shadow between them happened to split in half, and a bloom in deep shade is missing altogether. That gap &mdash; between <em>bright</em> and <em>flower</em> &mdash; is the whole difference between this kind of tool and the kind that recognises things.</p>
+  </section>
+
+  <section class="essay-section" id="section-10">
+    <h2><span class="essay-no">10</span>The photograph as specks</h2>
+    <p>This site draws almost everything in specks &mdash; the wood down Pineward&rsquo;s margins, the crowd on Almost Human, the contact sheet, the search page&rsquo;s ground. So: read picture 5&rsquo;s brightness on a five-pixel grid, put a dot at every crossing, and make the dot bigger and lighter the brighter the reading. The photograph itself is never shown. It is measured, then drawn again from the measurements.</p>
+    <figure class="demo-figure">
+      <img src="../images/Theories/image-js-demo/specks.jpg" alt="The spruce photograph redrawn entirely as dots of varying size" width="760" height="507" loading="lazy">
+      <figcaption><code>grey</code>, <code>getValue</code>, <code>drawCircle</code> &mdash; about fifteen thousand dots, each one sized by what the photograph read at that point. The brightness is squared first, so the dark stays properly dark</figcaption>
+    </figure>
+    <p>This is the one that seems worth keeping. It is the site&rsquo;s own language, applied to the owner&rsquo;s own photographs &mdash; and it is made once, as a file, rather than drawn by a script in the page every time somebody opens it.</p>
+  </section>
+
+  <section class="essay-section" id="section-11">
+    <h2><span class="essay-no">11</span>Finding the same picture again</h2>
+    <p>A question the repository actually has: which original in your gallery folder did each web copy come from? Nothing anywhere records it. So: bring two pictures down to a 64&thinsp;&times;&thinsp;64 grey thumbnail and measure the difference between them pixel by pixel &mdash; 0 is identical, 255 is black against white.</p>
+    <p><strong>The easy case first</strong>, to prove the method is doing anything at all. Take picture 5&rsquo;s own web copy and look for it among all twenty-eight: it finds itself at <strong>0</strong>, and the next nearest picture is <strong>57</strong> away. That gap is what a method working looks like.</p>
+    <p><strong>Then the real one.</strong> An original of 39.8 megapixels, looked for among the twenty-eight. Best answer: <code>pineward-11.jpg</code> at <strong>37.3</strong> &mdash; with the runner-up at 44.1 and the worst at 74.2. A thin margin, and it is right:</p>
+    <figure class="demo-figure">
+      <img src="../images/Theories/image-js-demo/match-pair.jpg" alt="The landscape original beside the portrait web copy made from it, the same branch in both" width="760" height="570" loading="lazy">
+      <figcaption><code>computeRmse</code> &mdash; the original on the left, the copy it matched on the right. Same branch, same cones</figcaption>
+    </figure>
+    <p>The margin is thin for a reason worth knowing: <strong>the web copy is a crop</strong>. The original is a wide frame; the copy standing in the gallery is an upright piece cut out of the middle of it and enlarged. More than half of what was being compared is not in both pictures at all. That the right answer still came out on top is the method being robust; that it came out by seven points rather than fifty is the method telling you honestly that it is not certain.</p>
+    <p class="essay-note">Which is the useful lesson about all of this. The tool is happy to give an answer to anything. Reading <em>how far ahead</em> that answer is, is your job.</p>
+  </section>
+
+  <section class="essay-section" id="section-12">
+    <h2><span class="essay-no">12</span>Every picture at once</h2>
+    <p>Twenty-eight photographs read, brought to one size and laid into a grid &mdash; an actual contact sheet, which is the thing the Scent descriptions page is named after. One pass, no handling.</p>
+    <figure class="demo-figure demo-figure-wide">
+      <img src="../images/Theories/image-js-demo/montage.jpg" alt="All twenty-eight gallery photographs as small squares in a grid" width="1050" height="600" loading="lazy">
+      <figcaption><code>resize</code> and <code>copyTo</code> &mdash; the whole Pineward gallery on one sheet, 198KB</figcaption>
+    </figure>
+  </section>
+
+  <section class="essay-section" id="section-13">
+    <h2><span class="essay-no">13</span>What it cannot do</h2>
+    <p>Three limits, plainly, because they decide whether any of this is useful to you.</p>
+    <p><strong>It cannot run in the browser.</strong> Not on this site. Every picture above was made on a machine and committed as a file. That is a feature rather than a hardship &mdash; the work is done once instead of by every visitor &mdash; but it means nothing here can respond to a pointer or change as somebody scrolls. The drawings on this site do that; these do not.</p>
+    <p><strong>It does not know what anything is.</strong> It found eight bright regions, not eight flowers. Recognising a thing is a different kind of tool entirely.</p>
+    <p><strong>It is another thing to install.</strong> This repository has no build step and needs nothing to publish &mdash; that is deliberate, and this does not change it. The library is not in <code>package.json</code>; it is installed only when the script is run, which is why the script says so at the top of itself.</p>
+    <p>What it is good for, on this site: making and remaking the web copies, cutting thumbnails, building contact sheets, reading a photograph&rsquo;s own colours so a page can be set in them, and turning photographs into the drawn language the rest of the site already speaks.</p>
+  </section>
+
+</article>
+
+<footer class="essay-foot">
+  <a class="essay-back" href="../categories/theories.html">&larr; Theories</a>
+  <a class="essay-on" href="../works/pineward.html#pine-gallery-head">The Pineward gallery &rarr;</a>
+</footer>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../nav.js"></script>
+<script src="../essay.js"></script>
+</body>
+</html>

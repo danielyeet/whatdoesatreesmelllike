@@ -31,6 +31,7 @@ const PAGES = [
   { url: "/works/theory-01.html", root: "../", title: /Architecture of Sunscreen/ },
   { url: "/works/theory-02.html", root: "../", title: /Architecture of Sweat/ },
   { url: "/works/theory-03.html", root: "../", title: /Note Dissemination Framework/ },
+  { url: "/works/theory-04.html", root: "../", title: /Photograph, Taken Apart/ },
   { url: "/works/resins-in-perfumery.html", root: "../", title: /Resins/ },
   { url: "/works/test-node-a.html", root: "../", title: /Test node/ },
   { url: "/works/test-node-b.html", root: "../", title: /Test node/ },

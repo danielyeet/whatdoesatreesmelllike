@@ -32,6 +32,7 @@
     { url: "works/theory-01.html", trail: ["Theories", "The Architecture of Sunscreen"] },
     { url: "works/theory-02.html", trail: ["Theories", "The Architecture of Sweat"] },
     { url: "works/theory-03.html", trail: ["Theories", "The Note Dissemination Framework"] },
+    { url: "works/theory-04.html", trail: ["Theories", "A Photograph, Taken Apart"] },
     { url: "categories/favorites.html", trail: ["Favourites"] },
     { url: "categories/researches.html", trail: ["Explorations & Researches"] },
     { url: "works/resins-in-perfumery.html", trail: ["Explorations & Researches", "Resins in Perfumery"] },

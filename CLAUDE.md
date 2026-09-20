@@ -84,6 +84,7 @@ which talk through five `window` globals; see the landing page's report).
 | `works/almost-human.html` | **Almost Human**, the third house: five fragrances standing in a **crowd** — people down both margins drawn entirely in specks, each of them nearly a person and never quite one, resolving under the pointer — with a ticked **rank** down the side | `search.js`, `almost-human.js` | [Almost Human](docs/features/2026-09-20-almost-human.md) |
 | `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/theory-03.html` | the same, and the longest piece on the site: **The Note Dissemination Framework**, which argues in **diagrams** and carries a **calculator** standing in the same page | `essay.js`, `calculator.js` | [the framework](docs/features/2026-09-20-the-note-dissemination-framework.md) |
+| `works/theory-04.html` | **temporary** &mdash; not a theory but a demonstration of what an image library can do to the site's own photographs, standing in the fourth theory's place. Every picture on it is a file made by `tools/image-js-demo.js`; nothing on it is drawn by the browser | `essay.js` | [the demonstration](docs/features/2026-09-20-the-image-js-demonstration.md) |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages | none | — |
 | `search.html` | the **search page**: one field over the whole site on a dark ground of drifting specks, the answers as ruled rows carrying the trail that says where each lives, and a row of **filters** narrowing them by kind | `search.js`, `search-page.js`, `find-ground.js` | [search](docs/features/2026-09-17-the-search.md) |
 | `contact.html` | a plain page | none | — |
@@ -208,6 +209,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| The image-js demonstration (temporary) | `works/theory-04.html`, `tools/image-js-demo.js` | [report](docs/features/2026-09-20-the-image-js-demonstration.md) |
 | The Photography page | `photography.js` | [report](docs/features/2026-09-18-the-photography-page.md) |
 | The Pineward gallery | `pineward-gallery.js` | [report](docs/features/2026-09-18-the-pineward-gallery.md) |
 | A folder of pictures per house | `images/` | [report](docs/features/2026-09-17-images-folder-per-house.md) |
