@@ -611,8 +611,63 @@
       // keep them apart without having to work out where they all are.
       // A line with barely room for its date is the exception — there
       // is nowhere to slide it to, so it goes in the middle.
+      //
+      // AND THE DATE IS HELD TO THE SAME RULE THE LINE IS. A line is
+      // refused wherever a caption is in the way (see `clearBetween`),
+      // with one exception: the captions of the two pictures it joins,
+      // which are exactly the ones a line leaving the bottom of a
+      // picture runs into. The date rides on that line, so it can be
+      // slid into one of those two — which is what happened the moment
+      // a third house was added to the sheet and the scatter changed.
+      //
+      // So the slide is SEARCHED rather than taken: the random one
+      // first, then a spread of others along the same line, and the
+      // first that is clear of both ends' captions wins. If none is
+      // clear the random one is kept, because a line without a date
+      // reads as unfinished beside the ones that have them.
+      //
+      // `random()` is called exactly once here whatever happens. It is
+      // the sheet's own seeded roll, and taking a different number of
+      // turns of it would lay the whole sheet out differently.
       const slid = 0.38 + random() * 0.26;
-      const along = length > words * 2.4 ? slid : 0.5;
+      const half = words / 2;
+      const ux = (b.x - a.x) / length, uy = (b.y - a.y) / length;
+      // EVERY caption, not only the two this line joins. A line never
+      // crosses a caption — `clearBetween` refuses it — but the
+      // lettering is set ABOVE its line (`dy`) and has a height of its
+      // own, so a date can poke into a caption its own line cleared by
+      // a hair. Node 0's caption is printed inside its frame rather
+      // than under it, which is why `clearBetween` skips it too.
+      const pads = nodes.slice(1).map(captionBox);
+      const inBox = (x, y) => pads.some((box) =>
+        x > box.left - 1 && x < box.right + 1 &&
+        y > box.top - 1 && y < box.bottom + 1);
+      /** Whether a date centred `at` along the line stands clear. The
+          band is taken wider than the lettering on both sides rather
+          than worked out from the baseline: erring outwards only moves
+          a date along its own line, and erring inwards prints it on
+          somebody's caption. */
+      const lifts = [-size * 1.3, -size * 0.6, 0, size * 0.6, size * 1.3];
+      const steps = [-half, -half / 2, 0, half / 2, half];
+      const clearAt = (at) => {
+        const cx = a.x + (b.x - a.x) * at, cy = a.y + (b.y - a.y) * at;
+        for (const step of steps) {
+          for (const lift of lifts) {
+            if (inBox(cx + ux * step - uy * lift, cy + uy * step + ux * lift)) {
+              return false;
+            }
+          }
+        }
+        return true;
+      };
+      let along = length > words * 2.4 ? slid : 0.5;
+      if (!clearAt(along)) {
+        const tries = [0.5, 0.34, 0.66, 0.26, 0.74, 0.2, 0.8, 0.16, 0.84,
+                       0.44, 0.56, 0.3, 0.7];
+        for (const at of tries) {
+          if (clearAt(at)) { along = at; break; }
+        }
+      }
       label.setAttribute(
         "transform",
         "translate(" + (a.x + (b.x - a.x) * along).toFixed(1) + "," +

@@ -27,6 +27,7 @@
     { url: "categories/scent-descriptions.html", trail: ["Scent descriptions"] },
     { url: "works/pineward.html", trail: ["Scent descriptions", "Houses", "Pineward"] },
     { url: "works/adar.html", trail: ["Scent descriptions", "Houses", "ADAR"] },
+    { url: "works/almost-human.html", trail: ["Scent descriptions", "Houses", "Almost Human"] },
     { url: "categories/theories.html", trail: ["Theories"] },
     { url: "works/theory-01.html", trail: ["Theories", "The Architecture of Sunscreen"] },
     { url: "works/theory-02.html", trail: ["Theories", "The Architecture of Sweat"] },

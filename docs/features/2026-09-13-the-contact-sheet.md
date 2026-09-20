@@ -351,6 +351,34 @@ Pointing at a picture still isolates it, and still without moving it: the traces
 it are drawn more plainly and their pulses run faster (`HOT_LIFT`, `PULSE_HOT`), and
 everything else steps back (`COLD_INK`).
 
+### A date is slid to somewhere clear, not just along
+
+Every trace carries a date, written along the line and knocked out of it. Where on the
+line was a **random slide** between 0.38 and 0.64, and the reason was dates colliding with
+each other: two lines crossing near their middles would print their dates on top of one
+another, and sliding each along its own line by a different amount is enough to keep them
+apart without working out where they all are.
+
+**That was not enough once a third house went on the sheet.** A line never crosses a
+caption — `clearBetween` refuses it — but the lettering is set *above* its line (`dy`) and
+has a height of its own, so a date can poke into a caption the line itself cleared by a
+hair. Adding Almost Human changed the scatter and one date landed on a caption; the test
+caught it.
+
+So the slide is **searched** rather than taken: the random one first, then a spread of
+others along the same line, and the first that stands clear of **every** caption on the
+sheet wins. If none is clear the random one is kept, because a line without a date reads
+as unfinished beside the ones that have them.
+
+Two things about it worth not undoing:
+
+- **`random()` is called exactly once**, whatever the search does. It is the sheet's own
+  seeded roll, and taking a different number of turns of it would lay the whole sheet out
+  differently.
+- **The band tested is wider than the lettering on both sides**, rather than worked out
+  from the baseline. Erring outwards only moves a date along its own line; erring inwards
+  prints it on somebody's caption.
+
 ### Why the page used to lag, and what must not come back
 
 Two things, and the first is the one that mattered:

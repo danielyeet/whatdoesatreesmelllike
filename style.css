@@ -4537,6 +4537,7 @@ body.view-fragrances .index-table tr:hover td { color: var(--ink); }
    page that silently scrolls somewhere leaves you wondering whether it
    did anything. */
 .pine-part.found > summary,
+.human-part.found > summary,
 .adar-part.found > summary { animation: found-mark 2.4s var(--menu-ease); }
 @keyframes found-mark {
   0%, 100% { background: transparent; }
@@ -5171,6 +5172,8 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 .pine-text p,
 .pine-intro p,
 .adar-part .adar-body p,
+.human-part .human-body p,
+.human-intro .human-text p,
 .chapter-note p,
 .index-say-lede,
 .photo-set-say,
@@ -5744,4 +5747,358 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   .math-line { white-space: normal; }
   .math-cont { padding-left: 1.6em; }
   .zone-name { font-size: 24px; }
+}
+
+/* ==================================================================
+   ALMOST HUMAN — works/almost-human.html
+
+   The third house in Scent descriptions. Pineward is paper turned
+   faintly green and ADAR is black; this one is the site's OWN paper,
+   untinted, and it spends no accent colour anywhere — what it spends
+   instead is density. The figures down the margins are drawn on a
+   canvas by almost-human.js and nothing here knows about them beyond
+   leaving them room.
+
+   The shape of the page is Pineward's and ADAR's: a head, an
+   introduction, and then the fragrances, each compacted to a number, a
+   small square and a title until it is opened. Where those two differ
+   is the ground and the scale, and this file is those two things.
+================================================================== */
+.human-page {
+  background: var(--bg);
+  color: var(--ink);
+}
+.human-field {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.human-head {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(150px, 26vh, 260px) 64px clamp(40px, 7vh, 80px);
+}
+.human-kicker {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+.human-head h1 {
+  font-size: clamp(34px, 6.4vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ink);
+}
+.human-head h1 em {
+  display: block;
+  margin-top: 0.18em;
+  font-size: 0.4em;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+}
+.human-standfirst {
+  margin: 28px 0 0;
+  max-width: 54ch;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.human-intro {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(40px, 7vh, 86px) 64px clamp(20px, 3vh, 34px);
+}
+.human-section-mark {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.human-intro h2 {
+  font-size: clamp(22px, 3vw, 34px);
+  letter-spacing: -0.01em;
+  margin: 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+.human-text { max-width: 62ch; }
+.human-text p { margin: 0 0 16px; color: #45443c; }
+.human-intro .human-text { margin-top: 22px; }
+/* A note the owner has written and means, set apart from the
+   placeholder writing round it — ADAR's ADAR Effect paragraph does the
+   same job on that page. */
+.human-text p.human-note {
+  color: var(--ink);
+  border-left: 1px solid var(--line);
+  padding-left: 18px;
+}
+/* What is still waiting to be written, and says so. It is drawn as a
+   placeholder rather than as writing, so an unfinished house reads as
+   unfinished instead of as thin. */
+.human-text p.human-waiting {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  padding: 14px 16px;
+}
+
+.human-parts {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 64px clamp(30px, 6vh, 70px);
+}
+.human-part { border-bottom: 1px solid var(--line); }
+.human-part > summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0;
+  cursor: pointer;
+  list-style: none;
+}
+.human-part > summary::-webkit-details-marker { display: none; }
+.human-no {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  flex: none;
+  width: 26px;
+}
+/* The small square is always a square, whatever shape the photograph
+   is: cropped to fill one rather than squashed into one, with
+   `--focus` saying which part of it to keep. ADAR's thumb explains the
+   reasoning at length. */
+.human-thumb {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(-45deg, rgba(23,23,15,0.09) 0px, rgba(23,23,15,0.09) 1px, transparent 1px, transparent 12px);
+}
+.human-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--focus, 50% 50%);
+  display: block;
+}
+.human-title { font-size: 18px; color: var(--ink); }
+.human-part > summary::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-image: radial-gradient(circle, rgba(23,23,15,0.3) 0.5px, transparent 0.6px);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  order: 3;
+}
+.human-cue {
+  order: 4;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  padding: 3px 9px;
+}
+.human-part[open] > summary .human-cue,
+.human-part > summary:hover .human-cue { color: var(--ink); border-color: #b6b1a4; }
+
+.human-body {
+  display: flex;
+  gap: 36px;
+  align-items: flex-start;
+  padding: 6px 0 34px 46px;
+}
+.human-plate {
+  flex: none;
+  width: 320px;
+  margin: 0;
+}
+.human-plate > div {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(-45deg, rgba(23,23,15,0.09) 0px, rgba(23,23,15,0.09) 1px, transparent 1px, transparent 16px);
+}
+.human-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+}
+/* A picture and its placeholder are never both on the page:
+   almost-human.js takes an <img> off if the file is not there, which
+   puts the placeholder back. */
+.human-plate:has(img) > div { display: none; }
+.human-plate figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+/* A STAGE of a fragrance — top, mid, base, a sidenote. The owner
+   writes in those on ADAR and this house takes the same label, so the
+   two read as one person's notes. */
+.human-stage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 12px;
+  font-weight: 400;
+}
+.human-stage::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.human-stage + p { margin-top: 0; }
+.human-part .human-text p + .human-stage { margin-top: 26px; }
+
+/* THE RANK down the side, and the reading in the corner. Pineward's
+   trunk and ADAR's sounding by a third name: the LINE is the whole of
+   the page and the fill grows down it from the very first pixel of
+   scroll, while the TICKS count the fragrances you have been past.
+   Two readings, said separately, on all three houses. */
+.human-rank {
+  position: fixed;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 2;
+  pointer-events: none;
+}
+.human-rank-line {
+  position: relative;
+  width: 1px;
+  height: 34vh;
+  background: rgba(23, 23, 15, 0.16);
+}
+.human-rank-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: rgba(23, 23, 15, 0.55);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.25s var(--menu-ease);
+}
+.human-ticks { display: flex; flex-direction: column; gap: 6px; }
+.human-tick {
+  width: 8px;
+  height: 1px;
+  background: rgba(23, 23, 15, 0.25);
+  transition: width 0.3s var(--menu-ease), background-color 0.3s ease;
+}
+.human-tick.passed { width: 16px; background: var(--ink); }
+.human-readout {
+  position: fixed;
+  right: 28px;
+  bottom: 24px;
+  margin: 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  z-index: 2;
+  pointer-events: none;
+}
+.human-readout-no { color: var(--ink); }
+.human-readout-where {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* The parts come up as they are reached. Nothing is hidden until the
+   script says it is watching, so a blocked script leaves every one of
+   them on the page. */
+.human-ready .human-part,
+.human-ready .human-rises {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.62s var(--menu-ease), transform 0.62s var(--menu-ease);
+}
+.human-ready .human-part.arrived,
+.human-ready .human-rises.arrived { opacity: 1; transform: none; }
+
+.human-foot {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 40px 64px 80px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.human-back,
+.human-on {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-decoration: none;
+}
+.human-on { text-align: right; }
+.human-back:hover, .human-on:hover { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .human-rank-fill { transition: none; }
+  .human-tick { transition: none; }
+  .human-ready .human-part,
+  .human-ready .human-rises { opacity: 1; transform: none; transition: none; }
+}
+
+@media (max-width: 1080px) {
+  .human-rank { display: none; }
+}
+@media (max-width: 860px) {
+  .human-head,
+  .human-intro,
+  .human-parts,
+  .human-foot { padding-left: 24px; padding-right: 24px; }
+  .human-body { flex-direction: column; padding-left: 0; gap: 20px; }
+  .human-plate { width: 100%; }
 }

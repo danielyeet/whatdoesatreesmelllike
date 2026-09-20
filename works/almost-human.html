@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Almost Human — The Taste of Aldehydes</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  ALMOST HUMAN — the third house in Scent descriptions. FIVE
+  FRAGRANCES.
+
+  HOW IT IS LAID OUT. The same shape as Pineward and ADAR — a head, an
+  introduction, and then the fragrances, each compacted to a number, a
+  small square and a title until it is opened — on a ground of its own.
+  Pineward has a wood and ADAR has a void; this one has a CROWD:
+  figures standing down both margins the whole length of the page, and
+  every one of them drawn entirely in specks by almost-human.js.
+
+  THE HOUSE'S NAME IS THE DRAWING'S BEHAVIOUR. Every speck knows
+  exactly where it belongs and stands somewhere else, so a figure is
+  always nearly a person and never quite one. Bring the pointer near
+  and the specks come home — the figure resolves under your hand and
+  comes apart again when you leave.
+
+  THIS PAGE SPENDS NO ACCENT COLOUR. Pineward has its green and ADAR
+  its silver; this one is ink on the site's own paper, and what it
+  spends instead is density.
+
+  THE RANK down the left is Pineward's trunk and ADAR's sounding by a
+  third name: the line fills from the very first pixel of scroll, and
+  the ticks count the fragrances you have been past. Two readings, said
+  separately, on all three houses.
+
+  THE WRITING IS THE OWNER'S, and most of it is not written yet. Where
+  a paragraph is still waiting it says so, in a dashed box
+  (<p class="human-waiting">), rather than standing in as prose — an
+  unfinished house should read as unfinished, not as thin.
+
+  THE PHOTOGRAPHS. Each fragrance names the file it wants in
+  images/Almost-Human/ and shows it the moment that file is there.
+  Until then the page takes the picture off itself and leaves the
+  hatched placeholder, so a house whose pictures are still coming looks
+  unfinished rather than broken. The small square in the list is
+  always a SQUARE, cropped round its subject rather than squashed;
+  `--focus` on the thumb says which part of the picture to keep.
+
+  TO WRITE A PART: replace its title and its writing, and point the two
+  <img> tags at your picture. Where a fragrance is written in stages —
+  top, mid, base, a sidenote — the stage is a <p class="human-stage">
+  label above the paragraphs it belongs to, exactly as on ADAR.
+
+  TO ADD ONE: copy a whole <details class="human-part"> block and
+  renumber the ones after it — the numbers are in the markup, so they
+  are yours. IF YOU RENUMBER, re-point the Fragrances table in
+  categories/scent-descriptions.html in the same turn: it links at
+  #part-NN, so a part removed from the middle silently sends every
+  link after it to the wrong fragrance. There is a test for that.
+
+  WITHOUT JAVASCRIPT this page is all of its writing: the parts are
+  real <details> elements, and the drawing carries nothing to read.
+-->
+<body class="human-page">
+
+<canvas class="human-field" aria-hidden="true"></canvas>
+
+<header class="human-head">
+  <p class="human-kicker">Scent descriptions · 03</p>
+  <h1>Almost Human<br><em>the house that nearly gets there</em></h1>
+  <p class="human-standfirst">
+    Replace this line with your own standing first paragraph — the one
+    that says what the house is before the introduction begins.
+  </p>
+</header>
+
+<section class="human-intro" id="introduction" aria-labelledby="introduction-name">
+  <p class="human-section-mark">00</p>
+  <h2 id="introduction-name">Introduction</h2>
+  <div class="human-text">
+    <p class="human-waiting">Waiting for your introduction to Almost Human — what the house is, how you came across it, and what the five below are. Nothing here has been written for you.</p>
+    <p class="human-note">The one thing already written down about this house anywhere on the site is Desert Hope, in <a href="theory-02.html#section-03">The Architecture of Sweat</a>: cumin-y, dark, and natural — though you said there it could be argued it is carnal.</p>
+  </div>
+</section>
+
+<!-- THE FIVE. COPY ONE WHOLE <details> BLOCK TO ADD ANOTHER. -->
+<div class="human-parts">
+
+  <details class="human-part" id="part-01">
+    <summary>
+      <span class="human-no">01</span>
+      <span class="human-thumb" style="--focus: 50% 42%" aria-hidden="true">
+        <img src="../images/Almost-Human/desert-hope.jpg" alt="">
+      </span>
+      <span class="human-title">Desert Hope</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/desert-hope.jpg" alt="Desert Hope">
+        <figcaption>Desert Hope</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">Waiting for your write-up of Desert Hope. What stands here for now is only what you have already said about it elsewhere.</p>
+        <p>In <a href="theory-02.html#section-03">The Architecture of Sweat</a> you place it as cumin-y (c), dark (b) and natural (b) — adding that it could be argued it is carnal (a), and that you do not feel comfortable presenting an absolute answer.</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- COPY FROM HERE ---------------------------------------------- -->
+  <details class="human-part" id="part-02">
+    <summary>
+      <span class="human-no">02</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Almost-Human/part-02.jpg" alt="">
+      </span>
+      <span class="human-title">Untitled</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/part-02.jpg" alt="">
+        <figcaption>Untitled</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">Waiting for its name and your writing.</p>
+      </div>
+    </div>
+  </details>
+  <!-- TO HERE ------------------------------------------------------ -->
+
+  <details class="human-part" id="part-03">
+    <summary>
+      <span class="human-no">03</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Almost-Human/part-03.jpg" alt="">
+      </span>
+      <span class="human-title">Untitled</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/part-03.jpg" alt="">
+        <figcaption>Untitled</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">Waiting for its name and your writing.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-04">
+    <summary>
+      <span class="human-no">04</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Almost-Human/part-04.jpg" alt="">
+      </span>
+      <span class="human-title">Untitled</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/part-04.jpg" alt="">
+        <figcaption>Untitled</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">Waiting for its name and your writing.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-05">
+    <summary>
+      <span class="human-no">05</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Almost-Human/part-05.jpg" alt="">
+      </span>
+      <span class="human-title">Untitled</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/part-05.jpg" alt="">
+        <figcaption>Untitled</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">Waiting for its name and your writing.</p>
+      </div>
+    </div>
+  </details>
+
+</div>
+
+<!-- Back to the category on the left, back round to the first house on
+     the right — this is the last house on the sheet, so "on" wraps. -->
+<footer class="human-foot">
+  <a class="human-back" href="../categories/scent-descriptions.html">← Scent descriptions</a>
+  <a class="human-on" href="pineward.html">Back to 01 · Pineward →</a>
+</footer>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../nav.js"></script>
+<script src="../search.js"></script>
+<script src="../almost-human.js"></script>
+</body>
+</html>

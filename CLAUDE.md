@@ -81,6 +81,7 @@ which talk through five `window` globals; see the landing page's report).
 | `categories/other-2.html` | **Photography**: the frames in sets, a grid a wide one breaks, numbered down the margin | `search.js`, `page-search.js`, `photography.js` | [photography](docs/features/2026-09-18-the-photography-page.md) |
 | `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 52 compacted parts — one per fragrance, each with its own photograph — in four forest **strata**, with a **wood** grown down both margins, a ticked **trunk**, a faint pine-green ground, and the **gallery** at the foot of it | `search.js`, `pineward.js`, `pineward-gallery.js` | [Pineward](docs/features/2026-09-16-pineward.md), [gallery](docs/features/2026-09-18-the-pineward-gallery.md) |
 | `works/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window that shows the house's mark under the pointer — with a ruled **log** and falling **dust** down the left and a **sounding** down the side | `search.js`, `adar.js` | [ADAR](docs/features/2026-09-17-adar.md) |
+| `works/almost-human.html` | **Almost Human**, the third house: five fragrances standing in a **crowd** — people down both margins drawn entirely in specks, each of them nearly a person and never quite one, resolving under the pointer — with a ticked **rank** down the side | `search.js`, `almost-human.js` | [Almost Human](docs/features/2026-09-20-almost-human.md) |
 | `works/theory-01.html`, `-02`, `-03`, `works/resins-in-perfumery.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages | none | — |
 | `search.html` | the **search page**: one field over the whole site on a dark ground of drifting specks, the answers as ruled rows carrying the trail that says where each lives, and a row of **filters** narrowing them by kind | `search.js`, `search-page.js`, `find-ground.js` | [search](docs/features/2026-09-17-the-search.md) |
@@ -88,7 +89,8 @@ which talk through five `window` globals; see the landing page's report).
 
 Four of those page scripts are elaborate: `chamber.js` (~1,740 lines), `node-scene.js`
 (~1,470), `structure.js` (~1,360) and `contact-sheet.js` (~1,360). The rest are smaller:
-`adar.js` (~820), `pineward.js` (~690), `paper.js` (~570), `essay.js` (~380),
+`adar.js` (~820), `pineward.js` (~690), `paper.js` (~570), `almost-human.js` (~545),
+`essay.js` (~380),
 `index-page.js` (~290), `thread.js` (~290), `search.js` (~270), `pineward-gallery.js`
 (~260), `extras.js` (~250), `landing.js` (~230), `nav.js` (~200), `find-ground.js`
 (~200), `photography.js` (~180), `search-page.js` (~130), `page-search.js` (~110) and
@@ -149,7 +151,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 159 passed, 0 failed, and takes six to nine minutes.** If you get a
+**A clean run is 169 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -187,7 +189,7 @@ Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
   `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
-  `adar.js`, `essay.js`, `index-page.js` and `style.css`, each degrading to a still
+  `adar.js`, `almost-human.js`, `essay.js`, `index-page.js` and `style.css`, each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
   fade to nothing) do *not* check it beyond that; if you add motion there, add the guard
   too.
@@ -208,6 +210,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 | The Pineward gallery | `pineward-gallery.js` | [report](docs/features/2026-09-18-the-pineward-gallery.md) |
 | A folder of pictures per house | `images/` | [report](docs/features/2026-09-17-images-folder-per-house.md) |
 | The search | `search.js`, `search-page.js`, `page-search.js`, `find-ground.js` | [report](docs/features/2026-09-17-the-search.md) |
+| Almost Human | `almost-human.js` | [report](docs/features/2026-09-20-almost-human.md) |
 | ADAR | `adar.js` | [report](docs/features/2026-09-17-adar.md) |
 | The index pages, and the two views | `index-page.js`, `views.js` | [report](docs/features/2026-09-17-the-index-pages-and-views.md) |
 | The Note Dissemination Framework | `works/theory-03.html` | [report](docs/features/2026-09-20-the-note-dissemination-framework.md) |
@@ -267,7 +270,12 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   numbers are in the markup rather than counted, so they are the owner's. **A fragrance
   of ADAR** (`works/adar.html`) is the same block by another name
   (`<details class="adar-part">`), with its stages — top, mid, base, a sidenote — written
-  as `<p class="adar-stage">` labels inside it.
+  as `<p class="adar-stage">` labels inside it, and **a fragrance of Almost Human**
+  (`works/almost-human.html`) is the same block again (`<details class="human-part">`,
+  `<p class="human-stage">`). All three number their parts in the markup rather than
+  counting them, so the numbers are the owner's — and all three are linked at by
+  `#part-NN` from the Fragrances table, so **renumbering one means re-pointing that table
+  in the same turn**.
 - **A section of an essay page** is one `<section class="essay-section">` with an `<h2>`
   in it, whose number is a `<span class="essay-no">` inside that heading. The rule down
   the left is built from those, so adding a section adds a tick and nothing else needs
@@ -300,8 +308,8 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   `images/Pineward/The Pinewards Gallery Page/`. The order they stand in is the order
   they are shown and numbered in.
 - Images live in `images/`, **one folder per house or category** — `images/ADAR/`,
-  `images/Pineward/`, `images/Favorites/`, `images/Individual Fragrances/`,
-  `images/Theories/` — referenced from the `<img>` tags left commented out in the
+  `images/Pineward/`, `images/Almost-Human/`, `images/Favorites/`,
+  `images/Individual Fragrances/`, `images/Theories/` — referenced from the `<img>` tags left commented out in the
   templates. The folder names are the owner's own and are capitalised as they wrote
   them; paths are case-sensitive on the live site, so `ADAR` is not `adar`. Each empty
   folder holds a `README.txt` saying what it is for, which is also the only thing
@@ -374,6 +382,10 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **Pineward** | The first house in Scent descriptions: `works/pineward.html`, "the house that smells like trees". An introduction and fifty-two parts, one per fragrance, in alphabetical order. It was fifty-four until the owner removed Fanghorn I and Gelatto. |
 | **part** (Pineward) | One of Pineward's fifty-two: a `<details>` showing its number, a small picture and its title until it is opened, and its full picture and writing inside. The pictures are the owner's own, one per fragrance, matched to the parts **by name**. |
 | **ADAR** | The second house in Scent descriptions: `works/adar.html`, "the house that you have never heard of". Eleven fragrances in four groups, on a **void**. |
+| **Almost Human** | The third house in Scent descriptions: `works/almost-human.html`, "the house that nearly gets there". Five fragrances, standing in a **crowd**. Only one of the five has a name yet — Desert Hope, which the owner placed in The Architecture of Sweat — and none of them has its writing. |
+| **the crowd** | That page's ground: people standing down both margins the whole length of it, every one of them drawn entirely in specks, built out of capsules rather than traced from an outline. |
+| **the stray** | What makes the crowd *almost* human, and the house's name said as a behaviour: every speck knows exactly where it belongs and stands a twentieth of the figure's height away from it, fixed for the life of that figure. Bring the pointer near and the specks come home — the figure resolves under your hand and comes apart again when you leave. It never resolves completely (`STRAY_NEAR`); one that came exactly home would be the wrong drawing. |
+| **the rank** (Almost Human) | The scale down the side of that page: Pineward's **trunk** and ADAR's **sounding** by a third name, in plain ink. (Not the chromatogram's **rank / ridge**, above.) The fill is how far down the page you are, from its very first pixel; the ticks are how many fragrances you have been past. |
 | **the void** | ADAR's ground: a hole standing off to one side of the window with soundings ringing out from it and specks falling round its rim. Drawn by taking the disc back out of the finished drawing, not by painting one over it. |
 | **the sounding** | Two things on that page, and they go together: one of the ringed scales drawn out from the void, and the scale down the side of the page with one tick per fragrance — Pineward's **trunk** by another name. |
 | **stage** | Top, mid, base, a sidenote: the label above a run of paragraphs about one part of how a fragrance develops. `<p class="adar-stage">`. |
@@ -505,11 +517,15 @@ worth knowing before touching anything shared:
 - **Every plate on the site but ADAR's and Pineward's is still a hatched placeholder**,
   with its `<img>` tag commented out waiting for a file and a name — see [the images
   report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's fifty-two
-  fragrance pictures and its gallery arrived on 2026-09-18.
+  fragrance pictures and its gallery arrived on 2026-09-18. Almost Human's five name the
+  files they want in `images/Almost-Human/` and show them the moment they are there.
 
 **The placeholders in the new pages are marked as placeholders.** ADAR's introduction,
-the three theory pages, the standfirsts and every plate on the site but ADAR's are
-waiting for the owner. The dates in the Fragrances table are rolled from a seed so the
+the standfirsts and every plate on the site but ADAR's and Pineward's are waiting for the
+owner. **Almost Human is almost entirely waiting**: four of its five fragrances have no
+name yet and none has its writing, and every unwritten paragraph on that page says so in
+a dashed box rather than standing in as prose. The three theory pages now carry the
+owner's own writing. The dates in the Fragrances table are rolled from a seed so the
 sorting has something to work on; they say nothing. The one thing that was not guessed at
 is a fragrance's own writing, which is theirs throughout.
 
