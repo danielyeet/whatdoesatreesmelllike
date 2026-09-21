@@ -293,6 +293,32 @@ box that travels and belongs to the page.
 There is a regression for it, proved against the old selector: it watches the plates
 column through a swipe and fails with `display: block` half way across.
 
+## The Fragrances view stopped being the site's index
+
+**2026-09-21.** It listed every fragrance written up anywhere on the site — sixty-three
+rows — and every one of them pointed back into a house. The owner asked for it to be
+something else entirely: *"It should NOT be a page that contains all the fragrances on the
+website, but rather an independent fragrance review page where I put information about
+perfumes that do not belong in any house on the houses tab."*
+
+So the table holds **seven** now, and they open into `works/individual-fragrances.html`
+rather than into the houses. The layout did not change at all — it is the same board, the
+same sortable columns, the same search — because the owner asked for the *contents* of the
+table to change (*"delete the contents of that table"*), not the shape of it.
+
+**The House column earns its place here in a way it never did before.** When every row
+came from one of three houses it was a filter; now the seven are from seven different
+houses and it is the only thing saying where each came from.
+
+The reviews are on a page of their own rather than inside this view, because this view is
+laid out to come out on one screen — there is a test saying so — and a list of open
+`<details>` would fight that. The page it opens into is shaped like a house, so it gets
+the parts, the rank and the VIEW NOTES panel without a second set of anything.
+
+**The numbering has a hole in it on purpose.** The owner's list ran 1, 2, 3, 4, 6, 7 and
+then called them "the seven", so 05 is an empty slot rather than closed up. Closing it
+would renumber the two after it and quietly lose whatever the fifth was meant to be.
+
 ## Known issues / TODO
 
 - **The dates in the Fragrances table are rolled from a seed** so that sorting has

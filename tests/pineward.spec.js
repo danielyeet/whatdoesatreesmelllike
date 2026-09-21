@@ -326,3 +326,78 @@ test("the piece is what the sheet's first picture points at", async ({ page }) =
   await expect(first.locator(".sheet-say"))
     .toHaveText("the house that smells like trees");
 });
+
+/* AND THE BLOOM DOES NOT SNAP OFF. The owner asked for "a delay to the
+   effects of the pineward trees, so that when you hover a tree, the
+   effect lasts about 0.25 seconds after your cursor leaves".
+
+   THE FAULT THIS IS FOR is subtler than it sounds. Leaving the PAGE
+   already faded, because `handAt` eased down; what snapped was moving
+   the pointer somewhere else ON the page, because the bloom is worked
+   out from how near the hand is to each speck and the hand was
+   suddenly far. So this measures exactly that: the pointer goes from
+   the tree to another part of the same window, and the tree should
+   still be lit a moment later.
+
+   The hold is per speck now — each one takes a brighter bloom at once,
+   holds what it has for BLOOM_HOLD, and only then eases out. */
+test("a tree stays lit for a moment after the pointer leaves it",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(3200);
+
+  const inkAt = (x, y, r) =>
+    page.evaluate(([x, y, r]) => {
+      const canvas = document.querySelector(".pine-canopy");
+      const ratio = canvas.width / canvas.clientWidth;
+      const shot = canvas.getContext("2d").getImageData(
+        Math.round((x - r) * ratio), Math.round((y - r) * ratio),
+        Math.round(2 * r * ratio), Math.round(2 * r * ratio)).data;
+      let ink = 0;
+      for (let n = 3; n < shot.length; n += 4) ink += shot[n];
+      return ink;
+    }, [x, y, r]);
+
+  const spot = await page.evaluate(() => {
+    const canvas = document.querySelector(".pine-canopy");
+    const ratio = canvas.width / canvas.clientWidth;
+    const paint = canvas.getContext("2d");
+    let best = null;
+    for (let x = canvas.clientWidth - 240; x < canvas.clientWidth - 30; x += 40) {
+      for (let y = 120; y < canvas.clientHeight - 120; y += 40) {
+        const shot = paint.getImageData(Math.round((x - 40) * ratio),
+          Math.round((y - 40) * ratio), Math.round(80 * ratio), Math.round(80 * ratio)).data;
+        let ink = 0;
+        for (let n = 3; n < shot.length; n += 4) ink += shot[n];
+        if (!best || ink > best.ink) best = { x: x, y: y, ink: ink };
+      }
+    }
+    return best;
+  });
+
+  const resting = await inkAt(spot.x, spot.y, 80);
+  await page.mouse.move(spot.x, spot.y);
+  await page.waitForTimeout(1100);
+  const lit = await inkAt(spot.x, spot.y, 80);
+  expect(lit, "it should bloom first").toBeGreaterThan(resting * 1.5);
+
+  // THE POINTER GOES SOMEWHERE ELSE ON THE PAGE, not off it — into the
+  // middle, where the writing is and no tree stands.
+  await page.mouse.move(Math.round(spot.x / 2), spot.y);
+  await page.waitForTimeout(120);
+  const held = await inkAt(spot.x, spot.y, 80);
+
+  // Still most of the way lit a tenth of a second later. Without the
+  // hold this is back to resting in a frame.
+  const kept = (held - resting) / Math.max(1, lit - resting);
+  expect(kept, `a tenth of a second after leaving it kept ${(kept * 100).toFixed(0)}%`)
+    .toBeGreaterThan(0.55);
+
+  // And gone a second after that, so it is a delay and not a smear
+  // that never clears.
+  await page.waitForTimeout(1200);
+  const gone = await inkAt(spot.x, spot.y, 80);
+  const left = (gone - resting) / Math.max(1, lit - resting);
+  expect(left, `a second later it kept ${(left * 100).toFixed(0)}%`).toBeLessThan(0.25);
+});

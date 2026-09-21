@@ -71,11 +71,17 @@ test("a page's own search looks over that page, and hands on what it cannot answ
     { timeout: 20000 }
   );
 
+  // A PAGE'S OWN SEARCH LOOKS OVER THAT PAGE ONLY, so what it can find
+  // here changed when the Fragrances view stopped listing every
+  // fragrance on the site. It used to be asked for "murkwod" and
+  // answer Murkwood, which lives on the Pineward page and is not on
+  // this one any more. Haxan is — and the misspelling is kept, because
+  // matching a word somebody has typed badly is half of what this is
+  // for.
   await page.locator(".sheet-search-trigger").click();
-  await page.locator(".sheet-search-field").fill("murkwod");
+  await page.locator(".sheet-search-field").fill("haxen");
   const answer = page.locator(".sheet-found-row").first();
-  await expect(answer.locator(".sheet-found-what")).toHaveText("Murkwood");
-  await expect(answer.locator(".sheet-found-where")).toContainText("Pineward");
+  await expect(answer.locator(".sheet-found-what")).toHaveText("Haxan");
 
   // Something this category knows nothing about goes to the site's own
   // search page, with the question carried in the address.

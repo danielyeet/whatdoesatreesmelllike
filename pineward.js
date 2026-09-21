@@ -155,6 +155,17 @@
   const BLOOM_NEEDLES = 3;     // how many needles it puts out
   const BLOOM_LONG = 7;        // and how long they are, in pixels
   const BLOOM_EASE = 3.4;      // how quickly the bloom comes and goes
+  // AND HOW LONG IT STAYS AFTER THE HAND HAS GONE. The owner asked for
+  // "a delay to the effects of the pineward trees, so that when you
+  // hover a tree, the effect lasts about 0.25 seconds after your cursor
+  // leaves". The wait is per SPECK rather than per page, which is the
+  // whole of why it reads right: the bloom is worked out from how near
+  // the hand is to each speck, so moving the pointer off a tree used to
+  // put that tree out in the same frame even though the hand was still
+  // on the page and `handAt` was still 1. Now every speck lights at
+  // once, holds what it has for BLOOM_HOLD, and only then eases out —
+  // so the tree you have just left stays lit behind you and fades.
+  const BLOOM_HOLD = 0.25;     // seconds a speck holds its bloom after the hand leaves it
   const GREEN_LIFT = 0.85;     // how far towards the house's green a bloomed speck goes
 
 
@@ -472,9 +483,30 @@
       if (y < -40 || y > tall + 40) return;
       // THE BLOOM: how near the hand this speck is. Nothing moves
       // towards it — what is near is simply drawn more fully.
-      const bloom = handAt > 0
+      const want = handAt > 0
         ? handAt * Math.max(0, 1 - Math.hypot(x - handX, y - handY) / BLOOM_REACH)
         : 0;
+      // RISING IS AT ONCE, FALLING WAITS. A speck takes a brighter
+      // bloom the moment it is offered one and starts its hold again;
+      // a dimmer one is refused until the hold has run out, and then
+      // eased down rather than dropped. Under `prefers-reduced-motion`
+      // there is no easing anywhere on this page, so there is nothing
+      // to hold either.
+      let bloom;
+      if (REDUCE_MOTION) {
+        bloom = want;
+      } else {
+        const was = one.glow || 0;
+        if (want >= was) {
+          bloom = want;
+          one.held = now + BLOOM_HOLD;
+        } else if (now >= (one.held || 0)) {
+          bloom = was + (want - was) * Math.min(1, BLOOM_EASE / 60);
+        } else {
+          bloom = was;
+        }
+        one.glow = bloom;
+      }
       placed.push({
         x: x, y: y, size: one.size, bloom: bloom, of: one, lit: lit(one.x, y),
         // Its own colour, carried the rest of the way towards green by

@@ -85,6 +85,7 @@ which talk through five `window` globals; see the landing page's report).
 | `works/ataraxia.html` | **Ataraxia**, the fourth house: five fragrances standing in a **churchyard** — angels and crosses down both margins, cut out of specks and perfectly still, with a **light** crossing the window and a **halo** under the pointer | `search.js`, `house.js`, `ataraxia.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `works/grande-parfums.html` | **Grande Parfums**, the fifth house: seventeen fragrances — fifteen written up alphabetically, two at the foot not smelled yet — on the site's own paper, with no ground of its own yet | `search.js`, `house.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `works/les-abstraits.html` | **Les Abstraits**, the sixth house: four fragrances, none written yet | `search.js`, `house.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `works/individual-fragrances.html` | the **individual fragrances**: the ones that belong to no house, each with the house it did come from. What the Fragrances view of Scent descriptions opens into | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the notes](docs/features/2026-09-21-the-notes.md) |
 | `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html`, `works/cold-vs-warm-incense.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/theory-03.html` | the same, and the longest piece on the site: **The Note Dissemination Framework**, which argues in **diagrams** and carries a **calculator** standing in the same page | `essay.js`, `calculator.js` | [the framework](docs/features/2026-09-20-the-note-dissemination-framework.md) |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages | none | — |
@@ -94,7 +95,7 @@ which talk through five `window` globals; see the landing page's report).
 Four of those page scripts are elaborate: `chamber.js` (~2,770 lines), `structure.js`
 (~1,560), `contact-sheet.js` (~1,550) and `node-scene.js` (~1,520). The rest are smaller:
 `almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
-(~780), `paper.js` (~580), `essay.js` (~430), `ataraxia.js` (~400), `pineward-gallery.js`
+(~780), `paper.js` (~580), `essay.js` (~430), `ataraxia.js` (~400), `notes.js` (~210), `pineward-gallery.js`
 (~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `search.js`
 (~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230), `nav.js` (~220),
 `search-page.js` (~190), `photography.js` (~190), `find-ground.js` (~180) and
@@ -156,7 +157,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 212 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 222 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -259,6 +260,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| View notes, and the Fragrances page | `notes.js`, `notes-data.js` | [report](docs/features/2026-09-21-the-notes.md) |
 | Ataraxia, Grande Parfums and Les Abstraits | `house.js`, `ataraxia.js` | [report](docs/features/2026-09-21-the-newer-houses.md) |
 | The Photography page | `photography.js` | [report](docs/features/2026-09-18-the-photography-page.md) |
 | The Pineward gallery | `pineward-gallery.js` | [report](docs/features/2026-09-18-the-pineward-gallery.md) |
@@ -331,6 +333,17 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   a row per named fragrance in the Fragrances table, an `images/<House>/` folder with a
   README, and the **footer chain** — every house's `human-on` link points at the next one
   and the last wraps round to Pineward.
+- **NOTES FOR A FRAGRANCE** go in `notes-data.js`, never in the markup, keyed by the
+  page's own `window.HOUSE_NOTES` and the part's number — `"pineward:01"`. An entry is
+  `{ top, mid, base }` **only when the source actually divides them**, or `{ flat: […] }`
+  when it gives one undivided list, and it always carries `source: { name, url }`. **Never
+  write a pyramid a source did not state**: a review's prose is not a pyramid, and there
+  is a test for every one of those rules. A fragrance with no entry is fine — it gets the
+  button and a panel saying the notes have not been found yet.
+- **A NEW HOUSE THAT WANTS NOTES** sets `window.HOUSE_NOTES` beside `SITE_ROOT` and loads
+  `notes-data.js` then `notes.js` after its own script. **Renumbering a house means
+  renumbering `notes-data.js` in the same turn**, exactly as it means re-pointing the
+  Fragrances table; both ends have a test.
 - **A fragrance with no name yet** is `<span class="human-title human-untitled">Untitled</span>`
   and a `<p class="human-waiting">` saying so, in both places the title appears (the
   summary and the figcaption). **Don't invent a name or a write-up** — an unfinished house
@@ -474,8 +487,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the register** | The way the contact sheet page's *Favorites view* was laid out: a page ruled edge to edge with horizontal tracks, a square travelling along each, lines between them, and a glitch. **Removed** with that whole view and its two buttons — there is no `favorites.js` in the site any more. If the owner uses the word, they mean that. |
 | **track** / **gauge** / **car** / **square** / **the tear** / **the sig** / **index** / **log** | All of the register's own parts, removed with it. |
 | **the field** / **the hatch** | The ruled ground of fine strokes the Favorites view carried before it became the register — its reading was which **way** it lay. Removed, like everything else that view had. |
-| **Pineward** | The first house in Scent descriptions: `works/pineward.html`, "the house that smells like trees". An introduction and fifty-two parts, one per fragrance, in alphabetical order. It was fifty-four until the owner removed Fanghorn I and Gelatto. |
-| **part** (Pineward) | One of Pineward's fifty-two: a `<details>` showing its number, a small picture and its title until it is opened, and its full picture and writing inside. The pictures are the owner's own, one per fragrance, matched to the parts **by name**. |
+| **Pineward** | The first house in Scent descriptions: `works/pineward.html`, "the house that smells like trees". An introduction and **forty-seven** parts, one per fragrance, in alphabetical order within five groups. It was fifty-four; the owner has removed several since, so **count the markup rather than trusting a number written down** — this one was wrong for a while. |
+| **part** (Pineward) | One of Pineward's forty-seven: a `<details>` showing its number, a small picture and its title until it is opened, and its full picture and writing inside. The pictures are the owner's own, one per fragrance, matched to the parts **by name**. |
 | **ADAR** | The second house in Scent descriptions: `works/adar.html`, "the house that you have never heard of". Eleven fragrances in four groups, on a **void**. |
 | **Almost Human** | The third house in Scent descriptions: `works/almost-human.html`, "Abstraction done quite well" (it was "the house that nearly gets there" until the owner wrote their own). Five fragrances — Burning Bridges, Dear Future, Desert Hope, Ritual Code, Silent Rain — standing in a **crowd**. **All five are written**, and so are the introduction and the standfirst. |
 | **the mark** (Almost Human) | The house's own logo, and it is **shown by the hand and nowhere else** — the owner asked for "a hover-to-display thing, similarly to adar". It is not printed on the page at all; it stood at the head of it for a round and does not now (there is no `figure.human-mark`). What shows it is the **fault**: hold a figure together and whatever part of it is faulty stands as the mark for that beat, every beat. Read off `images/Almost-Human/house-web/ah-logo.webp`, an 800px copy of the owner's `AH_Logo_Black.jpg`, **black on transparent** rather than on the original's white, as places a speck may stand. `LOGO_*` in `almost-human.js`. (Not the contact sheet's **mark**, which is a drawn plate.) |
@@ -572,7 +585,11 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the swipe** | How the contact sheet's two views change over **once both have been opened**: the page travels sideways, what you are leaving going off one edge as what you are going to comes in from the other. The first time a view is opened there is no swipe — it is the plain swap, because a swipe says "these two stand side by side", which is only worth saying to somebody who has seen both. The chrome does not travel: the Menu, the category's name, the buttons and the search all live outside the box that slides. `views.js`. |
 | **view** | One of the two ways the contact sheet page shows its category, behind the two buttons across the top: the **houses** (the sheet itself) and the **individual fragrances** (the index). `views.js` switches them, and only one is ever on the page except during the swipe. It briefly had a different pair — the **map** and **Favorites**, the second of which was the removed **register** — so if the owner says "Description portfolio" or "the Favorites view", they mean those. |
 | **houses** | The contact sheet view: one picture per house, scattered and joined by dated lines. The pictures run in order down the page — 01 at the top, then 02, 03 and so on. |
-| **fragrances** (the view) | The index view of the contact sheet page: every fragrance written up anywhere on the site, with its number, its name, the house it belongs to and the date it was written about. It was called *Individual fragrances* for one round. |
+| **fragrances** (the view) | The index view of the contact sheet page. It **used to list every fragrance on the whole site** and point back into the houses; it does not any more. It is now the way in to `works/individual-fragrances.html` — the perfumes that belong to no house — and carries only those. If the owner remembers it as "every one of them", that is what it was until 2026-09-21. |
+| **view notes** | The button at the foot of every fragrance's writing, and the panel it opens BESIDE the writing (never under it) carrying the notes and the source. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
+| **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
+| **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |
+| **individual fragrances** | `works/individual-fragrances.html`: the perfumes that belong to no house on the Houses view, each carrying the house it DID come from. Shaped like a house so it gets the parts, the rank and the notes panel. The **Fragrances** view is the index into it. |
 | **the chain** / **the tuft** | **Removed.** The specks round a picture on the contact sheet, kept only within reach of a point where a line tied on. The pictures keep their ruled border; what stands where a line meets one is the tie. |
 | **the run** | **Removed.** The line between two pictures drawn as specks rather than as a stroke. Replaced by the trace, which is dashed — a solid stroke is the one thing the line must not be, and there is a test saying so. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
@@ -638,7 +655,7 @@ worth knowing before touching anything shared:
 - **Three of the six carry a real picture on the contact sheet**, and every other
   plate on the site is still a hatched placeholder with its `<img>` tag commented out
   waiting for a file and a name — see [the images
-  report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's fifty-two
+  report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's
   fragrance pictures and its gallery arrived on 2026-09-18; Almost Human's own two — its
   **mark** and the photograph `This one` — on 2026-09-21. The photograph is that house's
   frame on the contact sheet; the mark is not printed on any page at all, and is only ever

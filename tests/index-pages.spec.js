@@ -100,7 +100,12 @@ test("the headings sort the table, and pressing one again turns it round",
 
   // As written: by number.
   const written = await showing(page);
-  expect(written.length, "every fragrance on the site").toBeGreaterThan(20);
+  // ENOUGH ROWS TO SORT, rather than a count of the site's fragrances.
+  // This asked for more than twenty until the Fragrances view stopped
+  // being an index of every fragrance on the site and became its own
+  // review page — what the test is about is the sorting, not how many
+  // perfumes the owner has written about.
+  expect(written.length, "enough rows to sort").toBeGreaterThan(4);
   expect(written.map((r) => r.no)).toEqual(written.map((r, i) => i + 1));
 
   // By name, both ways.
@@ -138,11 +143,11 @@ test("the field above the table searches it", async ({ page }) => {
   await toFragrances(page);
 
   const all = (await showing(page)).length;
-  await page.fill(".index-search-field", "murkwood");
+  await page.fill(".index-search-field", "haxan");
   await page.waitForTimeout(150);
   const found = await showing(page);
   expect(found.length, "one fragrance is called that").toBe(1);
-  expect(found[0].name).toBe("Murkwood");
+  expect(found[0].name).toBe("Haxan");
   await expect(page.locator(".index-count")).toContainText("001");
 
   // And it gives the rest back.
@@ -153,12 +158,22 @@ test("the field above the table searches it", async ({ page }) => {
 
 test("the headings stay where they are while the rows scroll under them",
   async ({ page }) => {
-  // On the fragrances table, which has far more rows than its box: the
-  // researches are only half a dozen so far and do not fill theirs.
+  // THE TABLE IS MADE LONG HERE RATHER THAN FOUND LONG. Until the
+  // Fragrances view became its own review page it carried sixty-three
+  // rows and overflowed its box on its own; it carries seven now, and
+  // neither index on the site is long enough to scroll. What is being
+  // checked is the LAYOUT — that a heading stays put while rows go
+  // under it — and that has to hold whatever the table happens to
+  // hold, so the rows are cloned until there are enough of them.
   await page.goto(SHEET);
   await toFragrances(page);
 
   const stayed = await page.evaluate(() => {
+    const body = document.querySelector(".index-table tbody");
+    const seed = [...body.querySelectorAll("tr")];
+    while (body.querySelectorAll("tr").length < 60) {
+      seed.forEach((row) => body.appendChild(row.cloneNode(true)));
+    }
     const box = document.querySelector(".index-scroll");
     const head = document.querySelector(".index-table thead th");
     const before = head.getBoundingClientRect().top;
@@ -182,11 +197,21 @@ test("the whole index comes out on one screen, whatever is in the table",
   await page.goto(SHEET);
   await toFragrances(page);
 
-  const fits = await page.evaluate(() => ({
-    page: document.documentElement.scrollHeight,
-    window: window.innerHeight,
-    rows: document.querySelectorAll(".index-table tbody tr").length,
-  }));
+  // As above: the rows are cloned until there are far more than would
+  // ever fit, because "whatever is in the table" is the whole claim and
+  // the real table is seven rows long today.
+  const fits = await page.evaluate(() => {
+    const body = document.querySelector(".index-table tbody");
+    const seed = [...body.querySelectorAll("tr")];
+    while (body.querySelectorAll("tr").length < 80) {
+      seed.forEach((row) => body.appendChild(row.cloneNode(true)));
+    }
+    return {
+      page: document.documentElement.scrollHeight,
+      window: window.innerHeight,
+      rows: body.querySelectorAll("tr").length,
+    };
+  });
   expect(fits.rows, "there are more rows than would ever fit").toBeGreaterThan(30);
   expect(fits.page, "and the page is still one screen").toBeLessThanOrEqual(fits.window + 2);
 });

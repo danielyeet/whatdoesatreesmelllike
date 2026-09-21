@@ -31,6 +31,7 @@
     { url: "works/ataraxia.html", trail: ["Scent descriptions", "Houses", "Ataraxia"] },
     { url: "works/grande-parfums.html", trail: ["Scent descriptions", "Houses", "Grande Parfums"] },
     { url: "works/les-abstraits.html", trail: ["Scent descriptions", "Houses", "Les Abstraits"] },
+    { url: "works/individual-fragrances.html", trail: ["Scent descriptions", "Fragrances"] },
     { url: "categories/theories.html", trail: ["Theories"] },
     { url: "works/theory-01.html", trail: ["Theories", "The Architecture of Sunscreen"] },
     { url: "works/theory-02.html", trail: ["Theories", "The Architecture of Sweat"] },
