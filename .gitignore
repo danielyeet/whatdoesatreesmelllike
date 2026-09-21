@@ -20,3 +20,9 @@ blob-report/
 
 # npm logs
 npm-debug.log*
+
+# Scratch scripts used to drive a browser at the site while working on
+# it (screenshots, one-off measurements). One of these was committed by
+# accident on 2026-09-21 by a `git add -A`; it is not part of the site.
+look-tmp.js
+*-tmp.js
