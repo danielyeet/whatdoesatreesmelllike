@@ -66,7 +66,15 @@
   function measure() {
     const r = canvas.getBoundingClientRect();
     w = r.width; h = r.height;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // A PHONE DRAWS AT A LOWER RATIO. Every canvas here is capped at
+    // two device pixels to one CSS pixel, which on a desktop is
+    // right and on a phone at three is still a million-odd pixels to
+    // fill sixty times a second on a fraction of the power. Narrow
+    // screens get 1.5, which is a little over half the fill and no
+    // difference anybody can see at that size. Nothing above 700
+    // changes at all.
+    const dpr = Math.min(window.devicePixelRatio || 1,
+                         window.innerWidth < 700 ? 1.5 : 2);
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

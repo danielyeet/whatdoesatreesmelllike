@@ -178,7 +178,12 @@ On a window too narrow to have margins they stand near the edges instead and `li
 takes them down to a twentieth over the reading.
 
 `lit()` asks about the **column**, not about a share of the window, so the quiet band is
-exactly where the reading is however wide the window happens to be.
+exactly where the reading is however wide the window happens to be — **above the column**.
+Below it there is no room either side to take out, and that used to mean the quiet band
+covered the whole page and the entire drawing was rendered at a twentieth: on a phone this
+page had no ground at all. There is a floor now, and it is a ternary rather than a
+`Math.max` so a wide window is untouched. See [the phone
+report](2026-09-21-the-site-on-a-phone.md).
 
 ## The rank
 

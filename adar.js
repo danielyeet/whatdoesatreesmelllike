@@ -287,7 +287,15 @@
 
   function resize() {
     if (!canvas) return;
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    // A PHONE DRAWS AT A LOWER RATIO. Every canvas here is capped at
+    // two device pixels to one CSS pixel, which on a desktop is
+    // right and on a phone at three is still a million-odd pixels to
+    // fill sixty times a second on a fraction of the power. Narrow
+    // screens get 1.5, which is a little over half the fill and no
+    // difference anybody can see at that size. Nothing above 700
+    // changes at all.
+    const ratio = Math.min(window.innerWidth < 700 ? 1.5 : 2,
+                           window.devicePixelRatio || 1);
     width = window.innerWidth;
     height = window.innerHeight;
     small = Math.min(width, height);
@@ -820,14 +828,21 @@
     return Math.max(0, Math.min(1, 1.25 - (away / r) * 0.6));
   }
 
-  window.addEventListener("pointermove", (event) => {
+  const hand = (event) => {
     handX = event.clientX;
     handY = event.clientY;
     if (REDUCE_MOTION) {
       spot = wanted();
       draw(window.scrollY, 0);
     }
-  }, { passive: true });
+  };
+  window.addEventListener("pointermove", hand, { passive: true });
+  // AND A TAP COUNTS AS THE HAND ARRIVING. On a phone there is no
+  // hovering: a drag sends `pointermove` and works already, but a
+  // TAP sends `pointerdown` and may send nothing else at all, so
+  // without this a touch on a figure did nothing. Same handler,
+  // same numbers — a mouse simply sets the same place twice.
+  window.addEventListener("pointerdown", hand, { passive: true });
   window.addEventListener("pointerleave", () => {
     handX = handY = -9999;
     if (REDUCE_MOTION) { spot = 0; draw(window.scrollY, 0); }

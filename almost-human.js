@@ -490,7 +490,15 @@
 
   function size() {
     if (!canvas) return;
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    // A PHONE DRAWS AT A LOWER RATIO. Every canvas here is capped at
+    // two device pixels to one CSS pixel, which on a desktop is
+    // right and on a phone at three is still a million-odd pixels to
+    // fill sixty times a second on a fraction of the power. Narrow
+    // screens get 1.5, which is a little over half the fill and no
+    // difference anybody can see at that size. Nothing above 700
+    // changes at all.
+    const ratio = Math.min(window.innerWidth < 700 ? 1.5 : 2,
+                           window.devicePixelRatio || 1);
     const w = window.innerWidth;
     const h = window.innerHeight;
     const tall = document.documentElement.scrollHeight;
@@ -512,11 +520,29 @@
       band is exactly where the reading is however wide the window
       happens to be. */
   const EASED_IN = 80;        // how far outside the column it starts going quiet
+  const EDGE_LEAST = 0.26;    // the share of each side always left to stand in
   function lit(x) {
-    const edge = Math.max(0, (width - COLUMN) / 2);
-    const from = edge - EASED_IN, to = width - edge + EASED_IN;
+    // ON A WINDOW NARROWER THAN THE COLUMN THERE IS NO MARGIN TO TAKE
+    // OUT, and this used to take the whole page out with it: `edge`
+    // came to nought, the quiet band covered the window, and every
+    // figure, every drop of rain and every ray was drawn at a
+    // twentieth. On a phone this page had no ground at all — the whole
+    // drawing was there and invisible.
+    //
+    // So a quarter of each side is always left, which is where the
+    // figures are put (`EDGE`) when there is no margin to put them in.
+    // The soft edge comes in with it, or on a narrow window the fade
+    // is most of the page.
+    //
+    // AND ONLY BELOW THE COLUMN. Taking the wider of the two would move
+    // the quiet band on a desktop as well — at 1280 across, a quarter
+    // of each side is 333px where the margin is 170 — and a wide window
+    // is not what is being fixed here.
+    const edge = width > COLUMN ? (width - COLUMN) / 2 : width * EDGE_LEAST;
+    const soft = Math.min(EASED_IN, width * 0.12);
+    const from = edge - soft, to = width - edge + soft;
     if (x <= from || x >= to) return 1;
-    const inside = Math.min(x - from, to - x) / EASED_IN;
+    const inside = Math.min(x - from, to - x) / soft;
     return 0.05 + 0.95 * Math.max(0, 1 - Math.min(1, inside));
   }
 
@@ -1007,11 +1033,18 @@
   // ============================================================
   // KEEPING UP
   // ============================================================
-  window.addEventListener("pointermove", (event) => {
+  const hand = (event) => {
     handX = event.clientX;
     handY = event.clientY;
     if (REDUCE_MOTION) draw(window.scrollY, 0);
-  }, { passive: true });
+  };
+  window.addEventListener("pointermove", hand, { passive: true });
+  // AND A TAP COUNTS AS THE HAND ARRIVING. On a phone there is no
+  // hovering: a drag sends `pointermove` and works already, but a
+  // TAP sends `pointerdown` and may send nothing else at all, so
+  // without this a touch on a figure did nothing. Same handler,
+  // same numbers — a mouse simply sets the same place twice.
+  window.addEventListener("pointerdown", hand, { passive: true });
   window.addEventListener("pointerleave", () => {
     handX = -99999; handY = -99999;
   });

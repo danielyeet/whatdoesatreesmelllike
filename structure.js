@@ -559,6 +559,11 @@
     ink.putImageData(shot, 0, 0);
     return off;
   }
+  /** A narrow window is a phone, and a phone is asked for less: see
+      the ratio in `resize` and the grain in `draw`. Read once rather
+      than per frame — a window that changes width that far is a
+      rotation, and the page is laid out again for it anyway. */
+  const SMALL = window.innerWidth < 700;
   let grain = null;
 
   const stampWhite = glowStamp(WHITE);
@@ -589,7 +594,15 @@
   let vignette = null;
 
   function resize() {
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    // A PHONE DRAWS AT A LOWER RATIO. Every canvas here is capped at
+    // two device pixels to one CSS pixel, which on a desktop is
+    // right and on a phone at three is still a million-odd pixels to
+    // fill sixty times a second on a fraction of the power. Narrow
+    // screens get 1.5, which is a little over half the fill and no
+    // difference anybody can see at that size. Nothing above 700
+    // changes at all.
+    const ratio = Math.min(window.innerWidth < 700 ? 1.5 : 2,
+                           window.devicePixelRatio || 1);
     width = Math.max(1, window.innerWidth);
     height = Math.max(1, window.innerHeight);
     midX = width / 2;
@@ -1294,7 +1307,12 @@
 
     paint.fillStyle = vignette;
     paint.fillRect(0, 0, width, height);
-    if (grain) {
+    // THE GRAIN IS SKIPPED ON A PHONE. It is a repeating pattern painted
+    // over the whole canvas on every frame, which is the single most
+    // expensive thing this drawing does and the one nobody can see at
+    // that size. The vignette stays — it is a gradient made once in
+    // `resize` and it is what gives the frame its depth.
+    if (grain && !SMALL) {
       paint.fillStyle = grain;
       paint.fillRect(0, 0, width, height);
     }

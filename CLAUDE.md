@@ -152,7 +152,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 196 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 199 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -174,9 +174,11 @@ tests stop testing what actually ships. Nothing in `package.json` is needed to v
 publish the site; it exists only for the tests.
 
 **What each spec file covers is written up in that feature's report**, under "How to
-test it". The browserless checks in `repository.spec.js` are the exception and belong to
-no one feature: no link points at a missing file, no credentials are committed, and the
-site still needs no build step to publish.
+test it". Two spec files are the exception and belong to no one feature: the browserless
+checks in `repository.spec.js` (no link points at a missing file, no credentials are
+committed, the site still needs no build step to publish), and `mobile.spec.js`, which is
+about the whole site at a phone's size — see [the phone
+report](docs/features/2026-09-21-the-site-on-a-phone.md).
 
 Several tests are regressions for specific bugs the owner reported and that were fixed.
 Each one is named and explained in its own feature's report, under "How to test it", next
@@ -185,6 +187,24 @@ behaviour**, unless the behaviour change is deliberate.
 
 Visual/aesthetic judgement is still manual — the suite checks that things work, not that
 they look right.
+
+### A phone
+
+The site is meant to work on one, and the standing rule is that **nothing above 700px may
+change** — the owner asked for the phone "without changing its desktop version". Three
+things follow, and they are the ones to keep in mind when adding a drawing:
+
+- **Every canvas draws at a lower ratio below 700px** (1.5 rather than 2), which is a
+  little over half the fill. A new drawing should do the same.
+- **A rule written against `COLUMN` needs a floor.** The writing's measure is 940px, so on
+  a phone "the room either side of the column" is none — and a drawing that takes the
+  column out of itself takes the whole page out. Almost Human's `lit()` did exactly that
+  and the page had no ground at all.
+- **There is no hovering.** A drag sends `pointermove` and a tap sends `pointerdown`; a
+  drawing that answers the hand should listen for both.
+
+`tests/mobile.spec.js` is the guard: no page scrolls sideways at 390px, the crowd is
+drawn, and a tap brings a figure home.
 
 Two states are easy to forget when reviewing a change:
 

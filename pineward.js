@@ -343,7 +343,15 @@
   function paintWood() {
     if (!ink || !wood) return;
     const wide = canopy.clientWidth, tall = canopy.clientHeight;
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    // A PHONE DRAWS AT A LOWER RATIO. Every canvas here is capped at
+    // two device pixels to one CSS pixel, which on a desktop is
+    // right and on a phone at three is still a million-odd pixels to
+    // fill sixty times a second on a fraction of the power. Narrow
+    // screens get 1.5, which is a little over half the fill and no
+    // difference anybody can see at that size. Nothing above 700
+    // changes at all.
+    const ratio = Math.min(window.innerWidth < 700 ? 1.5 : 2,
+                           window.devicePixelRatio || 1);
     if (canopy.width !== Math.round(wide * ratio)) {
       canopy.width = Math.round(wide * ratio);
       canopy.height = Math.round(tall * ratio);
@@ -812,10 +820,14 @@
   // blooms where it stands. Nothing is dragged towards it and nothing
   // follows it, which is what the owner asked for — the wood is not
   // interactive, it is only more itself where somebody is looking.
-  window.addEventListener("pointermove", (e) => {
-    handX = e.clientX;
-    handY = e.clientY;
-  }, { passive: true });
+  const hand = (e) => { handX = e.clientX; handY = e.clientY; };
+  window.addEventListener("pointermove", hand, { passive: true });
+  // AND A TAP COUNTS AS THE HAND ARRIVING. On a phone there is no
+  // hovering: a drag sends `pointermove` and works already, but a
+  // TAP sends `pointerdown` and may send nothing else at all, so
+  // without this a touch on a figure did nothing. Same handler,
+  // same numbers — a mouse simply sets the same place twice.
+  window.addEventListener("pointerdown", hand, { passive: true });
   window.addEventListener("pointerleave", () => { handX = -9999; handY = -9999; });
 
   page.classList.add("pine-ready");

@@ -1057,6 +1057,10 @@ body.view-fragrances .sheet-search { display: none; }
   left: 0;
   top: calc(100% + 3px);
   width: max-content;
+  /* WIDE ENOUGH FOR THE LINE, NEVER WIDER THAN THE PAGE. It is taken
+     out of the flow but it still counts towards how wide the document
+     is. See the narrow-window rule below for what that costs on a
+     phone. */
   max-width: 220px;
   color: var(--ink);
   background: var(--bg);
@@ -1068,6 +1072,20 @@ body.view-fragrances .sheet-search { display: none; }
 /* `hot` is the drawing's own word for the picture under the pointer;
    :hover and :focus-within are what answers when the script is not
    running, so the say still works on the plain page. */
+/* ON A PHONE IT IS KEPT INSIDE ITS OWN PICTURE. The line is taken out
+   of the flow but it still counts towards how wide the DOCUMENT is, so
+   a line 220px long hanging off a picture near the right-hand edge
+   pushed the whole page sideways — a horizontal scrollbar on a page
+   with nothing to the right of it. Held to the picture's own width and
+   allowed to wrap, it cannot reach past anything. On a wide window it
+   stays one line, which is the whole point of it. */
+@media (max-width: 700px) {
+  .sheet-frame .sheet-say {
+    width: auto;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
 .sheet-frame:hover .sheet-say,
 .sheet-frame:focus-within .sheet-say,
 .sheet-frame.hot .sheet-say { opacity: 1; }
