@@ -6,8 +6,8 @@
 //
 // What is on the page that the markup does not carry:
 //
-//   THE FIGURES — people, standing down both margins the whole length
-//   of the piece, and every one of them drawn entirely in specks. They
+//   THE FIGURES — people, standing in whatever room the page leaves
+//   and over nothing at all, and every one of them drawn in specks. They
 //   are built out of capsules — a head, a neck, a torso, two arms, two
 //   legs — and the specks are scattered through those, so a figure is
 //   a shape a crowd of particles happens to be making rather than an
@@ -56,12 +56,12 @@
 
   // --- the figures
   //
-  // THEY STAND IN THE MARGINS THE WRITING LEAVES, and the page's own
-  // measure is what decides where that is: the head, the introduction
-  // and the parts are all one column `COLUMN` wide, so what is left
-  // either side of it is where a figure belongs. On a window too narrow
-  // to have margins they stand behind the writing instead and `lit()`
-  // takes them down to almost nothing there.
+  // THEY STAND WHERE THE PAGE LEAVES ROOM AND NOWHERE ELSE. On a wide
+  // window that is the margins either side of the column, which is
+  // where the crowd has always been; on a narrow one there are no
+  // margins, so it is the clearings down the page instead. Every place
+  // is checked against the writing's own boxes before a figure is put
+  // there — see WHERE A FIGURE MAY STAND below.
   const COLUMN = 940;         // the writing's own measure — style.css keeps the same
   const FIG_EVERY = 330;      // how far apart they stand down the page, in pixels
   const FIG_TALL = [170, 290];   // how tall one is drawn, in pixels
@@ -173,34 +173,42 @@
   // ============================================================
   // THE HOUSE'S MARK, IN THE GLITCH
   //
-  // The owner asked for their logo to be part of what goes wrong with
-  // a figure: "maybe make 1/3 of the glitches of the guys face be
-  // replaced with the logo or something". So on about a third of the
-  // beats, a figure whose HEAD is the faulty part loses its face and
-  // the specks that were the head stand as the mark instead — which is
-  // the house's name said one more way: the thing that is almost a
-  // person, and then for a second is a brand.
+  // THE MARK IS NOT PRINTED ANYWHERE ON THIS PAGE. It is shown by the
+  // hand and by nothing else, the way ADAR's mark is shown by the
+  // pointer passing over the void — the owner asked for "a
+  // hover-to-display thing, similarly to adar" — and the way it is
+  // shown is the glitch itself: hold a figure together, it comes apart,
+  // and WHATEVER PART OF IT IS FAULTY stands as the logo for the beat.
+  // A head that comes apart in slices comes apart into the mark; the
+  // one whose fault is all of it goes to the mark entire.
+  //
+  // It used to be a third of the beats, and only on a figure whose
+  // head was the faulty part — which was right while the logo also
+  // stood at the head of the page, and is not now that this is the
+  // only place it appears. It is every beat.
   //
   // The mark is READ OFF THE OWNER'S OWN FILE rather than drawn here
   // from a guess at its geometry: the image is put on a small offscreen
   // canvas once and every dark pixel becomes a place a speck may stand.
   // It is their logo, so it should be their logo.
   // ============================================================
-  // The 800px copy rather than the 3125px original, and the same file
-  // the head of the page shows — so the mark is fetched once and used
-  // twice. It is read on a 116 grid, so 800 is far more than enough.
+  // The 800px copy rather than the 3125px original. It is read on a 116
+  // grid, so 800 is far more than enough.
   const LOGO_FILE = "../images/Almost-Human/house-web/ah-logo.webp";
   const LOGO_GRID = 116;      // how finely the mark is read off the file
   const LOGO_DARK = 140;      // and how dark a pixel has to be to count
   const LOGO_SPOTS = 900;     // how many places are kept
-  const LOGO_ODDS = 0.34;     // the share of beats a head goes to the mark
-  const LOGO_BIG = 2.1;       // how much bigger than the head it is drawn
-  const LOGO_INK = 1.9;       // and how much more plainly
+  const LOGO_INK = 1.9;       // how much more plainly a speck on it is drawn
 
-  // WHERE THE HEAD STANDS in a figure's own unit box, taken off BODY
-  // above: the head capsule runs 0.065 to 0.105 with a radius of 0.052,
-  // so it is 0.144 tall and its middle is at 0.085.
-  const HEAD_AT = 0.085, HEAD_TALL = 0.144;
+  // HOW BIG THE MARK IS DRAWN, and it is asked of HOW MANY SPECKS
+  // THERE ARE rather than of the part they came from. An arm is ninety
+  // specks and a whole figure is nine hundred; strung round the same
+  // ring, the first is a scatter and the second is a blot. So the ring
+  // is sized to keep the same density whatever is standing in it —
+  // `LOGO_DENSITY` times the square root of the count — and then never
+  // drawn smaller than the part it replaces, or the mark would sit
+  // inside a figure rather than instead of part of one.
+  const LOGO_DENSITY = 5.3;
 
   /** The mark, as places a speck may stand. Empty until the file has
       arrived, which is the whole of the guard this needs: until then a
@@ -346,7 +354,21 @@
       come home under the hand and go quiet over the reading alike. */
   function cloud(points, at, tall, mid, wander, weight) {
     let half = 0;
+    // WHERE EACH PART OF A PERSON ACTUALLY LIES, in the figure's own
+    // unit box. The mark is stood on whichever part is faulty, so the
+    // fault has to know how big that part is and where its middle is.
+    // Measured off the specks rather than read back out of BODY: the
+    // lean has already swung the arms and legs by the time they get
+    // here, and a capsule's radius is not in its two end points.
+    const box = [];
     const specks = points.map((one) => {
+      const seat = box[one[2]] ||
+        (box[one[2]] = { x0: 1, x1: 0, y0: 1, y1: 0, n: 0 });
+      if (one[0] < seat.x0) seat.x0 = one[0];
+      if (one[0] > seat.x1) seat.x1 = one[0];
+      if (one[1] < seat.y0) seat.y0 = one[1];
+      if (one[1] > seat.y1) seat.y1 = one[1];
+      seat.n++;
       const hx = mid + (one[0] - 0.5) * tall / width;
       half = Math.max(half, Math.abs(hx - mid) * width);
       return {
@@ -368,52 +390,198 @@
     // HOW WIDE IT ACTUALLY STANDS, measured off the specks themselves
     // rather than guessed. The hand is answered against this box, so a
     // figure that leans hard is reached at its elbow like any other.
-    return { y: at, tall: tall, mid: mid, half: half, specks: specks, home: 0 };
+    return { y: at, tall: tall, mid: mid, half: half, specks: specks,
+             home: 0, box: box };
+  }
+
+  /** Whether this part of this figure is the part that is wrong.
+      Asked at build time, to work out where the mark stands, and again
+      every frame, to work out what slips. */
+  function isFaulty(figure, part) {
+    if (figure.fault === "all") return true;
+    if (figure.fault === "head") return part === 0 || part === 1;
+    if (figure.fault === "torso") return part === 2;
+    return part === figure.armPart;
+  }
+
+  /** THE BOX THE MARK STANDS IN: the parts of this figure that are
+      faulty, taken together, in its own unit box — with how many specks
+      they hold, which is what decides how big the mark is drawn. */
+  function markBox(figure) {
+    let x0 = 1, x1 = 0, y0 = 1, y1 = 0, n = 0;
+    figure.box.forEach((seat, part) => {
+      if (!seat || !isFaulty(figure, part)) return;
+      if (seat.x0 < x0) x0 = seat.x0;
+      if (seat.x1 > x1) x1 = seat.x1;
+      if (seat.y0 < y0) y0 = seat.y0;
+      if (seat.y1 > y1) y1 = seat.y1;
+      n += seat.n;
+    });
+    if (n < 24) return null;
+    return { x: (x0 + x1) / 2, y: (y0 + y1) / 2,
+             side: Math.max(x1 - x0, y1 - y0), n: n };
+  }
+
+  // ============================================================
+  // WHERE A FIGURE MAY STAND
+  //
+  // NOWHERE THAT ANYTHING ELSE IS. The owner asked for the crowd not to
+  // be put over anything on the page, so a figure stands in the room
+  // the page actually leaves — and the page is ASKED where that is
+  // rather than told. Every block of writing on it is measured, and a
+  // figure is only put somewhere its whole box (its specks, its stray
+  // and a little air) misses every one of them.
+  //
+  // On a wide window that room is the MARGINS either side of the
+  // column, which is where the crowd has always stood and where it
+  // still is. Take the window below about eleven hundred and there are
+  // no margins left, so what is left is the CLEARINGS — the bands down
+  // the page with nothing in them — and the page makes one of those on
+  // purpose before the introduction (`.human-gap` in style.css),
+  // because a phone otherwise has none worth standing in.
+  // ============================================================
+  /** The blocks of writing a figure has to keep off. Containers where
+      they carry a rule of their own (a part, the foot), the writing
+      itself where they do not. */
+  const CONTENT = ".human-head > *, .human-intro .human-section-mark," +
+                  " .human-intro h2, .human-intro .human-text," +
+                  " .human-part, .human-foot";
+  const CLEAR = 16;           // the air left round a block, in pixels
+  const ROOM_LEAST = 150;     // the margin worth standing a person in
+  const STEP_TIGHT = 150;     // how often they are tried where there is none
+  const BOX_WIDE = 0.185;     // how wide a figure is drawn, as a share of its height
+  const SMALLER = 0.66;       // what it is shrunk to when it will not fit
+  const LEAST_TALL = 120;     // and the shortest one worth drawing at all
+
+  /** Where the writing stands, in DOCUMENT space. */
+  function readContent() {
+    const out = [];
+    const up = window.scrollY;
+    document.querySelectorAll(CONTENT).forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return;
+      out.push({
+        x0: r.left - CLEAR, x1: r.right + CLEAR,
+        y0: r.top + up - CLEAR, y1: r.bottom + up + CLEAR,
+      });
+    });
+    return out;
+  }
+
+  /** Whether a box misses every one of them. */
+  function clearOf(blocks, x0, y0, x1, y1) {
+    for (let i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      if (x1 > b.x0 && x0 < b.x1 && y1 > b.y0 && y0 < b.y1) return false;
+    }
+    return true;
   }
 
   function build() {
     seed = SEED;
     crowd = [];
     if (!width || !docTall) return;
+    const blocks = readContent();
     // The middle of each margin, or the edge of the window when the
     // window is too narrow to have one.
     const free = Math.max(0, (width - COLUMN) / 2);
     const stand = free > 150 ? (free / 2) / width : EDGE;
+    // HOW MUCH ROOM THE WRITING LEAVES either side of itself. With a
+    // margin to stand in the crowd stands in it and is stepped down
+    // the page at its own spacing; without one it is tried far more
+    // often, because a phone has two or three clearings in the whole
+    // page and stepping past them would find one and stop.
+    let room = width;
+    blocks.forEach((b) => {
+      room = Math.min(room, b.x0 + CLEAR, width - (b.x1 - CLEAR));
+    });
+    const roomy = room >= ROOM_LEAST;
+    const every = roomy ? FIG_EVERY : STEP_TIGHT;
     const top = window.innerHeight * 0.5;
-    for (let y = top; y < docTall - 60; y += FIG_EVERY * between(0.84, 1.16)) {
-      // Left and right alternately, each a little way in or out of its
-      // own margin so the two columns are not a pair of railings.
-      const side = crowd.length % 2 === 0 ? 0 : 1;
-      const tall = between(FIG_TALL[0], FIG_TALL[1]);
-      const mid = side === 0
-        ? stand + between(-0.022, 0.026)
-        : 1 - stand + between(-0.026, 0.022);
+    for (let y = top; y < docTall - 60; y += every * between(0.84, 1.16)) {
       // NO TWO OF THEM ARE THE SAME CROWD. Height, pose, how many
       // specks, how heavily they are drawn and how far they stray are
       // all their own, so the margin reads as a row of different people
       // rather than one person printed over and over.
+      const tall = between(FIG_TALL[0], FIG_TALL[1]);
       const howMany = Math.round(between(FIG_SPECKS[0], FIG_SPECKS[1]));
       const weight = between(FIG_INK[0], FIG_INK[1]);
       const wander = STRAY * between(STRAY_VARY[0], STRAY_VARY[1]);
-      const fault = FAULTS[crowd.length % FAULTS.length];
       // For the "arm" fault, which arm — left (3) or right (4).
       const armPart = random() < 0.5 ? 3 : 4;
+      const lean = between(-0.22, 0.22);
+      const nudge = between(-0.022, 0.026);
+      const across = random();
+
+      // WHERE IT WOULD STAND. Two kinds of place, and which is tried
+      // first is the whole of the difference between a wide window and
+      // a phone. THE MARGINS: left and right alternately, each a little
+      // way in or out of its own margin so the two columns are not a
+      // pair of railings. THE CLEARING: out in the page itself, which
+      // on a window with margins would be over the writing and on one
+      // without is the only room there is.
+      //
+      // The first place that misses every block of writing is where it
+      // goes; if none does it is tried once more at two thirds the
+      // size, and then given up on. A place is never taken because it
+      // is empty on this scroll — every block on the page is checked,
+      // the whole page at once.
+      const side = crowd.length % 2 === 0 ? 0 : 1;
+      const mine = { at: side === 0 ? stand + nudge : 1 - stand - nudge, fade: true };
+      const other = { at: side === 0 ? 1 - stand - nudge : stand + nudge, fade: true };
+      const open = { at: 0.24 + 0.52 * across, fade: false };
+      const middle = { at: 0.5, fade: false };
+      const wants = roomy ? [mine, other, open, middle]
+                          : [open, middle, mine, other];
+      let put = null;
+      for (let s = 0; s < 2 && !put; s++) {
+        const high = s === 0 ? tall : tall * SMALLER;
+        if (high < LEAST_TALL) break;
+        const half = high * (BOX_WIDE + wander);
+        const lift = high * wander;
+        for (let w = 0; w < wants.length && !put; w++) {
+          const cx = wants[w].at * width;
+          if (!clearOf(blocks, cx - half, y - lift, cx + half, y + high + lift)) continue;
+          // AND HOW MUCH WIDER THAN ITSELF IT MAY BE DRAWN. The mark is
+          // square and stands on the faulty part, so it is wider than
+          // the person is — widest of all on the figure whose fault is
+          // the whole of it. Widened out from the figure's own box
+          // until it would touch the writing or leave the window, and
+          // the mark is held to that: a logo half off the side of the
+          // screen is not a logo.
+          let most = half;
+          while (most < high * 0.62 && cx - most - 8 > 0 && cx + most + 8 < width &&
+                 clearOf(blocks, cx - most - 8, y - lift, cx + most + 8, y + high + lift)) {
+            most += 8;
+          }
+          // A figure standing in one of the margins is still beside
+          // the reading, and goes quiet the nearer it gets to it. One
+          // standing in a clearing is over nothing at all, so nothing
+          // is taken off it.
+          put = { mid: wants[w].at, tall: high, fade: wants[w].fade, room: most };
+        }
+      }
+      if (!put) continue;
       // AND WHERE EACH SPECK ACTUALLY STANDS is fixed for the life of
       // the figure (`wander`, inside `cloud`), so the crowd is always
       // wrong in the same way — a stray that re-rolled would read as a
       // fizz rather than as a shape that has not settled.
-      const body = makeBody(between(-0.22, 0.22), howMany);
-      crowd.push(Object.assign(cloud(body, y, tall, mid, wander, weight), {
-        held: 0, glitch: 0,
-        fault: fault, armPart: armPart,
-        // Its own place in the fault's clock, so two figures with the
-        // same fault never come apart on the same frame.
-        seed: Math.floor(random() * 9973),
-      }));
+      const body = makeBody(lean, howMany);
+      const figure = Object.assign(
+        cloud(body, y, put.tall, put.mid, wander, weight), {
+          held: 0, glitch: 0, fade: put.fade,
+          fault: FAULTS[crowd.length % FAULTS.length], armPart: armPart,
+          // Its own place in the fault's clock, so two figures with the
+          // same fault never come apart on the same frame.
+          seed: Math.floor(random() * 9973),
+        });
+      // And the box the mark will stand in, which is whatever is wrong
+      // with this one. Worked out once, here, rather than every frame.
+      figure.markAt = markBox(figure);
+      figure.markRoom = put.room;
+      crowd.push(figure);
     }
-
   }
-
 
   /** THE RAIN. It falls on the WINDOW rather than down the document —
       it is weather, not something standing in the writing — so it is
@@ -447,7 +615,12 @@
     }
   }
 
-  function size() {
+  /** `again` rebuilds the crowd even when nothing about the window has
+      changed — for when the WRITING has moved under it, which is what
+      a webfont arriving does. The crowd is placed against the boxes the
+      writing actually stands in, so those boxes moving matters here in
+      a way it did not when a figure simply stood in a margin. */
+  function size(again) {
     if (!canvas) return;
     // A PHONE DRAWS AT A LOWER RATIO. Every canvas here is capped at
     // two device pixels to one CSS pixel, which on a desktop is
@@ -468,7 +641,7 @@
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
     ink.setTransform(ratio, 0, 0, ratio, 0, 0);
-    if (!same) { build(); buildRain(); }
+    if (!same || again) { build(); buildRain(); }
   }
 
   let handX = -99999, handY = -99999;
@@ -577,47 +750,46 @@
       }
       figure.glitch += (wantGlitch - figure.glitch) * (step === 0 ? 1 : 0.22);
 
-      /** Whether this part of this figure is the part that is wrong. */
-      const faulty = (part) => {
-        if (figure.fault === "all") return true;
-        if (figure.fault === "head") return part === 0 || part === 1;
-        if (figure.fault === "torso") return part === 2;
-        return part === figure.armPart;
-      };
+      const faulty = (part) => isFaulty(figure, part);
       const wide = figure.tall * GLITCH_PUSH;
 
-      // AND ON ABOUT A THIRD OF THE BEATS, A HEAD GOES TO THE MARK.
-      // Rolled once per beat rather than per frame, off the beat's own
-      // number and the figure's own seed, so it holds for the whole of
-      // that second instead of flickering in and out of it — and so the
-      // same figure does not go to the logo every time.
-      const beatNo = Math.floor(Math.max(0, since) / GLITCH_CYCLE);
-      const headIsFaulty = figure.fault === "head" || figure.fault === "all";
-      const toMark = LOGO.length > 0 && headIsFaulty && figure.glitch > 0.02 &&
-        hash(7, beatNo, figure.seed + 313) < LOGO_ODDS;
-      // Where the mark stands and how big: on the head, a little wider
-      // than it, so it reads at all.
-      const markSize = figure.tall * HEAD_TALL * LOGO_BIG;
-      const markX = figure.mid * width;
-      const markY = top + figure.tall * HEAD_AT;
+      // AND WHAT IS WRONG WITH IT GOES TO THE MARK. Not the head, and
+      // not a third of the time: whichever part is faulty, every beat.
+      // This is the only place the house's logo appears on this page,
+      // so it has to be what the hand finds rather than what it might.
+      const spot = figure.markAt;
+      const toMark = LOGO.length > 0 && spot && figure.glitch > 0.02;
+      // Where the mark stands and how big — over the faulty part, and
+      // never smaller than it.
+      const markSize = spot
+        ? Math.min(figure.markRoom * 2,
+                   Math.max(spot.side * figure.tall,
+                            LOGO_DENSITY * Math.sqrt(spot.n)))
+        : 0;
+      const markX = spot ? figure.mid * width + (spot.x - 0.5) * figure.tall : 0;
+      const markY = spot ? top + spot.y * figure.tall : 0;
 
       figure.specks.forEach((one) => {
         const wander = idle === 0 ? 0 : idle *
           Math.sin((clock / one.every) * Math.PI * 2 + one.phase);
         let x = one.hx * width + one.sx * held + wander;
         let y = one.hy - down + one.sy * held + wander * 0.7;
-        let shown = one.ink * (0.78 + 0.34 * figure.home) * lit(x);
+        // A figure in a margin is beside the reading and goes quiet
+        // the nearer it gets to it; one standing in a clearing is over
+        // nothing, so nothing is taken off it.
+        let shown = one.ink * (0.78 + 0.34 * figure.home) *
+                    (figure.fade ? lit(x) : 1);
 
         // THE FAULT. A slice of the figure — a band of it a fortieth of
         // its height tall — is pushed sideways, and some slices are not
         // drawn at all. Each part keeps its own place in the clock, so
         // on the figure whose fault is "all" the head, the arms and the
         // legs come apart at different moments rather than together.
-        // THE HEAD, GONE TO THE MARK. The speck does not slip or drop
-        // — it stands somewhere on the logo instead, in its own fixed
-        // place on it, and is drawn a little more plainly so the mark
-        // is a mark rather than a smudge where a head was.
-        if (toMark && (one.part === 0 || one.part === 1)) {
+        // THE FAULTY PART, GONE TO THE MARK. The speck does not slip
+        // or drop — it stands somewhere on the logo instead, in its own
+        // fixed place on it, and is drawn a little more plainly so the
+        // mark is a mark rather than a smudge where an arm was.
+        if (toMark && faulty(one.part)) {
           const spot = LOGO[one.mark % LOGO.length];
           const held2 = figure.glitch;
           const wasX = x, wasY = y;
@@ -971,6 +1143,13 @@
 
   window.addEventListener("resize", () => { size(); reckon(); });
   window.addEventListener("scroll", reckon, { passive: true });
+  // THE CROWD IS PLACED AGAINST THE WRITING, so it has to be placed
+  // again once the writing has stopped moving: a webfont arriving can
+  // shift every block on the page without changing its height enough
+  // for `size` to notice on its own.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { size(true); reckon(); }).catch(() => {});
+  }
 
   size();
   reckon();

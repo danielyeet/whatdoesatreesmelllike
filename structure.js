@@ -512,6 +512,11 @@
       String(Math.round((stop.at.z / ROAD) * 100)).padStart(3, "0") + "% ALONG";
     marks.appendChild(mark);
     stop.mark = mark;
+    // The name alone, not the whole of the say: the line under it is
+    // only read on a hover and is much the longest of the three, and
+    // sliding the lettering by that would take the name off the other
+    // side of the window.
+    stop.say = mark.querySelector(".structure-name");
   });
 
   // The road, as something the page can actually scroll down.
@@ -581,6 +586,29 @@
   // TRAVELLING
   // ============================================================
   let width = 0, height = 0, lens = 0, midX = 0, midY = 0;
+
+  // HOW FAR OUT TO THE SIDES THE STATIONS ARE ACTUALLY DRAWN.
+  //
+  // A station is placed at a fixed distance from the middle of the
+  // frame, in the frame's own units. How much of the WINDOW that
+  // distance turns out to be depends on the lens, and the lens is taken
+  // off the SHORTER side of the window — so on a wide one a station
+  // comes out where it was drawn to, out to the side and whole, with
+  // its name under it, and on a window taller than it is wide the same
+  // station is thrown half off the edge. That is what the owner saw on
+  // a phone: "The architecture of sunscreen is not fully on screen".
+  //
+  // So they are drawn in towards the middle by however much narrower
+  // this window's own view is than a wide one's. It is a minimum with
+  // 1, and NOTHING ON A WIDE WINDOW MOVES AT ALL: 1280 x 800 works out
+  // at 1.02 and 1920 x 1080 at 1.14, and both come back as 1. A phone
+  // in the hand is 0.62 whatever size it is, since the lens and the
+  // half-width are both taken off the width there.
+  //
+  // It is a SHIFT, not a squeeze: the whole assembly moves in together,
+  // so a constellation is never drawn narrower than it was built.
+  const SIDE_REF = 0.68;       // the view a wide window has, as an angle
+  let pull = 1;
   /** The swarm's cross-section, and how many of the pool are in the air.
       Both are worked out from the window, in `resize`. */
   let spreadX = SPREAD, spreadY = SPREAD, inAir = SWARM_POOL;
@@ -613,6 +641,7 @@
     canvas.style.height = height + "px";
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
     lens = Math.min(width, height) * LENS;
+    pull = Math.min(1, ((width / 2) / lens) / SIDE_REF);
 
     // HOW MANY, AND WHAT SHAPE — both off the window. The spreads are
     // the square cross-section stretched to the page's aspect ratio,
@@ -848,10 +877,13 @@
       thing being opened out, not one thing being swapped for another. */
   function drawAssembly(thing, strength, accent, lay) {
     const put = [];
+    // Drawn in towards the middle on a window too narrow to hold it out
+    // at the side — see `pull`. Nought on a wide one.
+    const aside = thing.at ? thing.at.x * (pull - 1) : 0;
     for (const node of thing.nodes) {
       const wob = REDUCE_MOTION ? 0 : WOBBLE * 1.6;
       const p = to(
-        node.x + Math.sin(clock * node.rate + node.phase) * wob,
+        node.x + aside + Math.sin(clock * node.rate + node.phase) * wob,
         node.y + Math.cos(clock * node.rate * 0.7 + node.phase) * wob,
         node.z
       );
@@ -995,6 +1027,8 @@
   /** One station: its figure, the marks that say it can be opened, and
       the link laid over it. `lay` is only passed for the one that has
       been opened — see THE SET-OUT below. */
+  const SAY_EDGE = 12;         // the air a station's name keeps from the window's side
+
   function drawStop(stop, strength, ranged, lay) {
     const box = drawAssembly(stop, strength, true, lay);
     if (!box) { stop.mark.classList.add("gone"); return; }
@@ -1080,6 +1114,24 @@
     stop.mark.style.height = (foot - top).toFixed(1) + "px";
     stop.mark.style.opacity = (0.28 + strength * 0.72).toFixed(3);
     stop.mark.classList.toggle("close", strength > 0.55);
+
+    // AND THE LETTERING IS KEPT ON THE WINDOW. The station's name hangs
+    // off the bottom left corner of its bracket and does not wrap, so a
+    // station standing out to the right writes its name off the side of
+    // the screen — which on a phone is most of them, and is what the
+    // owner saw: "The architecture of sunscreen is not fully on screen".
+    // It is slid back along by exactly how far it is over, and never
+    // the other way, so on a wide window nothing moves at all.
+    //
+    // Its width is measured ONCE, the first time the station is drawn,
+    // and thrown away on a resize or when the webfont lands: reading
+    // `offsetWidth` in a frame forces the browser to lay the page out
+    // again, and this runs sixty times a second.
+    if (!stop.sayWide) stop.sayWide = stop.say.offsetWidth;
+    const over = Math.min(0, width - SAY_EDGE - (left + stop.sayWide));
+    const under = Math.max(0, SAY_EDGE - left);
+    stop.mark.style.setProperty("--say-shift",
+      (over + under).toFixed(1) + "px");
   }
 
   function drawStops(nearest) {
@@ -1485,7 +1537,13 @@
     if (opening && Math.abs(window.scrollY - heldScroll) > 12) closeStation();
     fromScroll();
   }, { passive: true });
-  window.addEventListener("resize", () => { resize(); fromScroll(); });
+  /** The names have to be measured again when the type they are set in
+      changes under them, or when the window does. */
+  function forgetSays() { stops.forEach((stop) => { stop.sayWide = 0; }); }
+  window.addEventListener("resize", () => { resize(); forgetSays(); fromScroll(); });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(forgetSays).catch(() => {});
+  }
 
   resize();
   fromScroll();

@@ -4,7 +4,13 @@ Date: 2026-09-21
 
 Files touched: `node-scene.js`, `structure.js`, `chamber.js`, `contact-sheet.js`,
 `almost-human.js`, `pineward.js`, `adar.js`, `essay.js`, `index-page.js`, `paper.js`,
-`find-ground.js`, `style.css`, `tests/mobile.spec.js`.
+`find-ground.js`, `style.css`, `tests/mobile.spec.js` — and in the second round
+`works/almost-human.html` as well.
+
+**There are two rounds in this report.** The first made the site *run* on a phone. The
+second, below under "The second pass", is the owner going through it on their own phone
+and photographing what was actually wrong with how it *looked* — six things, all of them
+something printed over something else.
 
 ## What changed
 
@@ -84,6 +90,137 @@ nothing to the right of it.
 Below 700px it is held to the picture's own width and allowed to wrap. On a wide window it
 stays one line, which is the whole point of it.
 
+## The second pass
+
+The owner read the site on their own phone and sent four photographs. Every one of them was
+the same kind of fault in a different place — **something printed over something else** —
+and none of it was anything the first round measured, because the first round measured
+whether the drawings ran and whether the page could be dragged sideways. It could not see a
+word standing inside a paragraph.
+
+### The chrome needed a ground of its own
+
+`Menu` is fixed to the top left of the window and the page travels underneath it. On a wide
+window there is nothing up there to travel past; on a phone the writing reaches the top
+corner, and the owner photographed the word printed straight through a paragraph,
+unreadable.
+
+So below 700px the word gets **a box no bigger than itself, blurring what is behind it**.
+Two things about how:
+
+- **The ground is the page's own**, not a colour picked for the box. `--chrome-ground` is
+  the paper on a light page and near-black on the five drawn on a dark one, so the box is
+  never a patch of the wrong colour on a page it does not belong to.
+- **The word itself does not move**: the padding is taken back out of `left`, so the
+  lettering stands where it stood. Nothing above 700px has a box at all.
+
+**And it goes when the menu is open**, because the word stands on the overlay's own black
+there and is lettered light — a pale box under it would hide it rather than help.
+
+The same box went on three more things that are fixed to the window while the page travels
+under them: the contact sheet's two view buttons and its search, and the readings in the
+corner of the three house pages (`00 / 47 · INTRODUCTION`, which was printed through the
+introduction).
+
+### The sheet was drawn over its own chrome
+
+Giving the buttons a ground was not enough on the contact sheet, because a picture there
+carries a `z-index` worked out from how far back it stands — 1000 at the front of the
+volume — and the chrome stands at 30. The nearest pictures were being drawn straight over
+the buttons, box and all, and `Houses` was printed inside a photograph. Below 700px the
+chrome is raised above them. On a wide window the sheet never passes under it and nothing
+here applies.
+
+### And the sheet was drawn over itself
+
+The grid the pictures are placed on cannot overlap: each one is inside its own square and
+the room its caption needs is counted into the row. **The depth can.** A picture standing
+far back is drawn smaller and nearer the vanishing point, and on a sheet two columns wide —
+which is what a phone gets — that pull is most of a column, so a deep picture from a low row
+lands on top of a shallow one from a high one. Measured: **five pairs of pictures printed
+over each other at 390px, none at 1280**.
+
+A picture that would land on one already placed is **stood nearer**, a step at a time, until
+it is clear. At depth nought it is back in its own square where nothing can reach it, so it
+always finishes. What counts as a clash is a real overlap rather than a touch (`TOUCH`),
+which is what keeps this from moving a picture on a wide window to fix something nobody can
+see: **measured at 1280, every picture on the sheet stands on exactly the pixel it did**.
+
+### A station wrote its name off the side of the screen
+
+The owner: *"The architecture if sunscreen is not fully on screen on the phone version"*.
+Two separate faults, and both are fixed:
+
+- **The lettering.** A station's name hangs off the bottom left corner of its bracket and
+  does not wrap, so a station out to the right writes its name off the edge. It is slid back
+  along by exactly how far it is over, and never the other way. Its width is measured once
+  and thrown away on a resize or when the webfont lands — reading `offsetWidth` in a frame
+  forces the browser to lay the page out again, and that runs sixty times a second. It is
+  the **name** that is measured, not the whole say: the line under it is only read on a
+  hover and is much the longest of the three, and sliding by that put the name off the
+  *other* side of the window. That was the first go, and the screenshot of it reads
+  "of Sunscreen".
+- **The station itself.** It is placed at a fixed distance from the middle of the frame in
+  the frame's own units, and how much of the window that is depends on the lens — which is
+  taken off the *shorter* side. On a wide window a station comes out where it was drawn to;
+  on a window taller than it is wide the same station is thrown half off the edge. They are
+  drawn in towards the middle by however much narrower this window's view is than a wide
+  one's (`pull`), as a **shift rather than a squeeze**, so a constellation is never drawn
+  narrower than it was built. It is a minimum with 1 and **nothing on a wide window moves**:
+  1280 × 800 works out at 1.02 and 1920 × 1080 at 1.14, and both come back as 1.
+
+### A table wrote one column through the next
+
+On the Explorations & Researches index a cell is `max-width: 0` with an ellipsis, so a long
+name is cut rather than allowed to widen the table. The **anchor inside it** is a block of
+its own, and a block inside a clipped cell simply overflows it — so the rows that had a page
+behind them printed their name straight through the column beside it, and the rows that did
+not ellipsised properly. The owner photographed `Resins` written over `RESEARCH`. The link
+is clamped the same way the cell is.
+
+And the three readings either side of the name are set to a width each, which on a 390px
+screen is three quarters of the table — eighty pixels to name a fragrance in. They are
+smaller and tighter below 700px, and the name gets what they give up.
+
+### Pineward had no wood at all
+
+The wood stands in the two strips between the reading gutter and the writing's column. On a
+phone the writing takes the whole width, so both strips come out narrower than a tree and
+**this page had no wood on it whatever** below about a thousand pixels across.
+
+The owner asked for one of the trees on the phone too and marked where: the top right of
+the head, in the clear band above the piece's own kicker. When there is no strip, one tree
+stands there — grown by the same `treeAt`, blooming under the hand like any other
+(measured: 2,727 pixels of ink at rest, 4,945 under the pointer, 2,728 when it goes). The
+page is asked where its writing starts rather than told, and the tree's lowest branches have
+to droop clear of it or it is not drawn.
+
+Two of the wood's own rules are turned off for it, and for a reason: **quietening across the
+middle of the page** exists to keep the wood off the writing, and a tree in an empty band has
+no writing beside it; and the **fade at the window's top edge** exists so a tree straddling
+the edge is not seen sliced, which at `EDGE_FADE`'s 130px would have half-drawn a tree
+standing exactly where it was asked to stand. `ONE_FADE` is 70.
+
+### The chamber jumped when a chapter was opened
+
+*"there is a tiny jump of the page. Asides from that its perfect, so just fix the little
+jump."* It was 185 pixels, in one frame, and it was one word of CSS.
+
+`transition` is a single property. `.favorites-page.bursting .chamber-plate` wrote a new one
+for the fade, which **replaced** the `transform` transition the plate carries — and the
+plate's transform is what `--menu-lift` rides on, how far it stands above the middle so the
+word and the menu are centred together. Opening a chapter closes the menu, which writes a new
+lift on the same frame that class lands, so with the transform transition gone the plate
+snapped down the whole height of the menu, in full view, before any of the burst had begun.
+Both transitions are named there now. Measured: the one-frame jump of 185px is gone and the
+largest step in the same stretch is 3px, which is the ease.
+
+### Almost Human's crowd stopped standing on things
+
+Not a phone fix in origin — the owner asked for the crowd not to be put over anything — but
+it is the same fault and it shows on a phone. Written up in [the Almost Human
+report](2026-09-20-almost-human.md).
+
 ## How to test it
 
 ```bash
@@ -101,6 +238,15 @@ fault**:
 - **`a tap brings a figure home`** — with `pointerdown` removed the ink width reads
   78 → 78, which is a tap doing nothing.
 
+**The tap test had to be re-aimed in the second round**, and the reason is worth keeping.
+It used to look for the figure down the left margin, because that is where one stood; a
+phone has no margins now, so the crowd stands in the clearing the page makes for it and a
+figure can be anywhere across the width. It also has to measure in **a box wider than the
+figure's cloud** — the old 150px box read its own width whatever the figure did (141 → 138
+with the figure plainly coming home inside it), because the cloud is wider than that and
+the box was saturated. At 300px it reads **185 → 153 with the tap, and 185 → 187 with no
+tap at all**, waiting exactly as long.
+
 By hand, the thing worth doing is the one the tests cannot: open each page at a phone's
 size and **drag a finger down it**. The drawings answer a drag the way a desktop answers a
 pointer, and that is most of what these pages are.
@@ -111,11 +257,13 @@ pointer, and that is most of what these pages are.
   structure's card and the crowd's resolving all answer a finger now, but they are
   discovered by dragging rather than by pointing, and nothing on a phone tells you to
   drag.
-- **The reading in the corner of a house page can overlap the picture** at the head of it
-  on a narrow window. It is fixed to the window and the picture is in the flow.
 - **The three drawn category pages are not re-laid-out for a phone**, only made to run on
-  one. The contact sheet in particular is a tall single file of pictures at that width
-  rather than a scatter, which is the honest thing for it to be, but it was not designed
-  that way.
+  one and then made not to overlap. The contact sheet in particular is a tall single file
+  of pictures at that width rather than a scatter, which is the honest thing for it to be,
+  but it was not designed that way.
+- **The chrome's boxes are not on the pages' own searches.** `.page-find` on the theories,
+  favourites and photography pages is the same fixed mark in the same corner and has the
+  same problem; it stands over a drawing rather than over writing on all three, which is
+  why it has not been done.
 - 37 frames a second on the map is playable rather than smooth. The next thing to try
   there is fewer wake specks on a narrow window.

@@ -185,6 +185,38 @@ for it gone; it was removed outright rather than left switched off, so there is 
   wide, shallow vignette over a near-black ground comes out in visible steps, and
   something uneven laid over it is what breaks them.
 
+## On a window taller than it is wide
+
+A station is placed at a fixed distance from the middle of the frame, in the frame's own
+units, and **how much of the window that distance turns out to be depends on the lens —
+which is taken off the SHORTER side**. On a wide window a station comes out where it was
+drawn to: out to the side, whole, with its name under it. On a window taller than it is
+wide the same station is thrown half off the edge. The owner saw it on a phone: *"The
+architecture if sunscreen is not fully on screen on the phone version"*.
+
+Two things were wrong there, and they are separate:
+
+- **The station.** They are drawn in towards the middle by however much narrower this
+  window's own view is than a wide one's (`pull`, `SIDE_REF`), and it is a **shift rather
+  than a squeeze** — the whole assembly moves in together, so a constellation is never
+  drawn narrower than it was built. It is a minimum with 1, and **nothing on a wide window
+  moves at all**: 1280 × 800 works out at 1.02 and 1920 × 1080 at 1.14, and both come back
+  as 1. A phone in the hand is 0.62 whatever size it is, since the lens and the half-width
+  are both taken off the width there.
+- **The lettering.** The name hangs off the bottom left corner of the bracket and does not
+  wrap, so it is slid back along by exactly how far it is over the edge, and never the
+  other way (`--say-shift`, set every frame; `SAY_EDGE`). Its width is measured **once**,
+  the first time the station is drawn, and thrown away on a resize or when the webfont
+  lands: reading `offsetWidth` in a frame forces the browser to lay the page out again, and
+  this runs sixty times a second.
+
+**It is the NAME that is measured, not the whole say.** The line under it is only ever read
+on a hover and is much the longest of the three, and sliding the lettering by that width
+put the name off the *other* side of the window — the first go printed "of Sunscreen". Each
+line in the say is its own width now (`width: max-content`) so the name can be asked how
+wide it is without being told how wide the line under it is, and below 860px that line
+wraps rather than running off the side.
+
 ## How to test it
 
 ```bash

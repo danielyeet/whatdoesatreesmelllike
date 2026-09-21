@@ -77,6 +77,24 @@
   const TREE_GAP = [46, 140];  // and the clear air between it and the next one down
   const TREE_SPREAD = 0.5;     // how wide it may get, against the strip it stands in
   const EDGE_FADE = 130;       // how far from the window's top and foot the wood fades out
+
+  // --- AND THE ONE TREE THAT STANDS WHERE THERE ARE NO STRIPS
+  //
+  // A PHONE HAS NO STRIPS AT ALL. The writing takes the whole width of
+  // the window there, the gutters take what is left, and both bands
+  // come out narrower than a tree — so this page had no wood on it
+  // whatever below about a thousand pixels across. The owner asked for
+  // one of the trees on the phone too and marked where they wanted it:
+  // the top right of the head, in the clear band above the piece's own
+  // kicker. So that is where it goes. One tree, standing in the only
+  // room the page actually has, and answering the hand exactly as the
+  // wood does on a wide window — it is the same tree, grown by the same
+  // `treeAt`, not a picture of one.
+  const ONE_TALL = [96, 132];  // how tall it is
+  const ONE_ROOF = 64;         // how far below the top of the page its crown may come
+  const ONE_CLEAR = 18;        // the air it leaves above the kicker
+  const ONE_WIDE = 0.5;        // how wide it gets, against its own height
+  const ONE_FADE = 70;         // and how near the window's edge it may come before fading
   const WHORLS = [9, 15];      // how many rounds of branches one carries
   const BRANCH_OUT = [0.34, 0.86]; // how far out a branch reaches, against its tree
   const BRANCH_DROOP = 0.42;   // and how far it falls as it goes
@@ -133,8 +151,7 @@
 
 
   // --- the parts arriving
-  const RISE_MS = 620;         // how long one takes to come up
-  const RISE_STEP = 45;        // and the pause between two that arrive together
+  const RISE_STEP = 45;        // the pause between two that arrive together
   const OPEN_MS = 760;        // how long a part takes to open
   const SHUT_MS = 620;        // and to close, which is a little quicker
   // A gentle curve, flat at both ends — the same shape the chamber's
@@ -288,9 +305,11 @@
     // it impossible for two of them to grow through one another, and
     // keeping the walk inside PAGE_PAD is what stops one hanging off
     // the top or the foot of the page.
+    let standing = 0;
     bands.forEach((band, side) => {
       const room = band.to - band.from;
       if (room < BAND_MIN) return;
+      standing++;
       let y = PAGE_PAD + (side ? between(TREE_GAP) : 0);
       let guard = 0;
       while (y < tall - PAGE_PAD && guard++ < 600) {
@@ -308,6 +327,30 @@
         y = foot + droopRoom + between(TREE_GAP);
       }
     });
+    // NO STRIPS AT ALL — a phone. One tree in the head's own clearing,
+    // top right, where the owner marked it. See ONE_* above. It is
+    // grown last so that nothing else has to know about it, and the
+    // page is asked where its writing starts rather than told.
+    let clearing = false;
+    if (!standing) {
+      const first = document.querySelector(".pine-kicker");
+      const roof = first
+        ? first.getBoundingClientRect().top + (window.scrollY || 0)
+        : window.innerHeight * 0.26;
+      const room = roof - ONE_CLEAR - ONE_ROOF;
+      const high = Math.min(between(ONE_TALL), room / 1.34);
+      const spread = Math.min(wide * 0.3, high * ONE_WIDE);
+      const foot = ONE_ROOF + high;
+      // The lowest branches droop below the foot, and the whole of that
+      // has to stay clear of the writing — a tree hanging into the
+      // kicker is the one thing this must not do.
+      if (high >= ONE_TALL[0] * 0.6 &&
+          foot + spread * BRANCH_DROOP * 1.4 <= roof - ONE_CLEAR) {
+        treeAt(wide - GUTTER_RIGHT - spread, foot, high, spread, specks, runs);
+        clearing = true;
+      }
+    }
+
     // Bucketed by where they stand down the page, so that drawing only
     // what is on the screen is a lookup rather than a search through
     // every speck in the wood.
@@ -323,7 +366,8 @@
       if (!rows.has(row)) rows.set(row, { specks: [], runs: [] });
       rows.get(row).runs.push(one);
     });
-    wood = { rows: rows, ROW: ROW, wide: wide, tall: tall, reach: 0 };
+    wood = { rows: rows, ROW: ROW, wide: wide, tall: tall, reach: 0,
+             clearing: clearing };
     wood.reach = specks.reduce((m, one) => Math.max(m, one.at), 1);
   }
 
@@ -373,10 +417,20 @@
         page. Faded, a tree dissolves into the margin instead, and
         nothing is ever seen sliced. */
     const lit = (x, y) => {
-      const off = Math.min(1, Math.abs(x - wide / 2) / (wide * CLEAR_MID));
-      const across = 0.04 + 0.96 * off * off;
+      // THE ONE TREE IN A CLEARING IS NOT QUIETENED ACROSS THE PAGE.
+      // Both of these rules exist to keep the wood off the writing, and
+      // a tree standing in the head's own empty band has no writing
+      // beside it to keep off — quietened by the middle it would be a
+      // half-drawn tree for no reason, and cut back at the window's top
+      // edge it would be a half-drawn tree standing exactly where it
+      // was asked to stand.
+      const across = wood.clearing
+        ? 1
+        : 0.04 + 0.96 * Math.pow(
+            Math.min(1, Math.abs(x - wide / 2) / (wide * CLEAR_MID)), 2);
       if (y === undefined) return across;
-      const edge = Math.min(y, tall - y) / EDGE_FADE;
+      const edge = Math.min(y, tall - y) /
+                   (wood.clearing ? ONE_FADE : EDGE_FADE);
       return across * Math.max(0, Math.min(1, edge));
     };
 

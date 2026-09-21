@@ -71,8 +71,10 @@ Almost Human's two are in a `house-web/` folder inside the house's own rather th
 the original — the same arrangement Pineward's gallery uses, and the better one now there
 is more than one copy to keep. **The mark is the one picture on the site that is not
 served as it was given**: the owner's file is black on pure white and the copy is black on
-**transparent**, because the page it stands on is `#fafaf9` and a white square shows
-against that. The reasoning, and what was tried first, is in [Almost
+**transparent**, because the page it was printed on is `#fafaf9` and a white square shows
+against that. It is not printed on any page now — it is only ever drawn by the crowd's
+glitch, which reads the same file, and the transparency is what makes the ring's inside
+not a place a speck may stand. The reasoning, and what was tried first, is in [Almost
 Human's report](2026-09-20-almost-human.md).
 
 **The originals are kept and nothing points at them.** The copies exist because the full

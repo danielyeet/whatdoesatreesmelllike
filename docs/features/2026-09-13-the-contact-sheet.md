@@ -302,6 +302,30 @@ What has come back is the *pair of buttons*, with different names over different
 If the owner says "Favorites view" or "Description portfolio", they mean the removed
 one.
 
+## Nothing is drawn over anything else
+
+**The grid the places come off cannot overlap.** Every picture is inside its own square,
+and the room its caption needs is counted into the row rather than guessed at afterwards.
+
+**The depth can, and on a narrow window it did.** A picture standing far back is drawn
+smaller and nearer the vanishing point; on a sheet only two columns wide — which is what a
+phone gets — that pull is most of a column, so a deep picture from a low row lands on top of
+a shallow one from a high one. Measured: **five pairs of pictures printed over each other at
+390px, and none at 1280**.
+
+So a picture that would land on something already placed is **stood nearer**, one depth step
+at a time, until it is clear. At depth nought it is back in its own square, where nothing
+can reach it, so this always finishes. It costs some of the volume where there is no room
+for it and nothing at all where there is.
+
+**What counts as a clash is a real overlap, not a touch** (`TOUCH`), and that is what keeps
+this from moving a picture on a wide window to fix something nobody can see. Two pictures
+whose edges meet by a pixel are side by side. Measured at 1280 with and without the pass:
+every picture on the sheet stands on exactly the pixel it did.
+
+The middle window is in the list the pass checks against, so nothing is ever projected on
+to the plate either.
+
 ## How to test it
 
 ```bash
@@ -532,7 +556,8 @@ Every picture but the middle window is given a depth of its own and then **proje
 What is further back is drawn smaller, fainter and nearer the vanishing point — which is
 the middle window's own middle, since the plate stands at the front of the volume — and
 what is in front of it is drawn over it (`zIndex` from the depth, `--depth` on the frame
-for the stylesheet to fade by). `DEPTH_MAX`, `FOCAL` and `DEPTH_FADE`.
+for the stylesheet to fade by). `DEPTH_MAX` and `FOCAL` in the script; the fading
+itself is `--depth` in the stylesheet, so there is no `DEPTH_FADE` here any more.
 
 **The projection is done in the script, not with a CSS `perspective`, and that is the
 whole reason it works.** The lines between the pictures are drawn on a canvas from the

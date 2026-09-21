@@ -2,7 +2,7 @@
 
 Date: 2026-09-20
 
-Files: `almost-human.js` (~990 lines), `works/almost-human.html`, the `human-*` block in
+Files: `almost-human.js` (~1,170 lines), `works/almost-human.html`, the `human-*` block in
 `style.css`, `images/Almost-Human/`, `tests/almost-human.spec.js`; and the three places a
 new house has to be added — the frame and the Fragrances row in
 `categories/scent-descriptions.html`, the `PAGES` line in `search-page.js`, and ADAR's
@@ -22,7 +22,7 @@ ground, and there is now one per house:
 |---|---|
 | [Pineward](2026-09-16-pineward.md) | a **wood**, conifers down both margins |
 | [ADAR](2026-09-17-adar.md) | a **void**, a hole with soundings ringing out of it |
-| Almost Human | a **crowd**, people standing down both margins |
+| Almost Human | a **crowd**, people standing in whatever room the page leaves |
 
 ## The crowd, and why the house's name is the drawing's behaviour
 
@@ -169,21 +169,22 @@ it is eased towards rather than set, so it arrives and departs at a pace.
 - **The stray has to be a share of the figure's height, not a number of pixels.** At a
   fixed 26px it was a soft edge on a tall figure and a shapeless cloud on a short one.
 
-## Where the figures stand
+## Going quiet over the reading
 
-In the margins the writing leaves, and the page's own measure decides where that is: the
-head, the introduction and the parts are all one column `COLUMN` (940px) wide — the same
-number `style.css` keeps — so what is left either side of it is where a figure belongs.
-On a window too narrow to have margins they stand near the edges instead and `lit()`
-takes them down to a twentieth over the reading.
-
-`lit()` asks about the **column**, not about a share of the window, so the quiet band is
-exactly where the reading is however wide the window happens to be — **above the column**.
-Below it there is no room either side to take out, and that used to mean the quiet band
-covered the whole page and the entire drawing was rendered at a twentieth: on a phone this
-page had no ground at all. There is a floor now, and it is a ternary rather than a
-`Math.max` so a wide window is untouched. See [the phone
+`lit()` is what keeps the drawing off the writing where the two share a line of the page.
+It asks about the **column** — the head, the introduction and the parts are all one
+`COLUMN` (940px) wide, the same number `style.css` keeps — rather than about a share of the
+window, so the quiet band is exactly where the reading is however wide the window happens
+to be. Below the column there is no room either side to take out, and that used to mean the
+quiet band covered the whole page and the entire drawing was rendered at a twentieth: on a
+phone this page had no ground at all. There is a floor now, and it is a ternary rather than
+a `Math.max` so a wide window is untouched. See [the phone
 report](2026-09-21-the-site-on-a-phone.md).
+
+**The rain is asked about it, and so is a figure standing in one of the margins. A figure
+standing in a clearing is not** — it is not over the writing to begin with, and fading it
+there would be a drawing dimmed for a reason that is not true. Where a figure is allowed to
+stand at all is below, under "Where the figures stand, and what they may not stand on".
 
 ## The rank
 
@@ -209,64 +210,124 @@ Pineward has its green and ADAR its silver. This one is ink on the site's own pa
 untinted, and what it spends instead is **density**. It is the second page on the site to
 spend none, after the chamber. There is a test.
 
-## The house's mark, in the glitch
+## The house's mark, shown by the hand
 
-The owner sent their logo and asked for it to be part of what goes wrong with a figure:
-*"maybe make 1/3 of the glitches of the guys face be replaced with the logo or
-something"*. So on about a third of the beats, a figure whose **head** is the faulty part
-loses its face and the specks that were the head stand as the mark instead — which is the
-house's name said one more way: the thing that is almost a person, and then for a second
-is a brand.
+**It is not printed anywhere on this page any more.** It stood at the head of the piece
+for a round; the owner asked for it to be *"a hover-to-display thing, similarly to adar"*
+— ADAR's mark is drawn inside the void under the pointer and nowhere else — and for the
+glitch itself to be what shows it: *"when you hover them, they glitch out and the
+glitching part of them is replaced or glitched into the logo itself."*
 
-Four things about how it is done:
+So the only place the logo appears is in the crowd. Hold a figure together, it starts to
+fail, and **whatever part of it is faulty stands as the mark for the beat**: a head that
+comes apart in slices comes apart into the mark, a torso that slips slips into it, and the
+figure whose fault is all of it goes to the mark entire. It is the house's name said one
+more way — the thing that is almost a person, and then for a second is a brand.
+
+It used to be **a third of the beats, and only on a figure whose head was the faulty
+part**. That was right while the logo also stood at the head of the page: the mark was
+already there to be seen, and the glitch was a second sighting of it. It is not right now
+that this is the only place it appears — a mark you might see on one figure in six is a
+mark nobody finds. It is **every beat, and whatever part is wrong**.
+
+Five things about how it is done:
 
 - **The mark is read off the owner's own file** rather than drawn here from a guess at its
   geometry. The image goes on a small offscreen canvas once, every dark pixel becomes a
   place a speck may stand, and the list is shuffled and capped. It is their logo, so it
-  should be their logo. Until the file has arrived the list is empty and a head simply
+  should be their logo. Until the file has arrived the list is empty and a part simply
   glitches the way it always did — which is the whole of the guard this needs.
-- **It is the same file the head of the page shows** — `house-web/ah-logo.webp`, an 800px
-  copy of their `AH_Logo_Black.jpg` — so the mark is fetched once and used twice. The
-  original is 3125px square; this is read on a 116 grid, so 800 is far more than enough.
-- **The roll is once per beat**, off the beat's own number and the figure's own seed, so
-  the mark holds for the whole of that second instead of flickering in and out of it, and
-  so the same figure does not go to the logo every time.
-- **It is drawn bigger than the head and two pixels a speck.** A head is about 150 specks;
-  at the head's own size, strung round a ring, that is a smudge. At `LOGO_BIG` 2.1 and two
-  pixels each they nearly touch and the ring reads.
-- The specks **travel to it** on the same `glitch` the rest of the fault uses, so the face
-  comes apart into the mark rather than being swapped for it.
+- **A speck knows which part of a person it is**, and so does the mark. `markBox` takes the
+  parts that are faulty, works out the box they stand in from the figure's own specks, and
+  the mark is drawn over that. Off the specks rather than out of `BODY`, because by the
+  time a figure is built its lean has already swung the arms and legs, and a capsule's
+  radius is not in its two end points.
+- **How big it is drawn is asked of HOW MANY SPECKS THERE ARE**, not of the part they came
+  from. An arm is ninety specks and a whole figure is nine hundred; strung round the same
+  ring the first is a scatter and the second is a blot. The ring is sized to keep the
+  density about the same — `LOGO_DENSITY` times the square root of the count — and then
+  never drawn smaller than the part it replaces, or the mark sits inside a figure instead
+  of standing where part of one was.
+- **And never wider than the room the figure has.** The mark is square and stands on the
+  part, so it is wider than the person is — widest of all on the one whose fault is the
+  whole of it. It is widened out from the figure's own box when the crowd is built, until
+  it would touch the writing or leave the window, and held to that: a logo half off the
+  side of the screen is not a logo.
+- The specks **travel to it** on the same `glitch` the rest of the fault uses, so the part
+  comes apart into the mark rather than being swapped for it. It is drawn two pixels a
+  speck and a little more plainly (`LOGO_INK`), so the ring reads as a ring.
 
-## The mark at the head, and the photograph on the sheet
+`LOGO_ODDS`, `LOGO_BIG`, `HEAD_AT` and `HEAD_TALL` went with the old behaviour, and so did
+the `figure.human-mark` block at the head of the page and its `.human-mark` styles.
 
-**The two pictures changed places.** The owner's photograph, `This one`, stood at the head
-of this page for a round; they asked for it to be *"used on the page SD"* instead — it is
-this house's picture on the contact sheet now, the third frame in
-`categories/scent-descriptions.html`, which had been the hatch until then. The original
-(5152 × 7728 and 4.2MB) is far too big to send to a browser, so what is loaded there is
-the 1600px copy in `house-web/` — the same arrangement Pineward's gallery uses. That frame
-is square and the picture is portrait, so it is cropped to its middle, which is where the
-bottle stands.
+## Where the figures stand, and what they may not stand on
 
-**The house's mark stands at the head of this page in its place** (`figure.human-mark`),
-at 168px — a mark's size rather than a picture's — and with no border, because a rule
-drawn round a logo reads as a box somebody forgot to take off.
+**The owner asked for the crowd not to be put over anything on the page.** So a figure
+stands in the room the page actually leaves — and the page is ASKED where that is rather
+than told. Every block of writing on it is measured (`readContent`), and a figure is only
+put somewhere its whole box — its specks, its stray and a little air — misses every one of
+them (`clearOf`).
 
-**The file has no ground of its own**, and that is the one thing about it worth knowing.
-The owner's logo is a JPEG, black on pure `#ffffff`, and this page's paper is `#fafaf9` —
-dropped in as it comes, the mark is a white square standing a shade brighter than the
-page, which is exactly what it looked like the first time. A `mix-blend-mode: multiply`
-was tried and **does nothing here**: the header makes a stacking context of its own, so
-there is no backdrop inside it to multiply against, and the image is drawn unchanged
-(measured: `#ffffff` inside the box against `#fafaf9` outside it). So `ah-logo.webp` is
-black on **transparent**, made from their file, and the page's own paper stands behind the
-ring.
+Two kinds of place, and which is tried first is the whole of the difference between a wide
+window and a phone:
 
-`almost-human.js` reads that same transparent file for the glitch, and needed no change
-for it: the sampler already skipped any pixel with an alpha under 40, so the ring's inside
-is simply not a place a speck may stand. Read off a 116 grid it gives 6,435 places where
-the opaque original gave 6,012 — the difference is the ring's anti-aliased edge, and only
-900 of them are kept anyway.
+| | |
+|---|---|
+| **the margins** | left and right alternately, each a little way in or out of its own margin so the two columns are not a pair of railings. Where the crowd has always stood, and where it still is on a wide window. |
+| **the clearing** | out in the page itself. On a window with margins that would be over the writing; on one without, it is the only room there is. |
+
+The first place that misses every block is where the figure goes. If none does it is tried
+once more at two thirds the size, and then given up on. **A place is never taken because it
+happens to be empty on this scroll** — the whole page is checked at once, in document
+space.
+
+**A figure in a margin still goes quiet the nearer it gets to the reading** (`lit`), which
+is what it always did. **One standing in a clearing is over nothing at all, so nothing is
+taken off it**: faded there it would be a drawing dimmed for a reason that is not true.
+
+### And the page makes a clearing on purpose
+
+The writing here is a 940px column with 64px of padding either side, so below about eleven
+hundred across there is **no margin left to stand a person in** — and on a phone there is
+nothing like one. The page carries an empty band before the introduction for exactly that
+(`.human-gap`), sized in the stylesheet and worth nothing above 1111px, where the margins
+are there and an empty band would only push the writing down. It is the answer to the
+owner's *"If there are none, make before the introduction"*, and it is where the mark
+stood before it went into the hand.
+
+**The crowd is placed against the writing, so it is placed again once the writing has
+stopped moving**: a webfont arriving can shift every block on the page without changing its
+height enough for `size` to notice on its own, so `document.fonts.ready` rebuilds it.
+
+## The two pictures, and what became of them
+
+**They changed places, and then one of them left the page altogether.** The owner's
+photograph, `This one`, stood at the head of this page for a round; they asked for it to be
+*"used on the page SD"* instead — it is this house's picture on the contact sheet now, the
+third frame in `categories/scent-descriptions.html`, which had been the hatch until then.
+The original (5152 × 7728 and 4.2MB) is far too big to send to a browser, so what is loaded
+there is the 1600px copy in `house-web/` — the same arrangement Pineward's gallery uses.
+That frame is square and the picture is portrait, so it is cropped to its middle, which is
+where the bottle stands.
+
+**The house's mark took its place at the head of this page, and has since gone into the
+hand.** There is no `figure.human-mark` and no `.human-mark` in the stylesheet any more:
+the head of the page is its kicker, its name and its standfirst, and then the clearing the
+crowd stands in. See "The house's mark, shown by the hand" above.
+
+**The file has no ground of its own**, and that is still the one thing about it worth
+knowing, because `almost-human.js` reads it for the glitch. The owner's logo is a JPEG,
+black on pure `#ffffff`, and this page's paper is `#fafaf9` — dropped in as it came, the
+mark was a white square standing a shade brighter than the page, which is exactly what it
+looked like the first time. A `mix-blend-mode: multiply` was tried and **did nothing**: the
+header made a stacking context of its own, so there was no backdrop inside it to multiply
+against, and the image was drawn unchanged (measured: `#ffffff` inside the box against
+`#fafaf9` outside it). So `ah-logo.webp` is black on **transparent**, made from their file.
+
+The sampler wants that anyway: it skips any pixel with an alpha under 40, so the ring's
+inside is simply not a place a speck may stand. Read off a 116 grid the transparent file
+gives 6,435 places where the opaque original gave 6,012 — the difference is the ring's
+anti-aliased edge, and only 900 of them are kept.
 
 **All five are written now**, and the introduction and the standfirst with them, in the
 owner's own words. The house's second line is theirs as well: *Abstraction done quite
@@ -302,7 +363,8 @@ npm test -- tests/almost-human.spec.js
 ```
 
 Fourteen tests: the five being really five and numbered in the markup; a fragrance being
-a title until it is opened; the crowd being drawn and keeping out of the writing's column;
+a title until it is opened; the crowd being drawn and keeping out of the writing's column
+(which it now does by never being put there at all, rather than by being faded once it is);
 the rank filling from the first pixel and finishing full; no accent colour anywhere; the
 crowd standing still under `prefers-reduced-motion`; all of the writing being there with
 the script blocked; and the five below.
@@ -364,10 +426,16 @@ Put the pointer on a figure and take it away again. That is the page.
 ## Known issues / TODO
 
 - **No photograph per fragrance yet.** The house's own two pictures are in —
-  `house-web/ah-logo.webp` at the head of this page, and `this-one.webp` on the contact
-  sheet — but `images/Almost-Human/` holds no `burning-bridges.jpg` and none of the other
-  four the README names. The page's own answer — take the `<img>` off, leave the hatch —
-  is what is showing, and there is a test for it.
+  `house-web/ah-logo.webp`, which is now only ever drawn in the glitch, and `this-one.webp`
+  on the contact sheet — but `images/Almost-Human/` holds no `burning-bridges.jpg` and none
+  of the other four the README names. The page's own answer — take the `<img>` off, leave
+  the hatch — is what is showing, and there is a test for it.
+- **The crowd is thin on a phone, and that is the honest cost of not standing on anything.**
+  A phone has one clearing worth standing in, so what was a column of people down each
+  margin is a small group near the top of the page and then weather for the rest of it. If
+  the owner wants more of them there, the answer is more clearings — a band between the
+  introduction and the fragrances would take another group — rather than putting the crowd
+  back over the writing.
 - All five are in the Fragrances table, pointing at `#part-01` to `#part-05`. Renumbering
   the house means re-pointing them in the same turn; there is a test.
 - **No groups.** ADAR's eleven are in four groups and Pineward's fifty-two in four strata;
