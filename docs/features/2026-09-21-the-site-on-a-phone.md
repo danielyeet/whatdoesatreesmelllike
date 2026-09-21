@@ -98,6 +98,11 @@ and none of it was anything the first round measured, because the first round me
 whether the drawings ran and whether the page could be dragged sideways. It could not see a
 word standing inside a paragraph.
 
+A **fifth photograph** came after the rest of the round had landed, and it is the one fault
+here that is not something printed over something else: the theories card's calculator
+button standing away from the line it belongs to. It is written up with the others below,
+under "The calculator button hung off the right of its card".
+
 **Every fix in this round is held below 700px, and it was checked rather than assumed** —
 see "Nothing above 700px moved" at the end of this section, which is the measurement and
 the four places where holding to the rule costs something.
@@ -180,6 +185,24 @@ Two separate faults, and both are fixed:
   would be worth having on anything squarer than about 3:2, and a 1100 × 1000 window throws
   a station off the edge for exactly the same reason a phone does — but that is a desktop
   window, and desktop windows do not move.
+
+### The calculator button hung off the right of its card
+
+The owner, of the same page: *"move the open calcilator button to be under the other
+button on the phone app"*.
+
+A station whose row carries `data-calc` gets a second way in at the foot of its card, boxed
+where `OPEN →` is bare, and it is put at the **right-hand end** of the card by
+`margin-left: auto`. On a wide window the card is 360px and the box stands under the end of
+the line above it, which is what "a second way in, over to the right" is meant to look
+like. On a phone the card is 84vw — 327px on a 390px screen — and the same box is
+left with 225px of nothing between it and the words above, so it reads as belonging to the
+edge of the window rather than to the line it follows.
+
+Below 700px the `auto` goes and the box comes back to the left, so the two ways in stand one
+directly under the other. It is `margin-left` on its own rather than the whole shorthand,
+so the 18px the box gives the foot of the card is untouched. Measured at 701, 760, 1280,
+1440 and 1920: the box is still flush to the card's right edge at every one of them.
 
 ### A table wrote one column through the next
 
@@ -307,7 +330,7 @@ report](2026-09-20-almost-human.md).
 npm test -- tests/mobile.spec.js
 ```
 
-Three tests, and they belong to no one feature the way `repository.spec.js` doesn't —
+Four tests, and they belong to no one feature the way `repository.spec.js` doesn't —
 they are about the whole site at a phone's size. Every one was **proved against the real
 fault**:
 
@@ -317,6 +340,13 @@ fault**:
   **0 pixels of ink** on a whole phone screen.
 - **`a tap brings a figure home`** — with `pointerdown` removed the ink width reads
   78 → 78, which is a tap doing nothing.
+- **`the calculator button stands under OPEN, not off to the side`** — with the 700px block taken out it reads
+  **133px across** from the line it is meant to stand under, on a 390px screen.
+
+  It **opens the station** to read it. The card is built with the mark, but until the
+  station is set out it has no box at all: reading it where it stands gives zeros at every
+  width, so a test written that way passes on a desktop too and proves nothing. That was
+  the first go at it.
 
 **The tap test had to be re-aimed in the second round**, and the reason is worth keeping.
 It used to look for the figure down the left margin, because that is where one stood; a

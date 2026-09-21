@@ -19,6 +19,10 @@
 //   3. A TAP COUNTS AS THE HAND ARRIVING. There is no hovering on a
 //      phone: a drag sent `pointermove` and worked, a tap sent
 //      `pointerdown` and did nothing.
+//   4. A BUTTON BELONGS TO THE LINE ABOVE IT. Held to the right of a
+//      360px card, the theories card's OPEN CALCULATOR reads as the
+//      end of that line; held to the right of an 84vw one it reads as
+//      the edge of the window.
 // ============================================================
 const { test, expect, devices } = require("@playwright/test");
 const { serveDependenciesLocally } = require("./helpers");
@@ -160,5 +164,73 @@ test.describe("on a phone", () => {
     const home = await wide(box);
     expect(home, `a tap should draw it together — ${apart} to ${home}`)
       .toBeLessThan(apart * 0.9);
+  });
+
+  /* THE SECOND WAY IN STOOD AWAY FROM THE FIRST. A station carrying a
+     calculator gets a boxed OPEN CALCULATOR at the foot of its card,
+     put over to the right by `margin-left: auto`. On a wide window the
+     card is 360px and that reads as the end of the line above it; on a
+     phone the card is 84vw and the box is left with 225px of nothing
+     beside it, so it belongs to the edge of the window rather than to
+     the line it follows. Below 700px the `auto` goes.
+
+     The station has to be OPENED to be measured: until then its card
+     has no box at all, so reading it where it stands gives zeros at
+     every width and proves nothing. Which station carries one is found
+     rather than assumed, and the road is walked until it is there. */
+  test("the calculator button stands under OPEN, not off to the side", async ({ page }) => {
+    await serveDependenciesLocally(page);
+    await page.goto("/categories/theories.html");
+    await page.waitForSelector(".structure-field", { timeout: 20000 });
+    await page.waitForFunction(
+      () => document.querySelectorAll(".structure-stop:not(.gone)").length > 0,
+      null, { timeout: 20000 });
+    await page.waitForTimeout(1200);
+
+    const which = await page.evaluate(() => [...document.querySelectorAll(".structure-stop")]
+      .findIndex((s) => {
+        const c = s.querySelector(".structure-card-calc");
+        return c && !c.hidden;
+      }));
+    expect(which, "one station should carry a calculator").toBeGreaterThanOrEqual(0);
+
+    // It stands at its own depth along the road, so go down it until
+    // it is drawn strongly enough to be aimed at.
+    let there = false;
+    for (let step = 0; step < 40 && !there; step++) {
+      there = await page.evaluate((i) => {
+        const s = document.querySelectorAll(".structure-stop")[i];
+        return !!s && !s.classList.contains("gone") &&
+               parseFloat(s.style.opacity || "0") > 0.6;
+      }, which);
+      if (there) break;
+      await page.evaluate(() => window.scrollBy(0, 260));
+      await page.waitForTimeout(160);
+    }
+    expect(there, "the station should come up as the road is walked").toBe(true);
+
+    const box = await page.locator(".structure-stop").nth(which).boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(1400);
+    await expect(page.locator(".structure-stop.open")).toHaveCount(1);
+
+    const at = await page.evaluate(() => {
+      const card = document.querySelector(".structure-stop.open .structure-card");
+      const calc = card.querySelector(".structure-card-calc");
+      const open = card.querySelector(".structure-card-open");
+      const l = (e) => e.getBoundingClientRect().left;
+      return {
+        across: Math.round(l(calc) - l(open)),
+        pad: Math.round(l(calc) - card.getBoundingClientRect().left),
+        wide: Math.round(calc.getBoundingClientRect().width),
+      };
+    });
+
+    expect(at.wide, "the box should actually be drawn").toBeGreaterThan(40);
+    // Flush with the line above it, rather than shoved across the card.
+    expect(Math.abs(at.across),
+      `it should start where OPEN does \u2014 ${at.across}px across`).toBeLessThanOrEqual(1);
+    // And still inside the card's own padding, not against its rule.
+    expect(at.pad, "it should keep the card's left padding").toBeGreaterThan(8);
   });
 });

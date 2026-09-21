@@ -2321,6 +2321,15 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
 /* The card's own bottom padding belongs to whichever of the two is
    last: with the button there, "OPEN →" gives its up. */
 .structure-card-open:has(+ .structure-card-calc:not([hidden])) { padding-bottom: 14px; }
+/* On a phone the card is only 84vw wide, and a box held over at the
+   right of it reads as belonging to the edge of the window rather than
+   to the line above it. Below 700px it comes back to the left, so the
+   two ways in stand one directly under the other. `margin-left` alone,
+   so the 18px it gives the foot of the card is untouched. Nothing
+   above 700px moves. */
+@media (max-width: 700px) {
+  .structure-card-calc { margin-left: 0; }
+}
 
 /* One name, one place: the station's name is in the card while it is
    open, so the copy under the figure goes — and the names of the

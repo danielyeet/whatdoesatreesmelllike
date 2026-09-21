@@ -286,6 +286,18 @@ over to the right, for a piece that carries something of its own worth going str
 Only `works/theory-03.html` has one. It is read off the page like `data-note` and
 `data-plate`, so a theory without one simply does not get the button.
 
+**Over to the right, until a phone.** `margin-left: auto` is what puts it at the
+right-hand end. On a wide window the card is 360px, so the box stands under the end of the
+line above it and reads as belonging to it. On a phone the card is 84vw — 327px on a
+390px screen — and the same rule leaves 133px of nothing between the box and the words
+it follows, so it reads as belonging to the edge of the window instead. The owner
+photographed it: *"move the open calcilator button to be under the other button on the
+phone app"*. Below 700px the `auto` goes and the two ways in stand one under the other.
+`margin-left` on its own, not the shorthand, so the 18px the box gives the foot of the
+card is untouched — and nothing above 700px moves, which was measured at 701, 760, 1280,
+1440 and 1920. `tests/mobile.spec.js` guards it; see [the phone
+report](2026-09-21-the-site-on-a-phone.md).
+
 **It is not an anchor**, and it cannot be: the whole card already stands inside the
 station's own `<a>`, and an anchor cannot stand inside an anchor. It is a `<span>` with a
 link's role, a link's keys (Enter and Space) and a link's middle-click and
