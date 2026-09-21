@@ -51,31 +51,36 @@
   // beat before the flicking starts. Going straight into the cuts from
   // a blank page is a jolt; a moment of the piece itself first reads
   // as a projector being started rather than as a page loading.
-  // HALF THE TIME AND HALF THE CUTS, which the owner asked for: it was
-  // 18 cuts over about three seconds and it is 9 over about one and a
-  // quarter. Each cut is a little quicker as well (FLIP_FIRST_MS), and
-  // they slow more steeply (FLIP_SLOW), so it still ends by coming to
-  // rest rather than stopping.
+  // NINE CUTS, AND HALF AGAIN AS LONG AS THEY FIRST WERE. It was 18
+  // cuts over about three seconds; halving both was too much of a good
+  // thing, and the owner asked for the flashing back up by half. So it
+  // is 9 cuts over about a second and a half: the count stays where it
+  // was asked to be and each cut is held longer. They slow steeply
+  // (FLIP_SLOW), so it still ends by coming to rest rather than
+  // stopping.
   // The BEAT BEFORE IT STARTS is not part of what the owner asked to
   // be halved — that was the cycling — and it is what makes the page
   // read as a projector being started. Left where it was.
   const FLIP_HOLD_MS = 250;
-  const FLIP_FIRST_MS = 32;
+  const FLIP_FIRST_MS = 48;
   const FLIP_SLOW = 1.29;
-  const FLIP_LAST_MS = 250;
+  const FLIP_LAST_MS = 375;
 
   // The map. Sizes are shares of the sheet's own width, so the whole
   // arrangement scales rather than being pinned to one screen.
-  const PLATE_SHARE = 0.44, PLATE_MIN = 270, PLATE_MAX = 500;
+  const PLATE_SHARE = 0.38, PLATE_MIN = 250, PLATE_MAX = 430;
   // BIGGER, which the owner asked for: they were a ninth of the sheet
   // across and never more than 152px, which on a wide window is a page
   // of stamps.
   const CHILD_SHARE = 0.175, CHILD_MIN = 130, CHILD_MAX = 236;
-  const CELL_SPREAD = 1.6;    // how much room each picture is given, as a multiple of itself
+  // COMPACT. It was 1.6 with a seventh more room a row, which on a
+  // wide window left the sheet more air than pictures — the owner
+  // asked for the empty space back.
+  const CELL_SPREAD = 1.3;    // how much room each picture is given, as a multiple of itself
   // ...and a little more of it the further down the page it is, so the
   // sheet opens out as it goes rather than bunching up towards the
   // bottom. Gently: at 0.16 the map became a third empty.
-  const ROW_OPEN = 0.07;      // each row this much roomier than the one above
+  const ROW_OPEN = 0.025;     // each row this much roomier than the one above
   const CELL_JITTER = 0.85;   // how much of the room left over it may wander in
   const SIZE_VARY = 0.2;      // how much the pictures differ in size before depth
 
@@ -92,16 +97,22 @@
   // on a canvas from these same numbers, so projecting the numbers
   // moves the pictures and their lines together. A transform in the
   // stylesheet would move the pictures and leave every line behind.
-  const DEPTH_MAX = 430;      // how far back a picture may stand
-  const FOCAL = 1500;         // how strongly it recedes; lower is stronger
-  const DEPTH_FADE = 0.42;    // how much of its ink the furthest one gives up
-  // ROOM ROUND THE MIDDLE WINDOW, and more of it than there was. The
-  // cells are kept clear of the plate by this much, and then every
-  // picture is projected TOWARDS the plate's own middle by however
-  // far back it stands — so at 34 the nearest ones ended up all but
-  // touching it, and the line between them had a dozen pixels to
-  // run in, which is not a line on a map.
-  const PLATE_CLEAR = 130;    // space kept clear around the middle window
+  // DEEPER THAN IT WAS. At 430 against a focal length of 1500 the
+  // furthest picture was drawn at 78% of the nearest and the owner
+  // could not see the volume at all; at 640 against 1050 it is 62%,
+  // which is a picture standing plainly further off.
+  const DEPTH_MAX = 640;      // how far back a picture may stand
+  const FOCAL = 1050;         // how strongly it recedes; lower is stronger
+  const DEPTH_FADE = 0.5;     // how much of its ink the furthest one gives up
+  // ROOM ROUND THE MIDDLE WINDOW. It was raised to 130 for a round, to
+  // stop the nearest pictures being projected in so close to the plate
+  // that the line between them had a dozen pixels to run in — and that
+  // was the wrong end of the problem: on a sheet 1240 across, a plate
+  // 430 wide with 130 either side leaves no column clear at all, so
+  // the top two rows stood empty and the page opened on a band of
+  // nothing. The short lines are refused where they are made now
+  // (`farEnough`), and this is back to the space a picture needs.
+  const PLATE_CLEAR = 44;     // space kept clear around the middle window
 
   // How the pictures are joined up. Not everything reaches back to the
   // middle: each picture links to one of its nearer neighbours, some
@@ -114,10 +125,14 @@
   const LINE_GAP = 8;         // clear space between a line and the pictures it joins
   const DATE_SIZE = 10;       // how big a date is set on a line with room for it
   // What stands in for a date on a line reaching a picture that has
-  // nothing written behind it yet. The owner's own, and thirteen of
-  // them on purpose: it is the width of a date, so a line that can
-  // carry one can carry this.
-  const NO_DATE = "xxxxxxxxxxxxx";
+  // nothing written behind it yet. The owner wrote thirteen crosses;
+  // it is TEN here, which is exactly the length of a date — and that
+  // matters more than the count does. Every rule about where a date may
+  // be printed, how small it is set on a short line and how far it may
+  // be slid to clear a caption is worked out from the ten characters a
+  // date comes to, and at thirteen the crosses kept being the one
+  // label on the sheet that would not fit anywhere clear.
+  const NO_DATE = "xxxxxxxxxx";
   const LABEL_MIN = 26;       // and the shortest line that can carry one at all
   const CAPTION_ROOM = 30;    // the strip under a picture its caption is printed on
 
@@ -536,7 +551,10 @@
     // bottom — which means where a row starts has to be counted rather
     // than multiplied out. The room a picture's caption needs is part
     // of the row, so nothing is ever printed over anything.
-    const rows = Math.ceil((rest.length * 1.75) / cols) + 1;
+    // Places per picture: more of them is more of the gaps that make
+    // this a scatter rather than a table, and 1.75 was more gap than
+    // sheet.
+    const rows = Math.ceil((rest.length * 1.4) / cols) + 1;
     const rowTop = [];
     const rowHeight = [];
     let down = 0;
@@ -556,7 +574,17 @@
         const clashes =
           x < plateX + plateSize + PLATE_CLEAR && x + cellW > plateX - PLATE_CLEAR &&
           rowTop[r] < plateSize + PLATE_CLEAR;
-        if (!clashes) open.push({ x: x, y: rowTop[r], h: rowHeight[r], key: random() });
+        // THE PLACES BESIDE THE MIDDLE WINDOW ARE TAKEN FIRST. Which
+        // squares get used is a shuffle, and left to itself it would
+        // often leave the two rows either side of the plate empty —
+        // which is a band of nothing across the top of the sheet and
+        // most of what the owner meant by "THAT much empty space".
+        // Nudging their keys down puts them near the front of the
+        // shuffle without fixing the order of anything.
+        const beside = r < 2 ? 0.55 : 0;
+        if (!clashes) {
+          open.push({ x: x, y: rowTop[r], h: rowHeight[r], key: random() - beside });
+        }
       }
     }
     open.sort((a, b) => a.key - b.key);
@@ -774,7 +802,18 @@
       // own, so a date can poke into a caption its own line cleared by
       // a hair. Node 0's caption is printed inside its frame rather
       // than under it, which is why `clearBetween` skips it too.
-      const pads = nodes.slice(1).map(captionBox);
+      // AND EVERY PICTURE. This used to be captions only, and that was
+      // an oversight that a sparse map hid: a line never crosses a
+      // picture either, but the lettering is set above its line and has
+      // a height of its own, so on a map compact enough for lines to
+      // run close to the pictures a date lands on one. The middle
+      // window is in this list as well — it is the biggest thing on the
+      // sheet and the one a date has most room to land on.
+      const pads = nodes.slice(1).map(captionBox).concat(
+        nodes.map((one) => ({
+          left: one.x, right: one.x + one.size,
+          top: one.y, bottom: one.y + one.size,
+        })));
       const inBox = (x, y) => pads.some((box) =>
         x > box.left - 1 && x < box.right + 1 &&
         y > box.top - 1 && y < box.bottom + 1);
@@ -784,7 +823,8 @@
           a date along its own line, and erring inwards prints it on
           somebody's caption. */
       const lifts = [-size * 1.3, -size * 0.6, 0, size * 0.6, size * 1.3];
-      const steps = [-half, -half / 2, 0, half / 2, half];
+      const steps = [-half, -half * 0.75, -half / 2, -half / 4, 0,
+                     half / 4, half / 2, half * 0.75, half];
       const clearAt = (at) => {
         const cx = a.x + (b.x - a.x) * at, cy = a.y + (b.y - a.y) * at;
         for (const step of steps) {
@@ -797,12 +837,27 @@
         return true;
       };
       let along = length > words * 2.4 ? slid : 0.5;
-      if (!clearAt(along)) {
+      let clear = clearAt(along);
+      if (!clear) {
         const tries = [0.5, 0.34, 0.66, 0.26, 0.74, 0.2, 0.8, 0.16, 0.84,
-                       0.44, 0.56, 0.3, 0.7];
+                       0.44, 0.56, 0.3, 0.7, 0.12, 0.88, 0.38, 0.62];
         for (const at of tries) {
-          if (clearAt(at)) { along = at; break; }
+          if (clearAt(at)) { along = at; clear = true; break; }
         }
+      }
+      // AND IF NOTHING ALONG IT IS CLEAR, IT CARRIES NO DATE. A line
+      // without one reads as unfinished; a date printed across a
+      // picture reads as broken, and of the two that is much the worse.
+      // It used to take the random place anyway, which on a sparse map
+      // never showed — the map is compact enough now that a line can
+      // run the whole of its length beside something.
+      // `hidden` is an HTML attribute and does nothing at all to an SVG
+      // element, which is a trap worth writing down: the first go set
+      // it and the lettering stayed exactly where it was.
+      label.style.display = clear ? "" : "none";
+      if (!clear) {
+        label.classList.remove("shown");
+        return;
       }
       label.setAttribute(
         "transform",
@@ -927,7 +982,16 @@
   const PULSE_LONG = 44;      // how much of a trace is lit at once, in pixels
   const PULSE_RATE = 46;      // how fast it travels, in pixels a second
   const PULSE_INK = 0.75;     // how bright the lit part is
-  const PULSE_HOT = 2.1;      // and how much faster it runs on a hot trace
+  const PULSE_HOT = 2.6;      // and how much faster it runs on a hot trace
+  // THE PULL. With a picture pointed at, every pulse on the map turns
+  // round to run TOWARDS it — into it on the traces tied to it, and
+  // towards its end of the line on all the rest — and the whole map
+  // runs brighter, longer and faster while it does. The owner asked for
+  // the bold run of dashes always to go to the picture under the
+  // pointer, "as if there was a pull", and for it to be emphasized.
+  const PULL_RATE = 1.7;      // how much faster every pulse runs while one is pointed at
+  const PULL_LONG = 2.0;      // how much more of a trace is lit
+  const PULL_INK = 1.45;      // and how much brighter
   const HOT_LIFT = 1.5;       // how much more plainly a hot trace is drawn
   const COLD_INK = 0.35;      // and what is left of everything else
   const INK = "23,23,15";     // --ink
@@ -966,7 +1030,9 @@
       `lit` is where the pulse has got to along the same line; dashes
       inside it are drawn brighter. Everything here is a loop over the
       length of one line — no arrays are built and nothing is kept. */
-  function drawTrace(a, b, of, upTo, shade, weight, lit) {
+  function drawTrace(a, b, of, upTo, shade, weight, lit, long, glow) {
+    const runLong = long === undefined ? PULSE_LONG : long;
+    const runInk = glow === undefined ? PULSE_INK : glow;
     const far = Math.hypot(b.x - a.x, b.y - a.y);
     if (far < 1) return;
     const ux = (b.x - a.x) / far, uy = (b.y - a.y) / far;
@@ -980,7 +1046,7 @@
     ink.beginPath();
     for (let at = 0; at < end; at += step) {
       const to = Math.min(at + DASH, end);
-      if (lit !== undefined && at > lit - PULSE_LONG && at < lit) continue;
+      if (lit !== undefined && at > lit - runLong && at < lit) continue;
       ink.moveTo(a.x + ux * at, a.y + uy * at);
       ink.lineTo(a.x + ux * to, a.y + uy * to);
     }
@@ -988,10 +1054,10 @@
 
     // ...and the lit run, in a second pass at its own weight.
     if (lit === undefined) return;
-    ink.strokeStyle = rgba(PULSE_INK * shade);
+    ink.strokeStyle = rgba(runInk * shade);
     ink.beginPath();
-    for (let at = Math.max(0, Math.floor((lit - PULSE_LONG) / step) * step); at < end; at += step) {
-      if (at <= lit - PULSE_LONG || at >= lit) continue;
+    for (let at = Math.max(0, Math.floor((lit - runLong) / step) * step); at < end; at += step) {
+      if (at <= lit - runLong || at >= lit) continue;
       const to = Math.min(at + DASH, end);
       ink.moveTo(a.x + ux * at, a.y + uy * at);
       ink.lineTo(a.x + ux * to, a.y + uy * to);
@@ -1036,11 +1102,26 @@
 
       // Each trace's pulse starts somewhere of its own and runs at its
       // own pace, so fourteen of them never fall into step.
-      const rate = PULSE_RATE * (0.7 + wobble(i, 1, 3) * 0.6) * (hot ? PULSE_HOT : 1);
-      const span = far + PULSE_LONG;
+      const pulling = hotNode >= 0 ? heat : 0;
+      const rate = PULSE_RATE * (0.7 + wobble(i, 1, 3) * 0.6) *
+        (hot ? PULSE_HOT : 1) * (1 + (PULL_RATE - 1) * pulling);
+      const long = PULSE_LONG * (1 + (PULL_LONG - 1) * pulling);
+      const span = far + long;
       const lit = ((clock * rate + wobble(i, 2, 7) * span) % span);
 
-      drawTrace(a, b, i, upTo, shade, TRACE_INK * (hot ? HOT_LIFT : 1), lit);
+      // WHICH WAY IT RUNS. With nothing pointed at, along the line the
+      // way it was drawn. With a picture pointed at, the way that
+      // carries it TOWARDS that picture: into it on the traces tied to
+      // it, and towards its end of the line on every other one, so the
+      // whole map runs at the picture under the hand.
+      const toward = hotNode >= 0 &&
+        distance(nodes[link.b], nodes[hotNode]) >
+        distance(nodes[link.a], nodes[hotNode]);
+      const litAt = toward ? far - lit : lit;
+
+      drawTrace(a, b, i, upTo, shade,
+        TRACE_INK * (hot ? HOT_LIFT : 1), litAt, long,
+        PULSE_INK * (1 + (PULL_INK - 1) * pulling));
 
       // The ties, once the trace has actually reached them.
       drawTie(a.x, a.y, b.x, b.y, shade);

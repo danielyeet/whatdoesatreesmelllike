@@ -547,9 +547,13 @@ Four things went wrong on the way in, and all four are worth keeping written dow
   picture standing far back is drawn nearer the vanishing point, so a low cell at depth
   came out above a high one at the front. Every place is worked out **before** any picture
   is put in one now, and the places are sorted by where they come out **on the window**.
-- **The middle window was crowded.** Every picture is projected *towards* the plate's own
-  middle, so at `PLATE_CLEAR` 34 the nearest ones ended up all but touching it and the
-  line between them had a dozen pixels to run in. It is 130.
+- **The middle window was crowded, and then it was too clear.** Every picture is
+  projected *towards* the plate's own middle, so at `PLATE_CLEAR` 34 the nearest ones
+  ended up all but touching it and the line between them had a dozen pixels to run in.
+  Raising it to 130 fixed that and caused a worse one: on a sheet 1240 across, a plate 430
+  wide with 130 either side leaves **no column clear at all**, so the top two rows stood
+  empty and the page opened on a band of nothing. It is 44 — the space a picture needs —
+  and the short lines are refused where they are made instead.
 - **Lines too short to carry a date.** Two pictures at different depths can come out close
   together on the window even though the scatter kept them in cells of their own — that is
   what depth looks like — and a run of twenty pixels cannot carry ten characters. A line
@@ -572,14 +576,50 @@ Four things went wrong on the way in, and all four are worth keeping written dow
 at a third of its weight. What is further back gives some of it up with the rest of its
 ink.
 
-## The flick is half what it was, and in no order
+## More compact, and the space beside the plate used
+
+The owner asked for the grid to be pulled in: *"there is no reason for there to be THAT
+much empty space"*. Three numbers, and one habit of the scatter:
+
+- `CELL_SPREAD` 1.6 — 1.3, the room each picture is given as a multiple of itself.
+- `ROW_OPEN` 0.07 — 0.025, how much roomier each row is than the one above it.
+- The places per picture 1.75 — 1.4. More places is more of the gaps that make this a
+  scatter rather than a table, and 1.75 was more gap than sheet.
+- **The places beside the middle window are taken first.** Which squares get used is a
+  shuffle, and left to itself it often left the two rows either side of the plate empty,
+  which is a band of nothing across the top of the page. Their keys are nudged to the
+  front of the shuffle without fixing the order of anything.
+
+The plate came down with it — `PLATE_SHARE` 0.44 — 0.38, `PLATE_MAX` 500 — 430 — which
+is what leaves room beside it at all on a sheet 1240 across.
+
+## The pull
+
+The owner saw the lit run of dashes travelling along a trace and asked for it always to
+run to the picture under the pointer, *"as if there was a pull"*, and for it to be
+emphasized.
+
+So with a picture pointed at, **every pulse on the map turns round**: into that picture on
+the traces tied to it, and towards its end of the line on all the rest, so the whole sheet
+runs at whatever the hand is on. Which way a pulse goes is decided by which of the line's
+two ends is nearer the picture being pointed at, and the lit run is simply measured from
+the other end when it is the far one.
+
+It is emphasized three ways at once, all of them eased in on the same `heat` the rest of
+the hover uses so nothing snaps: `PULL_RATE` 1.7 (every pulse faster), `PULL_LONG` 2.0
+(twice as much of a trace lit) and `PULL_INK` 1.45 (brighter). The traces tied to the
+picture keep their own `PULSE_HOT`, raised to 2.6, on top of that.
+
+## The flick is nine cuts, and in no order
 
 Three notes in one: *faster*, *half the time*, *half the images*, and **not clickable while
 it runs**.
 
-It was 18 cuts over about three seconds; it is 9 over about one and a quarter. Each cut is
-quicker to begin with (`FLIP_FIRST_MS` 42 — 32) and they slow more steeply
-(`FLIP_SLOW` 1.14 — 1.29), so it still ends by coming to rest rather than stopping. **The
+It was 18 cuts over about three seconds. Halving both was too much of a good thing and the
+owner asked for the flashing back up by half, so it is **9 cuts over about a second and a
+half**: the count stays where it was asked to be and each cut is held longer
+(`FLIP_FIRST_MS` 48). They slow steeply (`FLIP_SLOW` 1.29), so it still ends by coming to
+rest rather than stopping. **The
 beat before it starts is not part of that** — `FLIP_HOLD_MS` stays at 250, because that is
 what makes the page read as a projector being started rather than as a page loading, and
 there is a test that watches for it.
@@ -597,10 +637,23 @@ showing.
 ## A date about nothing is not a date
 
 A frame carrying `data-open="no"` has no page of its own yet, and the dates on the lines
-reaching it are printed as **xxxxxxxxxxxxx** rather than as a date that says nothing. The
-owner asked for it. Thirteen crosses is about the width of a date, and the lettering is
-set from the label's own length rather than the ten characters a date comes to, so a line
-that can carry a date can carry this.
+reaching it are printed as **xxxxxxxxxx** rather than as a date that says nothing. The
+owner asked for it, and wrote thirteen crosses; it is **ten**, which is exactly the length
+of a date, and that matters more than the count does. Every rule about where a date may be
+printed, how small it is set on a short line and how far it may be slid to clear
+something is worked out from the ten characters a date comes to, and at thirteen the
+crosses were the one label on the sheet that would not fit anywhere clear.
+
+**A date keeps off the pictures as well as off the captions.** It was captions only, which
+a sparse map hid: a line never crosses a picture either, but the lettering is set above
+its line and has a height of its own, so on a map compact enough for lines to run close to
+the pictures a date lands on one. And **if nothing along a line is clear, it carries no
+date at all** — a line without one reads as unfinished, a date printed across a picture
+reads as broken, and of the two that is much the worse.
+
+One trap in doing that: `hidden` is an HTML attribute and does **nothing** to an SVG
+element. The first go set `label.hidden` and the lettering stayed exactly where it was;
+it is `style.display` now.
 
 Eleven of the fourteen pictures are unwritten at the moment, so most of the map's dates
 are crosses. That is the truth of the page rather than a fault of it: three houses are

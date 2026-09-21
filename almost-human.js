@@ -183,6 +183,78 @@
   const RAY_WAIT = [0.4, 2.6];   // and how long before the next goes off
   const RAY_FAN = 0.13;          // how far it spreads as it goes
   const RAY_INK = [0.34, 0.72];
+
+  // ============================================================
+  // THE HOUSE'S MARK, IN THE GLITCH
+  //
+  // The owner asked for their logo to be part of what goes wrong with
+  // a figure: "maybe make 1/3 of the glitches of the guys face be
+  // replaced with the logo or something". So on about a third of the
+  // beats, a figure whose HEAD is the faulty part loses its face and
+  // the specks that were the head stand as the mark instead — which is
+  // the house's name said one more way: the thing that is almost a
+  // person, and then for a second is a brand.
+  //
+  // The mark is READ OFF THE OWNER'S OWN FILE rather than drawn here
+  // from a guess at its geometry: the image is put on a small offscreen
+  // canvas once and every dark pixel becomes a place a speck may stand.
+  // It is their logo, so it should be their logo.
+  // ============================================================
+  const LOGO_FILE = "../images/Almost-Human/AH_Logo_Black.jpg";
+  const LOGO_GRID = 116;      // how finely the mark is read off the file
+  const LOGO_DARK = 140;      // and how dark a pixel has to be to count
+  const LOGO_SPOTS = 900;     // how many places are kept
+  const LOGO_ODDS = 0.34;     // the share of beats a head goes to the mark
+  const LOGO_BIG = 2.1;       // how much bigger than the head it is drawn
+  const LOGO_INK = 1.9;       // and how much more plainly
+
+  // WHERE THE HEAD STANDS in a figure's own unit box, taken off BODY
+  // above: the head capsule runs 0.065 to 0.105 with a radius of 0.052,
+  // so it is 0.144 tall and its middle is at 0.085.
+  const HEAD_AT = 0.085, HEAD_TALL = 0.144;
+
+  /** The mark, as places a speck may stand. Empty until the file has
+      arrived, which is the whole of the guard this needs: until then a
+      head simply glitches the way it always did. */
+  let LOGO = [];
+  (function readMark() {
+    const picture = new Image();
+    picture.addEventListener("load", () => {
+      try {
+        const sheet = document.createElement("canvas");
+        sheet.width = LOGO_GRID;
+        sheet.height = LOGO_GRID;
+        const paint = sheet.getContext("2d", { willReadFrequently: true });
+        paint.drawImage(picture, 0, 0, LOGO_GRID, LOGO_GRID);
+        const seen = paint.getImageData(0, 0, LOGO_GRID, LOGO_GRID).data;
+        const spots = [];
+        for (let y = 0; y < LOGO_GRID; y++) {
+          for (let x = 0; x < LOGO_GRID; x++) {
+            const at = (y * LOGO_GRID + x) * 4;
+            if (seen[at + 3] < 40) continue;
+            // Its own brightness, near enough: the mark is black on
+            // white, so anything dark is the mark.
+            const dark = (seen[at] + seen[at + 1] + seen[at + 2]) / 3;
+            if (dark <= LOGO_DARK) {
+              spots.push([x / (LOGO_GRID - 1), y / (LOGO_GRID - 1)]);
+            }
+          }
+        }
+        // Shuffled once, so a head taking the first hundred of them
+        // takes a hundred spread over the whole mark rather than its
+        // top few rows. Its own roll, not the crowd's seeded one.
+        for (let i = spots.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const keep = spots[i]; spots[i] = spots[j]; spots[j] = keep;
+        }
+        LOGO = spots.slice(0, LOGO_SPOTS);
+      } catch (whatever) {
+        // A canvas that will not be read is not worth a broken page.
+        LOGO = [];
+      }
+    });
+    picture.src = LOGO_FILE;
+  })();
   // ============================================================
   // WHAT A PERSON IS, AS A HANDFUL OF CAPSULES
   //
@@ -296,6 +368,9 @@
         phase: random() * Math.PI * 2,
         part: one[2],
         down: one[1],
+        // Its own place in the house's mark, for the beats a head goes
+        // to the logo. Fixed, so the mark holds still while it is up.
+        mark: Math.floor(random() * 99991),
       };
     });
     // HOW WIDE IT ACTUALLY STANDS, measured off the specks themselves
@@ -527,6 +602,21 @@
       };
       const wide = figure.tall * GLITCH_PUSH;
 
+      // AND ON ABOUT A THIRD OF THE BEATS, A HEAD GOES TO THE MARK.
+      // Rolled once per beat rather than per frame, off the beat's own
+      // number and the figure's own seed, so it holds for the whole of
+      // that second instead of flickering in and out of it — and so the
+      // same figure does not go to the logo every time.
+      const beatNo = Math.floor(Math.max(0, since) / GLITCH_CYCLE);
+      const headIsFaulty = figure.fault === "head" || figure.fault === "all";
+      const toMark = LOGO.length > 0 && headIsFaulty && figure.glitch > 0.02 &&
+        hash(7, beatNo, figure.seed + 313) < LOGO_ODDS;
+      // Where the mark stands and how big: on the head, a little wider
+      // than it, so it reads at all.
+      const markSize = figure.tall * HEAD_TALL * LOGO_BIG;
+      const markX = figure.mid * width;
+      const markY = top + figure.tall * HEAD_AT;
+
       figure.specks.forEach((one) => {
         const wander = idle === 0 ? 0 : idle *
           Math.sin((clock / one.every) * Math.PI * 2 + one.phase);
@@ -539,6 +629,27 @@
         // drawn at all. Each part keeps its own place in the clock, so
         // on the figure whose fault is "all" the head, the arms and the
         // legs come apart at different moments rather than together.
+        // THE HEAD, GONE TO THE MARK. The speck does not slip or drop
+        // — it stands somewhere on the logo instead, in its own fixed
+        // place on it, and is drawn a little more plainly so the mark
+        // is a mark rather than a smudge where a head was.
+        if (toMark && (one.part === 0 || one.part === 1)) {
+          const spot = LOGO[one.mark % LOGO.length];
+          const held2 = figure.glitch;
+          const wasX = x, wasY = y;
+          x = wasX + ((markX + (spot[0] - 0.5) * markSize) - wasX) * held2;
+          y = wasY + ((markY + (spot[1] - 0.5) * markSize) - wasY) * held2;
+          shown *= 1 + (LOGO_INK - 1) * held2;
+          if (y < -8 || y > height + 8) return;
+          if (shown < 0.012) return;
+          // Drawn two pixels square whatever the speck's own size is:
+          // a hundred and fifty specks strung round a ring only read as
+          // a ring if they nearly touch.
+          ink.fillStyle = rgba(shown);
+          ink.fillRect(Math.round(x), Math.round(y), 2, 2);
+          return;
+        }
+
         if (figure.glitch > 0.02 && faulty(one.part)) {
           const band = Math.floor(one.down / GLITCH_BAND);
           const beat = tick + (figure.fault === "all" ? one.part * 3 : 0);

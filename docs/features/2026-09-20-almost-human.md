@@ -204,9 +204,54 @@ Pineward has its green and ADAR its silver. This one is ink on the site's own pa
 untinted, and what it spends instead is **density**. It is the second page on the site to
 spend none, after the chamber. There is a test.
 
+## The house's mark, in the glitch
+
+The owner sent their logo and asked for it to be part of what goes wrong with a figure:
+*"maybe make 1/3 of the glitches of the guys face be replaced with the logo or
+something"*. So on about a third of the beats, a figure whose **head** is the faulty part
+loses its face and the specks that were the head stand as the mark instead — which is the
+house's name said one more way: the thing that is almost a person, and then for a second
+is a brand.
+
+Four things about how it is done:
+
+- **The mark is read off the owner's own file** (`images/Almost-Human/AH_Logo_Black.jpg`)
+  rather than drawn here from a guess at its geometry. The image goes on a small offscreen
+  canvas once, every dark pixel becomes a place a speck may stand, and the list is shuffled
+  and capped. It is their logo, so it should be their logo. Until the file has arrived the
+  list is empty and a head simply glitches the way it always did — which is the whole of
+  the guard this needs.
+- **The roll is once per beat**, off the beat's own number and the figure's own seed, so
+  the mark holds for the whole of that second instead of flickering in and out of it, and
+  so the same figure does not go to the logo every time.
+- **It is drawn bigger than the head and two pixels a speck.** A head is about 150 specks;
+  at the head's own size, strung round a ring, that is a smudge. At `LOGO_BIG` 2.1 and two
+  pixels each they nearly touch and the ring reads.
+- The specks **travel to it** on the same `glitch` the rest of the fault uses, so the face
+  comes apart into the mark rather than being swapped for it.
+
+## The picture, and the writing
+
+The owner's photograph of the house is at the head of the page. The original
+(`This one.webp`, 5152 × 7728 and 4.2MB) is far too big to send to a browser, so what is
+loaded is a 1600px copy in `house-web/` beside it — the same arrangement Pineward's
+gallery uses.
+
+**All five are written now**, and the introduction and the standfirst with them, in the
+owner's own words. The house's second line is theirs as well: *Abstraction done quite
+well*, which replaces the placeholder tagline the page carried.
+
+One thing to leave alone: their spelling and punctuation. `celcius`, `Maaaaaaaybe`,
+`youre`, `isnt`, `Dry down?` with its question mark, and **amboricinide** in one paragraph
+and **ambrocinide** in the next are all as they wrote them.
+
+One fragrance's writing carries a list (`ul.human-list`); the rest are prose. And the
+stage labels are theirs too — `Mid 1` and `Mid 2` on Burning Bridges, where the others
+have one middle.
+
 ## What is the owner's, and what is waiting
 
-**All five are named and none of them is written.** The owner gave the names:
+**All five are written now.** The owner gave the names, and then the writing:
 **Burning Bridges**, **Dear Future**, **Desert Hope**, **Ritual Code**, **Silent Rain**,
 in that order — which is alphabetical, as Pineward's are.
 

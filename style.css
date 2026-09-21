@@ -5988,6 +5988,40 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   color: var(--muted);
   font-size: 17px;
 }
+/* THE HOUSE'S OWN PICTURE, under the standfirst. Kept to the column the
+   writing is set in and ruled like every other plate on this site, so
+   it reads as part of the piece rather than as a banner over it. */
+.human-hero {
+  margin: 44px 0 0;
+  max-width: 560px;
+}
+.human-hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+}
+/* A list inside a fragrance's writing. One of the five is written with
+   one; the rest are prose. */
+.human-list {
+  margin: 14px 0 0;
+  padding-left: 20px;
+  list-style: none;
+}
+.human-list li {
+  position: relative;
+  margin: 7px 0 0;
+  line-height: 1.7;
+}
+.human-list li::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 0.78em;
+  width: 9px;
+  height: 1px;
+  background: var(--line);
+}
 
 .human-intro {
   position: relative;
