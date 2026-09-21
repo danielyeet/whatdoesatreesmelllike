@@ -6606,15 +6606,23 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 }
 
 /* ==================================================================
-   VIEW NOTES — the pyramid beside a fragrance
+   VIEW NOTES — the pyramid, in a window over the page
 
-   A boxed button at the foot of a fragrance's writing, and a panel
-   that opens BESIDE the writing rather than under it. All three houses
-   lay a part out the same way — a flex row holding the picture and the
-   writing — so the panel is simply a third thing in that row, and one
-   set of rules covers `pine-body`, `adar-body` and `human-body` alike.
+   It opened BESIDE the writing at first, as a third column in the
+   part's own row, and the owner asked for a window instead. That was
+   the simpler thing as well as the asked-for one: standing in the row,
+   the panel had to be paid for out of somebody's width — a part is a
+   picture and a column of writing inside 940px, and a 252px panel left
+   the writing about 110px across until the plate was told to give way.
 
-   `notes.js` builds both; without it there is neither, and the page is
+   A WINDOW COSTS THE LAYOUT NOTHING, so all of that is gone: no
+   `notes-on`, no narrowed plate, no separate arrangement for a phone.
+   One window, sized against whatever it is opened on.
+
+   `notes.js` builds the button and the window and puts the window on
+   the BODY — a fixed thing inside an ancestor carrying a transform is
+   positioned against that ancestor, and a part's box is given one
+   while it opens. Without the script there is neither, and the page is
    all of its writing exactly as before.
 ================================================================== */
 
@@ -6640,7 +6648,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 }
 .note-open:hover { border-color: var(--ink); }
 /* The registration mark this site uses for anything that opens: a
-   hollow square, filled in once it is open. */
+   hollow square, filled in while it is open. */
 .note-open-mark {
   width: 7px;
   height: 7px;
@@ -6649,34 +6657,115 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 }
 .note-open.is-on .note-open-mark { background: currentColor; }
 
-/* THE PANEL. Its width is written here and measured by the script, so
-   this is the only place it is said. */
+/* THE SCRIM. Its own layer under the window, and the thing that makes
+   pressing the page behind close it. */
+.note-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 25, 22, 0.42);
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: 90;
+}
+.note-scrim.is-on { opacity: 1; }
+.note-scrim[hidden] { display: none; }
+
+/* The page behind a window does not scroll under it. */
+body.note-holding { overflow: hidden; }
+
+/* THE WINDOW. Centred on the viewport rather than anchored to
+   anything on the page, because it belongs to the fragrance rather
+   than to a place in it. It is sized against the window it is
+   standing in — `min()` rather than a media query — so a phone and a
+   desktop get the same window at the size each has room for. */
 .note-panel {
-  flex: none;
-  width: 252px;
-  overflow: hidden;
-  border-left: 1px solid var(--line);
-  padding-left: 22px;
-  align-self: stretch;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: min(430px, calc(100vw - 36px));
+  max-height: min(74vh, 640px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 64px rgba(26, 25, 22, 0.22);
+  padding: 0 26px 26px;
+  z-index: 91;
+  /* Up a hair and a shade small to begin with, so it arrives rather
+     than appearing. */
+  transform: translate(-50%, -48%) scale(0.985);
+  opacity: 0;
+  transition: opacity 300ms ease, transform 300ms cubic-bezier(0.42, 0.02, 0.24, 1);
+}
+.note-panel.is-up {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 .note-panel[hidden] { display: none; }
-.note-in { width: 230px; }
+
+/* THE BAR ACROSS THE TOP, which stays put while the notes scroll under
+   it — a long flat list can be forty notes deep. */
+.note-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 22px 0 14px;
+  margin-bottom: 4px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
 .note-head {
-  margin: 0 0 14px;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.note-head-say {
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
 }
+/* THE FRAGRANCE'S OWN NAME. A window standing over the page has left
+   its fragrance behind, so it says which one it belongs to — which
+   the panel beside the writing never had to. */
+.note-head-of {
+  font-size: 15px;
+  color: var(--ink);
+}
+.note-shut {
+  flex: none;
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+.note-shut:hover { color: var(--ink); }
+
 .note-pyramid { margin: 0; }
 .note-row {
   display: grid;
   grid-template-columns: 46px 1fr;
   gap: 0 12px;
-  padding: 10px 0;
+  padding: 11px 0;
   border-top: 1px solid var(--line);
 }
+.note-row:first-child { border-top: 0; }
 .note-row dt {
   font-family: var(--mono);
   font-size: 10px;
@@ -6695,15 +6784,15 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
    list rather than under it, because it changes what the list means.*/
 .note-undivided,
 .note-aside {
-  margin: 0 0 10px;
+  margin: 12px 0 10px;
   font-size: 12px;
   line-height: 1.6;
   font-style: italic;
   color: var(--muted);
 }
-.note-aside { margin: 12px 0 0; font-style: normal; }
+.note-aside { margin: 14px 0 0; font-style: normal; }
 .note-waiting {
-  margin: 0;
+  margin: 14px 0 0;
   padding: 13px 14px;
   font-family: var(--mono);
   font-size: 11.5px;
@@ -6713,14 +6802,14 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   border: 1px dashed var(--line);
 }
 .note-source {
-  margin: 14px 0 0;
+  margin: 16px 0 0;
   font-family: var(--mono);
   font-size: 10.5px;
   letter-spacing: 0.05em;
   line-height: 1.7;
   color: var(--muted);
   border-top: 1px solid var(--line);
-  padding-top: 11px;
+  padding-top: 12px;
 }
 .note-source span {
   display: block;
@@ -6732,153 +6821,46 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 .note-source a:hover { color: var(--ink); }
 
 /* ADAR IS THE ONE HOUSE ON A DARK GROUND, and its writing's colours
-   are written rather than taken from the tokens, so the panel's are
-   too — the same pair that page already uses for its own text. */
-.adar-page .note-row dd { color: #dcdce4; }
-.adar-page .note-open { color: #dcdce4; border-color: rgba(232, 232, 238, 0.28); }
-.adar-page .note-open:hover { border-color: #dcdce4; }
-.adar-page .note-panel { border-left-color: rgba(232, 232, 238, 0.28); }
+   are written rather than taken from the tokens, so the window's are
+   too. The window is on the BODY, which on that page IS `.adar-page`,
+   so these still reach it. */
+.adar-page .note-panel {
+  background: #07070a;
+  border-color: rgba(232, 232, 238, 0.28);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.66);
+}
+.adar-page .note-bar {
+  background: #07070a;
+  border-bottom-color: rgba(232, 232, 238, 0.28);
+}
+.adar-page .note-head-of { color: #dcdce4; }
 .adar-page .note-row { border-top-color: rgba(232, 232, 238, 0.18); }
+.adar-page .note-row dd { color: #dcdce4; }
 .adar-page .note-source { border-top-color: rgba(232, 232, 238, 0.18); }
 .adar-page .note-waiting { border-color: rgba(232, 232, 238, 0.28); }
+.adar-page .note-scrim { background: rgba(0, 0, 0, 0.62); }
+.adar-page .note-shut { color: #a8a8b4; }
+.adar-page .note-shut:hover { color: #dcdce4; }
+.adar-page .note-open { color: #dcdce4; border-color: rgba(232, 232, 238, 0.28); }
+.adar-page .note-open:hover { border-color: #dcdce4; }
 
-/* WHILE THE NOTES ARE OPEN, THE PICTURE GIVES WAY. A part is a row in
-   a column 940px wide; with the panel in it, the plate, the writing and
-   the panel cannot all have what they want. The writing is the thing
-   you are reading, so the plate is what narrows — and the writing is
-   told to take whatever is left rather than shrink to its own content,
-   which is what left it two words to a line the first time.
-
-   Only while a panel is open: with one closed, every one of these
-   rules is off and the part is exactly what it was. */
-.human-part.notes-on .human-plate { width: 188px; }
-.human-part.notes-on .human-text,
-.pine-part.notes-on .pine-text,
-.adar-part.notes-on .adar-text { flex: 1 1 0; min-width: 0; }
-.pine-part.notes-on .pine-plate { flex: 0 1 26%; }
-.adar-part.notes-on .adar-plates,
-.adar-part.notes-on .adar-plate { width: 188px; }
-
-/* THE CLOSE, AND THE SCRIM: both only exist when the panel is a sheet.
-   Beside the writing the panel is part of the page rather than over
-   it, and neither has anything to do. */
-.note-shut { display: none; }
-.note-scrim { display: none; }
-
-@media (max-width: 860px) {
-  /* ON A PHONE THE PANEL IS A SHEET, not a column under the writing.
-     There is no room beside the writing at this width — a 252px box on
-     a 390px screen is most of the page — and putting it underneath
-     buried it at the foot of a long fragrance where nobody would find
-     it. So it comes up from the foot of the WINDOW, over everything,
-     and goes down the same way.
-
-     `notes.js` moves the panel out to the body to do this: a fixed
-     thing inside an ancestor carrying a transform is positioned
-     against that ancestor rather than the window, and a part's own box
-     is given a transform while it opens. It is put back when the sheet
-     goes down.
-
-     860px is the same width the part's row becomes a column at, and
-     the script reads the same number. They have to agree, or the panel
-     is laid out one way and animated the other. */
-  .note-panel.note-pop {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    width: auto;
-    max-width: none;
-    max-height: 76vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    background: var(--bg);
-    border: 0;
-    border-top: 1px solid var(--line);
-    box-shadow: 0 -16px 44px rgba(26, 25, 22, 0.16);
-    padding: 26px 22px calc(26px + env(safe-area-inset-bottom, 0px));
-    /* 101% rather than 100%: a border and a shadow sit outside the
-       box, and at exactly 100% a hair of both stays on screen. */
-    transform: translateY(101%);
-    transition: transform 340ms cubic-bezier(0.42, 0.02, 0.24, 1);
-    z-index: 91;
+@media (max-width: 560px) {
+  /* A little more of the screen, and a little less padding, because at
+     this width every millimetre is the notes. */
+  .note-panel {
+    width: calc(100vw - 24px);
+    max-height: 80vh;
+    padding: 0 18px 20px;
   }
-  .note-panel.note-pop.is-up { transform: translateY(0); }
-  .note-panel.note-pop .note-in { width: auto; }
-  /* The grab bar every sheet on a phone has, which is what says it can
-     be pushed back down. */
-  .note-panel.note-pop .note-head { position: relative; padding-top: 14px; }
-  .note-panel.note-pop .note-head::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 42px;
-    height: 3px;
-    border-radius: 3px;
-    background: var(--line);
-  }
-
-  .note-shut {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 18px;
-    right: 16px;
-    width: 34px;
-    height: 34px;
-    font-size: 21px;
-    line-height: 1;
-    color: var(--muted);
-    background: none;
-    border: 0;
-    cursor: pointer;
-  }
-  .note-shut:hover { color: var(--ink); }
-
-  .note-scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(26, 25, 22, 0.42);
-    opacity: 0;
-    transition: opacity 340ms ease;
-    z-index: 90;
-  }
-  .note-scrim.is-on { opacity: 1; }
-  .note-scrim[hidden] { display: none; }
-
-  /* The page behind a sheet does not scroll under it. */
-  body.note-holding { overflow: hidden; }
-
-  /* And with the panel out of the row, the plate keeps its own size. */
-  .human-part.notes-on .human-plate,
-  .adar-part.notes-on .adar-plates,
-  .adar-part.notes-on .adar-plate { width: 100%; }
-  .pine-part.notes-on .pine-plate { flex: 1 1 auto; }
-  .human-part.notes-on .human-text,
-  .pine-part.notes-on .pine-text,
-  .adar-part.notes-on .adar-text { flex: 0 1 auto; min-width: 0; }
-
-  /* ADAR is the one house on a dark ground. */
-  .adar-page .note-panel.note-pop {
-    background: #07070a;
-    border-top-color: rgba(232, 232, 238, 0.28);
-    box-shadow: 0 -16px 44px rgba(0, 0, 0, 0.6);
-  }
-  .adar-page .note-panel.note-pop .note-head::before { background: rgba(232, 232, 238, 0.3); }
-  .adar-page .note-scrim { background: rgba(0, 0, 0, 0.62); }
-  .adar-page .note-shut { color: #a8a8b4; }
-  .adar-page .note-shut:hover { color: #dcdce4; }
+  .note-bar { padding-top: 18px; }
 }
 
-@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
-  .note-panel.note-pop { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .note-panel,
   .note-scrim { transition: none; }
+  .note-panel { transform: translate(-50%, -50%) scale(1); }
 }
+
 
 /* ==================================================================
    THE NOTE DISSEMINATION CALCULATOR — works/theory-03.html

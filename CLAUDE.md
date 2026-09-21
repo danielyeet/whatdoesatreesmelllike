@@ -208,10 +208,11 @@ report](docs/features/2026-09-21-the-site-on-a-phone.md) under "Nothing above 70
 
 Seven things follow, and they are the ones to keep in mind when adding a drawing:
 
-- **A panel that stands beside the writing needs a phone arrangement of its own.** The
-  notes panel becomes a **sheet** over the window below 860px, because there is no room
-  beside a 390px column. That width is in `style.css` and read again in `notes.js`, and
-  the two have to agree.
+- **A thing standing over the page is sized against the viewport, not by a media query.**
+  The notes window is `min(430px, calc(100vw - 36px))` wide and `min(74vh, 640px)` tall,
+  so a phone and a desktop get the same window at the size each has room for. It was a
+  column beside the writing with a separate sheet for phones, and one window sized this
+  way replaced both.
 - **Every canvas draws at a lower ratio below 700px** (1.5 rather than 2), which is a
   little over half the fill. A new drawing should do the same.
 - **A rule written against `COLUMN` needs a floor.** The writing's measure is 940px, so on
@@ -590,7 +591,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **view** | One of the two ways the contact sheet page shows its category, behind the two buttons across the top: the **houses** (the sheet itself) and the **individual fragrances** (the index). `views.js` switches them, and only one is ever on the page except during the swipe. It briefly had a different pair — the **map** and **Favorites**, the second of which was the removed **register** — so if the owner says "Description portfolio" or "the Favorites view", they mean those. |
 | **houses** | The contact sheet view: one picture per house, scattered and joined by dated lines. The pictures run in order down the page — 01 at the top, then 02, 03 and so on. |
 | **fragrances** (the view) | The index view of the contact sheet page. It **used to list every fragrance on the whole site** and point back into the houses; it does not any more. It is now the way in to `works/individual-fragrances.html` — the perfumes that belong to no house — and carries only those. If the owner remembers it as "every one of them", that is what it was until 2026-09-21. |
-| **view notes** | The button at the foot of every fragrance's writing, and the panel it opens BESIDE the writing carrying the notes and the source. **It goes with the fragrance**: collapse the part and the notes collapse too, and opening the part again leaves them shut. **On a phone it is a sheet instead** — up from the foot of the window over a scrim, since there is no room beside the writing at that width. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
+| **view notes** | The button at the foot of every fragrance's writing, and the **window** it opens over the page carrying the notes and the source. A real dialog: centred, over a scrim, with the page behind held still, closing on the scrim, on escape and on its own close. **It goes with the fragrance**: collapse the part and the window goes too, and opening the part again leaves it shut. It opened BESIDE the writing for a round, as a column in the part's own row — if the owner remembers it that way, that is what it was until they asked for a window. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
 | **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |
 | **individual fragrances** | `works/individual-fragrances.html`: the perfumes that belong to no house on the Houses view, each carrying the house it DID come from. Shaped like a house so it gets the parts, the rank and the notes panel. The **Fragrances** view is the index into it. |

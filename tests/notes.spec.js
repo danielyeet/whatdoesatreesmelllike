@@ -162,22 +162,46 @@ test("every fragrance gets a View notes button, and it opens a panel",
   await page.waitForTimeout(700);
   await expect(button).toHaveAttribute("aria-expanded", "true");
 
-  const panel = first.locator(".note-panel");
+  const panel = page.locator("#notes-individual-01");
   await expect(panel).toBeVisible();
   await expect(panel.locator(".note-row")).toHaveCount(3);      // top, mid, base
   await expect(panel.locator(".note-source")).toHaveCount(1);
-  // The panel is BESIDE the writing, not under it — which is what the
-  // owner asked for and the one thing a stylesheet change could undo.
-  const [text, notes] = await Promise.all([
-    first.locator(".human-text").boundingBox(),
-    panel.boundingBox(),
-  ]);
-  expect(notes.x, "the panel should start to the right of the writing")
-    .toBeGreaterThan(text.x + text.width - 4);
 
-  // And it closes again.
-  await button.click();
-  await page.waitForTimeout(700);
+  // IT IS A WINDOW OVER THE PAGE, which is the owner's second word on
+  // it — it opened beside the writing at first. So: on the body rather
+  // than inside the fragrance, fixed, centred on the viewport, over a
+  // scrim, with the page behind it held still.
+  const over = await page.evaluate(() => {
+    const el = document.querySelector(".note-panel:not([hidden])");
+    const box = el.getBoundingClientRect();
+    return {
+      onBody: el.parentElement === document.body,
+      fixed: getComputedStyle(el).position,
+      offX: Math.round(box.left + box.width / 2 - window.innerWidth / 2),
+      offY: Math.round(box.top + box.height / 2 - window.innerHeight / 2),
+      scrim: !!document.querySelector(".note-scrim.is-on"),
+      held: document.body.classList.contains("note-holding"),
+      role: el.getAttribute("role"),
+    };
+  });
+  expect(over.onBody, "the window has to live on the body: a fixed thing inside " +
+    "an ancestor with a transform is positioned against that ancestor").toBe(true);
+  expect(over.fixed).toBe("fixed");
+  expect(over.role).toBe("dialog");
+  expect(Math.abs(over.offX), `centred across: ${over.offX}px off`).toBeLessThan(3);
+  expect(Math.abs(over.offY), `centred down: ${over.offY}px off`).toBeLessThan(3);
+  expect(over.scrim, "the page behind should be dimmed").toBe(true);
+  expect(over.held, "and should not scroll under it").toBe(true);
+
+  // AND IT SAYS WHICH FRAGRANCE IT BELONGS TO. A window standing over
+  // the page has left its fragrance behind, which the column beside the
+  // writing never had to worry about.
+  await expect(panel.locator(".note-head-of")).toHaveText("CV99");
+
+  // And it closes again. Not on the button, which is behind the scrim
+  // now: on the window's own close.
+  await panel.locator(".note-shut").click();
+  await page.waitForTimeout(600);
   await expect(button).toHaveAttribute("aria-expanded", "false");
   await expect(panel).toBeHidden();
 
@@ -199,7 +223,8 @@ test("a fragrance whose source gives no division says so", async ({ page }) => {
   await first.locator(".note-open").click();
   await page.waitForTimeout(700);
 
-  const panel = first.locator(".note-panel");
+  // The window lives on the body, not inside the fragrance.
+  const panel = page.locator("#notes-pineward-01");
   await expect(panel.locator(".note-undivided")).toHaveCount(1);
   await expect(panel.locator(".note-row")).toHaveCount(1);
   await expect(panel.locator(".note-row dt")).toHaveText("Notes");
@@ -221,8 +246,9 @@ test("a fragrance with no notes yet says they have not been found",
   await fifth.locator(".note-open").click();
   await page.waitForTimeout(700);
 
-  await expect(fifth.locator(".note-waiting")).toHaveCount(1);
-  await expect(fifth.locator(".note-row")).toHaveCount(0);
+  const panel = page.locator("#notes-individual-05");
+  await expect(panel.locator(".note-waiting")).toHaveCount(1);
+  await expect(panel.locator(".note-row")).toHaveCount(0);
 });
 
 /* WITHOUT THE SCRIPT there is no button and no panel, and the page is
@@ -257,7 +283,7 @@ test("the notes collapse with the fragrance, and do not come back with it",
 
   const part = page.locator(".human-part").first();
   const button = part.locator(".note-open");
-  const panel = part.locator(".note-panel");
+  const panel = page.locator("#notes-individual-01");
 
   await part.locator("summary").click();
   await page.waitForTimeout(1100);
@@ -266,15 +292,25 @@ test("the notes collapse with the fragrance, and do not come back with it",
   await expect(button).toHaveAttribute("aria-expanded", "true");
   await expect(panel).toBeVisible();
 
-  // Collapse the fragrance: the notes go with it.
-  await part.locator("summary").click();
-  await page.waitForTimeout(1200);
+  // COLLAPSE THE FRAGRANCE AND THE WINDOW GOES WITH IT. Done through
+  // the element rather than by pressing the summary, because with the
+  // window up the page behind it cannot be pressed at all — which is
+  // the point of a window. This is the safety net the `toggle`
+  // listener exists for: a part closed by anything other than a press.
+  await page.evaluate(() => {
+    document.querySelector(".human-part").open = false;
+  });
+  await page.waitForTimeout(500);
   await expect(button).toHaveAttribute("aria-expanded", "false");
   await expect(panel).toBeHidden();
-  // And the part is not left wearing the class that narrows its plate.
-  await expect(part).not.toHaveClass(/notes-on/);
+  expect(await page.evaluate(
+    () => document.body.classList.contains("note-holding")),
+    "and the page is given back").toBe(false);
 
-  // Open the fragrance again: the notes stay shut.
+  // OPEN THE FRAGRANCE AGAIN: the notes stay shut. This is the one the
+  // owner asked for in as many words — they "have to be opened up again
+  // independently" — and the easy one to get wrong, because a window
+  // that remembered would read as the page deciding for you.
   await part.locator("summary").click();
   await page.waitForTimeout(1200);
   await expect(button, "the notes should have to be asked for again")
@@ -282,19 +318,17 @@ test("the notes collapse with the fragrance, and do not come back with it",
   await expect(panel).toBeHidden();
 });
 
-/* ON A PHONE IT IS A SHEET, NOT A COLUMN. There is no room beside the
-   writing at that width — a 252px panel on a 390px screen is most of
-   the page — and underneath the writing it was buried at the foot of a
-   long fragrance. The owner asked for "a popup window", "adjusted
-   properly to the device".
-
-   What this checks is that it is really OVER the page rather than in
-   it: fixed to the foot of the WINDOW, as wide as the window, with the
-   page behind it held still. */
+/* ON A PHONE IT IS THE SAME WINDOW, sized for the screen it is on.
+   It was a bottom sheet for a round, while the wide version was still
+   a column beside the writing; once the owner asked for a window
+   everywhere there was no reason to keep two arrangements. The window
+   is sized with `min()` against the viewport rather than by a media
+   query, so a phone and a desktop get the same thing at the size each
+   has room for. */
 test.describe("the notes on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
-  test("the panel comes up as a sheet over the page", async ({ page }) => {
+  test("the window fits the screen and stands over the page", async ({ page }) => {
     await serveDependenciesLocally(page);
     const errors = collectPageErrors(page, ["Failed to load resource"]);
     await page.goto("/works/individual-fragrances.html");
@@ -304,44 +338,43 @@ test.describe("the notes on a phone", () => {
     await part.locator("summary").click();
     await page.waitForTimeout(1200);
     await page.locator(".note-open").first().click();
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(700);
 
-    const sheet = await page.evaluate(() => {
-      const el = document.querySelector(".note-panel.note-pop");
+    const win = await page.evaluate(() => {
+      const el = document.querySelector(".note-panel:not([hidden])");
       if (!el) return null;
       const box = el.getBoundingClientRect();
       return {
-        // Moved out to the body: a fixed thing inside an ancestor with
-        // a transform is positioned against that ancestor, not the
-        // window, and a part's box is given one while it opens.
-        onBody: el.parentElement === document.body,
-        fixed: getComputedStyle(el).position,
-        bottom: Math.round(box.bottom),
+        offX: Math.round(box.left + box.width / 2 - window.innerWidth / 2),
+        offY: Math.round(box.top + box.height / 2 - window.innerHeight / 2),
         width: Math.round(box.width),
+        height: Math.round(box.height),
         window: { w: window.innerWidth, h: window.innerHeight },
         scrim: !!document.querySelector(".note-scrim.is-on"),
         held: document.body.classList.contains("note-holding"),
       };
     });
 
-    expect(sheet, "there should be a sheet").toBeTruthy();
-    expect(sheet.onBody).toBe(true);
-    expect(sheet.fixed).toBe("fixed");
-    expect(sheet.width, "it should be as wide as the window")
-      .toBeGreaterThanOrEqual(sheet.window.w - 1);
-    expect(Math.abs(sheet.bottom - sheet.window.h),
-      `it should sit on the foot of the window: ${sheet.bottom} against ${sheet.window.h}`)
-      .toBeLessThan(3);
-    expect(sheet.scrim, "the page behind it should be dimmed").toBe(true);
-    expect(sheet.held, "and should not scroll under it").toBe(true);
+    expect(win, "there should be a window").toBeTruthy();
+    expect(Math.abs(win.offX), `centred across: ${win.offX}px off`).toBeLessThan(3);
+    expect(Math.abs(win.offY), `centred down: ${win.offY}px off`).toBeLessThan(3);
+    // IT FITS. The whole point of sizing it against the viewport: a
+    // 430px window on a 390px screen would hang off both sides.
+    expect(win.width, `${win.width} on a ${win.window.w} screen`)
+      .toBeLessThanOrEqual(win.window.w);
+    expect(win.height, `${win.height} tall in a ${win.window.h} screen`)
+      .toBeLessThanOrEqual(win.window.h);
+    // And it is not a thin strip either — it uses the width it has.
+    expect(win.width).toBeGreaterThan(win.window.w * 0.8);
+    expect(win.scrim).toBe(true);
+    expect(win.held).toBe(true);
 
-    // The notes are readable rather than merely present.
-    await expect(page.locator(".note-panel.note-pop .note-row")).toHaveCount(3);
+    await expect(page.locator(".note-panel:not([hidden]) .note-row")).toHaveCount(3);
 
     expect(errors).toEqual([]);
   });
 
-  test("the sheet closes on the scrim, on escape, and on its own button",
+  test("the window closes on the scrim, on escape, and on its own button",
     async ({ page }) => {
     await serveDependenciesLocally(page);
     await page.goto("/works/individual-fragrances.html");
@@ -353,28 +386,29 @@ test.describe("the notes on a phone", () => {
 
     const open = async () => {
       await page.locator(".note-open").first().click();
-      await page.waitForTimeout(700);
-      await expect(page.locator(".note-panel.note-pop")).toHaveCount(1);
+      await page.waitForTimeout(650);
+      await expect(page.locator(".note-panel:not([hidden])")).toHaveCount(1);
     };
     const gone = async (how) => {
-      await page.waitForTimeout(700);
-      await expect(page.locator(".note-panel.note-pop"), how).toHaveCount(0);
+      await page.waitForTimeout(650);
+      await expect(page.locator(".note-panel:not([hidden])"), how).toHaveCount(0);
       await expect(page.locator(".note-open").first()).toHaveAttribute("aria-expanded", "false");
       expect(await page.evaluate(
         () => document.body.classList.contains("note-holding")), how).toBe(false);
     };
 
     await open();
-    await page.locator(".note-scrim").click({ position: { x: 30, y: 60 } });
-    await gone("tapping the scrim should close it");
+    // The scrim covers the page, so a press anywhere off the window
+    // lands on it.
+    await page.locator(".note-scrim").click({ position: { x: 20, y: 40 } });
+    await gone("pressing the page behind should close it");
 
     await open();
     await page.keyboard.press("Escape");
     await gone("escape should close it");
 
     await open();
-    // Scoped to the sheet that is up: every panel on the page has one.
-    await page.locator(".note-panel.note-pop .note-shut").click();
-    await gone("its own button should close it");
+    await page.locator(".note-panel:not([hidden]) .note-shut").click();
+    await gone("its own close should close it");
   });
 });
