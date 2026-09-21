@@ -2,7 +2,7 @@
 
 Date: 2026-09-20
 
-Files: `almost-human.js` (~545 lines), `works/almost-human.html`, the `human-*` block in
+Files: `almost-human.js` (~990 lines), `works/almost-human.html`, the `human-*` block in
 `style.css`, `images/Almost-Human/`, `tests/almost-human.spec.js`; and the three places a
 new house has to be added — the frame and the Fragrances row in
 `categories/scent-descriptions.html`, the `PAGES` line in `search-page.js`, and ADAR's
@@ -105,46 +105,46 @@ slice slips), `GLITCH_DROP` 0.28 — 0.12 (the share that go missing), the torso
 loss 0.3 — 0.15, the vertical slip 6px — 3px, and `GLITCH_RATE` 11 — 8 re-rolls a
 second. The owner's word was *subtle*.
 
-## The things that are not people
+## The thing that is not a person
 
 The owner asked for *"other things that are weirdly formed by particles and geometry,
 such as a sun, rain that is animated and falling and maybe add something else"*. A sun, an
 empty chair and the rain went in; the round after, they asked for **the sun and the chair
-gone**, the rain kept, and *"particle rays that blast from here and there"* in their place.
+gone**, the rain kept, and *"particle rays that blast from here and there"* in their
+place; the round after **that**, having seen the rays, they asked for those gone as well.
 
-So there are two now, and both are weather. Both live in **window space** rather than down
-the document — they fall and fly on the screen, they do not stand in the writing — and
-both go quiet over the reading like everything else here.
+So there is **one** thing here that is not a person, and it is the rain. It lives in
+**window space** rather than down the document — it falls on the screen, it does not stand
+in the writing — and it goes quiet over the reading like everything else here. Falling the
+whole length of the page, each drop a short string of five specks rather than a line.
 
-| | |
-|---|---|
-| **the rain** | Falling, the whole length of the page, each drop a short string of five specks rather than a line. |
-| **the rays** | A spray of specks fired out from a point somewhere in the margins, in a direction of its own, thrown wider the further along the ray they sit, brightest at the head and gone at the tail. One goes off every second or two, from nowhere in particular. Four can be travelling at once. |
-
-Three things about the rays that are not obvious from the code:
-
-- **A ray is a thing travelling, not a fizz.** Where each of its 140 specks sits along it,
-  how far it is thrown off the line of it and how big it is drawn are all rolled **once,
-  when it is armed**, and held for that firing. Rolling them per frame would be static.
-- **It goes out rather than being switched off.** The head travels fast and slows
-  (`1 - (1-p)^2.2`), and the whole thing fades over its own life, so it ends by being
-  gone rather than by disappearing.
-- **Eighteen specks was not a blast.** The first go had `RAY_BEADS` at 18 travelling up to
-  1100 pixels, which is a thin dotted line nobody would notice; it is 140 specks over 150
-  to 660 pixels now, which reads as a spray.
-
-Both roll their own numbers from an LCG of their own (`roll`), **not** from the seeded
+It rolls its own numbers from an LCG of its own (`roll`), **not** from the seeded
 `random()` the crowd is built from: taking numbers out of that run anywhere else would
 move every figure on the page.
 
-**What went with the sun and the chair.** `SUN_*`, `CHAIR`, `PROP_INK`, `PROP_STRAY`,
-`makeSun`, the whole `props` population and its drawing loop, and the test that checked
-the sun was round. `cloud()` stayed — it was a refactor the crowd uses too — and so did
-`sample()`, which `makeBody` calls. Why they were there is worth keeping: a figure is
-meant to give no hint of what it is until the hand arrives, but a sun that strays that far
-is nothing at all, so the props had a stray a tenth of the crowd's. The rays have no stray
-to speak of; they are a thing in flight.
+### What went with the sun, the chair and the rays
 
+`SUN_*`, `CHAIR`, `PROP_INK`, `PROP_STRAY`, `makeSun`, the whole `props` population and its
+drawing loop went with the first two, along with the test that checked the sun was round.
+`RAY_COUNT`, `RAY_BEADS`, `RAY_SPEED`, `RAY_LONG`, `RAY_LIVE`, `RAY_WAIT`, `RAY_FAN`,
+`RAY_INK`, `armRay`, `buildRays`, `drawRays`, the `rays` array and both of its call sites
+went with the rays. `cloud()` stayed — it was a refactor the crowd uses too — and so did
+`sample()`, which `makeBody` calls.
+
+**The test turned round rather than going.** A ray was a thing that *went off*, and the
+test for it measured exactly that: the amount of ink on the whole canvas swinging by well
+over a tenth as one fired and went out. That is now the guard that they are gone —
+`nothing blasts out of the margins` asks for a swing of **less** than 6%. It was measured
+both ways by putting the rays back and running it: **12.8% with them** (it fails, naming
+the number), **1.0% without**. The ceiling sits between the two rather than near either.
+
+Why the rays were built the way they were is worth keeping, since the owner may ask for
+something like them again: a ray rolled where each of its 140 specks sat along it, how far
+it was thrown off the line and how big it was drawn **once, when it was armed**, and held
+all three for that firing — rolled per frame it was static rather than a thing travelling.
+It faded over its own life rather than being switched off. And the first go had 18 specks
+travelling up to 1100 pixels, which is a thin dotted line nobody would notice; it took 140
+specks over 150 to 660 pixels to read as a spray at all.
 ## No two of them are the same crowd
 
 Height, pose, how many specks (`FIG_SPECKS`, 420 to 620), how heavily they are drawn
@@ -220,12 +220,14 @@ is a brand.
 
 Four things about how it is done:
 
-- **The mark is read off the owner's own file** (`images/Almost-Human/AH_Logo_Black.jpg`)
-  rather than drawn here from a guess at its geometry. The image goes on a small offscreen
-  canvas once, every dark pixel becomes a place a speck may stand, and the list is shuffled
-  and capped. It is their logo, so it should be their logo. Until the file has arrived the
-  list is empty and a head simply glitches the way it always did — which is the whole of
-  the guard this needs.
+- **The mark is read off the owner's own file** rather than drawn here from a guess at its
+  geometry. The image goes on a small offscreen canvas once, every dark pixel becomes a
+  place a speck may stand, and the list is shuffled and capped. It is their logo, so it
+  should be their logo. Until the file has arrived the list is empty and a head simply
+  glitches the way it always did — which is the whole of the guard this needs.
+- **It is the same file the head of the page shows** — `house-web/ah-logo.webp`, an 800px
+  copy of their `AH_Logo_Black.jpg` — so the mark is fetched once and used twice. The
+  original is 3125px square; this is read on a 116 grid, so 800 is far more than enough.
 - **The roll is once per beat**, off the beat's own number and the figure's own seed, so
   the mark holds for the whole of that second instead of flickering in and out of it, and
   so the same figure does not go to the logo every time.
@@ -235,12 +237,36 @@ Four things about how it is done:
 - The specks **travel to it** on the same `glitch` the rest of the fault uses, so the face
   comes apart into the mark rather than being swapped for it.
 
-## The picture, and the writing
+## The mark at the head, and the photograph on the sheet
 
-The owner's photograph of the house is at the head of the page. The original
-(`This one.webp`, 5152 × 7728 and 4.2MB) is far too big to send to a browser, so what is
-loaded is a 1600px copy in `house-web/` beside it — the same arrangement Pineward's
-gallery uses.
+**The two pictures changed places.** The owner's photograph, `This one`, stood at the head
+of this page for a round; they asked for it to be *"used on the page SD"* instead — it is
+this house's picture on the contact sheet now, the third frame in
+`categories/scent-descriptions.html`, which had been the hatch until then. The original
+(5152 × 7728 and 4.2MB) is far too big to send to a browser, so what is loaded there is
+the 1600px copy in `house-web/` — the same arrangement Pineward's gallery uses. That frame
+is square and the picture is portrait, so it is cropped to its middle, which is where the
+bottle stands.
+
+**The house's mark stands at the head of this page in its place** (`figure.human-mark`),
+at 168px — a mark's size rather than a picture's — and with no border, because a rule
+drawn round a logo reads as a box somebody forgot to take off.
+
+**The file has no ground of its own**, and that is the one thing about it worth knowing.
+The owner's logo is a JPEG, black on pure `#ffffff`, and this page's paper is `#fafaf9` —
+dropped in as it comes, the mark is a white square standing a shade brighter than the
+page, which is exactly what it looked like the first time. A `mix-blend-mode: multiply`
+was tried and **does nothing here**: the header makes a stacking context of its own, so
+there is no backdrop inside it to multiply against, and the image is drawn unchanged
+(measured: `#ffffff` inside the box against `#fafaf9` outside it). So `ah-logo.webp` is
+black on **transparent**, made from their file, and the page's own paper stands behind the
+ring.
+
+`almost-human.js` reads that same transparent file for the glitch, and needed no change
+for it: the sampler already skipped any pixel with an alpha under 40, so the ring's inside
+is simply not a place a speck may stand. Read off a 116 grid it gives 6,435 places where
+the opaque original gave 6,012 — the difference is the ring's anti-aliased edge, and only
+900 of them are kept anyway.
 
 **All five are written now**, and the introduction and the standfirst with them, in the
 owner's own words. The house's second line is theirs as well: *Abstraction done quite
@@ -314,12 +340,14 @@ being trusted:
   test compared each sample against the ninetieth percentile *of the samples themselves*,
   which is self-referential: with the fault running on it read 30.6% against a ceiling of
   30% and only just failed.
-- **`rays go off in the margins, from here and there`** — a ray is a thing that goes
-  off, which is what this measures: the ink on the whole canvas swings as one fires and
-  goes out. Said as a **share** of the ink rather than a count of pixels, because how many
-  there are at all depends on the window and on the screen's own scale, and the suite runs
-  at neither of the sizes it was measured at. With the rays it is 14.6%; with them off —
-  the rain wrapping and the figures drifting their pixel — it is 1.5%. The floor is 7%.
+- **`nothing blasts out of the margins — the rays are gone`** — the ray test turned round
+  when the owner asked for the rays gone, rather than deleted. A ray was a thing that went
+  *off*: the ink on the whole canvas swung as one fired and went out. What is left — the
+  rain wrapping and the figures drifting their pixel — barely moves. Said as a **share** of
+  the ink rather than a count of pixels, because how many there are at all depends on the
+  window and on the screen's own scale, and the suite runs at neither of the sizes it was
+  measured at. Proved by putting the rays back and running it: **12.8%**, and it fails
+  naming that number; with them gone it is **1.0%**. The ceiling is 6%, between the two.
 - **`the rain falls`** and **`the rain does not fall when motion is turned off`** —
   measured at the very edge of the window, in a strip no figure reaches even at its
   strayest, so what is counted there is the rain and nothing else. With the falling taken
@@ -335,10 +363,11 @@ Put the pointer on a figure and take it away again. That is the page.
 
 ## Known issues / TODO
 
-- **None of the five has its writing yet.** The introduction and the standfirst are
-  waiting too.
-- **No photographs.** `images/Almost-Human/` holds only its README. The page's own answer
-  — take the `<img>` off, leave the hatch — is what is showing.
+- **No photograph per fragrance yet.** The house's own two pictures are in —
+  `house-web/ah-logo.webp` at the head of this page, and `this-one.webp` on the contact
+  sheet — but `images/Almost-Human/` holds no `burning-bridges.jpg` and none of the other
+  four the README names. The page's own answer — take the `<img>` off, leave the hatch —
+  is what is showing, and there is a test for it.
 - All five are in the Fragrances table, pointing at `#part-01` to `#part-05`. Renumbering
   the house means re-pointing them in the same turn; there is a test.
 - **No groups.** ADAR's eleven are in four groups and Pineward's fifty-two in four strata;

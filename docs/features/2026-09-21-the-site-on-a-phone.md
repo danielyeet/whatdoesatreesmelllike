@@ -17,9 +17,10 @@ wrong, and each was measured before and after, both ways:
    **19**. They run at 40 and 37 now, and nothing on the site is below 37.
 2. **The contact sheet could be dragged sideways.** One line of lettering, hanging off a
    picture near the right-hand edge, made the document 415px wide on a 390px screen.
-3. **Almost Human's whole ground was invisible.** The crowd, the rain and the rays were
-   all being drawn at a twentieth of their ink on any window narrower than the writing's
-   own column — which is every phone. The drawing was there, and you could not see it.
+3. **Almost Human's whole ground was invisible.** The crowd and the rain — and the rays,
+   which the owner has since asked to have taken off that page — were all being drawn at a
+   twentieth of their ink on any window narrower than the writing's own column, which is
+   every phone. The drawing was there, and you could not see it.
 
 And one thing was missing rather than wrong: **a tap did nothing**. Dragging a finger
 across a house page worked, because a drag sends `pointermove`; a tap sends `pointerdown`

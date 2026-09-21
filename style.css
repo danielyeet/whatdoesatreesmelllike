@@ -6009,15 +6009,27 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 /* THE HOUSE'S OWN PICTURE, under the standfirst. Kept to the column the
    writing is set in and ruled like every other plate on this site, so
    it reads as part of the piece rather than as a banner over it. */
-.human-hero {
-  margin: 44px 0 0;
-  max-width: 560px;
+/* THE HOUSE'S MARK at the head of Almost Human — their own logo, not a
+   photograph, so it is set at a mark's size rather than a picture's and
+   carries no border: a rule drawn round a logo reads as a box somebody
+   forgot to take off.
+
+   IT HAS NO GROUND OF ITS OWN. The file in house-web/ is black on
+   TRANSPARENT rather than black on white, so the page's own paper is
+   what stands behind the ring. The owner's original is a JPEG and its
+   white is #ffffff where this page is #fafaf9 — dropped in as it comes,
+   the mark is a white square a shade brighter than the page. A
+   `mix-blend-mode: multiply` was tried first and does nothing here: the
+   header makes a stacking context of its own, so there is no backdrop
+   inside it to multiply against. */
+.human-mark {
+  margin: 40px 0 0;
+  width: 168px;
 }
-.human-hero img {
+.human-mark img {
   display: block;
   width: 100%;
   height: auto;
-  border: 1px solid var(--line);
 }
 /* A list inside a fragrance's writing. One of the five is written with
    one; the rest are prose. */

@@ -450,16 +450,23 @@ test("a held figure glitches in beats, and stands whole between them",
 });
 
 /* THE THINGS THAT ARE NOT PEOPLE. A sun and an empty chair stood in
-   these margins for a round and the owner asked for both of them gone,
-   the rain kept, and "particle rays that blast from here and there" in
-   their place. So there are two now, and both are weather.
+   these margins for a round, then rays in their place; the owner has
+   now asked for the rays gone too. So there is ONE thing here that is
+   not a person, and it is the rain.
 
-   A RAY IS A THING THAT GOES OFF, which is what this measures: with
-   them the amount of ink on the whole canvas swings by well over a
-   thousand pixels as one fires and goes out, and without them — the rain
-   wrapping and the figures drifting their pixel — it barely moves at
-   all. Measured both ways: 1460 against 252. */
-test("rays go off in the margins, from here and there", async ({ page }) => {
+   THIS IS THE GUARD ON THAT, and it is the ray test turned round. A
+   ray was a thing that GOES OFF: with them the amount of ink on the
+   whole canvas swung by well over a tenth as one fired and went out,
+   and the test that is gone asked for a swing of MORE than 7%. What is
+   left — the rain wrapping and the figures drifting their pixel —
+   barely moves at all. Measured both ways by putting the rays back:
+   12.8% with them, 1.0% without. The ceiling is set between the two.
+
+   Said as a SHARE of the ink rather than a count of pixels: how many
+   there are at all depends on the window and on the screen's own
+   scale, and this runs at neither of the sizes it was measured at. */
+test("nothing blasts out of the margins — the rays are gone",
+  async ({ page }) => {
   await page.goto(HOUSE);
   await page.waitForTimeout(1500);
   await page.mouse.move(700, 4);
@@ -478,15 +485,11 @@ test("rays go off in the margins, from here and there", async ({ page }) => {
     seen.push(await allInk());
     await page.waitForTimeout(130);
   }
-  // Said as a SHARE of the ink rather than a count of pixels: how many
-  // there are at all depends on the window and on the screen's own
-  // scale, and this runs at neither of the sizes it was measured at.
   const lo = Math.min.apply(null, seen), hi = Math.max.apply(null, seen);
   const swing = (hi - lo) / hi;
-  expect(swing, `the ink should swing as rays fire — ${lo} to ${hi}` +
-    ` (${(swing * 100).toFixed(1)}%)`).toBeGreaterThan(0.07);
+  expect(swing, `the ink should sit still — ${lo} to ${hi}` +
+    ` (${(swing * 100).toFixed(1)}%)`).toBeLessThan(0.06);
 });
-
 /* THE RAIN FALLS. Measured at the very edge of the window, where no
    figure reaches even at its strayest — so what is counted there is
    the rain and nothing else. */

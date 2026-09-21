@@ -91,7 +91,7 @@ which talk through five `window` globals; see the landing page's report).
 Four of those page scripts are elaborate: `chamber.js` (~1,740 lines), `node-scene.js`
 (~1,470), `structure.js` (~1,360) and `contact-sheet.js` (~1,360). The rest are smaller:
 `adar.js` (~820), `calculator.js` (~600), `pineward.js` (~690), `paper.js` (~570),
-`almost-human.js` (~960), `essay.js` (~400),
+`almost-human.js` (~990), `essay.js` (~400),
 `index-page.js` (~290), `thread.js` (~290), `search.js` (~270), `pineward-gallery.js`
 (~260), `extras.js` (~250), `landing.js` (~230), `nav.js` (~200), `find-ground.js`
 (~200), `photography.js` (~180), `search-page.js` (~130), `page-search.js` (~110) and
@@ -422,12 +422,12 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **part** (Pineward) | One of Pineward's fifty-two: a `<details>` showing its number, a small picture and its title until it is opened, and its full picture and writing inside. The pictures are the owner's own, one per fragrance, matched to the parts **by name**. |
 | **ADAR** | The second house in Scent descriptions: `works/adar.html`, "the house that you have never heard of". Eleven fragrances in four groups, on a **void**. |
 | **Almost Human** | The third house in Scent descriptions: `works/almost-human.html`, "Abstraction done quite well" (it was "the house that nearly gets there" until the owner wrote their own). Five fragrances — Burning Bridges, Dear Future, Desert Hope, Ritual Code, Silent Rain — standing in a **crowd**. **All five are written**, and so are the introduction and the standfirst. |
-| **the mark** (Almost Human) | The house's own logo, read off `images/Almost-Human/AH_Logo_Black.jpg` as places a speck may stand. On about a third of the beats a figure whose HEAD is the faulty part loses its face and stands as the mark instead. `LOGO_*` in `almost-human.js`. (Not the contact sheet's **mark**, which is a drawn plate.) |
+| **the mark** (Almost Human) | The house's own logo. It stands at the **head of that page** (`figure.human-mark`), and it is read off the same file as places a speck may stand: on about a third of the beats a figure whose HEAD is the faulty part loses its face and stands as the mark instead. One file for both — `images/Almost-Human/house-web/ah-logo.webp`, an 800px copy of the owner's `AH_Logo_Black.jpg`, **black on transparent** rather than on the original's white, because this page's paper is `#fafaf9` and a white square shows against it. `LOGO_*` in `almost-human.js`. (Not the contact sheet's **mark**, which is a drawn plate.) |
 | **the crowd** | That page's ground: people standing down both margins the whole length of it, every one of them drawn entirely in specks, built out of capsules rather than traced from an outline. |
 | **the stray** | What makes the crowd *almost* human, and the house's name said as a behaviour: every speck knows exactly where it belongs and stands up to a FIFTH of the figure's height away from it, fixed for the life of that figure. At rest a figure is a cloud that gives no hint of a person; the person is entirely the pointer's doing. Bring the pointer near — **anywhere on the figure** — and the specks come home: the figure resolves under your hand and comes apart again when you leave. It never resolves completely (`STRAY_NEAR`); one that came exactly home would be the wrong drawing. |
 | **the fault** | What is wrong with each figure on Almost Human, and it shows **only after the figure has been held formed for a moment**: a head that comes apart in slices, a torso that slips and loses specks, one arm on its own, or every part of it each on a clock of its own. Four of them, running in order down the page. It is a **beat rather than a drone** — one second in every six, easing in and out at each end — and every part of it is about half the size it first was. `FAULTS`, `GLITCH_*` in `almost-human.js`. |
-| **the rain** / **the rays** (Almost Human) | The two things on that page that are not people, and both are weather: **rain** falling the length of the page, each drop a short string of specks, and **rays** — a spray of specks fired out from a point in the margins, one every second or two, from nowhere in particular. Both live on the window rather than down the document. |
-| **the sun** / **the chair** (Almost Human) | **Removed.** A sun drawn as a ring with uneven rays and an empty chair stood in those margins for one round; the owner asked for both gone and for the rays in their place. Nothing of them is in `almost-human.js` — no `SUN_*`, no `CHAIR`, no `props`. |
+| **the rain** (Almost Human) | The one thing on that page that is not a person, and it is weather: rain falling the length of the page, each drop a short string of specks. It lives on the window rather than down the document. |
+| **the sun** / **the chair** / **the rays** (Almost Human) | **All removed.** A sun drawn as a ring with uneven rays and an empty chair stood in those margins for one round; the owner asked for both gone and for **rays** — "particle rays that blast from here and there" — in their place, and then, having seen them, asked for the rays gone as well. Nothing of any of the three is in `almost-human.js`: no `SUN_*`, no `CHAIR`, no `props`, no `RAY_*`, no `armRay`, `buildRays` or `drawRays`. The rain is what is left. |
 | **the rank** (Almost Human) | The scale down the side of that page: Pineward's **trunk** and ADAR's **sounding** by a third name, in plain ink. (Not the chromatogram's **rank / ridge**, above.) The fill is how far down the page you are, from its very first pixel; the ticks are how many fragrances you have been past. |
 | **the void** | ADAR's ground: a hole standing off to one side of the window with soundings ringing out from it and specks falling round its rim. Drawn by taking the disc back out of the finished drawing, not by painting one over it. |
 | **the sounding** | Two things on that page, and they go together: one of the ringed scales drawn out from the void, and the scale down the side of the page with one tick per fragrance — Pineward's **trunk** by another name. |
@@ -562,19 +562,21 @@ worth knowing before touching anything shared:
   overlay's links and the global focus ring, on every page including the chamber. Why it
   was left is in [the page shell's
   report](docs/features/2026-09-11-the-page-shell-and-menu.md).
-- **Every plate on the site but ADAR's and Pineward's is still a hatched placeholder**,
-  with its `<img>` tag commented out waiting for a file and a name — see [the images
+- **All three houses carry a real picture on the contact sheet now**, and every other
+  plate on the site is still a hatched placeholder with its `<img>` tag commented out
+  waiting for a file and a name — see [the images
   report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's fifty-two
-  fragrance pictures and its gallery arrived on 2026-09-18. Almost Human's five name the
-  files they want in `images/Almost-Human/` and show them the moment they are there.
+  fragrance pictures and its gallery arrived on 2026-09-18; Almost Human's own two — the
+  **mark** at the head of its page and the photograph `This one` on the sheet — on
+  2026-09-21. Almost Human's five fragrance pictures name the files they want in
+  `images/Almost-Human/` and show them the moment they are there.
 
 **The placeholders in the new pages are marked as placeholders.** ADAR's introduction,
-the standfirsts and every plate on the site but ADAR's and Pineward's are waiting for the
-owner. **Almost Human is almost entirely waiting**: four of its five fragrances have no
-name yet and none has its writing, and every unwritten paragraph on that page says so in
-a dashed box rather than standing in as prose. The three theory pages now carry the
-owner's own writing. The dates in the Fragrances table are rolled from a seed so the
-sorting has something to work on; they say nothing. The one thing that was not guessed at
+the standfirsts and most of the site's plates are waiting for the owner, and every
+unwritten paragraph says so in a dashed box rather than standing in as prose. **Almost
+Human is written**, all five fragrances and its introduction with them, as are the three
+theory pages — all in the owner's own words. The dates in the Fragrances table are
+rolled from a seed so the sorting has something to work on; they say nothing. The one thing that was not guessed at
 is a fragrance's own writing, which is theirs throughout.
 
 **What has never been asked for and should not be invented:** the placeholder content.

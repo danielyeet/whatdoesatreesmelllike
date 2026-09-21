@@ -64,6 +64,16 @@ title page, both for the contact sheet. Neither is served as uploaded.
 |---|---|---|
 | `Pineward/Batch 1 Photograph (40).JPG` | 19MB, 5152×7728 | `batch-1-photograph-40-web.jpg`, 0.21MB, 1067×1600 |
 | `ADAR/Adar Title page.png` | 6.3MB, 3873×3873 | `adar-title-page-web.jpg`, 0.16MB, 1600×1600 |
+| `Almost-Human/This one.webp` | 4.2MB, 5152×7728 | `house-web/this-one.webp`, 0.015MB, 1067×1600 |
+| `Almost-Human/AH_Logo_Black.jpg` | 0.17MB, 3125×3125 | `house-web/ah-logo.webp`, 0.02MB, 800×800 |
+
+Almost Human's two are in a `house-web/` folder inside the house's own rather than beside
+the original — the same arrangement Pineward's gallery uses, and the better one now there
+is more than one copy to keep. **The mark is the one picture on the site that is not
+served as it was given**: the owner's file is black on pure white and the copy is black on
+**transparent**, because the page it stands on is `#fafaf9` and a white square shows
+against that. The reasoning, and what was tried first, is in [Almost
+Human's report](2026-09-20-almost-human.md).
 
 **The originals are kept and nothing points at them.** The copies exist because the full
 files did measurable harm: together they starved the contact sheet's opening animation of
@@ -81,10 +91,12 @@ photographs are small enough already and were left alone.
 
 ## Known issues / TODO
 
-- `Favorites/`, `Individual Fragrances/` and `Theories/` are still empty but for their
-  READMEs. ADAR's folder is complete; `Pineward/` has one photograph, on the contact
-  sheet. Every other plate on the site is still a hatched placeholder with its `<img>`
-  tag commented out — the fifty-four Pineward parts among them.
+- `Favorites/` and `Individual Fragrances/` are still empty but for their READMEs.
+  ADAR's folder is complete; `Pineward/` has its fifty-two fragrance pictures and its
+  gallery; `Almost-Human/` has the house's two — the mark and `This one` — and none of
+  the five its fragrances name. **All three houses carry a real picture on the contact
+  sheet now**; every other plate on the site is still a hatched placeholder with its
+  `<img>` tag commented out.
 - The link test's tolerance of missing images is deliberate, but it means path breakage
   in this area has to be caught by eye. If the placeholders are ever all filled in, that
   tolerance is worth revisiting.

@@ -149,24 +149,19 @@
   const rgba = (a) => "rgba(" + INK + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
 
   // ============================================================
-  // AND THE THINGS THAT ARE NOT PEOPLE
+  // AND THE THING THAT IS NOT PEOPLE
   //
-  // Two of them, and they are both weather. A sun and an empty chair
-  // stood here for a round; the owner asked for both of them gone and
-  // for the rain to stay, and the rays are what they asked for in
-  // their place — "particle rays that blast from here and there".
+  // One thing now, and it is weather. THE RAIN: falling the whole
+  // length of the page, each drop a short string of specks rather
+  // than a line. It lives in WINDOW space rather than down the
+  // document — it is weather, not something standing in the writing
+  // — and goes quiet over the reading like everything else here.
   //
-  //   the rain    falling, the whole length of the page, each drop a
-  //               short string of specks rather than a line.
-  //   the rays    a spray of specks fired out from a point, somewhere
-  //               in the margins, in a direction of its own, thrown
-  //               wider the further along it they sit and fading as
-  //               the whole thing goes out. One every second or two,
-  //               from nowhere in particular.
-  //
-  // Both live in WINDOW space rather than down the document — they are
-  // weather, not something standing in the writing — and both go quiet
-  // over the reading like everything else here.
+  // THREE THINGS STOOD HERE AND ARE GONE. A sun and an empty chair
+  // went in one round, when the owner asked for both of them gone
+  // and for the rain to stay; RAYS — "particle rays that blast from
+  // here and there" — went in the next, once they had seen them.
+  // Nothing of any of the three is in this file.
   // ============================================================
   const RAIN_DROPS = 170;        // how many are falling at once
   const RAIN_BEADS = 5;          // the specks one drop is strung from
@@ -174,15 +169,6 @@
   const RAIN_LONG = [24, 64];    // how long one is, in pixels
   const RAIN_SLANT = 0.16;       // how far it leans as it falls
   const RAIN_INK = [0.13, 0.34];
-
-  const RAY_COUNT = 4;           // how many can be travelling at once
-  const RAY_BEADS = 140;         // the specks one ray is strung from
-  const RAY_SPEED = [430, 920];  // how fast the head of one travels
-  const RAY_LONG = [90, 240];    // how far the tail trails behind it
-  const RAY_LIVE = [0.38, 0.72]; // how long one lasts, in seconds
-  const RAY_WAIT = [0.4, 2.6];   // and how long before the next goes off
-  const RAY_FAN = 0.13;          // how far it spreads as it goes
-  const RAY_INK = [0.34, 0.72];
 
   // ============================================================
   // THE HOUSE'S MARK, IN THE GLITCH
@@ -200,7 +186,10 @@
   // canvas once and every dark pixel becomes a place a speck may stand.
   // It is their logo, so it should be their logo.
   // ============================================================
-  const LOGO_FILE = "../images/Almost-Human/AH_Logo_Black.jpg";
+  // The 800px copy rather than the 3125px original, and the same file
+  // the head of the page shows — so the mark is fetched once and used
+  // twice. It is read on a 116 grid, so 800 is far more than enough.
+  const LOGO_FILE = "../images/Almost-Human/house-web/ah-logo.webp";
   const LOGO_GRID = 116;      // how finely the mark is read off the file
   const LOGO_DARK = 140;      // and how dark a pixel has to be to count
   const LOGO_SPOTS = 900;     // how many places are kept
@@ -231,9 +220,13 @@
         for (let y = 0; y < LOGO_GRID; y++) {
           for (let x = 0; x < LOGO_GRID; x++) {
             const at = (y * LOGO_GRID + x) * 4;
+            // THE GROUND OF THE FILE IS TRANSPARENT, not white — the
+            // page shows the same file and its paper is #fafaf9, so a
+            // white square would stand a shade brighter than the page.
+            // Both tests are kept: what counts is a pixel that is
+            // there AND dark, which is true of the old opaque file as
+            // well as of this one.
             if (seen[at + 3] < 40) continue;
-            // Its own brightness, near enough: the mark is black on
-            // white, so anything dark is the mark.
             const dark = (seen[at] + seen[at + 1] + seen[at + 2]) / 3;
             if (dark <= LOGO_DARK) {
               spots.push([x / (LOGO_GRID - 1), y / (LOGO_GRID - 1)]);
@@ -347,11 +340,10 @@
   let width = 0, height = 0, docTall = 0;
   let crowd = [];
   let rain = [];
-  let rays = [];
 
-  /** One cloud of specks standing somewhere down the page: the same
-      shape for a person, a sun and a chair, so all three stray, come
-      home under the hand and go quiet over the reading alike. */
+  /** One cloud of specks standing somewhere down the page. Every
+      figure in the crowd is built through here, so they all stray,
+      come home under the hand and go quiet over the reading alike. */
   function cloud(points, at, tall, mid, wander, weight) {
     let half = 0;
     const specks = points.map((one) => {
@@ -455,39 +447,6 @@
     }
   }
 
-  /** A RAY, ARMED AND WAITING. Every one of them starts part way
-      through its own wait the first time, so they do not all go off
-      together on the first second of the page. */
-  function armRay(ray, first) {
-    const margin = Math.max(110, (width - COLUMN) / 2 + EASED_IN);
-    // FROM HERE AND THERE, which is what the owner asked for — but
-    // out of the margins, because the middle of the window is the
-    // reading. Left side or right, and anywhere down the window.
-    ray.x = roll() < 0.5 ? roll() * margin : width - roll() * margin;
-    ray.y = roll() * height;
-    ray.ang = roll() * Math.PI * 2;
-    ray.speed = among(RAY_SPEED);
-    ray.long = among(RAY_LONG);
-    ray.live = among(RAY_LIVE);
-    ray.ink = among(RAY_INK);
-    ray.wait = among(RAY_WAIT) * (first ? roll() : 1);
-    ray.at = 0;
-    ray.beads = [];
-    for (let k = 0; k < RAY_BEADS; k++) {
-      // Where a speck sits along the ray, how far it is thrown off the
-      // line of it and how big it is drawn — all three fixed for this
-      // firing, so a ray is a thing travelling rather than a fizz.
-      ray.beads.push([Math.pow(roll(), 0.7), (roll() - 0.5) * 2, roll()]);
-    }
-    return ray;
-  }
-
-  function buildRays() {
-    rays = [];
-    if (!width || !height) return;
-    for (let n = 0; n < RAY_COUNT; n++) rays.push(armRay({}, true));
-  }
-
   function size() {
     if (!canvas) return;
     // A PHONE DRAWS AT A LOWER RATIO. Every canvas here is capped at
@@ -509,7 +468,7 @@
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
     ink.setTransform(ratio, 0, 0, ratio, 0, 0);
-    if (!same) { build(); buildRain(); buildRays(); }
+    if (!same) { build(); buildRain(); }
   }
 
   let handX = -99999, handY = -99999;
@@ -525,7 +484,7 @@
     // ON A WINDOW NARROWER THAN THE COLUMN THERE IS NO MARGIN TO TAKE
     // OUT, and this used to take the whole page out with it: `edge`
     // came to nought, the quiet band covered the window, and every
-    // figure, every drop of rain and every ray was drawn at a
+    // every figure and every drop of rain was drawn at a
     // twentieth. On a phone this page had no ground at all — the whole
     // drawing was there and invisible.
     //
@@ -584,7 +543,6 @@
     wasAt = clock;
 
     drawRain(dt);
-    drawRays(dt);
 
     crowd.forEach((figure) => {
       const top = figure.y - down;
@@ -695,44 +653,6 @@
         if (shown < 0.012) return;
         ink.fillStyle = rgba(shown);
         ink.fillRect(Math.round(x), Math.round(y), one.size, one.size);
-      });
-    });
-  }
-
-  /** THE RAYS. A spray of specks fired out from a point, thrown wider
-      the further along the ray they sit, brightest at the head and
-      gone at the tail — and fading as a whole over its own life, so it
-      goes OUT rather than being switched off. Under
-      `prefers-reduced-motion` a ray that has not gone off yet stays
-      where it is and nothing fires. */
-  function drawRays(dt) {
-    rays.forEach((ray) => {
-      if (dt > 0) {
-        if (ray.wait > 0) { ray.wait -= dt; return; }
-        ray.at += dt;
-        if (ray.at >= ray.live) { armRay(ray, false); return; }
-      } else if (ray.wait > 0) {
-        return;
-      }
-      const p = ray.live ? Math.min(1, ray.at / ray.live) : 0;
-      // Out fast and slowing, and fading over the whole of its life.
-      const going = ray.speed * ray.live * (1 - Math.pow(1 - p, 2.2));
-      const fade = Math.min(1, p * 6) * (1 - Math.pow(p, 1.7));
-      if (fade <= 0.01) return;
-      const ux = Math.cos(ray.ang), uy = Math.sin(ray.ang);
-      const px = -uy, py = ux;
-      ray.beads.forEach((bead) => {
-        const along = going - bead[0] * ray.long;
-        if (along < 0) return;
-        const fan = bead[1] * RAY_FAN * along;
-        const x = ray.x + ux * along + px * fan;
-        const y = ray.y + uy * along + py * fan;
-        if (x < -6 || x > width + 6 || y < -6 || y > height + 6) return;
-        const shown = ray.ink * fade * (1 - bead[0] * 0.85) * lit(x);
-        if (shown < 0.012) return;
-        const big = bead[2] < 0.45 ? 2 : 1;
-        ink.fillStyle = rgba(shown);
-        ink.fillRect(Math.round(x), Math.round(y), big, big);
       });
     });
   }
