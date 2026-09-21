@@ -248,6 +248,16 @@ head of the page, so the header is 208px shorter and the crowd that is built to 
 page is a different crowd. That is not a phone change and it is written up in [the Almost
 Human report](2026-09-20-almost-human.md).
 
+**A drawing is never still, and the check has to know that.** The theories page creeps on a
+clock of its own (the breath) and the landing page's map turns, so two renders sampled a
+frame apart put the same element a pixel from itself. A difference of one pixel in x, y,
+width or height with every other field equal is counted as drift and named as drift rather
+than called a change — proved by running the same comparison twice and watching which
+entries move. In the final sweep that was three elements in seventy-eight page-checks, all
+of them on the two pages that animate. Without that tolerance the first run reported the
+theories page as changed at three sizes and `same` at the same three on the next run, which
+is how the noise was identified in the first place.
+
 **The harness is not in the repository** — it needs a second checkout and two servers, which
 is not something `npm test` can carry — but it is twenty lines of Playwright and the recipe
 above is the whole of it. It is worth rebuilding for any round that touches a shared rule,
