@@ -399,6 +399,31 @@ The page is the plain list of favourites, and it holds its own markup back until
 script has taken over the same way the other two replaced pages do — the `js-coming`
 class in its own `<head>`.
 
+## The little jump when a chapter opened
+
+The owner: *"In favourites when you click on chapter one; there is a tiny jump of the page.
+Asides from that its perfect, so just fix the little jump."* It was **185 pixels in one
+frame**, and it was one property of CSS.
+
+`transition` is a single property, and writing a new one replaces the whole list. The
+plate carries `transition: transform ...` — its transform is what `--menu-lift` rides on,
+how far it stands above the middle of the window so that the word and the menu are centred
+together — and `.favorites-page.bursting .chamber-plate` wrote a new transition for the
+fade. That took the transform transition off on the frame the class landed.
+
+Opening a chapter closes the menu, which writes a new lift on that same frame. With the
+transform transition gone the plate **snapped down the whole height of the menu**, in full
+view, before any of the burst had begun. Both transitions are named in the `bursting` rule
+now, so the plate eases down while it fades.
+
+Measured, at 390 × 844: the one-frame jump of 185px is gone, and the largest step anywhere
+in the same stretch is 3px, which is the ease doing its work.
+
+**This is the second time a change of `--menu-lift` has been visible as a jump**, and the
+first is written up under `.chamber-plate` in the stylesheet: the menu used to be in the
+plate's own flow, so putting it on the page grew the box and shoved the word 143px up the
+window in one frame. Anything that writes a new lift has to be able to travel on.
+
 ## How to test it
 
 ```bash

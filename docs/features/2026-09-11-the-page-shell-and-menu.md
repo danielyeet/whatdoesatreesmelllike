@@ -93,6 +93,30 @@ Pick a port that is **not 4321**: that is the one the test suite starts its own 
 There is no build or lint step, so nothing catches a mistake before the browser does —
 open the console after any change to a drawing.
 
+## The Menu's own ground, on a phone
+
+The trigger is fixed to the top left of the window and the page travels underneath it. On a
+wide window there is nothing up there to travel past; on a phone the writing reaches the
+top corner, and the owner photographed the word `Menu` printed straight through a
+paragraph, unreadable.
+
+Below 700px it gets **a box no bigger than the word, blurring what is behind it**. Three
+things about how it is done:
+
+- **The ground is the page's own.** `--chrome-ground` is a token on `:root` — the paper on
+  a light page, and near-black under the five bodies drawn on a dark one
+  (`theories-page`, `adar-page`, `essay-page`, `find-page`, `chapter-open`). A colour
+  picked here instead would be a patch of the wrong one on half the site.
+- **The word does not move.** The padding is taken back out of `left`, so the lettering
+  stands exactly where it stood. **Nothing above 700px has a box at all.**
+- **It goes when the menu is open.** The word stands on the overlay's own black there and
+  is lettered light, so a pale box under it would hide it rather than help.
+
+The same token and the same box went on to three more things fixed to the window while the
+page travels under them — the contact sheet's view buttons and its search, and the readings
+in the corner of the three house pages. Not on a page's own search (`.page-find`), which
+stands over a drawing rather than over writing on all three pages that carry it.
+
 ## How to test it
 
 ```bash

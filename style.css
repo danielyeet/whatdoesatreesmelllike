@@ -173,6 +173,64 @@ img { max-width: 100%; display: block; }
 body.menu-open .menu-trigger { color: #f0efe8; }
 body.menu-open .menu-trigger:hover { color: var(--brass); }
 
+/* ON A PHONE THE WORD IS GIVEN A GROUND OF ITS OWN.
+   The trigger is fixed to the top left of the window and the page
+   travels underneath it, so on a narrow screen it ends up printed
+   through whatever happens to be scrolling past — the owner sent a
+   photograph of "Menu" standing inside a paragraph, unreadable. A box
+   no bigger than the word, blurring what is behind it, gives the word
+   back its own ground without putting a bar across the top of every
+   page.
+
+   IT IS THE PAGE'S OWN GROUND, not a colour picked here: `--chrome-ground`
+   is the paper on a light page and near-black on the five drawn on a
+   dark one, so the box never shows as a patch of the wrong colour. The
+   word itself does not move — the padding is taken back out of `left`
+   — because nothing above 700px may change and nothing below it should
+   jump either.
+
+   AND IT GOES WHEN THE MENU IS OPEN: the word stands on the overlay's
+   own black there and is lettered light, so a pale box under it would
+   hide it rather than help. */
+:root { --chrome-ground: rgba(250, 250, 249, 0.76); }
+/* The three house pages' readings are the same problem in the opposite
+   corner: fixed to the foot of the window with the writing travelling
+   under them, they were printed through a paragraph on a phone. Same
+   box, same ground. ADAR's page is dark, so it takes the dark one
+   through the list below. */
+@media (max-width: 700px) {
+  .pine-readout,
+  .adar-readout,
+  .human-readout {
+    padding: 5px 9px 6px;
+    border-radius: 3px;
+    background: var(--chrome-ground);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
+body.theories-page,
+body.adar-page,
+body.essay-page,
+body.find-page,
+body.chapter-open { --chrome-ground: rgba(11, 12, 15, 0.62); }
+
+@media (max-width: 700px) {
+  .menu-trigger {
+    left: 14px;
+    padding: 4px 8px 5px;
+    border-radius: 3px;
+    background: var(--chrome-ground);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  body.menu-open .menu-trigger {
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 .menu-overlay {
   position: fixed;
   inset: 0;
@@ -892,6 +950,39 @@ body.view-fragrances .sheet-search { display: none; }
 .sheet-search-field:focus { outline: none; border-bottom-color: var(--ink); }
 .sheet-search.open .sheet-search-field { width: min(230px, 42vw); opacity: 1; }
 .sheet-search.open .sheet-search-word { color: var(--brass); }
+
+/* ON A PHONE THE REST OF THE CHROME GETS A GROUND TOO. The Menu, these
+   two buttons and the search all stand fixed across the top of the
+   window while the sheet travels underneath them — and on a narrow
+   screen the sheet is a tall single file of pictures, so what travels
+   underneath them is a picture rather than white paper, and the
+   lettering was printed straight through it. The same box and the same
+   `--chrome-ground` the Menu has; see .menu-trigger.
+
+   The padding is taken back out of the position either side, so the
+   lettering itself stands exactly where it did. */
+@media (max-width: 700px) {
+  .sheet-filters,
+  .sheet-search {
+    padding: 4px 9px 5px;
+    border-radius: 3px;
+    background: var(--chrome-ground);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .sheet-filters { gap: 18px; }
+  .sheet-search { right: 13px; }
+  /* AND THE CHROME HAS TO BE ON TOP OF THE SHEET, which it was not: a
+     picture carries a z-index worked out from how far back it stands
+     (1000 at the front of the volume), and the chrome stands at 30 —
+     so the nearest pictures were drawn straight OVER the buttons, box
+     and all, and "Houses" was printed inside a photograph. On a wide
+     window the sheet is wide enough that nothing passes under them and
+     nothing here applies. */
+  body.sheet-page .menu-trigger,
+  .sheet-filters,
+  .sheet-search { z-index: 1100; }
+}
 
 .sheet {
   position: relative;
@@ -1751,8 +1842,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   animation: chamber-drawn-in 1.2s cubic-bezier(0.6, 0, 0.72, 0.3) both;
   animation-delay: calc((1 - var(--mid, 0)) * 0.55s);
 }
-.chamber-plate.drawn-in .chamber-head,
-.chamber-plate.drawn-in .chamber-rule {
+.chamber-plate.drawn-in .chamber-head {
   animation: chamber-drawn-in 1.2s cubic-bezier(0.6, 0, 0.72, 0.3) both;
 }
 @keyframes chamber-drawn-in {
@@ -1771,8 +1861,7 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .chamber-plate.drawn-in .chamber-panel,
   .chamber-plate.drawn-in .chamber-row,
-  .chamber-plate.drawn-in .chamber-head,
-  .chamber-plate.drawn-in .chamber-rule { animation-duration: 0.01s; }
+  .chamber-plate.drawn-in .chamber-head { animation-duration: 0.01s; }
 }
 /* WITH ANIMATION TURNED OFF there is nothing to watch the step
    happening: chamber.js settles the drawing into whichever state the
@@ -1796,20 +1885,6 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
 }
-.chamber-back {
-  flex: none;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.chamber-back[hidden] { display: none; }
-.chamber-back:hover, .chamber-back:focus-visible { color: var(--ink); }
 .chamber-spec {
   margin: 0;
   font-family: var(--mono);
@@ -2075,6 +2150,23 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
   display: block;
   white-space: nowrap;
 }
+/* KEEPING A STATION'S NAME ON THE WINDOW, and only on a phone.
+   `--say-shift` is how far the lettering has to slide back along not to
+   run off the side; structure.js works it out and writes it every
+   frame, and it is only ever negative — the name is pulled back off the
+   edge, never pushed out to it.
+
+   BOTH RULES ARE HELD BELOW 700px, and the two go together. Each line
+   being its own width is what lets structure.js ask how wide the NAME
+   is without being told how wide the line under it is (that one is only
+   ever read on a hover and is much the longest of the three) — and
+   without it the shift would be measured against the wrong number. So
+   above 700px there is no shift, no transform and no change to any box
+   on the drawing: it is the page it always was. */
+@media (max-width: 700px) {
+  .structure-say > span { width: max-content; max-width: 100%; }
+  .structure-say { transform: translateX(var(--say-shift, 0px)); }
+}
 .structure-no {
   display: block;
   font-family: var(--mono);
@@ -2241,6 +2333,15 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
   /* The two numbers stay: they are how you know where you are. */
   .structure-readout { top: 16px; right: 16px; font-size: 10px; letter-spacing: 0.08em; }
   .structure-spine { width: min(260px, 60vw); }
+}
+
+/* And on a phone the line under a station's name wraps rather than
+   running off the side: it is much the longest of the three and there
+   is no room for it on one line there. Held to 700px with everything
+   else, though it would be worth having at 860 too — nothing above
+   700px may change. */
+@media (max-width: 700px) {
+  .structure-meta { white-space: normal; max-width: 62vw; }
 }
 
 /* Where there is no room beside the figure the card goes under it, and
@@ -2491,12 +2592,6 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   margin: 0;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--line);
-}
-.pine-stratum-line {
-  margin: 14px 0 0;
-  color: var(--muted);
-  font-style: italic;
-  max-width: 46ch;
 }
 .pine-stratum-count {
   font-family: var(--mono);
@@ -3862,21 +3957,44 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
   text-transform: uppercase;
 }
 .index-table .index-of { width: 30%; }
-.index-table td a { color: inherit; text-decoration: none; display: block; }
+/* THE LINK IS CLAMPED TOO, and not only the cell it is in. A cell is
+   `max-width: 0` with an ellipsis so a long name is cut rather than
+   allowed to widen the table; the anchor inside it is a block of its
+   own, and a block inside a clipped cell simply overflows it — so on a
+   narrow window the rows that HAD a page behind them printed their name
+   straight through the column beside it, and the rows that did not
+   ellipsised properly. The owner sent a photograph of exactly that:
+   "Resins" written over "RESEARCH". */
+.index-table td a {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .index-table tr:hover .index-what { color: var(--ink); }
 /* A row with nothing to open is not a link, and says so by being
    quieter than one that is. */
 .index-table tr[data-open="no"] td { color: var(--line); }
 .index-table tr[data-open="no"]:hover td { color: var(--muted); }
 
-.index-foot {
-  grid-column: 1;
-  grid-row: 3;
-  margin: clamp(18px, 3vh, 30px) 0 0;
-  color: var(--ink);
-  line-height: 1.45;
+/* ON A PHONE THE READINGS GIVE UP THEIR ROOM TO THE NAME. The three
+   columns either side of it are set to a width each, and on a 390px
+   screen those three take three quarters of the table between them —
+   which leaves a fragrance or a research with about eighty pixels to be
+   named in, and every one of them cut to two letters. They are set in
+   the mono and they are short, so they can be smaller and tighter here
+   without becoming unreadable; the name gets what they give up. */
+@media (max-width: 700px) {
+  .index-table { font-size: 12px; }
+  .index-table td { padding-right: 8px; }
+  .index-table .index-no { width: 42px; font-size: 11px; }
+  .index-table .index-date { width: 76px; font-size: 11px; }
+  .index-table .index-kind { width: 94px; font-size: 10px; letter-spacing: 0.04em; }
+  .index-table .index-of { width: 26%; }
+  .index-sort { font-size: 10px; letter-spacing: 0.06em; }
 }
-.index-foot span { color: var(--muted); display: block; }
 
 @media (max-width: 900px) {
   .index-page {
@@ -3886,13 +4004,11 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
   }
   .index-head,
   .index-right,
-  .index-board,
-  .index-foot { grid-column: 1; }
+  .index-board { grid-column: 1; }
   .index-head { grid-row: 1; grid-template-columns: 1fr; }
   .index-say { grid-column: 1; margin-top: 26px; }
   .index-right { grid-row: 2; margin-top: 30px; }
   .index-board { grid-row: 3; margin-top: 40px; }
-  .index-foot { grid-row: 4; }
   .index-scroll { max-height: 56vh; }
 }
 
@@ -4265,9 +4381,10 @@ body.find-reading .find-reading-note { opacity: 1; }
 
    AND IT IS GEOMETRIC, which is the other half of the note — "more
    geometrical, and not so circular smooth... more mechanical". Every
-   edge here is a POLYGON of twelve sides, not a circle: the shells, the
-   hairline that leads them, and the cut the page is opened with
-   (`CLIP_ROUND` in chamber.js). At this size twelve sides read as
+   edge here is a POLYGON of twelve sides, not a circle: the shells and
+   the hairline that leads them. (The cut the chapter page was once
+   opened with was a polygon too; it is gone — the mesh's own panels
+   turn the window over now.) At this size twelve sides read as
    facets rather than as a circle, which is the difference between a
    ripple and a machine.
 
@@ -4508,11 +4625,23 @@ body.find-reading .find-reading-note { opacity: 1; }
    middle of the chamber — half the disc — so fading it took half the
    ring away on the way in. The labels are faded in `chamber.js`
    instead, where the particles can be told apart from the chrome. */
+/* AND THE PLATE KEEPS ITS OWN TRANSITION. `transition` is one
+   property: writing a new one here REPLACES the `transform` transition
+   the plate carries, and the plate's transform is what `--menu-lift`
+   rides on — how far it stands above the middle so the word and the
+   menu are centred together. Opening a chapter closes the menu, which
+   writes a new lift on the same frame this class lands; with the
+   transform transition gone the plate SNAPPED down the whole height of
+   the menu in one frame, in full view, before any of the burst had
+   begun. That is the little jump the owner reported on pressing a
+   chapter. Both transitions are named here, so the plate eases down
+   while it fades. */
 .favorites-page.bursting .chamber-plate,
 .favorites-page.bursting .page-find {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 1.25s var(--menu-ease);
+  transition: opacity 1.25s var(--menu-ease),
+              transform var(--chamber-step-ms) var(--chamber-step);
 }
 /* And the particles themselves, once the wave has gone out past them. */
 .chamber.burst-wave .chamber-field {
@@ -4745,11 +4874,9 @@ body.find-reading .find-reading-note { opacity: 1; }
    that the table is never waiting on itself. */
 .index-arriving .index-head,
 .index-arriving .index-right,
-.index-arriving .index-search,
-.index-arriving .index-foot { animation: index-in 0.7s var(--menu-ease) both; }
+.index-arriving .index-search { animation: index-in 0.7s var(--menu-ease) both; }
 .index-arriving .index-right { animation-delay: 0.08s; }
 .index-arriving .index-search { animation-delay: 0.16s; }
-.index-arriving .index-foot { animation-delay: 0.3s; }
 .index-arriving .index-table thead th { animation: index-in 0.6s var(--menu-ease) 0.2s both; }
 .index-arriving .index-table tbody tr:nth-child(-n+18) {
   animation: index-row 0.5s var(--menu-ease) both;
@@ -4790,7 +4917,6 @@ input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; appe
   .index-arriving .index-head,
   .index-arriving .index-right,
   .index-arriving .index-search,
-  .index-arriving .index-foot,
   .index-arriving .index-table thead th,
   .index-arriving .index-table tbody tr { animation: none; }
 }
@@ -6018,30 +6144,33 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   color: var(--muted);
   font-size: 17px;
 }
-/* THE HOUSE'S OWN PICTURE, under the standfirst. Kept to the column the
-   writing is set in and ruled like every other plate on this site, so
-   it reads as part of the piece rather than as a banner over it. */
-/* THE HOUSE'S MARK at the head of Almost Human — their own logo, not a
-   photograph, so it is set at a mark's size rather than a picture's and
-   carries no border: a rule drawn round a logo reads as a box somebody
-   forgot to take off.
+/* A CLEARING FOR THE CROWD, and the only thing on this page that is
+   here to be empty.
 
-   IT HAS NO GROUND OF ITS OWN. The file in house-web/ is black on
-   TRANSPARENT rather than black on white, so the page's own paper is
-   what stands behind the ring. The owner's original is a JPEG and its
-   white is #ffffff where this page is #fafaf9 — dropped in as it comes,
-   the mark is a white square a shade brighter than the page. A
-   `mix-blend-mode: multiply` was tried first and does nothing here: the
-   header makes a stacking context of its own, so there is no backdrop
-   inside it to multiply against. */
-.human-mark {
-  margin: 40px 0 0;
-  width: 168px;
-}
-.human-mark img {
-  display: block;
-  width: 100%;
-  height: auto;
+   The owner asked for the figures not to be put over anything. The room
+   a page leaves is its margins, and this one's writing is a 940px column
+   with 64px of padding either side — so below about eleven hundred
+   across there is no margin left to stand a person in, and the crowd
+   would have nowhere to be. The page makes one band of room on purpose,
+   before the introduction, and almost-human.js stands them in it.
+
+   ABOVE THAT IT IS WORTH NOTHING: the margins are there, the crowd is in
+   them, and an empty band would only push the writing down.
+
+   AND THE BAND ONLY APPEARS ON A PHONE, not everywhere the margins have
+   run out. By the measure above it would be worth having anywhere under
+   about eleven hundred across — but the standing rule here is that
+   NOTHING ABOVE 700px MAY CHANGE, and a band that pushes the writing
+   down a third of a screen is a change. Between the two the crowd
+   simply has fewer clearings to stand in, and stands over nothing
+   either way, which is what was actually asked for.
+
+   The house's mark used to stand here, at the head of the piece. It is
+   shown by the hand now and nowhere else — see THE HOUSE'S MARK, IN THE
+   GLITCH in almost-human.js. */
+.human-gap { height: 0; }
+@media (max-width: 700px) {
+  .human-gap { height: clamp(240px, 40vh, 360px); }
 }
 /* A list inside a fragrance's writing. One of the five is written with
    one; the rest are prose. */

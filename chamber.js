@@ -341,7 +341,6 @@
   const WEB_EACH = 4;          // the most lines any ONE of them carries
   const WEB_FLICK = [1.6, 5];  // how fast a link comes and goes
   const WEB_SKEW = 2.6;        // how far off the specks a line is drawn
-  const WEB_INK = 0.4;         // and how heavily
 
   // --- and what pointing at a row does to the orbit
   //

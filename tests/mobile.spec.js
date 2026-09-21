@@ -35,7 +35,11 @@ const PAGES = [
   "/works/pineward.html",
   "/works/adar.html",
   "/works/almost-human.html",
+  "/works/ataraxia.html",
+  "/works/grande-parfums.html",
+  "/works/les-abstraits.html",
   "/works/theory-03.html",
+  "/works/cold-vs-warm-incense.html",
   "/search.html",
   "/contact.html",
 ];
@@ -44,6 +48,12 @@ test.describe("on a phone", () => {
   test.use({ viewport: PHONE, hasTouch: true });
 
   test("no page can be dragged sideways", async ({ page }) => {
+    // THIS ONE GROWS WITH THE SITE. It opens every page in turn and
+    // waits out each one's arrival, so the default thirty seconds ran
+    // out the moment three houses and an exploration were added — as a
+    // TIMEOUT, which reads like a broken page rather than like a test
+    // that needs longer. Raise this, don't trim the list.
+    test.setTimeout(120000);
     await serveDependenciesLocally(page);
     const wide = [];
     for (const path of PAGES) {
@@ -87,19 +97,34 @@ test.describe("on a phone", () => {
     expect(ink, `the crowd should be drawn — ${ink} pixels of ink`).toBeGreaterThan(2500);
   });
 
-  /* A TAP IS THE ONLY HOVER A PHONE HAS. */
+  /* A TAP IS THE ONLY HOVER A PHONE HAS.
+
+     THE FIGURE IS LOOKED FOR OVER THE WHOLE WINDOW, not down the left
+     margin, AND IN A BOX WIDER THAN IT IS. Both follow from the same
+     change: a phone has no margins, so the crowd stands in the
+     clearing the page makes for it instead — anywhere across the
+     width, and at its full ink rather than faded towards the reading.
+     A box narrower than the cloud reads its own width whatever the
+     figure does (150 wide gave 141 -> 138 with the figure plainly
+     coming home in it), so the box has to hold the whole cloud.
+     See WHERE A FIGURE MAY STAND in almost-human.js.
+
+     What is being claimed has not changed: a tap draws a figure
+     together. Measured both ways — with the tap it reads 185 -> 153,
+     and with no tap at all, waiting exactly as long, 185 -> 187. */
   test("a tap brings a figure home", async ({ page }) => {
     await page.goto("/works/almost-human.html");
     await page.waitForTimeout(2500);
 
-    /** The width of the ink in a strip of the left margin, between its
-        fourth and ninety-sixth percentile. */
-    const wide = (top) => page.evaluate((from) => {
+    /** The width of the ink in a box, between its fourth and
+        ninety-sixth percentile. The figure is narrow, so its stray is
+        most of what decides this. */
+    const wide = (box) => page.evaluate((b) => {
       const el = document.querySelector(".human-field");
       const g = el.getContext("2d", { willReadFrequently: true });
       const r = el.width / parseFloat(el.style.width);
-      const W = Math.round(130 * r), H = Math.round(200 * r);
-      const d = g.getImageData(0, Math.round(from * r), W, H).data;
+      const W = Math.round(b.w * r), H = Math.round(b.h * r);
+      const d = g.getImageData(Math.round(b.x * r), Math.round(b.y * r), W, H).data;
       const cols = new Array(W).fill(0);
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) if (d[(y * W + x) * 4 + 3] > 10) cols[x] += 1;
@@ -111,33 +136,38 @@ test.describe("on a phone", () => {
       run = 0;
       for (let i = W - 1; i >= 0; i--) { run += cols[i]; if (run >= tot * 0.04) { hi = i; break; } }
       return Math.round((hi - lo) / r);
-    }, top);
+    }, box);
 
-    // Found rather than assumed: whichever strip of the left margin has
-    // the most ink in it has a figure in it.
-    const top = await page.evaluate(() => {
+    // Found rather than assumed: whichever box of the window has the
+    // most ink in it has a figure in it.
+    const box = await page.evaluate(() => {
       const el = document.querySelector(".human-field");
       const g = el.getContext("2d", { willReadFrequently: true });
       const r = el.width / parseFloat(el.style.width);
       const im = g.getImageData(0, 0, el.width, el.height).data;
-      let best = 0, at = 0;
-      for (let y = 0; y + 200 * r < el.height; y += 20 * r) {
-        let n = 0;
-        for (let yy = y; yy < y + 200 * r; yy += 4) {
-          for (let x = 0; x < 120 * r; x += 3) {
-            if (im[(Math.round(yy) * el.width + Math.round(x)) * 4 + 3] > 10) n += 1;
+      const W = Math.round(300 * r), H = Math.round(240 * r);
+      const step = Math.max(1, Math.round(20 * r));
+      let best = 0, at = null;
+      for (let y = 0; y + H < el.height; y += step) {
+        for (let x = 0; x + W < el.width; x += step) {
+          let n = 0;
+          for (let yy = y; yy < y + H; yy += 4) {
+            for (let xx = x; xx < x + W; xx += 3) {
+              if (im[(yy * el.width + xx) * 4 + 3] > 10) n += 1;
+            }
           }
+          if (n > best) { best = n; at = { x: x / r, y: y / r, w: 300, h: 240 }; }
         }
-        if (n > best) { best = n; at = y / r; }
       }
       return at;
     });
+    expect(box, "there should be a figure somewhere on the page").toBeTruthy();
 
-    const apart = await wide(top);
-    expect(apart, "there should be a figure in the left margin").toBeGreaterThan(30);
-    await page.touchscreen.tap(60, Math.round(top + 100));
+    const apart = await wide(box);
+    expect(apart, "the figure should be drawn before the tap").toBeGreaterThan(30);
+    await page.touchscreen.tap(Math.round(box.x + box.w / 2), Math.round(box.y + box.h / 2));
     await page.waitForTimeout(1400);
-    const home = await wide(top);
+    const home = await wide(box);
     expect(home, `a tap should draw it together — ${apart} to ${home}`)
       .toBeLessThan(apart * 0.9);
   });

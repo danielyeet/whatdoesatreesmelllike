@@ -161,7 +161,6 @@ const SHOW_CHROMATOGRAM = true;
   // when that changes rather than every frame.
   function layout(W, H) {
     const baseY = H - CHROMA_BASE;
-    const centreX = W / 2;
 
     ridges.forEach((ridge) => {
       const lift = RIDGE_SPAN * (1 - Math.pow(RIDGE_FALLOFF, ridge.rank));

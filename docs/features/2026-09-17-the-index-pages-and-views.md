@@ -85,6 +85,21 @@ same on every build and the sorting has something real to work on. They say noth
 Changing one means changing it in two places on the row: the `data-date`, which is what
 it sorts by, and the lettering, which is what is read.
 
+## The column that printed through the next one
+
+A cell in the table is `max-width: 0` with `overflow: hidden` and an ellipsis, which is how
+a long name is cut rather than allowed to widen the table. **The anchor inside it is a
+block of its own, and a block inside a clipped cell simply overflows it** — so on a narrow
+window the rows that HAD a page behind them printed their name straight through the column
+beside it, and the rows that did not ellipsised properly. The owner photographed exactly
+that: `Resins` written over `RESEARCH`. The link is clamped the same way the cell is.
+
+**And the readings give up their room to the name on a phone.** `No.`, the kind and the
+date are each set to a width, and on a 390px screen those three take three quarters of the
+table between them — about eighty pixels to name a fragrance or a research in, and every
+one of them cut to two letters. They are set in the mono and they are short, so below 700px
+they are smaller and tighter and the name gets what they give up.
+
 ## How to test it
 
 ```bash

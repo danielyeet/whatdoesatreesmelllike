@@ -103,7 +103,6 @@
   // which is a picture standing plainly further off.
   const DEPTH_MAX = 640;      // how far back a picture may stand
   const FOCAL = 1050;         // how strongly it recedes; lower is stronger
-  const DEPTH_FADE = 0.5;     // how much of its ink the furthest one gives up
   // ROOM ROUND THE MIDDLE WINDOW. It was raised to 130 for a round, to
   // stop the nearest pictures being projected in so close to the plate
   // that the line between them had a dozen pixels to run in — and that
@@ -633,6 +632,52 @@
     // a low cell at depth can come out above a high one at the front.
     // Sorting the PROJECTED places is what keeps the reading order the
     // reading order.
+    // NOTHING IS DRAWN OVER ANYTHING ELSE.
+    //
+    // The grid these places come off cannot overlap: every picture is
+    // inside its own square and the room its caption needs is counted
+    // into the row. THE DEPTH CAN, though, and that is a different
+    // thing — a picture standing far back is drawn smaller and nearer
+    // the vanishing point, and on a sheet only two columns wide that
+    // pull is most of a column. So a deep picture from a low row lands
+    // on top of a shallow one from a high one. On a phone, which is
+    // exactly where the sheet comes out two columns wide, that was five
+    // pictures printed over each other and their captions written
+    // through the frames underneath.
+    //
+    // So a picture that would land on something already placed is STOOD
+    // NEARER, a step at a time, until it is clear. At depth nought it
+    // is back in its own square, where nothing can reach it, so this
+    // always finishes. It costs some of the volume where there is no
+    // room for it and NOTHING AT ALL where there is: measured on a
+    // 1280 window, no picture on the sheet moves by a pixel.
+    // A REAL OVERLAP, not a touch. Two pictures whose edges meet by a
+    // pixel are side by side, and standing one of them nearer to
+    // separate them would move a picture on a wide sheet to fix
+    // something nobody can see. `TOUCH` is what has to be covered
+    // before it counts as one thing printed over another; the caption
+    // is part of what a picture takes up, since it is printed in the
+    // strip underneath it.
+    const TOUCH = 4;
+    const DEPTH_STEP = DEPTH_MAX / 14;
+    // ON A PHONE, AND NOWHERE ELSE. The pass does nothing where there
+    // is nothing to do — measured at 860, 960, 1060, 1160 and 1280
+    // across, no picture on the sheet moves by a pixel — so it could
+    // run everywhere and be invisible almost everywhere. But it is not
+    // invisible quite everywhere: between about 700 and 820 the old
+    // sheet overlaps two or three pictures, and fixing that there would
+    // be a change on a window this site's standing rule calls a
+    // desktop. NOTHING ABOVE 700px MAY CHANGE, so it is held to a
+    // phone, and the narrow-desktop band keeps the fault it had.
+    const tighten = window.innerWidth <= 700;
+    const standing = [{ x: plateX, y: 0, size: plateSize }];
+    const clashes = (at) => standing.some((was) => {
+      const ox = Math.min(at.x + at.size, was.x + was.size) - Math.max(at.x, was.x);
+      const oy = Math.min(at.y + at.size + CAPTION_ROOM, was.y + was.size + CAPTION_ROOM) -
+                 Math.max(at.y, was.y);
+      return ox > TOUCH && oy > TOUCH;
+    });
+
     const plan = taken.map((spot) => {
       const cellH = spot.h;
       // Pictures differ a little in size, and none of them sits dead
@@ -654,8 +699,15 @@
       // What is in front is drawn over what is behind (`zIndex`), and
       // what is behind gives up some of its ink (`--depth`, which the
       // stylesheet reads).
-      const z = random() * DEPTH_MAX;
-      return { put: project(x, y, size, z), z: z };
+      let z = random() * DEPTH_MAX;
+      let at = project(x, y, size, z);
+      let guard = 0;
+      while (tighten && z > 0 && guard++ < 20 && clashes(at)) {
+        z = Math.max(0, z - DEPTH_STEP);
+        at = project(x, y, size, z);
+      }
+      standing.push(at);
+      return { put: at, z: z };
     });
     plan.sort((a, b) => (a.put.y - b.put.y) || (a.put.x - b.put.x));
 

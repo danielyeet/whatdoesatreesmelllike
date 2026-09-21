@@ -81,7 +81,7 @@ which talk through five `window` globals; see the landing page's report).
 | `categories/other-2.html` | **Photography**: the frames in sets, a grid a wide one breaks, numbered down the margin | `search.js`, `page-search.js`, `photography.js` | [photography](docs/features/2026-09-18-the-photography-page.md) |
 | `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 52 compacted parts — one per fragrance, each with its own photograph — in four forest **strata**, with a **wood** grown down both margins, a ticked **trunk**, a faint pine-green ground, and the **gallery** at the foot of it | `search.js`, `pineward.js`, `pineward-gallery.js` | [Pineward](docs/features/2026-09-16-pineward.md), [gallery](docs/features/2026-09-18-the-pineward-gallery.md) |
 | `works/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window that shows the house's mark under the pointer — with a ruled **log** and falling **dust** down the left and a **sounding** down the side | `search.js`, `adar.js` | [ADAR](docs/features/2026-09-17-adar.md) |
-| `works/almost-human.html` | **Almost Human**, the third house: five fragrances standing in a **crowd** — people down both margins drawn entirely in specks, each of them nearly a person and never quite one, resolving under the pointer — with a ticked **rank** down the side | `search.js`, `almost-human.js` | [Almost Human](docs/features/2026-09-20-almost-human.md) |
+| `works/almost-human.html` | **Almost Human**, the third house: five fragrances standing in a **crowd** — people drawn entirely in specks, standing in whatever room the page leaves and over nothing, each of them nearly a person and never quite one, resolving under the pointer and glitching into the house's **mark** — with a ticked **rank** down the side | `search.js`, `almost-human.js` | [Almost Human](docs/features/2026-09-20-almost-human.md) |
 | `works/ataraxia.html` | **Ataraxia**, the fourth house: five fragrances standing in a **churchyard** — angels and crosses down both margins, cut out of specks and perfectly still, with a **light** crossing the window and a **halo** under the pointer | `search.js`, `house.js`, `ataraxia.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `works/grande-parfums.html` | **Grande Parfums**, the fifth house: seventeen fragrances — fifteen written up alphabetically, two at the foot not smelled yet — on the site's own paper, with no ground of its own yet | `search.js`, `house.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `works/les-abstraits.html` | **Les Abstraits**, the sixth house: four fragrances, none written yet | `search.js`, `house.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
@@ -91,14 +91,15 @@ which talk through five `window` globals; see the landing page's report).
 | `search.html` | the **search page**: one field over the whole site on a dark ground of drifting specks, the answers as ruled rows carrying the trail that says where each lives, and a row of **filters** narrowing them by kind | `search.js`, `search-page.js`, `find-ground.js` | [search](docs/features/2026-09-17-the-search.md) |
 | `contact.html` | a plain page | none | — |
 
-Four of those page scripts are elaborate: `chamber.js` (~1,740 lines), `node-scene.js`
-(~1,470), `structure.js` (~1,360) and `contact-sheet.js` (~1,360). The rest are smaller:
-`adar.js` (~820), `calculator.js` (~600), `pineward.js` (~690), `paper.js` (~570),
-`almost-human.js` (~990), `essay.js` (~400), `ataraxia.js` (~380), `house.js` (~310),
-`index-page.js` (~290), `thread.js` (~290), `search.js` (~270), `pineward-gallery.js`
-(~260), `extras.js` (~250), `landing.js` (~230), `nav.js` (~200), `find-ground.js`
-(~200), `photography.js` (~180), `search-page.js` (~130), `page-search.js` (~110) and
-`views.js` (~85).
+Four of those page scripts are elaborate: `chamber.js` (~2,770 lines), `structure.js`
+(~1,560), `contact-sheet.js` (~1,550) and `node-scene.js` (~1,520). The rest are smaller:
+`almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
+(~780), `paper.js` (~580), `essay.js` (~430), `ataraxia.js` (~400), `pineward-gallery.js`
+(~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `search.js`
+(~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230), `nav.js` (~220),
+`search-page.js` (~190), `photography.js` (~190), `find-ground.js` (~180) and
+`page-search.js` (~110).
+These drift with every round; `wc -l *.js` is the answer, not this paragraph.
 
 **Read the matching report in `docs/features/` before editing one of them.**
 
@@ -196,8 +197,15 @@ they look right.
 ### A phone
 
 The site is meant to work on one, and the standing rule is that **nothing above 700px may
-change** — the owner asked for the phone "without changing its desktop version". Three
-things follow, and they are the ones to keep in mind when adding a drawing:
+change** — the owner asked for the phone "without changing its desktop version", and then,
+a round later, for that to be **checked rather than assumed**. It is: every page on the
+site is rendered at six sizes against the commit before the change, and every element's
+box, opacity, z-index, background and transform compared. How that is done, and the four
+faults deliberately left standing between 700px and wherever they stop because the rule
+says so, are in [the phone
+report](docs/features/2026-09-21-the-site-on-a-phone.md) under "Nothing above 700px moved".
+
+Seven things follow, and they are the ones to keep in mind when adding a drawing:
 
 - **Every canvas draws at a lower ratio below 700px** (1.5 rather than 2), which is a
   little over half the fill. A new drawing should do the same.
@@ -207,6 +215,24 @@ things follow, and they are the ones to keep in mind when adding a drawing:
   and the page had no ground at all.
 - **There is no hovering.** A drag sends `pointermove` and a tap sends `pointerdown`; a
   drawing that answers the hand should listen for both.
+- **Anything fixed to the window will end up printed over the page.** There is nothing in
+  the top corner of a wide window for the Menu to stand over; on a phone the writing
+  reaches it. Fixed chrome below 700px gets a box of `--chrome-ground` behind it — the
+  Menu, the contact sheet's view buttons and search, and the three houses' readings all
+  carry one. A new piece of fixed chrome should too.
+- **A z-index worked out from a drawing can outrank the chrome.** A picture on the contact
+  sheet carries one up to 1000, from how far back it stands; the chrome sits at 30, so the
+  pictures were drawn over the buttons. Below 700px the chrome is raised above them.
+- **A drawing placed by a window's shorter side gets narrower in portrait.** The theories
+  stations are placed against the lens, which is taken off the shorter side, so on a phone
+  they were thrown half off the edge; they are drawn in towards the middle by however much
+  narrower the view is (`pull`). Anything placed the same way needs the same.
+- **A fix keyed to the fault rather than to the width will leak above 700px**, because the
+  faults do not stop at 700 — the sheet overlaps its own pictures up to about 820, Pineward
+  has no wood up to about 1036, and a squarish desktop window throws a station off its edge
+  at any size. Every one of those is keyed to the width anyway (`tighten`, `ONE_WIDEST`,
+  `SIDE_NARROW`), because the rule is a rule. Key a new one the same way and say in the
+  comment what it is leaving behind.
 
 `tests/mobile.spec.js` is the guard: no page scrolls sideways at 390px, the crowd is
 drawn, and a tap brings a figure home.
@@ -411,6 +437,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (a shockwave crosses, the map falls into its centre, everything clears to **white**), then `__reform` 0→1 (an ink line draws from the sphere to the top), and only then scrolls. The reforming line stops below the slide-2 sentence, landing on the same point the downward leg leaves from. The sphere left at the end of it does not fade: `node-scene.js` holds `arrival` while `__exit` is set, so it stays solid black and rides the page off the bottom of the screen, and what fades afterwards does so off screen. |
 | **the wake** | Only the specks along a branch now — see **wake / wake speck** below. The paper's arrival going 2 → 3 used to be shaped as a duck's wake (a V trailing back from the middle of the page, `WAKE_HALF_ANGLE`); that was replaced by the top-down wipe described under **curtain**, and neither the V nor `WAKE_HALF_ANGLE` exists in `paper.js` any more. |
 | **the shockwave** | The narrow ring that closes on the centre ahead of the collapse, on its own faster clock (`WAVE_*` in `paper.js`). Distinct from the suction, which pulls everywhere at once. A second ring (`OUTWARD_*`) runs the other way at the same time, shoving the grid outward while everything else pulls in. It is **on** — `OUTWARD_STRENGTH` is 58; setting it to 0 is how you would remove it. |
+| **the chrome's ground** | The blurred box behind a piece of fixed chrome on a phone, so the page travelling underneath it cannot be read through it. `--chrome-ground` on `:root`, redefined under the five dark page bodies; below 700px it stands behind the **Menu**, the contact sheet's view buttons and search, and the three houses' readings. Nothing above 700px carries one. |
 | **the menu** | One menu for the whole site, built by `nav.js`: the same dark overlay, fading in the same way, on every page and on all three slides of the landing page. It briefly opened three different ways on the landing page (`mode-title` / `mode-side` / `mode-map`, in a `menu-modes.js` since deleted); "uniform" is the state the owner asked for and none of that is in the code any more. |
 | **rank** / **ridge** | One of the copies of the chromatogram trace standing behind the front line, higher up the page and fainter, so the reading recedes like hills. `RIDGE_*` in `extras.js`. |
 | **suction** | The even, proportional inward pull `paper.js` applies to the whole grid during the collapse, on top of the per-node dimples — what makes the grid implode rather than just dimple near the middle. |
@@ -451,10 +478,11 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **part** (Pineward) | One of Pineward's fifty-two: a `<details>` showing its number, a small picture and its title until it is opened, and its full picture and writing inside. The pictures are the owner's own, one per fragrance, matched to the parts **by name**. |
 | **ADAR** | The second house in Scent descriptions: `works/adar.html`, "the house that you have never heard of". Eleven fragrances in four groups, on a **void**. |
 | **Almost Human** | The third house in Scent descriptions: `works/almost-human.html`, "Abstraction done quite well" (it was "the house that nearly gets there" until the owner wrote their own). Five fragrances — Burning Bridges, Dear Future, Desert Hope, Ritual Code, Silent Rain — standing in a **crowd**. **All five are written**, and so are the introduction and the standfirst. |
-| **the mark** (Almost Human) | The house's own logo. It stands at the **head of that page** (`figure.human-mark`), and it is read off the same file as places a speck may stand: on about a third of the beats a figure whose HEAD is the faulty part loses its face and stands as the mark instead. One file for both — `images/Almost-Human/house-web/ah-logo.webp`, an 800px copy of the owner's `AH_Logo_Black.jpg`, **black on transparent** rather than on the original's white, because this page's paper is `#fafaf9` and a white square shows against it. `LOGO_*` in `almost-human.js`. (Not the contact sheet's **mark**, which is a drawn plate.) |
-| **the crowd** | That page's ground: people standing down both margins the whole length of it, every one of them drawn entirely in specks, built out of capsules rather than traced from an outline. |
+| **the mark** (Almost Human) | The house's own logo, and it is **shown by the hand and nowhere else** — the owner asked for "a hover-to-display thing, similarly to adar". It is not printed on the page at all; it stood at the head of it for a round and does not now (there is no `figure.human-mark`). What shows it is the **fault**: hold a figure together and whatever part of it is faulty stands as the mark for that beat, every beat. Read off `images/Almost-Human/house-web/ah-logo.webp`, an 800px copy of the owner's `AH_Logo_Black.jpg`, **black on transparent** rather than on the original's white, as places a speck may stand. `LOGO_*` in `almost-human.js`. (Not the contact sheet's **mark**, which is a drawn plate.) |
+| **the crowd** | That page's ground: people drawn entirely in specks, built out of capsules rather than traced from an outline. They stand **in whatever room the page leaves and over nothing else** — the margins either side of the writing on a wide window, and the **clearings** on one without margins. |
+| **the clearing** (Almost Human) | A band down the page with nothing in it, which is where a figure stands when there are no margins to stand in. The page makes one on purpose before the introduction (`.human-gap`), worth nothing above 1111px; the rest are whatever gaps the writing happens to leave. |
 | **the stray** | What makes the crowd *almost* human, and the house's name said as a behaviour: every speck knows exactly where it belongs and stands up to a FIFTH of the figure's height away from it, fixed for the life of that figure. At rest a figure is a cloud that gives no hint of a person; the person is entirely the pointer's doing. Bring the pointer near — **anywhere on the figure** — and the specks come home: the figure resolves under your hand and comes apart again when you leave. It never resolves completely (`STRAY_NEAR`); one that came exactly home would be the wrong drawing. |
-| **the fault** | What is wrong with each figure on Almost Human, and it shows **only after the figure has been held formed for a moment**: a head that comes apart in slices, a torso that slips and loses specks, one arm on its own, or every part of it each on a clock of its own. Four of them, running in order down the page. It is a **beat rather than a drone** — one second in every six, easing in and out at each end — and every part of it is about half the size it first was. `FAULTS`, `GLITCH_*` in `almost-human.js`. |
+| **the fault** | What is wrong with each figure on Almost Human, and it shows **only after the figure has been held formed for a moment**: a head that comes apart in slices, a torso that slips and loses specks, one arm on its own, or every part of it each on a clock of its own. Four of them, running in order down the page. It is a **beat rather than a drone** — one second in every six, easing in and out at each end — and every part of it is about half the size it first was. On every beat the faulty part goes to **the mark**. `FAULTS`, `GLITCH_*` in `almost-human.js`. |
 | **the rain** (Almost Human) | The one thing on that page that is not a person, and it is weather: rain falling the length of the page, each drop a short string of specks. It lives on the window rather than down the document. |
 | **the sun** / **the chair** / **the rays** (Almost Human) | **All removed.** A sun drawn as a ring with uneven rays and an empty chair stood in those margins for one round; the owner asked for both gone and for **rays** — "particle rays that blast from here and there" — in their place, and then, having seen them, asked for the rays gone as well. Nothing of any of the three is in `almost-human.js`: no `SUN_*`, no `CHAIR`, no `props`, no `RAY_*`, no `armRay`, `buildRays` or `drawRays`. The rain is what is left. |
 | **Ataraxia** | The fourth house in Scent descriptions: `works/ataraxia.html`. Five fragrances, none of them named or written yet. Its subject is statuary, and its page stands in a **churchyard**. |
@@ -508,6 +536,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **research** | One piece in Researches — a material at a time, where it comes from and what it smells like. The first is `works/resins-in-perfumery.html`. |
 | **stratum** | One of the four groups of thirteen parts — Canopy, Understorey, Trunk, Roots — a section through a forest read from the light down into the ground. |
 | **the wood** / **the canopy** | The drawing behind Pineward: conifers standing down both margins the whole length of the page, specks strung along their branches, grown from nothing when the page opens and holding their shape afterwards. Kept out of the middle of the page, where the writing stands. It was one canopy behind the title before the owner asked for it extended through the whole piece; they may still call it the canopy. |
+| **the one tree** (Pineward) | What the wood comes to where there are no margins to stand it in — a phone. One tree, in the clear band at the top right of the head, where the owner marked it; the same tree as any other, blooming under the hand the same way. `ONE_*` in `pineward.js`. |
 | **the bloom** | What Pineward's wood does under the pointer: the specks near the hand are drawn more plainly, **turn towards the house's dark green** (`GREEN_LIFT`), and put out a few short needles, all eased in and out together. Nothing moves — the tree is only drawn fuller, and greener, there. |
 | **the idle** | The pixel of drift each speck in that wood keeps about its own place, so the drawing is never quite still without ever going anywhere. |
 | **the reading tree** | **Removed.** For one round Pineward's progress bar was the fir off the bottle, drawn empty and inked in from the ground up. The owner asked for it scrapped — "remove the tree on the left, scrap that idea" — so there is no `firPath` and no `FIR_*` in `pineward.js` any more. |
@@ -610,10 +639,11 @@ worth knowing before touching anything shared:
   plate on the site is still a hatched placeholder with its `<img>` tag commented out
   waiting for a file and a name — see [the images
   report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's fifty-two
-  fragrance pictures and its gallery arrived on 2026-09-18; Almost Human's own two — the
-  **mark** at the head of its page and the photograph `This one` on the sheet — on
-  2026-09-21. Almost Human's five fragrance pictures name the files they want in
-  `images/Almost-Human/` and show them the moment they are there.
+  fragrance pictures and its gallery arrived on 2026-09-18; Almost Human's own two — its
+  **mark** and the photograph `This one` — on 2026-09-21. The photograph is that house's
+  frame on the contact sheet; the mark is not printed on any page at all, and is only ever
+  drawn by the crowd's glitch. Almost Human's five fragrance pictures name the files they
+  want in `images/Almost-Human/` and show them the moment they are there.
 
 **The placeholders in the new pages are marked as placeholders.** ADAR's introduction,
 the standfirsts and most of the site's plates are waiting for the owner, and every
