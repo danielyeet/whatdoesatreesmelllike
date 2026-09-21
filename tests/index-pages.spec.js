@@ -71,8 +71,18 @@ test("the researches are a numbered, dated table, and the first one opens",
     (all) => all.map((row) => row.dataset.kind));
   expect(kinds.filter((k) => k === "Research").length,
     "Resins in Perfumery is a research").toBeGreaterThan(0);
+  // ASKED AS "AT LEAST", not as a count. This used to be `.toBe(2)`
+  // and broke the moment the owner added a third exploration, which is
+  // a thing they will keep doing — what the test is really about is
+  // that the KIND is on the row so the column can sort on it, not how
+  // many of each there happen to be today.
   expect(kinds.filter((k) => k === "Exploration").length,
-    "and the two new pieces are explorations").toBe(2);
+    "the explorations are marked as explorations").toBeGreaterThanOrEqual(2);
+  // And nothing carries a kind that is not one of the two, or empty
+  // for a piece that is neither yet.
+  const allowed = ["Research", "Exploration", ""];
+  expect(kinds.filter((k) => !allowed.includes(k)),
+    "a row's kind is Research, Exploration, or not decided yet").toEqual([]);
 
   // And the first one is a link to a page that is really there.
   const href = await page.locator(".index-table tbody tr a").first().getAttribute("href");

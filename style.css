@@ -3133,6 +3133,18 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
 .essay-section li { margin: 0 0 8px; }
 /* A short run of readings inside the writing — notes, a pyramid, a
    list of what is in something. Mono, ruled, and quiet. */
+/* A SECTION THAT IS NOT WRITTEN YET — the dashed box the house pages
+   use, in the essay pages' own colours. An unfinished piece should
+   read as unfinished rather than as thin. */
+.essay-waiting {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.85;
+  color: #767e8d;
+  border: 1px dashed #2f3542;
+  padding: 14px 16px;
+}
 .essay-note {
   font-family: var(--mono);
   font-size: 12px;
@@ -6339,6 +6351,112 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   .human-foot { padding-left: 24px; padding-right: 24px; }
   .human-body { flex-direction: column; padding-left: 0; gap: 20px; }
   .human-plate { width: 100%; }
+}
+
+/* ==================================================================
+   THE HOUSE SHAPE, AND THE THREE THINGS ONLY THE NEWER HOUSES NEED
+
+   Everything above is written for Almost Human and is the shape every
+   house uses now — Ataraxia, Grande Parfums and Les Abstraits all
+   carry `human-page` and the `human-*` classes, and house.js gives
+   them the behaviour. The prefix is where those names were born, not
+   what they mean; renaming them would touch three working pages and
+   their tests to no end.
+
+   What follows is only what those three added.
+================================================================== */
+
+/* A FRAGRANCE THAT HAS NO NAME YET. Set apart from a written title
+   rather than dressed up as one, so a list of them reads as work still
+   to come rather than as a house full of things called Untitled. */
+.human-untitled {
+  font-style: italic;
+  color: var(--muted);
+}
+
+/* THE STANDOUT MARK — the owner's own, asked for by hand on Grande
+   Parfums' Vintage Memoir: "make a handdrawn star next to this one".
+   It is an SVG path with every point nudged off true and every edge
+   bowed, so it is a star somebody drew rather than one worked out; it
+   is drawn as a STROKE and left unfilled for the same reason. It sits
+   after the title and before the cue, and takes no room in the row's
+   own layout. */
+.human-star {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 9px;
+  flex: 0 0 auto;
+}
+.human-star svg {
+  width: 17px;
+  height: 17px;
+  overflow: visible;
+}
+.human-star svg path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.35;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* NOT SMELLED YET — the names at the foot of a house, with nothing
+   behind them. Pineward has had this since it was written; Grande
+   Parfums is the second house to need it, so the rules are here rather
+   than a second copy under another prefix. `.pine-waiting` stays as it
+   is: it spends the pine green, which is that page's alone. */
+.house-waiting {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 8px auto 0;
+  padding: 0 64px 20px;
+}
+.house-waiting-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.house-waiting-head h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.house-waiting-head .human-section-mark { margin: 0; }
+.house-waiting-count {
+  margin: 0 0 0 auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.house-waiting-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 48px;
+}
+.house-waiting-list li {
+  break-inside: avoid;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+.house-waiting-name { font-size: 15px; color: var(--muted); }
+
+@media (max-width: 860px) {
+  .house-waiting { padding-left: 24px; padding-right: 24px; }
+}
+@media (max-width: 720px) {
+  .house-waiting-list { columns: 1; }
 }
 
 /* ==================================================================

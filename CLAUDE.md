@@ -82,7 +82,10 @@ which talk through five `window` globals; see the landing page's report).
 | `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 52 compacted parts — one per fragrance, each with its own photograph — in four forest **strata**, with a **wood** grown down both margins, a ticked **trunk**, a faint pine-green ground, and the **gallery** at the foot of it | `search.js`, `pineward.js`, `pineward-gallery.js` | [Pineward](docs/features/2026-09-16-pineward.md), [gallery](docs/features/2026-09-18-the-pineward-gallery.md) |
 | `works/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window that shows the house's mark under the pointer — with a ruled **log** and falling **dust** down the left and a **sounding** down the side | `search.js`, `adar.js` | [ADAR](docs/features/2026-09-17-adar.md) |
 | `works/almost-human.html` | **Almost Human**, the third house: five fragrances standing in a **crowd** — people down both margins drawn entirely in specks, each of them nearly a person and never quite one, resolving under the pointer — with a ticked **rank** down the side | `search.js`, `almost-human.js` | [Almost Human](docs/features/2026-09-20-almost-human.md) |
-| `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
+| `works/ataraxia.html` | **Ataraxia**, the fourth house: five fragrances standing in a **churchyard** — angels and crosses down both margins, cut out of specks and perfectly still, with a **light** crossing the window and a **halo** under the pointer | `search.js`, `house.js`, `ataraxia.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `works/grande-parfums.html` | **Grande Parfums**, the fifth house: seventeen fragrances — fifteen written up alphabetically, two at the foot not smelled yet — on the site's own paper, with no ground of its own yet | `search.js`, `house.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `works/les-abstraits.html` | **Les Abstraits**, the sixth house: four fragrances, none written yet | `search.js`, `house.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html`, `works/cold-vs-warm-incense.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/theory-03.html` | the same, and the longest piece on the site: **The Note Dissemination Framework**, which argues in **diagrams** and carries a **calculator** standing in the same page | `essay.js`, `calculator.js` | [the framework](docs/features/2026-09-20-the-note-dissemination-framework.md) |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages | none | — |
 | `search.html` | the **search page**: one field over the whole site on a dark ground of drifting specks, the answers as ruled rows carrying the trail that says where each lives, and a row of **filters** narrowing them by kind | `search.js`, `search-page.js`, `find-ground.js` | [search](docs/features/2026-09-17-the-search.md) |
@@ -91,7 +94,7 @@ which talk through five `window` globals; see the landing page's report).
 Four of those page scripts are elaborate: `chamber.js` (~1,740 lines), `node-scene.js`
 (~1,470), `structure.js` (~1,360) and `contact-sheet.js` (~1,360). The rest are smaller:
 `adar.js` (~820), `calculator.js` (~600), `pineward.js` (~690), `paper.js` (~570),
-`almost-human.js` (~990), `essay.js` (~400),
+`almost-human.js` (~990), `essay.js` (~400), `ataraxia.js` (~380), `house.js` (~310),
 `index-page.js` (~290), `thread.js` (~290), `search.js` (~270), `pineward-gallery.js`
 (~260), `extras.js` (~250), `landing.js` (~230), `nav.js` (~200), `find-ground.js`
 (~200), `photography.js` (~180), `search-page.js` (~130), `page-search.js` (~110) and
@@ -152,7 +155,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 199 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 212 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -178,7 +181,9 @@ test it". Two spec files are the exception and belong to no one feature: the bro
 checks in `repository.spec.js` (no link points at a missing file, no credentials are
 committed, the site still needs no build step to publish), and `mobile.spec.js`, which is
 about the whole site at a phone's size — see [the phone
-report](docs/features/2026-09-21-the-site-on-a-phone.md).
+report](docs/features/2026-09-21-the-site-on-a-phone.md). `houses.spec.js` covers the
+three newest houses **and the shape they share** (`house.js`), so it belongs to one
+report but spans three pages.
 
 Several tests are regressions for specific bugs the owner reported and that were fixed.
 Each one is named and explained in its own feature's report, under "How to test it", next
@@ -210,8 +215,8 @@ Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
   `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
-  `adar.js`, `almost-human.js`, `essay.js`, `calculator.js`, `index-page.js` and
-  `style.css`, each degrading to a still
+  `adar.js`, `almost-human.js`, `ataraxia.js`, `house.js`, `essay.js`, `calculator.js`,
+  `index-page.js` and `style.css`, each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
   fade to nothing) do *not* check it beyond that; if you add motion there, add the guard
   too.
@@ -228,6 +233,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| Ataraxia, Grande Parfums and Les Abstraits | `house.js`, `ataraxia.js` | [report](docs/features/2026-09-21-the-newer-houses.md) |
 | The Photography page | `photography.js` | [report](docs/features/2026-09-18-the-photography-page.md) |
 | The Pineward gallery | `pineward-gallery.js` | [report](docs/features/2026-09-18-the-pineward-gallery.md) |
 | A folder of pictures per house | `images/` | [report](docs/features/2026-09-17-images-folder-per-house.md) |
@@ -288,6 +294,29 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   `<section class="gallery-chapter" data-chapter="...">` further down that page, and is
   what its page shows above the cards; a chapter with nothing written for it shows its
   cards and no description.
+- **A NEW HOUSE** is `works/<house>.html` on `body.human-page`, loading `search.js` and
+  **`house.js`** — the shared house shape, which gives it the parts opening on a measured
+  height, the rank down the side, and taking a photograph off the page when its file is
+  not there. A fragrance is a `<details class="human-part" id="part-NN">`. The three
+  newest houses use it; **Pineward, ADAR and Almost Human still carry their own copies**
+  and were deliberately left alone. A ground of its own is a `<canvas class="human-field">`
+  and a script of its own (`ataraxia.js` is the model); a house with no theme yet simply
+  has neither. Then: a frame on the contact sheet, a line in `PAGES` in `search-page.js`,
+  a row per named fragrance in the Fragrances table, an `images/<House>/` folder with a
+  README, and the **footer chain** — every house's `human-on` link points at the next one
+  and the last wraps round to Pineward.
+- **A fragrance with no name yet** is `<span class="human-title human-untitled">Untitled</span>`
+  and a `<p class="human-waiting">` saying so, in both places the title appears (the
+  summary and the figcaption). **Don't invent a name or a write-up** — an unfinished house
+  should read as unfinished. There is a test.
+- **A fragrance that has not been smelled** is not a part at all: it is a name at the foot
+  of the house, in a `<section class="house-waiting">` list (Pineward's own is the older
+  `.pine-waiting`, which spends the pine green). A fragrance moves up into the numbered
+  parts the moment there is something to say about it.
+- **A standout** carries the hand-drawn star — copy the whole `<span class="human-star">`
+  block from Grande Parfums' Vintage Memoir into another fragrance's `<summary>`. It is an
+  SVG path with bowed edges on purpose; a typed star character is not the same thing and
+  there is a test saying so.
 - **A part of Pineward** (`works/pineward.html`) is a `<details class="pine-part">` block:
   a number, a small picture and a title in its `<summary>`, and the full picture and the
   writing inside. Copy a whole block to add one, and renumber the ones after it — the
@@ -428,6 +457,16 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the fault** | What is wrong with each figure on Almost Human, and it shows **only after the figure has been held formed for a moment**: a head that comes apart in slices, a torso that slips and loses specks, one arm on its own, or every part of it each on a clock of its own. Four of them, running in order down the page. It is a **beat rather than a drone** — one second in every six, easing in and out at each end — and every part of it is about half the size it first was. `FAULTS`, `GLITCH_*` in `almost-human.js`. |
 | **the rain** (Almost Human) | The one thing on that page that is not a person, and it is weather: rain falling the length of the page, each drop a short string of specks. It lives on the window rather than down the document. |
 | **the sun** / **the chair** / **the rays** (Almost Human) | **All removed.** A sun drawn as a ring with uneven rays and an empty chair stood in those margins for one round; the owner asked for both gone and for **rays** — "particle rays that blast from here and there" — in their place, and then, having seen them, asked for the rays gone as well. Nothing of any of the three is in `almost-human.js`: no `SUN_*`, no `CHAIR`, no `props`, no `RAY_*`, no `armRay`, `buildRays` or `drawRays`. The rain is what is left. |
+| **Ataraxia** | The fourth house in Scent descriptions: `works/ataraxia.html`. Five fragrances, none of them named or written yet. Its subject is statuary, and its page stands in a **churchyard**. |
+| **the churchyard** | Ataraxia's ground: angels and crosses standing down both margins the whole length of the page, every one of them cut out of specks and standing on a plinth. `ataraxia.js`. |
+| **standing** | One of them — an **angel** (plinth, robe, head, two wings; no arms and no legs, because a statue in robes has neither) or a **cross** (plinth, upright, crossbar, and a **lean** of its own about the top of its plinth). |
+| **the stillness** (Ataraxia) | That nothing in the churchyard moves, which is the house's name said as a behaviour: *ataraxia* is a mind with nothing troubling it. The exact opposite of Almost Human's **stray** next door — there a speck stands where it does not belong, here it stands exactly where it does and never leaves. No drift, no idle. There is a test. |
+| **the light** (Ataraxia) | The soft band crossing slowly down the window, one pass every 31 seconds, drawing more plainly whatever it falls on. The only clock on that page. |
+| **the halo** | What answers the hand on Ataraxia: a fine ring coming up over the nearest standing — over an angel's head, at a cross's crossing — pressed flat onto its own plane so it reads as a ring seen from below. |
+| **Grande Parfums** | The fifth house: `works/grande-parfums.html`, smelled at Art Niche Expo 2026. **Seventeen** fragrances — fifteen written up in alphabetical order, and Genesys and Lounge Leather at the foot, not smelled yet. It has **no ground of its own**, because the owner has not said what the house is (*"Idk the theme to be honest"*); it is waiting, not finished. |
+| **the star** (Grande Parfums) | The owner's own standout mark, asked for by hand: a five-pointed star **drawn** rather than typed — an SVG path with every point nudged off true and every edge bowed. On Vintage Memoir, their favourite of the house, and nowhere else yet. `.human-star`. |
+| **Les Abstraits** | The sixth house: `works/les-abstraits.html`, four fragrances for now, none of them named or written yet. One name is known and deliberately unused — the owner mentions *Belle Ame by Les Abstraits* in Grande Parfums' Vintage Memoir. |
+| **the house shape** | What every house page is, and since 2026-09-21 what `house.js` gives the newer ones: the parts opening on a measured height, the rank down the side, and a photograph taken off the page when its file is not there. It uses the `human-*` class names, which were written for Almost Human and are the shape's names now. Pineward, ADAR and Almost Human still carry their own copies of it. |
 | **the rank** (Almost Human) | The scale down the side of that page: Pineward's **trunk** and ADAR's **sounding** by a third name, in plain ink. (Not the chromatogram's **rank / ridge**, above.) The fill is how far down the page you are, from its very first pixel; the ticks are how many fragrances you have been past. |
 | **the void** | ADAR's ground: a hole standing off to one side of the window with soundings ringing out from it and specks falling round its rim. Drawn by taking the disc back out of the finished drawing, not by painting one over it. |
 | **the sounding** | Two things on that page, and they go together: one of the ringed scales drawn out from the void, and the scale down the side of the page with one tick per fragrance — Pineward's **trunk** by another name. |
@@ -562,7 +601,12 @@ worth knowing before touching anything shared:
   overlay's links and the global focus ring, on every page including the chamber. Why it
   was left is in [the page shell's
   report](docs/features/2026-09-11-the-page-shell-and-menu.md).
-- **All three houses carry a real picture on the contact sheet now**, and every other
+- **There are six houses now** (Pineward, ADAR, Almost Human, Ataraxia, Grande Parfums,
+  Les Abstraits), and the three newest are three different states of finished: Ataraxia
+  has its drawing and no writing, Grande Parfums has its writing and no drawing, Les
+  Abstraits has neither. What each is waiting for is in [their
+  report](docs/features/2026-09-21-the-newer-houses.md).
+- **Three of the six carry a real picture on the contact sheet**, and every other
   plate on the site is still a hatched placeholder with its `<img>` tag commented out
   waiting for a file and a name — see [the images
   report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's fifty-two

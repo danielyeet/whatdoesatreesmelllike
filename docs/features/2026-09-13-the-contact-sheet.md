@@ -655,9 +655,16 @@ One trap in doing that: `hidden` is an HTML attribute and does **nothing** to an
 element. The first go set `label.hidden` and the lettering stayed exactly where it was;
 it is `style.display` now.
 
-Eleven of the fourteen pictures are unwritten at the moment, so most of the map's dates
-are crosses. That is the truth of the page rather than a fault of it: three houses are
-written and the rest are placeholders.
+Eight of the fourteen pictures are unwritten at the moment, so a good half of the map's
+dates are still crosses. That is the truth of the page rather than a fault of it.
+
+**The sheet carries six houses now** (2026-09-21): Ataraxia, Grande Parfums and Les
+Abstraits joined Pineward, ADAR and Almost Human in one round, and three of the empty
+frames came out with them so the page keeps the fourteen it had. Adding a house is one
+more `<a class="sheet-frame">` block and nothing else — the scatter, the depth and the
+lines all come off however many blocks are there. What that does mean is that **every
+house added moves every picture on the page**, for the same reason the flick and the
+links are planned from the finished map rather than from the markup.
 
 The roll still happens whether or not the date is used, so which pictures are written up
 does not change where anything else on the map ends up.

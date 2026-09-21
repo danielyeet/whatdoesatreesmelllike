@@ -325,6 +325,12 @@ being trusted:
   measured share rather than merely "smaller". With the resolving off it reads 66 → 67 and
   fails, as it should.
 
+- **`a figure comes home from the pointer anywhere on it`** is the one test in the suite
+  that has been seen to **flake**: it failed once in a full run on 2026-09-21 and passed
+  on its own and in the next full run. It measures how far a figure has come home a fixed
+  number of milliseconds after the pointer arrives, so a loaded machine near the end of a
+  nine-minute suite can miss the window. Worth a re-run before believing it; not worth
+  diagnosing twice.
 - **`a figure comes home from the pointer anywhere on it`** — the crown, the middle and
   the soles, and all three have to draw the figure together by the same amount. The two
   ends rather than near them, because the old circle was generous enough that a point

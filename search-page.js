@@ -28,6 +28,9 @@
     { url: "works/pineward.html", trail: ["Scent descriptions", "Houses", "Pineward"] },
     { url: "works/adar.html", trail: ["Scent descriptions", "Houses", "ADAR"] },
     { url: "works/almost-human.html", trail: ["Scent descriptions", "Houses", "Almost Human"] },
+    { url: "works/ataraxia.html", trail: ["Scent descriptions", "Houses", "Ataraxia"] },
+    { url: "works/grande-parfums.html", trail: ["Scent descriptions", "Houses", "Grande Parfums"] },
+    { url: "works/les-abstraits.html", trail: ["Scent descriptions", "Houses", "Les Abstraits"] },
     { url: "categories/theories.html", trail: ["Theories"] },
     { url: "works/theory-01.html", trail: ["Theories", "The Architecture of Sunscreen"] },
     { url: "works/theory-02.html", trail: ["Theories", "The Architecture of Sweat"] },
@@ -35,6 +38,7 @@
     { url: "categories/favorites.html", trail: ["Favourites"] },
     { url: "categories/researches.html", trail: ["Explorations & Researches"] },
     { url: "works/resins-in-perfumery.html", trail: ["Explorations & Researches", "Resins in Perfumery"] },
+    { url: "works/cold-vs-warm-incense.html", trail: ["Explorations & Researches", "Cold vs Warm Incense"] },
     { url: "categories/other-2.html", trail: ["Photography"] },
   ];
 

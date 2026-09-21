@@ -91,6 +91,11 @@ photographs are small enough already and were left alone.
 
 ## Known issues / TODO
 
+- **Three more folders arrived on 2026-09-21** with the three new houses —
+  `Ataraxia/`, `Grande/` and `Les-Abstraits/` — and all three hold only a README. Each
+  README names the files its page is already asking for, so a picture shows the moment it
+  is dropped in. Ataraxia's and Les Abstraits' are named by NUMBER rather than by
+  fragrance, because those fragrances are not named yet.
 - `Favorites/` and `Individual Fragrances/` are still empty but for their READMEs.
   ADAR's folder is complete; `Pineward/` has its fifty-two fragrance pictures and its
   gallery; `Almost-Human/` has the house's two — the mark and `This one` — and none of

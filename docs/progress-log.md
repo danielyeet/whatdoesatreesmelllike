@@ -11,6 +11,7 @@ was undone later by someone who didn't know why it was made.
 
 | date | entry | what it covers |
 |---|---|---|
+| 2026-09-21 | [Ataraxia, Grande Parfums and Les Abstraits](features/2026-09-21-the-newer-houses.md) | three houses in one round, the shared house shape they brought with them, and the churchyard |
 | 2026-09-21 | [The site on a phone](features/2026-09-21-the-site-on-a-phone.md) | what was actually wrong on a phone, and the rule that nothing above 700px may change |
 | 2026-09-20 | [Almost Human](features/2026-09-20-almost-human.md) | the third house: five fragrances standing in a crowd of figures that resolve under the pointer |
 | 2026-09-20 | [The Note Dissemination Framework](features/2026-09-20-the-note-dissemination-framework.md) | the third theory: twenty-two inline-SVG diagrams, a graph, and the only serif on the site |

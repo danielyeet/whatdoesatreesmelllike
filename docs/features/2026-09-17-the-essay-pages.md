@@ -75,6 +75,23 @@ The three theory pages are **templates** — placeholder writing, real structure
 resins research is the owner's own writing (sixteen sections against the theory pages'
 six). The theories category's first three rows point at the three theory pages.
 
+### The explorations use the same shape
+
+`works/cold-vs-warm-incense.html` (2026-09-21) is the first **exploration** on this
+ground, and it is an essay page like any other — the swarm behind it, the sights at the
+corners, the rule down the left. An exploration goes out after a smell and writes down
+what is there; a research takes a material at a time. The row on
+`categories/researches.html` says which in its `data-kind`.
+
+**It is not written yet.** Its four sections are the shape of the question and nothing
+more — what is being compared, each of the two, and where the line between them is — and
+each says it is waiting in a dashed box (`p.essay-waiting`, the house pages' box in these
+pages' colours) rather than standing in as prose. No fragrance is named in it and no
+conclusion is drawn: that is the owner's to write, and two things already on the site
+point at the question when they come to it — Mystical Incense on Grande Parfums (*"a cold
+incense, which starts off very un-incense-y"*) and the frankincense, myrrh, elemi and
+olibanum entries in the resins research.
+
 ## How to test it
 
 ```bash
