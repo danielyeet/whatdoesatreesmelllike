@@ -239,3 +239,142 @@ test("without the script there is no button and the writing is untouched",
   await expect(page.locator(".note-panel")).toHaveCount(0);
   await expect(page.locator(".pine-part")).toHaveCount(47);
 });
+
+/* THE NOTES GO WITH THE FRAGRANCE, and have to be asked for again.
+   The owner asked for exactly that: the panel "will collapse with the
+   fragrance if you collapse the fragrance, and will have to be opened
+   up again independently".
+
+   The third assertion is the one that matters and the easy one to get
+   wrong: reopening the fragrance must NOT bring the notes back with
+   it. A panel that remembers it was open would look like the page
+   deciding for you. */
+test("the notes collapse with the fragrance, and do not come back with it",
+  async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/works/individual-fragrances.html");
+  await page.waitForTimeout(700);
+
+  const part = page.locator(".human-part").first();
+  const button = part.locator(".note-open");
+  const panel = part.locator(".note-panel");
+
+  await part.locator("summary").click();
+  await page.waitForTimeout(1100);
+  await button.click();
+  await page.waitForTimeout(700);
+  await expect(button).toHaveAttribute("aria-expanded", "true");
+  await expect(panel).toBeVisible();
+
+  // Collapse the fragrance: the notes go with it.
+  await part.locator("summary").click();
+  await page.waitForTimeout(1200);
+  await expect(button).toHaveAttribute("aria-expanded", "false");
+  await expect(panel).toBeHidden();
+  // And the part is not left wearing the class that narrows its plate.
+  await expect(part).not.toHaveClass(/notes-on/);
+
+  // Open the fragrance again: the notes stay shut.
+  await part.locator("summary").click();
+  await page.waitForTimeout(1200);
+  await expect(button, "the notes should have to be asked for again")
+    .toHaveAttribute("aria-expanded", "false");
+  await expect(panel).toBeHidden();
+});
+
+/* ON A PHONE IT IS A SHEET, NOT A COLUMN. There is no room beside the
+   writing at that width — a 252px panel on a 390px screen is most of
+   the page — and underneath the writing it was buried at the foot of a
+   long fragrance. The owner asked for "a popup window", "adjusted
+   properly to the device".
+
+   What this checks is that it is really OVER the page rather than in
+   it: fixed to the foot of the WINDOW, as wide as the window, with the
+   page behind it held still. */
+test.describe("the notes on a phone", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+  test("the panel comes up as a sheet over the page", async ({ page }) => {
+    await serveDependenciesLocally(page);
+    const errors = collectPageErrors(page, ["Failed to load resource"]);
+    await page.goto("/works/individual-fragrances.html");
+    await page.waitForTimeout(900);
+
+    const part = page.locator(".human-part").first();
+    await part.locator("summary").click();
+    await page.waitForTimeout(1200);
+    await page.locator(".note-open").first().click();
+    await page.waitForTimeout(800);
+
+    const sheet = await page.evaluate(() => {
+      const el = document.querySelector(".note-panel.note-pop");
+      if (!el) return null;
+      const box = el.getBoundingClientRect();
+      return {
+        // Moved out to the body: a fixed thing inside an ancestor with
+        // a transform is positioned against that ancestor, not the
+        // window, and a part's box is given one while it opens.
+        onBody: el.parentElement === document.body,
+        fixed: getComputedStyle(el).position,
+        bottom: Math.round(box.bottom),
+        width: Math.round(box.width),
+        window: { w: window.innerWidth, h: window.innerHeight },
+        scrim: !!document.querySelector(".note-scrim.is-on"),
+        held: document.body.classList.contains("note-holding"),
+      };
+    });
+
+    expect(sheet, "there should be a sheet").toBeTruthy();
+    expect(sheet.onBody).toBe(true);
+    expect(sheet.fixed).toBe("fixed");
+    expect(sheet.width, "it should be as wide as the window")
+      .toBeGreaterThanOrEqual(sheet.window.w - 1);
+    expect(Math.abs(sheet.bottom - sheet.window.h),
+      `it should sit on the foot of the window: ${sheet.bottom} against ${sheet.window.h}`)
+      .toBeLessThan(3);
+    expect(sheet.scrim, "the page behind it should be dimmed").toBe(true);
+    expect(sheet.held, "and should not scroll under it").toBe(true);
+
+    // The notes are readable rather than merely present.
+    await expect(page.locator(".note-panel.note-pop .note-row")).toHaveCount(3);
+
+    expect(errors).toEqual([]);
+  });
+
+  test("the sheet closes on the scrim, on escape, and on its own button",
+    async ({ page }) => {
+    await serveDependenciesLocally(page);
+    await page.goto("/works/individual-fragrances.html");
+    await page.waitForTimeout(900);
+
+    const part = page.locator(".human-part").first();
+    await part.locator("summary").click();
+    await page.waitForTimeout(1200);
+
+    const open = async () => {
+      await page.locator(".note-open").first().click();
+      await page.waitForTimeout(700);
+      await expect(page.locator(".note-panel.note-pop")).toHaveCount(1);
+    };
+    const gone = async (how) => {
+      await page.waitForTimeout(700);
+      await expect(page.locator(".note-panel.note-pop"), how).toHaveCount(0);
+      await expect(page.locator(".note-open").first()).toHaveAttribute("aria-expanded", "false");
+      expect(await page.evaluate(
+        () => document.body.classList.contains("note-holding")), how).toBe(false);
+    };
+
+    await open();
+    await page.locator(".note-scrim").click({ position: { x: 30, y: 60 } });
+    await gone("tapping the scrim should close it");
+
+    await open();
+    await page.keyboard.press("Escape");
+    await gone("escape should close it");
+
+    await open();
+    // Scoped to the sheet that is up: every panel on the page has one.
+    await page.locator(".note-panel.note-pop .note-shut").click();
+    await gone("its own button should close it");
+  });
+});

@@ -6759,26 +6759,125 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 .adar-part.notes-on .adar-plates,
 .adar-part.notes-on .adar-plate { width: 188px; }
 
+/* THE CLOSE, AND THE SCRIM: both only exist when the panel is a sheet.
+   Beside the writing the panel is part of the page rather than over
+   it, and neither has anything to do. */
+.note-shut { display: none; }
+.note-scrim { display: none; }
+
 @media (max-width: 860px) {
-  /* The part's row becomes a column here, so the panel stops being
-     beside the writing and goes under it. Its width has to come off
-     with the row, or it is a 252px box on a 390px screen. */
-  .note-panel {
+  /* ON A PHONE THE PANEL IS A SHEET, not a column under the writing.
+     There is no room beside the writing at this width — a 252px box on
+     a 390px screen is most of the page — and putting it underneath
+     buried it at the foot of a long fragrance where nobody would find
+     it. So it comes up from the foot of the WINDOW, over everything,
+     and goes down the same way.
+
+     `notes.js` moves the panel out to the body to do this: a fixed
+     thing inside an ancestor carrying a transform is positioned
+     against that ancestor rather than the window, and a part's own box
+     is given a transform while it opens. It is put back when the sheet
+     goes down.
+
+     860px is the same width the part's row becomes a column at, and
+     the script reads the same number. They have to agree, or the panel
+     is laid out one way and animated the other. */
+  .note-panel.note-pop {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
     width: auto;
-    max-width: 100%;
-    border-left: 0;
+    max-width: none;
+    max-height: 76vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg);
+    border: 0;
     border-top: 1px solid var(--line);
-    padding-left: 0;
-    padding-top: 20px;
+    box-shadow: 0 -16px 44px rgba(26, 25, 22, 0.16);
+    padding: 26px 22px calc(26px + env(safe-area-inset-bottom, 0px));
+    /* 101% rather than 100%: a border and a shadow sit outside the
+       box, and at exactly 100% a hair of both stays on screen. */
+    transform: translateY(101%);
+    transition: transform 340ms cubic-bezier(0.42, 0.02, 0.24, 1);
+    z-index: 91;
   }
-  .note-in { width: auto; }
-  /* And the plate goes back to its own size, because nothing is
-     beside it any more. */
+  .note-panel.note-pop.is-up { transform: translateY(0); }
+  .note-panel.note-pop .note-in { width: auto; }
+  /* The grab bar every sheet on a phone has, which is what says it can
+     be pushed back down. */
+  .note-panel.note-pop .note-head { position: relative; padding-top: 14px; }
+  .note-panel.note-pop .note-head::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 42px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--line);
+  }
+
+  .note-shut {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 18px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    font-size: 21px;
+    line-height: 1;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .note-shut:hover { color: var(--ink); }
+
+  .note-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 25, 22, 0.42);
+    opacity: 0;
+    transition: opacity 340ms ease;
+    z-index: 90;
+  }
+  .note-scrim.is-on { opacity: 1; }
+  .note-scrim[hidden] { display: none; }
+
+  /* The page behind a sheet does not scroll under it. */
+  body.note-holding { overflow: hidden; }
+
+  /* And with the panel out of the row, the plate keeps its own size. */
   .human-part.notes-on .human-plate,
   .adar-part.notes-on .adar-plates,
   .adar-part.notes-on .adar-plate { width: 100%; }
   .pine-part.notes-on .pine-plate { flex: 1 1 auto; }
-  .adar-page .note-panel { border-top-color: rgba(232, 232, 238, 0.28); }
+  .human-part.notes-on .human-text,
+  .pine-part.notes-on .pine-text,
+  .adar-part.notes-on .adar-text { flex: 0 1 auto; min-width: 0; }
+
+  /* ADAR is the one house on a dark ground. */
+  .adar-page .note-panel.note-pop {
+    background: #07070a;
+    border-top-color: rgba(232, 232, 238, 0.28);
+    box-shadow: 0 -16px 44px rgba(0, 0, 0, 0.6);
+  }
+  .adar-page .note-panel.note-pop .note-head::before { background: rgba(232, 232, 238, 0.3); }
+  .adar-page .note-scrim { background: rgba(0, 0, 0, 0.62); }
+  .adar-page .note-shut { color: #a8a8b4; }
+  .adar-page .note-shut:hover { color: #dcdce4; }
+}
+
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
+  .note-panel.note-pop { transition: none; }
+  .note-scrim { transition: none; }
 }
 
 /* ==================================================================
