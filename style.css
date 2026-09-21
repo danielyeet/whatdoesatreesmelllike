@@ -2142,10 +2142,6 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
 }
 .structure-stop.gone { display: none; }
 .structure-stop:hover, .structure-stop:focus-visible { border-color: rgba(142, 180, 226, 0.4); }
-/* `--say-shift` is set by structure.js every frame: how far the name
-   has to slide back along to stay on the window. It is nought on a wide
-   one, and only ever negative on a narrow one — the lettering is
-   pulled back off the edge, never pushed out to it. */
 .structure-say {
   position: absolute;
   left: 0;
@@ -2153,14 +2149,24 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
   margin-top: 8px;
   display: block;
   white-space: nowrap;
-  transform: translateX(var(--say-shift, 0px));
 }
-/* Each line is its own width rather than the widest of them. It looks
-   the same — they are left-aligned blocks either way — but it lets
-   structure.js ask how wide the NAME is without being told how wide the
-   line under it is, which is only ever read on a hover and is much the
-   longest of the three. */
-.structure-say > span { width: max-content; max-width: 100%; }
+/* KEEPING A STATION'S NAME ON THE WINDOW, and only on a phone.
+   `--say-shift` is how far the lettering has to slide back along not to
+   run off the side; structure.js works it out and writes it every
+   frame, and it is only ever negative — the name is pulled back off the
+   edge, never pushed out to it.
+
+   BOTH RULES ARE HELD BELOW 700px, and the two go together. Each line
+   being its own width is what lets structure.js ask how wide the NAME
+   is without being told how wide the line under it is (that one is only
+   ever read on a hover and is much the longest of the three) — and
+   without it the shift would be measured against the wrong number. So
+   above 700px there is no shift, no transform and no change to any box
+   on the drawing: it is the page it always was. */
+@media (max-width: 700px) {
+  .structure-say > span { width: max-content; max-width: 100%; }
+  .structure-say { transform: translateX(var(--say-shift, 0px)); }
+}
 .structure-no {
   display: block;
   font-family: var(--mono);
@@ -2327,9 +2333,14 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
   /* The two numbers stay: they are how you know where you are. */
   .structure-readout { top: 16px; right: 16px; font-size: 10px; letter-spacing: 0.08em; }
   .structure-spine { width: min(260px, 60vw); }
-  /* And the line under a station's name wraps rather than running off
-     the side: it is the longest of the three and there is no room for
-     it on one line here. */
+}
+
+/* And on a phone the line under a station's name wraps rather than
+   running off the side: it is much the longest of the three and there
+   is no room for it on one line there. Held to 700px with everything
+   else, though it would be worth having at 860 too — nothing above
+   700px may change. */
+@media (max-width: 700px) {
   .structure-meta { white-space: normal; max-width: 62vw; }
 }
 
@@ -6134,11 +6145,19 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
    ABOVE THAT IT IS WORTH NOTHING: the margins are there, the crowd is in
    them, and an empty band would only push the writing down.
 
+   AND THE BAND ONLY APPEARS ON A PHONE, not everywhere the margins have
+   run out. By the measure above it would be worth having anywhere under
+   about eleven hundred across — but the standing rule here is that
+   NOTHING ABOVE 700px MAY CHANGE, and a band that pushes the writing
+   down a third of a screen is a change. Between the two the crowd
+   simply has fewer clearings to stand in, and stands over nothing
+   either way, which is what was actually asked for.
+
    The house's mark used to stand here, at the head of the piece. It is
    shown by the hand now and nowhere else — see THE HOUSE'S MARK, IN THE
    GLITCH in almost-human.js. */
 .human-gap { height: 0; }
-@media (max-width: 1111px) {
+@media (max-width: 700px) {
   .human-gap { height: clamp(240px, 40vh, 360px); }
 }
 /* A list inside a fragrance's writing. One of the five is written with

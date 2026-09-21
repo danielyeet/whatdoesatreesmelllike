@@ -660,6 +660,16 @@
     // strip underneath it.
     const TOUCH = 4;
     const DEPTH_STEP = DEPTH_MAX / 14;
+    // ON A PHONE, AND NOWHERE ELSE. The pass does nothing where there
+    // is nothing to do — measured at 860, 960, 1060, 1160 and 1280
+    // across, no picture on the sheet moves by a pixel — so it could
+    // run everywhere and be invisible almost everywhere. But it is not
+    // invisible quite everywhere: between about 700 and 820 the old
+    // sheet overlaps two or three pictures, and fixing that there would
+    // be a change on a window this site's standing rule calls a
+    // desktop. NOTHING ABOVE 700px MAY CHANGE, so it is held to a
+    // phone, and the narrow-desktop band keeps the fault it had.
+    const tighten = window.innerWidth <= 700;
     const standing = [{ x: plateX, y: 0, size: plateSize }];
     const clashes = (at) => standing.some((was) => {
       const ox = Math.min(at.x + at.size, was.x + was.size) - Math.max(at.x, was.x);
@@ -692,7 +702,7 @@
       let z = random() * DEPTH_MAX;
       let at = project(x, y, size, z);
       let guard = 0;
-      while (z > 0 && guard++ < 20 && clashes(at)) {
+      while (tighten && z > 0 && guard++ < 20 && clashes(at)) {
         z = Math.max(0, z - DEPTH_STEP);
         at = project(x, y, size, z);
       }

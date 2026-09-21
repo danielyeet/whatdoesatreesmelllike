@@ -98,6 +98,10 @@ and none of it was anything the first round measured, because the first round me
 whether the drawings ran and whether the page could be dragged sideways. It could not see a
 word standing inside a paragraph.
 
+**Every fix in this round is held below 700px, and it was checked rather than assumed** —
+see "Nothing above 700px moved" at the end of this section, which is the measurement and
+the four places where holding to the rule costs something.
+
 ### The chrome needed a ground of its own
 
 `Menu` is fixed to the top left of the window and the page travels underneath it. On a wide
@@ -143,8 +147,11 @@ over each other at 390px, none at 1280**.
 A picture that would land on one already placed is **stood nearer**, a step at a time, until
 it is clear. At depth nought it is back in its own square where nothing can reach it, so it
 always finishes. What counts as a clash is a real overlap rather than a touch (`TOUCH`),
-which is what keeps this from moving a picture on a wide window to fix something nobody can
-see: **measured at 1280, every picture on the sheet stands on exactly the pixel it did**.
+so a pair whose edges meet by a pixel is left alone: they are side by side.
+
+**It runs on a phone and nowhere else** (`tighten`), and the reason is in "Nothing above
+700px moved" below — the pass is invisible at every ordinary desktop size, but not quite
+everywhere, so it is held to the rule rather than to where it happens to be harmless.
 
 ### A station wrote its name off the side of the screen
 
@@ -159,15 +166,20 @@ Two separate faults, and both are fixed:
   the **name** that is measured, not the whole say: the line under it is only read on a
   hover and is much the longest of the three, and sliding by that put the name off the
   *other* side of the window. That was the first go, and the screenshot of it reads
-  "of Sunscreen".
+  "of Sunscreen". Asking the name its width needs each line of the say to be its own width
+  rather than the widest of them (`width: max-content`), and **that rule and the shift are
+  in the same 700px block on purpose**: apart, the shift would be measured against a number
+  the page was not using, which is a worse fault than the one being fixed.
 - **The station itself.** It is placed at a fixed distance from the middle of the frame in
   the frame's own units, and how much of the window that is depends on the lens — which is
   taken off the *shorter* side. On a wide window a station comes out where it was drawn to;
   on a window taller than it is wide the same station is thrown half off the edge. They are
   drawn in towards the middle by however much narrower this window's view is than a wide
   one's (`pull`), as a **shift rather than a squeeze**, so a constellation is never drawn
-  narrower than it was built. It is a minimum with 1 and **nothing on a wide window moves**:
-  1280 × 800 works out at 1.02 and 1920 × 1080 at 1.14, and both come back as 1.
+  narrower than it was built. **Below 700px only** (`SIDE_NARROW`): by the measure alone it
+  would be worth having on anything squarer than about 3:2, and a 1100 × 1000 window throws
+  a station off the edge for exactly the same reason a phone does — but that is a desktop
+  window, and desktop windows do not move.
 
 ### A table wrote one column through the next
 
@@ -189,11 +201,15 @@ phone the writing takes the whole width, so both strips come out narrower than a
 **this page had no wood on it whatever** below about a thousand pixels across.
 
 The owner asked for one of the trees on the phone too and marked where: the top right of
-the head, in the clear band above the piece's own kicker. When there is no strip, one tree
-stands there — grown by the same `treeAt`, blooming under the hand like any other
+the head, in the clear band above the piece's own kicker. **Below 700px** (`ONE_WIDEST`)
+one tree stands there — grown by the same `treeAt`, blooming under the hand like any other
 (measured: 2,727 pixels of ink at rest, 4,945 under the pointer, 2,728 when it goes). The
 page is asked where its writing starts rather than told, and the tree's lowest branches have
 to droop clear of it or it is not drawn.
+
+The strips actually run out at about a thousand pixels across, so between 700 and there this
+page still has no wood on it and would be better with one. That is the rule costing
+something, knowingly.
 
 Two of the wood's own rules are turned off for it, and for a reason: **quietening across the
 middle of the page** exists to keep the wood off the writing, and a tree in an empty band has
@@ -214,6 +230,60 @@ lift on the same frame that class lands, so with the transform transition gone t
 snapped down the whole height of the menu, in full view, before any of the burst had begun.
 Both transitions are named there now. Measured: the one-frame jump of 185px is gone and the
 largest step in the same stretch is 3px, which is the ease.
+
+### Nothing above 700px moved, and here is how that was checked
+
+The owner asked for it directly — *"Make sure that the changes to the mobile site
+presentation do not affect the desktop version"* — so it was **measured rather than
+reasoned about**. A git worktree of the commit before this round was served on one port and
+the working tree on another, and every page on the site was opened on both at
+**1280 × 800, 1440 × 900, 1920 × 1080, 1100 × 1000, 760 × 900 and 701 × 900**. For each
+page the check compares, element by element in document order: the tag, the classes, the
+box, the opacity, the z-index, the background, the backdrop-filter and the transform, plus
+the document's own size and any page errors.
+
+**Every page reads `same` at every one of those sizes**, with one exception:
+`works/almost-human.html`, which differs by design — the owner asked for the mark off the
+head of the page, so the header is 208px shorter and the crowd that is built to fit the
+page is a different crowd. That is not a phone change and it is written up in [the Almost
+Human report](2026-09-20-almost-human.md).
+
+**The harness is not in the repository** — it needs a second checkout and two servers, which
+is not something `npm test` can carry — but it is twenty lines of Playwright and the recipe
+above is the whole of it. It is worth rebuilding for any round that touches a shared rule,
+because it caught two things that reading the diff had passed over:
+
+- **A transform that resolved to the identity matrix.** `.structure-say` carried
+  `transform: translateX(var(--say-shift, 0px))` at every width. The shift is nought on a
+  wide window so nothing moved — but `none` became `matrix(1, 0, 0, 1, 0, 0)`, which is a
+  containing block and a stacking context where there had been neither. Nothing on that
+  page depended on it, and it still should not have been there.
+- **`width: max-content` on the say's lines**, which changed `.structure-no` from 500px wide
+  to 15 and `.structure-name` from 500 to 211 on a desktop. Left-aligned blocks with no
+  background render identically at either width, which is why it looked free; it is a
+  different page all the same.
+
+**Four fixes cost something to be held to the rule**, and all four are deliberate:
+
+| | held to 700px | what that leaves |
+|---|---|---|
+| the clearing before Almost Human's introduction | was 1111px | between 700 and 1111 the crowd has only the gaps the writing happens to leave |
+| the contact sheet's overlap pass | was every width | at 701–820px the sheet still prints two or three pictures over each other, as it always did |
+| Pineward's one tree | was every width with no strips | between 700 and about 1036 the page still has no wood at all |
+| the station's `pull` and its lettering | was every width | a squarish desktop window still throws a station off its edge |
+
+Each of those is a real fault left in place between 700px and wherever it stops, and every
+one of them could be lifted by moving one number. The rule won because it is the owner's.
+
+**Two changes in this round are NOT held to 700px, and should not be**, because neither is
+about a phone:
+
+- **The chamber's transition fix.** The plate snapped 185px on every window, desktop
+  included; the owner reported it from a phone but it was never a phone fault.
+- **The index table's clamped link.** A cell is clipped with an ellipsis and the anchor
+  inside it was not, which is a plain layout fault at any width. Measured: it changes
+  nothing at any size tested, because it only bites where a name is too long for its
+  column — which above 700px it never is.
 
 ### Almost Human's crowd stopped standing on things
 

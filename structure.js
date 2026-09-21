@@ -599,14 +599,25 @@
   // a phone: "The architecture of sunscreen is not fully on screen".
   //
   // So they are drawn in towards the middle by however much narrower
-  // this window's own view is than a wide one's. It is a minimum with
-  // 1, and NOTHING ON A WIDE WINDOW MOVES AT ALL: 1280 x 800 works out
-  // at 1.02 and 1920 x 1080 at 1.14, and both come back as 1. A phone
-  // in the hand is 0.62 whatever size it is, since the lens and the
+  // this window's own view is than a wide one's. A phone in the hand
+  // comes out at 0.62 whatever size it is, since the lens and the
   // half-width are both taken off the width there.
   //
   // It is a SHIFT, not a squeeze: the whole assembly moves in together,
   // so a constellation is never drawn narrower than it was built.
+  //
+  // THE WIDTH DECIDES WHETHER IT APPLIES, THE SHAPE HOW MUCH. By the
+  // measure alone it would be worth having on any window squarer than
+  // about 3:2 — a 1100 x 1000 one throws a station off the edge for
+  // exactly the same reason a phone does, and 1280 x 800 and
+  // 1920 x 1080 would work out at 1 and be untouched anyway. But
+  // "squarer than 3:2" is not a phone, and the standing rule here is
+  // that NOTHING ABOVE 700px MAY CHANGE. So above 700 it is flatly 1
+  // and the drawing is the drawing it always was; the narrow-desktop
+  // window keeps the fault, knowingly.
+  const SIDE_NARROW = 700;     // the widest window this applies to, INCLUSIVE —
+                               // the same 700 the stylesheet's `max-width` uses,
+                               // so the two agree on 700 as well as either side
   const SIDE_REF = 0.68;       // the view a wide window has, as an angle
   let pull = 1;
   /** The swarm's cross-section, and how many of the pool are in the air.
@@ -641,7 +652,9 @@
     canvas.style.height = height + "px";
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
     lens = Math.min(width, height) * LENS;
-    pull = Math.min(1, ((width / 2) / lens) / SIDE_REF);
+    pull = width > SIDE_NARROW
+      ? 1
+      : Math.min(1, ((width / 2) / lens) / SIDE_REF);
 
     // HOW MANY, AND WHAT SHAPE — both off the window. The spreads are
     // the square cross-section stretched to the page's aspect ratio,
@@ -1127,11 +1140,19 @@
     // and thrown away on a resize or when the webfont lands: reading
     // `offsetWidth` in a frame forces the browser to lay the page out
     // again, and this runs sixty times a second.
-    if (!stop.sayWide) stop.sayWide = stop.say.offsetWidth;
-    const over = Math.min(0, width - SAY_EDGE - (left + stop.sayWide));
-    const under = Math.max(0, SAY_EDGE - left);
-    stop.mark.style.setProperty("--say-shift",
-      (over + under).toFixed(1) + "px");
+    // ON A PHONE ONLY, and the stylesheet agrees: above 700px the shift
+    // is not applied, each line of the say is the width it always was,
+    // and there is nothing to measure — so nothing is measured, which
+    // also spares a wide window a forced layout every frame.
+    if (width > SIDE_NARROW) {
+      stop.mark.style.setProperty("--say-shift", "0px");
+    } else {
+      if (!stop.sayWide) stop.sayWide = stop.say.offsetWidth;
+      const over = Math.min(0, width - SAY_EDGE - (left + stop.sayWide));
+      const under = Math.max(0, SAY_EDGE - left);
+      stop.mark.style.setProperty("--say-shift",
+        (over + under).toFixed(1) + "px");
+    }
   }
 
   function drawStops(nearest) {

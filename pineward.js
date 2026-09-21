@@ -90,6 +90,14 @@
   // room the page actually has, and answering the hand exactly as the
   // wood does on a wide window — it is the same tree, grown by the same
   // `treeAt`, not a picture of one.
+  //
+  // AND ONLY ON A PHONE. The strips actually run out at about a
+  // thousand pixels across, and between there and 700 this page has no
+  // wood on it and would be better with one — but the standing rule
+  // here is that NOTHING ABOVE 700px MAY CHANGE, and a tree appearing
+  // on a narrow desktop window is a change. It is held to the same
+  // width as everything else.
+  const ONE_WIDEST = 700;      // the window this stands in at all
   const ONE_TALL = [96, 132];  // how tall it is
   const ONE_ROOF = 64;         // how far below the top of the page its crown may come
   const ONE_CLEAR = 18;        // the air it leaves above the kicker
@@ -332,7 +340,7 @@
     // grown last so that nothing else has to know about it, and the
     // page is asked where its writing starts rather than told.
     let clearing = false;
-    if (!standing) {
+    if (!standing && wide <= ONE_WIDEST) {
       const first = document.querySelector(".pine-kicker");
       const roof = first
         ? first.getBoundingClientRect().top + (window.scrollY || 0)

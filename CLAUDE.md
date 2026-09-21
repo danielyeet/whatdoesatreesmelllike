@@ -191,8 +191,15 @@ they look right.
 ### A phone
 
 The site is meant to work on one, and the standing rule is that **nothing above 700px may
-change** — the owner asked for the phone "without changing its desktop version". Three
-things follow, and they are the ones to keep in mind when adding a drawing:
+change** — the owner asked for the phone "without changing its desktop version", and then,
+a round later, for that to be **checked rather than assumed**. It is: every page on the
+site is rendered at six sizes against the commit before the change, and every element's
+box, opacity, z-index, background and transform compared. How that is done, and the four
+faults deliberately left standing between 700px and wherever they stop because the rule
+says so, are in [the phone
+report](docs/features/2026-09-21-the-site-on-a-phone.md) under "Nothing above 700px moved".
+
+Seven things follow, and they are the ones to keep in mind when adding a drawing:
 
 - **Every canvas draws at a lower ratio below 700px** (1.5 rather than 2), which is a
   little over half the fill. A new drawing should do the same.
@@ -202,7 +209,6 @@ things follow, and they are the ones to keep in mind when adding a drawing:
   and the page had no ground at all.
 - **There is no hovering.** A drag sends `pointermove` and a tap sends `pointerdown`; a
   drawing that answers the hand should listen for both.
-
 - **Anything fixed to the window will end up printed over the page.** There is nothing in
   the top corner of a wide window for the Menu to stand over; on a phone the writing
   reaches it. Fixed chrome below 700px gets a box of `--chrome-ground` behind it — the
@@ -215,6 +221,12 @@ things follow, and they are the ones to keep in mind when adding a drawing:
   stations are placed against the lens, which is taken off the shorter side, so on a phone
   they were thrown half off the edge; they are drawn in towards the middle by however much
   narrower the view is (`pull`). Anything placed the same way needs the same.
+- **A fix keyed to the fault rather than to the width will leak above 700px**, because the
+  faults do not stop at 700 — the sheet overlaps its own pictures up to about 820, Pineward
+  has no wood up to about 1036, and a squarish desktop window throws a station off its edge
+  at any size. Every one of those is keyed to the width anyway (`tighten`, `ONE_WIDEST`,
+  `SIDE_NARROW`), because the rule is a rule. Key a new one the same way and say in the
+  comment what it is leaving behind.
 
 `tests/mobile.spec.js` is the guard: no page scrolls sideways at 390px, the crowd is
 drawn, and a tap brings a figure home.
