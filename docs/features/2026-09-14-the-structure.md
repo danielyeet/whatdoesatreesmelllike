@@ -279,6 +279,15 @@ the count had quietly dropped by a quarter. It passed alone and failed in a load
 run. If a swarm change ever makes that test flaky, this is why — look at how many specks
 are actually being drawn before looking anywhere else.
 
+**It went again on 2026-09-22**, in the full run of the round that moved the houses into
+`houses/`, and it is worth writing down how that was ruled out rather than assumed: every
+file this page loads — `categories/theories.html`, `structure.js`, `style.css`, `nav.js`,
+`search.js` and `page-search.js` — was byte-identical to the commit before that round, so
+there was no mechanism by which the move could reach this drawing at all. It passed alone
+in 3.5s and passed 13 of 13 in its own spec under load. **Check the six files first next
+time**: if they are unchanged, the failure is this, and re-running proves nothing the
+comparison has not already settled.
+
 ## A second way in, at the foot of a card
 
 `data-calc` on a row is an address the card puts a boxed **OPEN CALCULATOR** at its foot,
