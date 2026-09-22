@@ -478,28 +478,37 @@
   // it is filed under. Naming them, ordering them and adding to them
   // are all HTML edits.
   // ============================================================
-  /** The dates a chapter covers, earliest first. They are written
-      dd.mm.yyyy, which does not sort as text, so they are turned round
-      to compare. Read in page order the range came out backwards —
-      "14.03.2024 – 27.06.2023" — which is not a range at all. */
-  function spanOf(items) {
-    const dates = items.map((item) => item.date).filter(Boolean).slice();
-    const key = (d) => d.split(".").reverse().join("");
-    dates.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
-    return dates.length ? dates[0] + " – " + dates[dates.length - 1] : "";
+  /** THE READING OVER A CHAPTER. It used to be the count and the range
+      of dates the chapter covered; the owner asked for the dates to
+      come off the favourites and for the perfume HOUSE to stand where
+      they did, so there are no dates on this page at all any more and
+      no range to read. `spanOf`, which sorted them into order, has
+      gone with them. */
+  function specOf(items) {
+    return items.length ? numbered(items.length - 1) + " ENTRIES" : "NO ENTRIES YET";
   }
 
   const chapters = [];
-  entries.forEach((entry) => {
-    const name = (entry.dataset.chapter || "Unsorted").trim();
+  /** A chapter by name, made if it is not there yet. Order is the
+      order they are first asked for. */
+  function chapterOf(name) {
     let chapter = chapters.find((one) => one.name === name);
     if (!chapter) {
       chapter = { name: name, items: [] };
       chapters.push(chapter);
     }
-    chapter.items.push({
+    return chapter;
+  }
+
+  entries.forEach((entry) => {
+    chapterOf((entry.dataset.chapter || "Unsorted").trim()).items.push({
       name: entry.textContent.trim(),
-      date: (entry.dataset.date || "").trim(),
+      // THE HOUSE THE PERFUME COMES FROM, where the date used to be.
+      house: (entry.dataset.house || "").trim(),
+      // And, optionally, the key its notes are filed under in
+      // notes-data.js — which is what puts a NOTES button in the card
+      // when it is opened.
+      notes: (entry.dataset.notes || "").trim(),
       href: entry.getAttribute("href"),
     });
   });
@@ -508,9 +517,33 @@
   // chapter, matched by `data-chapter`. A chapter with nothing written
   // for it simply shows its cards, so this is optional and the page
   // works without any of it.
+  //
+  // AND A CHAPTER WRITTEN UP HERE EXISTS EVEN WITH NOTHING FILED UNDER
+  // IT. The chapters used to be read off the favourites alone, so a
+  // chapter with no favourites was not a chapter — which is no use for
+  // one that has been named and not filled. Chapter 2 is exactly that:
+  // "To be determined...", and nothing in it yet. It still stands in
+  // the menu and you can still arrow into it.
+  //
+  // `data-ground` is the drawing that stands behind that chapter's
+  // page, if it asks for one. Chapter 1 asks for the sun.
   const notes = {};
+  const grounds = {};
   document.querySelectorAll(".gallery-chapter[data-chapter]").forEach((block) => {
-    notes[(block.dataset.chapter || "").trim()] = block.innerHTML.trim();
+    const name = (block.dataset.chapter || "").trim();
+    if (!name) return;
+    notes[name] = block.innerHTML.trim();
+    if (block.dataset.ground) grounds[name] = block.dataset.ground.trim();
+    chapterOf(name);
+  });
+
+  // WHAT A FAVOURITE SAYS WHEN ITS CARD IS OPENED — one block per
+  // favourite, matched by name. The owner asked for a description and
+  // a paragraph of commentary; what is actually carried through is
+  // whatever the block holds, so the shape is theirs to change.
+  const writings = {};
+  document.querySelectorAll(".gallery-writing[data-favourite]").forEach((block) => {
+    writings[(block.dataset.favourite || "").trim()] = block.innerHTML.trim();
   });
 
   // ============================================================
@@ -594,7 +627,6 @@
   column.appendChild(chapterList);
 
   chapters.forEach((chapter, i) => {
-    const span = spanOf(chapter.items);
     const row = document.createElement("button");
     row.type = "button";
     row.className = "chamber-row chamber-chapter";
@@ -604,9 +636,7 @@
       '<span class="chamber-name"></span>' +
       '<span class="chamber-go" aria-hidden="true">&#8594;</span>';
     row.querySelector(".chamber-no").textContent = numbered(i);
-    row.querySelector(".chamber-of").textContent =
-      numbered(chapter.items.length - 1) + " ENTRIES" +
-      (span ? "   ·   " + span : "");
+    row.querySelector(".chamber-of").textContent = specOf(chapter.items);
     row.querySelector(".chamber-name").textContent = chapter.name;
     chapterList.appendChild(row);
     chapter.row = row;
@@ -620,13 +650,31 @@
   const chapterPage = document.createElement("div");
   chapterPage.className = "chapter-page dark-surface";
   chapterPage.hidden = true;
+  // THE ARROWS EITHER SIDE OF THE NAME are the owner's: "an arrow near
+  // the right side and left of the word chapter, that you can cycle
+  // through". They step one chapter at a time and wrap round, so with
+  // two chapters it is 1 → 2 → 1. Nothing about the burst is replayed —
+  // the page you are standing on is simply rewritten under you.
+  //
+  // THE GROUND is the drawing behind the page, if that chapter asks for
+  // one. It is a canvas outside the sheet so the writing can fade for a
+  // turn without the drawing behind it flickering.
   chapterPage.innerHTML =
+    '<canvas class="chapter-ground" aria-hidden="true" hidden></canvas>' +
     '<div class="chapter-sheet">' +
       '<button type="button" class="chapter-back">' +
         '<span aria-hidden="true">&#8592;</span> Favourites' +
       "</button>" +
       '<p class="chapter-kicker">Favourites</p>' +
-      '<h2 class="chapter-name"></h2>' +
+      '<div class="chapter-title">' +
+        '<button type="button" class="chapter-step chapter-step-back" ' +
+          'aria-label="The chapter before this one">' +
+          '<span aria-hidden="true">&#8592;</span></button>' +
+        '<h2 class="chapter-name"></h2>' +
+        '<button type="button" class="chapter-step chapter-step-on" ' +
+          'aria-label="The next chapter">' +
+          '<span aria-hidden="true">&#8594;</span></button>' +
+      "</div>" +
       '<p class="chapter-spec"></p>' +
       '<div class="chapter-note"></div>' +
       '<div class="chapter-cards"></div>' +
@@ -635,8 +683,52 @@
   const chapterSpec = chapterPage.querySelector(".chapter-spec");
   const chapterNote = chapterPage.querySelector(".chapter-note");
   const chapterCards = chapterPage.querySelector(".chapter-cards");
+  const chapterGround = chapterPage.querySelector(".chapter-ground");
   chapterPage.querySelector(".chapter-back")
     .addEventListener("click", () => closeChapter());
+  chapterPage.querySelector(".chapter-step-back")
+    .addEventListener("click", () => stepChapter(-1));
+  chapterPage.querySelector(".chapter-step-on")
+    .addEventListener("click", () => stepChapter(1));
+
+  // A FAVOURITE'S NOTES, IN THIS PAGE'S OWN COLOURS.
+  //
+  // It is the SAME WINDOW the rest of the site uses — `.note-panel`,
+  // its bar, its close, and a body written by the one renderer in
+  // notes.js — so a reader is told the same thing about a fragrance
+  // whichever door they came in by. What is different is the colour,
+  // and that is five tokens redefined on the window itself rather than
+  // a second set of rules for everything inside it: every rule the
+  // window already draws in reads them. See the note in style.css.
+  //
+  // It stands INSIDE the chapter page, not on the body: the chapter
+  // page is fixed over the window and carries no transform, so a fixed
+  // thing in here is fixed to the window — and every direct child of
+  // <body> is caught by the rule that dims the page behind the Menu.
+  const favScrim = document.createElement("div");
+  favScrim.className = "note-scrim fav-note-scrim";
+  favScrim.hidden = true;
+  chapterPage.appendChild(favScrim);
+
+  const favNote = document.createElement("div");
+  favNote.className = "note-panel fav-note";
+  favNote.id = "fav-note";
+  favNote.hidden = true;
+  favNote.setAttribute("role", "dialog");
+  favNote.setAttribute("aria-modal", "true");
+  favNote.setAttribute("aria-labelledby", "fav-note-head");
+  favNote.innerHTML =
+    '<div class="note-bar">' +
+      '<p class="note-head" id="fav-note-head">' +
+        '<span class="note-head-say">Notes</span>' +
+        '<span class="note-head-of"></span>' +
+      "</p>" +
+      '<button class="note-shut" type="button" aria-label="Close this">' +
+        '<span aria-hidden="true">\u00d7</span></button>' +
+    "</div>" +
+    '<div class="note-in"></div>';
+  chapterPage.appendChild(favNote);
+
   // Inside the chamber rather than loose in the page. Every direct child
   // of <body> is caught by the rule that dims the page behind the menu,
   // which outranks anything written for a new element — the note in
@@ -887,7 +979,18 @@
 
   /** Null, or the burst that is running / the chapter that is open. */
   let burst = null;
-  const chapterShowing = () => Boolean(burst);
+  /** The timer running the way out of a chapter, or 0. It outlives
+      `burst` — the chamber is given back to itself half way through the
+      leaving, while the black is still over it — so it is what keeps a
+      second press from starting the whole thing again. */
+  let leaving = 0;
+  const chapterShowing = () => Boolean(burst) || Boolean(leaving);
+  /** THE WAY OUT, IN MILLISECONDS. The writing goes first, then the
+      chamber is handed back under a black that is still solid, and only
+      then does the black clear. Both are written in the stylesheet as
+      well; change one and change the other. */
+  const LEAVE_WRITING = 340;
+  const LEAVE_CLEAR = 620;
 
   /** HOW FAST THE RING IS TURNING, AND WHICH WAY — read off the
       particles rather than worked out from the geometry, because what
@@ -1295,7 +1398,11 @@
   }
 
   function openChapter(i) {
-    if (burst) return;
+    // Nor while the last one is still being left — the chamber is
+    // handed back to itself half way through that, under a black that
+    // is still solid, and starting a second burst into it would wind in
+    // a chamber that has only just been refired.
+    if (burst || leaving) return;
     const orbit0 = orbitNow();
     const rate = spinNow(orbit0);
     burst = {
@@ -1418,9 +1525,43 @@
     plate.classList.add("drawn-in");
   }
 
+  /** THE WAY OUT, IN THREE BEATS RATHER THAN IN ONE FRAME.
+
+      It used to be a cut. Pressing "← Favourites" took the black off
+      the window on the frame it was pressed, and what was underneath
+      was a white page with no chrome on it — the menu and the
+      particles both faded out by the burst — which then faded back in
+      afterwards. So leaving a chapter was a flash of an empty white
+      page, and that is what the owner meant by wanting it "way
+      smoother".
+
+      What happens now, in order, and none of it is a cut:
+
+        1  THE WRITING GOES.   The sheet fades where it stands.
+        2  THE CHAMBER COMES BACK UNDER THE BLACK, which is still
+           solid: the particles are handed back to the physics, the
+           menu is reopened and the chrome begins to fade in. Nothing
+           of this is seen, and that is the point — by the time the
+           black goes there is a page behind it.
+        3  THE BLACK CLEARS. */
   function closeChapter() {
-    if (!burst) return;
+    if (!burst || leaving) return;
     const was = burst;
+    if (REDUCE_MOTION) { giveBack(was); clearChapter(); return; }
+    chapterPage.classList.add("going");
+    leaving = window.setTimeout(() => {
+      giveBack(was);
+      chapterPage.classList.add("clearing");
+      leaving = window.setTimeout(() => {
+        leaving = 0;
+        clearChapter();
+      }, LEAVE_CLEAR);
+    }, LEAVE_WRITING);
+  }
+
+  /** The chamber, handed back to itself. Run while the black is still
+      over it, so none of it is watched happening. */
+  function giveBack(was) {
     burst = null;
     shell.classList.remove("bursting", "burst-wave");
     page.classList.remove("bursting", "chapter-open");
@@ -1431,10 +1572,6 @@
       row.style.removeProperty("--pull");
       row.style.removeProperty("--mid");
     });
-    chapterPage.classList.remove("here");
-    chapterPage.classList.remove("laid");
-    chapterPage.hidden = true;
-    chapterWave.hidden = true;
     // Back into the physics' hands: every particle is fired again from
     // its own injector, staggered, so the chamber fills the way it does
     // when the page opens rather than snapping back into a finished ring.
@@ -1444,7 +1581,20 @@
       speck.wait = random() * between(LIFE);
     });
     const row = chapters[was.chapter] && chapters[was.chapter].row;
-    if (row) { setOpen(true, false); row.focus(); }
+    if (row) { setOpen(true, false); row.focus({ preventScroll: true }); }
+  }
+
+  /** The chapter page, off the window and back to nothing. */
+  function clearChapter() {
+    if (leaving) { window.clearTimeout(leaving); leaving = 0; }
+    settleNote();
+    noteFrom = null;
+    openCard = null;
+    if (ground) { ground.stop(); ground = null; }
+    chapterGround.hidden = true;
+    chapterPage.classList.remove("here", "laid", "going", "clearing", "turning");
+    chapterPage.hidden = true;
+    chapterWave.hidden = true;
   }
 
   /** Winding in. `p` runs 0 to 1 across the whole wind.
@@ -1525,58 +1675,69 @@
     }
   }
 
-  /** The chapter, on the page. Built from the page's own markup every
-      time, so a chapter renamed or re-filed in the HTML is right here
-      without anything else being touched. */
-  function layChapter(i) {
+  // ============================================================
+  // A CHAPTER'S OWN PAGE
+  //
+  // Three things happen on it that did not before, and all three are
+  // the owner's:
+  //
+  //   THE ARROWS   either side of the name, stepping one chapter along
+  //                and wrapping round. Nothing about the burst is
+  //                replayed: the page you are standing on is rewritten
+  //                under you.
+  //   THE GROUND   a drawing behind the page, if that chapter asks for
+  //                one. Chapter 1 asks for the sun.
+  //   A CARD OPENS WHERE IT STANDS, taking the whole width of the grid
+  //                so the favourites after it go down a row, and
+  //                carrying what is written about that fragrance and
+  //                the two ways on from it.
+  // ============================================================
+
+  /** The card that is open, or null. One at a time: a second would
+      have the first still standing above it saying the same things. */
+  let openCard = null;
+  /** The drawing standing behind the chapter that is showing, or null. */
+  let ground = null;
+  /** The timer turning the page to another chapter, if one is running. */
+  let turning = 0;
+  /** How long the writing takes to go before the page is rewritten. */
+  const TURN_MS = 340;
+  /** How long a card takes to open, and to shut. */
+  const CARD_MS = 420;
+
+  /** The chapter, written onto the page. Built from the page's own
+      markup every time, so a chapter renamed or re-filed in the HTML is
+      right here without anything else being touched.
+
+      IT IS SPLIT FROM `layChapter` because the arrows rewrite the page
+      without laying it. Laying it is the end of the burst — the page
+      going under the mesh — and stepping from one chapter to the next
+      must not play any of that again. */
+  function writeChapter(i) {
     const chapter = chapters[i];
-    const span = spanOf(chapter.items);
+    shutNote(true);
+    openCard = null;
     chapterName.textContent = chapter.name;
-    chapterSpec.textContent =
-      numbered(chapter.items.length - 1) + " ENTRIES" + (span ? "   ·   " + span : "");
+    chapterSpec.textContent = specOf(chapter.items);
 
     const note = notes[chapter.name];
     chapterNote.innerHTML = note || "";
     chapterNote.hidden = !note;
 
-    chapterCards.innerHTML = "";
-    chapter.items.forEach((item, n) => {
-      const card = document.createElement("a");
-      card.className = "chapter-card";
-      card.href = item.href;
-      card.innerHTML =
-        '<span class="chapter-card-no"></span>' +
-        '<span class="chapter-card-name"></span>' +
-        '<span class="chapter-card-date"></span>' +
-        '<span class="chapter-card-go" aria-hidden="true">OPEN &#8594;</span>';
-      card.querySelector(".chapter-card-no").textContent = numbered(n);
-      card.querySelector(".chapter-card-name").textContent = item.name;
-      card.querySelector(".chapter-card-date").textContent = item.date;
-      card.style.setProperty("--n", String(n));
-      chapterCards.appendChild(card);
+    // The arrows say nothing when there is only one chapter to be on.
+    [...chapterPage.querySelectorAll(".chapter-step")].forEach((step) => {
+      step.hidden = chapters.length < 2;
     });
 
-    // NOTHING IS CLIPPED. The page used to be cut open from the point
-    // the particles met, and the whole of that — `clipTo`, CLIP_ROUND,
-    // the clip-path on .chapter-page — is gone: the owner asked for the
-    // black part of the explosion removed, and the web's own panels
-    // turn black in its place. So the page is simply laid under the web
-    // once the web has the window covered, and by then both are black.
-    // AND ITS WRITING WAITS FOR THE DRAWING TO GO. `laid` is the page
-    // standing under the mesh — black under black, with nothing on it
-    // yet — and `here` is the mesh gone. Everything on the sheet comes
-    // in on `here`.
-    //
-    // It used to arrive underneath: the page was laid at PAGE_LAID and
-    // its cards started their entrance there, four hundred-odd
-    // milliseconds before the drawing was taken off. By the time you
-    // could see anything the heading was simply there and the cards
-    // were half way in, so the end of the burst read as a cut to a page
-    // already part built. That is what the owner meant by the handover
-    // not being smooth.
-    chapterPage.hidden = false;
-    page.classList.add("chapter-open");
-    chapterPage.classList.add("laid");
+    chapterCards.innerHTML = "";
+    chapter.items.forEach((item, n) => chapterCards.appendChild(makeCard(item, n)));
+    // A CHAPTER CAN HAVE NOTHING IN IT. Chapter 2 is named and written
+    // up and has no favourites yet, and an empty grid would leave a
+    // gap under the writing that reads as something failing to load.
+    chapterCards.hidden = !chapter.items.length;
+
+    setGround(grounds[chapter.name] || "");
+
     // One number per thing on the sheet, so they come in one behind the
     // other. Counted here rather than in CSS because the note is not
     // always there.
@@ -1586,6 +1747,313 @@
       one.style.setProperty("--i", String(place));
       place += 1;
     });
+  }
+
+  /** ONE FAVOURITE, AS A CARD THAT OPENS WHERE IT STANDS.
+
+      It used to be a link straight to the piece. The owner asked for it
+      to open in place instead — "the other favorite fragrances will go
+      down and the square in which Des Cendres is will expand revealing
+      the window of the fragrance" — and what it opens into carries the
+      link on from it, so the card itself cannot be one: a link inside a
+      link is not a thing the browser will build. It is a button. */
+  function makeCard(item, n) {
+    const shell = document.createElement("div");
+    shell.className = "chapter-card-shell";
+    shell.style.setProperty("--n", String(n));
+
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "chapter-card";
+    card.setAttribute("aria-expanded", "false");
+    card.innerHTML =
+      '<span class="chapter-card-no"></span>' +
+      '<span class="chapter-card-name"></span>' +
+      '<span class="chapter-card-house"></span>' +
+      '<span class="chapter-card-go" aria-hidden="true">OPEN \u2193</span>';
+    card.querySelector(".chapter-card-no").textContent = numbered(n);
+    card.querySelector(".chapter-card-name").textContent = item.name;
+    // THE HOUSE THE PERFUME COMES FROM, where the date used to stand.
+    // A favourite that has not been told its house says so with a rule
+    // rather than with nothing, so the card keeps its shape.
+    card.querySelector(".chapter-card-house").textContent = item.house || "—";
+    shell.appendChild(card);
+
+    const body = document.createElement("div");
+    body.className = "chapter-card-body";
+    body.hidden = true;
+    body.innerHTML =
+      '<div class="fav-writing">' +
+        (writings[item.name] ||
+          '<p class="gallery-waiting">Nothing has been written about this one yet.</p>') +
+      "</div>" +
+      '<p class="fav-links">' +
+        '<a class="fav-link fav-link-go" href="' + (item.href || "#") + '">' +
+          '<span class="fav-link-say">Go to fragrance</span>' +
+          '<span class="fav-link-mark" aria-hidden="true">→</span></a>' +
+        '<button type="button" class="fav-link fav-link-notes" ' +
+          'aria-haspopup="dialog" aria-controls="fav-note">' +
+          '<span class="fav-link-say">Notes</span>' +
+          '<span class="fav-link-mark" aria-hidden="true">↗</span></button>' +
+      "</p>";
+    shell.appendChild(body);
+
+    card.addEventListener("click", () => turnCard(shell));
+    body.querySelector(".fav-link-notes")
+      .addEventListener("click", (e) => showNote(item, e.currentTarget));
+    return shell;
+  }
+
+  /** Open it if it is shut, shut it if it is open. */
+  function turnCard(shell) {
+    if (openCard === shell) { shutCard(shell); return; }
+    if (openCard) shutCard(openCard);
+    const card = shell.querySelector(".chapter-card");
+    const body = shell.querySelector(".chapter-card-body");
+    // WHERE EVERY OTHER CARD STANDS BEFORE THIS ONE TAKES THE ROW.
+    // Widening a card re-lays the whole grid in one frame, so the ones
+    // after it would JUMP down rather than travel — and the owner asked
+    // for them to go down. Their places are read first, given back to
+    // them as a transform once the grid has moved, and then released,
+    // so each one travels from where it was to where it now is.
+    const others = [...chapterCards.children].filter((one) => one !== shell);
+    const was = others.map((one) => one.getBoundingClientRect());
+
+    openCard = shell;
+    shell.classList.add("is-open");
+    card.setAttribute("aria-expanded", "true");
+    card.querySelector(".chapter-card-go").textContent = "CLOSE \u2191";
+    body.hidden = false;
+    if (REDUCE_MOTION) { body.style.height = "auto"; return; }
+    travel(others, was);
+    // Opened on a measured height, the way a part of a house opens:
+    // `auto` is not a height the browser will ease to.
+    const tall = body.scrollHeight;
+    body.style.height = "0px";
+    body.getBoundingClientRect();
+    body.style.height = tall + "px";
+    after(body, () => { body.style.height = "auto"; });
+  }
+
+  function shutCard(shell) {
+    const card = shell.querySelector(".chapter-card");
+    const body = shell.querySelector(".chapter-card-body");
+    card.setAttribute("aria-expanded", "false");
+    card.querySelector(".chapter-card-go").textContent = "OPEN \u2193";
+    if (openCard === shell) openCard = null;
+    if (REDUCE_MOTION) {
+      shell.classList.remove("is-open");
+      body.hidden = true;
+      body.style.height = "";
+      return;
+    }
+    const others = [...chapterCards.children].filter((one) => one !== shell);
+    const was = others.map((one) => one.getBoundingClientRect());
+    body.style.height = body.scrollHeight + "px";
+    body.getBoundingClientRect();
+    shell.classList.remove("is-open");
+    body.style.height = "0px";
+    travel(others, was);
+    after(body, () => { body.hidden = true; body.style.height = ""; });
+  }
+
+  /** Wait for a height to finish easing, with a backstop for the case
+      where the transition never runs at all — a background tab, or a
+      browser that has been told not to animate. */
+  function after(body, done) {
+    let timer = 0;
+    const end = (e) => {
+      if (e && (e.target !== body || e.propertyName !== "height")) return;
+      body.removeEventListener("transitionend", end);
+      window.clearTimeout(timer);
+      done();
+    };
+    body.addEventListener("transitionend", end);
+    timer = window.setTimeout(() => end(null), CARD_MS + 120);
+  }
+
+  /** FLIP: put them back where they were and let them go. The transform
+      is written on the SHELL and the entrance animation runs on the
+      card inside it, which is not an accident — a CSS animation with a
+      fill outranks an inline style, so an entrance that finished on
+      `transform: none` would simply ignore this. */
+  function travel(nodes, was) {
+    nodes.forEach((one, n) => {
+      const now = one.getBoundingClientRect();
+      const dx = was[n].left - now.left;
+      const dy = was[n].top - now.top;
+      if (!dx && !dy) return;
+      one.style.transition = "none";
+      one.style.transform = "translate(" + dx + "px, " + dy + "px)";
+      one.getBoundingClientRect();
+      one.style.transition = "transform " + CARD_MS + "ms var(--menu-ease)";
+      one.style.transform = "";
+      window.setTimeout(() => {
+        one.style.transition = "";
+        one.style.transform = "";
+      }, CARD_MS + 60);
+    });
+  }
+
+  // ============================================================
+  // A FAVOURITE'S NOTES
+  //
+  // The same window as everywhere else on the site, written by the one
+  // renderer in notes.js, in this page's own colours. The owner: "Notes
+  // will do the exact same thing everywhere else... just copy the
+  // information but adjust the theme."
+  // ============================================================
+  /** What to give the keyboard back to when the window shuts. */
+  let noteFrom = null;
+  let noteEnding = null;
+  let noteTimer = 0;
+
+  function showNote(item, from) {
+    const panel = window.NOTE_PANEL;
+    if (!panel) return;
+    settleNote();
+    noteFrom = from || null;
+    favNote.querySelector(".note-head-of").textContent = item.name;
+    favNote.querySelector(".note-in").innerHTML =
+      panel.html((window.FRAGRANCE_NOTES || {})[item.notes], "fav-note");
+    favScrim.hidden = false;
+    favNote.hidden = false;
+    if (REDUCE_MOTION) {
+      favScrim.classList.add("is-on");
+      favNote.classList.add("is-up");
+    } else {
+      // Two frames: one for the browser to take the window as being
+      // where it starts from, one to move it.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        favScrim.classList.add("is-on");
+        favNote.classList.add("is-up");
+      }));
+    }
+    const shut = favNote.querySelector(".note-shut");
+    if (shut) shut.focus({ preventScroll: true });
+  }
+
+  /** Off the page, and everything that was waiting for it stopped. */
+  function settleNote() {
+    window.clearTimeout(noteTimer);
+    noteTimer = 0;
+    if (noteEnding) {
+      favNote.removeEventListener("transitionend", noteEnding);
+      noteEnding = null;
+    }
+    favNote.hidden = true;
+    favNote.classList.remove("is-up");
+    favScrim.hidden = true;
+    favScrim.classList.remove("is-on");
+  }
+
+  /** THE FADE ITSELF SAYS WHEN IT IS DONE, and the number is only the
+      backstop. Cutting a window and its scrim on a timer is the bug
+      that shipped once already on the house pages — see the note in
+      style.css — and it is not repeated here. */
+  function shutNote(atOnce) {
+    if (favNote.hidden) {
+      if (noteFrom) noteFrom = null;
+      return;
+    }
+    favNote.classList.remove("is-up");
+    favScrim.classList.remove("is-on");
+    const back = noteFrom;
+    noteFrom = null;
+    if (atOnce || REDUCE_MOTION) { settleNote(); }
+    else {
+      noteEnding = (e) => {
+        if (e.target !== favNote || e.propertyName !== "opacity") return;
+        settleNote();
+      };
+      favNote.addEventListener("transitionend", noteEnding);
+      noteTimer = window.setTimeout(settleNote, 900);
+    }
+    if (back && !atOnce) back.focus({ preventScroll: true });
+  }
+
+  favScrim.addEventListener("click", () => shutNote(false));
+  favNote.querySelector(".note-shut").addEventListener("click", () => shutNote(false));
+  const noteShowing = () => !favNote.hidden;
+
+  // ============================================================
+  // THE DRAWING BEHIND A CHAPTER'S PAGE
+  //
+  // A ground registers itself on `window.CHAPTER_GROUNDS` from its own
+  // script — `sun.js` is the one there is — and is handed the canvas
+  // and a way of asking where the writing stands, so it can quieten
+  // itself behind it the way Ataraxia's bands are quietened over their
+  // column. A chapter with no ground is black, as it always was.
+  // ============================================================
+  function setGround(name) {
+    if (ground && ground.name === name) return;
+    if (ground) { ground.stop(); ground = null; }
+    chapterGround.hidden = true;
+    const make = name && (window.CHAPTER_GROUNDS || {})[name];
+    if (!make) return;
+    chapterGround.hidden = false;
+    const made = make(chapterGround, {
+      column: () => {
+        const sheet = chapterPage.querySelector(".chapter-sheet");
+        return sheet ? sheet.getBoundingClientRect() : null;
+      },
+    });
+    if (made && made.stop) ground = { name: name, stop: made.stop };
+    else chapterGround.hidden = true;
+  }
+
+  /** THE ARROWS. One chapter along, wrapping round — the owner's
+      "cycle through the page in order to acceess chapter 2 and 3 and 1
+      again". The writing goes, the page is rewritten under it, and its
+      entrance is run again, so stepping to a chapter reads like
+      arriving at one rather than like a table being refilled. */
+  function stepChapter(way) {
+    if (!burst || burst.phase !== "open" || leaving || turning) return;
+    if (chapters.length < 2) return;
+    const to = (burst.chapter + way + chapters.length) % chapters.length;
+    if (to === burst.chapter) return;
+    burst.chapter = to;
+    shutNote(true);
+    if (REDUCE_MOTION) { writeChapter(to); chapterPage.scrollTop = 0; return; }
+    chapterPage.classList.add("turning");
+    turning = window.setTimeout(() => {
+      turning = 0;
+      writeChapter(to);
+      chapterPage.scrollTop = 0;
+      chapterPage.classList.remove("here");
+      void chapterPage.offsetWidth;          // so the entrance plays again
+      chapterPage.classList.add("here");
+      chapterPage.classList.remove("turning");
+    }, TURN_MS);
+  }
+
+  /** The chapter, laid under the mesh at the end of the burst.
+
+      NOTHING IS CLIPPED. The page used to be cut open from the point
+      the particles met, and the whole of that — `clipTo`, CLIP_ROUND,
+      the clip-path on .chapter-page — is gone: the owner asked for the
+      black part of the explosion removed, and the web's own panels
+      turn black in its place. So the page is simply laid under the web
+      once the web has the window covered, and by then both are black.
+
+      AND ITS WRITING WAITS FOR THE DRAWING TO GO. `laid` is the page
+      standing under the mesh — black under black, with nothing on it
+      yet — and `here` is the mesh gone. Everything on the sheet comes
+      in on `here`.
+
+      It used to arrive underneath: the page was laid at PAGE_LAID and
+      its cards started their entrance there, four hundred-odd
+      milliseconds before the drawing was taken off. By the time you
+      could see anything the heading was simply there and the cards
+      were half way in, so the end of the burst read as a cut to a page
+      already part built. That is what the owner meant by the handover
+      not being smooth. */
+  function layChapter(i) {
+    writeChapter(i);
+    chapterPage.hidden = false;
+    chapterPage.scrollTop = 0;
+    page.classList.add("chapter-open");
+    chapterPage.classList.add("laid");
     if (REDUCE_MOTION) settleChapter();
   }
 
@@ -1777,7 +2245,9 @@
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    // Out of a chapter first, then out of the menu.
+    // Out of a notes window first, then out of a chapter, then out of
+    // the menu — one level at a time, the way it always stepped out.
+    if (noteShowing()) { shutNote(false); return; }
     if (chapterShowing()) { closeChapter(); return; }
     if (!opened) return;
     setOpen(false, true);
@@ -1788,9 +2258,9 @@
   // page and pressing it is how you leave the menu.
   document.addEventListener("pointerdown", (e) => {
     // Nothing off the writing closes anything while a chapter is being
-    // arrived at or is standing open — the page belongs to the chapter
-    // then, and the way out of it is its own way back.
-    if (burst) return;
+    // arrived at, is standing open, or is being left — the page belongs
+    // to the chapter then, and the way out of it is its own way back.
+    if (chapterShowing()) return;
     if (!opened) return;
     if (plate.contains(e.target)) return;
     if (e.target.closest && e.target.closest(".menu-trigger, .menu-overlay")) return;

@@ -173,6 +173,14 @@ test("the menu is grown from the page's own favourites", async ({ page }) => {
       const on = (entry.dataset.chapter || "Unsorted").trim();
       if (named.indexOf(on) < 0) named.push(on);
     });
+    // AND A CHAPTER THAT IS WRITTEN UP BUT HAS NOTHING FILED UNDER IT
+    // IS STILL A CHAPTER. The chapters used to be read off the
+    // favourites alone, which is no use for one that has been named and
+    // not filled — Chapter 2 is exactly that.
+    document.querySelectorAll(".gallery-chapter[data-chapter]").forEach((block) => {
+      const on = (block.dataset.chapter || "").trim();
+      if (on && named.indexOf(on) < 0) named.push(on);
+    });
     return {
       named: named,
       perChapter: named.map(
@@ -180,8 +188,8 @@ test("the menu is grown from the page's own favourites", async ({ page }) => {
       ),
       rows: [...document.querySelectorAll(".chamber-chapter .chamber-name")]
         .map((el) => el.textContent.trim()),
-      counts: [...document.querySelectorAll(".chamber-chapter .chamber-of")]
-        .map((el) => Number(el.textContent.trim().split(" ")[0])),
+      reads: [...document.querySelectorAll(".chamber-chapter .chamber-of")]
+        .map((el) => el.textContent.trim()),
       entries: entries.length,
       chambered: document.body.classList.contains("chambered"),
     };
@@ -190,7 +198,13 @@ test("the menu is grown from the page's own favourites", async ({ page }) => {
   expect(built.entries, "the page should carry some favourites").toBeGreaterThan(2);
   expect(built.named.length, "filed under a few chapters").toBeGreaterThan(1);
   expect(built.rows, "a row for each, in the order the page names them").toEqual(built.named);
-  expect(built.counts, "and each carrying its own count").toEqual(built.perChapter);
+  // Each row reads how many are in it — and an empty chapter says so in
+  // words rather than counting to nothing.
+  built.reads.forEach((read, n) => {
+    const many = built.perChapter[n];
+    if (many) expect(Number(read.split(" ")[0]), built.named[n]).toBe(many);
+    else expect(read, built.named[n] + " has nothing in it yet").toMatch(/NO ENTRIES/i);
+  });
   expect(built.chambered).toBe(true);
   expect(errors).toEqual([]);
 });
@@ -519,31 +533,59 @@ test("the chapter page is never cut open, it is laid under the mesh",
   await waitForChamber(page);
   await page.waitForTimeout(3000);
   await openMenu(page);
-  await page.locator(".chamber-chapter").first().click();
 
-  const cuts = [];
-  for (let n = 0; n < 70; n++) {
-    await page.waitForTimeout(80);
-    cuts.push(await page.locator(".chapter-page").evaluate((el) => ({
-      inline: el.style.clipPath || "",
-      used: getComputedStyle(el).clipPath,
-      shown: !el.hidden,
-    })));
-    if (cuts[cuts.length - 1].shown) break;
-  }
-  const cut = cuts.find((one) => one.inline.indexOf("polygon") === 0 ||
+  // WATCHED FROM INSIDE THE PAGE, FRAME BY FRAME, and set going before
+  // the press. It used to poll over the wire every 80ms and then read
+  // the mesh once the page had appeared — which is a sample taken at a
+  // time rather than at a state, and a heavy frame moves it. It flaked
+  // under a loaded full run for that reason, and once the sun was
+  // drawing behind the page as well it began failing outright: by the
+  // time the poll noticed the page, the mesh had finished and cleared.
+  //
+  // This reads the mesh ON THE FRAME the page is first shown, which is
+  // the moment the claim is actually about.
+  await page.evaluate(() => {
+    window.__cut = [];
+    window.__onArrival = null;
+    const tick = () => {
+      const pg = document.querySelector(".chapter-page");
+      if (pg) {
+        const shown = !pg.hidden;
+        window.__cut.push({
+          inline: pg.style.clipPath || "",
+          used: getComputedStyle(pg).clipPath,
+          shown: shown,
+        });
+        if (shown && window.__onArrival === null) {
+          const rings = document.querySelector(".chapter-rings");
+          window.__onArrival = rings && rings.width > 8
+            ? rings.getContext("2d").getImageData(
+                Math.round(rings.width / 2), Math.round(rings.height * 0.08), 1, 1).data[3] / 255
+            : -1;
+        }
+      }
+      if (window.__cut.length < 1200) requestAnimationFrame(tick);
+    };
+    tick();
+  });
+
+  await page.locator(".chamber-chapter").first().click();
+  await page.waitForSelector(".chapter-page.here", { timeout: 20000 });
+
+  const seen = await page.evaluate(() => ({
+    cuts: window.__cut, arrival: window.__onArrival,
+  }));
+  const cut = seen.cuts.find((one) => one.inline.indexOf("polygon") === 0 ||
     (one.used && one.used !== "none"));
   expect(cut, `the page was cut open: ${JSON.stringify(cut)}`).toBeFalsy();
+  expect(seen.cuts.some((one) => one.shown), "the page should have arrived").toBe(true);
 
   // And when it does arrive, the mesh has the window covered — so there
-  // is nothing to see in the swap.
-  await expect(page.locator(".chapter-page")).toBeVisible();
-  const black = await page.locator(".chapter-rings").evaluate((el) => {
-    const g = el.getContext("2d");
-    const im = g.getImageData(Math.round(el.width / 2), Math.round(el.height * 0.08), 1, 1).data;
-    return im[3] / 255;
-  });
-  expect(black, "the mesh should have the top of the window covered by then")
+  // is nothing to see in the swap. Read on the arrival frame itself,
+  // not a moment later.
+  expect(seen.arrival, "the mesh should have been drawing when the page arrived")
+    .toBeGreaterThan(-1);
+  expect(seen.arrival, "the mesh should have the top of the window covered by then")
     .toBeGreaterThan(0.75);
 });
 
@@ -559,30 +601,440 @@ test("a chapter's page carries its writing, and its favourites as cards",
   expect((await page.locator(".chapter-note").textContent()).trim().length)
     .toBeGreaterThan(20);
 
-  const cards = await page.$$eval(".chapter-card", (all) =>
-    all.map((card) => ({
-      no: card.querySelector(".chapter-card-no").textContent.trim(),
-      date: card.querySelector(".chapter-card-date").textContent.trim(),
-      name: card.querySelector(".chapter-card-name").textContent.trim(),
-      href: card.getAttribute("href"),
+  const cards = await page.$$eval(".chapter-card-shell", (all) =>
+    all.map((shell) => ({
+      no: shell.querySelector(".chapter-card-no").textContent.trim(),
+      house: shell.querySelector(".chapter-card-house").textContent.trim(),
+      name: shell.querySelector(".chapter-card-name").textContent.trim(),
+      href: shell.querySelector(".fav-link-go").getAttribute("href"),
+      dated: /\d{2}\.\d{2}\.\d{4}/.test(shell.textContent),
     }))
   );
   expect(cards.length).toBeGreaterThan(1);
   cards.forEach((card, n) => {
     expect(card.no, "numbered in order").toBe(String(n + 1).padStart(2, "0"));
-    expect(card.date, `${card.name} should carry the date it is filed under`)
-      .toMatch(/^\d{2}\.\d{2}\.\d{4}$/);
+    // THE HOUSE THE PERFUME COMES FROM, WHERE THE DATE USED TO STAND.
+    // The owner asked for the dates off the favourites and for the
+    // house in their place, so there must be no date anywhere on a card.
+    expect(card.house.length, `${card.name} should say a house or say nothing`)
+      .toBeGreaterThan(0);
+    expect(card.dated, `${card.name} should carry no date at all`).toBe(false);
     expect(card.name.length).toBeGreaterThan(0);
     expect(card.href, `${card.name} should point at a piece`).toMatch(/works\//);
   });
+  expect(cards.some((c) => c.house !== "\u2014"),
+    "at least one favourite names its house").toBe(true);
 
-  // The reading over them, and its dates the right way round: read in
-  // page order this came out latest-first, which is not a range.
+  // The reading over them. It used to carry the range of dates the
+  // chapter covered; there are none on this page any more.
   const spec = await page.locator(".chapter-spec").textContent();
-  expect(spec).toMatch(/ENTRIES.+\d{2}\.\d{2}\.\d{4} – \d{2}\.\d{2}\.\d{4}/);
-  const [from, to] = spec.match(/\d{2}\.\d{2}\.\d{4}/g);
-  const key = (d) => d.split(".").reverse().join("");
-  expect(key(from) <= key(to), `the range should read earliest first: ${spec}`).toBe(true);
+  expect(spec).toMatch(/\d{2} ENTRIES/);
+  expect(spec, "and no dates in it either").not.toMatch(/\d{2}\.\d{2}\.\d{4}/);
+});
+
+/** Press a chapter and wait until its page has the window and its
+    writing has come in — `here` rather than merely `hidden = false`,
+    which happens a few hundred milliseconds earlier while the mesh is
+    still over it. */
+async function openChapterFully(page, which) {
+  await page.locator(".chamber-chapter").nth(which || 0).click();
+  await page.waitForSelector(".chapter-page.here", { timeout: 20000 });
+  await page.waitForTimeout(900);
+}
+
+/* A CHAPTER NEED NOT HAVE ANYTHING IN IT.
+   The chapters were read off the favourites alone, so a chapter with no
+   favourites was not a chapter at all — which is no use for one that
+   has been named and not filled yet. The owner emptied Chapter 2 and
+   gave it a description in the same round, and both have to survive. */
+test("a chapter with nothing filed under it is still a chapter, and says so",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+
+  const written = await page.$$eval(".gallery-chapter[data-chapter]", (all) =>
+    all.map((b) => ({
+      name: (b.dataset.chapter || "").trim(),
+      says: b.textContent.trim().length,
+      filed: document.querySelectorAll(
+        '.gallery-entry[data-chapter="' + (b.dataset.chapter || "") + '"]').length,
+    })));
+  const empty = written.filter((c) => c.filed === 0);
+  expect(empty.length, "the page should carry a chapter with nothing in it")
+    .toBeGreaterThan(0);
+
+  const rows = await page.$$eval(".chamber-chapter .chamber-name",
+    (all) => all.map((el) => el.textContent.trim()));
+  empty.forEach((c) => {
+    expect(rows, c.name + " should still stand in the menu").toContain(c.name);
+  });
+
+  await openMenu(page);
+  const which = rows.indexOf(empty[0].name);
+  await openChapterFully(page, which);
+
+  const state = await page.evaluate(() => ({
+    name: document.querySelector(".chapter-name").textContent.trim(),
+    spec: document.querySelector(".chapter-spec").textContent.trim(),
+    note: document.querySelector(".chapter-note").textContent.trim(),
+    cards: document.querySelectorAll(".chapter-card").length,
+    // An empty grid under the writing reads as something that failed to
+    // load, so the whole of it is taken off the page.
+    grid: getComputedStyle(document.querySelector(".chapter-cards")).display,
+  }));
+  expect(state.name).toBe(empty[0].name);
+  expect(state.cards, "and nothing in it").toBe(0);
+  expect(state.grid, "with its empty grid off the page").toBe("none");
+  expect(state.note.length, "but its writing on it").toBeGreaterThan(3);
+  expect(state.spec, "and a reading that says so in words").toMatch(/NO ENTRIES/i);
+  expect(errors).toEqual([]);
+});
+
+/* THE ARROWS EITHER SIDE OF THE NAME.
+   The owner: "an arrow near the right side and left of the word
+   chapter, that you can cycle through the page in order to acceess
+   chapter 2 and 3 and 1 again etc." So they step one along and wrap,
+   and none of the burst is replayed — the page you are standing on is
+   rewritten under you. */
+test("the arrows step through the chapters and wrap round", async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  const names = await page.$$eval(".chamber-chapter .chamber-name",
+    (all) => all.map((el) => el.textContent.trim()));
+  expect(names.length, "this needs more than one chapter to be worth testing")
+    .toBeGreaterThan(1);
+
+  await openMenu(page);
+  await openChapterFully(page, 0);
+  await expect(page.locator(".chapter-name")).toHaveText(names[0]);
+
+  // Forward through every one of them and round to the first again.
+  for (let n = 1; n <= names.length; n++) {
+    await page.locator(".chapter-step-on").click();
+    await page.waitForTimeout(900);
+    await expect(page.locator(".chapter-name")).toHaveText(names[n % names.length]);
+    // And the chamber is never come back to on the way: stepping is not
+    // leaving, so the page must still have the window throughout.
+    expect(await page.locator(".chapter-page").isVisible()).toBe(true);
+  }
+
+  // And backwards, which wraps the other way.
+  await page.locator(".chapter-step-back").click();
+  await page.waitForTimeout(900);
+  await expect(page.locator(".chapter-name")).toHaveText(names[names.length - 1]);
+  expect(errors).toEqual([]);
+});
+
+/* LEAVING A CHAPTER IS NOT A CUT, AND THIS IS THE REGRESSION FOR IT.
+   Pressing "← Favourites" used to take the black off the window on the
+   frame it was pressed — and what was underneath was a white page with
+   no chrome on it, because the burst had faded the menu and the
+   particles out on the way in. So leaving a chapter was a flash of an
+   empty white page before the chamber faded back. The owner asked for
+   it "way smoother".
+
+   What it must never do is show any part of the chamber before the
+   chamber has its chrome back. Watched frame by frame from inside the
+   page, because sampling this over the wire is far too coarse. */
+test("leaving a chapter never shows the chamber without its chrome",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await page.waitForTimeout(2500);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+
+  await page.evaluate(() => {
+    window.__out = [];
+    const t0 = performance.now();
+    const tick = () => {
+      const pg = document.querySelector(".chapter-page");
+      const sheet = document.querySelector(".chapter-sheet");
+      window.__out.push({
+        hid: pg.hidden,
+        page: Number(getComputedStyle(pg).opacity),
+        sheet: Number(getComputedStyle(sheet).opacity),
+        plate: Number(getComputedStyle(document.querySelector(".chamber-plate")).opacity),
+      });
+      if (performance.now() - t0 < 2600) requestAnimationFrame(tick);
+    };
+    tick();
+  });
+  await page.locator(".chapter-back").click();
+  await page.waitForTimeout(3000);
+
+  const seen = await page.evaluate(() => window.__out);
+  const live = seen.filter((f) => !f.hid);
+  expect(live.length, "the page should still have been watched while it was up")
+    .toBeGreaterThan(10);
+
+  // 1. It fades rather than being cut: there is a run of frames part
+  //    way through, not one frame at 1 and the next gone.
+  const steps = new Set(live.map((f) => f.page.toFixed(2)));
+  expect(steps.size, "the black should fade, not be cut").toBeGreaterThan(4);
+
+  // 2. And nothing of the chamber is ever seen through it before the
+  //    chamber has its chrome back. This is the fault itself.
+  const bare = live.filter((f) => f.page < 0.9 && f.plate < 0.9);
+  expect(bare.length,
+    "the chamber was shown through the fading black before its chrome was back")
+    .toBe(0);
+
+  // 3. The writing goes first, and the black afterwards.
+  const wroteOff = live.findIndex((f) => f.sheet < 0.2);
+  const blackOff = live.findIndex((f) => f.page < 0.9);
+  expect(wroteOff).toBeGreaterThan(-1);
+  expect(blackOff).toBeGreaterThan(wroteOff);
+
+  // And it really does come back to the chamber.
+  await expect(page.locator(".chapter-page")).toBeHidden();
+  await expect(page.locator(".chamber-panel")).toBeVisible();
+});
+
+/* A FAVOURITE OPENS WHERE IT STANDS.
+   The owner: "when you click a given fragrance... the other favorite
+   fragrances will go down and the square in which Des Cendres is will
+   expand revealing the window of the fragrance. There will be a
+   description, anothe rparagraph for commentary, and then 2 links: Go
+   to fragrance : Notes". */
+test("a favourite opens where it stands, and the ones after it go down",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+
+  const before = await page.$$eval(".chapter-card-shell", (all) =>
+    all.map((s) => {
+      const r = s.getBoundingClientRect();
+      return { top: r.top, width: r.width };
+    }));
+  expect(before.length, "this wants more than one favourite").toBeGreaterThan(1);
+
+  await page.locator(".chapter-card").first().click();
+  await page.waitForTimeout(900);
+
+  const after = await page.$$eval(".chapter-card-shell", (all) =>
+    all.map((s) => {
+      const r = s.getBoundingClientRect();
+      return { top: r.top, width: r.width, open: s.classList.contains("is-open") };
+    }));
+
+  expect(after[0].open, "the one pressed is the one that opened").toBe(true);
+  expect(after[0].width, "and it takes the whole width of the grid")
+    .toBeGreaterThan(before[0].width + 40);
+  expect(after[1].top, "the ones after it go down")
+    .toBeGreaterThan(before[1].top + 40);
+
+  // What is inside it.
+  const inside = await page.evaluate(() => {
+    const shell = document.querySelector(".chapter-card-shell.is-open");
+    const body = shell.querySelector(".chapter-card-body");
+    return {
+      tall: body.getBoundingClientRect().height,
+      said: body.querySelectorAll(".fav-writing p").length,
+      go: (body.querySelector(".fav-link-go") || {}).getAttribute
+        ? body.querySelector(".fav-link-go").getAttribute("href") : null,
+      notes: Boolean(body.querySelector(".fav-link-notes")),
+    };
+  });
+  expect(inside.tall, "opened on a measured height").toBeGreaterThan(80);
+  expect(inside.said, "a description and a paragraph of commentary")
+    .toBeGreaterThanOrEqual(2);
+  expect(inside.go, "and a way on to wherever that fragrance lives")
+    .toMatch(/works\//);
+  expect(inside.notes).toBe(true);
+
+  // Only one at a time: a second would leave the first standing above
+  // it saying the same things.
+  await page.locator(".chapter-card").nth(1).click();
+  await page.waitForTimeout(900);
+  expect(await page.locator(".chapter-card-shell.is-open").count()).toBe(1);
+  expect(await page.locator(".chapter-card-shell").nth(1)
+    .evaluate((s) => s.classList.contains("is-open"))).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+/* AND ITS NOTES ARE THE SITE'S OWN NOTES.
+   The owner: "Notes will do the exact same thing everywhere else. Since
+   perfume number 1 already has a notes window somewhere, just copy the
+   information but adjust the theme." So the window is written by the
+   one renderer in notes.js off the one file of notes, and what differs
+   is the colour. */
+test("a favourite's notes are the site's own, in this page's colours",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+
+  // The favourite that names a notes key, whichever it is.
+  const keyed = await page.evaluate(() => {
+    const all = [...document.querySelectorAll(".gallery-entry")];
+    const n = all.findIndex((e) => (e.dataset.notes || "").trim());
+    return n < 0 ? null : { at: n, key: all[n].dataset.notes.trim(),
+      name: all[n].textContent.trim() };
+  });
+  expect(keyed, "one favourite should point at its notes").not.toBeNull();
+
+  await page.locator(".chapter-card").nth(keyed.at).click();
+  await page.waitForTimeout(800);
+  // The button inside the card that was opened, not the first on the
+  // page: every card carries one, shut.
+  await page.locator(".chapter-card-shell.is-open .fav-link-notes").click();
+  await page.waitForTimeout(700);
+
+  const win = await page.evaluate((key) => {
+    const w = document.querySelector(".fav-note");
+    const style = getComputedStyle(w);
+    const entry = (window.FRAGRANCE_NOTES || {})[key] || {};
+    const list = [].concat(entry.flat || [], entry.top || [], entry.mid || [], entry.base || []);
+    const said = w.querySelector(".note-in").textContent;
+    return {
+      up: !w.hidden && w.classList.contains("is-up"),
+      of: w.querySelector(".note-head-of").textContent.trim(),
+      missing: list.filter((note) => said.indexOf(note) < 0),
+      wanted: list.length,
+      ground: style.backgroundColor,
+      ink: style.color,
+      source: Boolean(w.querySelector(".note-source")),
+    };
+  }, keyed.key);
+
+  expect(win.up, "the window should be up").toBe(true);
+  expect(win.of, "and say which fragrance it belongs to").toBe(keyed.name);
+  expect(win.wanted, "that fragrance should have notes to show").toBeGreaterThan(0);
+  expect(win.missing, "every note in the file should be in the window").toEqual([]);
+  expect(win.source, "and it names where they came from").toBe(true);
+
+  // THE THEME, ADJUSTED. Dark ground, light lettering — the window is
+  // turned over by redefining its five colour tokens rather than by a
+  // second set of rules, so this is the one thing worth pinning.
+  const dark = win.ground.match(/\d+/g).slice(0, 3).map(Number);
+  const light = win.ink.match(/\d+/g).slice(0, 3).map(Number);
+  expect(Math.max(...dark), "the window stands on this page's black")
+    .toBeLessThan(60);
+  expect(Math.min(...light), "and is read in its silver").toBeGreaterThan(120);
+
+  // Escape steps out of the window first, and leaves the chapter alone.
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(700);
+  await expect(page.locator(".fav-note")).toBeHidden();
+  await expect(page.locator(".chapter-page")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+/* THE SUN.
+   The owner: "The theme of chapter 1's page should be the sun; I want a
+   3D massive sun in the background made of particles and geometry that
+   turns and has a character." It is asked for in the page's own markup
+   — `data-ground` on the chapter's block — so a chapter that does not
+   ask for one gets the plain black every chapter used to get. */
+test("the sun stands behind the chapter that asks for it, and nowhere else",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+
+  const asked = await page.$$eval(".gallery-chapter[data-chapter]", (all) =>
+    all.map((b) => ({
+      name: (b.dataset.chapter || "").trim(),
+      ground: (b.dataset.ground || "").trim(),
+    })));
+  const withOne = asked.findIndex((c) => c.ground);
+  const without = asked.findIndex((c) => !c.ground);
+  expect(withOne, "one chapter should ask for a drawing").toBeGreaterThan(-1);
+  expect(without, "and one should not").toBeGreaterThan(-1);
+
+  const rows = await page.$$eval(".chamber-chapter .chamber-name",
+    (all) => all.map((el) => el.textContent.trim()));
+
+  await openMenu(page);
+  await openChapterFully(page, rows.indexOf(asked[withOne].name));
+  // Let it turn for a moment: the first frame of a sun is a sun.
+  await page.waitForTimeout(1200);
+
+  const drawn = await page.evaluate(() => {
+    const c = document.querySelector(".chapter-ground");
+    if (!c || c.hidden) return { hidden: true };
+    const shot = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    let lit = 0;
+    for (let n = 3; n < shot.length; n += 4) if (shot[n] > 8) lit += 1;
+    return {
+      hidden: false,
+      lit: lit,
+      of: (c.width * c.height) || 1,
+      sized: c.width > 100 && c.height > 100,
+      // It must not be in the way of the writing.
+      clicks: getComputedStyle(c).pointerEvents,
+    };
+  });
+  expect(drawn.hidden, "the drawing should be on the page").toBe(false);
+  expect(drawn.sized, "and sized to the window").toBe(true);
+  expect(drawn.lit / drawn.of, "and actually drawing something")
+    .toBeGreaterThan(0.004);
+  expect(drawn.clicks, "without ever being the thing you press").toBe("none");
+
+  // AND THE READING STAYS LEGIBLE. A speck over the writing is drawn at
+  // a fraction of its strength — the same way Ataraxia's bands are
+  // quietened over their column, which is what the owner asked for by
+  // name — so the page is markedly darker behind the words than beside
+  // them.
+  // MEASURED OVER THE WHOLE CANVAS, in two regions: everything well
+  // inside the sheet's own box and everything well outside it, with the
+  // `SOFT` ramp the quiet eases in over left out of both. It is the
+  // mean that counts rather than any one pixel: the drawing turns, so
+  // which patch of it is bright at a given moment does not hold still,
+  // but how much light there is over a hundred thousand pixels does.
+  //
+  // PROVED AGAINST THE FAULT, which is the rule here: with `QUIET` set
+  // to 1 in sun.js — the quiet removed and nothing else changed — this
+  // page reads 46.3 inside against 36.8 outside, a ratio of 1.26. With
+  // the quiet as it stands it reads 22.6 against 37.0, a ratio of 0.61.
+  // The threshold sits between the two with room either side.
+  const both = await page.evaluate(() => {
+    const c = document.querySelector(".chapter-ground");
+    const ratio = c.width / c.clientWidth;
+    const box = document.querySelector(".chapter-sheet").getBoundingClientRect();
+    const shot = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    const SOFT = 74;               // the ramp in sun.js
+    let inSum = 0, inN = 0, outSum = 0, outN = 0;
+    for (let y = 0; y < c.height; y += 2) {
+      for (let x = 0; x < c.width; x += 2) {
+        const a = shot[(y * c.width + x) * 4 + 3];
+        const px = x / ratio, py = y / ratio;
+        if (px > box.left + SOFT && px < box.right - SOFT &&
+            py > box.top + SOFT && py < box.bottom - SOFT) { inSum += a; inN += 1; }
+        else if (px < box.left - SOFT || px > box.right + SOFT ||
+                 py < box.top - SOFT || py > box.bottom + SOFT) { outSum += a; outN += 1; }
+      }
+    }
+    return { in: inSum / Math.max(1, inN), out: outSum / Math.max(1, outN),
+      inN: inN, outN: outN };
+  });
+  expect(both.inN, "there should be some window inside the writing").toBeGreaterThan(1000);
+  expect(both.outN, "and some beside it").toBeGreaterThan(1000);
+  expect(both.out, "the drawing should reach past the writing at all")
+    .toBeGreaterThan(6);
+  expect(both.in / both.out,
+    "a speck over the writing is drawn at a fraction of its strength")
+    .toBeLessThan(0.8);
+
+  // The other chapter has no drawing at all. Stepped to rather than
+  // opened afresh, which also says the drawing is taken off again.
+  for (let n = 0; n < rows.length; n++) {
+    if ((await page.locator(".chapter-name").textContent()).trim() === asked[without].name) break;
+    await page.locator(".chapter-step-on").click();
+    await page.waitForTimeout(900);
+  }
+  await expect(page.locator(".chapter-name")).toHaveText(asked[without].name);
+  expect(await page.locator(".chapter-ground").isVisible(),
+    asked[without].name + " asks for no drawing and should have none").toBe(false);
+  expect(errors).toEqual([]);
 });
 
 test("the two injectors stand at opposite corners, and nothing is fired from the other two",

@@ -76,7 +76,7 @@ which talk through five `window` globals; see the landing page's report).
 | `index.html` | three scroll-snapped **slides**: the title, the italic line, the 3D **node map** | `landing.js`, `node-scene.js`, `paper.js`, `thread.js`, `extras.js` (and Three.js from a CDN — the only page that uses it) | [node map](docs/features/2026-09-11-the-node-map.md), [slides](docs/features/2026-09-11-the-landing-slides-and-exit.md), [paper](docs/features/2026-09-11-the-paper.md), [thread](docs/features/2026-09-11-the-thread.md), [chromatogram](docs/features/2026-09-11-the-chromatogram.md) |
 | `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **contact sheet** of pictures scattered and joined by dated lines, all of it drawn in specks — and the **fragrances**, an **index** of the perfumes with no house, each of which opens **in the page** rather than navigating away | `search.js`, `contact-sheet.js`, `index-page.js`, `notes-data.js`, `notes.js`, `fragrance-reader.js`, `views.js` | [contact sheet](docs/features/2026-09-13-the-contact-sheet.md), [index and views](docs/features/2026-09-17-the-index-pages-and-views.md), [the reader](docs/features/2026-09-22-the-fragrance-reader.md) |
 | `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `search.js`, `page-search.js`, `structure.js` | [structure](docs/features/2026-09-14-the-structure.md) |
-| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu of **chapters** — and opening one **bursts** into that chapter's own page, black and silver | `search.js`, `page-search.js`, `chamber.js` | [chamber](docs/features/2026-09-15-the-chamber.md) |
+| `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu of **chapters** — and opening one **bursts** into that chapter's own page, black and silver, with arrows either side of its name to step to the next, its favourites opening where they stand, and **the sun** standing behind Chapter 1 | `search.js`, `page-search.js`, `notes-data.js`, `notes.js`, `sun.js`, `chamber.js` | [chamber](docs/features/2026-09-15-the-chamber.md) |
 | `categories/researches.html` | **Explorations &amp; Researches**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left, each row saying whether it is a research or an exploration | `search.js`, `index-page.js` | [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
 | `categories/other-2.html` | **Photography**: the frames in sets, a grid a wide one breaks, numbered down the margin | `search.js`, `page-search.js`, `photography.js` | [photography](docs/features/2026-09-18-the-photography-page.md) |
 | `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 52 compacted parts — one per fragrance, each with its own photograph — in four forest **strata**, with a **wood** grown down both margins, a ticked **trunk**, a faint pine-green ground, and the **gallery** at the foot of it | `search.js`, `pineward.js`, `pineward-gallery.js` | [Pineward](docs/features/2026-09-16-pineward.md), [gallery](docs/features/2026-09-18-the-pineward-gallery.md) |
@@ -92,10 +92,11 @@ which talk through five `window` globals; see the landing page's report).
 | `search.html` | the **search page**: one field over the whole site on a dark ground of drifting specks, the answers as ruled rows carrying the trail that says where each lives, and a row of **filters** narrowing them by kind | `search.js`, `search-page.js`, `find-ground.js` | [search](docs/features/2026-09-17-the-search.md) |
 | `contact.html` | a plain page | none | — |
 
-Four of those page scripts are elaborate: `chamber.js` (~2,770 lines), `structure.js`
+Four of those page scripts are elaborate: `chamber.js` (~3,240 lines), `structure.js`
 (~1,560), `contact-sheet.js` (~1,550) and `node-scene.js` (~1,520). The rest are smaller:
 `almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
-(~780), `paper.js` (~580), `notes.js` (~475), `essay.js` (~430), `ataraxia.js` (~385),
+(~780), `paper.js` (~580), `sun.js` (~560), `notes.js` (~475), `essay.js` (~430),
+`ataraxia.js` (~385),
 `fragrance-reader.js` (~380), `pineward-gallery.js`
 (~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `grande.js` (~265), `search.js`
 (~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230), `nav.js` (~220),
@@ -179,7 +180,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 248 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 254 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -270,7 +271,7 @@ Two states are easy to forget when reviewing a change:
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
   `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
   `adar.js`, `almost-human.js`, `ataraxia.js`, `grande.js`, `house.js`, `essay.js`,
-  `calculator.js`,
+  `calculator.js`, `sun.js`,
   `index-page.js`, `fragrance-reader.js` and `style.css`, each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
   fade to nothing) do *not* check it beyond that; if you add motion there, add the guard
@@ -345,12 +346,28 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   sends every link after it to the wrong fragrance. That happened; there is a test for it
   now in `repository.spec.js`.
 - A favourite on the **chamber** page (`favorites`) is an `<a class="gallery-entry">`
-  block with a `data-chapter` and a `data-date` — the chapters are the different
-  `data-chapter` values in the order they first appear, and the chapters standing in the
-  chamber's column are made from them. **What a chapter is** is written in its own
+  block with a `data-chapter`, a **`data-house`** — the perfume house, which is what its
+  card reads and which replaced the `data-date` the cards used to carry, so **there is no
+  date anywhere on that page any more** — and optionally a **`data-notes`**, the key its
+  notes are filed under in `notes-data.js` (`"abstraits:02"`). Its `href` is wherever that
+  fragrance lives on the site, and is what GO TO FRAGRANCE follows. The chapters are the
+  different `data-chapter` values in the order they first appear, and the chapters
+  standing in the chamber's column are made from them.
+- **What a chapter is** is written in its own
   `<section class="gallery-chapter" data-chapter="...">` further down that page, and is
   what its page shows above the cards; a chapter with nothing written for it shows its
-  cards and no description.
+  cards and no description. **A chapter written up here exists even with nothing filed
+  under it** — Chapter 2 is named, described and empty — and a `<p class="gallery-aside">`
+  inside the block is set apart from the writing above it, which is where the owner's
+  note about the favourites not being ranked stands. **`data-ground`** on the block is the
+  drawing that stands behind that chapter's page; there is one, `"sun"`, and a chapter
+  without the attribute gets plain black.
+- **WHAT A FAVOURITE SAYS WHEN ITS CARD IS OPENED** is a
+  `<section class="gallery-writing" data-favourite="...">` in the `.gallery-writings`
+  block at the foot of that page, matched to the favourite **by name** — so renaming one
+  means renaming it in both places in the same turn. The shape is a description and then a
+  paragraph of commentary, the second marked `gallery-word`. A favourite with no block
+  opens with its two links and nothing else.
 - **A NEW HOUSE** is `works/<house>.html` on `body.human-page`, loading `search.js` and
   **`house.js`** — the shared house shape, which gives it the parts opening on a measured
   height, the rank down the side, and taking a photograph off the page when its file is
@@ -541,7 +558,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the breath** | The structure's own slow creep: the eye drifts a little way in and back out again on a fixed cycle (`CREEP`, `CREEP_EVERY`), so the page is never quite still but the scroll is always the whole of where you are. |
 | **carriage** | The gantry that runs down the frame towards you on its own clock, lighting each rib as it passes. |
 | **traverse** | One of the streaks that run across the frame — the mechanical version of a falling star. |
-| **chapter** | One grouping in Favorites — whatever an entry's `data-chapter` says. The chapters, their names and their order all come from the page. |
+| **chapter** | One grouping in Favorites — whatever an entry's `data-chapter` says, **plus any chapter written up in a `.gallery-chapter` block with nothing filed under it**. The chapters, their names and their order all come from the page. There are two: Chapter 1, which has three favourites and the sun behind it, and Chapter 2, which is *To be determined...* and empty. Chapter 3 was removed at the owner's word. |
 | **the register** | The way the contact sheet page's *Favorites view* was laid out: a page ruled edge to edge with horizontal tracks, a square travelling along each, lines between them, and a glitch. **Removed** with that whole view and its two buttons — there is no `favorites.js` in the site any more. If the owner uses the word, they mean that. |
 | **track** / **gauge** / **car** / **square** / **the tear** / **the sig** / **index** / **log** | All of the register's own parts, removed with it. |
 | **the field** / **the hatch** | The ruled ground of fine strokes the Favorites view carried before it became the register — its reading was which **way** it lay. Removed, like everything else that view had. |
@@ -630,7 +647,13 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the mesh** | What goes out when the two populations meet, and the whole of the second half of the burst: a **lattice** standing in the ring's own plane — rings crossed by spokes — with a front travelling outward through it, **spinning about its own axis** rather than turning on the window (the ellipse stands where the orbit stands and the pattern turns inside it), and the home page's own two halo shells riding out with it, bending what is behind them rather than painting a colour over it. Nothing in it has a colour. It is the owner's *"more weblike"*; it is called the mesh here only because **the web** was already this page's cursor. |
 | **panel** (the mesh) | One cell of that lattice, between two of its rings and two of its spokes. Behind the front every panel darkens on a clock slightly its own until it is the chapter page's own black — which is how the window turns over now. |
 | **the black part** | **Removed.** For several rounds a black ellipse was cut open from the same point a beat behind the drawing (`clipTo`, `CLIP_ROUND`, `WAVE_LEAD`, a `clip-path` on `.chapter-page`), and it was catching the drawing up half way across the window. The owner asked for it gone and for the panels to darken in its place. Nothing of it is in the code. |
-| **a chapter's page** | What the burst opens into: the chapter named, the reading over it, what that chapter is (written in `categories/favorites.html`, one block per chapter), and its favourites as **cards**. Black, with **silver** — no accent anywhere on it, which keeps the chamber's promise of spending none. |
+| **a chapter's page** | What the burst opens into: the chapter named **with an arrow either side of it**, the reading over it, what that chapter is (written in `categories/favorites.html`, one block per chapter), and its favourites as **cards**. Black, with **silver** — no accent anywhere on it, which keeps the chamber's promise of spending none — and whatever **ground** that chapter asks for standing behind all of it. |
+| **the arrows** (a chapter) | The two buttons either side of a chapter's name, stepping one chapter along and wrapping round. Nothing of the **burst** is replayed: the sheet fades, the page is rewritten under it, and its entrance is run again. They are taken off the page when there is only one chapter to be on. `stepChapter` in `chamber.js`. |
+| **the way out** (a chapter) | Pressing "← Favourites", and it is three beats rather than one frame: the writing goes, the chamber is handed back to itself **under a black that is still solid**, and only then does the black clear. It used to be a cut, and what was under it was a white page with no chrome on it — the flash the owner asked to have made "way smoother". `LEAVE_WRITING` and `LEAVE_CLEAR` in `chamber.js`, matched by two numbers in `style.css`. |
+| **the house** (a card) | What a favourite's card reads where its **date** used to: the perfume house, off `data-house`. There is no date anywhere on that page now, and `spanOf` — which sorted them into a range over a chapter — went with them. A favourite not yet told its house prints an em dash. |
+| **opening a favourite** | What clicking a card does: it takes the whole width of the grid, the favourites after it travel down a row, and it opens on a measured height into what is written about that fragrance and the two ways on from it — **GO TO FRAGRANCE**, which follows the entry's own `href`, and **NOTES**, which opens the site's own notes window in this page's colours. One at a time. The card is a `<button>` and not a link, because what it opens carries links. |
+| **the sun** | The ground behind Chapter 1, and the only **chapter ground** there is: a sphere far bigger than the window drawn entirely in specks — a Fibonacci surface, three latitude rings and four meridians turning with it, a **registration ring** that does not turn, five **prominences** rising off the limb, and a corona. `sun.js`. Its readability is Ataraxia's, by name and by the same two mechanisms at its own values: a speck over the sheet is drawn at `QUIET` of its strength and its **bloom** is scaled by `hush³`, so the glow is gone long before the writing is. |
+| **a chapter ground** | The drawing behind a chapter's page, asked for in the page's own markup (`data-ground` on the chapter's block) and registered by its own script on `window.CHAPTER_GROUNDS`. There is one, `"sun"`. A chapter without the attribute gets the plain black every chapter used to get. (Not Pineward's **the ground**, which is that page's paper.) |
 | **the read** | What pointing at a row of the chamber's menu does: the stretch of orbit level with it swells outward, and the rule under the row draws back from the right. It replaced a **cinch**, where the sides left the orbit and leant in towards the row. |
 | **the level** (chamber) | **Removed.** A chapter used to open a second level of rows inside the same menu, listing its favourites. It opens a page of its own now: there is no `.chamber-item` and no back button in the menu head any more. |
 | **leader** (chamber) | The line that used to be run from each end of a pointed-at row out to the side of the window, with a tick where it landed — the "selection lines" the owner asked to have taken off the menu. Gone from `chamber.js` entirely; the orbit's swell is the whole of the read now. (Not to be confused with the short leader still drawn at each **injector**, along the way its own stream leaves.) |
@@ -666,7 +689,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the chain** / **the tuft** | **Removed.** The specks round a picture on the contact sheet, kept only within reach of a point where a line tied on. The pictures keep their ruled border; what stands where a line meets one is the tie. |
 | **the run** | **Removed.** The line between two pictures drawn as specks rather than as a stroke. Replaced by the trace, which is dashed — a solid stroke is the one thing the line must not be, and there is a test saying so. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
-| **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter` and a `data-date`. |
+| **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter`, a `data-house`, optionally a `data-notes` key into `notes-data.js`, and an `href` pointing at wherever that fragrance lives on the site. It carried a `data-date` until 2026-09-22; if the owner uses the word, that is what it was. |
 | **work** | An individual piece, one page in `works/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 

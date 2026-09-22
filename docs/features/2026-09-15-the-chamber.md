@@ -2,10 +2,17 @@
 
 Date: 2026-09-15 (`10eaaca`, *Open a chamber for the favourites*), through many rounds
 to `8137578` (*Stop the word blinking, put the specks in front of the menu*) on
-2026-09-17. Migrated from CLAUDE.md on 2026-09-17.
+2026-09-17. Migrated from CLAUDE.md on 2026-09-17. **The chapter page was reworked on
+2026-09-22** — the arrows, the empty chapter, the house on a card, a favourite opening
+where it stands, the way out, and the sun; see the sections under "The burst, and a
+chapter's own page".
 
-Files: `categories/favorites.html`, `chamber.js` (~1,740 lines — the largest file in the
-repository), the `chamber-*` block in `style.css`, `tests/chamber.spec.js`
+Files: `categories/favorites.html`, `chamber.js` (the largest file in the repository),
+`sun.js`, the `chamber-*` and `chapter-*` blocks in `style.css`, `tests/chamber.spec.js`
+
+The page also loads `notes-data.js` and `notes.js` now — not for a house of its own, which
+it has none of, but for the renderer they hand out as `window.NOTE_PANEL`, which is what
+writes a favourite's notes window.
 
 This page has had more rounds of work than anything else on the site. Most of the
 paragraphs below are the record of a specific thing that was tried and was wrong; they
@@ -430,8 +437,8 @@ window in one frame. Anything that writes a new lift has to be able to travel on
 npm test -- tests/chamber.spec.js
 ```
 
-Twenty tests: the menu being grown from that page's own favourites and carrying
-number, date, name and link; the word opening the menu and a chapter opening its own
+Twenty-eight tests: the menu being grown from that page's own favourites — and from any
+chapter written up with nothing in it — carrying number, house, name and link; the word opening the menu and a chapter opening its own
 favourites with Escape stepping back out one level at a time; the two injectors standing
 at opposite corners with nothing fired from the other two; the orbit standing round the
 word and running on behind it unbroken with its near rim drawn over it; opening the menu
@@ -444,6 +451,45 @@ what pressing it does and saying the other thing once it is open; the cursor str
 web between the specks it is near and letting go again; no part of it ever being drawn in
 the site's accent colour; it standing still under `prefers-reduced-motion`; and the plain
 list coming back when the script is blocked.
+
+Six more are about the chapter page as the owner reworked it on 2026-09-22, and two of
+those are regressions for faults they reported:
+
+- **`a chapter with nothing filed under it is still a chapter, and says so`** — reads the
+  chapter blocks out of the page's own markup, finds the ones nothing is filed under, and
+  requires each to stand in the menu, to open with its writing on it, to read NO ENTRIES
+  YET, and to have its empty grid taken off the page with a computed `display` of `none`
+  rather than merely a `hidden` attribute that a `display: grid` would outrank.
+- **`a chapter's page carries its writing, and its favourites as cards`** — the same test
+  as before, asking a different thing: every card carries the house it comes from and
+  **no date anywhere on it**, at least one names a real house, and the reading over the
+  cards has no date range in it either.
+- **`the arrows step through the chapters and wrap round`** — forward through every
+  chapter and round to the first again, then one back, which wraps the other way. It also
+  checks the chapter page still has the window at every step: stepping is not leaving.
+- **`leaving a chapter never shows the chamber without its chrome`** — the regression for
+  the cut. Watched frame by frame from inside the page, because sampling a handover this
+  short over the wire is far too coarse. Three claims: the black **fades** (more than four
+  distinct opacities part way through, not one frame at 1 and the next gone); **no frame
+  at all** has the black part gone with the chamber's chrome not yet back, which is the
+  fault itself; and the writing goes before the black does.
+- **`a favourite opens where it stands, and the ones after it go down`** — the boxes of
+  every card before and after, so the opened one must gain the width of the grid and the
+  next one must actually move down. Then what is inside it: a measured height, at least
+  two paragraphs, a link at `works/`, a notes button — and that opening a second closes
+  the first.
+- **`a favourite's notes are the site's own, in this page's colours`** — takes the
+  favourite that names a `data-notes` key, opens its window, and requires **every note in
+  `notes-data.js` for that key to be in the window**, so the two can never drift. Then the
+  theme: the window's computed background must be this page's black and its lettering its
+  silver, which is what pins the five tokens being redefined rather than a second set of
+  rules being written.
+- **`the sun stands behind the chapter that asks for it, and nowhere else`** — the ground
+  is drawn and sized, is never the thing you press, and is taken off again on the chapter
+  that does not ask for one. And the quiet: a strip just inside the sheet's edge against
+  a strip just outside it at the same height, **measured across the edge rather than at
+  two places picked by hand**, so the test says nothing about where the sun happens to
+  stand. Move the sun and it still holds; take the quiet out and it fails.
 
 Four of them are about the burst, and two of those are regressions for faults the owner
 reported:
@@ -1011,39 +1057,240 @@ is `--silver` and `--silver-dim`, on the hairlines, the corner marks and the let
 that is doing the work. The chapter's name catches the light across itself, which is the
 whole of what silver means on a screen.
 
-It carries the chapter's name, the reading over it, **what that chapter is**, and its
-favourites as cards. The writing comes off the page's own markup —
-`.gallery-chapter[data-chapter]` in `categories/favorites.html`, one block per chapter,
-placeholder words that are the owner's to replace. A chapter with nothing written for it
-simply shows its cards.
+It carries the chapter's name **with an arrow either side of it**, the reading over it,
+**what that chapter is**, and its favourites as cards. The writing comes off the page's
+own markup — `.gallery-chapter[data-chapter]` in `categories/favorites.html`, one block
+per chapter. A chapter with nothing written for it simply shows its cards.
 
 **It stands inside `.chamber`, not loose in the page.** Every direct child of `<body>` is
 caught by the rule that dims the page behind the menu, and that rule outranks anything
 written for a new element — the note in `style.css` says so and it has caught features
 before. In here it is dimmed along with everything else, which is what should happen.
 
+#### A chapter can now have nothing in it
+
+The chapters were read off the favourites and nowhere else — the different `data-chapter`
+values in the order they first appear — so **a chapter with no favourites was not a
+chapter at all.** That is no use for one that has been named and not filled, and the owner
+made exactly that in one round: they emptied Chapter 2 and wrote *"To be determined..."*
+for it in the same message.
+
+So `chapterOf(name)` makes a chapter by name if there is not one, and the chapter blocks
+are read as well as the entries. The order is unchanged for everything already there:
+entries first, in the order they appear, then any chapter that is only written up. The
+menu row for an empty one reads **NO ENTRIES YET** rather than counting to nothing, its
+page shows its writing, and its empty grid is taken off the page altogether — an empty
+grid under a paragraph reads as something that failed to load.
+
+`.chapter-cards[hidden]` is written out in the stylesheet on purpose: `.chapter-cards` has
+a `display: grid` of its own and the browser's own rule for `hidden` lives in the
+user-agent stylesheet, which any author rule outranks. This is the trap CLAUDE.md warns
+about, and it has shipped once before.
+
+#### The house, where the date used to be
+
+The owner: *"I want you to remove the date from the first second and third favoirtes
+themselves. Instead, there will be the perfume house."* So a favourite carries
+`data-house` instead of `data-date`, the card reads it, and **there is no date anywhere on
+this page any more** — which took `spanOf` with it, since it existed only to sort the
+dates into a range. Both readings, the menu row's and the chapter page's, are now
+`specOf`: the count, or the words for none.
+
+A favourite that has not been told its house prints an em dash rather than nothing, so
+the card keeps its shape. Two of the three in Chapter 1 are still the placeholder
+favourites and have no house to name.
+
+#### A favourite opens where it stands
+
+The owner: *"when you click a given fragrance... the other favorite fragrances will go
+down and the square in which Des Cendres is will expand revealing the window of the
+fragrance. There will be a description, anothe rparagraph for commentary, and then 2
+links: Go to fragrance : Notes."*
+
+So a card is no longer a link to the piece. **It cannot be**, because what it opens into
+carries a link, and a link inside a link is not a thing the browser will build. The grid
+item is a `.chapter-card-shell` holding a `<button class="chapter-card">` and the
+`.chapter-card-body` it opens; the open shell takes `grid-column: 1 / -1`, which is what
+sends the favourites after it down a row; and the body opens on a **measured height**, the
+same way a part of a house opens, because `auto` is not a height a browser will ease to.
+
+**The ones after it travel rather than jumping**, and that takes a FLIP: their boxes are
+read before the class lands, given back to them as a transform once the grid has re-laid
+itself, and then released. The transform goes on the SHELL and the entrance animation
+stays on the card inside it, and that is not an accident — **a CSS animation with a fill
+outranks an inline style**, so a transform written on the card, whose entrance finishes on
+`transform: none`, would simply be ignored.
+
+Only one card is open at a time. A second would leave the first standing above it saying
+the same things.
+
+What a favourite says is in the page's own markup, in a `.gallery-writing[data-favourite]`
+block matched **by name** — so a favourite renamed in one place is renamed in both. Des
+Cendres' two paragraphs are marked as placeholders and say so in the dashed box the rest of
+the site uses: the writing is the owner's, and an unwritten favourite should read as
+unwritten.
+
+#### Its notes are the site's own notes, in this page's colours
+
+The owner: *"Notes will do the exact same thing everywhere else. Since perfume number 1
+already has a notes window somewhere, just copy the information but adjust the theme."*
+
+So the window is the same `.note-panel` every house page opens, with the same bar, the
+same close, and a body written by the one renderer in `notes.js` — one renderer, or the
+two drift apart and a reader is told different things about the same fragrance depending
+on which door they came in by. A favourite points at its entry with `data-notes`
+(`"abstraits:02"` for Des Cendres); a favourite with none gets the button anyway and a
+window saying the notes have not been found yet, which is what every other page does.
+
+**The theme is five tokens.** `--bg`, `--bg-2`, `--line`, `--ink` and `--muted` are
+redefined on `.fav-note` itself, so every rule the window already draws in turns over at
+once and nothing anywhere else is touched. `--ink-rgb` is there for the same reason it
+exists at all — `rgba()` cannot take a hex, and the handful of rules that spend the ink at
+an alpha would otherwise have stayed black on black. This is the trick `.find-page`,
+`.sheet-page` and `.ataraxia-page` are built on.
+
+The window stands **inside the chapter page**, not on the body: the chapter page is fixed
+over the window and carries no transform, so a fixed thing in here is fixed to the window
+— and every direct child of `<body>` is caught by the rule that dims the page behind the
+Menu. It closes on its scrim, on its own close, and on Escape, which now steps out of the
+window first, the chapter second and the menu third.
+
+### The arrows either side of the name
+
+The owner: *"I want the title itself to have an arrow near the right side and left of the
+word chapter, that you can cycle through the page in order to acceess chapter 2 and 3 and
+1 again etc."*
+
+They step one chapter along and wrap round, and **none of the burst is replayed** — the
+page you are standing on is rewritten under you. That is why `layChapter` is split in two:
+`writeChapter` fills the page, and `layChapter` is what puts it under the mesh at the end
+of a burst. Stepping calls only the first.
+
+What it looks like is the sheet fading out on its own opacity (`turning`, 300ms), the page
+being rewritten under it, and **the sheet's entrance being run again** — `here` removed,
+a reflow forced, `here` put back, which is what makes a CSS animation play a second time.
+So stepping to a chapter reads like arriving at one rather than like a table being
+refilled. The arrows are taken off the page altogether when there is only one chapter to
+be on.
+
+### Leaving a chapter, in three beats rather than in one frame
+
+Pressing "← Favourites" used to be a cut. The black came off the window on the frame it
+was pressed — and what was underneath was a **white page with no chrome on it**, because
+the burst had faded the menu, the word and the particles out on the way in. So leaving a
+chapter was a flash of an empty white page and then the chamber fading back into it. The
+owner: *"I also want the transition to be way smoother when it comes to clicking the word
+&lt;-- favorites."*
+
+Nothing about it is a cut now:
+
+| | |
+|---|---|
+| 1. **the writing goes** | The sheet fades where it stands (`going`, `LEAVE_WRITING`). |
+| 2. **the chamber comes back under the black** | `giveBack` hands every particle to the physics again, reopens the menu and drops the classes that had the chrome faded out — all of it while the black is still fully opaque. None of it is watched happening, and that is the point. |
+| 3. **the black clears** | `clearing`, `LEAVE_CLEAR`, and by then there is a page behind it. |
+
+`leaving` outlives `burst`, because `burst` is set to null in the middle of the second
+beat; it is what keeps a second press, an Escape or a new chapter from starting the whole
+thing again half way through. `chapterShowing()` is both of them together, and the
+pointerdown that closes the menu reads it rather than `burst` alone.
+
+Measured on the way out: the sheet reaches nothing at about 580ms, the chamber's plate is
+back at 1 by about 770ms with the page still fully black, and the black is down to 0.04 by
+1110ms. **No frame at all shows the black part-gone with the chrome not yet back**, which
+is the fault itself and is what the regression pins.
+
+### The sun
+
+The owner: *"The theme of chapter 1's page should be the sun; I want a 3D massive sun in
+the background made of particles and geometry that turns and has a character. I want it to
+have a glow too. I want it to make the text legible, so that that particles exist in
+behind the text the same way they do in the page for ataraxia (house, SD), i think that is
+good."*
+
+`sun.js`, and it is **registered rather than wired in**: a ground puts itself on
+`window.CHAPTER_GROUNDS` by name, and a chapter asks for one in the page's own markup —
+`data-ground="sun"` on its block. `chamber.js` starts it when that chapter is written onto
+the page and stops it when another is. Neither file knows anything about the other, which
+is the same arrangement every house's ground has with `house.js`.
+
+What is drawn, all of it in specks:
+
+| | |
+|---|---|
+| **the surface** | Fourteen thousand specks on a **Fibonacci sphere** — the same arrangement the home page's node map stands its seven link nodes on: every point about as far from its neighbours as every other, which a rolled scatter never is. Rolled, a sphere comes out in clumps and bald patches and reads as a mistake. |
+| **the churn** | What gives it a character rather than a texture: a slow three-way wave **in the sphere's own coordinates**, so the bright and dark patches are ON the sun and turn with it instead of crawling across a disc. Two waves make a grid you can see; three make weather. |
+| **the geometry** | Three latitude rings and four meridians, in specks, turning with the sphere — the drawn globe under the fire — and one **registration ring** standing round the whole of it, at its own angle, ticked like every other scale on this site. That one does not turn, which is what makes the turn readable at all. |
+| **the prominences** | Five arcs that rise off the surface, bow out past the limb and fall back, each on its own clock so one is always going up as another is coming down. |
+| **the corona** | One soft gradient behind all of it, and a bloom on every speck bright enough to earn one. |
+
+**The far side is drawn faint rather than not drawn.** Taking it off leaves a disc with a
+hard rim, which is a circle rather than a ball; left at a fifth it reads as the atmosphere
+you see round the edge of one. And the rim of the disc is drawn **brighter**: the specks
+pile up there as the surface turns away from the eye, and lifting them is what gives the
+ball an edge without a line being drawn anywhere.
+
+**Legibility is Ataraxia's, by name, and it is the same two mechanisms** — at this page's
+own values, because the sheet here is wider than Ataraxia's column and the drawing behind
+it is denser. A speck standing over the sheet is drawn at `QUIET` (0.3, against Ataraxia's
+0.26) of its strength, eased in over `SOFT` (74 pixels, against 96) outside the sheet's
+own box so there is no line on the page where the quiet begins. And
+**the bloom goes first**: it is scaled by the cube of the quiet, so it is gone long before
+the cores are. A speck's core is a pixel or two and costs a paragraph almost nothing; what
+would wash one out is the bloom, which is soft and fourteen times as wide. The sun still
+passes behind the words; it just stops glowing while it does.
+
+The one thing that cannot be quietened speck by speck is the **corona**, because it is a
+gradient. It is kept low (`CORONA_LIT` 0.13) for exactly that reason.
+
+#### Two things that were wrong on the way
+
+- **It was a scatter, not a surface.** The first pass put three thousand specks on a sphere
+  whose disc covers well over a million pixels — about one speck per six hundred of them —
+  and what came out was a handful of flecks in the corner of the window. Fourteen thousand
+  puts them about a dozen pixels apart and the ball is a ball. The number is high and it
+  has to be.
+- **It ran at fifteen frames a second**, and the whole of that was one line: `hush()` asked
+  the page where the writing stood, and it was called once per speck. Fourteen thousand
+  `getBoundingClientRect()` calls a frame is fourteen thousand questions the browser has to
+  settle the layout to answer. Nothing about the box can change between two specks of the
+  same frame, so it is read once at the top of the frame and handed down — 15fps to 49fps
+  in headless, and that with the colour ramp quantised into twenty steps at the same time
+  so a colour is not built as a string per speck per frame.
+
+**Where it stands is a composition, not a default.** It is off to the right and a little
+high, with its right side running off the edge of the window — `AT_X`, `AT_Y` and `BIG`.
+Centred, it would be behind the writing and nothing else; where it is, the reading column
+is clear of it and the sphere still fills half the page.
+
+It degrades to a still sun under `prefers-reduced-motion`: it is a drawing rather than a
+movement, so there is a whole picture to stand still.
+
 ### Two things this took out, and one it put right
 
 - **The second level in the menu is gone**, and with it the back button in the menu head
   and the `open` index: the column only ever holds the chapters now. There is no
   `.chamber-item` and no `chapter.level` in the file.
-- **The dates over a chapter read as a range now.** They were written in page order,
-  which gave "14.03.2024 – 27.06.2023" — later first, which is not a range. `spanOf`
-  sorts them, turning `dd.mm.yyyy` round to compare, and both the menu row and the
-  chapter page use it.
-- The way out is the chapter's own back, or Escape. Escape steps out of a chapter first
-  and out of the menu second, the way it always stepped out one level at a time.
+- **The dates are gone, and `spanOf` with them.** They used to read as a range over a
+  chapter — sorted, because written in page order they came out "14.03.2024 – 27.06.2023",
+  which is not a range at all. The owner asked for the date off a favourite and the house
+  in its place, so there is no `data-date` on this page and nothing left to sort. If they
+  use the word, that is what it was.
+- The way out is the chapter's own back, or Escape. Escape steps out of a notes window
+  first, out of a chapter second and out of the menu third, the way it always stepped out
+  one level at a time.
 
 ## Known issues / TODO
 
-- **`the chapter page is never cut open, it is laid under the mesh` flakes under load.**
-  It failed once in a full-suite run on 2026-09-22 and passed on every run since,
-  including twice in isolation and once against the commit before that round's changes.
-  It samples a heavy canvas animation at a fixed moment, and the suite runs its workers
-  in parallel, so a slow frame moves the thing it is measuring rather than breaking it.
-  **It is a real weakness in the test, not in the page**: if it fails again the fix is to
-  wait for the mesh to have covered the window rather than to sample at a time, not to
-  loosen what it asks for.
+- ~~**`the chapter page is never cut open, it is laid under the mesh` flakes under
+  load.**~~ **Fixed on 2026-09-22, the way this section said it should be.** It polled the
+  page over the wire every 80ms and then read the mesh once the page had appeared, which
+  is a sample taken at a *time* rather than at a *state* — a slow frame moved the thing it
+  was measuring. Once the sun was drawing behind the chapter page as well it stopped
+  flaking and simply failed: by the time the poll noticed the page, the mesh had finished
+  and cleared, and the reading came back 0. It now watches frame by frame from inside the
+  page, set going before the press, and reads the mesh **on the frame the page is first
+  shown** — the moment the claim is actually about. Nothing it asks for was loosened.
 
 - **This page spends no accent of its own, but the shared chrome still does** — the Menu
   trigger, the menu overlay's links and the focus ring are all still `--brass` here,

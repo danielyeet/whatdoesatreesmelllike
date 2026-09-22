@@ -1460,9 +1460,13 @@ body.chambered .page-content { padding: 0; margin: 0; max-width: none; }
    the chamber where you could not quite see it — until the menu was
    opened, which takes the whole page to a tenth of its opacity, and
    there it was: three paragraphs of placeholder writing across the
-   drawing. That is the stray text the owner photographed. */
+   drawing. That is the stray text the owner photographed.
+
+   `.gallery-writings` is here for exactly the same reason: it is what
+   a favourite says when its card is opened, and it is source. */
 body.chambered .work-list,
 body.chambered .gallery-chapters,
+body.chambered .gallery-writings,
 body.chambered .page-content > h1,
 body.chambered .page-content > .category-lede {
   position: absolute;
@@ -4323,8 +4327,45 @@ body.find-reading .find-reading-note { opacity: 1; }
      which time both are the same black and there is nothing to see in
      the swap. There is no clip-path here, and no `clipTo` in
      chamber.js. */
+  /* AND IT FADES ON THE WAY OUT. Pressing "← Favourites" used to take
+     the black off the window on the frame it was pressed, and what was
+     underneath was a white page with no chrome on it — the menu and the
+     particles both faded out by the burst — which then faded back in
+     afterwards. So leaving a chapter was a flash of an empty white
+     page. The chamber is given back to itself first, under a black that
+     is still solid, and only then does the black clear. 620ms, and
+     `LEAVE_CLEAR` in chamber.js is the same number. */
+  transition: opacity 620ms var(--menu-ease);
 }
+.chapter-page.clearing { opacity: 0; pointer-events: none; }
 .chapter-page[hidden] { display: none; }
+
+/* THE DRAWING BEHIND A CHAPTER'S PAGE, if that chapter asks for one —
+   `data-ground` in the page's own markup. It stands outside the sheet
+   so the writing can fade for a turn, or for the way out, without the
+   drawing behind it flickering with it. */
+.chapter-ground {
+  /* FIXED, not absolute. This page scrolls inside itself, and an
+     absolutely placed canvas in here scrolls with the writing — so the
+     sun would be left behind at the top of a long chapter. Fixed means
+     the window, because `.chapter-page` carries no transform. */
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  /* It comes up with the rest of the page, once the drawing that
+     brought you here has gone — never underneath it. */
+  opacity: 0;
+  transition: opacity 1.1s var(--menu-ease);
+}
+.chapter-page.here .chapter-ground { opacity: 1; }
+/* `hidden` is an attribute and the browser's own rule for it is in the
+   user-agent stylesheet, which ANY author rule outranks — including
+   the `display: block` two lines above. */
+.chapter-ground[hidden] { display: none; }
 /* THE HANDOVER, in two states. `laid` is the page standing UNDER the
    mesh — it has to be there before the drawing goes, or the chamber's
    white shows through for a frame — with nothing written on it yet.
@@ -4338,6 +4379,14 @@ body.find-reading .find-reading-note { opacity: 1; }
    of the burst read as a cut to a page already part built. Now the
    drawing goes first and the page writes itself in after it. */
 .chapter-page.laid .chapter-sheet > *,
+/* AND THE NAME AND ITS ARROWS BY THEMSELVES. They stand inside
+   `.chapter-title` now rather than being children of the sheet, and an
+   ancestor at zero opacity does not make a descendant's OWN opacity
+   zero — which is what `the chapter page's writing waits for the
+   drawing to be taken off` reads, and it failed the moment the name
+   gained a wrapper. Held back here as well, so nothing on the sheet has
+   a strength of its own while the drawing is still over it. */
+.chapter-page.laid .chapter-title > *,
 .chapter-page.laid .chapter-card { opacity: 0; }
 .chapter-page.here .chapter-sheet > *:not(.chapter-cards) {
   animation: chapter-in 0.55s var(--menu-ease) both;
@@ -4349,10 +4398,19 @@ body.find-reading .find-reading-note { opacity: 1; }
 }
 
 .chapter-sheet {
+  position: relative;
+  z-index: 1;
   max-width: 1040px;
   margin: 0 auto;
   padding: clamp(84px, 14vh, 150px) 28px 80px;
+  /* THE WRITING GOES BEFORE THE PAGE IS REWRITTEN UNDER IT — stepping
+     to another chapter with the arrows, and leaving the chapter
+     altogether. Both are timed against this in chamber.js (`TURN_MS`
+     and `LEAVE_WRITING`), with a little slack either side. */
+  transition: opacity 300ms var(--menu-ease);
 }
+.chapter-page.turning .chapter-sheet,
+.chapter-page.going .chapter-sheet { opacity: 0; }
 
 .chapter-back {
   border: 0;
@@ -4389,6 +4447,40 @@ body.find-reading .find-reading-note { opacity: 1; }
   background-clip: text;
   color: transparent;
 }
+/* THE ARROWS EITHER SIDE OF THE NAME. The owner asked for "an arrow
+   near the right side and left of the word chapter, that you can cycle
+   through the page in order to acceess chapter 2 and 3 and 1 again" —
+   so they step one chapter along and wrap round, and they are taken off
+   the page altogether when there is only one chapter to be on. */
+.chapter-title {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2.4vw, 26px);
+  min-width: 0;
+}
+.chapter-title .chapter-name { min-width: 0; }
+.chapter-step {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--silver-dim);
+  background: none;
+  border: 1px solid var(--silver-line);
+  cursor: pointer;
+  transition: color 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease),
+    transform 0.3s var(--menu-ease);
+}
+.chapter-step:hover { color: var(--silver); border-color: rgba(200, 204, 212, 0.5); }
+.chapter-step-back:hover { transform: translateX(-3px); }
+.chapter-step-on:hover { transform: translateX(3px); }
+.chapter-step[hidden] { display: none; }
+
 .chapter-spec {
   font-family: var(--mono);
   font-size: 11px;
@@ -4409,6 +4501,21 @@ body.find-reading .find-reading-note { opacity: 1; }
   color: #aeb3bc;
 }
 .chapter-note[hidden] { display: none; }
+/* A NOTE ABOUT THE CHAPTER rather than part of what it is — set apart
+   from the writing above it by a rule and by the site's mono. The
+   owner's own: "The fragrances are not ranked nor ordered in any way."
+   It is written in the page's markup inside that chapter's block, so
+   only the chapters that want one have one. */
+.chapter-note .gallery-aside {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  line-height: 1.8;
+  color: var(--silver-dim);
+  border-left: 1px solid var(--silver-line);
+  padding: 2px 0 2px 16px;
+  margin: 22px 0 0;
+}
 
 /* THE WAVE — the home page's own centre, spread over the whole window.
 
@@ -4559,13 +4666,35 @@ body.find-reading .find-reading-note { opacity: 1; }
 
 /* THE CARDS. One per favourite, ruled in silver with a mark at two
    corners — the same registration mark the rest of the site uses,
-   opened out to the size of a card. */
+   opened out to the size of a card.
+
+   A CARD OPENS WHERE IT STANDS NOW. It used to be a link straight to
+   the piece; the owner asked for it to open in place — "the other
+   favorite fragrances will go down and the square in which Des Cendres
+   is will expand revealing the window of the fragrance". So the grid
+   item is a SHELL holding a button and the body it opens, the open one
+   takes the whole width of the grid (which is what sends the ones after
+   it down a row), and what it opens into carries the two ways on from
+   it. The card itself cannot be a link any more: a link inside a link
+   is not a thing the browser will build. */
 .chapter-cards {
   margin-top: clamp(40px, 8vh, 76px);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 18px;
 }
+/* A chapter can have nothing in it — Chapter 2 is named, written up and
+   empty — and `hidden` alone would lose to the `display: grid` above. */
+.chapter-cards[hidden] { display: none; }
+
+/* THE SHELL is the grid item, and the FLIP that carries the other cards
+   down when one opens is written on it rather than on the card inside
+   it. That is not an accident: a CSS animation with a fill outranks an
+   inline style, so a transform written on the card — which finishes its
+   entrance on `transform: none` — would simply be ignored. */
+.chapter-card-shell { display: flex; flex-direction: column; min-width: 0; }
+.chapter-card-shell.is-open { grid-column: 1 / -1; }
+
 .chapter-card {
   position: relative;
   display: grid;
@@ -4574,23 +4703,29 @@ body.find-reading .find-reading-note { opacity: 1; }
   grid-template-areas:
     "no   no"
     "name name"
-    "date go";
+    "house go";
   gap: 18px 14px;
+  flex: 1 1 auto;
+  width: 100%;
   min-height: 190px;
   padding: 20px;
+  margin: 0;
+  font: inherit;
+  text-align: left;
   text-decoration: none;
   color: var(--silver);
   border: 1px solid var(--silver-line);
   background: linear-gradient(160deg, rgba(200, 204, 212, 0.05), rgba(200, 204, 212, 0) 60%);
+  cursor: pointer;
   transition: border-color 0.35s var(--menu-ease), background 0.35s var(--menu-ease),
-    transform 0.35s var(--menu-ease);
+    min-height 0.35s var(--menu-ease), padding 0.35s var(--menu-ease);
   /* They arrive one after another, the way every list on this site
      does — the explosion puts the page there, and the cards settle
      onto it. */
   opacity: 0;
 }
 /* A card comes in with the rest of the sheet, once the drawing is off
-   it — never underneath it. */
+   it — never underneath it. `--n` is set on the shell and inherited. */
 .chapter-page.here .chapter-card {
   animation: chapter-card-in 0.6s var(--menu-ease) both;
   animation-delay: calc(0.18s + var(--n, 0) * 70ms);
@@ -4622,6 +4757,21 @@ body.find-reading .find-reading-note { opacity: 1; }
 .chapter-card:hover::before,
 .chapter-card:hover::after { width: 24px; height: 24px; opacity: 1; }
 
+/* OPEN, the card is the head of the window rather than a square: one
+   line across the top of what it opened, with its rule run into the
+   body below it. */
+.chapter-card-shell.is-open .chapter-card {
+  grid-template-columns: auto 1fr auto auto;
+  grid-template-rows: auto;
+  grid-template-areas: "no name house go";
+  align-items: baseline;
+  min-height: 0;
+  padding: 18px 20px;
+  border-bottom-color: transparent;
+  background: linear-gradient(160deg, rgba(200, 204, 212, 0.1), rgba(200, 204, 212, 0) 60%);
+}
+.chapter-card-shell.is-open .chapter-card::after { display: none; }
+
 .chapter-card-no {
   grid-area: no;
   font-family: var(--mono);
@@ -4635,11 +4785,15 @@ body.find-reading .find-reading-note { opacity: 1; }
   line-height: 1.22;
   letter-spacing: -0.01em;
 }
-.chapter-card-date {
-  grid-area: date;
+/* THE HOUSE THE PERFUME COMES FROM, where the date used to stand. The
+   owner asked for the dates off the favourites and for the house in
+   their place; there are no dates anywhere on this page now. */
+.chapter-card-house {
+  grid-area: house;
   align-self: end;
   font-family: var(--mono);
   font-size: 11px;
+  letter-spacing: 0.06em;
   color: var(--silver-dim);
 }
 .chapter-card-go {
@@ -4653,6 +4807,96 @@ body.find-reading .find-reading-note { opacity: 1; }
   transition: color 0.35s var(--menu-ease);
 }
 .chapter-card:hover .chapter-card-go { color: var(--silver); }
+.chapter-card-shell.is-open .chapter-card-house,
+.chapter-card-shell.is-open .chapter-card-go { align-self: baseline; }
+
+/* WHAT THE CARD OPENS INTO. Opened on a measured height rather than on
+   `auto`, which is not a height a browser will ease to — the same way a
+   part of a house opens. */
+.chapter-card-body {
+  overflow: hidden;
+  height: 0;
+  border: 1px solid var(--silver-line);
+  border-top: 0;
+  background: linear-gradient(180deg, rgba(200, 204, 212, 0.05), rgba(200, 204, 212, 0));
+  transition: height 420ms var(--menu-ease);
+}
+.chapter-card-body[hidden] { display: none; }
+
+.fav-writing { padding: 26px 22px 6px; max-width: 64ch; }
+.fav-writing p { margin: 0 0 15px; font-size: 16.5px; line-height: 1.62; color: #aeb3bc; }
+/* THE COMMENTARY, under the description — the owner asked for "another
+   paragraph for commentary", which is a different kind of writing from
+   the one above it and is set apart rather than run on. */
+.fav-writing .gallery-word {
+  border-left: 1px solid var(--silver-line);
+  padding-left: 16px;
+  color: #8f949d;
+}
+/* NOT WRITTEN YET, and saying so: the dashed box the rest of the site
+   uses for an unwritten paragraph, in this page's silver. */
+.fav-writing .gallery-waiting {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.05em;
+  line-height: 1.85;
+  color: #767e8d;
+  border: 1px dashed rgba(200, 204, 212, 0.24);
+  padding: 14px 16px;
+}
+.fav-writing .gallery-waiting.gallery-word { border-left: 1px dashed rgba(200, 204, 212, 0.24); }
+
+/* THE TWO WAYS ON FROM A FAVOURITE. "Go to fragrance" follows the
+   entry's own href — wherever that perfume lives on this site — and
+   "Notes" opens the same window every other page opens, in this page's
+   colours. They are a link and a button and must read as one thing. */
+.fav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 22px 26px;
+}
+.fav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--silver-dim);
+  text-decoration: none;
+  background: none;
+  border: 1px solid var(--silver-line);
+  cursor: pointer;
+  transition: color 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
+}
+.fav-link:hover { color: var(--silver); border-color: rgba(200, 204, 212, 0.5); }
+.fav-link-mark { font-size: 12px; }
+
+/* THE NOTES WINDOW, IN THIS PAGE'S COLOURS.
+
+   It is the SAME window as everywhere else — `.note-panel`, its bar,
+   its close, and a body written by the one renderer in notes.js — and
+   what is different is five tokens, redefined on the window itself.
+   Every rule the window already draws in reads them, so this turns the
+   whole of it over at once and touches nothing anywhere else. That is
+   the same trick `.find-page`, `.sheet-page` and `.ataraxia-page` are
+   built on, and `--ink-rgb` is here for the same reason it exists at
+   all: `rgba()` cannot take a hex, so the handful of rules that spend
+   the ink at an alpha would otherwise stay black on black. */
+.fav-note {
+  --bg: #08090b;
+  --bg-2: #101217;
+  --line: rgba(200, 204, 212, 0.26);
+  --ink: #e6e9ef;
+  --ink-rgb: 230, 233, 239;
+  --muted: #8b9099;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.66);
+}
+.fav-note-scrim { background: rgba(0, 0, 0, 0.62); }
 
 /* EVERYTHING GOES AS THE WINDING STARTS. The owner asked for all of it
    to fade, "including the favorites text", and on the same frame the
@@ -4705,11 +4949,38 @@ body.find-reading .find-reading-note { opacity: 1; }
   .favorites-page.bursting .chamber-plate,
   .favorites-page.bursting .page-find,
   .chamber.burst-wave .chamber-field { transition: none; }
+  /* A card still opens and a chapter can still be stepped to; neither
+     is eased. The heights are written straight on by chamber.js. */
+  .chapter-sheet,
+  .chapter-card,
+  .chapter-card-body,
+  .chapter-step { transition: none; }
 }
 
 @media (max-width: 720px) {
   .chapter-sheet { padding: 76px 18px 60px; }
   .chapter-cards { grid-template-columns: 1fr; }
+  /* The arrows fall under the name rather than squeezing it: at a
+     phone's width there is no room either side of a heading this size.
+     Nothing above 700px moves. */
+  .chapter-title { flex-wrap: wrap; gap: 14px; }
+  .chapter-title .chapter-name { flex: 1 0 100%; order: -1; }
+  .chapter-step { width: 44px; height: 44px; }
+  .fav-writing { padding: 22px 16px 4px; }
+  .fav-links { padding: 8px 16px 22px; }
+  /* Open, the head of the window goes back to two lines — four things
+     across a phone is four things you cannot read. */
+  .chapter-card-shell.is-open .chapter-card {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "no   go"
+      "name name"
+      "house house";
+    align-items: start;
+    gap: 12px 14px;
+  }
+  .chapter-card-shell.is-open .chapter-card-house,
+  .chapter-card-shell.is-open .chapter-card-go { align-self: start; }
 }
 
 /* ==================================================================

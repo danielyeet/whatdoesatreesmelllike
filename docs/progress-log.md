@@ -25,7 +25,7 @@ was undone later by someone who didn't know why it was made.
 | 2026-09-17 | [The index pages, and the two views](features/2026-09-17-the-index-pages-and-views.md) | Works (was Researches) and the Fragrances view, and the switch between the contact sheet's two views |
 | 2026-09-17 | [The essay pages](features/2026-09-17-the-essay-pages.md) | a long piece of writing on the theories drawing's ground, with the rule down the left |
 | 2026-09-16 | [Pineward](features/2026-09-16-pineward.md) | the first house, its fifty-four parts, its wood and its trunk |
-| 2026-09-15 | [The chamber](features/2026-09-15-the-chamber.md) | Favourites: two injectors, one orbit, and the menu that opens out of the word |
+| 2026-09-15 | [The chamber](features/2026-09-15-the-chamber.md) | Favourites: two injectors, one orbit, and the menu that opens out of the word — **and, on 2026-09-22, the chapter page it bursts into**: arrows either side of the name stepping through the chapters, a chapter that can be named and empty, the house where the date used to be, a favourite opening where it stands with its notes window, a way out that is no longer a cut, and **the sun** behind Chapter 1 |
 | 2026-09-14 | [The structure](features/2026-09-14-the-structure.md) | Theories: a technical drawing in three dimensions you scroll into |
 | 2026-09-13 | [The contact sheet](features/2026-09-13-the-contact-sheet.md) | Scent descriptions, Houses view: pictures scattered and joined by dated lines, all in specks |
 | 2026-09-11 | [The 3D node map](features/2026-09-11-the-node-map.md) | slide 3 of the landing page — the one WebGL shader in the repository |

@@ -26,32 +26,34 @@
 </script>
 </head>
 <!--
-  This category is a CHAMBER: four injectors, one at each corner of the
-  window, firing a fine stream of particles inward on white. The streams
-  fall towards the middle, are swung round by what is there, and either
-  settle into an orbit or break up and scatter — the theories drawing's
-  world turned inside out, ink on white instead of white on near-black.
-  The menu of favourites stands in the middle of it, and the streams
-  close on the writing from every corner. chamber.js is the whole of it.
-
-  IT IS THE SAME MENU the contact sheet's Favorites view carries — the
-  chapters, their counts, and every favourite with its number, its date
-  and its name — in a different shape: one narrow column down the middle
-  rather than two columns down the sides.
+  This category is a CHAMBER: two injectors at opposite corners of the
+  window — top right and bottom left — firing a fine stream of particles
+  inward on white. The streams fall towards the middle, are swung round
+  by what is there, and either settle into an orbit or break up and
+  scatter — the theories drawing's world turned inside out, ink on white
+  instead of white on near-black. The menu of favourites stands in the
+  middle of it. chamber.js is the whole of it.
 
   TO ADD A FAVOURITE: copy one whole <a class="gallery-entry"> block
-  below, give it a name, a date and a chapter, and point its href at the
-  piece. Nothing in the script changes — the chapters are whatever the
-  data-chapter values are, in the order they first appear, and the strip
-  across the top of the menu is made from them.
+  below, give it a name, a chapter and the house the perfume comes
+  from, and point its href at wherever that fragrance lives on this
+  site. Nothing in the script changes — the chapters are whatever the
+  data-chapter values are, in the order they first appear, plus any
+  chapter written up below that has nothing filed under it yet.
+
+  A FAVOURITE CARRIES:
+    data-chapter   which chapter it is filed under.
+    data-house     the perfume house. It is what the card reads, and it
+                   replaced the date the cards used to carry.
+    data-notes     optional — the key its notes are under in
+                   notes-data.js, e.g. "abstraits:02". Giving it one
+                   puts a NOTES button in the card when it is opened.
+    href           where that fragrance lives, which is what "GO TO
+                   FRAGRANCE" follows.
 
   WITHOUT JAVASCRIPT this page is that same plain list of favourites,
   which is the right fallback: every one of them is there and every one
   is a link.
-
-  THE ENTRIES BELOW ARE PLACEHOLDERS, and deliberately the same ones the
-  contact sheet's Favorites view carries, so the two menus read alike
-  until there is real work to put in them.
 -->
 <body class="favorites-page" data-find="Favourites">
 
@@ -61,58 +63,71 @@
 
   <div class="work-list">
 
-    <a class="gallery-entry" data-chapter="Chapter 1" data-date="14.03.2024"
-       href="../works/example-gallery-work.html">First favourite</a>
+    <a class="gallery-entry" data-chapter="Chapter 1" data-house="Les Abstraits"
+       data-notes="abstraits:02"
+       href="../works/les-abstraits.html#part-02">Des Cendres</a>
 
-    <a class="gallery-entry" data-chapter="Chapter 1" data-date="02.11.2023"
+    <a class="gallery-entry" data-chapter="Chapter 1"
        href="../works/example-article-work.html">Second favourite</a>
 
-    <a class="gallery-entry" data-chapter="Chapter 1" data-date="27.06.2023"
+    <a class="gallery-entry" data-chapter="Chapter 1"
        href="../works/example-gallery-work.html">Third favourite</a>
-
-    <a class="gallery-entry" data-chapter="Chapter 2" data-date="09.01.2024"
-       href="../works/example-article-work.html">Fourth favourite</a>
-
-    <a class="gallery-entry" data-chapter="Chapter 2" data-date="18.08.2022"
-       href="../works/example-gallery-work.html">Fifth favourite</a>
-
-    <a class="gallery-entry" data-chapter="Chapter 2" data-date="30.04.2025"
-       href="../works/example-article-work.html">Sixth favourite</a>
-
-    <a class="gallery-entry" data-chapter="Chapter 3" data-date="05.12.2021"
-       href="../works/example-gallery-work.html">Seventh favourite</a>
-
-    <a class="gallery-entry" data-chapter="Chapter 3" data-date="22.09.2024"
-       href="../works/example-article-work.html">Eighth favourite</a>
-
-    <a class="gallery-entry" data-chapter="Chapter 3" data-date="11.05.2020"
-       href="../works/example-gallery-work.html">Ninth favourite</a>
 
   </div>
 
   <!--
-    WHAT EACH CHAPTER IS. Opening a chapter in the chamber now opens a
-    page of its own — a description, and its favourites as cards — and
-    this is where that description is written. One block per chapter,
-    matched to the chapters by `data-chapter`: the words below are
-    placeholders and are yours to replace. A chapter with nothing
-    written for it simply shows its cards.
+    WHAT EACH CHAPTER IS. Opening a chapter in the chamber opens a page
+    of its own — a description, and its favourites as cards — and this
+    is where that description is written. One block per chapter,
+    matched to the chapters by `data-chapter`.
+
+    A CHAPTER WITH NOTHING FILED UNDER IT STILL EXISTS if it is written
+    up here: Chapter 2 has no favourites yet and is still a chapter you
+    can arrow into. A chapter with no block simply shows its cards and
+    no description.
+
+    `data-ground` is the drawing that stands behind that chapter's
+    page. There is one at the moment — "sun" — and a chapter without
+    the attribute gets plain black, as it always did.
+
+    A <p class="gallery-aside"> inside a block is set apart from the
+    writing above it: a note about the chapter rather than part of the
+    description.
   -->
   <div class="gallery-chapters">
 
-    <section class="gallery-chapter" data-chapter="Chapter 1">
-      <p>Replace this with what Chapter 1 actually is — what these
-      three have in common, when you were wearing them, why they are
-      filed together rather than anywhere else. This is placeholder
-      writing.</p>
+    <section class="gallery-chapter" data-chapter="Chapter 1" data-ground="sun">
+      <p>From the myriad of things I have smelled, the fragrances on this page are the ones worth highlighting the most; as asides from  my subjective exaltation, I am certain my arguments will hold some objective merit too.</p>
+      <p>At the time of creating this website, Chapter One of Favorites will be the first iteration in a hopefully ever evolving hall of fame. Enjoy.</p>
+      <p class="gallery-aside">The fragrances are not ranked nor ordered in any way. This is not a &quot;top-10 list&quot; and shouldn&#8217;t be treated like one.</p>
     </section>
 
     <section class="gallery-chapter" data-chapter="Chapter 2">
-      <p>Replace this with what Chapter 2 is. Placeholder writing.</p>
+      <p>To be determined...</p>
     </section>
 
-    <section class="gallery-chapter" data-chapter="Chapter 3">
-      <p>Replace this with what Chapter 3 is. Placeholder writing.</p>
+  </div>
+
+  <!--
+    WHAT A FAVOURITE SAYS WHEN IT IS OPENED. Clicking a card on a
+    chapter's page opens it where it stands, and this is what goes
+    inside it. One block per favourite, matched by name to the
+    `<a class="gallery-entry">` above — the name is the key, so a
+    favourite renamed up there is renamed down here in the same turn.
+
+    The shape the owner asked for is two paragraphs: a description,
+    and then a paragraph of commentary, which is the one marked
+    `gallery-word`. Any other markup in a block is carried through as
+    it stands.
+
+    A favourite with no block opens with its links and nothing else,
+    which is honest: nobody has written it yet.
+  -->
+  <div class="gallery-writings">
+
+    <section class="gallery-writing" data-favourite="Des Cendres">
+      <p class="gallery-waiting">The description of Des Cendres is the owner&#8217;s and has not been written yet.</p>
+      <p class="gallery-waiting gallery-word">The commentary — why this one is in Chapter One — is the owner&#8217;s too, and is not written yet.</p>
     </section>
 
   </div>
@@ -122,6 +137,9 @@
 <script src="../nav.js"></script>
 <script src="../search.js"></script>
 <script src="../page-search.js"></script>
+<script src="../notes-data.js"></script>
+<script src="../notes.js"></script>
+<script src="../sun.js"></script>
 <script src="../chamber.js"></script>
 </body>
 </html>
