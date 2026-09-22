@@ -1300,9 +1300,23 @@ movement, so there is a whole picture to stand still.
 - `images/Favorites/` is empty but for its README.
 - This page has had more rounds than anything else here and should be treated as a live
   subject.
-- **`pointing at a row swells the orbit level with it` is flaky under a loaded full
-  run**, and passes on its own every time. It measures how far the orbit has swelled and
-  then relaxed, both eased over time, and this is the heaviest page in the site to draw —
-  under load the relaxation has not finished by the time it is measured. Nothing about
-  the page is wrong when it fails. Re-run `tests/chamber.spec.js` alone before believing
-  it.
+- ~~**`pointing at a row swells the orbit level with it` is flaky under a loaded full
+  run**, and passes on its own every time.~~ **Recalibrated on 2026-09-22, and the cause
+  was not load.** It failed on its own as well once Chapter 3 was removed, by a margin of
+  nothing at all — the swell has to beat a fixed fifty pixels and it came in at exactly
+  fifty.
+
+  **What it measures depends on where the row stands.** The reading is how much further
+  right the orbit reaches in a stripe level with the row, and the test takes the LAST row.
+  Near the top or bottom of the menu the orbit's rim is well inside its widest, so a swell
+  there buys a lot of horizontal reach; level with the middle of the window the rim is
+  already close to its widest and the same swell buys much less. Dropping from three
+  chapters to two moved the last row from y=429 to y=361 — the middle of the window.
+
+  Measured on one commit, pointing at the last row, with three chapters against two:
+  516 → 599, 512 → 603, 497 → 598 (a swell of 83 to 101) against 575 → 623, 568 → 617,
+  572 → 625 (42 to 65). **Nothing about the swell changed**; the threshold was calibrated
+  against a three-chapter menu. It now takes ten readings rather than five and asks for
+  thirty rather than fifty, and thirty is proved against the fault: pointing inside the
+  menu but NOT at a row — so no row is hot and there can be no swell — moves the same
+  reading by −5 and −7.

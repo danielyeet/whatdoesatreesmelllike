@@ -1298,27 +1298,53 @@ test("pointing at a row swells the orbit level with it, and nothing else",
   // answers, and nothing else does.
   const gap = [190, mid - 22, 220, 44];
 
+  // TEN READINGS RATHER THAN FIVE, AND A THRESHOLD OF THIRTY RATHER
+  // THAN FIFTY, and the reason is the page rather than the drawing.
+  //
+  // The swell is measured as how much further right the orbit reaches
+  // in a stripe level with the row. That reading depends on WHERE THE
+  // ROW STANDS: near the top or bottom of the menu the orbit's rim is
+  // well inside its widest, so a swell there buys a lot of horizontal
+  // reach; level with the middle of the window the rim is already close
+  // to its widest and the same swell buys much less.
+  //
+  // This test takes the LAST row. When the owner removed Chapter 3 the
+  // menu went from three rows to two, and the last row moved from y=429
+  // to y=361 — the middle of the window. Measured on the same commit,
+  // pointing at the last row: with three chapters the reach went
+  // 516 -> 599, 512 -> 603, 497 -> 598 (a swell of 83 to 101); with two
+  // it goes 575 -> 623, 568 -> 617, 572 -> 625 (a swell of 42 to 65).
+  // Nothing about the swell changed. The old threshold was calibrated
+  // against a three-chapter menu and no longer fits a two-chapter one.
+  //
+  // PROVED AGAINST THE FAULT: pointing INSIDE the menu but not at a row
+  // — so no row is hot and there must be no swell at all — the same
+  // reading moves by -5 and -7. Thirty sits well clear of that, and
+  // well below the real thing.
+  const TIMES = 10;
+  const SWELL = 30;
+
   const restGap = await inkSeen(page, gap);
-  const restReach = await reachOverTime(page, band);
+  const restReach = await reachOverTime(page, band, TIMES);
 
   await page.mouse.move(row.x + row.width / 2, mid);
   await page.waitForTimeout(1400);
   const readGap = await inkSeen(page, gap);
-  const readReach = await reachOverTime(page, band);
+  const readReach = await reachOverTime(page, band, TIMES);
 
   expect(readReach.right,
     `the orbit level with it should swell: ${restReach.right} \u2192 ${readReach.right}` +
     ` (${restReach.seen.join(",")} against ${readReach.seen.join(",")})`)
-    .toBeGreaterThan(restReach.right + 50);
+    .toBeGreaterThan(restReach.right + SWELL);
   expect(readGap.ink - restGap.ink,
     `and nothing run out across the page: ${restGap.ink} \u2192 ${readGap.ink}`)
     .toBeLessThan(4000);
 
   await page.mouse.move(4, 4);
   await page.waitForTimeout(2200);
-  const goneReach = await reachOverTime(page, band);
+  const goneReach = await reachOverTime(page, band, TIMES);
   expect(goneReach.right, `and let go again: ${readReach.right} \u2192 ${goneReach.right}`)
-    .toBeLessThan(readReach.right - 50);
+    .toBeLessThan(readReach.right - SWELL);
 });
 
 test("the orbit keeps turning, open and closed alike", async ({ page }) => {
