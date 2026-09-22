@@ -55,7 +55,26 @@
 
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const OPEN_MS = REDUCE_MOTION ? 0 : 300;
-  const SHUT_MS = REDUCE_MOTION ? 0 : 220;
+  /** HOW LONG TO WAIT FOR THE WINDOW TO GO, AND IT IS ONLY THE BACKSTOP.
+      The fade itself is what `close` waits for now; this number is
+      there for the case where the transition never runs at all — a
+      background tab, a browser that has been told not to animate.
+
+      IT USED TO BE THE WHOLE OF IT, AND IT WAS THE OWNER'S "it glitches
+      slightly when you click away". Two things were wrong with a timer
+      and both had to be, because either alone would have been enough:
+      it was set to 220ms against a fade the stylesheet runs for 300,
+      and the fade does not START when the timer does — a click has to
+      be handled and the styles recalculated first, which on this page
+      is about another 80. So `settle` hid the window 180ms into a
+      300ms fade. Measured: the panel and THE SCRIM WITH IT went from
+      0.606 opacity to nothing in a single frame, and the scrim is a
+      grey wash over the whole page, so what you saw was the entire
+      window flash.
+
+      Waiting for `transitionend` cannot drift out of step with the
+      stylesheet, which a number always can. */
+  const SHUT_MS = REDUCE_MOTION ? 0 : 900;
 
   /** The window that is up, if one is: its own `close`. */
   let showing = null;
@@ -201,9 +220,15 @@
       let up = false;
       let moving = false;
       let timer = 0;
+      /** The listener waiting for the window's fade to finish, if one
+          is. Held so it can be taken off again — a window reopened
+          before it had finished going would otherwise be settled shut
+          by the fade it was already half way through. */
+      let ending = null;
 
       function settle() {
         window.clearTimeout(timer);
+        stopWaiting();
         panel.hidden = true;
         panel.classList.remove("is-up");
         if (showing === close) showing = null;
@@ -221,9 +246,18 @@
           when the fragrance itself is being collapsed — there is no
           sense easing a window shut because the box it was opened from
           is closing. */
+      /** Stop listening for the fade to finish. Called both when it has
+          and when the window is opened again before it ever did. */
+      function stopWaiting() {
+        if (!ending) return;
+        panel.removeEventListener("transitionend", ending);
+        ending = null;
+      }
+
       function close(atOnce) {
         if (!up) return;
         window.clearTimeout(timer);
+        stopWaiting();
         up = false;
         button.setAttribute("aria-expanded", "false");
         button.classList.remove("is-on");
@@ -232,11 +266,20 @@
         panel.classList.remove("is-up");
         if (atOnce || REDUCE_MOTION) { settle(); return; }
         moving = true;
-        timer = window.setTimeout(settle, SHUT_MS + 40);
+        // THE FADE ITSELF SAYS WHEN IT IS DONE. Only the panel's own
+        // opacity counts: a transition on anything inside it bubbles up
+        // here too, and the close button alone has one.
+        ending = (event) => {
+          if (event.target !== panel || event.propertyName !== "opacity") return;
+          settle();
+        };
+        panel.addEventListener("transitionend", ending);
+        timer = window.setTimeout(settle, SHUT_MS);
       }
 
       function open() {
         window.clearTimeout(timer);
+        stopWaiting();
         // ONE AT A TIME: a second window over the first would have
         // nothing to go back to.
         if (showing && showing !== close) showing(true);

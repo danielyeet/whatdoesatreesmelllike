@@ -196,128 +196,208 @@ test("the rank fills from the first pixel of scroll, and finishes full",
   expect(await filled()).toBeGreaterThan(0.98);
 });
 
-/* ATARAXIA'S CHURCHYARD IS DRAWN, AND EVERY STANDING FITS THE MARGIN.
+/* ATARAXIA'S BANDS ARE DRAWN, AND THEY CROSS THE WHOLE WINDOW.
 
-   The fault this exists for is the one it was built with. A standing
-   was sized first and put in the margin afterwards, so on a 1280
-   window every statue was up to 205px wide in a margin 170px across:
-   its inner side fell in the band where the column rule quietens
-   everything down to a twentieth, and half of every angel simply was
-   not drawn. It read as a smear rather than as a figure.
+   This replaced a churchyard of angel statues and crosses standing
+   down the two margins, and the invariant has turned over with it. The
+   churchyard's rule was that NO INK may land where the reading is —
+   a statue with half of it in the quiet band read as a smear rather
+   than as a figure, which is the fault that test existed for.
 
-   SO THE INVARIANT IS EXACT: a standing fits in the CLEAR part of the
-   margin, and no ink of it lands in the quiet band at all. The
-   drawing's own two numbers say where that band is, and they are one
-   decision — EASED_IN is how wide it is, and `build` hands a standing
-   the margin less EASED_IN.
+   THE BANDS ARE THE OPPOSITE, and the owner asked for it in as many
+   words: "I want them to go behind the text. Idk how but make it so
+   that the readability is good." A band that stopped at the column and
+   started again on the other side would not be a band. So there MUST
+   be ink over the writing — and it must be much fainter there than in
+   the margins, which is the whole of how the reading is kept.
 
-   IT SAMPLES DOWN THE WHOLE PAGE rather than the first screen. Only
-   two standings are on screen at once and how wide those two happen to
-   be is the seed's business: measured on the first screen alone the
-   fault shows nothing at all. Over eight screens it is unmissable —
-   532 pixels of ink in the band with the fault, and 0 with it fixed. */
-test("the churchyard is drawn, and every standing fits its margin",
+   SO THIS MEASURES BOTH, and the second is the one that matters. It
+   samples down the whole page rather than the first screen: which
+   bands happen to be on screen at any one moment is the seed's
+   business, and the quiet is a property of every one of them. */
+test("the bands cross the whole window, and go quiet over the writing",
   async ({ page }) => {
   const errors = collectPageErrors(page, ["Failed to load resource"]);
   await page.goto(ATARAXIA);
   await page.waitForTimeout(1400);
 
+  // THREE ZONES, and the middle one is thrown away. The quieting eases
+  // in over SOFT pixels either side of the column, so the band between
+  // `edge - SOFT` and `edge` is neither full strength nor quiet and
+  // says nothing either way. What is measured is the CLEAR MARGIN
+  // outside it and the COLUMN PROPER inside it — where the reading
+  // actually is, and where `quiet()` is at exactly its floor.
   const sample = () => page.evaluate(() => {
     const el = document.querySelector(".human-field");
     const g = el.getContext("2d", { willReadFrequently: true });
     const im = g.getImageData(0, 0, el.width, el.height).data;
     const ratio = el.width / window.innerWidth;
     const edge = (window.innerWidth - 940) / 2;   // COLUMN in ataraxia.js
-    const from = edge - 34, to = window.innerWidth - edge + 34;  // EASED_IN
-    let clear = 0, quiet = 0;
+    const soft = 96;                              // SOFT in ataraxia.js
+    let clearInk = 0, clearOn = 0, quietInk = 0, quietOn = 0;
     for (let i = 0; i < im.length; i += 4) {
-      if (im[i + 3] <= 10) continue;
+      const a = im[i + 3];
+      if (a <= 4) continue;
       const x = ((i / 4) % el.width) / ratio;
-      if (x > from && x < to) quiet += 1; else clear += 1;
+      if (x > edge && x < window.innerWidth - edge) { quietInk += a; quietOn += 1; }
+      else if (x < edge - soft || x > window.innerWidth - edge + soft) {
+        clearInk += a; clearOn += 1;
+      }
     }
-    return [clear, quiet];
+    return { clearInk, clearOn, quietInk, quietOn };
   });
 
-  let clear = 0, quiet = 0;
+  let clearInk = 0, clearOn = 0, quietInk = 0, quietOn = 0;
   for (let n = 0; n < 8; n++) {
-    await page.evaluate((y) => window.scrollTo(0, y), n * 700);
+    await page.evaluate((y) => window.scrollTo(0, y), n * 640);
     await page.waitForTimeout(320);
-    const [c, q] = await sample();
-    clear += c;
-    quiet += q;
+    const got = await sample();
+    clearInk += got.clearInk; clearOn += got.clearOn;
+    quietInk += got.quietInk; quietOn += got.quietOn;
   }
 
-  expect(clear, "there should be a churchyard at all").toBeGreaterThan(6000);
-  expect(quiet, `ink in the quiet band: ${quiet}`).toBeLessThan(60);
+  expect(clearOn, "there should be bands at all").toBeGreaterThan(4000);
+  // THEY GO BEHIND THE WRITING. A drawing kept out of the middle of
+  // the page is the thing that was asked NOT to happen.
+  expect(quietOn, "the bands should pass behind the writing, not round it")
+    .toBeGreaterThan(400);
+
+  // AND THIS IS THE READING'S OWN GUARANTEE: what is over the writing
+  // is far fainter than what is beside it. Measured as the average
+  // weight of a lit pixel rather than as a count, because a count says
+  // how many and this has to say how loud.
+  const clear = clearInk / clearOn;
+  const quiet = quietInk / quietOn;
+  expect(quiet, `over the writing ${quiet.toFixed(1)}, beside it ${clear.toFixed(1)}`)
+    .toBeLessThan(clear * 0.6);
 
   expect(errors).toEqual([]);
 });
 
-/* AND NOTHING IN IT MOVES, which is the house's name said as a
-   behaviour. Ataraxia is the old word for a mind with nothing
-   troubling it: Almost Human's crowd keeps a pixel of drift so it is
-   never quite still, and this page deliberately keeps none.
+/* AND THE PAGE IS DARK GRAY, with the writing light on it. The owner
+   asked for dark gray specifically, which is not ADAR's near-black
+   next door, and the bands are white and additive — they need a ground
+   dark enough to read as light.
 
-   Measured with the pointer away, so the halo is not what is being
-   counted. The light crossing the window changes how PLAINLY things
-   are drawn, which moves the count a little; a speck that wandered
-   would move it far more. */
-test("nothing in the churchyard drifts", async ({ page }) => {
+   THE CONTRAST IS THE POINT of measuring it rather than the hex: a
+   page turned over by redefining its five tokens can be turned
+   halfway over by mistake, and light-on-light is what that looks
+   like. */
+test("Ataraxia is dark gray, and its writing is light on it", async ({ page }) => {
   await page.goto(ATARAXIA);
-  await page.waitForTimeout(1400);
+  await page.waitForTimeout(900);
 
-  const shot = () => page.evaluate(() => {
-    const el = document.querySelector(".human-field");
-    const g = el.getContext("2d", { willReadFrequently: true });
-    const im = g.getImageData(0, 0, el.width, el.height).data;
-    const on = [];
-    for (let i = 3; i < im.length; i += 4) if (im[i] > 10) on.push(i);
-    return on;
+  const seen = await page.evaluate(() => {
+    const lum = (css) => {
+      const n = css.match(/[\d.]+/g).map(Number);
+      return 0.2126 * n[0] + 0.7152 * n[1] + 0.0722 * n[2];
+    };
+    return {
+      ground: lum(getComputedStyle(document.body).backgroundColor),
+      heading: lum(getComputedStyle(document.querySelector("h1")).color),
+      reading: lum(getComputedStyle(document.querySelector(".human-text p")).color),
+      dark: document.body.classList.contains("dark-surface"),
+    };
   });
 
-  const first = await shot();
-  await page.waitForTimeout(900);
-  const then = await shot();
-
-  const was = new Set(first);
-  const still = then.filter((i) => was.has(i)).length;
-  const share = still / Math.max(1, Math.max(first.length, then.length));
-  // A stone that has not moved is the same pixels a second later. The
-  // light only changes how darkly they are drawn, and a speck has to
-  // fall under the floor entirely to leave this count.
-  expect(share, `${(share * 100).toFixed(1)}% of the ink stayed put`)
-    .toBeGreaterThan(0.93);
+  // Dark, and gray rather than black: ADAR's ground is about 7.
+  expect(seen.ground, `the ground reads ${seen.ground.toFixed(1)}`)
+    .toBeGreaterThan(20);
+  expect(seen.ground).toBeLessThan(70);
+  expect(seen.heading, "the heading has to be light on it")
+    .toBeGreaterThan(seen.ground + 120);
+  expect(seen.reading, "and so has the reading")
+    .toBeGreaterThan(seen.ground + 90);
+  // A dark page has to say so, or the cursor cannot be seen on it.
+  expect(seen.dark, "a dark page carries dark-surface").toBe(true);
 });
 
-/* THE HALO — the one thing on that page that answers the hand. It
-   comes up over the nearest standing and nowhere else, so what this
-   measures is the ink in the margin going UP when the pointer arrives
-   there and back down when it leaves. */
-test("a halo comes up under the pointer, and goes again", async ({ page }) => {
+/* THE KINDLE — the one thing on that page that answers the hand. The
+   specks within reach of the pointer burn brighter, so what this
+   measures is the ink going UP where the pointer arrives and back down
+   when it leaves.
+
+   IT COUNTS ONE CORNER rather than the whole canvas, because the crest
+   travelling along each band changes the total on its own and would
+   swamp the reading. */
+test("the specks kindle under the pointer, and go out again",
+  async ({ page }) => {
   await page.goto(ATARAXIA);
   await page.waitForTimeout(1500);
 
   const ink = () => page.evaluate(() => {
     const el = document.querySelector(".human-field");
     const g = el.getContext("2d", { willReadFrequently: true });
-    const im = g.getImageData(0, 0, el.width, el.height).data;
+    const ratio = el.width / window.innerWidth;
+    // A box round where the pointer will be put, in canvas pixels.
+    const x0 = Math.round(40 * ratio), y0 = Math.round(220 * ratio);
+    const w = Math.round(320 * ratio), h = Math.round(320 * ratio);
+    const im = g.getImageData(x0, y0, w, h).data;
     let n = 0;
-    for (let i = 3; i < im.length; i += 4) if (im[i] > 10) n += 1;
+    for (let i = 3; i < im.length; i += 4) n += im[i];
     return n;
   });
 
-  // Somewhere a statue actually stands, read off the drawing's own
-  // numbers rather than guessed: the first standing on the page.
+  await page.mouse.move(900, 700);
+  await page.waitForTimeout(700);
   const away = await ink();
-  await page.mouse.move(70, 300);
+  await page.mouse.move(200, 380);
   await page.waitForTimeout(700);
   const near = await ink();
-  await page.mouse.move(640, 700);
+  await page.mouse.move(900, 700);
   await page.waitForTimeout(900);
   const gone = await ink();
 
-  expect(near, `away ${away}, near ${near}`).toBeGreaterThan(away);
+  expect(near, `away ${away}, near ${near}`).toBeGreaterThan(away * 1.15);
   expect(gone, `near ${near}, gone ${gone}`).toBeLessThan(near);
+});
+
+/* GRANDE PARFUMS HAS A GROUND NOW, and it is the quietest one on the
+   site: the owner asked for "some particles and effects... subtle
+   designs please". So what is checked is that it is THERE and that it
+   is SUBTLE, which are two different failures — a drift nobody can see
+   is as wrong as one that fights the writing.
+
+   The page is on the site's own paper and the specks are drawn in its
+   ink, so "subtle" here means a low weight per lit pixel. */
+test("Grande Parfums has a drift, and it is a quiet one", async ({ page }) => {
+  const errors = collectPageErrors(page, ["Failed to load resource"]);
+  await page.goto(GRANDE);
+  await page.waitForTimeout(1600);
+
+  const seen = await page.evaluate(() => {
+    const el = document.querySelector(".human-field");
+    if (!el) return null;
+    const g = el.getContext("2d", { willReadFrequently: true });
+    const im = g.getImageData(0, 0, el.width, el.height).data;
+    const ratio = el.width / window.innerWidth;
+    let on = 0, weight = 0, top = 0, bottom = 0;
+    for (let i = 0; i < im.length; i += 4) {
+      const a = im[i + 3];
+      if (a <= 4) continue;
+      on += 1;
+      weight += a;
+      const y = Math.floor((i / 4) / el.width) / ratio;
+      if (y < window.innerHeight / 2) top += 1; else bottom += 1;
+    }
+    return { on, mean: on ? weight / on : 0, top, bottom };
+  });
+
+  expect(seen, "the page should have a canvas").toBeTruthy();
+  expect(seen.on, "there should be a drift at all").toBeGreaterThan(60);
+
+  // SUBTLE. 255 is solid ink; this is dust on paper.
+  expect(seen.mean, `the average speck weighs ${seen.mean.toFixed(1)} of 255`)
+    .toBeLessThan(90);
+
+  // AND IT IS SPREAD OVER THE PAGE. The first version rolled each
+  // speck's lifetime apart from its speed, so a slow one lived and
+  // died in thirty-six pixels and the whole drift was a smudge along
+  // the bottom edge. A lifetime is worked out from the speed now.
+  expect(seen.top, `${seen.top} specks in the top half, ${seen.bottom} in the bottom`)
+    .toBeGreaterThan(seen.on * 0.2);
+
+  expect(errors).toEqual([]);
 });
 
 /* WITHOUT THE SCRIPTS the writing is still all there and still opens.

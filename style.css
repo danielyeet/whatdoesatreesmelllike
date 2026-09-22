@@ -6,6 +6,15 @@
   --bg-2: #f0efe9;    /* slightly deeper panel background */
   --line: #ddd9cf;    /* hairlines, borders */
   --ink: #17170f;     /* main text color — near black */
+  /* THE INK AGAIN, AS THREE NUMBERS, and it exists for one reason:
+     a handful of rules spend the ink at an alpha — a hatched
+     placeholder, the dotted leader in a fragrance's row, the rank
+     down the side of a house — and `rgba()` cannot take a hex.
+     Written out by hand they were the one thing on a house page
+     that did NOT follow a page turning its tokens over, which is
+     how Ataraxia's rank came out black-on-dark-gray. Keep the two
+     the same colour. */
+  --ink-rgb: 23, 23, 15;
   --muted: #6d6c62;   /* secondary text */
   --brass: #9c6f35;   /* the one accent color, deepened for contrast on white */
 
@@ -211,6 +220,7 @@ body.menu-open .menu-trigger:hover { color: var(--brass); }
 }
 body.theories-page,
 body.adar-page,
+body.ataraxia-page,
 body.essay-page,
 body.find-page,
 body.chapter-open { --chrome-ground: rgba(11, 12, 15, 0.62); }
@@ -281,11 +291,34 @@ body.chapter-open { --chrome-ground: rgba(11, 12, 15, 0.62); }
    overlay reads as coming forward rather than just appearing.
    The transition sits on the base selector, not on .menu-open — when
    it lived on the open state only, closing the menu snapped the page
-   back to full brightness with no fade at all. */
-body > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
+   back to full brightness with no fade at all.
+
+   THE FOUR THINGS LEFT OUT USED TO BE TWO MORE THAN THIS, and the two
+   that were missing are the NOTES WINDOW and its SCRIM. That rule is a
+   child selector with four `:not()` on it, which outranks a plain
+   `.note-panel` — and because the window is built on the BODY (it has
+   to be; a `position: fixed` thing inside a transformed ancestor is
+   fixed to that ancestor instead of to the window), it was a direct
+   child of body and this caught it.
+
+   SO THE WINDOW NEVER HAD THE TRANSITION IT WAS WRITTEN WITH. Its own
+   rule says `opacity 300ms, transform 300ms`; what it actually got was
+   this one — 850ms, opacity ONLY, so it never slid or scaled at all,
+   it just faded. And the script, waiting the 260ms it thought the
+   close took, hid the window and the scrim 180ms into an 850ms fade:
+   both went from 0.606 opacity to nothing in a single frame, and the
+   scrim is a wash over the whole page. That is the owner's "it
+   glitches slightly when you click away".
+
+   The window is over the menu overlay anyway (z-index 91 against 25),
+   so there was never anything for the dimming to do to it. Both
+   selectors carry the same exclusions, and have to: the transition
+   living on one and not the other is the fault the paragraph above
+   this one is about. */
+body > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot):not(.note-panel):not(.note-scrim) {
   transition: opacity 0.85s var(--menu-ease);
 }
-body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot) {
+body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot):not(.note-panel):not(.note-scrim) {
   opacity: 0.1;
 }
 
@@ -6273,7 +6306,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   height: 56px;
   border: 1px solid var(--line);
   background-color: var(--bg-2);
-  background-image: repeating-linear-gradient(-45deg, rgba(23,23,15,0.09) 0px, rgba(23,23,15,0.09) 1px, transparent 1px, transparent 12px);
+  background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb),0.09) 0px, rgba(var(--ink-rgb),0.09) 1px, transparent 1px, transparent 12px);
 }
 .human-thumb img {
   width: 100%;
@@ -6287,7 +6320,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   content: "";
   flex: 1;
   height: 1px;
-  background-image: radial-gradient(circle, rgba(23,23,15,0.3) 0.5px, transparent 0.6px);
+  background-image: radial-gradient(circle, rgba(var(--ink-rgb),0.3) 0.5px, transparent 0.6px);
   background-size: 6px 1px;
   background-repeat: repeat-x;
   order: 3;
@@ -6323,7 +6356,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   aspect-ratio: 1 / 1;
   border: 1px solid var(--line);
   background-color: var(--bg-2);
-  background-image: repeating-linear-gradient(-45deg, rgba(23,23,15,0.09) 0px, rgba(23,23,15,0.09) 1px, transparent 1px, transparent 16px);
+  background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb),0.09) 0px, rgba(var(--ink-rgb),0.09) 1px, transparent 1px, transparent 16px);
 }
 .human-plate img {
   display: block;
@@ -6386,7 +6419,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   position: relative;
   width: 1px;
   height: 34vh;
-  background: rgba(23, 23, 15, 0.16);
+  background: rgba(var(--ink-rgb), 0.16);
 }
 .human-rank-fill {
   position: absolute;
@@ -6394,7 +6427,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   top: 0;
   width: 1px;
   height: 100%;
-  background: rgba(23, 23, 15, 0.55);
+  background: rgba(var(--ink-rgb), 0.55);
   transform: scaleY(0);
   transform-origin: top;
   transition: transform 0.25s var(--menu-ease);
@@ -6403,7 +6436,7 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 .human-tick {
   width: 8px;
   height: 1px;
-  background: rgba(23, 23, 15, 0.25);
+  background: rgba(var(--ink-rgb), 0.25);
   transition: width 0.3s var(--menu-ease), background-color 0.3s ease;
 }
 .human-tick.passed { width: 16px; background: var(--ink); }
@@ -6604,6 +6637,44 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 @media (max-width: 720px) {
   .human-house { display: none; }
 }
+
+/* ==================================================================
+   ATARAXIA — the same house shape, on dark gray
+
+   The fourth house is the only one of the three that turns the page
+   over, and it does it the way the contact sheet and the search page
+   do: by REDEFINING THE FIVE TOKENS on its own body class rather than
+   by writing a second set of rules for everything on it. Every rule in
+   the block above already draws in `--bg`, `--bg-2`, `--line`, `--ink`
+   and `--muted`, so setting them here turns the whole page over at
+   once and touches no other page at all.
+
+   DARK GRAY, NOT BLACK, which is what the owner asked for and is also
+   what keeps it from being ADAR next door — that page is #07070a and
+   means it. The bands of glowing particles ataraxia.js draws are white
+   and additive, so the ground has to be dark enough for them to read
+   as light and light enough not to be a hole.
+
+   WHAT IS LEFT AFTER THE TOKENS is three rules. Each one is a place
+   the shared block names a colour outright rather than a token, and
+   each is here rather than fixed in place above because the value it
+   names is right on the three pages that are on paper.
+   ================================================================== */
+.ataraxia-page {
+  --bg: #212328;
+  --bg-2: #2a2c31;
+  --line: #3c3f47;
+  --ink: #edeef2;
+  --muted: #9a9daa;
+  --ink-rgb: 237, 238, 242;
+}
+/* The reading, which is set a touch softer than the headings on every
+   house page. On paper that is a warm near-black; here it has to come
+   from the other side. */
+.ataraxia-page .human-text p { color: #c4c7d1; }
+/* The cue's border when a part is open or pointed at. */
+.ataraxia-page .human-part[open] > summary .human-cue,
+.ataraxia-page .human-part > summary:hover .human-cue { border-color: #6b6f7b; }
 
 /* ==================================================================
    VIEW NOTES — the pyramid, in a window over the page

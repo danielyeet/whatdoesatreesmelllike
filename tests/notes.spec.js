@@ -411,6 +411,103 @@ test.describe("the notes on a phone", () => {
     await page.locator(".note-panel:not([hidden]) .note-shut").click();
     await gone("its own close should close it");
   });
+
+});
+
+
+/* AND IT DOES NOT GLITCH ON THE WAY OUT, which is a bug the owner
+   reported in exactly those words: "when you click away, it glitches
+   slightly".
+
+   WHAT IT WAS. The window is built on the BODY — it has to be, or a
+   `position: fixed` window inside a part's own transformed box is
+   fixed to that box instead of to the screen. That made it a direct
+   child of body, which is what `body > *:not(...)` matches: the rule
+   that dims the page while the Menu is open. Four `:not()` outrank a
+   plain `.note-panel`, so the window's own `opacity 300ms, transform
+   300ms` was replaced by the menu's `opacity 0.85s` — no transform at
+   all, and nearly three times as long. The script meanwhile hid the
+   window on a 260ms timer. Measured: the panel and THE SCRIM WITH IT
+   went from 0.606 opacity to nothing in one frame, and the scrim is a
+   wash over the whole page, so the whole window flashed.
+
+   SO THIS WATCHES THE FADE rather than the end of it. Every frame
+   from the click until the scrim is hidden, it keeps the opacity; the
+   last one before it goes is what was on screen the instant it
+   vanished. Anything but nearly nothing there is a cut. */
+test("the window fades all the way out rather than being cut off",
+  async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/works/individual-fragrances.html");
+  await page.waitForTimeout(900);
+
+  const part = page.locator(".human-part").first();
+  await part.locator("summary").click();
+  await page.waitForTimeout(1200);
+  await page.locator(".note-open").first().click();
+  await page.waitForTimeout(700);
+
+  const watching = page.evaluate(() => new Promise((done) => {
+    const scrim = document.querySelector(".note-scrim");
+    const panel = document.querySelector(".note-panel:not([hidden])");
+    let lastScrim = 1, lastPanel = 1;
+    const began = performance.now();
+    (function tick() {
+      if (scrim.hidden || panel.hidden) { done({ lastScrim, lastPanel, cut: true }); return; }
+      lastScrim = +getComputedStyle(scrim).opacity;
+      lastPanel = +getComputedStyle(panel).opacity;
+      // Two seconds is far longer than any close should take; if it
+      // is still up the window is stuck, which the assertions catch.
+      if (performance.now() - began > 2000) { done({ lastScrim, lastPanel, cut: false }); return; }
+      requestAnimationFrame(tick);
+    })();
+  }));
+  await page.locator(".note-scrim").click({ position: { x: 20, y: 40 } });
+  const saw = await watching;
+
+  expect(saw.cut, "the window should actually go").toBe(true);
+  expect(saw.lastScrim,
+    `the scrim was still at ${saw.lastScrim} the frame before it vanished`)
+    .toBeLessThan(0.05);
+  expect(saw.lastPanel,
+    `the window was still at ${saw.lastPanel} the frame before it vanished`)
+    .toBeLessThan(0.05);
+});
+
+/* AND THE WINDOW KEEPS ITS OWN TRANSITION. This is the root of the
+   bug above rather than the symptom, and it is the half that will
+   come back: anything added as a child of body, or any change to the
+   menu's dimming rule, can quietly take the window's arrival away
+   again. The window is written to move on opacity AND transform; what
+   the menu rule gives it is opacity alone. */
+test("the window keeps its own transition, not the menu's", async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/works/individual-fragrances.html");
+  await page.waitForTimeout(900);
+
+  const part = page.locator(".human-part").first();
+  await part.locator("summary").click();
+  await page.waitForTimeout(1200);
+  await page.locator(".note-open").first().click();
+  await page.waitForTimeout(700);
+
+  const how = await page.evaluate(() => {
+    const panel = document.querySelector(".note-panel:not([hidden])");
+    const scrim = document.querySelector(".note-scrim");
+    const ps = getComputedStyle(panel);
+    return {
+      moves: ps.transitionProperty,
+      takes: ps.transitionDuration,
+      scrimTakes: getComputedStyle(scrim).transitionDuration,
+    };
+  });
+
+  expect(how.moves, `the window moves on: ${how.moves}`).toContain("transform");
+  expect(how.moves).toContain("opacity");
+  // The menu's is 0.85s. The window's own is 0.3s, and a window that
+  // takes most of a second to answer a click reads as stuck.
+  expect(how.takes, `the window takes ${how.takes}`).not.toContain("0.85");
+  expect(how.scrimTakes, `the scrim takes ${how.scrimTakes}`).not.toContain("0.85");
 });
 
 /* THE SOURCE HIERARCHY. The owner set it: "ALWAYS THE SOURCE OF THE

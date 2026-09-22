@@ -2,7 +2,8 @@
 
 Date: 2026-09-21
 
-Files: `house.js` (~313 lines, new), `ataraxia.js` (~380 lines, new),
+Files: `house.js` (~313 lines, new), `ataraxia.js` (~385 lines, rewritten 2026-09-22),
+`grande.js` (~265 lines, new 2026-09-22),
 `works/ataraxia.html`, `works/grande-parfums.html`, `works/les-abstraits.html` (all new),
 the `house-*` and `human-star` rules in `style.css`, `tests/houses.spec.js` (new),
 `images/Ataraxia/`, `images/Grande/`, `images/Les-Abstraits/`; and the four places a new
@@ -18,8 +19,8 @@ why the three pages are three different states of finished:
 
 | | what was given | what was built |
 |---|---|---|
-| **04 Ataraxia** | a theme — *"Their whole theme is angel statues and crosses; so accomodate that theme"* — and a count of five | the drawing, whole. No names and no writing. |
-| **05 Grande Parfums** | an introduction, fifteen write-ups, a list of the house's fragrances, and *"Idk the theme to be honest"* | the writing, whole. No drawing. |
+| **04 Ataraxia** | a theme — *"Their whole theme is angel statues and crosses"* — and a count of five, and then, a round later, *"Remove the ataraxia crosses and angels"* and the bands in their place | the drawing, whole, and rebuilt once. No names and no writing. |
+| **05 Grande Parfums** | an introduction, fifteen write-ups, a list of the house's fragrances, and *"Idk the theme to be honest"* — then, a round later, *"subtle designs please"* | the writing, whole, and a ground that claims no theme. |
 | **06 Les Abstraits** | *"make the page for four fragrances for now"* | the shape, four parts, and nothing else. |
 
 ## The shared shape, and why house.js exists at all
@@ -43,59 +44,86 @@ working pages and their tests to no end.
 `house.js` draws nothing. A house's ground is its own script and its own canvas, and the
 two never speak to each other — they simply stand on the same page.
 
-## Ataraxia: the churchyard
+## Ataraxia: the bands
 
-The owner's theme, done as the page's ground. Down both margins the whole length of the
-page stand **angels and crosses**, every one of them cut out of specks, each on a plinth
-of its own.
+**The page is dark gray, and bands of glowing white particles cross it at their own
+angles.** The owner asked for exactly that, and for one thing more that decided how the
+whole drawing is built: *"I want them to go behind the text. Idk how but make it so that
+the readability is good."*
 
 | | |
 |---|---|
-| **an angel** | a plinth, a robe falling from the shoulders and widening to the hem, a head, and two wings sweeping up and back. There are no arms and no legs, because a statue in robes has neither. |
-| **a cross** | a plinth, an upright and a crossbar — and a **lean** of a degree or two, its own, about the top of its own plinth, the way a settling stone leans. No two lean alike. |
+| **a band** | a spine crossing the window at its own angle, with specks scattered about it — heaped along the middle and thinning to nothing either side, so a band has a bright core and no edge you can point at. |
+| **the crest** | a swell of brightness travelling along a band's own length on its own slow clock, eleven to twenty-three seconds a pass. **The specks never move**; what moves is where the light is. That is the whole of the glow. |
+| **the kindle** | what answers the hand: the specks within reach of the pointer burn brighter, eased in and out so it arrives rather than switching on. |
 
-**Nothing in it moves, and that is the drawing.** *Ataraxia* is the old word for a mind
-with nothing troubling it, and this page is the exact opposite of Almost Human next door:
-there every speck knows where it belongs and stands somewhere else, and the figure is
-never quite a person. Here every speck stands **exactly** where it belongs and never
-leaves — no stray, no drift, no idle. The margins are as still as stone, because stone is
-what they are. There is a test for it.
+Each band leans six to twenty-six degrees off flat, and the sign is rolled with a memory
+of the last one, so two can lean the same way but three cannot — rolled freely, a run of
+four leaning the same way reads as a pattern rather than as weather.
 
-Two things happen anyway, and both come from outside the statues:
+### What replaced a churchyard
 
-- **The light** — a soft band crossing slowly down the window, one pass every 31 seconds.
-  What it falls on is drawn more plainly. It is the only clock on the page.
-- **The halo** — bring the pointer near a standing and a fine ring comes up over it: over
-  the head of an angel, at the crossing of a cross. Pressed flat onto its own plane, so
-  it reads as a ring seen a little from below rather than a circle drawn on the window.
-  Eased in and out, so it arrives rather than switching on.
+Angels and crosses stood down both margins here for one round, cut out of specks and
+perfectly still — *ataraxia* said as a behaviour. The owner asked for them gone: *"Remove
+the ataraxia crosses and angels."* Nothing of it is in `ataraxia.js` now: no angel, no
+cross, no plinth, no lean, no halo, and no light crossing the window. The glossary keeps
+the words, because they are still what the owner will call the thing they remember.
 
-**It spends no accent colour at all**, like Almost Human. Pineward has its green and ADAR
-its silver; this one is ink on the site's own paper, drawn paler than the crowd next door
-because it is stone.
+The bug that page was built with, and the two rounds of fixing it, went with it — a
+standing that had to be sized to fit the clear part of its margin is not a problem a band
+crossing the whole window can have. It is written up in the git history and is not
+repeated here, because nothing in the file it was about survives.
 
-### The one thing that was wrong, and it was wrong twice
+### How the reading is kept, which is the whole design
 
-**A standing has to fit the margin, and that is what decides how big it is** — not the
-other way round.
+The bands are **not** kept out of the middle of the page. A band that stopped at the
+column and started again on the other side would not be a band, and going behind the text
+is what was asked for. Two things keep the reading instead:
 
-The first version picked a height and let the width fall out of it (`wide = tall * 0.62`,
-118 to 205px). On a 1280 window the margin either side of the writing is 170px, so a
-statue overlapped the column rule's quiet band — where everything is drawn at a twentieth
-— by up to a third of itself. **Half of every angel was not drawn**, and what was left
-read as a smear rather than as a figure. The first screenshot of this page is one thin
-robe and one wing.
+- **The quiet.** A speck standing over the column is drawn at **`QUIET`** — 0.26 — of its
+  strength, easing in over 96px either side so there is no line down the page where it
+  begins.
+- **The bloom stops before the column.** A speck's core is a pixel or two and costs a
+  paragraph almost nothing even at full strength; what would wash out a line of text is
+  the **bloom** around it, which is soft and fourteen times as wide. So the bloom is
+  scaled by `hush³` and is gone long before the writing.
 
-The fix is to hand a standing the room first and size it to fit. And then it was still
-half wrong: the room was taken as the whole margin, while the quiet band starts
-`EASED_IN` *inside* it. So `EASED_IN` came down from Almost Human's 80 to **34** and the
-room is the margin less that. Those two numbers are one decision and have to move
-together — the comment in `ataraxia.js` says so.
+**The bloom was a hard cutoff first and that was wrong.** Refusing to draw one anywhere
+`hush` was under 1 stops it dead at a line you cannot see but can absolutely tell is
+there — and on a 1440 window that line is only 154px in from each edge, so the bands
+glowed in two narrow strips and were a grey dust everywhere else. Cubed, the glow falls
+away as it comes in towards the column.
 
-Why the difference from Almost Human: a wide soft edge is right for a crowd of figures,
-where the point is that they fade off rather than stop. A churchyard is different. A
-standing is a single object with a shape you are meant to read, and half an angel drawn
-at a twentieth is not a soft edge, it is a missing wing.
+### How the glow is drawn
+
+Every speck is a core: one `fillRect`, and cheap. Only a speck brighter than `GLOW_FROM`
+is **also** given a bloom, which is one pre-drawn sprite scaled to size. That is
+deliberate twice over — it keeps the count of expensive draws in the hundreds rather than
+the thousands, and because it is the **crest** that pushes a speck over that line, the
+bloom travels along the band with it. The whole frame is composited with `lighter`, so
+where two bands cross, the crossing is brighter than either.
+
+### The page's colour is five tokens
+
+`.ataraxia-page` redefines `--bg`, `--bg-2`, `--line`, `--ink` and `--muted` on its own
+body class, the way the search page and the contact sheet do. Every `human-*` rule
+already draws in those, so setting them turns the whole page over at once and touches no
+other page.
+
+**Dark gray, not black.** ADAR next door is `#07070a` and means it; this is `#212328`,
+which is dark enough for white additive specks to read as light and light enough not to
+be a hole.
+
+**One shared token had to be added for it.** A handful of rules spend the ink *at an
+alpha* — the hatched placeholder, the dotted leader in a fragrance's row, the rank down
+the side — and `rgba()` cannot take a hex, so they were written out as
+`rgba(23, 23, 15, …)` by hand. They were the one thing on a house page that did **not**
+follow a page turning its tokens over, which is how the rank came out black on dark gray.
+`--ink-rgb` on `:root` is the same colour said as three numbers, and `.ataraxia-page`
+redefines it with the rest.
+
+**It still spends no accent colour at all**, like Almost Human. The bands are white and
+the page is gray.
 
 ## Grande Parfums: fifteen written, two waiting
 
@@ -130,11 +158,38 @@ The test asks that it is a drawn path with curves in it and no straight lines. T
 pedantic and is not: a typed `☆` is indistinguishable from this in a screenshot and is
 exactly the thing the owner did not ask for. Proved by typing one — the test fails.
 
-### It has no ground of its own
+### It has a ground now, and it says nothing about the house
 
-The owner said *"Idk the theme to be honest"*, so none was invented. The page is the house
-shape on the site's own paper. It is **waiting**, not finished; giving it a ground means
-adding a canvas and a script of its own, the way `ataraxia.js` was added.
+The owner asked for *"some particles and effects for grande parfums. subtle designs
+please"*, and the second half of that is the brief. `grande.js` rises a field of fine
+specks slowly up the window — a **drift** — each on a clock of its own, fading in as it
+starts and out as it goes, so nothing on this page ever appears or disappears. About one
+in fourteen is a **mote**: a little larger and a little plainer, so the drift has
+something to catch the eye without anything in it being bright. Bring the pointer near
+and the specks around it **lean** towards it and draw a shade more plainly — they do not
+rush it and they do not stop; they lean.
+
+**It is deliberately not this house said as a behaviour**, which every other drawing on
+the site is. Pineward is a wood, ADAR a void, Almost Human a crowd, Ataraxia bands of
+light. The owner has still not said what this house is — *"Idk the theme to be honest"* —
+and drawing a theme for them would be putting words in their mouth. So this is paper with
+something in the air over it. **When they say what the house is, `grande.js` is the file
+to replace**, not to extend.
+
+It lives on the **window**, not down the document, which is the opposite of the wood on
+Pineward and the bands on Ataraxia and is right for the same reason Almost Human's rain
+is: a thing that is rising reads as weather in the room you are in. Anchored to the
+document it would slide down as you scrolled and up as it rose, and the two would fight.
+
+#### The one thing that was wrong
+
+**A speck's lifetime is worked out from its speed, not rolled apart from it.** The first
+version rolled a speed of 4–17 pixels a second and a life of 9–23 seconds independently,
+which meant a slow speck lived and died in **thirty-six pixels**. Every one of them is
+born at the foot of the window, so the whole drift was a smudge along the bottom edge of
+the page and the other nine-tenths of it was empty. That is exactly what the first
+screenshot looked like. A speck now lives exactly as long as it takes to rise the height
+of the window, and there is a test that counts how many are in the top half.
 
 ### The count is seventeen, not sixteen
 
@@ -170,19 +225,32 @@ that the written one does not.
 npm test -- tests/houses.spec.js
 ```
 
-Thirteen tests. Five of them were **proved against the real fault** before being trusted:
+Fourteen tests. **Six of them were proved against the real fault** before being
+trusted, which is the rule here — and the first one was proved twice, once in each
+direction:
 
-- **`the churchyard is drawn, and every standing fits its margin`** — the bug above. It
-  samples down **eight screens** rather than the first one, and that is the whole reason
-  it works: only two standings are on screen at once and how wide those two happen to be
-  is the seed's business, so measured on the first screen alone the fault shows **nothing
-  at all** (0 pixels in the quiet band either way). Over the whole page it is unmissable:
-  **532 pixels with the fault, 0 with it fixed.** The ceiling is 60.
-- **`nothing in the churchyard drifts`** — the house's name said as a behaviour. It
-  measures how much of the ink is the *same pixels* a second later; the light changes how
-  darkly a speck is drawn but not where it is. With a pixel of drift put in, it fails.
-- **`a halo comes up under the pointer, and goes again`** — the one thing on that page
-  that answers the hand. With `HALO_SPECKS` at 0 and the lift at 1, it fails.
+- **`the bands cross the whole window, and go quiet over the writing`** — the owner's
+  readability ask, measured rather than assumed, and it has two halves that fail in
+  opposite directions. Sampling three zones down eight screens — the clear margin, the
+  column proper, and the easing band in between thrown away — it asks that there **is**
+  ink over the writing (bands kept out of the middle: with `QUIET` at 0, it fails) and
+  that a lit pixel there is far fainter than one beside it (no damping at all: with
+  `QUIET` at 1 it reads **88.1 over the writing against 64.1 beside it**, and fails).
+  **The middle zone matters.** Measured against the outer edge of the easing instead, the
+  first half passed with the bands kept out of the column entirely, because the easing
+  band alone satisfied it.
+- **`Ataraxia is dark gray, and its writing is light on it`** — luminance rather than
+  hex, because a page turned over by redefining its tokens can be turned **half** over,
+  and light-on-light is what that looks like. With the token block cut back to `--bg`
+  alone, it fails on the heading.
+- **`the specks kindle under the pointer, and go out again`** — it counts one corner
+  rather than the whole canvas, because the crest travelling along each band moves the
+  total on its own and would swamp the reading. With `HAND_LIFT` at 1 it fails.
+- **`Grande Parfums has a drift, and it is a quiet one`** — three failures in one, and
+  they pull against each other: there has to **be** a drift, the average speck has to
+  weigh under 90 of 255 (subtle was the whole brief), and a fifth of it has to be in the
+  top half of the window. With the lifetime rolled apart from the speed it reads
+  **28 specks in the top half against 191 in the bottom**, and fails.
 - **`Grande Parfums is in alphabetical order`** — with one fragrance moved out of order,
   it fails.
 - **`the standout star is a drawn path`** — with a typed `☆` in place of the SVG, it
@@ -204,13 +272,30 @@ By hand:
 npm run serve    # then http://localhost:8123/works/ataraxia.html
 ```
 
-Put the pointer on a statue. That is the page.
+Put the pointer on a band and watch the specks under it come up, then leave it alone and
+watch the crest travel. Then read a paragraph with a band crossing behind it — that is
+the thing the whole drawing is arranged around.
+
+```bash
+npm run serve    # then http://localhost:8123/works/grande-parfums.html
+```
+
+And this one is meant to be nearly invisible. If you can see it without looking for it,
+it is too strong.
 
 ## Known issues / TODO
 
 - **Ataraxia has no names and no writing**, and neither has Les Abstraits. Both are
   waiting on the owner, and both say so on every part.
-- **Grande Parfums has no ground.** Waiting on the owner to say what the house is.
+- **Ataraxia's drawing no longer matches the house's stated subject.** The owner said the
+  house's theme is angel statues and crosses, and then asked for the churchyard that drew
+  it to be replaced by the bands. The standfirst still says the subject is statuary,
+  because that is their statement about the house rather than about the page; the two are
+  deliberately allowed to differ and are theirs to reconcile.
+- **Grande Parfums' ground claims no theme.** It is a drift of specks and deliberately
+  says nothing about the house, because the owner still has not said what the house is.
+  It is a holding answer to *"subtle designs please"*, not the house drawn — replace it
+  when they say.
 - **No photographs anywhere.** All three folders in `images/` hold only a README naming
   the files their page is already asking for.
 - **Neither Ataraxia nor Les Abstraits is in the Fragrances table**, because a row needs
