@@ -120,6 +120,11 @@ directions — the contact sheet went dark for one round and came back to white 
 and each time that was a handful of lines rather than a rewrite, and Ataraxia turned dark
 gray the same way.
 
+**`--grid-cell` is the size of the squared ground**, 46px, and it is spent in two places
+that have to agree: the contact sheet's own background and the fragrance reader that
+opens on top of it. A picture on its way back recedes into one of those squares, so if
+the two ever differ it lands on nothing. There is a test.
+
 **There is a sixth token, `--ink-rgb`, and it exists only because `rgba()` cannot take a
 hex.** A handful of shared rules spend the ink at an alpha — the hatched placeholder, the
 dotted leader in a fragrance's row, the rank down the side of a house. Written out by
@@ -644,8 +649,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the two halves** | A window carrying two lists, the house’s own above and Fragrantica’s below, each with its own heading and source. **Haxan** was the first and **all five of Ataraxia** followed, at the owner’s word ("split the exact same way as they were with haxan"). Haxan’s lower list is the only one on the site read off a screenshot the owner sent rather than through a search summary. |
 | **not disclosed yet** | What Ataraxia’s My Doll’s Makeup says in the upper half of its window: the house has published no notes for it, and saying so is different from quietly standing on the fallback alone — which is what the owner asked for. It is the only entry whose FIRST half is a `missing` and whose second is a list. |
 | **the fragrance reader** | What a fragrance in the **Fragrances** view opens into now: not another page but this one, gone blank, with that fragrance’s picture, writing and notes on it and an arrow back. The writing is FETCHED from `works/individual-fragrances.html` rather than copied, so there is still one copy of the owner’s words. `fragrance-reader.js`. |
-| **the flier** | A picture on its way home, on the way back out of the reader: lifted out of the article onto the window at exactly the box it occupied, squared up, and sent receding into a cell of **the grid**. They all fade together once they are home. |
-| **the grid** (the reader) | The faint squared field behind the fragrance reader, sized off the window. It is the reader’s ground AND what the pictures recede into — there was no grid on that page before, and the transition the owner described needs somewhere to go. |
+| **the flier** | A picture on its way home, on the way back out of the reader: lifted out of the article onto the window at exactly the box it occupied, squared up, and sent receding into one square of **the grid**, picked at random and never the same one twice. It comes to rest at exactly one cell's size, on the cell's own corner. They all fade together once they are home. |
+| **the grid** (the sheet) | The squared ground the contact sheet page is ruled into: 46px squares, `--grid-cell` on `:root`, painted by a pair of gradients in `.sheet-page`. **The fragrance reader is ruled into the same ones by the same declaration**, because a picture on its way back recedes into ONE OF THESE SQUARES and would otherwise land on nothing. The reader drew a grid of its own for one round, at about 90px, and it read as a second grid over the first. Its cells are arithmetic rather than elements — a cell is n × `--grid-cell`, not a span in the page. |
 | **the caution** (notes) | The small box that comes up on hovering **Fragrantica** in a notes window: *Fragrantica's notes are not to be trusted as 100% fact.* — the owner's own sentence. A `CAUTION` table in `notes.js` keyed by source name, so it is **only** on the fallback; put it on a house's own page and it stops meaning anything, and there is a test saying so. It stands above the source line because the source is the last thing in a window that scrolls. |
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
 | **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |

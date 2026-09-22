@@ -99,10 +99,20 @@ test("going back sends the picture into the grid, and the list is behind it",
   await page.locator('.index-what a[href*="part-01"]').click();
   await page.waitForTimeout(1500);
 
-  // The grid is there to recede INTO, and it is built off the window
-  // rather than typed in, so this only asks that there is one.
-  const cells = await page.locator(".frag-cell").count();
-  expect(cells, "there should be a grid to go home to").toBeGreaterThan(8);
+  // THE GRID IS THE PAGE'S OWN, and the reader is ruled into the same
+  // squares by the same declaration — which is not a nicety, because a
+  // picture recedes into ONE OF THEM and would otherwise land on
+  // nothing. The two being the same number is the whole of it.
+  const ruled = await page.evaluate(() => ({
+    cell: getComputedStyle(document.documentElement)
+      .getPropertyValue("--grid-cell").trim(),
+    sheet: getComputedStyle(document.body).backgroundSize.split(",")[0].trim(),
+    reader: getComputedStyle(document.querySelector(".frag-reader"))
+      .backgroundSize.split(",")[0].trim(),
+  }));
+  expect(ruled.reader, `the sheet is ${ruled.sheet}, the reader ${ruled.reader}`)
+    .toBe(ruled.sheet);
+  expect(ruled.sheet).toBe(ruled.cell + " " + ruled.cell);
 
   const was = await page.locator(".frag-plate img, .frag-plate > div").first()
     .evaluate((el) => el.getBoundingClientRect().width);
@@ -134,8 +144,25 @@ test("going back sends the picture into the grid, and the list is behind it",
   expect(flying.listBack, "the list should be back before the picture has gone").toBe(true);
   expect(flying.writingGone, "everything but the picture should have faded").toBe(true);
 
+  // AND IT COMES TO REST ON A SQUARE OF THAT GRID, which is the whole
+  // of "recede into one of the squares of the background": both its
+  // corners land on a multiple of the cell, and it is one cell big.
+  await page.waitForTimeout(350);
+  const cell = parseFloat(ruled.cell);
+  const home = await page.evaluate(() => {
+    const f = document.querySelector(".frag-flier");
+    if (!f) return null;
+    const box = f.getBoundingClientRect();
+    return { left: box.left, top: box.top, width: box.width, height: box.height };
+  });
+  expect(home, "it should still be there to look at").toBeTruthy();
+  expect(Math.abs(home.width - cell),
+    `${home.width} against a ${cell} cell`).toBeLessThan(2);
+  expect(home.left % cell, `left ${home.left} is not on the grid`).toBeLessThan(1.5);
+  expect(home.top % cell, `top ${home.top} is not on the grid`).toBeLessThan(1.5);
+
   // AND IT ALL CLEARS UP.
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(1500);
   await expect(page.locator(".frag-flier")).toHaveCount(0);
   await expect(page.locator(".frag-reader")).toBeHidden();
   await expect(page.locator(".index-table")).toBeVisible();

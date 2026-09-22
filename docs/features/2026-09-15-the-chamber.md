@@ -1036,6 +1036,15 @@ before. In here it is dimmed along with everything else, which is what should ha
 
 ## Known issues / TODO
 
+- **`the chapter page is never cut open, it is laid under the mesh` flakes under load.**
+  It failed once in a full-suite run on 2026-09-22 and passed on every run since,
+  including twice in isolation and once against the commit before that round's changes.
+  It samples a heavy canvas animation at a fixed moment, and the suite runs its workers
+  in parallel, so a slow frame moves the thing it is measuring rather than breaking it.
+  **It is a real weakness in the test, not in the page**: if it fails again the fix is to
+  wait for the mesh to have covered the window rather than to sample at a time, not to
+  loosen what it asks for.
+
 - **This page spends no accent of its own, but the shared chrome still does** — the Menu
   trigger, the menu overlay's links and the focus ring are all still `--brass` here,
   because they belong to every page at once. That is the one place the owner's "no orange

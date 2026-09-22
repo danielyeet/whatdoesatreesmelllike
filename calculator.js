@@ -209,7 +209,7 @@
       '<button class="calc-model" type="button" data-model="v1">Modified <i class="mv">IBR</i> (var. 1)</button>' +
       '<div class="calc-model-wrap">' +
         '<button class="calc-model" type="button" data-model="v2">Modified <i class="mv">IBR</i> (var. 2)</button>' +
-        '<p class="calc-caveat" hidden>This variation of the complication is still in the working, and needs to be further test it, so take the results with a grain of salt.</p>' +
+        '<p class="calc-caveat" hidden>This variation of the complication is still in the working, and needs to be further tested, so take the results with a grain of salt.</p>' +
       "</div>" +
     "</div>" +
     '<div class="calc-body" hidden></div>' +

@@ -61,12 +61,31 @@ The owner described it, and it is built exactly as described:
 **One cell each, and never twice the same.** The cells are shuffled and dealt out; two
 pictures receding into the same square would read as one picture rather than as two.
 
-### The grid had to be built
+### The grid is the page's own one
 
-There was no grid on this page. The transition needs somewhere to recede *into*, and a
-blank page has nowhere — so the reader draws one: a faint squared field behind it, sized
-off the window, which is also what gives the reader a ground of its own instead of blank
-paper.
+**The contact sheet is already ruled into squares** — `--grid-cell`, 46px, set on
+`:root` and spent in `.sheet-page` — and the reader is ruled into the same ones by the
+same declaration. So the squares a picture goes home to are the squares that were always
+there.
+
+**It had a grid of its own for one round**, at about 90px, built as a lattice of
+elements. That was written before anyone noticed the page was already ruled, and it read
+as a second grid over the first, which is what it was. The owner said so: *"there already
+exists a background grid. Match the grid you will create with that one."*
+
+Two things follow from matching it, and both are improvements rather than costs:
+
+- **The cells are not elements any more.** The grid is painted by a pair of gradients, so
+  a cell is a sum rather than a thing — the nth column begins at n × cell. A 1440-wide
+  window would otherwise want six hundred spans in the page to be measured and never
+  looked at.
+- **The size is read off the stylesheet** rather than written into the script again. The
+  page's ground and the place a picture lands are then one decision, and there is a test
+  whose whole job is that they are still the same number.
+
+The reader's grid is `background-attachment: fixed`, so it is painted against the window
+rather than scrolling with the reading: the squares a picture goes home to are the
+squares you can see.
 
 ### "Does not replay the animation"
 
@@ -103,10 +122,12 @@ trusted:
 - **`it carries the picture, the writing and the notes`** — the writing's being there at
   all is the fetch, since its text is nowhere in this page's own markup. With the fetched
   writing dropped, it fails.
-- **`going back sends the picture into the grid, and the list is behind it`** — three
+- **`going back sends the picture into the grid, and the list is behind it`** — five
   assertions that fail in different directions. With the picture shrinking without
   squaring it reads **91 × 271** and fails; with the list brought back late it fails on
-  the ordering.
+  the ordering; with the reader ruled at 90px against the page's 46 it says so
+  (*"the sheet is 46px 46px, the reader 90px 90px"*); and with the picture stopped 19px
+  short of a square it fails with *"left 203 is not on the grid"*.
 - **`without the reader the rows are still links to the other page`** — the site's
   standing rule, and the reason the rows were left as anchors rather than turned into
   buttons. The reader changes what a **press** does, not what the page is.
@@ -131,5 +152,7 @@ Press **Fragrances**, then press one. Then press the arrow and watch the picture
 - **The Houses view still navigates.** Pressing a house on the contact sheet opens that
   house's page, as it always has. The owner asked for this for the Fragrances view only,
   and a house is a long page rather than one fragrance.
-- **The grid is only behind the reader**, not behind the table. It comes up with the
-  reader and goes with it. Whether the list should stand on it too is the owner's to say.
+- **The picture comes to rest as one 46px square**, which is what "recede into one of the
+  squares" means literally. If that reads as too small a thing to end on, the honest fix
+  is a bigger `--grid-cell` — and that would move the page's own ground with it, which is
+  the owner's call rather than a number to tune here.

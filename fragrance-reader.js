@@ -53,10 +53,21 @@
 // one continuous movement from the fragrance into the grid, with the
 // list standing behind it as it goes.
 //
-// THE GRID IS THE THING THAT WAS MISSING. There was no grid on this
-// page to recede into, so this file draws one: a faint squared field
-// behind the reader, sized off the window, which is also what gives
-// the reader a ground of its own instead of blank paper.
+// THE GRID IS THE PAGE'S OWN ONE. The contact sheet is already ruled
+// into squares — `--grid-cell`, 46px, set on :root and spent in
+// `.sheet-page` — and the reader is ruled into the same ones by the
+// same declaration. So the squares a picture goes home to are the
+// squares that were always there.
+//
+// AND THE CELLS ARE NOT ELEMENTS. They are worked out: the grid is
+// drawn by a pair of gradients, so a cell is a sum rather than a
+// thing, and a 1440-wide window would otherwise want six hundred
+// spans in the page to be measured and never looked at.
+//
+// IT HAD A GRID OF ITS OWN FOR ONE ROUND, at about 90px, built as a
+// lattice of elements. That was written before anyone noticed the page
+// was already ruled, and it read as a second grid over the first,
+// which is what it was.
 //
 // WITHOUT THIS SCRIPT every row is still a link to the fragrance on
 // its own page, exactly as before. Nothing here is required to read
@@ -73,9 +84,6 @@
   // ============================================================
   // TUNING
   // ============================================================
-  const CELL = 92;              // how big a square of the grid wants to be
-  const CELL_LEAST = 56;        // and the smallest it may become on a phone
-
   const BLANK_MS = 420;         // the page going blank when one is opened
   const COME_MS = 520;          // and the fragrance arriving on it
 
@@ -118,7 +126,6 @@
   reader.hidden = true;
   reader.setAttribute("aria-live", "polite");
   reader.innerHTML =
-    '<div class="frag-grid" aria-hidden="true"></div>' +
     '<article class="frag-in">' +
       '<p class="frag-kicker"><span class="frag-no"></span><span class="frag-house"></span></p>' +
       '<h2 class="frag-name"></h2>' +
@@ -136,34 +143,31 @@
     "</article>";
   view.appendChild(reader);
 
-  const grid = reader.querySelector(".frag-grid");
   const inside = reader.querySelector(".frag-in");
   const plate = reader.querySelector(".frag-plate");
 
-  /** THE SQUARED GROUND, and the thing the pictures go home to. Built
-      off the window rather than off a number typed in, so the cells
-      are about the same size on every screen and there are as many of
-      them as there is room for. */
+  /** THE SQUARES, WORKED OUT RATHER THAN BUILT.
+
+      The grid is painted by two gradients at `--grid-cell` starting at
+      the window's own corner, so a cell is arithmetic: the nth column
+      begins at n × cell. Reading the size off the stylesheet rather
+      than writing it here again is the whole point — the page's ground
+      and the place a picture lands are then one decision. */
   let cells = [];
   function rule() {
-    const wide = reader.clientWidth || window.innerWidth;
-    const tall = reader.clientHeight || window.innerHeight;
-    if (!wide || !tall) return;
-    const want = Math.max(CELL_LEAST, Math.min(CELL, wide / 9));
-    const across = Math.max(3, Math.round(wide / want));
-    const down = Math.max(3, Math.round(tall / want));
-    grid.style.setProperty("--across", across);
-    grid.style.setProperty("--down", down);
-    if (cells.length === across * down) return;
-    grid.innerHTML = "";
-    const made = document.createDocumentFragment();
-    for (let n = 0; n < across * down; n++) {
-      const cell = document.createElement("span");
-      cell.className = "frag-cell";
-      made.appendChild(cell);
+    const wide = window.innerWidth;
+    const tall = window.innerHeight;
+    const said = getComputedStyle(document.documentElement)
+      .getPropertyValue("--grid-cell");
+    const cell = parseFloat(said) || 46;
+    const across = Math.max(1, Math.floor(wide / cell));
+    const down = Math.max(1, Math.floor(tall / cell));
+    cells = [];
+    for (let row = 0; row < down; row++) {
+      for (let col = 0; col < across; col++) {
+        cells.push({ left: col * cell, top: row * cell, width: cell, height: cell });
+      }
     }
-    grid.appendChild(made);
-    cells = [...grid.children];
   }
 
   window.addEventListener("resize", () => { if (open) rule(); });
@@ -309,9 +313,8 @@
       // one movement rather than two: a picture that squared up,
       // stopped, and then set off would read as two decisions.
       fliers.forEach((flier, n) => {
-        const cell = cells[free[n % Math.max(1, cells.length)]];
-        if (!cell) return;
-        const home = cell.getBoundingClientRect();
+        const home = cells[free[n % Math.max(1, cells.length)]];
+        if (!home) return;
         flier.style.transition =
           "left " + RECEDE_MS + "ms cubic-bezier(0.5, 0, 0.2, 1)," +
           "top " + RECEDE_MS + "ms cubic-bezier(0.5, 0, 0.2, 1)," +

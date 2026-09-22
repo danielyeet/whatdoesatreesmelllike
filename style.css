@@ -15,6 +15,13 @@
      how Ataraxia's rank came out black-on-dark-gray. Keep the two
      the same colour. */
   --ink-rgb: 23, 23, 15;
+
+  /* THE SQUARED GROUND. The contact sheet page is ruled into 46px
+     squares, and since 2026-09-22 so is the fragrance reader that
+     opens on top of it — a picture on its way back recedes into ONE
+     OF THESE SQUARES, so the two have to be the same grid or it
+     lands on nothing. One number, read by both. */
+  --grid-cell: 46px;
   --muted: #6d6c62;   /* secondary text */
   --brass: #9c6f35;   /* the one accent color, deepened for contrast on white */
 
@@ -796,10 +803,13 @@ html:has(.sheet-page) { scrollbar-gutter: stable; }
   --ink: #17170f;
   --muted: #6d6c62;
   background:
-    linear-gradient(to right, rgba(23, 23, 15, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(23, 23, 15, 0.035) 1px, transparent 1px),
+    linear-gradient(to right, rgba(var(--ink-rgb), 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--ink-rgb), 0.035) 1px, transparent 1px),
     var(--bg);
-  background-size: 46px 46px, 46px 46px, auto;
+  background-size:
+    var(--grid-cell) var(--grid-cell),
+    var(--grid-cell) var(--grid-cell),
+    auto;
   color: var(--ink);
 }
 
@@ -6684,10 +6694,18 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
    table fades away, the page goes blank, and that fragrance comes up
    on it with its picture, its writing and its notes.
 
-   THE GRID IS THE GROUND, and it is also what the picture goes home to
-   on the way back — see THE WAY BACK in fragrance-reader.js. There was
-   no grid on this page before; the transition the owner described
-   needs somewhere to recede INTO, and a blank page has nowhere.
+   THE GRID IS THE PAGE'S OWN. The contact sheet is ruled into 46px
+   squares (`--grid-cell`, set on :root and spent in `.sheet-page`), and
+   the reader is ruled into the same ones — the SAME declaration, so
+   they cannot drift apart. It is the reader's ground and it is also
+   what a picture goes home to on the way back: it recedes into one of
+   these squares, so the two grids being the same grid is not a
+   nicety.
+
+   IT BRIEFLY HAD A GRID OF ITS OWN, at about 90px, drawn as a lattice
+   of elements. That was written before anyone noticed the page was
+   already ruled, and it looked like a second grid over the first —
+   which is exactly what it was.
    ================================================================== */
 .frag-reader {
   position: fixed;
@@ -6695,7 +6713,18 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   z-index: 20;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background: var(--bg);
+  background:
+    linear-gradient(to right, rgba(var(--ink-rgb), 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--ink-rgb), 0.035) 1px, transparent 1px),
+    var(--bg);
+  background-size:
+    var(--grid-cell) var(--grid-cell),
+    var(--grid-cell) var(--grid-cell),
+    auto;
+  /* The grid is painted against the WINDOW rather than scrolling with
+     the reading, so the squares a picture goes home to are the squares
+     you can see. */
+  background-attachment: fixed;
   opacity: 0;
   transition: opacity 520ms var(--menu-ease);
 }
@@ -6710,17 +6739,6 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 }
 /* Nothing scrolls behind a reader standing over the whole window. */
 body.frag-open { overflow: hidden; }
-
-.frag-grid {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(var(--across, 12), 1fr);
-  grid-template-rows: repeat(var(--down, 8), 1fr);
-  pointer-events: none;
-  z-index: 0;
-}
-.frag-cell { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); opacity: 0.34; }
 
 .frag-in {
   position: relative;
