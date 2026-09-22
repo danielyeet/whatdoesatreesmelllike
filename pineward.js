@@ -1,5 +1,5 @@
 // ============================================================
-// PINEWARD (works/pineward.html only)
+// PINEWARD (houses/pineward.html only)
 //
 // A long piece — an introduction and fifty-two parts — drawn the way
 // the rest of this site draws: hairlines, specks, and the lines

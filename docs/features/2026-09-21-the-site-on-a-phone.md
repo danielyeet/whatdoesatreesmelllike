@@ -5,7 +5,7 @@ Date: 2026-09-21
 Files touched: `node-scene.js`, `structure.js`, `chamber.js`, `contact-sheet.js`,
 `almost-human.js`, `pineward.js`, `adar.js`, `essay.js`, `index-page.js`, `paper.js`,
 `find-ground.js`, `style.css`, `tests/mobile.spec.js` — and in the second round
-`works/almost-human.html` as well.
+`houses/almost-human.html` as well.
 
 **There are two rounds in this report.** The first made the site *run* on a phone. The
 second, below under "The second pass", is the owner going through it on their own phone
@@ -243,7 +243,7 @@ box, the opacity, the z-index, the background, the backdrop-filter and the trans
 the document's own size and any page errors.
 
 **Every page reads `same` at every one of those sizes**, with one exception:
-`works/almost-human.html`, which differs by design — the owner asked for the mark off the
+`houses/almost-human.html`, which differs by design — the owner asked for the mark off the
 head of the page, so the header is 208px shorter and the crowd that is built to fit the
 page is a different crowd. That is not a phone change and it is written up in [the Almost
 Human report](2026-09-20-almost-human.md).

@@ -3,7 +3,7 @@
 // categories/scent-descriptions.html
 //
 // Pressing a fragrance in that table used to LEAVE THE PAGE for
-// works/individual-fragrances.html. The owner asked for it not to:
+// individual-fragrances/individual-fragrances.html. The owner asked for it not to:
 // "i dont want the page for the fragrances in SD to take you to a new
 // page when you click a new fragrance. I want the fragrances to open
 // in page and one by one."
@@ -14,7 +14,7 @@
 // go back.
 //
 // WHERE THE WRITING COMES FROM, AND WHY IT IS FETCHED. It is not
-// copied into this page. `works/individual-fragrances.html` is where a
+// copied into this page. `individual-fragrances/individual-fragrances.html` is where a
 // fragrance's writing lives, and this view FETCHES that page and lifts
 // the part out of it. Two copies of the owner's own words is the one
 // thing this site has a standing rule against — the index and the
@@ -109,7 +109,7 @@
   // sentence, and moving it is moving four numbers.
   const HOME = { from: 0.56, to: 0.94, top: 0.24, down: 0.76 };
 
-  const WHERE = "../works/individual-fragrances.html";
+  const WHERE = "../individual-fragrances/individual-fragrances.html";
 
   let sheet = null;             // that page, once it has been fetched
   let fetching = null;

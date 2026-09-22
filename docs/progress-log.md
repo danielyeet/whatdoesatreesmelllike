@@ -11,6 +11,7 @@ was undone later by someone who didn't know why it was made.
 
 | date | entry | what it covers |
 |---|---|---|
+| 2026-09-22 | [The houses folder](features/2026-09-22-the-houses-folder.md) | the six houses moved into `houses/` and the individual fragrances into a folder of their own, the five links that crossed the new boundary, the seven forwarding pages left at the old addresses, and the anchor test that had quietly stopped checking anything |
 | 2026-09-22 | [The fragrance reader](features/2026-09-22-the-fragrance-reader.md) | a fragrance from the Fragrances view opening IN the page instead of navigating away, where its writing is fetched from, and the way back — the picture squaring up and receding into a grid |
 | 2026-09-21 | [View notes, and the Fragrances page](features/2026-09-21-the-notes.md) | the notes window on every fragrance, where its data lives, the source hierarchy behind it — the house's own page first, Fragrantica only if that fails — Almost Human's olfactory landscape beside its notes, the two-part windows Haxan and all five of Ataraxia carry, which version a reformulated fragrance's notes belong to, and the two that were looked up and came back with nothing |
 | 2026-09-21 | [Ataraxia, Grande Parfums and Les Abstraits](features/2026-09-21-the-newer-houses.md) | three houses in one round, the shared house shape they brought with them, Ataraxia's bands of light on dark gray (which replaced a churchyard) and Grande Parfums' drift |

@@ -4,12 +4,12 @@ Date: 2026-09-21
 
 Files: `house.js` (~313 lines, new), `ataraxia.js` (~385 lines, rewritten 2026-09-22),
 `grande.js` (~265 lines, new 2026-09-22),
-`works/ataraxia.html`, `works/grande-parfums.html`, `works/les-abstraits.html` (all new),
+`houses/ataraxia.html`, `houses/grande-parfums.html`, `houses/les-abstraits.html` (all new),
 the `house-*` and `human-star` rules in `style.css`, `tests/houses.spec.js` (new),
 `images/Ataraxia/`, `images/Grande/`, `images/Les-Abstraits/`; and the four places a new
 house has to be added — the frame and the Fragrances rows in
 `categories/scent-descriptions.html`, the `PAGES` lines in `search-page.js`, and the
-footer chain through `works/almost-human.html`.
+footer chain through `houses/almost-human.html`.
 
 ## What it is
 
@@ -269,7 +269,7 @@ by name so it shows the moment that file is there.
 By hand:
 
 ```bash
-npm run serve    # then http://localhost:8123/works/ataraxia.html
+npm run serve    # then http://localhost:8123/houses/ataraxia.html
 ```
 
 Put the pointer on a band and watch the specks under it come up, then leave it alone and
@@ -277,7 +277,7 @@ watch the crest travel. Then read a paragraph with a band crossing behind it —
 the thing the whole drawing is arranged around.
 
 ```bash
-npm run serve    # then http://localhost:8123/works/grande-parfums.html
+npm run serve    # then http://localhost:8123/houses/grande-parfums.html
 ```
 
 And this one is meant to be nearly invisible. If you can see it without looking for it,

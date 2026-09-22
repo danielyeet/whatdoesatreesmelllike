@@ -249,7 +249,7 @@ gain.
 ## The anchors into a house, and the bug that hid behind them
 
 A fragrance in the Fragrances table points at that fragrance **where it stands in its
-house's own page** — `../works/pineward.html#part-37` — so the index and the houses are
+house's own page** — `../houses/pineward.html#part-37` — so the index and the houses are
 two ways into the same writing rather than two copies of it. That is the right design and
 it has one sharp edge: those anchors are the part's *number*, and the numbers are in the
 house's markup rather than counted, because they are the owner's.
@@ -260,7 +260,7 @@ its fragrance used to have. Following **Murkwood** from the search opened **Noki
 table's own numbering was stale with it.
 
 Nothing would have caught that. The repository's link test asks whether
-`works/pineward.html` exists — it cannot see the `#part-37` on the end. One browser test
+`houses/pineward.html` exists — it cannot see the `#part-37` on the end. One browser test
 failed, by accident, because it happened to follow that one search answer.
 
 **There is a test for it now**, in `repository.spec.js`: every `#part-NN` link anywhere in
@@ -301,7 +301,7 @@ something else entirely: *"It should NOT be a page that contains all the fragran
 website, but rather an independent fragrance review page where I put information about
 perfumes that do not belong in any house on the houses tab."*
 
-So the table holds **seven** now, and they open into `works/individual-fragrances.html`
+So the table holds **seven** now, and they open into `individual-fragrances/individual-fragrances.html`
 rather than into the houses. The layout did not change at all — it is the same board, the
 same sortable columns, the same search — because the owner asked for the *contents* of the
 table to change (*"delete the contents of that table"*), not the shape of it.

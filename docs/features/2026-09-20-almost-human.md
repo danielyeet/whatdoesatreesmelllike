@@ -2,7 +2,7 @@
 
 Date: 2026-09-20
 
-Files: `almost-human.js` (~1,170 lines), `works/almost-human.html`, the `human-*` block in
+Files: `almost-human.js` (~1,170 lines), `houses/almost-human.html`, the `human-*` block in
 `style.css`, `images/Almost-Human/`, `tests/almost-human.spec.js`; and the three places a
 new house has to be added — the frame and the Fragrances row in
 `categories/scent-descriptions.html`, the `PAGES` line in `search-page.js`, and ADAR's
@@ -424,7 +424,7 @@ being trusted:
 By hand:
 
 ```bash
-npm run serve    # then http://localhost:8123/works/almost-human.html
+npm run serve    # then http://localhost:8123/houses/almost-human.html
 ```
 
 Put the pointer on a figure and take it away again. That is the page.

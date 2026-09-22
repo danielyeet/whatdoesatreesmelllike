@@ -27,7 +27,7 @@ const PAGES = [
   // without it — the picture is taken off the page and the placeholder
   // shown — so a picture the owner has not added yet is an expected
   // 404 rather than a fault. See images/README.txt.
-  { url: "/works/adar.html", root: "../", title: /ADAR/ },
+  { url: "/houses/adar.html", root: "../", title: /ADAR/ },
   { url: "/works/theory-01.html", root: "../", title: /Architecture of Sunscreen/ },
   { url: "/works/theory-02.html", root: "../", title: /Architecture of Sweat/ },
   { url: "/works/theory-03.html", root: "../", title: /Note Dissemination Framework/ },

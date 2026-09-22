@@ -14,9 +14,9 @@
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 
-const ATARAXIA = "/works/ataraxia.html";
-const GRANDE = "/works/grande-parfums.html";
-const ABSTRAITS = "/works/les-abstraits.html";
+const ATARAXIA = "/houses/ataraxia.html";
+const GRANDE = "/houses/grande-parfums.html";
+const ABSTRAITS = "/houses/les-abstraits.html";
 const SHEET = "/categories/scent-descriptions.html";
 
 test.beforeEach(async ({ page }) => {
@@ -42,12 +42,12 @@ test("all six houses stand on the contact sheet, in their own order",
   const hrefs = await page.$$eval(".sheet-frame:not([data-open='no'])", (all) =>
     all.map((a) => a.getAttribute("href")));
   expect(hrefs).toEqual([
-    "../works/pineward.html",
-    "../works/adar.html",
-    "../works/almost-human.html",
-    "../works/ataraxia.html",
-    "../works/grande-parfums.html",
-    "../works/les-abstraits.html",
+    "../houses/pineward.html",
+    "../houses/adar.html",
+    "../houses/almost-human.html",
+    "../houses/ataraxia.html",
+    "../houses/grande-parfums.html",
+    "../houses/les-abstraits.html",
   ]);
 });
 

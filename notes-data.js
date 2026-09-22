@@ -42,7 +42,7 @@
 window.FRAGRANCE_NOTES = {
 
   // ============================================================
-  // THE INDIVIDUAL FRAGRANCES — works/individual-fragrances.html
+  // THE INDIVIDUAL FRAGRANCES — individual-fragrances/individual-fragrances.html
   // The ones that belong to no house on the Houses view.
   // ============================================================
   "individual:01": {
@@ -109,7 +109,7 @@ window.FRAGRANCE_NOTES = {
   },
 
   // ============================================================
-  // ALMOST HUMAN — works/almost-human.html
+  // ALMOST HUMAN — houses/almost-human.html
   //
   // NOT ONE OF THE FIVE HAS A PYRAMID, and that is the house rather
   // than a gap in the research: it presents its fragrances as an
@@ -164,7 +164,7 @@ window.FRAGRANCE_NOTES = {
   },
 
   // ============================================================
-  // ADAR — works/adar.html
+  // ADAR — houses/adar.html
   //
   // This house DOES divide, and its own site is where the division is
   // — which is the source the owner asked for first.
@@ -241,7 +241,7 @@ window.FRAGRANCE_NOTES = {
   },
 
   // ============================================================
-  // ATARAXIA — works/ataraxia.html
+  // ATARAXIA — houses/ataraxia.html
   //
   // EVERY ONE OF THESE IS TWO LISTS, which the owner asked for by name
   // ("split the exact same way as they were with haxan"): the HOUSE'S
@@ -321,7 +321,7 @@ window.FRAGRANCE_NOTES = {
   },
 
   // ============================================================
-  // LES ABSTRAITS — works/les-abstraits.html
+  // LES ABSTRAITS — houses/les-abstraits.html
   //
   // Every one of these comes off the house's own site, which publishes
   // a divided list for all four. The house is one perfumer's: every
@@ -357,7 +357,7 @@ window.FRAGRANCE_NOTES = {
   },
 
   // ============================================================
-  // GRANDE PARFUMS — works/grande-parfums.html
+  // GRANDE PARFUMS — houses/grande-parfums.html
   // ============================================================
   "grande:05": {
     missing: "I could not find this fragrance online.",
@@ -449,7 +449,7 @@ window.FRAGRANCE_NOTES = {
   },
 
   // ============================================================
-  // PINEWARD — works/pineward.html
+  // PINEWARD — houses/pineward.html
   //
   // THIS HOUSE PUBLISHES NO PYRAMIDS AT ALL. Its own Master Scent List
   // and Fragrantica both give one undivided list per fragrance, so

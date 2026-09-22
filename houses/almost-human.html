@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Almost Human — The Taste of Aldehydes</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  ALMOST HUMAN — the third house in Scent descriptions. FIVE
+  FRAGRANCES.
+
+  HOW IT IS LAID OUT. The same shape as Pineward and ADAR — a head, an
+  introduction, and then the fragrances, each compacted to a number, a
+  small square and a title until it is opened — on a ground of its own.
+  Pineward has a wood and ADAR has a void; this one has a CROWD:
+  figures standing down both margins the whole length of the page, and
+  every one of them drawn entirely in specks by almost-human.js.
+
+  THE HOUSE'S NAME IS THE DRAWING'S BEHAVIOUR. Every speck knows
+  exactly where it belongs and stands somewhere else, so a figure is
+  always nearly a person and never quite one. Bring the pointer near
+  and the specks come home — the figure resolves under your hand and
+  comes apart again when you leave. Hold one together and it starts to
+  fail, and WHATEVER PART OF IT FAILS STANDS AS THE HOUSE'S MARK for
+  the beat: the logo is nowhere else on this page.
+
+  THIS PAGE SPENDS NO ACCENT COLOUR. Pineward has its green and ADAR
+  its silver; this one is ink on the site's own paper, and what it
+  spends instead is density.
+
+  THE RANK down the left is Pineward's trunk and ADAR's sounding by a
+  third name: the line fills from the very first pixel of scroll, and
+  the ticks count the fragrances you have been past. Two readings, said
+  separately, on all three houses.
+
+  THE WRITING IS THE OWNER'S, and most of it is not written yet. Where
+  a paragraph is still waiting it says so, in a dashed box
+  (<p class="human-waiting">), rather than standing in as prose — an
+  unfinished house should read as unfinished, not as thin.
+
+  THE PHOTOGRAPHS. Each fragrance names the file it wants in
+  images/Almost-Human/ and shows it the moment that file is there.
+  Until then the page takes the picture off itself and leaves the
+  hatched placeholder, so a house whose pictures are still coming looks
+  unfinished rather than broken. The small square in the list is
+  always a SQUARE, cropped round its subject rather than squashed;
+  `--focus` on the thumb says which part of the picture to keep.
+
+  TO WRITE A PART: replace its title and its writing, and point the two
+  <img> tags at your picture. Where a fragrance is written in stages —
+  top, mid, base, a sidenote — the stage is a <p class="human-stage">
+  label above the paragraphs it belongs to, exactly as on ADAR.
+
+  TO ADD ONE: copy a whole <details class="human-part"> block and
+  renumber the ones after it — the numbers are in the markup, so they
+  are yours. IF YOU RENUMBER, re-point the Fragrances table in
+  categories/scent-descriptions.html in the same turn: it links at
+  #part-NN, so a part removed from the middle silently sends every
+  link after it to the wrong fragrance. There is a test for that.
+
+  TWO BUTTONS PER FRAGRANCE, and this is the only house with two.
+  Almost Human publishes no notes at all — it says so itself, and works
+  in OLFACTORY LANDSCAPES: five impressions rather than a list of
+  materials. So each of the five carries an OLFACTORY LANDSCAPE button
+  with the house's own five in it, and a VIEW NOTES button after it
+  with Fragrantica's reading of the same fragrance. Both live in
+  notes-data.js; the landscape is the `landscape` field.
+
+  WITHOUT JAVASCRIPT this page is all of its writing: the parts are
+  real <details> elements, and the drawing carries nothing to read.
+-->
+<body class="human-page">
+
+<canvas class="human-field" aria-hidden="true"></canvas>
+
+<header class="human-head">
+  <p class="human-kicker">Scent descriptions · 03</p>
+  <h1>Almost Human<br><em>Abstraction done quite well</em></h1>
+  <p class="human-standfirst">
+    Almost Human is a house launched in 2026, with fragrances that conceptualize certain
+    emotions or situations. I smelled all of their first collection and I think they did a
+    great job.
+  </p>
+  <!-- THE HOUSE'S MARK IS NOT PRINTED HERE. It stood at the head of
+       this piece for a round; the owner asked for it to be shown by
+       the hand instead, the way ADAR's mark is shown by the pointer
+       passing over the void. So the only place it appears is in the
+       crowd: hold a figure together and whatever part of it is faulty
+       glitches into the logo. almost-human.js reads it off
+       images/Almost-Human/house-web/ah-logo.webp, the 800px copy of
+       the owner's AH_Logo_Black.jpg (3125 x 3125).
+
+       The photograph that stood here before that, `This one`, is on
+       the contact sheet now: it is this house's picture in
+       categories/scent-descriptions.html. -->
+</header>
+
+<!-- A CLEARING FOR THE CROWD, and the only thing on this page that is
+     here to be empty. The figures stand over nothing, which on a wide
+     window means the margins either side of the column; below about
+     eleven hundred there are no margins, so the page makes one band
+     of room on purpose and the crowd stands in that instead. It is
+     nothing at all on a wide window — see .human-gap in style.css. -->
+<div class="human-gap" aria-hidden="true"></div>
+
+<section class="human-intro" id="introduction" aria-labelledby="introduction-name">
+  <p class="human-section-mark">00</p>
+  <h2 id="introduction-name">Introduction</h2>
+  <div class="human-text">
+    <p>Almost Human is a house that really embraces abstraction and conceptualization in perfumery; and as an opponent of abstraction in any art form (generalizing of course), I hate to admit that I did love this house.</p>
+    <p>The first collection (which is what I smelled at the time of writing this) takes you through a journey of emotional self reformation in a digital world of some abstract future, and each fragrance plays some role in the general story. Now; I do not subscribe to that personally, so I will just tell you what I thought:</p>
+    <p>Despite the abstraction, the use of ai in the creation of imagery to support the fragrances, and the use of abstract notes that do not make sense to me (such as &ldquo;green mist&rdquo; and &ldquo;quiet air&rdquo;), the fragrances of this house are great. They are simple, and they achieve the equally simple goal they have. The fragrance that is supposed to smell like walking through the scorching desert smells exactly like that; the fragrance that smells like some specific personal iteration of rain achieves that too; and you get the point.</p>
+    <p>In the coming paragraphs, you will see my analysis of each perfume independently from the others, as a perfume, and not as a body of work; because I feel if I did take into account the AI, and the somewhat pompous abstraction, then some points would have to be deducted. However, I do feel obliged to repeat that that is a personal grudge I hold against the latter, and if any house managed to capture conceptualization, then Almost Human would be a damn good contender for the top spot.</p>
+  </div>
+</section>
+
+<!-- THE FIVE, in the order the owner named them. -->
+<div class="human-parts">
+
+  <!-- COPY ONE WHOLE <details> BLOCK TO ADD ANOTHER, and renumber the
+       ones after it. -->
+  <details class="human-part" id="part-01">
+    <summary>
+      <span class="human-no">01</span>
+      <span class="human-thumb" style="--focus: 50% 42%" aria-hidden="true">
+        <img src="../images/Almost-Human/burning-bridges.jpg" alt="">
+      </span>
+      <span class="human-title">Burning Bridges</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/burning-bridges.jpg" alt="Burning Bridges">
+        <figcaption>Burning Bridges</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-stage">Top</p>
+        <p>This is smokey, with citrus and some spices. It is simple yet unique. I could see this being the smell of acrid ground, in 50+ degree celcius weather. Though, I have a need to specify that this setting is captured during a windy day; windy because it does not feel dense, and day because there is a certain element of airiness to this (probably introduced by the citruses).</p>
+        <p>The citruses and smoke do combine nicely too, and there is some trigeminal activation.</p>
+        <p class="human-stage">Mid 1</p>
+        <p>It does turn more citrussy in the middle, and in a really nice way. It combines with the spices and smoke and becomes simple and very nice. I feel this isnt much different from my top description, so i have to emphasize that the character of the combination changes. It becomes somewhat more mainstream and more wearable. It drops the concept a little and takes a conventional direction; and becomes more pleasant.</p>
+        <p class="human-stage">Mid 2</p>
+        <p>It starts smelling sweet at some point, and surprisingly so, because it is a type of acrid sweetness that is seldom found in simple perfumes. It maintains some background smokiness too, as well as that trigeminal activation.</p>
+        <p class="human-stage">Dry Down</p>
+        <p>It is very pleasant when it dries down. It is sweet, smoky and unobtrusive and light.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-02">
+    <summary>
+      <span class="human-no">02</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Almost-Human/dear-future.jpg" alt="">
+      </span>
+      <span class="human-title">Dear Future</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/dear-future.jpg" alt="Dear Future">
+        <figcaption>Dear Future</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-stage">Top</p>
+        <p>One of the nicest ozone centered fragrances I have smelled so far. Maaaaaaaybe i can smell some aldehydes too, or spices or ambers. I am not sure. It is equally warm as it is airy.</p>
+        <p>If I were to consider it to be like something, I can imagine Aeolus, the Greek god of the wind, to smell like this. Here is a list of stuff it also smells like:</p>
+        <ul class="human-list">
+          <li>Skin of a person with prosthetics</li>
+          <li>A robot</li>
+          <li>A digital river</li>
+          <li>A stray ray of sunshine</li>
+          <li>High altitudes</li>
+        </ul>
+        <p class="human-stage">Mid</p>
+        <p>in the middle, it turns way darker, real fast. It starts smelling more aldehydic/ambery. The high altitudes are now combined with a cloudy smell. The ozonic character persists, but the aldehydic becomes more prominent.</p>
+        <p class="human-stage">Dry down?</p>
+        <p>I feel that as this fragrance dries down, it leans more and more into smelling like some iteration of skin, but it is by no means a skin scent. I think it could be one if you would center it around a relatively large dose of aldehydes. It smells spicy and electric, but also like skin. As it develops in the dry down, it turns warmer and warmer.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-03">
+    <summary>
+      <span class="human-no">03</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Almost-Human/desert-hope.jpg" alt="">
+      </span>
+      <span class="human-title">Desert Hope</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/desert-hope.jpg" alt="Desert Hope">
+        <figcaption>Desert Hope</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-stage">Top</p>
+        <p>This is an amazing fragrance. It conveys the scorching sensation of the sun so very well it is incredible; with the image I interpret is one of being barraged by the sun rays and having your sweat not be able to keep up with the heating while traversing some seemingly endless desert.</p>
+        <p>It is also a sweaty fragrance: dense and cumin-y; but not carnal (<a href="../works/theory-02.html">click here</a> for a look into the architecture of sweat fragrances).</p>
+        <p>Additionally, I know what different sands smell like in different parts of the world, but this is not it. That is not necessarily a bad thing, because as I have stated in the introduction, this house attempts to conceptualize stuff rather than be direct and interpretable, rather than taking on a more realistic recreative approach. I did also confirm this with the owner; who was very nice and enthusiastic about it.</p>
+        <p>Do I think it achieves that conceptual smell of sand somewhere within this fragrance? 100%!</p>
+        <p class="human-stage">Mid</p>
+        <p>It is so damn strong. In my opinion, unwearable but incredible as an idea and fragrance. The cumin and the warmth really give it a lot of oomph in the mid.</p>
+        <p class="human-stage">Dry Down</p>
+        <p>When it settles down a little, it becomes more wearable, as you&rsquo;re left with a cumin-y solar profile.</p>
+        <p>It is a very interesting scent.</p>
+        <p>In <a href="../works/theory-02.html#section-03">The Architecture of Sweat</a> you place it as cumin-y (c), dark (b) and natural (b) &mdash; adding that it could be argued it is carnal (a), and that you do not feel comfortable presenting an absolute answer.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-04">
+    <summary>
+      <span class="human-no">04</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Almost-Human/ritual-code.jpg" alt="">
+      </span>
+      <span class="human-title">Ritual Code</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/ritual-code.jpg" alt="Ritual Code">
+        <figcaption>Ritual Code</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-stage">Top</p>
+        <p>You get a faceful of smoky, earthy animalics. Despite an initial density, it turns airy and quite green. Not galbanum or oleoresins green, but like a dew-in-the-morning-grass green. This facet is also earthy in some sense.</p>
+        <p class="human-stage">Mid</p>
+        <p>It also is a little resinous, though ambiguously so, as I cannot quite place the type of resins. It feels like it borrowed some of the deeper ambery character of some resin, while trying to omit the brighter parts of it.</p>
+        <p>I can see this smelling like an overgrown train station, with the plants having cracked the concrete to grow, and the animals having populated this once very mechanical area.</p>
+        <p class="human-stage">Dry Down</p>
+        <p>It does turn a little more resinous, but remains pleasant. On the dry-down it comes close to being a semi conventional winter scent.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-05">
+    <summary>
+      <span class="human-no">05</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Almost-Human/silent-rain.jpg" alt="">
+      </span>
+      <span class="human-title">Silent Rain</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Almost-Human/silent-rain.jpg" alt="Silent Rain">
+        <figcaption>Silent Rain</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-stage">Top</p>
+        <p>If youre driving a car, something unspectacular, in the hills in between villages in a country like the Czech Republic or Slovenia, where there are fields and forests on either side of you, and it has just rained lightly on this snaked road, just enough to carry the smell of everything aforementioned into the now damp end-of-summer air, then this is what you would smell. I know this is specific, but I can also vouch for this being a 1:1. Take my word.</p>
+        <p>It starts off delightingly bright and wet, and then within seconds it fades into this intrusive wet and green (here the green character is more like dew in the morning grass rather than galbanum, oleoresins or pine). I can 100% tell that it uses amboricinide (unrelated to ambroxide by the way), but in the perfect amount. I find that in excess, ambrocinide can smell sour and like rotten detritus and forest floor.</p>
+        <p>In my search for a fragrance that matches the vibe I described earlier, I have found this to be the closest perfume yet. Honorable mentions I have come across include Filippo Sorcinelli&rsquo;s Nebbia Spesa and NVRNAGN&rsquo;s Deluge, both of which unfortunately overdose on the ambrocinide to the point where it smells rancid and dense to the point of unpleasantness. Silent Rain doesn&rsquo;t do that.</p>
+        <p class="human-note">Silent Rain is my favorite of the five.</p>
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- Back to the category on the left, on to the next house on the
+     right. The chain runs 01 Pineward → 02 ADAR → 03 Almost Human →
+     04 Ataraxia → 05 Grande Parfums → 06 Les Abstraits, and the last
+     one wraps round to the first. -->
+<footer class="human-foot">
+  <a class="human-back" href="../categories/scent-descriptions.html">← Scent descriptions</a>
+  <a class="human-on" href="ataraxia.html">Continue to 04 · Ataraxia →</a>
+</footer>
+
+<script>window.SITE_ROOT = "../"; window.HOUSE_NOTES = "almost-human";</script>
+<script src="../nav.js"></script>
+<script src="../search.js"></script>
+<script src="../almost-human.js"></script>
+<script src="../notes-data.js"></script>
+<script src="../notes.js"></script>
+</body>
+</html>

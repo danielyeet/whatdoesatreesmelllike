@@ -1,5 +1,5 @@
 // ============================================================
-// ALMOST HUMAN (works/almost-human.html)
+// ALMOST HUMAN (houses/almost-human.html)
 //
 // The third house: five fragrances on a ground that is a CROWD rather
 // than a wood or a void. These check the things that can be wrong
@@ -16,7 +16,7 @@
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 
-const HOUSE = "/works/almost-human.html";
+const HOUSE = "/houses/almost-human.html";
 
 test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);

@@ -4,7 +4,7 @@ Date: 2026-09-17 (`aa55557`, *Give each house and category its own folder of pic
 
 Files: `images/` (the `ADAR/`, `Pineward/`, `Favorites/`, `Individual Fragrances/` and
 `Theories/` folders, each empty one carrying a `README.txt`; `images/README.txt`),
-`works/adar.html`, `works/pineward.html`, `works/theory-01.html`, `works/theory-02.html`,
+`houses/adar.html`, `houses/pineward.html`, `works/theory-01.html`, `works/theory-02.html`,
 `works/theory-03.html`, `adar.js`
 
 ## What it is
@@ -13,7 +13,7 @@ Files: `images/` (the `ADAR/`, `Pineward/`, `Favorites/`, `Individual Fragrances
 fourteen pictures presently on the site live in `images/ADAR/`, since every one of them
 is ADAR's — the thirteen its fragrances ask for (the two extra ADHD photographs
 included) and the house's own mark. Everything that names a picture points there: the
-twenty-four live `<img>` tags on `works/adar.html`, the sigil `adar.js` draws inside the
+twenty-four live `<img>` tags on `houses/adar.html`, the sigil `adar.js` draws inside the
 void, and the commented-out placeholder tags on the Pineward and theory pages. The four
 folders with no pictures in them yet each carry a `README.txt` saying what belongs
 there.
@@ -48,7 +48,7 @@ suite:
 
 ```bash
 npm test -- tests/adar.spec.js    # the mark in the void, and every fragrance's photograph
-python3 -m http.server 8000       # then open http://localhost:8000/works/adar.html
+python3 -m http.server 8000       # then open http://localhost:8000/houses/adar.html
 ```
 
 With the page open, confirm the pictures are served from their new place with nothing

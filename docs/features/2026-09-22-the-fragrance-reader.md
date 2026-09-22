@@ -9,7 +9,7 @@ out, `tests/fragrance-reader.spec.js` (new).
 ## What it is
 
 Pressing a fragrance in the **Fragrances** view of Scent descriptions used to leave the
-page for `works/individual-fragrances.html`. The owner asked for it not to:
+page for `individual-fragrances/individual-fragrances.html`. The owner asked for it not to:
 
 > i dont want the page for the fragrances in SD to take you to a new page when you click
 > a new fragrance. I want the fragrances to open in page and one by one.
@@ -24,7 +24,7 @@ asked to go away.
 
 ## Where the writing comes from, and why it is fetched
 
-It is **not** copied into this page. `works/individual-fragrances.html` is where a
+It is **not** copied into this page. `individual-fragrances/individual-fragrances.html` is where a
 fragrance's writing lives, and the reader **fetches that page and lifts the part out of
 it**.
 

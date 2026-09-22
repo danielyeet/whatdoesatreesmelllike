@@ -68,7 +68,7 @@ actually called that.
 ## An answer opens the thing itself
 
 `openFromHash(selector)`. A result links at one fragrance —
-`works/pineward.html#part-39` — and the page it lands on opens that part through its
+`houses/pineward.html#part-39` — and the page it lands on opens that part through its
 own summary, so it opens gently like everything else, brings it to the middle of the
 window and marks it for a moment. Both houses call it on arrival (`pineward.js` with
 `.pine-part`, `adar.js` with `.adar-part`). Being taken to a page with the thing you
@@ -175,5 +175,5 @@ be left looking at an empty page with no way of telling why.
   search has.
 - There is a **second** hand-maintained list of pages, unrelated to this one: `PAGES` in
   `tests/pages.spec.js`, which decides what gets a clean-load check. Adding a page means
-  remembering both, and they are already out of step — `works/pineward.html` is in the
+  remembering both, and they are already out of step — `houses/pineward.html` is in the
   search's list but not the test's.

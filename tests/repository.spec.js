@@ -140,7 +140,7 @@ test("the site needs no build step to publish", async () => {
 test("every link into a fragrance lands on that fragrance", async () => {
   // THE INDEX AND THE HOUSES ARE TWO WAYS INTO THE SAME WRITING, which
   // means the Fragrances table links at a part of a house's own page by
-  // its anchor: ../works/pineward.html#part-37. Nothing checks those.
+  // its anchor: ../houses/pineward.html#part-37. Nothing checks those.
   // The link test above only asks whether pineward.html exists — it
   // cannot see the "#part-37" on the end of it.
   //
@@ -156,8 +156,8 @@ test("every link into a fragrance lands on that fragrance", async () => {
   // part an anchor points at is the part whose title the link is
   // written with.
   const plain = (html) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  const houses = ["works/pineward.html", "works/adar.html"];
-  const parts = {};      // "works/pineward.html" -> { "part-37": "Murkwood" }
+  const houses = ["houses/pineward.html", "houses/adar.html"];
+  const parts = {};      // "houses/pineward.html" -> { "part-37": "Murkwood" }
 
   for (const house of houses) {
     const src = fs.readFileSync(path.join(ROOT, house), "utf8");
@@ -176,22 +176,122 @@ test("every link into a fragrance lands on that fragrance", async () => {
   }
 
   const wrong = [];
+  let looked = 0;
   for (const page of htmlFiles()) {
     const src = withoutComments(fs.readFileSync(page, "utf8"));
-    const link = /<a href="[^"]*?(works\/(?:pineward|adar)\.html)#(part-\d+)"[^>]*>([^<]*)<\/a>/g;
+    const link = /<a href="[^"]*?(houses\/(?:pineward|adar)\.html)#(part-\d+)"[^>]*>([^<]*)<\/a>/g;
     for (const found of src.matchAll(link)) {
+      looked += 1;
       const [, house, anchor, words] = found;
       const title = parts[house][anchor];
       const from = path.relative(ROOT, page);
       const said = plain(words);
       if (!title) wrong.push(`${from}: #${anchor} is not a part of ${house}`);
-      // Starts with, rather than equals: a link may carry the first of
-      // a fragrance's two names where the part carries both.
-      else if (!title.startsWith(said)) {
+      // EITHER MAY BE THE LONGER, and both happen here:
+      //   the link is SHORTER when it carries the first of a
+      //   fragrance's two names and the part carries both;
+      //   the link is LONGER when it names the house as well, which is
+      //   how a link reads inside a sentence — theory-03 says "Amber
+      //   Zero by ADAR" of a part titled "Amber Zero".
+      // Only the shorter being a prefix of the longer is required, so a
+      // link saying "Murkwood" that lands on "Noki" still fails, which
+      // is the fault this whole test exists for.
+      else if (!title.startsWith(said) && !said.startsWith(title)) {
         wrong.push(`${from}: "${said}" points at #${anchor}, which is "${title}"`);
       }
     }
   }
 
   expect(wrong, "links pointing at the wrong fragrance").toEqual([]);
+  // AND IT MUST ACTUALLY HAVE LOOKED AT SOMETHING. This regex names the
+  // house pages by path, and when they moved out of `works/` into
+  // `houses/` it went on matching nothing at all — passing while
+  // checking nothing, which is worse than failing outright. A test that
+  // can quietly stop testing should say so.
+  //
+  // GREATER THAN NOTHING, and not a count: that is precisely the
+  // failure being guarded against, and a number would fail the day the
+  // owner rewrites a sentence. For the record there are three today,
+  // all of them ADAR fragrances named in theory-03's prose. The
+  // Fragrances table used to be the bulk of these and stopped pointing
+  // into the houses on 2026-09-21, when it became the way in to the
+  // individual fragrances instead.
+  expect(looked, "no links into a fragrance were found to check at all")
+    .toBeGreaterThan(0);
+});
+
+/* THE SEVEN FORWARDING PAGES.
+   The houses moved out of `works/` into `houses/` on 2026-09-22, and
+   the individual fragrances into a folder of their own, so that the
+   repository sorts by what a thing IS. That changed their public web
+   addresses, and anything already linked or bookmarked at an old one
+   still has to work — so a signpost was left at each.
+
+   What this pins is the part that is easy to get wrong: a signpost must
+   carry THE ANCHOR across. The Fragrances table links at a part of a
+   house by its anchor, and a plain <meta refresh> drops everything
+   after the `#`. So each one has to forward with a script as well, and
+   that script has to append `location.hash`. */
+test("every old address still forwards, and carries its anchor", () => {
+  const moved = {
+    "works/pineward.html": "../houses/pineward.html",
+    "works/adar.html": "../houses/adar.html",
+    "works/almost-human.html": "../houses/almost-human.html",
+    "works/ataraxia.html": "../houses/ataraxia.html",
+    "works/grande-parfums.html": "../houses/grande-parfums.html",
+    "works/les-abstraits.html": "../houses/les-abstraits.html",
+    "works/individual-fragrances.html":
+      "../individual-fragrances/individual-fragrances.html",
+  };
+
+  const wrong = [];
+  for (const [from, to] of Object.entries(moved)) {
+    const at = path.join(ROOT, from);
+    if (!fs.existsSync(at)) { wrong.push(`${from} is missing entirely`); continue; }
+    const html = fs.readFileSync(at, "utf8");
+
+    // The page it points at has to be a real file.
+    const lands = path.join(ROOT, "works", to);
+    if (!fs.existsSync(lands)) wrong.push(`${from} forwards to ${to}, which does not exist`);
+
+    // The script, carrying the anchor. This is the one that matters.
+    if (!/location\.replace\(\s*"([^"]+)"\s*\+\s*location\.hash\s*\)/.test(html)) {
+      wrong.push(`${from} does not forward by script with the anchor kept`);
+    } else {
+      const said = /location\.replace\(\s*"([^"]+)"\s*\+/.exec(html)[1];
+      if (said !== to) wrong.push(`${from} forwards by script to ${said}, not ${to}`);
+    }
+
+    // And the no-JavaScript fallback.
+    if (!new RegExp(`http-equiv="refresh"[^>]*url=${to.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)
+      .test(html)) {
+      wrong.push(`${from} has no <meta refresh> fallback to ${to}`);
+    }
+  }
+  expect(wrong, "forwarding pages that do not forward").toEqual([]);
+});
+
+/* AND NOTHING INSIDE THE SITE LINKS AT ONE.
+   A signpost is for links that already exist out in the world. Every
+   link the site writes for itself should go straight to the real page —
+   a signpost in the middle of a journey is a redirect nobody asked
+   for, and it would quietly hide a path that had gone stale. */
+test("nothing inside the site links at a forwarding page", () => {
+  const stale = [
+    "works/pineward.html", "works/adar.html", "works/almost-human.html",
+    "works/ataraxia.html", "works/grande-parfums.html", "works/les-abstraits.html",
+    "works/individual-fragrances.html",
+  ];
+  const found = [];
+  for (const page of htmlFiles()) {
+    const from = path.relative(ROOT, page).split(path.sep).join("/");
+    if (stale.includes(from)) continue;            // the signposts themselves
+    const src = withoutComments(fs.readFileSync(page, "utf8"));
+    for (const old of stale) {
+      const leaf = old.replace("works/", "");
+      const re = new RegExp(`(?:href|src)="[^"]*works/${leaf.replace(".", "\\.")}`, "g");
+      if (re.test(src)) found.push(`${from} links at ${old}`);
+    }
+  }
+  expect(found, "links pointing at a forwarding page instead of the real one").toEqual([]);
 });

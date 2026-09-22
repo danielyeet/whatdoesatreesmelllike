@@ -1,5 +1,5 @@
 // ============================================================
-// THE PINEWARD GALLERY — works/pineward.html only
+// THE PINEWARD GALLERY — houses/pineward.html only
 //
 // The pictures the owner took for that page, standing at the foot of
 // it: a strip of small squares that cycles on its own, and a VIEWER

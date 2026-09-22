@@ -1,5 +1,5 @@
 // ============================================================
-// PINEWARD (works/pineward.html)
+// PINEWARD (houses/pineward.html)
 //
 // The first piece in Scent descriptions, and a long one: an
 // introduction and forty-seven parts, each of which is a fragrance: a picture and a
@@ -19,7 +19,7 @@
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 
-const PAGE = "/works/pineward.html";
+const PAGE = "/houses/pineward.html";
 
 test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
@@ -317,7 +317,7 @@ test("without its script the page is still all of its writing", async ({ page })
 test("the piece is what the sheet's first picture points at", async ({ page }) => {
   await page.goto("/categories/scent-descriptions.html");
   const first = page.locator(".sheet-frame").first();
-  await expect(first).toHaveAttribute("href", "../works/pineward.html");
+  await expect(first).toHaveAttribute("href", "../houses/pineward.html");
   await expect(first.locator(".sheet-caption"))
     .toHaveText("Pineward the house that smells like trees");
   // The name is what is printed; the line about it waits to be pointed

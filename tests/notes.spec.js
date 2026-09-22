@@ -128,13 +128,13 @@ test("no entry is empty", () => {
 test("every key points at a part that is really on its page", () => {
   const all = notes();
   const PAGES = {
-    pineward: ["works/pineward.html", "pine"],
-    adar: ["works/adar.html", "adar"],
-    "almost-human": ["works/almost-human.html", "human"],
-    grande: ["works/grande-parfums.html", "human"],
-    ataraxia: ["works/ataraxia.html", "human"],
-    abstraits: ["works/les-abstraits.html", "human"],
-    individual: ["works/individual-fragrances.html", "human"],
+    pineward: ["houses/pineward.html", "pine"],
+    adar: ["houses/adar.html", "adar"],
+    "almost-human": ["houses/almost-human.html", "human"],
+    grande: ["houses/grande-parfums.html", "human"],
+    ataraxia: ["houses/ataraxia.html", "human"],
+    abstraits: ["houses/les-abstraits.html", "human"],
+    individual: ["individual-fragrances/individual-fragrances.html", "human"],
   };
   const missing = [];
   Object.keys(all).forEach((key) => {
@@ -198,7 +198,7 @@ test("every fragrance gets a View notes button, and it opens a panel",
   async ({ page }) => {
   await serveDependenciesLocally(page);
   const errors = collectPageErrors(page, ["Failed to load resource"]);
-  await page.goto("/works/individual-fragrances.html");
+  await page.goto("/individual-fragrances/individual-fragrances.html");
   await page.waitForTimeout(700);
 
   await expect(page.locator(".note-open")).toHaveCount(6);
@@ -265,7 +265,7 @@ test("every fragrance gets a View notes button, and it opens a panel",
    undivided list, and shows one row rather than three. */
 test("a fragrance whose source gives no division says so", async ({ page }) => {
   await serveDependenciesLocally(page);
-  await page.goto("/works/pineward.html");
+  await page.goto("/houses/pineward.html");
   await page.waitForTimeout(900);
 
   const first = page.locator(".pine-part").first();
@@ -303,7 +303,7 @@ test("a fragrance with no notes yet says they have not been found",
     route.fulfill({ contentType: "application/javascript",
                     body: "window.FRAGRANCE_NOTES = {};" }));
 
-  await page.goto("/works/individual-fragrances.html");
+  await page.goto("/individual-fragrances/individual-fragrances.html");
   await page.waitForTimeout(700);
 
   const first = page.locator("#part-01");
@@ -331,7 +331,7 @@ test("a fragrance with no notes yet says they have not been found",
    every fragrance shows somebody else's notes. */
 test("the individual fragrances run 01 to 06 with nothing missing", () => {
   const all = notes();
-  const page = read("works/individual-fragrances.html");
+  const page = read("individual-fragrances/individual-fragrances.html");
   const ids = [...page.matchAll(/id="part-(\d+)"/g)].map((m) => m[1]);
   expect(ids, `the parts run: ${ids.join(", ")}`)
     .toEqual(["01", "02", "03", "04", "05", "06"]);
@@ -366,7 +366,7 @@ test("without the script there is no button and the writing is untouched",
   async ({ page }) => {
   await serveDependenciesLocally(page);
   await page.route("**/notes.js", (route) => route.abort());
-  await page.goto("/works/pineward.html");
+  await page.goto("/houses/pineward.html");
   await page.waitForTimeout(600);
 
   await expect(page.locator(".note-open")).toHaveCount(0);
@@ -386,7 +386,7 @@ test("without the script there is no button and the writing is untouched",
 test("the notes collapse with the fragrance, and do not come back with it",
   async ({ page }) => {
   await serveDependenciesLocally(page);
-  await page.goto("/works/individual-fragrances.html");
+  await page.goto("/individual-fragrances/individual-fragrances.html");
   await page.waitForTimeout(700);
 
   const part = page.locator(".human-part").first();
@@ -439,7 +439,7 @@ test.describe("the notes on a phone", () => {
   test("the window fits the screen and stands over the page", async ({ page }) => {
     await serveDependenciesLocally(page);
     const errors = collectPageErrors(page, ["Failed to load resource"]);
-    await page.goto("/works/individual-fragrances.html");
+    await page.goto("/individual-fragrances/individual-fragrances.html");
     await page.waitForTimeout(900);
 
     const part = page.locator(".human-part").first();
@@ -485,7 +485,7 @@ test.describe("the notes on a phone", () => {
   test("the window closes on the scrim, on escape, and on its own button",
     async ({ page }) => {
     await serveDependenciesLocally(page);
-    await page.goto("/works/individual-fragrances.html");
+    await page.goto("/individual-fragrances/individual-fragrances.html");
     await page.waitForTimeout(900);
 
     const part = page.locator(".human-part").first();
@@ -546,7 +546,7 @@ test.describe("the notes on a phone", () => {
 test("the window fades all the way out rather than being cut off",
   async ({ page }) => {
   await serveDependenciesLocally(page);
-  await page.goto("/works/individual-fragrances.html");
+  await page.goto("/individual-fragrances/individual-fragrances.html");
   await page.waitForTimeout(900);
 
   const part = page.locator(".human-part").first();
@@ -590,7 +590,7 @@ test("the window fades all the way out rather than being cut off",
    the menu rule gives it is opacity alone. */
 test("the window keeps its own transition, not the menu's", async ({ page }) => {
   await serveDependenciesLocally(page);
-  await page.goto("/works/individual-fragrances.html");
+  await page.goto("/individual-fragrances/individual-fragrances.html");
   await page.waitForTimeout(900);
 
   const part = page.locator(".human-part").first();
@@ -631,7 +631,7 @@ test("the window keeps its own transition, not the menu's", async ({ page }) => 
 test("Almost Human carries a landscape before its notes", async ({ page }) => {
   await serveDependenciesLocally(page);
   const errors = collectPageErrors(page, ["Failed to load resource"]);
-  await page.goto("/works/almost-human.html");
+  await page.goto("/houses/almost-human.html");
   await page.waitForTimeout(900);
 
   const part = page.locator("#part-01");
@@ -684,7 +684,7 @@ test("Almost Human carries a landscape before its notes", async ({ page }) => {
 test("only the fragrances with a landscape have the button",
   async ({ page }) => {
   await serveDependenciesLocally(page);
-  await page.goto("/works/pineward.html");
+  await page.goto("/houses/pineward.html");
   await page.waitForTimeout(900);
   await page.locator("#part-01 summary").click();
   await page.waitForTimeout(1200);
@@ -703,7 +703,7 @@ test("only the fragrances with a landscape have the button",
 test("a reformulated fragrance says which version, at the top",
   async ({ page }) => {
   await serveDependenciesLocally(page);
-  await page.goto("/works/pineward.html");
+  await page.goto("/houses/pineward.html");
   await page.waitForTimeout(900);
   await page.locator("#part-47 summary").click();
   await page.waitForTimeout(1200);
@@ -739,7 +739,7 @@ test("a reformulated fragrance says which version, at the top",
 test("Haxan carries the perfumer's account and the fallback's reading",
   async ({ page }) => {
   await serveDependenciesLocally(page);
-  await page.goto("/works/individual-fragrances.html");
+  await page.goto("/individual-fragrances/individual-fragrances.html");
   await page.waitForTimeout(900);
   await page.locator("#part-03 summary").click();
   await page.waitForTimeout(1200);
@@ -784,7 +784,7 @@ test("a fragrance whose source says nothing says so, in its own words",
   // 10 is Lithos Diaphanes, and it is the last ADAR fragrance the
   // house names no material for. Root Code was here until the owner
   // supplied its notes from the house's own page.
-  await page.goto("/works/adar.html");
+  await page.goto("/houses/adar.html");
   await page.waitForTimeout(900);
   await page.locator("#part-10 summary").click();
   await page.waitForTimeout(1200);
@@ -847,7 +847,7 @@ test("every Les Abstraits fragrance comes from the house itself", () => {
 
   // AND THEY STAND ALPHABETICALLY, which is what the owner asked for
   // ("add them alphabetically") and is the house page's own order.
-  const page = read("works/les-abstraits.html");
+  const page = read("houses/les-abstraits.html");
   const named = [...page.matchAll(/<span class="human-title">([^<]+)<\/span>/g)]
     .map((m) => m[1].trim());
   expect(named.length).toBe(4);
@@ -974,7 +974,7 @@ test("a fragrance with more than one version says which one", () => {
 test("the fallback carries a warning and a house source does not",
   async ({ page }) => {
   await serveDependenciesLocally(page);
-  await page.goto("/works/pineward.html");
+  await page.goto("/houses/pineward.html");
   await page.waitForTimeout(900);
 
   const show = async (no) => {

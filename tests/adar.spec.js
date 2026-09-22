@@ -1,5 +1,5 @@
 // ============================================================
-// ADAR (works/adar.html)
+// ADAR (houses/adar.html)
 //
 // The house nobody has heard of: eleven fragrances in four groups, on
 // a ground that is a VOID rather than a wood. These check the things
@@ -11,7 +11,7 @@
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 
-const ADAR = "/works/adar.html";
+const ADAR = "/houses/adar.html";
 
 test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
@@ -282,7 +282,7 @@ test("without its script the page is still all of its writing", async ({ page })
 test("the house is what the sheet's second picture points at", async ({ page }) => {
   await page.goto("/categories/scent-descriptions.html");
   const second = page.locator(".sheet-frame").nth(1);
-  await expect(second).toHaveAttribute("href", "../works/adar.html");
+  await expect(second).toHaveAttribute("href", "../houses/adar.html");
   await expect(second.locator(".sheet-caption"))
     .toHaveText("ADAR the house that you have never heard of");
 });

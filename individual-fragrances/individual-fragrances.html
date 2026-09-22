@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Individual fragrances — The Taste of Aldehydes</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  INDIVIDUAL FRAGRANCES — the ones that belong to no house.
+
+  WHAT THIS IS FOR, in the owner's words: "an independent fragrance
+  review page where I put information about perfumes that do not belong
+  in any house on the houses tab". The Fragrances view of
+  categories/scent-descriptions.html is the index into it; this page is
+  the writing. Before this, that view listed every fragrance on the
+  whole site and pointed at the houses — it does not any more.
+
+  IT IS SHAPED LIKE A HOUSE on purpose: the same <details> parts, the
+  same rank down the side, the same VIEW NOTES panel. A fragrance is a
+  fragrance whether or not it has a house, and the reader should not
+  have to learn a second page.
+
+  EACH ENTRY CARRIES ITS OWN HOUSE in the summary, which a house page
+  never needs — here they are all from different ones.
+
+  TWO OF THESE CARRY SOMETHING UNUSUAL. HAXAN's window has two lists —
+  the perfumer's own account above and Fragrantica's interpreted notes
+  below — because the owner asked for both; it is not a pyramid and is
+  not published as one. FLAMENCO EDP carries the concentration in its
+  name, at the owner's word: the 2024 Extrait is a different
+  composition and the two would otherwise read as one fragrance.
+
+  SIX FRAGRANCES, AND THE GAP IS CLOSED. The owner first listed 1, 2,
+  3, 4, 6 and 7 and called them "the seven", so 05 was kept as an empty
+  slot for a round in case a fifth was meant to be there. On 2026-09-22
+  they asked for it removed and the ones below moved up, so Flamenco
+  EDP is 05 now and French Riviera is 06.
+
+  THAT MOVE TOUCHES THREE FILES, and they have to move together: the
+  parts here, the rows in the Fragrances table, and the keys in
+  notes-data.js. Both of those ends have a test.
+
+  TO WRITE ONE: replace the dashed box with the writing, and point the
+  two <img> tags at your picture. TO ADD ONE: copy a whole
+  <details class="human-part"> block, number it, and add its row to the
+  Fragrances table in categories/scent-descriptions.html — that table
+  links at #part-NN and there is a test for it.
+
+  THE NOTES come from notes-data.js, keyed "individual:NN". They are
+  not in this markup.
+
+  WITHOUT JAVASCRIPT this page is all of its writing: the parts are
+  real <details> elements. The notes panel is the one thing that needs
+  the script.
+-->
+<body class="human-page individual-page">
+
+<header class="human-head">
+  <p class="human-kicker">Scent descriptions · Fragrances</p>
+  <h1>Individual fragrances<br><em>the ones with no house here</em></h1>
+  <p class="human-standfirst">
+    Perfumes I have something to say about that do not belong to any of the houses on
+    the Houses view. One to a line, each with its own house beside it.
+  </p>
+</header>
+
+<section class="human-intro" id="introduction" aria-labelledby="introduction-name">
+  <p class="human-section-mark">00</p>
+  <h2 id="introduction-name">Introduction</h2>
+  <div class="human-text">
+    <p class="human-waiting">The introduction is the owner’s and has not been written yet.</p>
+  </div>
+</section>
+
+<div class="human-parts">
+  <details class="human-part" id="part-01">
+    <summary>
+      <span class="human-no">01</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Individual Fragrances/cv99.jpg" alt="">
+      </span>
+      <span class="human-title">CV99</span>
+      <span class="human-house">Lussur</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Individual Fragrances/cv99.jpg" alt="CV99">
+        <figcaption>CV99</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">The writing is the owner’s and has not arrived yet. The notes are in — press VIEW NOTES.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-02">
+    <summary>
+      <span class="human-no">02</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Individual Fragrances/de-profundis.jpg" alt="">
+      </span>
+      <span class="human-title">De Profundis</span>
+      <span class="human-house">Serge Lutens</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Individual Fragrances/de-profundis.jpg" alt="De Profundis">
+        <figcaption>De Profundis</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">The writing is the owner’s and has not arrived yet. The notes are in — press VIEW NOTES.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-03">
+    <summary>
+      <span class="human-no">03</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Individual Fragrances/haxan.jpg" alt="">
+      </span>
+      <span class="human-title">Haxan</span>
+      <span class="human-house">Prissana</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Individual Fragrances/haxan.jpg" alt="Haxan">
+        <figcaption>Haxan</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">The writing is the owner’s and has not arrived yet. The notes are in — press VIEW NOTES.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-04">
+    <summary>
+      <span class="human-no">04</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Individual Fragrances/tobacolor.jpg" alt="">
+      </span>
+      <span class="human-title">Tobacolor</span>
+      <span class="human-house">Dior</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Individual Fragrances/tobacolor.jpg" alt="Tobacolor">
+        <figcaption>Tobacolor</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">The writing is the owner’s and has not arrived yet. The notes are in — press VIEW NOTES.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-05">
+    <summary>
+      <span class="human-no">05</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Individual Fragrances/flamenco.jpg" alt="">
+      </span>
+      <span class="human-title">Flamenco EDP</span>
+      <span class="human-house">Ramon Monegal</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Individual Fragrances/flamenco.jpg" alt="Flamenco">
+        <figcaption>Flamenco EDP</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">The writing is the owner’s and has not arrived yet. The notes are in — press VIEW NOTES.</p>
+      </div>
+    </div>
+  </details>
+
+  <details class="human-part" id="part-06">
+    <summary>
+      <span class="human-no">06</span>
+      <span class="human-thumb" aria-hidden="true">
+        <img src="../images/Individual Fragrances/french-riviera.jpg" alt="">
+      </span>
+      <span class="human-title">French Riviera</span>
+      <span class="human-house">Mancera</span>
+      <span class="human-cue" aria-hidden="true">Open</span>
+    </summary>
+    <div class="human-body">
+      <figure class="human-plate">
+        <div aria-hidden="true"></div>
+        <img src="../images/Individual Fragrances/french-riviera.jpg" alt="French Riviera">
+        <figcaption>French Riviera</figcaption>
+      </figure>
+      <div class="human-text">
+        <p class="human-waiting">The writing is the owner’s and has not arrived yet. The notes are in — press VIEW NOTES.</p>
+      </div>
+    </div>
+  </details>
+</div>
+
+<footer class="human-foot">
+  <a class="human-back" href="../categories/scent-descriptions.html">← Scent descriptions</a>
+  <a class="human-on" href="../houses/pineward.html">On to the houses · 01 · Pineward →</a>
+</footer>
+
+<script>window.SITE_ROOT = "../"; window.HOUSE_NOTES = "individual";</script>
+<script src="../nav.js"></script>
+<script src="../search.js"></script>
+<script src="../house.js"></script>
+<script src="../notes-data.js"></script>
+<script src="../notes.js"></script>
+</body>
+</html>

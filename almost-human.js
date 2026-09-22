@@ -1,5 +1,5 @@
 // ============================================================
-// ALMOST HUMAN — works/almost-human.html
+// ALMOST HUMAN — houses/almost-human.html
 //
 // The third house in Scent descriptions. Pineward's page is a wood and
 // ADAR's is a void; this one is a CROWD.

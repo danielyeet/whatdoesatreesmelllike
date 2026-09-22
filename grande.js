@@ -1,5 +1,5 @@
 // ============================================================
-// GRANDE PARFUMS — works/grande-parfums.html
+// GRANDE PARFUMS — houses/grande-parfums.html
 //
 // The fifth house, and the quietest ground on the site. The owner
 // asked for "some particles and effects for grande parfums. subtle

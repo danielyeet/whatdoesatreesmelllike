@@ -2,7 +2,7 @@
 
 Date: 2026-09-18
 
-Files: `works/pineward.html` (the markup at the foot of it),
+Files: `houses/pineward.html` (the markup at the foot of it),
 `pineward-gallery.js` (new), the `pine-gallery` / `pine-viewer` block in
 `style.css`, `images/Pineward/The Pinewards Gallery Page/` (the owner's own
 photographs), `images/Pineward/gallery-web/` (the web copies)
@@ -108,7 +108,7 @@ the web copies are ever rebuilt, these three have to be turned again:
 | `pineward-42` | a quarter turn anticlockwise |
 
 Nothing in the page says so. That table and the comment above the strip in
-`works/pineward.html` are the only record of it.
+`houses/pineward.html` are the only record of it.
 
 ## Without the script
 

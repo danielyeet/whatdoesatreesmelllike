@@ -32,12 +32,12 @@ const PAGES = [
   "/categories/favorites.html",
   "/categories/researches.html",
   "/categories/other-2.html",
-  "/works/pineward.html",
-  "/works/adar.html",
-  "/works/almost-human.html",
-  "/works/ataraxia.html",
-  "/works/grande-parfums.html",
-  "/works/les-abstraits.html",
+  "/houses/pineward.html",
+  "/houses/adar.html",
+  "/houses/almost-human.html",
+  "/houses/ataraxia.html",
+  "/houses/grande-parfums.html",
+  "/houses/les-abstraits.html",
   "/works/theory-03.html",
   "/works/cold-vs-warm-incense.html",
   "/search.html",
@@ -82,7 +82,7 @@ test.describe("on a phone", () => {
      Below the column it is a quarter of each side now, and above it
      nothing has changed at all. */
   test("Almost Human's crowd is drawn on a phone", async ({ page }) => {
-    await page.goto("/works/almost-human.html");
+    await page.goto("/houses/almost-human.html");
     await page.waitForTimeout(2500);
     const ink = await page.evaluate(() => {
       const el = document.querySelector(".human-field");
@@ -113,7 +113,7 @@ test.describe("on a phone", () => {
      together. Measured both ways — with the tap it reads 185 -> 153,
      and with no tap at all, waiting exactly as long, 185 -> 187. */
   test("a tap brings a figure home", async ({ page }) => {
-    await page.goto("/works/almost-human.html");
+    await page.goto("/houses/almost-human.html");
     await page.waitForTimeout(2500);
 
     /** The width of the ink in a box, between its fourth and
