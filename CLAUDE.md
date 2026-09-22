@@ -95,7 +95,7 @@ which talk through five `window` globals; see the landing page's report).
 Four of those page scripts are elaborate: `chamber.js` (~2,770 lines), `structure.js`
 (~1,560), `contact-sheet.js` (~1,550) and `node-scene.js` (~1,520). The rest are smaller:
 `almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
-(~780), `paper.js` (~580), `essay.js` (~430), `ataraxia.js` (~385), `notes.js` (~350), `pineward-gallery.js`
+(~780), `paper.js` (~580), `notes.js` (~460), `essay.js` (~430), `ataraxia.js` (~385), `pineward-gallery.js`
 (~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `grande.js` (~265), `search.js`
 (~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230), `nav.js` (~220),
 `search-page.js` (~190), `photography.js` (~190), `find-ground.js` (~180) and
@@ -166,7 +166,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 230 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 238 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -354,6 +354,26 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   when it gives one undivided list, and it always carries `source: { name, url }`. **Never
   write a pyramid a source did not state**: a review's prose is not a pyramid, and there
   is a test for every one of those rules.
+- **AN ENTRY CAN ALSO SAY IT FOUND NOTHING**, which is not the same as having no entry.
+  `{ missing: "…" }` is one sentence and no lists, and it is what a source that was read
+  and never named a material gets — ADAR prints prose for two of its fragrances, and those
+  say *No information as of yet.* while still naming ADAR's page. A fragrance that could
+  not be found online AT ALL says so and names no source; that is the one entry in the
+  file without one, and the test that requires a source has that single exemption written
+  into it. **No key at all** is a third thing again, and means nobody has looked yet.
+- **A FRAGRANCE THAT EXISTS IN MORE THAN ONE VERSION CARRIES `version`**, and the newest
+  version's notes. It prints as a boxed line at the very TOP of the window, above the
+  notes rather than in the aside under them, because it qualifies all of them — the owner
+  asked for it to be "emphasized ... on the website itself". It must name a year; there
+  is a test.
+- **A SECOND LIST** is `also: { say, flat, source }`, under the first, with its own
+  heading and its own source. Only Haxan has one (the perfumer's account above,
+  Fragrantica's reading below) and the first list then needs a `say` of its own too.
+- **AN OLFACTORY LANDSCAPE** is `landscape: { flat, source }`, and it gives that fragrance
+  a SECOND BUTTON AND WINDOW standing before View notes. Only Almost Human has one,
+  because it is the only house that publishes a landscape instead of notes. **It can only
+  ever be sourced from the house** — a landscape on the fallback's authority would be the
+  fallback inventing the one thing it does not have — and there is a test.
 - **THE SOURCE IS A HIERARCHY, and the owner set it out in capitals**: the perfume's own
   house page first, and Fragrantica **only** where the house publishes nothing. Where
   Pineward's own `pages/master-scent-list` is what gave the notes, the source is named
@@ -613,7 +633,11 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **fragrances** (the view) | The index view of the contact sheet page. It **used to list every fragrance on the whole site** and point back into the houses; it does not any more. It is now the way in to `works/individual-fragrances.html` — the perfumes that belong to no house — and carries only those. If the owner remembers it as "every one of them", that is what it was until 2026-09-21. |
 | **the glitch on the way out** | What the notes window used to do when you clicked away, and why it is worth knowing: the window is built on the `<body>` (it has to be — a fixed thing inside a transformed box is fixed to that box), which put it in reach of `body > *:not(...)`, the rule that dims the page while the Menu is open. Four `:not()` outrank `.note-panel`, so the window got the menu's `opacity 0.85s` instead of its own `opacity 300ms, transform 300ms` — and the script hid it on a 260ms timer, cutting the window AND the scrim from 0.606 opacity to nothing in one frame. Both selectors now exclude it, and the close waits for `transitionend` rather than a number. **Anything else added as a child of `body` is in the same trap.** There is a test. |
 | **view notes** | The button at the foot of every fragrance's writing, and the **window** it opens over the page carrying the notes and the source. A real dialog: centred, over a scrim, with the page behind held still, closing on the scrim, on escape and on its own close. **It goes with the fragrance**: collapse the part and the window goes too, and opening the part again leaves it shut. It opened BESIDE the writing for a round, as a column in the part's own row — if the owner remembers it that way, that is what it was until they asked for a window. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
-| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 32 of the 73 entries are the house's own; the rest are on the fallback because the house prints no list anywhere. Named per entry in `notes-data.js`, with the link the owner can check. |
+| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 45 of the 89 sources in the file are the house's own, against 44 on the fallback — the houses overtook it on 2026-09-22. Named per entry in `notes-data.js`, with the link the owner can check. |
+| **the olfactory landscape** | What Almost Human publishes INSTEAD of notes: five impressions rather than a list of materials. Its five fragrances carry a second button and window of their own, standing **before** View notes, with the house's own landscape in it; the notes beside it are the fallback's. It is never called a list of notes, because it is not one. |
+| **the version** (notes) | Which edition a fragrance's notes belong to, printed as a boxed line at the top of its window. Several Pineward fragrances have been reformulated and the note list changes underneath the name, so a list with no year on it is a list you cannot check. Five entries carry one, and four of the five carry the NEWEST version — De Profundis is the 2011 original because the owner asked for that one. |
+| **said nothing** | An entry that was looked up and came back with nothing, which is not the same as no entry at all. `{ missing: "…" }` — ADAR's Root Code and Lithos Diaphanes say *No information as of yet.* and still name the house's page; Grande's "Cookie something (?)" says it could not be found online and names nothing. A fragrance with NO key says instead that the notes "have not been found yet", which means nobody has looked. |
+| **the two halves** (Haxan) | The one window on the site carrying two lists: the perfumer's own account above and Fragrantica's **interpreted notes** below, each with its own heading and source, neither a pyramid. The lower list is the only one on the site read off a screenshot the owner sent rather than through a search summary. |
 | **the caution** (notes) | The small box that comes up on hovering **Fragrantica** in a notes window: *Fragrantica's notes are not to be trusted as 100% fact.* — the owner's own sentence. A `CAUTION` table in `notes.js` keyed by source name, so it is **only** on the fallback; put it on a house's own page and it stops meaning anything, and there is a test saying so. It stands above the source line because the source is the last thing in a window that scrolls. |
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
 | **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |

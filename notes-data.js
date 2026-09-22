@@ -53,8 +53,9 @@ window.FRAGRANCE_NOTES = {
   },
 
   "individual:02": {
+    version: "2011 original",
     flat: ["Chrysanthemum", "Green Notes", "Violet", "Soil Tincture", "Incense", "Plum Tree"],
-    note: "Serge Lutens publishes no note list for it — the house rarely does — so this is the fallback. The 2015 Limited Edition is listed with a pyramid; this is the 2011 original, which is not.",
+    note: "Serge Lutens publishes no note list for it — the house rarely does — so this is the fallback. The 2015 Limited Edition is listed with a pyramid; this one is not.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Serge-Lutens/De-Profundis-13274.html" },
   },
 
@@ -63,8 +64,20 @@ window.FRAGRANCE_NOTES = {
            "Sandalwood", "Wormwood", "Styrax", "Pine Needle", "Saffron", "Thyme",
            "Rosemary", "Black Pepper", "Nutmeg", "Caraway", "Cinnamon", "Violet Leaf",
            "Tobacco", "Mushroom", "Basil", "Marjoram", "Vetiver", "Goat Hair", "Seaweed"],
-    note: "The perfumer's own account of it, which names these and says the composition uses over a hundred ingredients. Fragrantica lists forty, also undivided.",
+    say: "The perfumer\u2019s own account",
+    note: "The perfumer\u2019s own account of it, which names these and says the composition uses over a hundred ingredients. Neither list is a pyramid: this fragrance is not published as one.",
     source: { name: "PRIN (Prin Lomros)", url: "https://prinlomros.com/product/haxan/" },
+    // AND THE SECOND HALF, which the owner asked for by hand: "the
+    // upper part is the owners account, and then the bottom half is
+    // the interpreted notes sourced from fragrantica". Thirty-nine of
+    // them, read off the owner's own screenshot of the page rather
+    // than out of a search summary — the one entry on the site whose
+    // fallback list was seen rather than reported.
+    also: {
+      say: "Interpreted notes",
+      flat: ["Chamomile", "Balsam Fir", "Mushroom", "Goat Hair Tincture", "Spruce", "Cypress", "Galbanum", "Lavender", "Wormwood", "Beeswax", "Styrax", "Marjoram", "Rosemary", "Costus", "Thyme", "Castoreum", "Basil", "Cypriol Oil or Nagarmotha", "Vetiver", "Clary Sage", "Sage", "Musk", "Cedar", "Oregano", "Cashmeran", "Incense", "Labdanum", "Caraway", "Guaiac Wood", "Patchouli", "Elemi", "Nutmeg", "Tobacco", "Cloves", "Black Pepper", "Jasmine", "Australian Sandalwood", "Opoponax", "Saffron"],
+      source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Prissana/Haxan-77361.html" },
+    },
   },
 
   "individual:04": {
@@ -78,10 +91,11 @@ window.FRAGRANCE_NOTES = {
   // so their numbering is theirs; the fragrance is still to come.
 
   "individual:06": {
+    version: "2017 eau de parfum",
     top: ["Raspberry", "Apple", "Violet", "Orange Blossom"],
     mid: ["Rose", "Jasmine", "Iris"],
     base: ["Cedar", "Cypress", "Amber", "Pine Tree"],
-    note: "The 2017 eau de parfum. The 2024 Extrait is a different composition.",
+    note: "The 2024 Extrait is a different composition.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Ramon-Monegal/Flamenco-44233.html" },
   },
 
@@ -102,28 +116,48 @@ window.FRAGRANCE_NOTES = {
   // inventing a structure the house has gone out of its way not to use.
   // ============================================================
   "almost-human:01": {
+    landscape: {
+      flat: ["Burning Silence", "Glowing Dust", "Cracked Ground", "Dry Heat", "Clear Light Ahead"],
+      source: { name: "Almost Human", url: "https://almosthuman.store/products/burning-bridges" },
+    },
     flat: ["Woody Notes", "Smoke", "Spices", "Citrus"],
-    note: "The house sets its fragrances out as an olfactory landscape rather than a pyramid.",
+    note: "The house publishes an olfactory landscape rather than notes — it is on its own button above. These are the fallback\u2019s reading of the same fragrance.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Almost-Human/Burning-Bridges-122262.html" },
   },
   "almost-human:02": {
+    landscape: {
+      flat: ["Soft Ozone", "Glowing Skin", "Digital Warmth", "Soft Amber Light", "Distant Calm"],
+      source: { name: "Almost Human", url: "https://almosthuman.store/products/dear-future" },
+    },
     flat: ["Ozonic Notes", "Skin", "Amber"],
-    note: "The house dispenses with the fragrance pyramid by design — it sets its work out as an olfactory landscape — so it publishes no notes of its own.",
+    note: "The house publishes an olfactory landscape rather than notes — it is on its own button above. These are the fallback\u2019s reading of the same fragrance.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Almost-Human/Dear-Future-122266.html" },
   },
   "almost-human:03": {
+    landscape: {
+      flat: ["Sun-Burnt Sand", "Dry Woods", "Resin Heat", "Rose Dust", "Distant Cool Light"],
+      source: { name: "Almost Human", url: "https://almosthuman.store/products/desert-hope" },
+    },
     flat: ["Sand", "Resin", "Solar Notes", "Dust", "Dry Wood", "Rose"],
-    note: "The house dispenses with the fragrance pyramid by design — it sets its work out as an olfactory landscape — so it publishes no notes of its own.",
+    note: "The house publishes an olfactory landscape rather than notes — it is on its own button above. These are the fallback\u2019s reading of the same fragrance.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Almost-Human/Desert-Hope-122264.html" },
   },
   "almost-human:04": {
+    landscape: {
+      flat: ["Smoked Herbs", "Warm Resins", "Dry Earth", "Animal Heat", "Fading Ash"],
+      source: { name: "Almost Human", url: "https://almosthuman.store/products/ritual-code" },
+    },
     flat: ["Resins", "Ash", "Smoke", "Animal Notes", "Herbal Notes", "Earthy Notes"],
-    note: "The house dispenses with the fragrance pyramid by design — it sets its work out as an olfactory landscape — so it publishes no notes of its own.",
+    note: "The house publishes an olfactory landscape rather than notes — it is on its own button above. These are the fallback\u2019s reading of the same fragrance.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Almost-Human/Ritual-Code-122265.html" },
   },
   "almost-human:05": {
+    landscape: {
+      flat: ["Wet Concrete", "Green Mist", "Warm Soil Steam", "Fading Sunlight", "Quiet Air"],
+      source: { name: "Almost Human", url: "https://almosthuman.store/products/silent-rain" },
+    },
     flat: ["Soil Tincture", "Rain Notes", "Concrete", "Green Accord", "Airy Note", "Solar Notes"],
-    note: "The house's own account of it is wet concrete, green mist, warm soil steam, fading sunlight and quiet air — an olfactory landscape rather than a pyramid.",
+    note: "The house publishes an olfactory landscape rather than notes — it is on its own button above. These are the fallback\u2019s reading of the same fragrance.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Almost-Human/Silent-Rain-122263.html" },
   },
 
@@ -167,10 +201,66 @@ window.FRAGRANCE_NOTES = {
     note: "The house names these in its own description of the fragrance; it publishes no pyramid for it.",
     source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/" },
   },
+  "adar:02": {
+    top: ["Galbanum", "Lime", "Violet Leaf", "Marine Accord"],
+    mid: ["Ylang-Ylang", "Neroli", "Myrrh", "Clary Sage"],
+    base: ["Absolute Vetiver", "Cedar Wood Tincture", "Tonka Bean", "Leather Accord"],
+    note: "The house spells it Aetherialism, and gives the fragrance in full as Aetherialism Storm Breath. Left as the owner wrote it here.",
+    source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/aetherialism-storm-breath" },
+  },
+  "adar:04": {
+    flat: ["Smoky Oud", "Jasmine", "Bitter Orange", "Sandalwood", "Ambergris"],
+    note: "Named in the house's own prose rather than as a note list — a thousand-year-old smoky oud, lunar jasmine, bitter orange, ancient sandalwood, sealed with a tear of ambergris.",
+    source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/against-all-odds" },
+  },
+  "adar:08": {
+    missing: "No information as of yet.",
+    source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/root-code" },
+  },
+  "adar:09": {
+    top: ["Cold Night Air", "Frankincense"],
+    mid: ["Cedarwood", "Sawn Resin", "Dry Moss", "Rose", "Clean Bright Oud"],
+    base: ["Myrrh", "Aged Parchment Accord", "Skin"],
+    note: "Named in the house's own prose, which divides it into an opening, a heart and a base.",
+    source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/lignum-dei-the-wood-of-god-essence-of-hope-micro-batch-77-pieces" },
+  },
+  "adar:10": {
+    missing: "No information as of yet.",
+    source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/" },
+  },
 
   // ============================================================
   // GRANDE PARFUMS — works/grande-parfums.html
   // ============================================================
+  "grande:05": {
+    missing: "I could not find this fragrance online.",
+  },
+  "grande:09": {
+    top: ["Scorched Pineapple", "Soft Tobacco Leaf"],
+    mid: ["Apple Tarte Tatin Accord"],
+    base: ["Tonka Bean", "Vetiver", "Oakmoss", "Beeswax"],
+    note: "The house's own page gives no note list for it, so this is the fallback.",
+    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Grande/Hot-Stuff-114957.html" },
+  },
+  "grande:11": {
+    flat: ["Balsam of Peru", "Strawberry", "Raspberry", "Black Tea", "Cinnamon", "Tobacco", "Apple", "Cloves", "Bark", "Tea", "Taif Rose", "Guatemalan Cardamom", "Raisins", "Indian Saffron", "Ambergris", "Labdanum", "Rose Petals", "Masala Chai", "Musk", "Castoreum", "Dried Fruits", "Cambodian Oud", "Beeswax", "Vanilla", "Tonka Bean", "Amber", "Tobacco Flower"],
+    note: "The house's own page gives no note list for it, so this is the fallback — and the fallback gives one undivided list of twenty-seven.",
+    source: { name: "Fragrantica", url: "https://www.fragrantica.fr/parfum/Grande/Karak-Shisha-133545.html" },
+  },
+  "grande:14": {
+    top: ["Jasmine Tea", "Peach", "Lemon", "Bergamot"],
+    mid: ["Iris", "Iris Butter", "Violet Leaf", "Jasmine Sambac", "Ylang Ylang", "Geranium", "Tuberose", "Jasmine", "Rose de Mai", "Carnation", "Moroccan Rose", "Gardenia"],
+    base: ["Musk", "Ambergris", "Sandalwood", "Clove", "Vetiver", "Madagascar Vanilla", "Oakmoss", "Benzoin", "Civet", "Siam", "Dark Patchouli", "Tolu Balsam", "Tonka Bean", "Cedarwood", "Labdanum"],
+    note: "The house's own page describes it but gives no divided list, so this is the fallback. The owner's standout of the house.",
+    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Grande/Vintage-Memoir-124251.html" },
+  },
+  "grande:15": {
+    top: ["Orange Blossom", "Green Mandarin", "Pear", "Guava", "Ginger", "African CO2"],
+    mid: ["Baby Green Mango", "Moroccan Tea Absolute", "Lily of the Valley", "Woody Notes", "Raspberry", "Brazilian Orange"],
+    base: ["White Musk"],
+    note: "The house's own page lists the top notes but writes the heart and the base as prose, so the divided list is the fallback's.",
+    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Grande/White-Label-117529.html" },
+  },
   "grande:06": {
     top: ["Incense", "Spices", "Iris", "Red Berries", "Clementine", "Saffron", "Orange"],
     mid: ["Blackberry", "Dried Fruits", "Blueberry", "Liquor", "Plum", "Raisin",
@@ -322,9 +412,16 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Christmas-Wine-64601.html" },
   },
   "pineward:22": {
+    version: "2025 Icing Edition",
     flat: ["Ginger", "Cinnamon", "Cloves", "Nutmeg", "Wheat Absolute", "Molasses Distillate", "Brown Sugar", "Black Walnut", "Milk Accord", "Butter", "Vanilla", "Icing"],
-    note: "The 2025 Icing Edition, which is what the house lists.",
+    note: "The most recent of the Gingerbreads, and the one the house lists.",
     source: { name: "Pineward", url: "https://www.pinewardperfume.com/shop/p/gingerbread" },
+  },
+  "pineward:23": {
+    version: "2025 Edition",
+    flat: ["Cranberry", "Champaca", "Cherry Compote", "Raspberry", "Fir Balsam", "Chocolate", "Davana Attar", "Oakmoss", "Tolu Balsam", "Rose", "Sandalwood", "Frankincense"],
+    note: "The 2025 Edition, which the house says carries more red champaca absolute, a finer cocoa absolute, storax from Liquidambar orientalis and Mysore sandalwood. The 2021 is a shorter list without the storax, tolu, rose or sandalwood.",
+    source: { name: "Pineward", url: "https://pinewardperfume.com/products/gluhwein" },
   },
 
   "pineward:24": {
@@ -407,9 +504,10 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Treacle-71217.html" },
   },
   "pineward:47": {
-    flat: ["Labdanum", "Vanilla", "Clove", "Ambergris", "Fir", "Cypress"],
-    note: "Fragrantica lists a 2021 and a 2025 Velvetine; these are the 2021.",
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Velvetine-75632.html" },
+    version: "2025 revision",
+    flat: ["Ambergris", "Cypress", "Vanilla", "Clove", "Labdanum", "Fir", "Dragon\u2019s Blood Resin", "Sandalwood", "Tonkin Musk", "Vintage Mousse de Saxe"],
+    note: "The January 2025 revision, which the house calls a complete rework: a new cypress supplier, a custom vintage Mousse de Saxe base, Mysore sandalwood and dragon\u2019s blood resin. The 2021 has none of those last four.",
+    source: { name: "Pineward", url: "https://pinewardperfume.com/products/velvetine" },
   },
 
   "pineward:37": {
@@ -422,9 +520,9 @@ window.FRAGRANCE_NOTES = {
   },
 
   "pineward:06": {
-    flat: ["Moss", "Silver Fir", "Lichen", "Pine Needles"],
-    note: "Fanghorn II, not the 2020 Fanghorn, which is a different fragrance with its own notes.",
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Fanghorn-II-126423.html" },
+    flat: ["Silver Fir", "Moss", "Lichen", "Pine Needles", "Wet Soil", "Damp Vegetation"],
+    note: "Fanghorn II, not the 2020 Fanghorn: the house made it to replace the original after one of the key ingredients became unavailable, so they are two fragrances rather than two versions.",
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:12": {
     flat: ["Sandarac", "Tamarack", "Balsam", "Snoqualmie Forest Evergreens"],

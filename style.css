@@ -6837,6 +6837,11 @@ body.note-holding { overflow: hidden; }
   border-top: 1px solid var(--line);
 }
 .note-row:first-child { border-top: 0; }
+/* LANDSCAPE is a longer word than TOP, MID, BASE or NOTES, and the
+   label column is sized for those. Only the Almost Human window uses
+   this, and it carries one row, so nothing has to line up with
+   anything. */
+.note-pyramid-wide .note-row { grid-template-columns: 78px 1fr; }
 .note-row dt {
   font-family: var(--mono);
   font-size: 10px;
@@ -6862,6 +6867,53 @@ body.note-holding { overflow: hidden; }
   color: var(--muted);
 }
 .note-aside { margin: 14px 0 0; font-style: normal; }
+
+/* WHICH VERSION THESE NOTES BELONG TO, and the owner asked for it to be
+   said plainly: several Pineward fragrances have been reformulated and
+   the note list changes underneath the name, so a list with no year on
+   it is a list you cannot check. It stands at the very top of the
+   window, above everything, because it qualifies all of it. */
+.note-version {
+  margin: 14px 0 0;
+  padding: 9px 11px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg-2);
+  border-left: 2px solid var(--ink);
+}
+.note-version span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.note-version strong { font-weight: 500; }
+
+/* THE HEADING OVER ONE OF TWO LISTS. Only Haxan has two — the
+   perfumer's own account above, Fragrantica's reading of the same
+   fragrance below — so this is what tells them apart. */
+.note-half {
+  margin: 16px 0 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+/* And the second list is set off from the first by a rule rather than
+   by space alone, because the two are the same shape and would
+   otherwise read as one long list with a stray heading in it. */
+.note-also {
+  margin-top: 22px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
 .note-waiting {
   margin: 14px 0 0;
   padding: 13px 14px;
@@ -6971,6 +7023,13 @@ a.note-cite:hover { color: var(--ink); }
 .adar-page .note-row dd { color: #dcdce4; }
 .adar-page .note-source { border-top-color: rgba(232, 232, 238, 0.18); }
 .adar-page .note-waiting { border-color: rgba(232, 232, 238, 0.28); }
+.adar-page .note-version {
+  color: #dcdce4;
+  background: rgba(232, 232, 238, 0.07);
+  border-left-color: #dcdce4;
+}
+.adar-page .note-half { color: #dcdce4; }
+.adar-page .note-also { border-top-color: rgba(232, 232, 238, 0.18); }
 .adar-page .note-scrim { background: rgba(0, 0, 0, 0.62); }
 .adar-page .note-shut { color: #a8a8b4; }
 .adar-page .note-shut:hover { color: #dcdce4; }

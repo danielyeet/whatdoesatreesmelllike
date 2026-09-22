@@ -40,11 +40,40 @@ test("no entry is both a pyramid and a flat list", () => {
   const all = notes();
   const wrong = Object.keys(all).filter((k) => {
     const one = all[k];
+    // A THIRD SHAPE, added when the owner asked for one: an entry that
+    // was looked up and came back with nothing SAYS SO, in its own
+    // words. ADAR prints prose for two of its fragrances and never
+    // names a material; one Grande Parfums title could not be found
+    // online at all. That is an answer, and a different answer from a
+    // fragrance nobody has looked up yet — which is still no key.
+    if (one.missing) return one.flat || one.top || one.mid || one.base;
     const pyramid = one.top || one.mid || one.base;
     return (one.flat && pyramid) || (!one.flat && !pyramid);
   });
   expect(wrong, `these entries are neither one shape nor the other: ${wrong.join(", ")}`)
     .toEqual([]);
+});
+
+/* AND THE SECOND LIST, WHERE THERE IS ONE, IS THE SAME KIND OF THING.
+   Only Haxan has one — the perfumer's own account above, Fragrantica's
+   reading of the same fragrance below, which the owner asked for by
+   hand. It has to carry a heading, a list and a source of its own, or
+   the window shows two lists and no way to tell them apart. */
+test("a second list names itself and its own source", () => {
+  const all = notes();
+  const bad = [];
+  Object.keys(all).forEach((k) => {
+    const also = all[k].also;
+    if (!also) return;
+    if (!also.say) bad.push(k + " has no heading");
+    if (!Array.isArray(also.flat) || !also.flat.length) bad.push(k + " has no list");
+    if (also.top || also.mid || also.base) bad.push(k + " is a pyramid");
+    if (!also.source || !also.source.name || !/^https:\/\//.test(also.source.url || "")) {
+      bad.push(k + " has no usable source");
+    }
+    if (!all[k].say) bad.push(k + " has a second list and no heading on the first");
+  });
+  expect(bad, bad.join("; ")).toEqual([]);
 });
 
 /* EVERY ENTRY SAYS WHERE IT CAME FROM. The owner asked for the source
@@ -53,7 +82,14 @@ test("no entry is both a pyramid and a flat list", () => {
 test("every entry names a source, with a link", () => {
   const all = notes();
   const bad = Object.keys(all).filter((k) => {
-    const from = all[k].source;
+    const one = all[k];
+    // THE ONE EXEMPTION, and it is narrow: an entry that says the
+    // fragrance could not be found AT ALL has no page to point at. One
+    // entry is in that state. A `missing` entry that names a source is
+    // saying something different and better — "I read the house's page
+    // and it does not say" — and both of ADAR's do.
+    if (one.missing && !one.source) return false;
+    const from = one.source;
     return !from || !from.name || !from.url || !/^https:\/\//.test(from.url);
   });
   expect(bad, `these entries have no usable source: ${bad.join(", ")}`).toEqual([]);
@@ -67,6 +103,9 @@ test("no entry is empty", () => {
   const all = notes();
   const empty = Object.keys(all).filter((k) => {
     const one = all[k];
+    // A `missing` entry is not empty — it carries a sentence, and the
+    // sentence is the whole of it. An empty one would be.
+    if (one.missing) return typeof one.missing !== "string" || !one.missing.trim();
     const lists = [one.flat, one.top, one.mid, one.base].filter(Boolean);
     return !lists.length || lists.some((l) => !Array.isArray(l) || !l.length);
   });
@@ -510,6 +549,185 @@ test("the window keeps its own transition, not the menu's", async ({ page }) => 
   expect(how.scrimTakes, `the scrim takes ${how.scrimTakes}`).not.toContain("0.85");
 });
 
+/* THE OLFACTORY LANDSCAPE, which the owner asked for by hand: "add an
+   olfactory landscape button before the notes. It will be the exact
+   same as notes, but it will feature the olfactory landscape listed on
+   the almost human website."
+
+   THREE THINGS HAVE TO HOLD and they are easy to break separately: it
+   comes BEFORE the notes button, it carries the HOUSE'S landscape
+   rather than the fallback's notes, and the two windows are still ONE
+   AT A TIME — a fragrance with two buttons is the first thing on this
+   site that could have put two windows over the page at once. */
+test("Almost Human carries a landscape before its notes", async ({ page }) => {
+  await serveDependenciesLocally(page);
+  const errors = collectPageErrors(page, ["Failed to load resource"]);
+  await page.goto("/works/almost-human.html");
+  await page.waitForTimeout(900);
+
+  const part = page.locator("#part-01");
+  await part.locator("summary").click();
+  await page.waitForTimeout(1200);
+
+  // IN THAT ORDER. Both buttons stand at the foot of the same writing,
+  // so this is the whole of "before".
+  const calls = await part.locator(".note-open").allTextContents();
+  expect(calls.map((t) => t.trim()), `the buttons read: ${calls}`)
+    .toEqual(["Olfactory landscape", "View notes"]);
+
+  await part.locator(".note-open-landscape").click();
+  await page.waitForTimeout(700);
+  const land = page.locator(".note-panel:not([hidden])");
+  await expect(land).toHaveCount(1);
+  await expect(land.locator(".note-head-say")).toHaveText("Landscape");
+  // The house's own words, and the house as the source.
+  await expect(land.locator(".note-row dd"))
+    .toHaveText("Burning Silence, Glowing Dust, Cracked Ground, Dry Heat, Clear Light Ahead");
+  await expect(land.locator(".note-cite")).toHaveText("Almost Human");
+  // A landscape is the house's own, so there is nothing to caution.
+  await expect(land.locator(".note-warn"),
+    "the house's own words need no caution").toHaveCount(0);
+
+  // ONE AT A TIME, and the second button is the only way on this site
+  // to ask for two windows at once. The scrim covers the page while
+  // one is up, so a POINTER cannot reach the other button — but the
+  // keyboard can still tab to it and press it, and that is the path
+  // this takes: activating the notes button while the landscape is
+  // still up has to leave exactly one window standing.
+  await part.locator(".note-open:not(.note-open-landscape)")
+    .dispatchEvent("click");
+  await page.waitForTimeout(800);
+  await expect(page.locator(".note-panel:not([hidden])"),
+    "two windows should never be up together").toHaveCount(1);
+  const notes = page.locator(".note-panel:not([hidden])");
+  await expect(notes.locator(".note-head-say")).toHaveText("Notes");
+  // And the notes beside it are the fallback's, cautioned as ever.
+  await expect(notes.locator(".note-cite")).toHaveText("Fragrantica");
+  await expect(notes.locator(".note-warn")).toHaveCount(1);
+
+  expect(errors).toEqual([]);
+});
+
+/* AND NOTHING ELSE ON THE SITE GREW A SECOND BUTTON. The landscape is
+   Almost Human's alone: it is the only house that publishes one, and a
+   button on a fragrance with nothing behind it would open an empty
+   window. */
+test("only the fragrances with a landscape have the button",
+  async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/works/pineward.html");
+  await page.waitForTimeout(900);
+  await page.locator("#part-01 summary").click();
+  await page.waitForTimeout(1200);
+  await expect(page.locator("#part-01 .note-open")).toHaveCount(1);
+  await expect(page.locator("#part-01 .note-open-landscape")).toHaveCount(0);
+});
+
+/* WHICH VERSION THE NOTES BELONG TO, SAID IN THE WINDOW. The owner
+   asked for this in as many words — "make sure it is emphasized which
+   versions notes youre adding on the website itself" — because several
+   Pineward fragrances have been reformulated and the note list changes
+   underneath the name.
+
+   IT IS THE FIRST THING IN THE WINDOW, above the notes rather than in
+   the aside underneath them, because it qualifies all of them. */
+test("a reformulated fragrance says which version, at the top",
+  async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/works/pineward.html");
+  await page.waitForTimeout(900);
+  await page.locator("#part-47 summary").click();
+  await page.waitForTimeout(1200);
+  await page.locator("#part-47 .note-open").click();
+  await page.waitForTimeout(700);
+
+  const win = page.locator("#notes-pineward-47");
+  await expect(win.locator(".note-version")).toHaveCount(1);
+  await expect(win.locator(".note-version strong")).toHaveText("2025 revision");
+
+  // ABOVE the notes, not below them.
+  const order = await win.evaluate((el) => {
+    const bits = [...el.querySelectorAll(".note-version, .note-pyramid, .note-source")];
+    return bits.map((b) => b.className.split(" ")[0]);
+  });
+  expect(order[0], `the window reads: ${order.join(" → ")}`).toBe("note-version");
+
+  // And it is the most recent one, which is the other half of what was
+  // asked for: the 2025 rework brought in four materials the 2021 has
+  // none of.
+  const said = await win.locator(".note-row dd").textContent();
+  expect(said).toContain("Mousse de Saxe");
+});
+
+/* HAXAN'S TWO HALVES, asked for by hand: "double the size of the notes
+   listed, where the upper part is the owners account, and then the
+   bottom half is the interpreted notes sourced from fragrantica... No
+   note pyramid."
+
+   The interpreted list came off the owner's own screenshot of the
+   page rather than out of a search summary — the one entry on the site
+   whose fallback list was seen rather than reported. */
+test("Haxan carries the perfumer's account and the fallback's reading",
+  async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/works/individual-fragrances.html");
+  await page.waitForTimeout(900);
+  await page.locator("#part-03 summary").click();
+  await page.waitForTimeout(1200);
+  await page.locator("#part-03 .note-open").click();
+  await page.waitForTimeout(700);
+
+  const win = page.locator("#notes-individual-03");
+  // TWO LISTS, TWO HEADINGS, TWO SOURCES.
+  await expect(win.locator(".note-half")).toHaveCount(2);
+  await expect(win.locator(".note-half").first()).toHaveText("The perfumer’s own account");
+  await expect(win.locator(".note-half").nth(1)).toHaveText("Interpreted notes");
+  await expect(win.locator(".note-pyramid")).toHaveCount(2);
+  await expect(win.locator(".note-cite").first()).toHaveText("PRIN (Prin Lomros)");
+  await expect(win.locator(".note-cite").nth(1)).toHaveText("Fragrantica");
+
+  // NO PYRAMID, either half — the owner said so and the fragrance is
+  // not published as one.
+  await expect(win.locator("dt")).toHaveText(["Notes", "Notes"]);
+
+  // The second half is the longer of the two, which is the "double the
+  // size" of the ask.
+  const lens = await win.locator(".note-row dd").evaluateAll(
+    (els) => els.map((e) => e.textContent.split(",").length));
+  expect(lens[1], `${lens[0]} above, ${lens[1]} below`).toBeGreaterThan(lens[0]);
+
+  // And only the fallback half is cautioned.
+  await expect(win.locator(".note-warn")).toHaveCount(1);
+});
+
+/* A SOURCE THAT WAS READ AND SAID NOTHING. The owner asked for two
+   different sentences for two different situations — "no information
+   as of yet" where ADAR publishes prose and never names a material,
+   and "I couldn't find this fragrance online" for a Grande Parfums
+   title that is nowhere.
+
+   BOTH ARE ANSWERS, and neither is the same as a fragrance nobody has
+   looked up yet — which is still no key at all, and still says the
+   notes "have not been found yet". */
+test("a fragrance whose source says nothing says so, in its own words",
+  async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/works/adar.html");
+  await page.waitForTimeout(900);
+  await page.locator("#part-08 summary").click();
+  await page.waitForTimeout(1200);
+  await page.locator("#part-08 .note-open").click();
+  await page.waitForTimeout(700);
+
+  const win = page.locator("#notes-adar-08");
+  await expect(win.locator(".note-waiting")).toHaveText("No information as of yet.");
+  // It still names where that was read, which is the difference
+  // between "the house does not say" and "nobody has looked".
+  await expect(win.locator(".note-cite")).toHaveText("ADAR Perfumes");
+  await expect(win.locator(".note-pyramid"),
+    "there is nothing to put in a list").toHaveCount(0);
+});
+
 /* THE SOURCE HIERARCHY. The owner set it: "ALWAYS THE SOURCE OF THE
    PERFUME ITSELF and only then fragrantica." So every entry names one
    of the two, the house's own page is preferred wherever the house
@@ -523,11 +741,23 @@ test("every source is either a house's own page or the fallback", () => {
   const all = notes();
   const FALLBACK = "Fragrantica";
   const bad = [];
+  // EVERY SOURCE IN THE FILE, not just the one under the pyramid: an
+  // entry can carry a second list with a source of its own (Haxan) and
+  // an olfactory landscape with a third (Almost Human's five), and a
+  // link pasted under the wrong name is exactly as wrong in those.
+  const every = [];
   Object.keys(all).forEach((key) => {
-    const from = all[key].source;
+    const one = all[key];
+    if (one.source) every.push([key, one.source]);
+    if (one.also && one.also.source) every.push([key + " (second list)", one.also.source]);
+    if (one.landscape && one.landscape.source) every.push([key + " (landscape)", one.landscape.source]);
+  });
+  every.forEach(([key, from]) => {
     // A house source must point at the house, not at the fallback
-    // wearing the house's name.
-    const atFragrantica = /(^|\.)fragrantica\.com/i.test(new URL(from.url).hostname);
+    // wearing the house's name. `fragrantica.fr` counts: it is the same
+    // crowd-edited list in another language.
+    const host = new URL(from.url).hostname;
+    const atFragrantica = /(^|\.)fragrantica\.(com|fr)$/i.test(host);
     if (from.name === FALLBACK && !atFragrantica) bad.push(key + " says Fragrantica but does not link there");
     if (from.name !== FALLBACK && atFragrantica) bad.push(key + " links to Fragrantica under another name");
   });
@@ -536,9 +766,51 @@ test("every source is either a house's own page or the fallback", () => {
   // And the hierarchy is actually being worked: a good share of them
   // come from the houses themselves. If this ever drops to nothing,
   // somebody has taken the research out.
-  const own = Object.keys(all).filter((k) => all[k].source.name !== FALLBACK).length;
-  expect(own, `${own} of ${Object.keys(all).length} come from the house itself`)
+  const own = every.filter(([, from]) => from.name !== FALLBACK).length;
+  expect(own, `${own} of ${every.length} sources are the house's own`)
     .toBeGreaterThan(20);
+});
+
+/* AN OLFACTORY LANDSCAPE IS THE HOUSE'S OWN, ALWAYS. It is the thing
+   the house publishes INSTEAD of notes, so it can only ever come from
+   the house — a landscape on the fallback's authority would be the
+   fallback inventing the one thing it does not have. */
+test("a landscape comes from the house and nowhere else", () => {
+  const all = notes();
+  const withLand = Object.keys(all).filter((k) => all[k].landscape);
+  expect(withLand.length, "some fragrance should have one").toBeGreaterThan(0);
+  const bad = [];
+  withLand.forEach((k) => {
+    const land = all[k].landscape;
+    if (!Array.isArray(land.flat) || !land.flat.length) bad.push(k + " has no landscape");
+    if (land.top || land.mid || land.base) bad.push(k + " divides a landscape into a pyramid");
+    if (!land.source || land.source.name === "Fragrantica") {
+      bad.push(k + " takes its landscape from the fallback");
+    }
+    // And the notes beside it are a separate claim with a separate
+    // source, which is the whole reason there are two windows.
+    if (!all[k].source) bad.push(k + " has a landscape and no notes source");
+  });
+  expect(bad, bad.join("; ")).toEqual([]);
+});
+
+/* A VERSION, WHERE ONE IS NAMED, IS NAMED IN THE ENTRY RATHER THAN
+   ONLY IN THE ASIDE — the owner asked for it to be said on the page:
+   "make sure it is emphasized which versions notes youre adding". The
+   aside is prose nobody has to read; the version line is the first
+   thing in the window. */
+test("a fragrance with more than one version says which one", () => {
+  const all = notes();
+  const versioned = Object.keys(all).filter((k) => all[k].version);
+  expect(versioned.length, "several fragrances have been reformulated")
+    .toBeGreaterThan(2);
+  const bad = versioned.filter((k) => {
+    const v = all[k].version;
+    // A version has to say WHEN. "the new one" ages out; a year does
+    // not, and a year is what the houses themselves print.
+    return typeof v !== "string" || !/\d{4}/.test(v);
+  });
+  expect(bad, `these versions name no year: ${bad.join(", ")}`).toEqual([]);
 });
 
 /* THE WARNING ON THE FALLBACK, which the owner asked for in as many
