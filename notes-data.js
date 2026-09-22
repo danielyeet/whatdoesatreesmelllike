@@ -54,20 +54,17 @@ window.FRAGRANCE_NOTES = {
 
   "individual:02": {
     flat: ["Chrysanthemum", "Green Notes", "Violet", "Soil Tincture", "Incense", "Plum Tree"],
-    note: "The 2015 Limited Edition is listed with a pyramid; this is the 2011 original, which is not.",
+    note: "Serge Lutens publishes no note list for it — the house rarely does — so this is the fallback. The 2015 Limited Edition is listed with a pyramid; this is the 2011 original, which is not.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Serge-Lutens/De-Profundis-13274.html" },
   },
 
   "individual:03": {
-    flat: ["Basil", "Beeswax", "Caraway", "Cashmeran", "Castoreum", "Cedarwood",
-           "Chamomile", "Clary Sage", "Cloves", "Costus", "Cypress",
-           "Cypriol Oil or Nagarmotha", "Elemi", "Fir", "Galbanum", "Goat Hair",
-           "Guaiac Wood", "Incense", "Jasmine", "Labdanum", "Lavender", "Marjoram",
-           "Mushroom", "Musk", "Nutmeg", "Opoponax", "Oregano", "Patchouli", "Pepper",
-           "Rosemary", "Saffron", "Sage", "Sandalwood", "Spruce", "Styrax", "Thyme",
-           "Tobacco", "Vetiver", "Wormwood"],
-    note: "Forty notes and no division. Prin Lomros says the composition uses over a hundred ingredients.",
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Prissana/Haxan-51725.html" },
+    flat: ["Lavender (three natural oils)", "Birch", "Cedar", "Fir", "Guaiac", "Cypriol",
+           "Sandalwood", "Wormwood", "Styrax", "Pine Needle", "Saffron", "Thyme",
+           "Rosemary", "Black Pepper", "Nutmeg", "Caraway", "Cinnamon", "Violet Leaf",
+           "Tobacco", "Mushroom", "Basil", "Marjoram", "Vetiver", "Goat Hair", "Seaweed"],
+    note: "The perfumer's own account of it, which names these and says the composition uses over a hundred ingredients. Fragrantica lists forty, also undivided.",
+    source: { name: "PRIN (Prin Lomros)", url: "https://prinlomros.com/product/haxan/" },
   },
 
   "individual:04": {
@@ -111,14 +108,17 @@ window.FRAGRANCE_NOTES = {
   },
   "almost-human:02": {
     flat: ["Ozonic Notes", "Skin", "Amber"],
+    note: "The house dispenses with the fragrance pyramid by design — it sets its work out as an olfactory landscape — so it publishes no notes of its own.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Almost-Human/Dear-Future-122266.html" },
   },
   "almost-human:03": {
     flat: ["Sand", "Resin", "Solar Notes", "Dust", "Dry Wood", "Rose"],
+    note: "The house dispenses with the fragrance pyramid by design — it sets its work out as an olfactory landscape — so it publishes no notes of its own.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Almost-Human/Desert-Hope-122264.html" },
   },
   "almost-human:04": {
     flat: ["Resins", "Ash", "Smoke", "Animal Notes", "Herbal Notes", "Earthy Notes"],
+    note: "The house dispenses with the fragrance pyramid by design — it sets its work out as an olfactory landscape — so it publishes no notes of its own.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Almost-Human/Ritual-Code-122265.html" },
   },
   "almost-human:05": {
@@ -241,28 +241,28 @@ window.FRAGRANCE_NOTES = {
   // three claims nobody has made.
   // ============================================================
   "pineward:01": {
-    flat: ["Poplar Bud", "Pine Needles", "Ambrette", "Crushed Leaves", "Cedar"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Bindebole-66467.html" },
+    flat: ["Poplar Bud", "Citrus", "Pine Needles", "Ambrette", "Crushed Leaves", "Cedar"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:02": {
     flat: ["Pine Needles", "Mint", "Cedar", "Resins", "Moss"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Boreal-64599.html" },
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:03": {
-    flat: ["Larch", "Resin", "Agarwood (Oud)", "Hemlock", "Sandalwood", "Cherimoya"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Brokilaen-75637.html" },
+    flat: ["Black Hemlock Needles", "Larch Cones", "Sandarac Resin", "Momi", "Sandalwood", "Vietnamese Oud"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:04": {
-    flat: ["Oak", "Smoke", "Cedar", "Vanilla", "Pine Needles"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Cotswold-75633.html" },
+    flat: ["Cedar", "Smoke", "Oakwood", "Ponderosa Pine Needles", "Vanilla"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:05": {
-    flat: ["Fir", "Leather", "Myrrh", "Smoke", "Patchouli", "Pine Needles", "Oolong Tea", "Opoponax", "Oakmoss"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Eldritch-72485.html" },
+    flat: ["Leather", "Myrrh", "Patchouli", "Fir", "Oolong Tea", "Opoponax", "Smoke", "Pine Needles", "Salvia Absolute", "Oakmoss"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:07": {
-    flat: ["Dried Rose", "Leather", "Smoke", "Incense", "Oud", "Mushroom", "Myrrh", "Tobacco", "Blood", "Cedar"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Funerie-83384.html" },
+    flat: ["Morel Mushroom", "Decayed Rose", "Leather", "Tobacco", "Smoke", "Pineboard", "Incense", "Sweet Myrrh", "Blood Cedar", "Dried Needles", "Rotting Wood (Oud)"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:08": {
     flat: ["Lemon Peel", "Juniper", "Rosemary", "Lavender", "Juniper Berry", "Sandalwood", "Patchouli"],
@@ -281,8 +281,8 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/White-Fir-83392.html" },
   },
   "pineward:15": {
-    flat: ["Wool", "Honey", "Lavender", "Amber", "Sweet Grass", "Raspberry", "Beeswax", "Brown Sugar"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Bucolic-99956.html" },
+    flat: ["Sheep Wool", "Lanolin", "Raspberry", "Lavender", "Honey", "Brown Sugar", "Amber", "Beeswax", "Sweetgrass"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:16": {
     flat: ["Hay", "Honey", "Oat", "Wheat", "Hazelnut", "Almond", "Lavender", "Grass", "Indian Saffron"],
@@ -298,20 +298,20 @@ window.FRAGRANCE_NOTES = {
   },
 
   "pineward:10": {
-    flat: ["Pine", "Silver Fir", "Carnation", "Oakmoss", "Hay", "Patchouli", "Lavender", "Chamomile", "Juniper", "Geranium", "Tobacco", "Bergamot", "Sandalwood", "Amber", "Vetiver"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Nocturnis-83390.html" },
+    flat: ["Pine", "Juniper", "Bergamot", "Carnation", "Geranium", "Chamomile", "Hay", "Tobacco", "Silver Fir", "Lavender", "Amber", "Vetiver", "Sandalwood", "Oakmoss", "Patchouli"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:11": {
-    flat: ["Soil Tincture", "Pine Needles", "Juniper", "Vetiver", "Myrtle"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Oxylus-83380.html" },
+    flat: ["Pine Needles", "Juniper Scales", "Vetiver", "Myrtle", "Soil", "Swamp Water"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:17": {
-    flat: ["Hay", "Raisin", "Bread", "Acorn", "Vanilla", "Tonka", "Nutmeg", "Grass", "Hazelnut Cocoa Spread", "Oakmoss", "Himalayan Nard (Jatamansi)", "Cardamom"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Hayride-83387.html" },
+    flat: ["Hay", "Hot Cocoa", "Vanilla", "Sweet Vernalgrass", "Bison Grass", "Acorn Nut Bread", "Nutmeg", "Cardamom", "Spikenard", "Raisin", "Tonka", "Oakmoss"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:18": {
-    flat: ["Honey", "Hay", "Apricot", "Wheat", "Beeswax", "Grains", "Blackberry", "Bran", "Oat", "Propolis", "Rose Jam", "Tea", "Bourbon Vetiver", "Oakmoss"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Pastoral-83391.html" },
+    flat: ["Apricot Preserve", "Blackberry Jam", "Raw Honey", "Propolis", "Beeswax", "Sweetgrass", "Hay Bales", "Bran Wheat", "Oat Grains", "Bourbon Vetiver", "Maté Tea", "Oakmoss"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:20": {
     flat: ["Beeswax", "Tobacco", "Hay", "Maple", "Barley", "Hops", "Peat", "Pine Needles", "Poplar Buds"],
@@ -332,20 +332,20 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Revelries-75631.html" },
   },
   "pineward:26": {
-    flat: ["Sea Water", "Seaweed", "Cypress", "Juniper", "Eucalyptus", "Juniper Berries", "Mushroom", "Ambergris", "Moss", "Water Pepper", "Sandalwood"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Coastal-Veil-83189.html" },
+    flat: ["Juniper Berries", "Juniper Needles", "Sea Water", "Bladderwrack", "Coastal Cypress", "Oyster Mushroom", "Water Pepper", "Blue Gum Eucalyptus", "Pacific Ambergris", "Irish Sea Moss", "Sandalwood"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:27": {
-    flat: ["Neroli", "Ginger", "Bergamot", "Rosemary", "Blood Orange", "Oakmoss", "Himalayan Cedar", "Leather"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Gingermoss-83376.html" },
+    flat: ["Fresh Ginger", "Neroli Blossom", "Bergamot Peel", "Blood Orange", "Himalayan Cedar", "Rosemary", "Leather", "Oakmoss"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:28": {
     flat: ["Subalpine Fir", "Bergamot", "Black Pepper", "Cedar Leaf (Thuja)", "Sandalwood", "Vetiver", "Ambrette", "Moss"],
     source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:29": {
-    flat: ["Green Apple", "Sandalwood", "Benzoin", "Cedar", "Patchouli"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Akero-99961.html" },
+    flat: ["Green Apple", "Benzoin", "Patchouli", "Sandalwood", "Cedar"],
+    source: { name: "Pineward", url: "https://pinewardperfume.com/products/akero" },
   },
   "pineward:30": {
     flat: ["Fresh Red Apple", "Tobacco", "Fir Balsam", "Rum Resin", "Dried Fruits"],
@@ -368,8 +368,8 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Delfin-o-83372.html" },
   },
   "pineward:35": {
-    flat: ["Pine", "Fir", "Citron", "Vetiver", "Musk", "White Tobacco"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Greymist-83374.html" },
+    flat: ["Noble Fir", "Scotch Pine", "Expressed Citron", "Blond Tobacco", "Botanical Musk", "Vetiver"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
 
   "pineward:36": {
@@ -381,24 +381,25 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Icefall-83388.html" },
   },
   "pineward:39": {
-    flat: ["Cedarmoss", "Oakmoss", "Moss", "Lime", "Green Tea", "Lemon Verbena", "Ivy", "Peppermint", "Cypress", "Pine", "Cedarwood", "Water Lily"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Ivymoss-83377.html" },
+    flat: ["Climbing Ivy", "Green Tea", "Spearmint", "Lime Rind", "Lemon Verbena", "Waterlily", "Emerald Cypress", "Mugo Pine", "Cedarwood", "Oakmoss", "Treemoss", "Cedarmoss"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
 
   "pineward:41": {
-    flat: ["Tomato Leaf", "Grass", "Orange Blossom", "Wildflowers", "Oakmoss", "Wheat", "Balsam Fir"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Meadowmoss-83378.html" },
+    flat: ["Oakmoss", "Alpine Sandwort", "Wild Grass", "Green Wheat", "Orange Blossom", "Fir Balsam", "Tomato Leaf", "Azure Bluet", "Mountain Wildflowers"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:42": {
     flat: ["Chocolate", "Peppermint", "Patchouli", "Vanilla", "Spices", "Resins", "Malt", "Cedar"],
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Mint-Cocoa-99948.html" },
   },
   "pineward:44": {
-    flat: ["Ponderosa Resin", "Ponderosa Needles", "Cedar", "Vanilla", "Strawberry", "Cinnamon", "Butterscotch", "Beeswax", "Raisin Cookies"],
-    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Ponderosa-83393.html" },
+    flat: ["Ponderosa Resin", "Ponderosa Needles", "Cedarwood", "Bourbon Vanilla", "Strawberry", "Cinnamon Attar", "Butterscotch", "Beeswax", "Raisin Cookies"],
+    source: { name: "Pineward, Master Scent List", url: "https://pinewardperfume.com/pages/master-scent-list" },
   },
   "pineward:45": {
     flat: ["Parchment", "Paper", "Leather", "Tobacco", "Black Tea", "Sandalwood", "Cedar", "Orris Root", "Rice", "Ambrette", "Coffee", "Oakmoss", "Nagarmotha"],
+    note: "Left on the fallback on purpose: a search of the house's own list came back with Cotswold's notes and Cotswold's description under this name, which is a conflation rather than a source.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Pineward-Perfumes/Tome-115784.html" },
   },
   "pineward:46": {

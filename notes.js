@@ -76,6 +76,21 @@
     return scrim;
   }
 
+  // A WORD OF WARNING ON A SOURCE, shown when its name is hovered.
+  // Keyed by the source's own name, so the data file never repeats it:
+  // there are seventy-odd entries and the caution belongs to the
+  // source, not to any one of them.
+  //
+  // WHY THIS ONE. The house's own page is the first source for every
+  // fragrance here and Fragrantica is only the fallback — the owner
+  // asked for that hierarchy in as many words — so where Fragrantica
+  // is named, it is named because the house publishes nothing, and the
+  // reader should know it is a crowd-edited list rather than the
+  // house's own.
+  const CAUTION = {
+    Fragrantica: "Fragrantica\u2019s notes are not to be trusted as 100% fact.",
+  };
+
   /** A list of notes as one line, in the order the source gives them. */
   function say(list) {
     return Array.isArray(list) ? list.join(", ") : String(list || "");
@@ -86,7 +101,7 @@
   }
 
   /** WHAT THE WINDOW SAYS, and there are four things it can be. */
-  function fill(entry) {
+  function fill(entry, id) {
     if (!entry) {
       return '<p class="note-waiting">The notes for this one have not been found yet.</p>';
     }
@@ -106,11 +121,19 @@
     }
     if (entry.note) out += '<p class="note-aside">' + entry.note + "</p>";
     if (entry.source) {
+      const name = entry.source.name;
+      const warn = CAUTION[name];
+      // `aria-describedby` rather than a `title`: a screen reader is
+      // told the caution whether or not anything is hovered, and a
+      // title attribute would sit there as a second, uglier tooltip.
+      const tip = warn ? ' aria-describedby="' + id + '-warn"' : "";
       const from = entry.source.url
-        ? '<a href="' + entry.source.url + '" rel="noopener noreferrer" target="_blank">' +
-            entry.source.name + "</a>"
-        : entry.source.name;
-      out += '<p class="note-source"><span>Source</span> ' + from + "</p>";
+        ? '<a class="note-cite" href="' + entry.source.url +
+            '" rel="noopener noreferrer" target="_blank"' + tip + ">" + name + "</a>"
+        : '<span class="note-cite"' + tip + ">" + name + "</span>";
+      out += '<p class="note-source"><span>Source</span> ' + from +
+        (warn ? '<span class="note-warn" role="tooltip" id="' + id + '-warn">' +
+          warn + "</span>" : "") + "</p>";
     }
     return out;
   }
@@ -171,7 +194,7 @@
           '<button class="note-shut" type="button" aria-label="Close the notes">' +
             '<span aria-hidden="true">\u00d7</span></button>' +
         "</div>" +
-        '<div class="note-in">' + fill(entry) + "</div>";
+        '<div class="note-in">' + fill(entry, id) + "</div>";
       document.body.appendChild(panel);
       made += 1;
 

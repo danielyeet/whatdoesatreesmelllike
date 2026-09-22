@@ -157,7 +157,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 225 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 227 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -343,7 +343,14 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   `{ top, mid, base }` **only when the source actually divides them**, or `{ flat: […] }`
   when it gives one undivided list, and it always carries `source: { name, url }`. **Never
   write a pyramid a source did not state**: a review's prose is not a pyramid, and there
-  is a test for every one of those rules. A fragrance with no entry is fine — it gets the
+  is a test for every one of those rules.
+- **THE SOURCE IS A HIERARCHY, and the owner set it out in capitals**: the perfume's own
+  house page first, and Fragrantica **only** where the house publishes nothing. Where
+  Pineward's own `pages/master-scent-list` is what gave the notes, the source is named
+  `"Pineward, Master Scent List"` and links to it; a fragrance whose notes are on its own
+  product page instead is named `"Pineward"`, because they are two different pages.
+  Fragrantica carries a **caution** (see the glossary) and a house's own page does not —
+  there are two tests, and the one that matters says a house source has no caution. A fragrance with no entry is fine — it gets the
   button and a panel saying the notes have not been found yet.
 - **A NEW HOUSE THAT WANTS NOTES** sets `window.HOUSE_NOTES` beside `SITE_ROOT` and loads
   `notes-data.js` then `notes.js` after its own script. **Renumbering a house means
@@ -592,6 +599,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **houses** | The contact sheet view: one picture per house, scattered and joined by dated lines. The pictures run in order down the page — 01 at the top, then 02, 03 and so on. |
 | **fragrances** (the view) | The index view of the contact sheet page. It **used to list every fragrance on the whole site** and point back into the houses; it does not any more. It is now the way in to `works/individual-fragrances.html` — the perfumes that belong to no house — and carries only those. If the owner remembers it as "every one of them", that is what it was until 2026-09-21. |
 | **view notes** | The button at the foot of every fragrance's writing, and the **window** it opens over the page carrying the notes and the source. A real dialog: centred, over a scrim, with the page behind held still, closing on the scrim, on escape and on its own close. **It goes with the fragrance**: collapse the part and the window goes too, and opening the part again leaves it shut. It opened BESIDE the writing for a round, as a column in the part's own row — if the owner remembers it that way, that is what it was until they asked for a window. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
+| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 32 of the 73 entries are the house's own; the rest are on the fallback because the house prints no list anywhere. Named per entry in `notes-data.js`, with the link the owner can check. |
+| **the caution** (notes) | The small box that comes up on hovering **Fragrantica** in a notes window: *Fragrantica's notes are not to be trusted as 100% fact.* — the owner's own sentence. A `CAUTION` table in `notes.js` keyed by source name, so it is **only** on the fallback; put it on a house's own page and it stops meaning anything, and there is a test saying so. It stands above the source line because the source is the last thing in a window that scrolls. |
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
 | **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |
 | **individual fragrances** | `works/individual-fragrances.html`: the perfumes that belong to no house on the Houses view, each carrying the house it DID come from. Shaped like a house so it gets the parts, the rank and the notes panel. The **Fragrances** view is the index into it. |

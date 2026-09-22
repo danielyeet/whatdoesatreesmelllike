@@ -412,3 +412,86 @@ test.describe("the notes on a phone", () => {
     await gone("its own close should close it");
   });
 });
+
+/* THE SOURCE HIERARCHY. The owner set it: "ALWAYS THE SOURCE OF THE
+   PERFUME ITSELF and only then fragrantica." So every entry names one
+   of the two, the house's own page is preferred wherever the house
+   publishes anything, and Fragrantica is what is left.
+
+   This cannot test that the BETTER source was chosen — only a person
+   reading the house's page can say that. What it can test is that the
+   two kinds are kept apart and labelled honestly, which is the part
+   that could rot silently. */
+test("every source is either a house's own page or the fallback", () => {
+  const all = notes();
+  const FALLBACK = "Fragrantica";
+  const bad = [];
+  Object.keys(all).forEach((key) => {
+    const from = all[key].source;
+    // A house source must point at the house, not at the fallback
+    // wearing the house's name.
+    const atFragrantica = /(^|\.)fragrantica\.com/i.test(new URL(from.url).hostname);
+    if (from.name === FALLBACK && !atFragrantica) bad.push(key + " says Fragrantica but does not link there");
+    if (from.name !== FALLBACK && atFragrantica) bad.push(key + " links to Fragrantica under another name");
+  });
+  expect(bad, bad.join("; ")).toEqual([]);
+
+  // And the hierarchy is actually being worked: a good share of them
+  // come from the houses themselves. If this ever drops to nothing,
+  // somebody has taken the research out.
+  const own = Object.keys(all).filter((k) => all[k].source.name !== FALLBACK).length;
+  expect(own, `${own} of ${Object.keys(all).length} come from the house itself`)
+    .toBeGreaterThan(20);
+});
+
+/* THE WARNING ON THE FALLBACK, which the owner asked for in as many
+   words: hovering Fragrantica says its notes are not to be trusted as
+   100% fact.
+
+   The assertion that matters is the second one — that a house-sourced
+   entry has NO warning. The caution means "this came from the
+   fallback"; put it on everything and it means nothing. */
+test("the fallback carries a warning and a house source does not",
+  async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto("/works/pineward.html");
+  await page.waitForTimeout(900);
+
+  const show = async (no) => {
+    const part = page.locator("#part-" + no);
+    await part.locator("summary").click();
+    await page.waitForTimeout(1100);
+    await part.locator(".note-open").click();
+    await page.waitForTimeout(600);
+    return page.locator("#notes-pineward-" + no);
+  };
+  const hide = async (no) => {
+    await page.locator("#notes-pineward-" + no + " .note-shut").click();
+    await page.waitForTimeout(500);
+  };
+
+  // 01 Bindebole comes from Pineward's own Master Scent List.
+  const own = await show("01");
+  await expect(own.locator(".note-cite")).toHaveText("Pineward, Master Scent List");
+  await expect(own.locator(".note-warn"),
+    "a house's own page needs no warning").toHaveCount(0);
+  await hide("01");
+
+  // 13 Sturbridge is on the fallback, because the house's list could
+  // not be had for it.
+  const fell = await show("13");
+  await expect(fell.locator(".note-cite")).toHaveText("Fragrantica");
+  const warn = fell.locator(".note-warn");
+  await expect(warn).toHaveCount(1);
+
+  // It is out of the way until the name is hovered.
+  await expect(warn).toBeHidden();
+  await fell.locator(".note-cite").hover();
+  await page.waitForTimeout(400);
+  await expect(warn).toBeVisible();
+  await expect(warn).toHaveText("Fragrantica\u2019s notes are not to be trusted as 100% fact.");
+
+  // And a screen reader is told it whether or not anything is hovered.
+  await expect(fell.locator(".note-cite"))
+    .toHaveAttribute("aria-describedby", "notes-pineward-13-warn");
+});

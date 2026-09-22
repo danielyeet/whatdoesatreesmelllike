@@ -6817,8 +6817,70 @@ body.note-holding { overflow: hidden; }
   letter-spacing: 0.14em;
   margin-bottom: 3px;
 }
-.note-source a { color: var(--muted); text-underline-offset: 3px; }
-.note-source a:hover { color: var(--ink); }
+.note-source { position: relative; }
+.note-cite { color: var(--muted); text-underline-offset: 3px; }
+a.note-cite:hover { color: var(--ink); }
+
+/* A WORD OF WARNING ON A SOURCE. Only Fragrantica carries one: the
+   house's own page is the first source for every fragrance here and
+   Fragrantica is the fallback, so where it is named it is named
+   because the house publishes nothing.
+
+   IT STANDS ABOVE THE LINE RATHER THAN BELOW IT, and that is not a
+   preference: the window scrolls inside itself, the source is the last
+   thing in it, and a tooltip hung underneath would be clipped off the
+   bottom every time. Above, it sits over the notes, inside the window.
+
+   Shown on hover AND on keyboard focus — a caution only a mouse can
+   reach is not a caution. Screen readers are told it either way, by
+   the `aria-describedby` the script writes. */
+.note-warn {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 9px;
+  width: max-content;
+  max-width: 100%;
+  padding: 9px 11px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  line-height: 1.55;
+  text-transform: none;
+  color: var(--bg);
+  background: var(--ink);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(3px);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+  pointer-events: none;
+  z-index: 2;
+}
+/* The little point down at the line it belongs to. */
+.note-warn::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 14px;
+  border: 5px solid transparent;
+  border-top-color: var(--ink);
+}
+.note-cite:hover ~ .note-warn,
+.note-cite:focus ~ .note-warn,
+.note-cite:focus-visible ~ .note-warn {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.adar-page .note-warn { color: #07070a; background: #dcdce4; }
+.adar-page .note-warn::after { border-top-color: #dcdce4; }
+.adar-page .note-cite { color: #a8a8b4; }
+.adar-page a.note-cite:hover { color: #dcdce4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .note-warn { transition: none; }
+}
 
 /* ADAR IS THE ONE HOUSE ON A DARK GROUND, and its writing's colours
    are written rather than taken from the tokens, so the window's are
