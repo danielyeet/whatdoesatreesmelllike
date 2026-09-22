@@ -8102,3 +8102,79 @@ a.note-cite:hover { color: var(--ink); }
 /* The multiplication sign between two fractions wants air round it —
    a bare `×` between two stacked pairs reads as part of the lower one. */
 .mop { color: #8d94a3; padding: 0 0.28em; }
+
+/* ==================================================================
+   WHERE THE PICTURES CAME FROM
+
+   One quiet line at the foot of a house, above the way on to the next,
+   naming the source its photographs were actually taken from. The owner
+   asked for pictures to be credited wherever they are used.
+
+   It is set in the site's mono and kept well under the writing's
+   weight: a credit is a thing you go looking for, not a thing that
+   competes with the fragrance above it. It sits inside the house's own
+   measure so it lines up with the writing rather than with the window.
+   ================================================================== */
+.house-credit {
+  /* THE SAME MEASURE AND THE SAME GUTTER AS THE FOOT BELOW IT — 940px
+     wide with 64px of side padding inside that, which is what
+     `.pine-foot`, `.adar-foot` and `.human-foot` all use. Written
+     without the side padding it was 940px of TEXT against the foot's
+     812px, so the credit hung out past the writing on a wide window and
+     ran hard into both edges of a phone. */
+  max-width: 940px;
+  margin: clamp(40px, 7vh, 72px) auto 0;
+  padding: 16px 64px 0;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.house-credit-say {
+  display: inline-block;
+  margin-right: 12px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.house-credit strong { font-weight: 500; color: var(--ink); }
+.house-credit a { color: var(--ink); text-underline-offset: 3px; }
+.house-credit a:hover { color: var(--muted); }
+
+/* THE PICTURE ON AN OPENED FAVOURITE. A favourite may name a picture of
+   its own (`data-image`), and it stands beside the writing when the card
+   is opened. Under 720px it goes above it instead — beside is not a
+   thing a phone has room for. */
+.fav-shot {
+  margin: 0 0 18px;
+  float: right;
+  width: min(280px, 38%);
+  margin-left: 24px;
+}
+.fav-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--silver-line);
+}
+.fav-writing::after { content: ""; display: block; clear: both; }
+/* AND EVERY BLOCK BESIDE THE PICTURE GETS ITS OWN FORMATTING CONTEXT.
+   A float narrows the LINES of a block, not the block itself, so a
+   paragraph in a box — and the two beside this picture are dashed
+   boxes — kept its full width and ran its border underneath the
+   picture while its words wrapped politely round it. A block that
+   establishes a formatting context may not overlap a float at all, so
+   the box narrows with the text. */
+.fav-writing > :not(.fav-shot) { display: flow-root; }
+@media (max-width: 720px) {
+  .fav-shot { float: none; width: 100%; margin-left: 0; }
+  /* The same 24px the three house feet drop to at this width. */
+  .house-credit { padding-left: 24px; padding-right: 24px; }
+  /* A long source name in the mono has nowhere to break on a narrow
+     screen — "Profumix Luxury Perfumes" ran off the edge — so it is
+     allowed to break inside a word here rather than overflow. */
+  .house-credit { overflow-wrap: anywhere; }
+}

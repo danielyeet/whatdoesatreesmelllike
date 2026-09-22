@@ -107,3 +107,94 @@ photographs are small enough already and were left alone.
 - The link test's tolerance of missing images is deliberate, but it means path breakage
   in this area has to be caught by eye. If the placeholders are ever all filled in, that
   tolerance is worth revisiting.
+
+## 2026-09-22 — three houses' pictures, Haxan's, and crediting all of it
+
+The owner uploaded pictures for **Ataraxia**, **Grande Parfums** and **Les Abstraits**, a
+folder of three for **Haxan** in the individual fragrances, and a house picture for each of
+the three houses. Every one of them is now on the page.
+
+**The pages were already asking for files that did not exist**, by the names this report
+set out (`ataraxia-01.jpg`, `grande-01.jpg` and so on), and `house.js` was quietly taking
+each photograph off the page because the file was not there. What the owner uploaded is
+named quite differently — their own names, in sub-folders of their own — so the `<img>`
+tags were repointed at the real files rather than the files being renamed to match. **The
+names are the owner's**, which is this repository's standing rule for anything in
+`images/`.
+
+Three things about those names are worth knowing, because they all work and all look like
+they should not:
+
+- **Spaces survive.** `images/Grande/Pictures for the fragrances/Hot Stuff.webp` is written
+  into the `src` with its spaces intact and the browser encodes them. This is the same
+  thing `images/Individual Fragrances/` has always done.
+- **So do brackets, and so does a trailing space before the extension.**
+  `My Dolls Makeup (Fragrantica) .jpg` has a space between the `)` and the `.jpg`. It
+  loads. It was checked in a browser rather than assumed, because it is exactly the kind of
+  name that quietly 404s on a case-sensitive server.
+- **`House Picture.webp` and `5 Year anniversary.webp` are the same file**, byte for byte.
+  Grande's frame on the contact sheet and its first fragrance therefore show the same
+  photograph. That is what was uploaded; it is not a mistake in the markup.
+
+**What is used, and what is spare.** Three fragrances came with more pictures than there is
+room for — Ataraxia's Deity has three (`Deity 0`, `Deity 1`, `deity 2`), Les Abstraits' Des
+Cendres has three, and Haxan has three. A house page shows **one photograph per fragrance**,
+so the first of each is on the page and the rest are sitting in the folder unused. If the
+owner wants them shown, the shape to copy is Pineward's **gallery**, which is a feature of
+its own rather than something the house shape does.
+
+### Crediting them
+
+The owner: *"I also want you to give credits when pictures are used."* So each house that
+uses pictures carries one line at its foot, above the way on to the next house —
+`<p class="house-credit">`, in the site's mono, at the same 940px measure and 64px gutter
+as the foot below it.
+
+| house | where its pictures came from |
+|---|---|
+| Pineward | the house's own site; the gallery at the foot is the owner's own photography |
+| ADAR | the house's own site |
+| Ataraxia | the house's own site, plus the logo credit the house published: logos created by **avramgo** for Ataraxia™, the fragrance brand by **tudoristea**, ©2024 ataraxia_perfumes |
+| Grande Parfums | **the MEUS website and Profumix Luxury Perfumes** — not the house |
+| Les Abstraits | the house's own site |
+
+**Grande Parfums is the reason the line names a source rather than saying "the house".**
+Its pictures came from two retailers, which the owner recorded in a `Source.txt` beside the
+files. Assuming a house photographs its own bottles would have been wrong for exactly one
+of the five.
+
+**Two of the three source documents were readable and one was not.** Grande's `Source.txt`
+carries two lines of plain text. Ataraxia's is `credits.jpg`, a screenshot of an Instagram
+comment, which is where the avramgo / tudoristea credit comes from. Les Abstraits'
+`Source Les Abstraits Website.txt` is **zero bytes** — the credit there is taken from the
+file's own name, and is worth the owner confirming.
+
+### A favourite can carry a picture too
+
+The owner: *"Feel free to use the image for des cendres also in favorites."* A
+`<a class="gallery-entry">` may now name a `data-image`, and it stands beside the writing
+when that favourite's card is opened on a chapter page.
+
+**Every block beside it is given its own formatting context** (`display: flow-root`), and
+that is not decoration. A float narrows the *lines* of a block, not the block itself — so
+the two dashed placeholder boxes beside Des Cendres kept their full width and ran their
+borders underneath the picture while their words wrapped politely around it. A block that
+establishes a formatting context may not overlap a float at all, so the box narrows with
+its text.
+
+### How this was checked
+
+Every page of the site was walked in a browser at 1440×900 and again at 390×844 with touch,
+counting images, broken images, HTTP failures, console errors and sideways scroll. Results:
+**203 image paths resolve to a real file**; the three new houses have no 404 at all
+(Ataraxia 10 tags, Grande 30, Les Abstraits 8); the contact sheet carries all six houses;
+and no page scrolls sideways at 390px.
+
+The 20 paths with no file behind them are the pre-existing placeholders — Almost Human's
+five fragrances and five of the six individual fragrances — which is the behaviour this
+report describes: the page names the file it wants and shows it the moment it arrives.
+
+One thing the walk found and fixed: `.house-credit` was written with the footer's 940px
+measure but **without its 64px gutter**, so the credit ran wider than the writing above it
+on a desktop and hard into both edges of a phone. It now carries the same padding as the
+foot, and drops to 24px below 720px exactly as the three house feet do.

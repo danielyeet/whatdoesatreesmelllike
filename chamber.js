@@ -509,6 +509,9 @@
       // notes-data.js — which is what puts a NOTES button in the card
       // when it is opened.
       notes: (entry.dataset.notes || "").trim(),
+      // And a picture of the perfume, if it has one, which stands
+      // beside the writing when the card is opened.
+      image: (entry.dataset.image || "").trim(),
       href: entry.getAttribute("href"),
     });
   });
@@ -1782,8 +1785,16 @@
     const body = document.createElement("div");
     body.className = "chapter-card-body";
     body.hidden = true;
+    // THE PICTURE STANDS INSIDE THE WRITING, not above it, so the words
+    // wrap round it rather than being pushed down the page — an opened
+    // card is a window, and a picture with a column of text beside it
+    // is the shape the rest of this site reads in.
+    const shot = item.image
+      ? '<figure class="fav-shot"><img src="' + item.image + '" alt="' +
+        item.name.replace(/"/g, "&quot;") + '" loading="lazy" decoding="async"></figure>'
+      : "";
     body.innerHTML =
-      '<div class="fav-writing">' +
+      '<div class="fav-writing">' + shot +
         (writings[item.name] ||
           '<p class="gallery-waiting">Nothing has been written about this one yet.</p>') +
       "</div>" +

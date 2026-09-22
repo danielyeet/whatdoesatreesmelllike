@@ -295,3 +295,48 @@ test("nothing inside the site links at a forwarding page", () => {
   }
   expect(found, "links pointing at a forwarding page instead of the real one").toEqual([]);
 });
+
+/* A PICTURE IS CREDITED WHERE IT IS USED.
+   The owner asked for it in as many words: "I also want you to give
+   credits when pictures are used." So a house that shows photographs
+   carries one line at its foot saying where they came from.
+
+   It is worth a test rather than a habit because the credit is the
+   easiest thing on the page to forget when a house gains its pictures,
+   and because it is not decoration — Grande Parfums' photographs came
+   from two retailers rather than from the house, which is precisely the
+   kind of thing that stops being recorded anywhere once the line is
+   missing. */
+test("a house that shows photographs says where they came from", () => {
+  const wrong = [];
+  let credited = 0;
+  for (const page of htmlFiles()) {
+    const from = path.relative(ROOT, page).split(path.sep).join("/");
+    if (!from.startsWith("houses/")) continue;
+    const src = withoutComments(fs.readFileSync(page, "utf8"));
+
+    // Only the pictures that are really there count: a house whose
+    // <img> tags all point at files that have not arrived yet is not
+    // yet using anything to credit.
+    const real = [...src.matchAll(/<img[^>]*src="([^"]+)"/g)]
+      .map((m) => m[1])
+      .filter((s) => !s.startsWith("http"))
+      .filter((s) => fs.existsSync(path.join(ROOT, "houses", decodeURIComponent(s))));
+    if (!real.length) continue;
+
+    const credit = /<p class="house-credit">([\s\S]*?)<\/p>/.exec(src);
+    if (!credit) {
+      wrong.push(`${from} shows ${real.length} pictures and credits none of them`);
+      continue;
+    }
+    const said = credit[1].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    // A credit has to name something. "Pictures" on its own is a label,
+    // not a source.
+    if (said.replace(/^Pictures\s*/i, "").length < 20) {
+      wrong.push(`${from}: the credit names no source — "${said}"`);
+    }
+    credited += 1;
+  }
+  expect(wrong, "houses using pictures without crediting them").toEqual([]);
+  expect(credited, "no house was found using pictures at all").toBeGreaterThan(0);
+});

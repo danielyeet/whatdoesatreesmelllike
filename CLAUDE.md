@@ -502,6 +502,14 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   (a 1600px long edge and a 520px square thumbnail) made from the original in
   `images/Pineward/The Pinewards Gallery Page/`. The order they stand in is the order
   they are shown and numbered in.
+- **A PICTURE IS CREDITED WHERE IT IS USED.** The owner asked for it in as many words,
+  and it is one `<p class="house-credit">` at the foot of a house, above the way on to the
+  next, naming the source the pictures were actually taken from. Five houses carry one:
+  Pineward and ADAR from the houses' own sites, Les Abstraits from its own, Ataraxia from
+  its own with the logo credit the house published, and **Grande Parfums from the MEUS
+  website and Profumix Luxury Perfumes rather than from the house** — which is exactly why
+  the line says where it came from instead of assuming. A favourite may also name a
+  picture with `data-image`, and that wants crediting too.
 - Images live in `images/`, **one folder per house or category** — `images/ADAR/`,
   `images/Pineward/`, `images/Almost-Human/`, `images/Favorites/`,
   `images/Individual Fragrances/`, `images/Theories/` — referenced from the `<img>` tags left commented out in the
@@ -703,6 +711,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the run** | **Removed.** The line between two pictures drawn as specks rather than as a stroke. Replaced by the trace, which is dashed — a solid stroke is the one thing the line must not be, and there is a test saying so. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
 | **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter`, a `data-house`, optionally a `data-notes` key into `notes-data.js`, and an `href` pointing at wherever that fragrance lives on the site. It carried a `data-date` until 2026-09-22; if the owner uses the word, that is what it was. |
+| **the credit** | The line at the foot of a house saying where its pictures came from — `<p class="house-credit">`, above the way on to the next house. The owner asked for pictures to be credited wherever they are used. Five houses carry one; the source is the one the pictures were actually taken from, which for Grande Parfums is **not** the house's own site. |
 | **work** | An individual piece, one page in `works/` — the essays, the researches and the templates. A **house** is not one of these any more: since 2026-09-22 the six houses live in `houses/` and the individual fragrances in `individual-fragrances/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 
@@ -765,15 +774,15 @@ worth knowing before touching anything shared:
   houses in that state — the test that used to conflate them now keeps them apart. What
   each is waiting for is in [their
   report](docs/features/2026-09-21-the-newer-houses.md).
-- **Three of the six carry a real picture on the contact sheet**, and every other
-  plate on the site is still a hatched placeholder with its `<img>` tag commented out
-  waiting for a file and a name — see [the images
+- **All six houses now carry a real picture on the contact sheet**, and five of the six
+  have a photograph with every fragrance — see [the images
   report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's
   fragrance pictures and its gallery arrived on 2026-09-18; Almost Human's own two — its
-  **mark** and the photograph `This one` — on 2026-09-21. The photograph is that house's
-  frame on the contact sheet; the mark is not printed on any page at all, and is only ever
-  drawn by the crowd's glitch. Almost Human's five fragrance pictures name the files they
-  want in `images/Almost-Human/` and show them the moment they are there.
+  **mark** and the photograph `This one` — on 2026-09-21; and Ataraxia's, Grande Parfums'
+  and Les Abstraits' on 2026-09-22, along with Haxan's in the individual fragrances. The
+  mark is not printed on any page at all, and is only ever drawn by the crowd's glitch.
+  **What is still waiting** is Almost Human's five fragrance pictures and five of the six
+  individual fragrances: each names the file it wants and shows it the moment it is there.
 
 **The placeholders in the new pages are marked as placeholders.** ADAR's introduction,
 the standfirsts and most of the site's plates are waiting for the owner, and every

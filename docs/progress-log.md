@@ -20,7 +20,7 @@ was undone later by someone who didn't know why it was made.
 | 2026-09-20 | [The Note Dissemination Framework](features/2026-09-20-the-note-dissemination-framework.md) | the third theory: twenty-two inline-SVG diagrams, a graph, and the only serif on the site |
 | 2026-09-18 | [The Photography page](features/2026-09-18-the-photography-page.md) | the second Other page, laid out the way a photographer lays out work |
 | 2026-09-18 | [The Pineward gallery](features/2026-09-18-the-pineward-gallery.md) | the owner's own photographs at the foot of Pineward, and the viewer they open into |
-| 2026-09-17 | [A folder of pictures per house and category](features/2026-09-17-images-folder-per-house.md) | how `images/` is laid out, and why the link test won't catch a broken picture path |
+| 2026-09-17 | [A folder of pictures per house and category](features/2026-09-17-images-folder-per-house.md) | how `images/` is laid out, why the link test won't catch a broken picture path — **and, on 2026-09-22, the pictures arriving for Ataraxia, Grande Parfums, Les Abstraits and Haxan, and the credit line every house that uses pictures now carries** |
 | 2026-09-17 | [The search](features/2026-09-17-the-search.md) | one field over the whole site, a field on each page, and the one manifest a new page must be added to |
 | 2026-09-17 | [ADAR](features/2026-09-17-adar.md) | the second house, standing on its void, with its log, dust and sounding |
 | 2026-09-17 | [The index pages, and the two views](features/2026-09-17-the-index-pages-and-views.md) | Works (was Researches) and the Fragrances view, and the switch between the contact sheet's two views |
