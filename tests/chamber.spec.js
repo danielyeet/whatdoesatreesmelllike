@@ -620,7 +620,13 @@ test("a chapter's page carries its writing, and its favourites as cards",
       .toBeGreaterThan(0);
     expect(card.dated, `${card.name} should carry no date at all`).toBe(false);
     expect(card.name.length).toBeGreaterThan(0);
-    expect(card.href, `${card.name} should point at a piece`).toMatch(/works\//);
+    // A PAGE ON THIS SITE, not a named folder. These said `works/` until
+    // the houses moved out of it into `houses/`, which broke a test that
+    // was never really about where a house file sits — that a link
+    // resolves to a real file is `repository.spec.js`'s job, site-wide.
+    // What matters here is that the card carries a way on at all.
+    expect(card.href, `${card.name} should point at a piece`)
+      .toMatch(/^\.\.\/[\w-]+\/[\w-]+\.html(#[\w-]+)?$/);
   });
   expect(cards.some((c) => c.house !== "\u2014"),
     "at least one favourite names its house").toBe(true);
@@ -845,7 +851,7 @@ test("a favourite opens where it stands, and the ones after it go down",
   expect(inside.said, "a description and a paragraph of commentary")
     .toBeGreaterThanOrEqual(2);
   expect(inside.go, "and a way on to wherever that fragrance lives")
-    .toMatch(/works\//);
+    .toMatch(/^\.\.\/[\w-]+\/[\w-]+\.html(#[\w-]+)?$/);
   expect(inside.notes).toBe(true);
 
   // Only one at a time: a second would leave the first standing above
