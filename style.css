@@ -6677,6 +6677,190 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
 .ataraxia-page .human-part > summary:hover .human-cue { border-color: #6b6f7b; }
 
 /* ==================================================================
+   THE FRAGRANCE READER — one fragrance, in place
+
+   Pressing a fragrance in the Fragrances table used to LEAVE THE PAGE.
+   The owner asked for it to open here instead, one at a time: the
+   table fades away, the page goes blank, and that fragrance comes up
+   on it with its picture, its writing and its notes.
+
+   THE GRID IS THE GROUND, and it is also what the picture goes home to
+   on the way back — see THE WAY BACK in fragrance-reader.js. There was
+   no grid on this page before; the transition the owner described
+   needs somewhere to recede INTO, and a blank page has nowhere.
+   ================================================================== */
+.frag-reader {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg);
+  opacity: 0;
+  transition: opacity 520ms var(--menu-ease);
+}
+.frag-reader.is-here { opacity: 1; }
+.frag-reader[hidden] { display: none; }
+/* The page fading out from under it, which is the whole of the
+   "everything goes blank" the owner asked for. */
+.index-page.is-going {
+  opacity: 0;
+  transition: opacity 420ms var(--menu-ease);
+  pointer-events: none;
+}
+/* Nothing scrolls behind a reader standing over the whole window. */
+body.frag-open { overflow: hidden; }
+
+.frag-grid {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--across, 12), 1fr);
+  grid-template-rows: repeat(var(--down, 8), 1fr);
+  pointer-events: none;
+  z-index: 0;
+}
+.frag-cell { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); opacity: 0.34; }
+
+.frag-in {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(80px, 14vh, 150px) 64px clamp(60px, 10vh, 110px);
+  transition: opacity 340ms var(--menu-ease);
+}
+/* THE WRITING GOES AND THE PICTURE STAYS, which is step one of the way
+   back. The pictures are out of the layout by the time this runs —
+   they have been lifted into fliers of their own — so fading the whole
+   article is exactly "everything except the picture". */
+.frag-reader.is-clearing .frag-in { opacity: 0; }
+
+.frag-kicker {
+  display: flex;
+  gap: 14px;
+  margin: 0 0 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.frag-name {
+  margin: 0 0 34px;
+  font-size: clamp(30px, 5vw, 56px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+/* THE PICTURE BESIDE THE WRITING, which is the shape a fragrance has
+   on its own page. Stacked, the plate is a 940px square and the
+   writing starts below the fold — the first version of this did
+   exactly that and the notes were two screens down. */
+.frag-body {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .frag-body { grid-template-columns: 1fr; gap: 32px; }
+  .frag-plate { max-width: 360px; }
+}
+.frag-plate { margin: 0; }
+.frag-plate > div {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb),0.09) 0px, rgba(var(--ink-rgb),0.09) 1px, transparent 1px, transparent 16px);
+}
+.frag-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+}
+.frag-plate:has(img) > div { display: none; }
+
+.frag-text { max-width: 62ch; }
+.frag-side { min-width: 0; }
+.frag-text p { margin: 0 0 16px; color: #45443c; }
+.frag-text p.human-waiting,
+.frag-waiting {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  padding: 14px 16px;
+}
+.frag-notes { max-width: 62ch; margin-top: 38px; }
+.frag-notes-head {
+  margin: 0 0 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* THE ARROW AT THE FOOT, which is where the owner asked for it: "when
+   you finish reading, there should be an arrow at the end". */
+.frag-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 54px;
+  padding: 11px 18px 12px;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.3s ease, gap 0.3s var(--menu-ease);
+}
+.frag-back:hover { border-color: var(--ink); gap: 18px; }
+.frag-arrow { font-size: 14px; }
+
+/* A PICTURE ON ITS WAY HOME. Taken out of the layout and put on the
+   window at exactly the box it occupied, so nothing jumps when the
+   article underneath it fades. */
+.frag-flier {
+  position: fixed;
+  z-index: 40;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  opacity: 1;
+}
+.frag-flier img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.frag-flier-blank {
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb),0.09) 0px, rgba(var(--ink-rgb),0.09) 1px, transparent 1px, transparent 16px);
+}
+/* AND THEY GO AT ONCE, on one clock rather than each on its own. */
+.frag-flier.is-gone { opacity: 0; transition: opacity 420ms ease; }
+
+@media (max-width: 700px) {
+  .frag-in { padding: 96px 20px 70px; }
+}
+/* With motion turned off there is no blanking and no receding: the
+   reader is simply there, and simply gone again. */
+@media (prefers-reduced-motion: reduce) {
+  .frag-reader,
+  .frag-in,
+  .index-page.is-going { transition: none; }
+  .frag-reader { opacity: 1; }
+}
+
+/* ==================================================================
    VIEW NOTES — the pyramid, in a window over the page
 
    It opened BESIDE the writing at first, as a third column in the

@@ -44,7 +44,6 @@
 // ============================================================
 (function () {
   const KEY = window.HOUSE_NOTES;
-  if (!KEY) return;
   const ALL = window.FRAGRANCE_NOTES || {};
 
   const KINDS = [
@@ -165,15 +164,6 @@
     if (!entry) {
       return '<p class="note-waiting">The notes for this one have not been found yet.</p>';
     }
-    // A SOURCE THAT WAS LOOKED AT AND SAID NOTHING is not the same as a
-    // fragrance nobody has looked up yet, and the window says which.
-    // ADAR prints prose for two of its fragrances and never names a
-    // material; one Grande Parfums title could not be found online at
-    // all. Both are answers.
-    if (entry.missing) {
-      return '<p class="note-waiting">' + entry.missing + "</p>" +
-        cite(entry.source, id, "");
-    }
     let out = "";
     // WHICH VERSION THESE NOTES BELONG TO, and the owner asked for it
     // to be said on the page rather than only in the aside: several
@@ -185,7 +175,17 @@
         entry.version + "</strong></p>";
     }
     if (entry.say) out += '<p class="note-half">' + entry.say + "</p>";
-    out += lists(entry);
+    // A SOURCE THAT WAS LOOKED AT AND SAID NOTHING is not the same as a
+    // fragrance nobody has looked up yet, and the window says which.
+    // ADAR prints prose for two of its fragrances and never names a
+    // material; one Grande Parfums title could not be found online at
+    // all; Ataraxia has not disclosed one fragrance's notes. All three
+    // are answers, and the last of them still has a SECOND list under
+    // it — which is why this stands in for the lists rather than
+    // returning early, as it did when nothing could follow it.
+    out += entry.missing
+      ? '<p class="note-waiting">' + entry.missing + "</p>"
+      : lists(entry);
     if (entry.note) out += '<p class="note-aside">' + entry.note + "</p>";
     out += cite(entry.source, id, "");
     // A SECOND LIST, UNDER THE FIRST. Only Haxan has one: the perfumer
@@ -194,7 +194,9 @@
     if (entry.also) {
       out += '<div class="note-also">';
       out += '<p class="note-half">' + entry.also.say + "</p>";
-      out += lists(entry.also, true);
+      out += entry.also.missing
+        ? '<p class="note-waiting">' + entry.also.missing + "</p>"
+        : lists(entry.also, true);
       if (entry.also.note) out += '<p class="note-aside">' + entry.also.note + "</p>";
       out += cite(entry.also.source, id, "-also");
       out += "</div>";
@@ -215,6 +217,18 @@
 
   const safe = (text) => String(text)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // THE RENDERER, HANDED OUT. The Fragrances view of the contact sheet
+  // opens a fragrance IN PLACE now and shows its notes there, and it
+  // must show them the same way a house page does — one renderer, or
+  // the two drift apart and a reader is told different things about
+  // the same fragrance depending on which door they came in by.
+  window.NOTE_PANEL = { html: fill, landscape: fillLandscape };
+
+  // AND EVERYTHING BELOW HERE NEEDS A HOUSE. A page with no
+  // `window.HOUSE_NOTES` has no parts to put buttons on; it has taken
+  // what it came for above.
+  if (!KEY) return;
 
   let made = 0;
   const wanted = [];

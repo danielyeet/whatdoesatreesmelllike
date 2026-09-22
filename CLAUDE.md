@@ -74,7 +74,7 @@ which talk through five `window` globals; see the landing page's report).
 | page | what it is | scripts it loads beyond `nav.js` | report |
 |---|---|---|---|
 | `index.html` | three scroll-snapped **slides**: the title, the italic line, the 3D **node map** | `landing.js`, `node-scene.js`, `paper.js`, `thread.js`, `extras.js` (and Three.js from a CDN — the only page that uses it) | [node map](docs/features/2026-09-11-the-node-map.md), [slides](docs/features/2026-09-11-the-landing-slides-and-exit.md), [paper](docs/features/2026-09-11-the-paper.md), [thread](docs/features/2026-09-11-the-thread.md), [chromatogram](docs/features/2026-09-11-the-chromatogram.md) |
-| `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **contact sheet** of pictures scattered and joined by dated lines, all of it drawn in specks — and the **fragrances**, an **index** of every fragrance written up on the site | `search.js`, `contact-sheet.js`, `index-page.js`, `views.js` | [contact sheet](docs/features/2026-09-13-the-contact-sheet.md), [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
+| `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **contact sheet** of pictures scattered and joined by dated lines, all of it drawn in specks — and the **fragrances**, an **index** of the perfumes with no house, each of which opens **in the page** rather than navigating away | `search.js`, `contact-sheet.js`, `index-page.js`, `notes-data.js`, `notes.js`, `fragrance-reader.js`, `views.js` | [contact sheet](docs/features/2026-09-13-the-contact-sheet.md), [index and views](docs/features/2026-09-17-the-index-pages-and-views.md), [the reader](docs/features/2026-09-22-the-fragrance-reader.md) |
 | `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `search.js`, `page-search.js`, `structure.js` | [structure](docs/features/2026-09-14-the-structure.md) |
 | `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu of **chapters** — and opening one **bursts** into that chapter's own page, black and silver | `search.js`, `page-search.js`, `chamber.js` | [chamber](docs/features/2026-09-15-the-chamber.md) |
 | `categories/researches.html` | **Explorations &amp; Researches**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left, each row saying whether it is a research or an exploration | `search.js`, `index-page.js` | [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
@@ -82,9 +82,9 @@ which talk through five `window` globals; see the landing page's report).
 | `works/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 52 compacted parts — one per fragrance, each with its own photograph — in four forest **strata**, with a **wood** grown down both margins, a ticked **trunk**, a faint pine-green ground, and the **gallery** at the foot of it | `search.js`, `pineward.js`, `pineward-gallery.js` | [Pineward](docs/features/2026-09-16-pineward.md), [gallery](docs/features/2026-09-18-the-pineward-gallery.md) |
 | `works/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window that shows the house's mark under the pointer — with a ruled **log** and falling **dust** down the left and a **sounding** down the side | `search.js`, `adar.js` | [ADAR](docs/features/2026-09-17-adar.md) |
 | `works/almost-human.html` | **Almost Human**, the third house: five fragrances standing in a **crowd** — people drawn entirely in specks, standing in whatever room the page leaves and over nothing, each of them nearly a person and never quite one, resolving under the pointer and glitching into the house's **mark** — with a ticked **rank** down the side | `search.js`, `almost-human.js` | [Almost Human](docs/features/2026-09-20-almost-human.md) |
-| `works/ataraxia.html` | **Ataraxia**, the fourth house: five fragrances on **dark gray**, crossed side to side by **bands** of glowing white particles at their own angles — each with a **crest** of light travelling along it, passing behind the writing and quietened where it does, and **kindling** under the pointer | `search.js`, `house.js`, `ataraxia.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `works/ataraxia.html` | **Ataraxia**, the fourth house: five named fragrances (writing still to come) on **dark gray**, crossed side to side by **bands** of glowing white particles at their own angles — each with a **crest** of light travelling along it, passing behind the writing and quietened where it does, and **kindling** under the pointer | `search.js`, `house.js`, `ataraxia.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `works/grande-parfums.html` | **Grande Parfums**, the fifth house: seventeen fragrances — fifteen written up alphabetically, two at the foot not smelled yet — over a **drift** of fine specks rising slowly up the window, which claims no theme because the owner has not given one | `search.js`, `house.js`, `grande.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
-| `works/les-abstraits.html` | **Les Abstraits**, the sixth house: four fragrances, none written yet | `search.js`, `house.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `works/les-abstraits.html` | **Les Abstraits**, the sixth house: four named fragrances, none written yet, all four with notes off the house's own page | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `works/individual-fragrances.html` | the **individual fragrances**: the ones that belong to no house, each with the house it did come from. What the Fragrances view of Scent descriptions opens into | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the notes](docs/features/2026-09-21-the-notes.md) |
 | `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html`, `works/cold-vs-warm-incense.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/theory-03.html` | the same, and the longest piece on the site: **The Note Dissemination Framework**, which argues in **diagrams** and carries a **calculator** standing in the same page | `essay.js`, `calculator.js` | [the framework](docs/features/2026-09-20-the-note-dissemination-framework.md) |
@@ -95,7 +95,8 @@ which talk through five `window` globals; see the landing page's report).
 Four of those page scripts are elaborate: `chamber.js` (~2,770 lines), `structure.js`
 (~1,560), `contact-sheet.js` (~1,550) and `node-scene.js` (~1,520). The rest are smaller:
 `almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
-(~780), `paper.js` (~580), `notes.js` (~460), `essay.js` (~430), `ataraxia.js` (~385), `pineward-gallery.js`
+(~780), `paper.js` (~580), `notes.js` (~475), `essay.js` (~430), `ataraxia.js` (~385),
+`fragrance-reader.js` (~380), `pineward-gallery.js`
 (~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `grande.js` (~265), `search.js`
 (~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230), `nav.js` (~220),
 `search-page.js` (~190), `photography.js` (~190), `find-ground.js` (~180) and
@@ -166,7 +167,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 238 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 245 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -258,7 +259,7 @@ Two states are easy to forget when reviewing a change:
   `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
   `adar.js`, `almost-human.js`, `ataraxia.js`, `grande.js`, `house.js`, `essay.js`,
   `calculator.js`,
-  `index-page.js` and `style.css`, each degrading to a still
+  `index-page.js`, `fragrance-reader.js` and `style.css`, each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
   fade to nothing) do *not* check it beyond that; if you add motion there, add the guard
   too.
@@ -275,6 +276,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| The fragrance reader | `fragrance-reader.js` | [report](docs/features/2026-09-22-the-fragrance-reader.md) |
 | View notes, and the Fragrances page | `notes.js`, `notes-data.js` | [report](docs/features/2026-09-21-the-notes.md) |
 | Ataraxia, Grande Parfums and Les Abstraits | `house.js`, `ataraxia.js`, `grande.js` | [report](docs/features/2026-09-21-the-newer-houses.md) |
 | The Photography page | `photography.js` | [report](docs/features/2026-09-18-the-photography-page.md) |
@@ -383,7 +385,9 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   there are two tests, and the one that matters says a house source has no caution. A fragrance with no entry is fine — it gets the
   button and a panel saying the notes have not been found yet.
 - **A NEW HOUSE THAT WANTS NOTES** sets `window.HOUSE_NOTES` beside `SITE_ROOT` and loads
-  `notes-data.js` then `notes.js` after its own script. **Renumbering a house means
+  `notes-data.js` then `notes.js` after its own script. **Five of the six houses do now**,
+  and so does the Fragrances view of the contact sheet, which has no house of its own and
+  loads them only for the renderer `notes.js` hands out as `window.NOTE_PANEL`. **Renumbering a house means
   renumbering `notes-data.js` in the same turn**, exactly as it means re-pointing the
   Fragrances table; both ends have a test.
 - **A fragrance with no name yet** is `<span class="human-title human-untitled">Untitled</span>`
@@ -633,11 +637,15 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **fragrances** (the view) | The index view of the contact sheet page. It **used to list every fragrance on the whole site** and point back into the houses; it does not any more. It is now the way in to `works/individual-fragrances.html` — the perfumes that belong to no house — and carries only those. If the owner remembers it as "every one of them", that is what it was until 2026-09-21. |
 | **the glitch on the way out** | What the notes window used to do when you clicked away, and why it is worth knowing: the window is built on the `<body>` (it has to be — a fixed thing inside a transformed box is fixed to that box), which put it in reach of `body > *:not(...)`, the rule that dims the page while the Menu is open. Four `:not()` outrank `.note-panel`, so the window got the menu's `opacity 0.85s` instead of its own `opacity 300ms, transform 300ms` — and the script hid it on a 260ms timer, cutting the window AND the scrim from 0.606 opacity to nothing in one frame. Both selectors now exclude it, and the close waits for `transitionend` rather than a number. **Anything else added as a child of `body` is in the same trap.** There is a test. |
 | **view notes** | The button at the foot of every fragrance's writing, and the **window** it opens over the page carrying the notes and the source. A real dialog: centred, over a scrim, with the page behind held still, closing on the scrim, on escape and on its own close. **It goes with the fragrance**: collapse the part and the window goes too, and opening the part again leaves it shut. It opened BESIDE the writing for a round, as a column in the part's own row — if the owner remembers it that way, that is what it was until they asked for a window. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
-| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 45 of the 89 sources in the file are the house's own, against 44 on the fallback — the houses overtook it on 2026-09-22. Named per entry in `notes-data.js`, with the link the owner can check. |
+| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 54 of the 103 sources in the file are the house's own, against 49 on the fallback — the houses overtook it on 2026-09-22 and Les Abstraits is the first house where the fallback does not appear at all. Named per entry in `notes-data.js`, with the link the owner can check. |
 | **the olfactory landscape** | What Almost Human publishes INSTEAD of notes: five impressions rather than a list of materials. Its five fragrances carry a second button and window of their own, standing **before** View notes, with the house's own landscape in it; the notes beside it are the fallback's. It is never called a list of notes, because it is not one. |
 | **the version** (notes) | Which edition a fragrance's notes belong to, printed as a boxed line at the top of its window. Several Pineward fragrances have been reformulated and the note list changes underneath the name, so a list with no year on it is a list you cannot check. Five entries carry one, and four of the five carry the NEWEST version — De Profundis is the 2011 original because the owner asked for that one. |
 | **said nothing** | An entry that was looked up and came back with nothing, which is not the same as no entry at all. `{ missing: "…" }` — ADAR's Root Code and Lithos Diaphanes say *No information as of yet.* and still name the house's page; Grande's "Cookie something (?)" says it could not be found online and names nothing. A fragrance with NO key says instead that the notes "have not been found yet", which means nobody has looked. |
-| **the two halves** (Haxan) | The one window on the site carrying two lists: the perfumer's own account above and Fragrantica's **interpreted notes** below, each with its own heading and source, neither a pyramid. The lower list is the only one on the site read off a screenshot the owner sent rather than through a search summary. |
+| **the two halves** | A window carrying two lists, the house’s own above and Fragrantica’s below, each with its own heading and source. **Haxan** was the first and **all five of Ataraxia** followed, at the owner’s word ("split the exact same way as they were with haxan"). Haxan’s lower list is the only one on the site read off a screenshot the owner sent rather than through a search summary. |
+| **not disclosed yet** | What Ataraxia’s My Doll’s Makeup says in the upper half of its window: the house has published no notes for it, and saying so is different from quietly standing on the fallback alone — which is what the owner asked for. It is the only entry whose FIRST half is a `missing` and whose second is a list. |
+| **the fragrance reader** | What a fragrance in the **Fragrances** view opens into now: not another page but this one, gone blank, with that fragrance’s picture, writing and notes on it and an arrow back. The writing is FETCHED from `works/individual-fragrances.html` rather than copied, so there is still one copy of the owner’s words. `fragrance-reader.js`. |
+| **the flier** | A picture on its way home, on the way back out of the reader: lifted out of the article onto the window at exactly the box it occupied, squared up, and sent receding into a cell of **the grid**. They all fade together once they are home. |
+| **the grid** (the reader) | The faint squared field behind the fragrance reader, sized off the window. It is the reader’s ground AND what the pictures recede into — there was no grid on that page before, and the transition the owner described needs somewhere to go. |
 | **the caution** (notes) | The small box that comes up on hovering **Fragrantica** in a notes window: *Fragrantica's notes are not to be trusted as 100% fact.* — the owner's own sentence. A `CAUTION` table in `notes.js` keyed by source name, so it is **only** on the fallback; put it on a house's own page and it stops meaning anything, and there is a test saying so. It stands above the source line because the source is the last thing in a window that scrolls. |
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
 | **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |
@@ -701,9 +709,12 @@ worth knowing before touching anything shared:
   report](docs/features/2026-09-11-the-page-shell-and-menu.md).
 - **There are six houses now** (Pineward, ADAR, Almost Human, Ataraxia, Grande Parfums,
   Les Abstraits), and the three newest are three different states of finished: Ataraxia
-  has its drawing and no writing, Grande Parfums has both its writing and a drawing that
-  **deliberately says nothing about the house** — the owner has still not said what it
-  is — and Les Abstraits has neither. What each is waiting for is in [their
+  has its drawing, its names and its notes and **no writing**; Grande Parfums has its
+  writing and a drawing that **deliberately says nothing about the house**, because the
+  owner has still not said what it is; Les Abstraits has its names and its notes and
+  neither of the other two. **Named is not written**, and since 2026-09-22 the site has
+  houses in that state — the test that used to conflate them now keeps them apart. What
+  each is waiting for is in [their
   report](docs/features/2026-09-21-the-newer-houses.md).
 - **Three of the six carry a real picture on the contact sheet**, and every other
   plate on the site is still a hatched placeholder with its `<img>` tag commented out

@@ -66,8 +66,16 @@ test("a second list names itself and its own source", () => {
     const also = all[k].also;
     if (!also) return;
     if (!also.say) bad.push(k + " has no heading");
-    if (!Array.isArray(also.flat) || !also.flat.length) bad.push(k + " has no list");
-    if (also.top || also.mid || also.base) bad.push(k + " is a pyramid");
+    // A SECOND LIST IS THE SAME KINDS OF THING AS A FIRST, and the
+    // first version of this test said otherwise — it insisted the
+    // second was always a flat list, which was true when Haxan was the
+    // only one that had one. Ataraxia's five each carry a second list
+    // that IS divided, because the fallback divides them, and a
+    // division the source makes is one the entry may make.
+    const has = Array.isArray(also.flat) && also.flat.length;
+    const pyramid = also.top || also.mid || also.base;
+    if (!has && !pyramid && !also.missing) bad.push(k + " has no list");
+    if (has && pyramid) bad.push(k + " is both shapes at once");
     if (!also.source || !also.source.name || !/^https:\/\//.test(also.source.url || "")) {
       bad.push(k + " has no usable source");
     }
@@ -124,6 +132,8 @@ test("every key points at a part that is really on its page", () => {
     adar: ["works/adar.html", "adar"],
     "almost-human": ["works/almost-human.html", "human"],
     grande: ["works/grande-parfums.html", "human"],
+    ataraxia: ["works/ataraxia.html", "human"],
+    abstraits: ["works/les-abstraits.html", "human"],
     individual: ["works/individual-fragrances.html", "human"],
   };
   const missing = [];
@@ -712,20 +722,102 @@ test("Haxan carries the perfumer's account and the fallback's reading",
 test("a fragrance whose source says nothing says so, in its own words",
   async ({ page }) => {
   await serveDependenciesLocally(page);
+  // 10 is Lithos Diaphanes, and it is the last ADAR fragrance the
+  // house names no material for. Root Code was here until the owner
+  // supplied its notes from the house's own page.
   await page.goto("/works/adar.html");
   await page.waitForTimeout(900);
-  await page.locator("#part-08 summary").click();
+  await page.locator("#part-10 summary").click();
   await page.waitForTimeout(1200);
-  await page.locator("#part-08 .note-open").click();
+  await page.locator("#part-10 .note-open").click();
   await page.waitForTimeout(700);
 
-  const win = page.locator("#notes-adar-08");
+  const win = page.locator("#notes-adar-10");
   await expect(win.locator(".note-waiting")).toHaveText("No information as of yet.");
   // It still names where that was read, which is the difference
   // between "the house does not say" and "nobody has looked".
   await expect(win.locator(".note-cite")).toHaveText("ADAR Perfumes");
   await expect(win.locator(".note-pyramid"),
     "there is nothing to put in a list").toHaveCount(0);
+});
+
+/* THE TWO HOUSES THAT ARE NAMED BUT NOT WRITTEN. The owner gave
+   Ataraxia's five and Les Abstraits' four their real names and their
+   notes in one round, and kept the writing. So both houses now have a
+   full set of entries, and the tests that matter are about SHAPE.
+
+   ATARAXIA'S ARE ALL TWO-PART, which the owner asked for by name
+   ("split the exact same way as they were with haxan"): the house's
+   own account above and Fragrantica's below. */
+test("every Ataraxia fragrance carries both halves", () => {
+  const all = notes();
+  const keys = Object.keys(all).filter((k) => k.startsWith("ataraxia:"));
+  expect(keys.length, "all five should be in").toBe(5);
+  const bad = [];
+  keys.forEach((k) => {
+    const one = all[k];
+    if (one.source.name !== "Ataraxia Perfumery") bad.push(k + " does not lead with the house");
+    if (!one.also) bad.push(k + " has no second half");
+    else if (one.also.source.name !== "Fragrantica") bad.push(k + " does not follow with the fallback");
+    if (!one.say) bad.push(k + " has no heading on its first half");
+  });
+  expect(bad, bad.join("; ")).toEqual([]);
+
+  // AND ONE OF THEM SAYS THE HOUSE HAS NOT SAID, which the owner asked
+  // for in as many words: "add 'not disclosed yet' for the dolls
+  // makeup actual source; dont just add fragranticas account". It is
+  // the only entry on the site whose FIRST half is a `missing` and
+  // whose second half is a list.
+  const doll = all["ataraxia:03"];
+  expect(doll.missing, "the house's half should say so").toMatch(/not disclosed/i);
+  expect(doll.also.top, "and the fallback's half should still be there").toBeTruthy();
+});
+
+/* LES ABSTRAITS COMES ENTIRELY OFF ITS OWN HOUSE. It is the only house
+   on the site where that is true of every fragrance — the house
+   publishes a divided list for all four — so the fallback should not
+   appear anywhere in it. */
+test("every Les Abstraits fragrance comes from the house itself", () => {
+  const all = notes();
+  const keys = Object.keys(all).filter((k) => k.startsWith("abstraits:"));
+  expect(keys.length, "all four should be in").toBe(4);
+  keys.forEach((k) => {
+    expect(all[k].source.name, `${k} should be the house's own`).toBe("Les Abstraits");
+    expect(all[k].top, `${k} should be divided, as the house divides it`).toBeTruthy();
+  });
+
+  // AND THEY STAND ALPHABETICALLY, which is what the owner asked for
+  // ("add them alphabetically") and is the house page's own order.
+  const page = read("works/les-abstraits.html");
+  const named = [...page.matchAll(/<span class="human-title">([^<]+)<\/span>/g)]
+    .map((m) => m[1].trim());
+  expect(named.length).toBe(4);
+  const sorted = [...named].sort((a, b) => a.localeCompare(b, "en"));
+  expect(named, `they stand: ${named.join(", ")}`).toEqual(sorted);
+});
+
+/* EVERY ADAR FRAGRANCE QUOTES THE HOUSE. The owner asked for this
+   after seeing one of them: "i like what you did with [Against All
+   Odds] ... I want you to add equivalent text to other adar perfumes
+   too, with quotes from the prose."
+
+   ADAR is the house that writes prose instead of note lists, so what
+   its own page says about a fragrance is often the only thing it says
+   at all — and an entry that drops it keeps the notes and loses the
+   house. */
+test("every ADAR entry quotes the house's own prose", () => {
+  const all = notes();
+  const keys = Object.keys(all).filter((k) => k.startsWith("adar:"));
+  expect(keys.length, "all eleven should be in").toBe(11);
+  const bare = keys.filter((k) => !all[k].note || all[k].note.length < 40);
+  expect(bare, `these say nothing about the house: ${bare.join(", ")}`).toEqual([]);
+  // And most of them QUOTE the house rather than paraphrasing it — a
+  // curly quotation mark is the tell. This is the looser of the two
+  // assertions on purpose: the one above is what bites when an aside
+  // is thinned out, and it caught five of them when they were.
+  const quoted = keys.filter((k) => /[\u201c\u201d]/.test(all[k].note));
+  expect(quoted.length, `${quoted.length} of ${keys.length} carry a quotation`)
+    .toBeGreaterThan(5);
 });
 
 /* THE SOURCE HIERARCHY. The owner set it: "ALWAYS THE SOURCE OF THE

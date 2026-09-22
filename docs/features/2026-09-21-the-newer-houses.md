@@ -19,9 +19,9 @@ why the three pages are three different states of finished:
 
 | | what was given | what was built |
 |---|---|---|
-| **04 Ataraxia** | a theme — *"Their whole theme is angel statues and crosses"* — and a count of five, and then, a round later, *"Remove the ataraxia crosses and angels"* and the bands in their place | the drawing, whole, and rebuilt once. No names and no writing. |
+| **04 Ataraxia** | a theme, then the bands that replaced it, then on 2026-09-22 the five fragrances' **names** | the drawing, whole and rebuilt once; five named fragrances with two-part notes. The writing is still the owner's. |
 | **05 Grande Parfums** | an introduction, fifteen write-ups, a list of the house's fragrances, and *"Idk the theme to be honest"* — then, a round later, *"subtle designs please"* | the writing, whole, and a ground that claims no theme. |
-| **06 Les Abstraits** | *"make the page for four fragrances for now"* | the shape, four parts, and nothing else. |
+| **06 Les Abstraits** | *"make the page for four fragrances for now"*, then on 2026-09-22 the four **names** | four named fragrances, all four with notes off the house's own page. The writing is still the owner's. |
 
 ## The shared shape, and why house.js exists at all
 
@@ -285,8 +285,12 @@ it is too strong.
 
 ## Known issues / TODO
 
-- **Ataraxia has no names and no writing**, and neither has Les Abstraits. Both are
-  waiting on the owner, and both say so on every part.
+- **Ataraxia and Les Abstraits are named now, and still unwritten.** The owner gave both
+  houses their fragrances' names and their notes on 2026-09-22 and kept the writing, which
+  is a state this site had not had before: a house that reads as researched and unwritten
+  rather than unstarted. Neither page has an *Untitled* on it any more; both still say on
+  every part that the writing has not arrived. The notes are in
+  [the notes' report](2026-09-21-the-notes.md).
 - **Ataraxia's drawing no longer matches the house's stated subject.** The owner said the
   house's theme is angel statues and crosses, and then asked for the churchyard that drew
   it to be replaced by the bands. The standfirst still says the subject is statuary,
@@ -298,9 +302,10 @@ it is too strong.
   when they say.
 - **No photographs anywhere.** All three folders in `images/` hold only a README naming
   the files their page is already asking for.
-- **Neither Ataraxia nor Les Abstraits is in the Fragrances table**, because a row needs
-  a name. Adding one is a row per fragrance pointing at `#part-NN`, and
-  `repository.spec.js` checks that end of it.
+- **Neither Ataraxia nor Les Abstraits is in the Fragrances table**, and that is correct
+  rather than outstanding: that table is the **individual** fragrances — the ones with no
+  house — and every one of these has a house. They are reached through the contact sheet,
+  like the other four.
 - **Seventeen against the owner's sixteen** on Grande Parfums — see above.
 - **The three older houses still carry their own copies** of what `house.js` now does.
   Moving them over is a clean follow-up and was deliberately not done in the same round

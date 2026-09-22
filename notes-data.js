@@ -171,16 +171,19 @@ window.FRAGRANCE_NOTES = {
     top: ["Fig Leaf", "Icy Ginger", "Ozone"],
     mid: ["Saffron", "Leathery Osmanthus", "Mineral Accords"],
     base: ["Mineral Ambers", "Haitian Vetiver", "Smoky Resins", "Ambergris"],
+    note: "The house\u2019s own prose frames it as an event rather than a smell: \u201cthe moment of creation and the instant of protection, captured in drops\u201d \u2014 beginning \u201cnot with warmth, but with its absolute opposite: the vacuum before the Big Bang, the frozen split-second before a shield is raised.\u201d",
     source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/amber-zero-essence-of-dephts" },
   },
   "adar:03": {
     top: ["Japanese Honeysuckle", "Carob Pods", "Sea Salt"],
     mid: ["Black Honey", "Tobacco Leaf", "Candle Wax"],
     base: ["Amber Oud", "Burnt Almond", "Petrified Driftwood"],
+    note: "The house names its materials as stories: an ambered oud \u201csmuggled into Messina\u2019s port in a coffin-shaped crate\u201d, a burnt almond that is \u201cthe scent of torrone crumbled\u201d, and a petrified driftwood \u201cwashed ashore from Ulysses\u2019 shipwreck\u201d. It calls the formula \u201cextreme, confrontational, and artistically raw \u2014 not for casual wear.\u201d",
     source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/incantu-drops-of-styx" },
   },
   "adar:06": {
     flat: ["Musk", "Aquatic Notes", "Coumarin", "Vanilla", "Heliotrope", "Citruses", "Orange Blossom"],
+    note: "The house\u2019s own line is \u201cthe scent of the sea and the stars, with skin glistening with the dew of grapefruit and aldehydes\u201d \u2014 an image rather than a list, so the notes here are the fallback\u2019s.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/ADAR/Alta-Luna-115895.html" },
   },
 
@@ -188,12 +191,14 @@ window.FRAGRANCE_NOTES = {
     top: ["Banana", "Mint", "Saffron"],
     mid: ["Tuberose", "Jasmine", "Ylang Ylang"],
     base: ["Tobacco", "Incense", "Tonka Bean", "Civet"],
+    note: "The house calls it \u201cThe Alchemist\u2019s Banquet\u201d and says it smells of \u201csaffron, banana, and mint, with a hint of something unnameable\u201d \u2014 but publishes no divided list, so this is the fallback\u2019s.",
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/ADAR/Alpha-11-115893.html" },
   },
   "adar:07": {
     top: ["Pink Pepper", "Yuzu", "Quince", "Absinthe"],
     mid: ["Saffron", "Green Tea Flowers", "Black Cherry", "Murumuru Butter", "Myrrh"],
     base: ["Tonka Bean", "Maninka"],
+    note: "The house\u2019s own prose is the fragrance\u2019s argument: it \u201cdances between worlds \u2014 the tremors of synapses by day and listening to the murmurs of moss-covered rocks by night\u201d, the paradox of \u201ca mind that runs like wildfire yet finds peace in the eye of the storm.\u201d",
     source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/adhd-neuro-elixir" },
   },
   "adar:11": {
@@ -205,7 +210,7 @@ window.FRAGRANCE_NOTES = {
     top: ["Galbanum", "Lime", "Violet Leaf", "Marine Accord"],
     mid: ["Ylang-Ylang", "Neroli", "Myrrh", "Clary Sage"],
     base: ["Absolute Vetiver", "Cedar Wood Tincture", "Tonka Bean", "Leather Accord"],
-    note: "The house spells it Aetherialism, and gives the fragrance in full as Aetherialism Storm Breath. Left as the owner wrote it here.",
+    note: "The house's own list, and its own prose: \u201cthe charged silence of the moment before the storm, that suspended moment when the air becomes denser, when the horizon darkens, and when the invisible architecture of energy begins to unfold.\u201d",
     source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/aetherialism-storm-breath" },
   },
   "adar:04": {
@@ -214,7 +219,10 @@ window.FRAGRANCE_NOTES = {
     source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/against-all-odds" },
   },
   "adar:08": {
-    missing: "No information as of yet.",
+    top: ["Electric Bergamot", "Black Pepper", "Frozen Pine Needles"],
+    mid: ["Petrichor Accord", "Clear Orchid", "Mineral Accord"],
+    base: ["Dark Patchouli", "Rose Absolute", "White Amber", "Smoked Palo Santo", "Oakmoss Absolute"],
+    note: "The house divides it by the glyph on the bottle: the opening is \u201cthe arrow\u2019s tip \u2014 penetrating and clear\u201d, the heart \u201cthe semicircle \u2014 receptive and nurturing\u201d, and the base the root code itself, \u201cfoundational and algorithmic\u201d. The owner supplied this one from the house\u2019s own page, which is why it is here and the two beside it are not.",
     source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/products/root-code" },
   },
   "adar:09": {
@@ -226,7 +234,124 @@ window.FRAGRANCE_NOTES = {
   },
   "adar:10": {
     missing: "No information as of yet.",
+    note: "The house has no page for it that names a material, and no prose to quote either \u2014 which is the only one of the eleven that is true of.",
     source: { name: "ADAR Perfumes", url: "https://adarperfumes.com/" },
+  },
+
+  // ============================================================
+  // ATARAXIA — works/ataraxia.html
+  //
+  // EVERY ONE OF THESE IS TWO LISTS, which the owner asked for by name
+  // ("split the exact same way as they were with haxan"): the HOUSE'S
+  // OWN account above and Fragrantica's below. The two really do differ
+  // here — Ataraxia names its raw materials while the fallback lists
+  // the fragrance's conceptual notes, and on Deity and Amaretto Jazz
+  // the two lists are not even the same words.
+  // ============================================================
+  "ataraxia:01": {
+    say: "The house\u2019s own notes",
+    top: ["Amaretto", "Holy Bread"],
+    mid: ["Black Cherry Liquor", "Amaretto", "Honey", "Candle Wax"],
+    base: ["Hazelnut Chocolate", "Cognac", "Almond", "Dusty Sofa", "Passionflower", "Cacao Butter", "Honeycomb", "Vanilla Caviar", "Tobacco Absolute"],
+    note: "A collaboration with Toskovat\u2019. The house\u2019s own line for it: \u201clike drinking a sweet, honeyed Amaretto Sour in hell\u201d, in \u201ca burning jazz club filled with warmth and desire\u201d, with a sacramental bread accord round it \u2014 \u201ca quiet symbol of baptism, of salvation through pleasure.\u201d",
+    source: { name: "Ataraxia Perfumery", url: "https://ataraxiaperfumery.com/products/amaretto-jazz-in-the-melting-room" },
+    also: {
+      say: "Interpreted notes",
+      top: ["Amaretto", "Bread"],
+      mid: ["Amaretto", "Candle Wax", "Liquor", "Honey", "Black Cherry"],
+      base: ["Honeycomb", "Dust", "Almond", "Cognac", "Cocoa", "Tobacco", "Chocolate", "Hazelnut", "Butter", "Vanilla Caviar", "Passion Flower"],
+      source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Ataraxia-Perfumery/Amaretto-Jazz-in-the-Melting-Room-100361.html" },
+    },
+  },
+  "ataraxia:02": {
+    say: "The house\u2019s own notes",
+    top: ["Honey", "Japanese Plum", "Cherry Jam", "Chantilly Cream", "Golden Berry"],
+    mid: ["Condensed Milk", "Tobacco Absolute", "Tobacco Blonde", "Cocoa Butter", "Beeswax Absolute", "Snowdrops"],
+    base: ["Olibanum Absolute", "Labdanum Absolute", "Dark Cocoa", "Vanilla", "Tonka", "Amber", "Benzoin", "Elemi", "Myrrh", "Gold", "Patchouli", "Dates", "Nectar"],
+    note: "The house\u2019s own list names materials the fallback\u2019s does not \u2014 Japanese plum for loquat, cocoa butter for cocoa, and a note it simply calls Gold. It says the formula carries \u201ca very high concentration of absolutes and naturals that gives it an abyssal depth\u201d.",
+    source: { name: "Ataraxia Perfumery", url: "https://ataraxiaperfumery.com/products/deity" },
+    also: {
+      say: "Interpreted notes",
+      top: ["Honey", "Cherry Jam", "Chantilly Cream", "Goldenberry", "Japanese Loquat"],
+      mid: ["Beeswax", "Blonde Tobacco", "Tobacco", "Cocoa", "Condensed Milk", "Snowdrops"],
+      base: ["Myrrh", "Dark Chocolate", "Olibanum", "Amber", "Vanilla", "Benzoin", "Labdanum", "Elemi", "Dates", "Tonka", "Nectar", "Dark Patchouli"],
+      source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Ataraxia-Perfumery/Deity-119626.html" },
+    },
+  },
+  "ataraxia:03": {
+    say: "The house\u2019s own notes",
+    missing: "Not disclosed yet.",
+    note: "The owner asked for this one to say so rather than to stand on the fallback alone: the house has published no note list for it. What is below is Fragrantica\u2019s reading, and it is the only account there is.",
+    source: { name: "Ataraxia Perfumery", url: "https://ataraxiaperfumery.com/" },
+    also: {
+      say: "Interpreted notes",
+      top: ["Porcelain", "Lipstick", "Iris", "Raspberry", "Soda Bubbles"],
+      mid: ["Blush", "Velvet", "Iris Butter", "Candle Wax", "White Chocolate", "Orris"],
+      base: ["Makeup Palette", "Lip Gloss", "Eye Pencil", "Instant Film Accord", "Myrrh"],
+      source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Ataraxia-Perfumery/My-Doll-s-Makeup-142160.html" },
+    },
+  },
+  "ataraxia:04": {
+    say: "The house\u2019s own notes",
+    flat: ["Myrrh", "Marigold EO", "Rose", "Cypriol", "Hay Absolute", "Natural Birch Tar", "Seaweed", "Cumin Seed Oil", "Tuberose"],
+    note: "The two halves say different KINDS of thing here, and that is why both are worth having: the house names the raw materials it is built from, and the fallback names what it is supposed to smell OF. The house says it was made \u201cnot to be worn, but to be cherished, experienced, and collected as it evolves over time\u201d \u2014 no preservatives, so it goes on maturing.",
+    source: { name: "Ataraxia Perfumery", url: "https://ataraxiaperfumery.com/products/spinal-fluid" },
+    also: {
+      say: "Interpreted notes",
+      top: ["Steam", "Fire", "Salty Tears", "Gasoline"],
+      mid: ["Rotten Flesh", "Dried Blood", "Spinal Fluid"],
+      base: ["Ash", "Clear Skies", "Bluebell Flowers"],
+      source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Ataraxia-Perfumery/Spinal-Fluid-115343.html" },
+    },
+  },
+  "ataraxia:05": {
+    say: "The house\u2019s own notes",
+    flat: ["Dark Chocolate", "Spice", "Dusty Antiques"],
+    note: "Named in the house\u2019s own description rather than as a list: it was made \u201cto smell as whispers of a vampire\u2019s lair\u201d, of dark chocolate, spice and dusty antiques. The divided list below is the fallback\u2019s.",
+    source: { name: "Ataraxia Perfumery", url: "https://ataraxiaperfumery.com/products/vestibule" },
+    also: {
+      say: "Interpreted notes",
+      top: ["Chocolate", "Carolina Reaper"],
+      mid: ["Old House", "Wasabi", "Chocolate Truffle", "Red Chilli Pepper", "Pollen", "Cake", "Turmeric", "Beer"],
+      base: ["Potato", "Old Books", "Cocoa", "Halva", "Soybean", "Pistachio"],
+      source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Ataraxia-Perfumery/Vestibule-100362.html" },
+    },
+  },
+
+  // ============================================================
+  // LES ABSTRAITS — works/les-abstraits.html
+  //
+  // Every one of these comes off the house's own site, which publishes
+  // a divided list for all four. The house is one perfumer's: every
+  // composition is Antoine Lie's.
+  // ============================================================
+  "abstraits:01": {
+    top: ["Orris", "Iris", "African Ginger"],
+    mid: ["Cacao", "Olibanum", "Cardamom"],
+    base: ["Tonka Bean", "Musk", "Sandalwood"],
+    note: "The one the owner already mentions in Grande Parfums\u2019 Vintage Memoir, written up here at last.",
+    source: { name: "Les Abstraits", url: "https://lesabstraits.com/products/belle-ame" },
+  },
+  "abstraits:02": {
+    top: ["Pine Tar", "Galbanum", "Birch Tar", "Mint", "Clove"],
+    mid: ["Leather", "Violet Leaf", "Tuberose"],
+    base: ["Oakmoss", "Hyrax", "Vetiver", "Patchouli"],
+    note: "Built round the image of cinders and embers \u2014 Moroccan mint, galbanum, charred resins and burnt fruits.",
+    source: { name: "Les Abstraits", url: "https://lesabstraits.com/products/des-cendres" },
+  },
+  "abstraits:03": {
+    top: ["Bulgarian Rose Absolute", "Turkish Rose Absolute", "Iris Pallida", "Frankincense"],
+    mid: ["Clove", "Cumin", "Saffron"],
+    base: ["Castoreum Absolute", "Patchouli Aceh", "Atlas Cedar", "Spanish Labdanum", "Opoponax", "Myrrh"],
+    note: "The house\u2019s first fragrance, and its own image for it is \u201cthe exquisite pain\u201d: a single rose melting like red beeswax into cumin, incense, myrrh and patchouli.",
+    source: { name: "Les Abstraits", url: "https://lesabstraits.com/products/la-douleur-exquise" },
+  },
+  "abstraits:04": {
+    top: ["Bergamot (Ionian Coast)", "Lemon (Italy)", "Neroli", "Orange Blossom", "Baie Rose", "Cardamom", "Clove", "Cinnamon (Ceylon)", "Artemisia", "Juniper"],
+    mid: ["Geranium (Morocco)", "Clary Sage Absolute (France)", "Carnation", "Violet", "Lavender de Provence"],
+    base: ["Cedar Moss Absolute (Morocco)", "Vetiver (Haiti)", "Patchouli (Aceh)", "Costus", "Musk", "Benzoin", "Tonka Bean", "Vanilla"],
+    note: "A floral foug\u00e8re, and the house names the region of nearly every material rather than just the material \u2014 which is unusual enough to be worth keeping as it writes them.",
+    source: { name: "Les Abstraits", url: "https://lesabstraits.com/products/philosophers-walk" },
   },
 
   // ============================================================

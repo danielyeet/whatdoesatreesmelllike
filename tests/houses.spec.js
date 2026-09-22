@@ -425,14 +425,28 @@ test("without the scripts the new houses are all of their writing",
    and the temptation was to invent some; this is the guard on not
    having. */
 test("an unwritten fragrance says it is unwritten", async ({ page }) => {
+  // NAMED IS NOT WRITTEN, and the two came apart on 2026-09-22: the
+  // owner gave Ataraxia and Les Abstraits their fragrances' names and
+  // their notes, and kept the WRITING. So neither page has an Untitled
+  // on it any more, and both still say on every part that the writing
+  // has not arrived — which is the state this test now guards.
   for (const [url, parts] of [[ATARAXIA, 5], [ABSTRAITS, 4]]) {
     await page.goto(url);
     // Every part, and the introduction as well.
     await expect(page.locator(".human-waiting")).toHaveCount(parts + 1);
-    await expect(page.locator(".human-part .human-untitled")).toHaveCount(parts);
+    await expect(page.locator(".human-part .human-untitled"),
+      "these are named now").toHaveCount(0);
+    // And every one of them is named with something that is not the
+    // word the placeholder used.
+    const names = await page.locator(".human-part .human-title").allTextContents();
+    expect(names.length).toBe(parts);
+    names.forEach((name) => {
+      expect(name.trim().length, `"${name}" is not a name`).toBeGreaterThan(2);
+      expect(name.trim()).not.toBe("Untitled");
+    });
   }
 
-  // And the written house has none of either.
+  // And the written house has neither.
   await page.goto(GRANDE);
   await expect(page.locator(".human-waiting")).toHaveCount(0);
   await expect(page.locator(".human-untitled")).toHaveCount(0);
