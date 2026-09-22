@@ -162,8 +162,10 @@ test("the Fragrances view is its own page, not an index of the houses",
   await page.click('.sheet-filter[data-view="fragrances"]');
   await page.waitForTimeout(900);
 
+  // SIX. It was seven until the owner had the empty fifth slot removed
+  // and the ones below it moved up, on 2026-09-22.
   const rows = page.locator('.view[data-view="fragrances"] .index-table tbody tr');
-  await expect(rows).toHaveCount(7);
+  await expect(rows).toHaveCount(6);
 
   const hrefs = await page.$$eval(
     '.view[data-view="fragrances"] .index-table tbody a',
@@ -199,7 +201,7 @@ test("every fragrance gets a View notes button, and it opens a panel",
   await page.goto("/works/individual-fragrances.html");
   await page.waitForTimeout(700);
 
-  await expect(page.locator(".note-open")).toHaveCount(7);
+  await expect(page.locator(".note-open")).toHaveCount(6);
   await expect(page.locator(".note-panel:not([hidden])")).toHaveCount(0);
 
   const first = page.locator(".human-part").first();
@@ -285,19 +287,76 @@ test("a fragrance whose source gives no division says so", async ({ page }) => {
 test("a fragrance with no notes yet says they have not been found",
   async ({ page }) => {
   await serveDependenciesLocally(page);
+
+  // THIS ONE HAS TO BE STAGED NOW, and that is worth writing down: as
+  // of 2026-09-22 there is no fragrance anywhere on the site with no
+  // entry at all. The empty slot this used to open — the fifth of the
+  // individual fragrances, which the owner's own numbering skipped —
+  // was removed at their word, and every other part has either notes
+  // or an entry that SAYS it found nothing.
+  //
+  // The path is still real and still reachable the moment a part is
+  // added before its notes are, so rather than delete the test the
+  // notes are taken away from the page: with none at all, every
+  // fragrance should fall back to saying so.
+  await page.route("**/notes-data.js", (route) =>
+    route.fulfill({ contentType: "application/javascript",
+                    body: "window.FRAGRANCE_NOTES = {};" }));
+
   await page.goto("/works/individual-fragrances.html");
   await page.waitForTimeout(700);
 
-  // 05 is the slot the owner's own list skipped.
-  const fifth = page.locator("#part-05");
-  await fifth.locator("summary").click();
+  const first = page.locator("#part-01");
+  await first.locator("summary").click();
   await page.waitForTimeout(1000);
-  await fifth.locator(".note-open").click();
+  await first.locator(".note-open").click();
   await page.waitForTimeout(700);
 
-  const panel = page.locator("#notes-individual-05");
+  const panel = page.locator("#notes-individual-01");
   await expect(panel.locator(".note-waiting")).toHaveCount(1);
+  await expect(panel.locator(".note-waiting"))
+    .toHaveText("The notes for this one have not been found yet.");
   await expect(panel.locator(".note-row")).toHaveCount(0);
+  await expect(panel.locator(".note-source"),
+    "there is no source to name").toHaveCount(0);
+});
+
+/* AND THE SIX ARE NUMBERED 01 TO 06, WITH NO GAP. The owner's list
+   skipped a fifth and an empty slot was kept for it; on 2026-09-22
+   they asked for it removed and the ones below moved up.
+
+   THAT MOVE TOUCHES THREE FILES AT ONCE — the parts, the Fragrances
+   table and the keys here — and this is the check that they moved
+   together. Getting it wrong is silent: every link still resolves, and
+   every fragrance shows somebody else's notes. */
+test("the individual fragrances run 01 to 06 with nothing missing", () => {
+  const all = notes();
+  const page = read("works/individual-fragrances.html");
+  const ids = [...page.matchAll(/id="part-(\d+)"/g)].map((m) => m[1]);
+  expect(ids, `the parts run: ${ids.join(", ")}`)
+    .toEqual(["01", "02", "03", "04", "05", "06"]);
+
+  // No Untitled left, and every one of them has notes.
+  expect(page).not.toContain("human-untitled");
+  ids.forEach((id) => {
+    expect(all["individual:" + id], `individual:${id} has no notes`).toBeTruthy();
+  });
+  // And no key points past the end.
+  const keys = Object.keys(all).filter((k) => k.startsWith("individual:"));
+  expect(keys.length).toBe(6);
+
+  // THE TABLE AGREES, name for name and number for number.
+  const sheet = read("categories/scent-descriptions.html");
+  const view = sheet.slice(sheet.indexOf('data-view="fragrances"'));
+  const named = (id) => {
+    const at = page.indexOf('id="part-' + id + '"');
+    const bit = page.slice(at, page.indexOf("</summary>", at));
+    return (bit.match(/class="human-title[^"]*"[^>]*>([^<]*)</) || [])[1].trim();
+  };
+  ids.forEach((id) => {
+    const want = 'individual-fragrances.html#part-' + id + '">' + named(id) + "</a>";
+    expect(view, `the table should carry ${want}`).toContain(want);
+  });
 });
 
 /* WITHOUT THE SCRIPT there is no button and no panel, and the page is

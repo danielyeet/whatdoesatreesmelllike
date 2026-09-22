@@ -125,6 +125,13 @@ that have to agree: the contact sheet's own background and the fragrance reader 
 opens on top of it. A picture on its way back recedes into one of those squares, so if
 the two ever differ it lands on nothing. There is a test.
 
+**`hidden` is not enough on its own.** It is an attribute, and the browser's own
+`[hidden] { display: none }` lives in the user-agent stylesheet — which ANY author rule
+outranks. Anything here given a `display` of its own needs an `[hidden]` rule that
+outranks **every** rule giving it one, not just the first: `.index-page` is given one
+twice, and a plain `.index-page[hidden]` lost to the second and did nothing at all. That
+shipped, as the Fragrances table flashing back to full strength on the way in.
+
 **There is a sixth token, `--ink-rgb`, and it exists only because `rgba()` cannot take a
 hex.** A handful of shared rules spend the ink at an alpha — the hatched placeholder, the
 dotted leader in a fragrance's row, the rank down the side of a house. Written out by
@@ -172,7 +179,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 245 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 248 passed, 0 failed, and takes seven to ten minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -650,6 +657,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **not disclosed yet** | What Ataraxia’s My Doll’s Makeup says in the upper half of its window: the house has published no notes for it, and saying so is different from quietly standing on the fallback alone — which is what the owner asked for. It is the only entry whose FIRST half is a `missing` and whose second is a list. |
 | **the fragrance reader** | What a fragrance in the **Fragrances** view opens into now: not another page but this one, gone blank, with that fragrance’s picture, writing and notes on it and an arrow back. The writing is FETCHED from `works/individual-fragrances.html` rather than copied, so there is still one copy of the owner’s words. `fragrance-reader.js`. |
 | **the flier** | A picture on its way home, on the way back out of the reader: lifted out of the article onto the window at exactly the box it occupied, squared up, and sent receding into one square of **the grid**, picked at random and never the same one twice. It comes to rest at exactly one cell's size, on the cell's own corner. They all fade together once they are home. |
+| **home** (the reader) | The part of **the grid** a picture may land in — centre-ish and on the right, which is where the owner asked for it. `HOME` in `fragrance-reader.js`, given as fractions of the window so it means the same on every screen. The whole window was fair game for one round and the same movement read differently every time. **The four numbers are provisional**: the owner said they would send a picture of the grid they want. |
 | **the grid** (the sheet) | The squared ground the contact sheet page is ruled into: 46px squares, `--grid-cell` on `:root`, painted by a pair of gradients in `.sheet-page`. **The fragrance reader is ruled into the same ones by the same declaration**, because a picture on its way back recedes into ONE OF THESE SQUARES and would otherwise land on nothing. The reader drew a grid of its own for one round, at about 90px, and it read as a second grid over the first. Its cells are arithmetic rather than elements — a cell is n × `--grid-cell`, not a span in the page. |
 | **the caution** (notes) | The small box that comes up on hovering **Fragrantica** in a notes window: *Fragrantica's notes are not to be trusted as 100% fact.* — the owner's own sentence. A `CAUTION` table in `notes.js` keyed by source name, so it is **only** on the fallback; put it on a house's own page and it stops meaning anything, and there is a test saying so. It stands above the source line because the source is the last thing in a window that scrolls. |
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |

@@ -6726,7 +6726,11 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
      you can see. */
   background-attachment: fixed;
   opacity: 0;
-  transition: opacity 520ms var(--menu-ease);
+  /* SLOWER AND SMOOTHER, which the owner asked for in as many words.
+     The arrival is longer than the departure on purpose: coming to a
+     fragrance should feel like settling onto it, and leaving should
+     not feel like waiting. */
+  transition: opacity 700ms var(--menu-ease);
 }
 .frag-reader.is-here { opacity: 1; }
 .frag-reader[hidden] { display: none; }
@@ -6734,9 +6738,34 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
    "everything goes blank" the owner asked for. */
 .index-page.is-going {
   opacity: 0;
-  transition: opacity 420ms var(--menu-ease);
+  transition: opacity 560ms var(--menu-ease);
   pointer-events: none;
 }
+/* AND IT REALLY GOES, which it did not for one round.
+
+   `hidden` is an ATTRIBUTE, and the browser's own rule for it —
+   `[hidden] { display: none }` — lives in the user-agent stylesheet,
+   which ANY author rule outranks. `.index-page` sets a `display` of
+   its own, so setting `hidden` on it did nothing at all: the table
+   stayed exactly where it was, and the instant the script took
+   `is-going` off it — in the same breath, believing it hidden — it
+   SNAPPED BACK to full strength and sat there while the reader faded
+   in over it. That is the owner's "there is a lag where the thing in
+   the back appears and it looks choppy".
+
+   AND ONE `[hidden]` RULE WAS NOT ENOUGH, which is worth writing down
+   because the first fix looked right and changed nothing. This view
+   sets the page's display AGAIN, through
+   `.view[data-view="fragrances"] .index-page` — three class-level
+   parts against a plain `.index-page[hidden]`'s two, so the plain one
+   loses and the page went on being a flex box. Both are written here,
+   and the longer one is what actually does the work.
+
+   THE LESSON GENERALISES: anything on this site given a `display` of
+   its own needs an `[hidden]` rule that outranks EVERY rule giving it
+   one, not just the first. */
+.index-page[hidden],
+.view[data-view="fragrances"] .index-page[hidden] { display: none; }
 /* Nothing scrolls behind a reader standing over the whole window. */
 body.frag-open { overflow: hidden; }
 
@@ -6746,7 +6775,7 @@ body.frag-open { overflow: hidden; }
   max-width: 940px;
   margin: 0 auto;
   padding: clamp(80px, 14vh, 150px) 64px clamp(60px, 10vh, 110px);
-  transition: opacity 340ms var(--menu-ease);
+  transition: opacity 460ms var(--menu-ease);
 }
 /* THE WRITING GOES AND THE PICTURE STAYS, which is step one of the way
    back. The pictures are out of the layout by the time this runs —
@@ -6864,7 +6893,7 @@ body.frag-open { overflow: hidden; }
   background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb),0.09) 0px, rgba(var(--ink-rgb),0.09) 1px, transparent 1px, transparent 16px);
 }
 /* AND THEY GO AT ONCE, on one clock rather than each on its own. */
-.frag-flier.is-gone { opacity: 0; transition: opacity 420ms ease; }
+.frag-flier.is-gone { opacity: 0; transition: opacity 560ms ease; }
 
 @media (max-width: 700px) {
   .frag-in { padding: 96px 20px 70px; }

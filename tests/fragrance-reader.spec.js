@@ -118,7 +118,7 @@ test("going back sends the picture into the grid, and the list is behind it",
     .evaluate((el) => el.getBoundingClientRect().width);
 
   await page.locator(".frag-back").click();
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(900);
 
   // MID-FLIGHT. The picture is out of the article and on the window.
   const flying = await page.evaluate(() => {
@@ -147,7 +147,9 @@ test("going back sends the picture into the grid, and the list is behind it",
   // AND IT COMES TO REST ON A SQUARE OF THAT GRID, which is the whole
   // of "recede into one of the squares of the background": both its
   // corners land on a multiple of the cell, and it is one cell big.
-  await page.waitForTimeout(350);
+  // Long enough for the recede to have finished — it is 900ms after a
+  // 460ms clearing, and the owner asked for all of it to be slower.
+  await page.waitForTimeout(700);
   const cell = parseFloat(ruled.cell);
   const home = await page.evaluate(() => {
     const f = document.querySelector(".frag-flier");
@@ -162,10 +164,108 @@ test("going back sends the picture into the grid, and the list is behind it",
   expect(home.top % cell, `top ${home.top} is not on the grid`).toBeLessThan(1.5);
 
   // AND IT ALL CLEARS UP.
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1600);
   await expect(page.locator(".frag-flier")).toHaveCount(0);
   await expect(page.locator(".frag-reader")).toBeHidden();
   await expect(page.locator(".index-table")).toBeVisible();
+});
+
+/* IT DOES NOT FLASH THE TABLE BACK ON THE WAY IN, which is a bug the
+   owner reported in exactly those words: "there is a lag where the
+   thing in the back (the original fragrances text) appear and it looks
+   choppy (before the perfume specific page fades in, the one that
+   faded away reappears)".
+
+   WHAT IT WAS. The script fades the table out, then sets `hidden` on
+   it and takes the fading class off in the same breath. `hidden` is an
+   attribute, and the browser's own `[hidden] { display: none }` lives
+   in the user-agent stylesheet, which any author rule outranks — and
+   this page gives `.index-page` a display twice over. So `hidden` did
+   nothing, and taking the class off snapped the table back to FULL
+   STRENGTH, where it sat until the reader had faded in over it.
+
+   SO THIS WATCHES THE TABLE ITSELF, every frame, and asks one thing:
+   once it has started to fade it never gets brighter again. That is
+   the whole of "choppy", and it is measurable. */
+test("the table fades out and stays out, without flashing back",
+  async ({ page }) => {
+  await toTheList(page);
+
+  const watching = page.evaluate(() => new Promise((done) => {
+    const table = document.querySelector(".index-page");
+    const seen = [];
+    const began = performance.now();
+    (function tick() {
+      const cs = getComputedStyle(table);
+      // Gone is gone: display:none counts as nought rather than as
+      // whatever opacity it happened to be left at.
+      seen.push(cs.display === "none" ? 0 : +cs.opacity);
+      if (performance.now() - began < 2000) requestAnimationFrame(tick);
+      else done(seen);
+    })();
+  }));
+  await page.locator('.index-what a[href*="part-03"]').click();
+  const seen = await watching;
+
+  // It did fade.
+  expect(Math.min(...seen), "the table should fade away").toBeLessThan(0.02);
+
+  // AND IT NEVER CAME BACK, which is the owner's complaint and so goes
+  // first: walked forwards, the lowest it has been so far can never be
+  // beaten upwards by more than a rounding wobble.
+  let lowest = 1;
+  let rebound = 0;
+  let when = -1;
+  seen.forEach((now, i) => {
+    if (now < lowest) lowest = now;
+    if (now - lowest > rebound) { rebound = now - lowest; when = i; }
+  });
+  expect(rebound,
+    `the table climbed back ${rebound.toFixed(3)} at frame ${when} of ${seen.length}`)
+    .toBeLessThan(0.05);
+
+  expect(seen[seen.length - 1], "and it is still gone at the end").toBe(0);
+});
+
+/* AND THE PICTURES GO HOME TO ONE PART OF THE GRID, which the owner
+   asked for after seeing them go anywhere: "i want the grid that the
+   fragrances can go to to be somewhere in the center, ish and on the
+   right side".
+
+   Every square on the window was fair game before, so the same
+   movement read differently every time. This checks SEVERAL
+   fragrances, because one landing in the right place proves nothing
+   about a shuffle. */
+test("a picture goes home to the right of centre, every time",
+  async ({ page }) => {
+  await toTheList(page);
+
+  const landings = [];
+  for (const no of ["01", "02", "03", "04"]) {
+    await page.locator('.index-what a[href*="part-' + no + '"]').click();
+    await page.waitForTimeout(1500);
+    await page.locator(".frag-back").click();
+    await page.waitForTimeout(1500);
+    const at = await page.evaluate(() => {
+      const f = document.querySelector(".frag-flier");
+      if (!f) return null;
+      const box = f.getBoundingClientRect();
+      return { x: box.left, y: box.top, w: window.innerWidth, h: window.innerHeight };
+    });
+    expect(at, `part ${no} should still be landing`).toBeTruthy();
+    landings.push(at);
+    await page.waitForTimeout(1300);
+  }
+
+  landings.forEach((at, i) => {
+    // RIGHT OF CENTRE, with a little room for the block's own left edge.
+    expect(at.x, `landing ${i} at x=${Math.round(at.x)} of ${at.w}`)
+      .toBeGreaterThan(at.w * 0.5);
+    // AND CENTRE-ISH DOWN, rather than at the very top or bottom.
+    expect(at.y, `landing ${i} at y=${Math.round(at.y)} of ${at.h}`)
+      .toBeGreaterThan(at.h * 0.18);
+    expect(at.y).toBeLessThan(at.h * 0.82);
+  });
 });
 
 /* WITHOUT THE SCRIPT every row is still a link to the fragrance on its

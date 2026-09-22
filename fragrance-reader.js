@@ -64,6 +64,13 @@
 // thing, and a 1440-wide window would otherwise want six hundred
 // spans in the page to be measured and never looked at.
 //
+// ONLY PART OF IT IS HOME. Every square on the window was fair game
+// for one round, and the pictures went wherever the shuffle sent them
+// — which made the same movement read differently every time. The
+// owner asked for one place, "somewhere in the center, ish and on the
+// right side", so `HOME` cuts the grid down to that block before
+// anything is dealt out.
+//
 // IT HAD A GRID OF ITS OWN FOR ONE ROUND, at about 90px, built as a
 // lattice of elements. That was written before anyone noticed the page
 // was already ruled, and it read as a second grid over the first,
@@ -84,13 +91,23 @@
   // ============================================================
   // TUNING
   // ============================================================
-  const BLANK_MS = 420;         // the page going blank when one is opened
-  const COME_MS = 520;          // and the fragrance arriving on it
+  const BLANK_MS = 560;         // the page going blank when one is opened
+  const COME_MS = 700;          // and the fragrance arriving on it
 
-  const CLEAR_MS = 340;         // the writing going, on the way back
-  const SQUARE_MS = 380;        // the picture becoming a square
-  const RECEDE_MS = 620;        // and travelling back into the grid
-  const GONE_MS = 420;          // then all of them fading, together
+  const CLEAR_MS = 460;         // the writing going, on the way back
+  const SQUARE_MS = 560;        // the picture becoming a square
+  const RECEDE_MS = 900;        // and travelling back into the grid
+  const GONE_MS = 560;          // then all of them fading, together
+
+  // WHERE THE PICTURES GO HOME TO, as a share of the window: the owner
+  // asked for it "somewhere in the center, ish and on the right side"
+  // rather than anywhere on the page. Given as fractions rather than
+  // pixels so it means the same thing on every screen.
+  //
+  // THESE ARE PROVISIONAL. The owner said they would send a picture of
+  // the grid they want; until it arrives this is a reading of the
+  // sentence, and moving it is moving four numbers.
+  const HOME = { from: 0.56, to: 0.94, top: 0.24, down: 0.76 };
 
   const WHERE = "../works/individual-fragrances.html";
 
@@ -160,13 +177,37 @@
     const said = getComputedStyle(document.documentElement)
       .getPropertyValue("--grid-cell");
     const cell = parseFloat(said) || 46;
-    const across = Math.max(1, Math.floor(wide / cell));
-    const down = Math.max(1, Math.floor(tall / cell));
+
+    // ONLY PART OF THE GRID IS HOME. Every square on the window was
+    // fair game for one round and the pictures went wherever the
+    // shuffle sent them, which made the same movement read differently
+    // every time. The owner asked for one place — centre-ish, on the
+    // right — so the cells are cut down to that block before anything
+    // is dealt out.
+    const from = Math.floor((wide * HOME.from) / cell);
+    const to = Math.ceil((wide * HOME.to) / cell);
+    const top = Math.floor((tall * HOME.top) / cell);
+    const down = Math.ceil((tall * HOME.down) / cell);
+
     cells = [];
-    for (let row = 0; row < down; row++) {
-      for (let col = 0; col < across; col++) {
-        cells.push({ left: col * cell, top: row * cell, width: cell, height: cell });
+    for (let row = top; row < down; row++) {
+      for (let col = from; col < to; col++) {
+        const left = col * cell;
+        const up = row * cell;
+        // A square that hangs off the window is not somewhere to land.
+        if (left + cell > wide || up + cell > tall) continue;
+        cells.push({ left: left, top: up, width: cell, height: cell });
       }
+    }
+    // A window too small for that block still has to have somewhere to
+    // send a picture, so fall back to the middle square of whatever
+    // there is.
+    if (!cells.length) {
+      cells.push({
+        left: Math.max(0, Math.floor((wide - cell) / 2 / cell) * cell),
+        top: Math.max(0, Math.floor((tall - cell) / 2 / cell) * cell),
+        width: cell, height: cell,
+      });
     }
   }
 
@@ -315,11 +356,17 @@
       fliers.forEach((flier, n) => {
         const home = cells[free[n % Math.max(1, cells.length)]];
         if (!home) return;
+        // ONE EASING FOR THE WHOLE MOVEMENT, and a gentle one. It was
+        // two different curves — a sharper one for the travel than for
+        // the squaring — and at these longer durations that read as the
+        // picture changing its mind half way. A single soft ease in and
+        // out is what "smoother" turned out to mean.
+        const ease = "cubic-bezier(0.33, 0, 0.18, 1)";
         flier.style.transition =
-          "left " + RECEDE_MS + "ms cubic-bezier(0.5, 0, 0.2, 1)," +
-          "top " + RECEDE_MS + "ms cubic-bezier(0.5, 0, 0.2, 1)," +
-          "width " + SQUARE_MS + "ms cubic-bezier(0.4, 0, 0.2, 1)," +
-          "height " + SQUARE_MS + "ms cubic-bezier(0.4, 0, 0.2, 1)";
+          "left " + RECEDE_MS + "ms " + ease + "," +
+          "top " + RECEDE_MS + "ms " + ease + "," +
+          "width " + SQUARE_MS + "ms " + ease + "," +
+          "height " + SQUARE_MS + "ms " + ease;
         flier.style.left = home.left + "px";
         flier.style.top = home.top + "px";
         flier.style.width = home.width + "px";

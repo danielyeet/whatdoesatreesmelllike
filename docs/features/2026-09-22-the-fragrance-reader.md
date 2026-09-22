@@ -98,6 +98,47 @@ behind it as it goes.
 There is a test for that ordering specifically — with the list brought back *after* the
 pictures have gone instead, it fails.
 
+## Where the pictures go home to
+
+Every square on the window was fair game for one round, so the pictures went wherever the
+shuffle sent them and the same movement read differently every time. The owner asked for
+one place: *"i want the grid that the fragrances can go to to be somewhere in the center,
+ish and on the right side"*.
+
+`HOME` is that block, given as fractions of the window rather than pixels so it means the
+same thing on every screen — from 56% to 94% across, and from 24% to 76% down. The cells
+are cut to it before anything is dealt out, and a window too small to hold the block falls
+back to the middle square of whatever there is.
+
+**These four numbers are provisional.** The owner said they would send a picture of the
+grid they want; until it arrives this is a reading of the sentence, and moving it is
+moving four numbers in one place.
+
+There is a test, and it checks **four** fragrances rather than one: one landing in the
+right place proves nothing about a shuffle.
+
+## It is slower, and smoother
+
+Asked for in as many words — *"a tad bit slower and smoother"*. Every duration went up by
+about a third:
+
+| | was | is |
+|---|---|---|
+| the page going blank | 420ms | 560ms |
+| the fragrance arriving | 520ms | 700ms |
+| the writing going | 340ms | 460ms |
+| the picture squaring up | 380ms | 560ms |
+| receding into the grid | 620ms | 900ms |
+| fading together | 420ms | 560ms |
+
+**The arrival is longer than the departure on purpose**: coming to a fragrance should feel
+like settling onto it, and leaving should not feel like waiting.
+
+And "smoother" turned out to mean one easing rather than two. The travel and the squaring
+ran on different curves — a sharper one for the travel — and at these longer durations
+that read as the picture changing its mind half way across. They share a single soft ease
+now.
+
 ## The one thing that was wrong
 
 **The picture was the full width of the column, so the writing started below the fold.**
@@ -114,8 +155,8 @@ its own page — collapsing to a stack under 900px.
 npm test -- tests/fragrance-reader.spec.js
 ```
 
-Four tests, and **each of the first three was proved against a real fault** before being
-trusted:
+Six tests, and **every one of the first five was proved against a real fault** before
+being trusted:
 
 - **`a fragrance opens in the page, without leaving it`** — the address, before and
   after. With the click's `preventDefault` taken out it navigates, and it fails.
@@ -128,6 +169,13 @@ trusted:
   the ordering; with the reader ruled at 90px against the page's 46 it says so
   (*"the sheet is 46px 46px, the reader 90px 90px"*); and with the picture stopped 19px
   short of a square it fails with *"left 203 is not on the grid"*.
+- **`the table fades out and stays out, without flashing back`** — the owner's bug, and
+  it watches the table every frame rather than asking whether a flag was set. With the
+  `[hidden]` rules taken out it reports *"the table climbed back 0.997 at frame 38 of
+  120"*; with only the weaker of the two — the fix that looked right — it fails the same
+  way.
+- **`a picture goes home to the right of centre, every time`** — with the landing block
+  opened back up to the whole window it reports *"landing 0 at x=230 of 1280"*.
 - **`without the reader the rows are still links to the other page`** — the site's
   standing rule, and the reason the rows were left as anchors rather than turned into
   buttons. The reader changes what a **press** does, not what the page is.
@@ -139,6 +187,36 @@ npm run serve   # then http://localhost:8123/categories/scent-descriptions.html
 ```
 
 Press **Fragrances**, then press one. Then press the arrow and watch the picture go.
+
+## It flashed the table back on the way in
+
+The owner reported it precisely: *"when you click on one of the fragrances, there is a lag
+where the thing in the back (the original fragrances text) appear and it looks choppy
+(before the perfume specific page fades in, the one that faded away reappears)"*.
+
+The script fades the table out, then sets `hidden` on it and takes the fading class off in
+the same breath. **`hidden` did nothing.** It is an attribute, and the browser's own
+`[hidden] { display: none }` lives in the user-agent stylesheet, which any author rule
+outranks — and `.index-page` is given a display of its own. So the table stayed exactly
+where it was, and taking the class off snapped it back to **full strength**, where it sat
+until the reader had faded in over it.
+
+**And one `[hidden]` rule was not enough**, which is the part worth remembering because
+the first fix looked right and changed nothing. This view sets the page's display a second
+time, through `.view[data-view="fragrances"] .index-page` — three class-level parts against
+a plain `.index-page[hidden]`'s two. The plain rule lost, and the page went on being a flex
+box. Both are written now, and the longer one does the work.
+
+Measured, the table used to climb back **0.997** — from all but gone to fully lit — in one
+frame. It now fades to 0.003 and goes.
+
+**The lesson generalises:** anything on this site given a `display` of its own needs an
+`[hidden]` rule that outranks *every* rule giving it one, not just the first.
+
+**And the test that should have caught it did not**, which is its own lesson. It asked
+whether the `hidden` *attribute* was set, and it was — the page was simply still on the
+screen. A test that asks about an attribute is asking about the code's intention; the one
+that replaced it watches what the table actually does, frame by frame.
 
 ## Known issues / TODO
 
@@ -152,6 +230,8 @@ Press **Fragrances**, then press one. Then press the arrow and watch the picture
 - **The Houses view still navigates.** Pressing a house on the contact sheet opens that
   house's page, as it always has. The owner asked for this for the Fragrances view only,
   and a house is a long page rather than one fragrance.
+- **The landing block is four numbers, waiting on a picture.** The owner said they would
+  send the grid they want; `HOME` in `fragrance-reader.js` is where to change it.
 - **The picture comes to rest as one 46px square**, which is what "recede into one of the
   squares" means literally. If that reads as too small a thing to end on, the honest fix
   is a bigger `--grid-cell` — and that would move the page's own ground with it, which is

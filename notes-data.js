@@ -7,7 +7,7 @@
 // over several rounds without touching a single page.
 //
 // A KEY is the page's own `window.HOUSE_NOTES` and the part's number,
-// joined by a colon — "pineward:01", "individual:06". The number is
+// joined by a colon — "pineward:01", "individual:05". The number is
 // the one in the markup, so renumbering a house means renumbering here
 // in the same turn.
 //
@@ -86,11 +86,13 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Dior/Tobacolor-65551.html" },
   },
 
-  // "individual:05" is the one the owner's list skipped — they numbered
-  // 1, 2, 3, 4, 6, 7 and then called them "the seven". The slot is kept
-  // so their numbering is theirs; the fragrance is still to come.
+  // THE GAP IS CLOSED. The owner's list skipped a fifth — they numbered
+  // 1, 2, 3, 4, 6, 7 and called them "the seven" — and an empty slot
+  // was kept for a round in case one was meant to be there. On
+  // 2026-09-22 they asked for it removed and the ones below moved up,
+  // so what follows is Flamenco EDP at 05 and French Riviera at 06.
 
-  "individual:06": {
+  "individual:05": {
     version: "2017 eau de parfum",
     top: ["Raspberry", "Apple", "Violet", "Orange Blossom"],
     mid: ["Rose", "Jasmine", "Iris"],
@@ -99,7 +101,7 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Ramon-Monegal/Flamenco-44233.html" },
   },
 
-  "individual:07": {
+  "individual:06": {
     top: ["Lemon", "Orange", "Tangerine", "Ginger", "Pepper"],
     mid: ["Sea Notes", "Tiare Flower", "Pine Tree", "Mimosa", "Vetiver"],
     base: ["Sea Salt", "White Musk", "Amber"],
