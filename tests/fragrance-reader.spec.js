@@ -282,22 +282,37 @@ test("a picture goes home to the right of centre, every time",
         const b = f.getBoundingClientRect();
         return b.left + "," + b.top;
       };
-      // HOME IS A SIZE, NOT A STILLNESS, and that is the whole trick.
-      // Waiting for the picture to stop moving catches it during the
-      // beat where it SQUARES UP — it is stationary then, still sitting
-      // on the article's own box — and reads that as its landing. What
-      // is unambiguous is that it comes to rest at exactly ONE CELL of
-      // the grid, which is nothing like the size it set off at.
+      // WAIT FOR THE TRAVEL TO FINISH, WHICH IS NOT WHEN THE SQUARING
+      // DOES. This is the thing that made the test flake, and it is
+      // worth writing down: the flier's WIDTH eases over SQUARE_MS and
+      // its LEFT over RECEDE_MS, and those are different numbers — 560
+      // against 900. So the picture reaches its final SIZE a third of a
+      // second before it reaches its final PLACE. Two earlier goes at
+      // this both read the position at the wrong moment: at a fixed
+      // time after the press, and at the moment it stopped changing
+      // size. The second is why a landing came back as 615 of 1280 —
+      // still in flight, with a third of the journey left.
+      //
+      // What is unambiguous is that the script WRITES the destination
+      // on the element as an inline `left`. So: wait for that to change
+      // from where the picture started, and then for the computed value
+      // to catch up with it. That is arrival, exactly.
       const cell = parseFloat(getComputedStyle(document.documentElement)
         .getPropertyValue("--grid-cell")) || 46;
+      const setOff = f.style.left;
+      let sent = false;
       const began = performance.now();
       const look = () => {
         // Gone home and faded out from under us: nothing to measure.
         if (!f.isConnected) { done(null); return; }
-        const b = f.getBoundingClientRect();
-        if (Math.abs(b.width - cell) < 4 || performance.now() - began > 4000) {
+        if (!sent && f.style.left !== setOff) sent = true;
+        const want = parseFloat(f.style.left);
+        const at = parseFloat(getComputedStyle(f).left);
+        const there = sent && Math.abs(at - want) < 0.6;
+        if (there || performance.now() - began > 6000) {
+          const b = f.getBoundingClientRect();
           done({ x: b.left, y: b.top, w: window.innerWidth, h: window.innerHeight,
-                 wide: b.width, cell: cell });
+                 wide: b.width, cell: cell, arrived: there });
           return;
         }
         requestAnimationFrame(look);
@@ -305,6 +320,7 @@ test("a picture goes home to the right of centre, every time",
       requestAnimationFrame(look);
     }));
     expect(at, `part ${no} should still be landing`).toBeTruthy();
+    expect(at.arrived, `part ${no} never reached the square it was sent to`).toBe(true);
     expect(Math.abs(at.wide - at.cell),
       `part ${no} should have come to rest at one cell, not ${Math.round(at.wide)}px`)
       .toBeLessThan(4);
