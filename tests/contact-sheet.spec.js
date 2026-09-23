@@ -251,7 +251,9 @@ test("the pictures arrive one after another, spreading outwards", async ({ page 
   await waitForSheet(page);
   const arrivals = await page.evaluate(() => window.__arrivals);
 
-  expect(arrivals.length).toBeGreaterThan(8);
+  // Eight frames since 2026-09-23, when the owner had 09–14 taken off;
+  // every one of them lands.
+  expect(arrivals.length).toBeGreaterThanOrEqual(7);
   const spread = arrivals[arrivals.length - 1] - arrivals[1];
   expect(spread, "the map should take its time about it").toBeGreaterThan(1800);
 
@@ -1100,8 +1102,9 @@ test("a line reaching a picture with no page carries crosses, not a date",
     };
   });
 
-  expect(read.unwritten, "most of this sheet is still to be written")
-    .toBeGreaterThan(4);
+  // One empty frame since 2026-09-23 — the owner had 09–14 taken off.
+  expect(read.unwritten, "the sheet still has a frame to be written")
+    .toBeGreaterThanOrEqual(1);
   const crosses = read.dates.filter((d) => /^x+$/.test(d));
   expect(crosses.length, "a line to an unwritten picture should carry crosses")
     .toBeGreaterThan(0);
@@ -1133,4 +1136,54 @@ test("nothing on the sheet can be pressed while the pictures are cycling",
   const open = await page.locator(".sheet-frame").first()
     .evaluate((el) => getComputedStyle(el).pointerEvents);
   expect(open, "and should once it has settled").not.toBe("none");
+});
+
+/* EIGHT FRAMES: the seven houses and one empty frame. The owner asked
+   for frames 09 to 14 to be taken off on 2026-09-23. */
+test("the sheet carries the seven houses and one empty frame", async ({ page }) => {
+  await serveDependenciesLocally(page);
+  await page.goto(SHEET);
+  await expect(page.locator(".sheet-frame")).toHaveCount(8);
+  await expect(page.locator('.sheet-frame[data-open="no"]')).toHaveCount(1);
+});
+
+/* THE FLICK NEVER SHOWS THE SAME PICTURE TWICE. The owner: "change the
+   cycling animation so its randomized but any one thing is never
+   repeated." It used to pick at random for every cut and only kept a
+   picture from coming up twice RUNNING, so with fewer pictures than cuts
+   some were bound to come back. So: watched every frame, over three
+   loads — every picture but the landing one comes up exactly once, and
+   the order is not the same every time. The landing picture is the one
+   the page opens on and comes to rest on, and appears at those two ends
+   and nowhere between. */
+test("the flick shows every picture once, in a different order each time",
+  async ({ page }) => {
+  await serveDependenciesLocally(page);
+  const orders = [];
+  for (let run = 0; run < 3; run++) {
+    await page.goto(SHEET);
+    const seen = await page.evaluate(() => new Promise((done) => {
+      const out = [];
+      const began = performance.now();
+      (function tick() {
+        const sheet = document.querySelector(".sheet");
+        if (sheet && sheet.classList.contains("flicking")) {
+          out.push([...document.querySelectorAll(".sheet-frame")]
+            .findIndex((f) => f.style.visibility === "visible"));
+        }
+        if (performance.now() - began < 4500) requestAnimationFrame(tick);
+        else done(out);
+      })();
+    }));
+    const order = seen.filter((v, i) => i === 0 || v !== seen[i - 1]);
+    const frames = await page.locator(".sheet-frame").count();
+    expect(order[0], "it opens on the picture it will land on").toBe(0);
+    expect(order[order.length - 1], "and lands on it").toBe(0);
+    const middle = order.slice(1, -1);
+    expect(middle, "the landing picture does not come round in between").not.toContain(0);
+    expect(new Set(middle).size, `no picture twice: ${middle}`).toBe(middle.length);
+    expect(middle.length, "every other picture comes up").toBe(Math.min(frames - 1, 8));
+    orders.push(middle.join(","));
+  }
+  expect(new Set(orders).size, "randomised: not the same order every time").toBeGreaterThan(1);
 });

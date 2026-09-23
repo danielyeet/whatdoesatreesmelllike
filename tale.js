@@ -54,9 +54,11 @@
 // lily at the head of the page, which is where the house's mark
 // belongs anyway.
 //
+// IT ALSO BRINGS THE PAGE IN — see THE ENTRANCE below.
+//
 // WITHOUT THIS SCRIPT the page is all of its writing, and everything
-// else that looks drawn — the two handwriting faces, the uneven boxes,
-// the wavy rules — is the stylesheet's and is still there.
+// else that looks drawn — the two handwriting faces, the pictures'
+// corners, tilt and tape — is the stylesheet's and is still there.
 // ============================================================
 (function () {
   const page = document.querySelector(".tale-page");
@@ -341,6 +343,71 @@
   }
 
   // ============================================================
+  // THE ENTRANCE
+  //
+  // The page is held back from its first paint (`tale-coming`, set in
+  // its own <head>) until both handwriting faces are in, and then brought
+  // in piece by piece. The owner saw it "randomly flick into the
+  // handwritten ... page" — drawn for a moment in the site's own face,
+  // then jumping to the handwriting when the faces arrived — and asked
+  // for it animated in instead.
+  //
+  // The doodles wait for it too: `entered` is what `show` waits on, so
+  // nothing starts drawing itself on a page nobody can see yet.
+  // ============================================================
+  const ENTER_STEP = 130;      // ms between one piece coming in and the next
+  const FACES_AT_MOST = 2500;  // never wait longer than this for the faces
+
+  const facesIn = new Promise((done) => {
+    window.setTimeout(done, FACES_AT_MOST);
+    if (!document.fonts || !document.fonts.load) { done(); return; }
+    Promise.all([
+      document.fonts.load('400 1em "Gochi Hand"'),
+      document.fonts.load('400 1em "Patrick Hand"'),
+    ]).then(done, done);
+  });
+
+  const entered = facesIn.then(() => new Promise((done) => {
+    const root = document.documentElement;
+    if (REDUCE_MOTION) { root.classList.remove("tale-coming"); done(); return; }
+    const pieces = [
+      ...document.querySelectorAll(".human-head > *"),
+      document.querySelector(".human-intro"),
+      document.querySelector(".human-parts"),
+      document.querySelector(".house-credit"),
+      document.querySelector(".human-foot"),
+    ].filter(Boolean);
+    // The fixed chrome and the doodles' layer only fade: the chrome is
+    // placed with a transform of its own, and the layer spans the page.
+    const fades = [...document.querySelectorAll(".human-rank, .human-readout, .tale-doodles")];
+    pieces.forEach((el) => el.classList.add("tale-enter"));
+    fades.forEach((el) => el.classList.add("tale-enter-fade"));
+    root.classList.remove("tale-coming");
+    // A frame for the browser to take them as hidden, then in they come.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      pieces.forEach((el, n) => {
+        el.style.transitionDelay = (n * ENTER_STEP) + "ms";
+        el.classList.add("tale-entered");
+      });
+      fades.forEach((el) => {
+        el.style.transitionDelay = (2 * ENTER_STEP) + "ms";
+        el.classList.add("tale-entered");
+      });
+      const end = (pieces.length + 1) * ENTER_STEP + 1000;
+      window.setTimeout(() => {
+        // Taken off again once it is over, so nothing is left holding a
+        // transition or a delay that the page's own rules did not ask for.
+        [...pieces, ...fades].forEach((el) => {
+          el.classList.remove("tale-enter", "tale-enter-fade", "tale-entered");
+          el.style.transitionDelay = "";
+        });
+      }, end);
+      // The doodles start drawing as the head arrives, not after the foot.
+      window.setTimeout(done, 3 * ENTER_STEP);
+    }));
+  }));
+
+  // ============================================================
   // DRAWN IN AS THEY ARRIVE
   // ============================================================
   const watcher = !REDUCE_MOTION && "IntersectionObserver" in window
@@ -361,7 +428,7 @@
     if (watcher) {
       svg.classList.add("tale-to-draw");
       svg.style.setProperty("--draw", DRAW_MS + "ms");
-      watcher.observe(svg);
+      entered.then(() => watcher.observe(svg));
     } else {
       svg.classList.add("tale-drawn");
     }

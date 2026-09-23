@@ -22,8 +22,9 @@
 // it" — and a copy here would go stale the first time they edited the
 // other one.
 //
-// THE NOTES ARE RENDERED BY notes.js, not by this file: `NOTE_PANEL`
-// is the same renderer every house page uses. One renderer, or the two
+// THE NOTES ARE notes.js's, not this file's: `NOTE_PANEL` hands out the
+// same renderer AND the same VIEW NOTES button and window every house
+// page uses, so a fragrance's notes open on a click here too. One renderer, or the two
 // drift apart and a reader is told different things about the same
 // fragrance depending on which door they came in by.
 //
@@ -300,6 +301,13 @@
   // ============================================================
   // OPENING ONE
   // ============================================================
+  /** The notes windows standing for the fragrance that is open. */
+  let windows = [];
+  function notesOff() {
+    windows.forEach((w) => w.remove());
+    windows = [];
+  }
+
   function show(no, row) {
     if (busy) return;
     busy = true;
@@ -361,14 +369,30 @@
         'It is on <a href="' + WHERE + '#part-' + no + '">its own page</a>.</p>';
     });
 
-    // The notes, by the same renderer every house page uses.
+    // THE NOTES, BEHIND A BUTTON — the same VIEW NOTES and the same
+    // window every house page has, by the same script. They used to be
+    // printed out in full under the writing; the owner asked for them
+    // to be "also click to open", like everywhere else on the site.
+    notesOff();
     const notes = reader.querySelector(".frag-notes");
     const all = window.FRAGRANCE_NOTES || {};
     const panel = window.NOTE_PANEL;
-    notes.innerHTML = panel
-      ? '<p class="frag-notes-head">Notes</p>' +
-          panel.html(all["individual:" + no], "frag-notes-" + no)
-      : "";
+    if (panel && panel.button) {
+      const entry = all["individual:" + no];
+      const id = "frag-notes-" + no;
+      const name = named ? named.textContent.trim() : "";
+      if (entry && entry.landscape) {
+        windows.push(panel.button({
+          text: notes, id: id + "-landscape", extra: "note-open-landscape",
+          calls: "Olfactory landscape", titled: "Landscape", name: name,
+          body: panel.landscape(entry.landscape, id + "-landscape"),
+        }));
+      }
+      windows.push(panel.button({
+        text: notes, id: id, calls: "View notes", titled: "Notes", name: name,
+        body: panel.html(entry, id),
+      }));
+    }
 
     left = {
       y: window.scrollY || window.pageYOffset || 0,
@@ -469,12 +493,15 @@
     if (busy || !open) return;
     busy = true;
     hold(true);
+    // A notes window left up would stand over the way back.
+    windows.forEach((w) => w.close(true));
 
     const done = () => {
       reader.hidden = true;
       reader.classList.remove("is-here", "is-clearing", "is-leaving");
       reader.style.backgroundPosition = "";
       inside.style.opacity = "";
+      notesOff();
       document.querySelectorAll(".frag-flier").forEach((f) => f.remove());
       open = false;
       busy = false;
@@ -579,9 +606,19 @@
     if (event.target.closest(".frag-back")) hide();
   });
 
+  // Whether a notes window was up when the key went down, read in the
+  // capturing phase — before notes.js has had the chance to shut it.
+  let notesUp = false;
+  document.addEventListener("keydown", () => {
+    notesUp = !!document.querySelector(".note-panel:not([hidden])");
+  }, true);
   document.addEventListener("keydown", (event) => {
     if (!open) return;
-    if (event.key === "Escape" || event.key === "Esc") hide();
+    if (event.key !== "Escape" && event.key !== "Esc") return;
+    // Escape shuts a notes window first; only with none up does it take
+    // you back to the list.
+    if (notesUp) return;
+    hide();
   });
 
   // Leaving the Fragrances view by its own button closes whatever is
@@ -595,6 +632,7 @@
       reader.classList.remove("is-here", "is-clearing", "is-leaving");
       reader.style.backgroundPosition = "";
       document.querySelectorAll(".frag-flier").forEach((f) => f.remove());
+      notesOff();
       document.body.classList.remove("frag-open");
       open = false;
       busy = false;

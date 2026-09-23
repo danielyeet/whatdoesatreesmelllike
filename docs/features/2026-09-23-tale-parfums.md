@@ -129,3 +129,36 @@ doodle.
   *Tale Parfums*. The page uses the owner's name for the house.
 - The lily is the only doodle drawn at the head; the other three emblems appear in the
   margins, so on a phone only the lily is seen.
+
+## 2026-09-23, later — less drawn, straight lines, and coming in
+
+The owner, having seen it: *"fix the page so that it doesnt just randomly flick into the
+handwritten and handdrawn page; I want it to be animated in. I also want you to not make
+it as hand drawn as you did it. It should still have the same font and generally be the
+same, but with SOME additions of handdrawn-ness. But keep the drawings and decorations
+those are 10/10. make the lines straight and keep the images as they are."*
+
+- **Straight lines.** Every drawn wave is gone: the name's underline is one straight
+  stroke, and the introduction's heading, each fragrance, each stage heading and the foot
+  are ruled with the house's ordinary straight line. The Open cue, View notes and the
+  not-yet-written box have straight edges. `--wave` and `--under` are gone from the
+  stylesheet.
+- **Kept, as asked:** both handwriting faces, every doodle and its drawing-in and boil,
+  the loops round the numbers, and the pictures exactly as they were — uneven corners,
+  tilt and tape.
+- **It comes in.** The faces arrive after the page, so it used to be drawn for a moment
+  in the site's own face and then jump to the handwriting. The page now holds itself back
+  from the first paint (`tale-coming`, set in its own `<head>`, undone by itself after
+  load if the script never arrives), `tale.js` waits for both faces (2.5s at most), and
+  then brings the head, the introduction, the fragrances, the credit and the foot in one
+  after another — a fade and a short rise each, 130ms apart — with the fixed chrome and
+  the doodles fading in with them. The doodles only start drawing themselves once the
+  head has arrived. Measured: no frame shows the name before the handwriting is in, and
+  the name arrives before the introduction.
+- **One snag, worth knowing:** `house.js` brings the introduction up with a rule that
+  outranks anything page-level (`.human-ready .human-rises.arrived`), so the first version
+  of the hold let the introduction show through ahead of the name. The hold's opacity is
+  `!important` for that reason, and only the opacity.
+
+Tested by `Tale's rules are straight, and its pictures are still pinned on` and `Tale
+comes in rather than flicking into its handwriting`.

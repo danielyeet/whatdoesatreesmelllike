@@ -13,6 +13,22 @@
      the site's own faces if they never arrive. -->
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Gochi+Hand&family=Patrick+Hand&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../style.css">
+<script>
+  /* HELD BACK UNTIL THE HANDWRITING IS IN. The two faces arrive after
+     the page does, so without this it is drawn for a moment in the
+     site's own face and then jumps to the handwriting — the owner's
+     "randomly flick into the handwritten page". tale.js takes this off
+     and brings the page in once both faces are there.
+
+     It undoes itself if that script never arrives, so the page is never
+     left blank. */
+  document.documentElement.classList.add("tale-coming");
+  var taleReady = function () {
+    document.documentElement.classList.remove("tale-coming");
+  };
+  window.addEventListener("load", function () { setTimeout(taleReady, 1500); });
+  setTimeout(taleReady, 5000);
+</script>
 </head>
 <!--
   TALE PARFUMS — the seventh house in Scent descriptions, and the frame
@@ -33,8 +49,13 @@
   comment at the top of tale.js.
 
   EVERYTHING ELSE THAT LOOKS DRAWN IS THE STYLESHEET: the two
-  handwriting faces, the boxes with uneven corners, the wavy rules.
-  Those need no script at all; only the doodles do.
+  handwriting faces, the pictures' uneven corners, tilt and tape, and
+  the loops round the numbers. The RULES ARE STRAIGHT, at the owner's
+  word ("make the lines straight"); they were drawn waves for a round.
+
+  THE PAGE COMES IN rather than flicking from the site's own face into
+  the handwriting: the little script below holds it back until
+  tale.js has both faces and brings it in.
 
   THE PICTURES ARE THE HOUSE'S OWN, three to a fragrance, in
   images/Tale/Perfumes/: 1 is the bottle, 2 is its label drawing, 3 is
@@ -200,9 +221,9 @@
 -->
 <p class="house-credit">
   <span class="house-credit-say">Pictures</span>
-  TALE Parfum’s own — the bottles, the drawings off their labels and the photographs — from
+  <span class="house-credit-text">TALE Parfum’s own — the bottles, the drawings off their labels and the photographs — from
   <a href="https://www.taleparfum.com/" rel="noopener noreferrer" target="_blank">taleparfum.com</a>.
-  The doodles in the margins are drawn for this page after those drawings.
+  The doodles in the margins are drawn for this page after those drawings.</span>
 </p>
 
 <footer class="human-foot">

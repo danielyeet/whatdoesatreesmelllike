@@ -704,3 +704,25 @@ does not change where anything else on the map ends up.
   that.
 - The look of this page is a live subject; the owner has asked for several rounds on it
   and may ask for more.
+
+## 2026-09-23 — eight frames, and a flick that never repeats
+
+**Frames 09 to 14 are gone**, at the owner's word: the sheet is the seven houses and one
+empty frame (08), which is kept so there is somewhere for a line to go while the next
+house is made.
+
+**The flick never shows a picture twice.** The owner: *"change the cycling animation so
+its randomized but any one thing is never repeated."* It picked at random for every cut
+and only kept the same picture from coming up twice running, so with fewer pictures than
+cuts some were bound to come back — recorded, one load read `3,5,3,6,2,7,3,1`. The reel
+is a **shuffle** now: every picture but the landing one, in a fresh random order each
+visit, each exactly once, then the landing picture. That makes it as many cuts as there
+are pictures, nine at most; a shorter reel starts further into the slowing so it still
+comes to rest rather than stopping short. The landing picture still opens the run (the
+beat before the cuts) and ends it, and nowhere in between.
+
+Tested by `the flick shows every picture once, in a different order each time` (three
+loads, watched every frame) — with the old picking put back it fails on *no picture
+twice* — and `the sheet carries the seven houses and one empty frame`. Two older tests
+counted on fourteen frames (*more than eight arrive*, *more than four unwritten*) and now
+count the eight there are.

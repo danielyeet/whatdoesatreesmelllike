@@ -7192,7 +7192,7 @@ body.frag-open { overflow: hidden; }
   border: 1px dashed var(--line);
   padding: 14px 16px;
 }
-.frag-notes { max-width: 62ch; margin-top: 38px; }
+.frag-notes { max-width: 62ch; margin-top: 26px; }
 .frag-notes-head {
   margin: 0 0 4px;
   font-family: var(--mono);
@@ -8213,8 +8213,17 @@ a.note-cite:hover { color: var(--ink); }
      ran hard into both edges of a phone. */
   max-width: 940px;
   margin: clamp(40px, 7vh, 72px) auto 0;
-  padding: 16px 64px 0;
+  /* THE SAME SPACE BELOW THE WORDS AS ABOVE THEM. It had 16px above and
+     none below, so the words sat on the foot's rule underneath — the
+     owner's "have the text in the middle". */
+  padding: 18px 64px 18px;
   border-top: 1px solid var(--line);
+  /* AND THE WORDS IN A COLUMN OF THEIR OWN beside the label, so a second
+     line starts under the first rather than back under "PICTURES". */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: baseline;
   font-family: var(--mono);
   font-size: 12px;
   line-height: 1.85;
@@ -8223,7 +8232,7 @@ a.note-cite:hover { color: var(--ink); }
 }
 .house-credit-say {
   display: inline-block;
-  margin-right: 12px;
+  margin-right: 0;
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -8279,13 +8288,25 @@ a.note-cite:hover { color: var(--ink); }
      THE HANDS    Gochi Hand, a thick marker, for anything that is a
                   heading; Patrick Hand, a neat pen, for the reading.
                   This page is the only one that loads either.
-     THE BOXES    Uneven corners — `border-radius` given eight
-                  different radii, the old trick for a box somebody
-                  drew rather than one a computer ruled.
-     THE RULES    Wavy lines instead of ruled ones: a short drawn wave,
-                  repeated along the edge.
-     THE TAPE     A strip of it holding each fragrance's picture to the
-                  page.
+     THE PICTURES Uneven corners — `border-radius` given eight
+                  different radii, `--drawn` — tilted, and held to the
+                  page with a strip of TAPE.
+     THE CIRCLES  A loop drawn round each number.
+
+   AND NO MORE THAN THAT, which is the owner's second word on it: "not
+   make it as hand drawn as you did... SOME additions of
+   handdrawn-ness... keep the drawings and decorations... make the
+   lines straight and keep the images as they are." So every RULE on
+   the page is straight — it was a drawn wave for one round — and the
+   boxes (the cue, View notes, the not-yet-written box) have straight
+   edges. The doodles, the circles, the pictures and the two faces are
+   what stayed.
+
+   IT COMES IN RATHER THAN SWAPPING. With the faces arriving after the
+   page, it used to be drawn in the site's own face for a moment and
+   then jump to the handwriting. `tale-coming` on <html> holds the page
+   back until both faces are in, and tale.js then brings it in —
+   see THE ENTRANCE below.
 
    The page's colour is the five tokens, redefined on its own body class
    the way Ataraxia's are, and it is warm paper rather than white — the
@@ -8301,8 +8322,6 @@ a.note-cite:hover { color: var(--ink); }
   --hand: "Gochi Hand", "Archivo", sans-serif;
   --pen: "Patrick Hand", "Archivo", sans-serif;
   --drawn: 255px 15px 225px 15px / 15px 225px 15px 255px;
-  --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M0 4.5C14 1.5 24 7 40 4.2S66 1.2 80 4.6S106 7.2 120 4.5' fill='none' stroke='%231f1d18' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  --under: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 16' preserveAspectRatio='none'%3E%3Cpath d='M4 10C50 5 110 13 170 8S262 4 296 9' fill='none' stroke='%231f1d18' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M18 13C80 9 150 15 230 11S282 10 290 12' fill='none' stroke='%231f1d18' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
   --loop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 34'%3E%3Cpath d='M30 4C18 1 5 6 4 17S15 32 25 31S41 23 40 14S31 3 22 5' fill='none' stroke='%231f1d18' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
@@ -8363,8 +8382,10 @@ a.note-cite:hover { color: var(--ink); }
   line-height: 0.96;
   letter-spacing: 0;
   display: inline-block;
-  padding-bottom: 16px;
-  background: var(--under) no-repeat left bottom / 100% 16px;
+  padding-bottom: 14px;
+  /* ONE STRAIGHT STROKE under the name. It was a drawn double wave for
+     a round; the owner asked for the lines straight. */
+  border-bottom: 3px solid var(--ink);
 }
 .tale-page .human-standfirst {
   font-family: var(--pen);
@@ -8388,9 +8409,8 @@ a.note-cite:hover { color: var(--ink); }
   font-weight: 400;
   font-size: clamp(32px, 4vw, 44px);
   letter-spacing: 0;
-  border-bottom: 0;
   padding-bottom: 12px;
-  background: var(--wave) repeat-x left bottom / 120px 8px;
+  border-bottom: 1.5px solid rgba(var(--ink-rgb), 0.55);
 }
 .tale-page .human-text p {
   font-family: var(--pen);
@@ -8408,26 +8428,16 @@ a.note-cite:hover { color: var(--ink); }
   text-transform: none;
   color: var(--ink);
 }
-.tale-page .human-stage::after {
-  height: 8px;
-  background: var(--wave) repeat-x left center / 120px 8px;
-  opacity: 0.55;
-}
 .tale-page .human-text p.human-waiting {
   font-family: var(--pen);
   font-size: 17.5px;
   letter-spacing: 0;
-  border: 2px dashed #b9b0a0;
-  border-radius: var(--drawn);
+  border: 1.5px dashed #b9b0a0;
 }
 
-/* THE FRAGRANCES: each row ruled off with a drawn wave rather than a
-   line, its number circled, its drawing pinned on crooked. */
-.tale-page .human-part {
-  border-bottom: 0;
-  background: var(--wave) repeat-x left bottom / 150px 8px;
-  padding-bottom: 6px;
-}
+/* THE FRAGRANCES: each row ruled off with the house's own straight line,
+   its number circled, its drawing pinned on crooked. The rules were
+   drawn waves for a round, and the owner asked for them straight. */
 .tale-page .human-no {
   font-family: var(--hand);
   font-size: 19px;
@@ -8451,19 +8461,13 @@ a.note-cite:hover { color: var(--ink); }
   font-family: var(--hand);
   font-size: clamp(26px, 3vw, 34px);
 }
-.tale-page .human-part > summary::after {
-  height: 8px;
-  background: var(--wave) repeat-x left center / 60px 6px;
-  opacity: 0.35;
-}
 .tale-page .human-cue {
   font-family: var(--pen);
   font-size: 17px;
   letter-spacing: 0;
   text-transform: none;
   color: var(--ink);
-  border: 2px solid var(--ink);
-  border-radius: var(--drawn);
+  border: 1.5px solid var(--ink);
   padding: 2px 13px 3px;
   transition: transform 0.25s var(--menu-ease), background-color 0.25s ease;
 }
@@ -8503,16 +8507,44 @@ a.note-cite:hover { color: var(--ink); }
 .tale-page .human-readout-where { font-size: 13px; letter-spacing: 0.04em; text-transform: none; }
 .tale-page .human-back,
 .tale-page .human-on { font-family: var(--pen); font-size: 17px; letter-spacing: 0.02em; }
-.tale-page .human-foot { border-top: 0; background: var(--wave) repeat-x left top / 150px 8px; }
+
 .tale-page .house-credit { font-family: var(--pen); font-size: 15.5px; letter-spacing: 0; }
 .tale-page .note-open {
   font-family: var(--pen);
   font-size: 16px;
   letter-spacing: 0;
   text-transform: none;
-  border: 2px solid var(--ink);
-  border-radius: var(--drawn);
+  border: 1.5px solid var(--ink);
 }
+
+/* THE ENTRANCE. Everything is held back while `tale-coming` is on the
+   page (set in its own <head>), and tale.js brings the pieces in one
+   after another once the handwriting has arrived: a fade and a short
+   rise each. The fixed chrome only fades — it is placed with a
+   transform of its own, which a rise would undo. */
+html.tale-coming .tale-page .human-head > *,
+html.tale-coming .tale-page .human-intro,
+html.tale-coming .tale-page .human-parts,
+html.tale-coming .tale-page .house-credit,
+html.tale-coming .tale-page .human-foot,
+html.tale-coming .tale-page .tale-doodles,
+html.tale-coming .tale-page .human-rank,
+html.tale-coming .tale-page .human-readout { opacity: 0 !important; }
+/* `!important` ON THE OPACITY ONLY, and it has to be: house.js brings
+   the introduction and the parts up with rules of its own
+   (`.human-ready .human-rises.arrived`) that outrank anything written
+   here, and without it the introduction showed through ahead of the
+   name. The transform is left to lose — house.js's rise is its own. */
+.tale-page .tale-enter { opacity: 0 !important; transform: translateY(16px); }
+.tale-page .tale-enter-fade { opacity: 0 !important; }
+.tale-page .tale-enter.tale-entered,
+.tale-page .tale-enter-fade.tale-entered {
+  opacity: 1 !important;
+  transform: none;
+  transition: opacity 0.9s var(--menu-ease), transform 1s var(--menu-ease);
+}
+/* The lily at the head keeps its own place; it only fades. */
+.tale-page .tale-head-doodle.tale-enter { transform: none; }
 
 @media (max-width: 860px) {
   .tale-head-doodle { right: 20px; top: 64px; width: 104px; height: 104px; }
@@ -8521,6 +8553,8 @@ a.note-cite:hover { color: var(--ink); }
   .tale-by-3 { left: 84px; top: -8px; width: 16px; height: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .tale-page .tale-enter,
+  .tale-page .tale-enter-fade { opacity: 1; transform: none; transition: none; }
   .tale-to-draw path { stroke-dasharray: none; stroke-dashoffset: 0; }
   .tale-to-draw .tale-tint { opacity: 0.95; }
   .tale-to-draw.tale-drawn path,

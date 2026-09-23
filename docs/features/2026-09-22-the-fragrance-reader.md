@@ -314,3 +314,29 @@ Three new tests, and two were proved against the fault:
 
 The older tests' waits were lengthened to the new timings; that is the deliberate change
 the owner asked for, not a loosening.
+
+## 2026-09-23 — the notes open on a click
+
+The owner: *"change the format of the notes of the perfumes in haxan (and other
+individual fragrances) so that it is also click to open."* The reader printed a
+fragrance's notes out in full under its writing; every house page puts them behind a
+**View notes** button that opens a window. The reader now does the same — **the same
+button and the same window, from `notes.js`**, which hands its window-builder out as
+`NOTE_PANEL.button` beside the renderer it already handed out. One window, or the two
+drift apart.
+
+Three things the reader has to look after that a house page does not:
+
+- **It shows one fragrance after another in the same place**, so each one's window is
+  taken off the page (`remove`) when the next is opened, and when the reader closes — a
+  test checks the windows do not pile up.
+- **Escape answers twice.** The window and the reader both listen for it. Pressed with a
+  window up, it closes the window and leaves the fragrance; pressed again, it goes back to
+  the list. The reader asks, in the capturing phase, whether a window was up before
+  `notes.js` had shut it.
+- **The way back closes an open window first**, so it never stands over the pictures
+  flying home.
+
+Tested by `it carries the picture, the writing and the notes` (now: a button, nothing
+printed, and the window with Haxan's two halves once pressed) and `escape shuts the notes
+before the fragrance, and windows do not pile up`.

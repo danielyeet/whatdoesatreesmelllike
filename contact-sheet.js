@@ -51,7 +51,9 @@
   // beat before the flicking starts. Going straight into the cuts from
   // a blank page is a jolt; a moment of the piece itself first reads
   // as a projector being started rather than as a page loading.
-  // NINE CUTS, AND HALF AGAIN AS LONG AS THEY FIRST WERE. It was 18
+  // NINE CUTS AT MOST — fewer when there are fewer pictures, since none
+  // may come round twice (see THE REEL in `flick`) — AND HALF AGAIN AS
+  // LONG AS THEY FIRST WERE. It was 18
   // cuts over about three seconds; halving both was too much of a good
   // thing, and the owner asked for the flashing back up by half. So it
   // is 9 cuts over about a second and a half: the count stays where it
@@ -1333,24 +1335,31 @@
     // the ARRANGEMENT has to come out the same every visit and the reel
     // has to not, and drawing from the seeded run here would shift
     // every picture on the page.
-    const reel = [];
-    let last = -1;
-    for (let n = 0; n < Math.max(1, steps - 1); n++) {
-      let pick = 0;
-      if (frames.length > 1) {
-        // Never twice running: the same picture held for two cuts is a
-        // stall, not a cut.
-        do {
-          pick = 1 + Math.floor(Math.random() * (frames.length - 1));
-        } while (pick === last && frames.length > 2);
-      }
-      last = pick;
-      reel.push(pick);
+    //
+    // AND NO PICTURE COMES ROUND TWICE. The owner: "change the cycling
+    // animation so its randomized but any one thing is never repeated."
+    // It used to pick at random for every cut and only kept the same
+    // picture from being picked twice RUNNING — so with fewer pictures
+    // than cuts, some were bound to come back. It is a SHUFFLE now: every
+    // picture but the landing one, in a fresh random order each visit,
+    // each shown once. With eight pictures that is seven cuts and the
+    // landing, so the reel is as long as there are pictures to show and
+    // never longer — which means a sheet with fewer pictures flicks
+    // fewer times rather than repeating itself to make up the count.
+    const others = [];
+    for (let i = 1; i < frames.length; i++) others.push(i);
+    for (let i = others.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = others[i]; others[i] = others[j]; others[j] = t;
     }
+    const reel = others.slice(0, Math.max(0, steps - 1));
     reel.push(0);
 
     let at = 0;
-    let hold = FLIP_FIRST_MS;
+    // A SHORTER REEL STARTS FURTHER INTO THE SLOWING, so its last cuts
+    // are held as long as a full reel's would be and it still comes to
+    // rest rather than stopping short.
+    let hold = FLIP_FIRST_MS * Math.pow(FLIP_SLOW, Math.max(0, steps - reel.length));
     // NOTHING IS CLICKABLE WHILE IT IS CYCLING. The owner asked for it,
     // and it is the right answer anyway: what is under the pointer
     // changes nine times in a second, so a press lands on whatever

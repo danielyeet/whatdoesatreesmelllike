@@ -77,11 +77,45 @@ test("it carries the picture, the writing and the notes", async ({ page }) => {
   expect(said.trim().length, "the writing should have been fetched").toBeGreaterThan(20);
   expect(said, "and it should not still be waiting on the fetch").not.toContain("Fetching");
 
-  // THE NOTES, by the same renderer a house page uses — Haxan's two
-  // halves, two headings, two sources.
-  await expect(reader.locator(".frag-notes .note-half")).toHaveCount(2);
-  await expect(reader.locator(".frag-notes .note-cite")).toHaveCount(2);
-  await expect(reader.locator(".frag-notes .note-row")).toHaveCount(2);
+  // THE NOTES, BEHIND A CLICK since 2026-09-23 — the owner asked for
+  // them to be "also click to open", like on every house page. So there
+  // is a VIEW NOTES button and nothing printed out, and pressing it opens
+  // the same window, with Haxan's two halves, two headings, two sources.
+  await expect(reader.locator(".frag-notes .note-half")).toHaveCount(0);
+  const button = reader.locator(".frag-notes .note-open");
+  await expect(button).toHaveCount(1);
+  await button.click();
+  await page.waitForTimeout(600);
+  const shown = page.locator(".note-panel:not([hidden])");
+  await expect(shown).toHaveCount(1);
+  await expect(shown.locator(".note-half")).toHaveCount(2);
+  await expect(shown.locator(".note-cite")).toHaveCount(2);
+  await expect(shown.locator(".note-row")).toHaveCount(2);
+});
+
+/* ESCAPE SHUTS THE NOTES FIRST, and only then the fragrance. The notes
+   window and the reader both answer the key; pressed once with the
+   window up, it must not take the reader away from under it. And a
+   fragrance opened after another carries its OWN window, not a pile of
+   every window opened so far. */
+test("escape shuts the notes before the fragrance, and windows do not pile up",
+  async ({ page }) => {
+  await toTheList(page);
+  await page.locator('.index-what a[href*="part-03"]').click();
+  await page.waitForTimeout(1600);
+  await page.locator(".frag-notes .note-open").click();
+  await page.waitForTimeout(600);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(1000);
+  await expect(page.locator(".note-panel:not([hidden])")).toHaveCount(0);
+  await expect(page.locator(".frag-reader.is-here"), "the fragrance stays").toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(4200);
+  await expect(page.locator(".frag-reader")).toBeHidden();
+
+  await page.locator('.index-what a[href*="part-01"]').click();
+  await page.waitForTimeout(1600);
+  await expect(page.locator(".note-panel")).toHaveCount(1);
 });
 
 /* THE WAY BACK, which the owner described in full: "making everything

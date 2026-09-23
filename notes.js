@@ -223,15 +223,6 @@
   // must show them the same way a house page does — one renderer, or
   // the two drift apart and a reader is told different things about
   // the same fragrance depending on which door they came in by.
-  window.NOTE_PANEL = { html: fill, landscape: fillLandscape };
-
-  // AND EVERYTHING BELOW HERE NEEDS A HOUSE. A page with no
-  // `window.HOUSE_NOTES` has no parts to put buttons on; it has taken
-  // what it came for above.
-  if (!KEY) return;
-
-  let made = 0;
-  const wanted = [];
 
   /** ONE BUTTON AND THE WINDOW IT OPENS.
       A fragrance can have two of these — Almost Human's five carry an
@@ -389,6 +380,21 @@
 
     shutters.push(close);
 
+    /** Taking it off the page again — the button, the window and its
+        place among the shutters. The fragrance reader uses this, since
+        it shows one fragrance after another in the same place. */
+    const remove = () => {
+      close(true);
+      button.remove();
+      panel.remove();
+      const at = shutters.indexOf(close);
+      if (at >= 0) shutters.splice(at, 1);
+    };
+
+    // A WINDOW WITH NO <details> ABOUT IT — the fragrance reader's —
+    // has no part to collapse, and is taken off by `remove` instead.
+    if (!o.part || !o.summary) return { remove: remove, open: open, close: close };
+
     // THE WINDOW GOES WITH THE FRAGRANCE. Collapse a part and its
     // windows go with it, and opening the part again leaves them shut —
     // they have to be asked for again. Two listeners, because the two
@@ -403,7 +409,25 @@
     o.part.addEventListener("toggle", () => {
       if (!o.part.open && up) close(true);
     });
+    return { remove: remove, open: open, close: close };
   }
+
+  window.NOTE_PANEL = { html: fill, landscape: fillLandscape, button: makeWindow };
+
+  // ESCAPE CLOSES IT — on every page that can open one, the fragrance
+  // reader's included, which has no house of its own.
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" && event.key !== "Esc") return;
+    if (showing) showing(false);
+  });
+
+  // AND EVERYTHING BELOW HERE NEEDS A HOUSE. A page with no
+  // `window.HOUSE_NOTES` has no parts to put buttons on; it has taken
+  // what it came for above.
+  if (!KEY) return;
+
+  let made = 0;
+  const wanted = [];
 
   KINDS.forEach((kind) => {
     document.querySelectorAll("details." + kind.part).forEach((part) => {
@@ -450,13 +474,9 @@
     });
   });
 
-  // ESCAPE CLOSES IT, and so does the page changing shape underneath
-  // it: the window is sized against the viewport, and a phone turned on
-  // its side can leave it taller than the screen it is centred in.
-  document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" && event.key !== "Esc") return;
-    if (showing) showing(false);
-  });
+  // THE PAGE CHANGING SHAPE UNDERNEATH closes it too (escape is handled
+  // above): the window is sized against the viewport, and a phone turned
+  // on its side can leave it taller than the screen it is centred in.
   window.addEventListener("orientationchange", () => {
     shutters.forEach((close) => close(true));
   });

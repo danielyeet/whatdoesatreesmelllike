@@ -644,3 +644,56 @@ test("on a phone Tale keeps its lily and nothing stands over the writing",
   expect(clear.kicker, "nor over the line above it").toBe(true);
   expect(clear.wide, "and the page should not scroll sideways").toBe(0);
 });
+
+/* THE LINES ARE STRAIGHT. The owner, on the first version: "not make it
+   as hand drawn as you did it ... make the lines straight and keep the
+   images as they are." Every rule on the page was a drawn wave; none
+   may be now. The pictures keep their uneven corners and their tape. */
+test("Tale's rules are straight, and its pictures are still pinned on", async ({ page }) => {
+  await page.goto(TALE);
+  const seen = await page.evaluate(() => {
+    const wavy = [...document.querySelectorAll(".tale-page *")].filter((el) => {
+      const cs = getComputedStyle(el);
+      return /svg\+xml/.test(cs.backgroundImage) && !el.matches(".human-no, .human-section-mark");
+    }).map((el) => el.className);
+    const part = getComputedStyle(document.querySelector(".human-part"));
+    const img = getComputedStyle(document.querySelector(".human-plate > img"));
+    const tape = getComputedStyle(document.querySelector(".human-plate"), "::before");
+    return { wavy, rule: part.borderBottomStyle, tilt: img.transform, tape: tape.content };
+  });
+  expect(seen.wavy, "no drawn waves left").toEqual([]);
+  expect(seen.rule, "each fragrance is ruled off with a straight line").toBe("solid");
+  expect(seen.tilt, "the pictures keep their tilt").not.toBe("none");
+  expect(seen.tape, "and their tape").toBe('""');
+});
+
+/* IT COMES IN, IT DOES NOT FLICK. "fix the page so that it doesnt just
+   randomly flick into the handwritten ... page; I want it to be animated
+   in." It used to be drawn in the site's own face and then jump when the
+   handwriting arrived. So: the name is not visible at all until the
+   page's script has brought it in, and it fades rather than appearing. */
+test("Tale comes in rather than flicking into its handwriting", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__seen = [];
+    const t0 = performance.now();
+    (function tick() {
+      const h1 = document.querySelector(".human-head h1");
+      if (h1) {
+        let o = 1;
+        for (let el = h1; el && el.nodeType === 1; el = el.parentElement) {
+          o *= parseFloat(getComputedStyle(el).opacity);
+        }
+        window.__seen.push({ o, held: document.documentElement.classList.contains("tale-coming") });
+      }
+      if (performance.now() - t0 < 3500) requestAnimationFrame(tick);
+    })();
+  });
+  await page.goto(TALE);
+  await page.waitForTimeout(3800);
+  const seen = await page.evaluate(() => window.__seen);
+  expect(seen.filter((s) => s.held && s.o > 0.01).length,
+    "nothing is shown while the page is held back").toBe(0);
+  const between = seen.filter((s) => s.o > 0.05 && s.o < 0.95).length;
+  expect(between, "it fades in over several frames rather than appearing").toBeGreaterThan(3);
+  expect(seen[seen.length - 1].o, "and ends fully there").toBeGreaterThan(0.99);
+});

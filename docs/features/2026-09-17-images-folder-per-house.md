@@ -218,3 +218,13 @@ foot, and drops to 24px below 720px exactly as the three house feet do.
 - **Tale's credit names the house's own site, taleparfum.com, and that is an assumption**:
   no source note came with the files, and the site could not be reached to check. Written
   down in [Tale Parfums' report](2026-09-23-tale-parfums.md).
+
+## 2026-09-23 — the credit line, set straight
+
+The owner pointed at Les Abstraits' credit: *"have the text in the middle format it
+correctly"*. It had space above the words and none below, so they sat on the foot's rule,
+and a second line wrapped back under the **Pictures** label. It now has the same space
+above and below, and the words stand in a column of their own beside the label
+(`.house-credit-text`, a two-column grid), so a second line starts under the first. The
+line is the same component on all six houses that carry one, so it was fixed there once
+rather than on one page.
