@@ -6650,6 +6650,15 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
    almost-human.js takes an <img> off if the file is not there, which
    puts the placeholder back. */
 .human-plate:has(img) > div { display: none; }
+/* MORE THAN ONE PICTURE: the rest stand in a row under the first.
+   A <span>, so the rule above cannot take it for the placeholder. */
+.human-plate-more {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.human-plate .human-plate-more img { aspect-ratio: 2 / 3; object-fit: cover; }
 .human-plate figcaption {
   font-family: var(--mono);
   font-size: 11px;
@@ -6902,6 +6911,57 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
   .house-waiting-list { columns: 1; }
 }
 
+/* A QUOTATION inside a fragrance's writing — Les Abstraits' La Douleur
+   Exquise quotes Fragrantica on where its materials come from. Set in
+   from the writing with a rule, in the page's muted ink, so it reads as
+   somebody else's words; the line under it says whose. */
+.human-quote {
+  margin: 4px 0 20px;
+  padding: 2px 0 2px 18px;
+  border-left: 1px solid var(--line);
+}
+.human-text .human-quote p { color: var(--muted); font-size: 14.5px; margin: 0 0 10px; }
+.human-text .human-quote p.human-quote-from {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+.abstraits-page .human-text a { color: var(--ink); text-underline-offset: 3px; }
+.abstraits-page .human-text a:hover { color: var(--muted); }
+
+/* A PICTURE IN THE MIDDLE OF THE WRITING — the drawing of the road in
+   Des Cendres, which the owner asked for inside the paragraph that
+   describes it. The whole width of the writing, and plain. */
+.human-scene { margin: 6px 0 22px; }
+.human-scene img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.human-scene figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* THE LAST WORD at the foot of a house, after the fragrances and before
+   the credit: Les Abstraits ends by sending the reader to Antoine Lie's
+   own paragraph. The introduction's box, without its heading. */
+.human-after {
+  position: relative;
+  z-index: 1;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: clamp(24px, 4vh, 44px) 64px clamp(20px, 3vh, 34px);
+}
+@media (max-width: 860px) {
+  .human-after { padding-left: 24px; padding-right: 24px; }
+}
+
 /* THE HOUSE A FRAGRANCE CAME FROM, on the Individual fragrances page
    and nowhere else — a house page never needs it, because there they
    are all the same house. It sits after the title and before the cue,
@@ -7052,7 +7112,11 @@ body.frag-open { overflow: hidden; }
    back. The pictures are out of the layout by the time this runs —
    they have been lifted into fliers of their own — so fading the whole
    article is exactly "everything except the picture". */
-.frag-reader.is-clearing .frag-in { opacity: 0; }
+.frag-reader.is-clearing .frag-in { opacity: 0; transition-duration: 640ms; }
+/* THE WAY BACK IS SLOWER THAN THE WAY IN, at the owner's word — "make
+   it a bit slower too". The reader's own ground goes under the
+   pictures over a second rather than the 700ms it arrives in. */
+.frag-reader.is-leaving { transition-duration: 1000ms; }
 
 .frag-kicker {
   display: flex;
@@ -7100,6 +7164,18 @@ body.frag-open { overflow: hidden; }
   border: 1px solid var(--line);
 }
 .frag-plate:has(img) > div { display: none; }
+/* MORE THAN ONE PICTURE — Haxan carries three. The first stands full
+   width and the rest stand in a row under it, the way they do on the
+   page the writing is fetched from. It is a <span> and not a <div> so
+   the rule above, which takes the placeholder away once a picture is
+   there, cannot take this away with it. */
+.frag-plate-more {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.frag-plate-more img { aspect-ratio: 2 / 3; object-fit: cover; height: auto; }
 
 .frag-text { max-width: 62ch; }
 .frag-side { min-width: 0; }
@@ -7148,23 +7224,33 @@ body.frag-open { overflow: hidden; }
 
 /* A PICTURE ON ITS WAY HOME. Taken out of the layout and put on the
    window at exactly the box it occupied, so nothing jumps when the
-   article underneath it fades. */
+   article underneath it fades.
+
+   IT TRAVELS BY TRANSFORM ALONE — fragrance-reader.js moves and scales
+   the box and scales the picture inside it back the other way — so it
+   has NO BORDER: a hairline scaled unevenly into a square smears into
+   two different widths and then into nothing. The fade at the end is
+   the script's too, on one clock for every picture. */
 .frag-flier {
   position: fixed;
   z-index: 40;
   overflow: hidden;
   pointer-events: none;
   background: var(--bg);
-  border: 1px solid var(--line);
-  opacity: 1;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
 }
-.frag-flier img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.frag-flier-face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+}
+img.frag-flier-face { object-fit: cover; }
 .frag-flier-blank {
   background-color: var(--bg-2);
   background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb),0.09) 0px, rgba(var(--ink-rgb),0.09) 1px, transparent 1px, transparent 16px);
 }
-/* AND THEY GO AT ONCE, on one clock rather than each on its own. */
-.frag-flier.is-gone { opacity: 0; transition: opacity 560ms ease; }
 
 @media (max-width: 700px) {
   .frag-in { padding: 96px 20px 70px; }
@@ -8177,4 +8263,263 @@ a.note-cite:hover { color: var(--ink); }
      screen — "Profumix Luxury Perfumes" ran off the edge — so it is
      allowed to break inside a word here rather than overflow. */
   .house-credit { overflow-wrap: anywhere; }
+}
+
+/* ==================================================================
+   TALE PARFUMS — the house, drawn by hand
+
+   The owner's brief was "simple and very 'drawn by hand' ... almost
+   childish", after the four drawings on the house's labels. tale.js
+   draws the doodles in the margins; EVERYTHING ELSE THAT LOOKS DRAWN
+   IS HERE, and needs no script:
+
+     THE HANDS    Gochi Hand, a thick marker, for anything that is a
+                  heading; Patrick Hand, a neat pen, for the reading.
+                  This page is the only one that loads either.
+     THE BOXES    Uneven corners — `border-radius` given eight
+                  different radii, the old trick for a box somebody
+                  drew rather than one a computer ruled.
+     THE RULES    Wavy lines instead of ruled ones: a short drawn wave,
+                  repeated along the edge.
+     THE TAPE     A strip of it holding each fragrance's picture to the
+                  page.
+
+   The page's colour is the five tokens, redefined on its own body class
+   the way Ataraxia's are, and it is warm paper rather than white — the
+   paper somebody would draw on.
+   ================================================================== */
+.tale-page {
+  --bg: #fbf8f0;
+  --bg-2: #f3eee2;
+  --line: #d8d0bf;
+  --ink: #1f1d18;
+  --muted: #6c6556;
+  --ink-rgb: 31, 29, 24;
+  --hand: "Gochi Hand", "Archivo", sans-serif;
+  --pen: "Patrick Hand", "Archivo", sans-serif;
+  --drawn: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M0 4.5C14 1.5 24 7 40 4.2S66 1.2 80 4.6S106 7.2 120 4.5' fill='none' stroke='%231f1d18' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --under: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 16' preserveAspectRatio='none'%3E%3Cpath d='M4 10C50 5 110 13 170 8S262 4 296 9' fill='none' stroke='%231f1d18' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M18 13C80 9 150 15 230 11S282 10 290 12' fill='none' stroke='%231f1d18' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  --loop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 34'%3E%3Cpath d='M30 4C18 1 5 6 4 17S15 32 25 31S41 23 40 14S31 3 22 5' fill='none' stroke='%231f1d18' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* THE DOODLES' LAYER — the whole height of the page, under everything,
+   answering nothing (the boil reads the pointer off the window). */
+.tale-doodles {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.tale-doodle { position: absolute; overflow: visible; }
+/* DRAWN IN, stroke by stroke. Every stroke is one unit long
+   (`pathLength`), so the dash that hides it and the clock that draws it
+   are the same for a long stem and a short lash; each starts a beat
+   after the one before. */
+.tale-to-draw path { stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.tale-to-draw .tale-tint { opacity: 0; }
+.tale-to-draw.tale-drawn path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--draw, 1100ms) cubic-bezier(0.5, 0.1, 0.3, 1) calc(var(--n, 0) * 70ms);
+}
+.tale-to-draw.tale-drawn .tale-tint {
+  opacity: 0.95;
+  transition: opacity 700ms ease var(--draw, 1100ms);
+}
+
+/* THE HEAD: the lily, the house's mark, stood to the right of the name
+   with a few stars round it. */
+.tale-page .human-head { position: relative; }
+.tale-head-doodle {
+  position: absolute;
+  right: 56px;
+  top: clamp(96px, 17vh, 170px);
+  width: 190px;
+  height: 190px;
+  pointer-events: none;
+}
+.tale-head-doodle .tale-doodle { position: absolute; }
+.tale-mark { left: 0; top: 0; width: 100%; height: 100%; transform: rotate(-6deg); }
+.tale-by-1 { left: -38px; top: 34px; transform: rotate(-12deg); }
+.tale-by-2 { left: 166px; top: 150px; }
+.tale-by-3 { left: 150px; top: -14px; width: 22px; height: 22px; transform: rotate(14deg); }
+
+.tale-page .human-kicker {
+  font-family: var(--pen);
+  font-size: 17px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.tale-page .human-head h1 {
+  font-family: var(--hand);
+  font-weight: 400;
+  font-size: clamp(54px, 8.6vw, 104px);
+  line-height: 0.96;
+  letter-spacing: 0;
+  display: inline-block;
+  padding-bottom: 16px;
+  background: var(--under) no-repeat left bottom / 100% 16px;
+}
+.tale-page .human-standfirst {
+  font-family: var(--pen);
+  font-size: 22px;
+  line-height: 1.35;
+  color: var(--ink);
+  max-width: 30ch;
+}
+
+.tale-page .human-section-mark {
+  font-family: var(--hand);
+  font-size: 18px;
+  letter-spacing: 0;
+  color: var(--ink);
+  display: inline-block;
+  padding: 7px 11px;
+  background: var(--loop) no-repeat center / 100% 100%;
+}
+.tale-page .human-intro h2 {
+  font-family: var(--hand);
+  font-weight: 400;
+  font-size: clamp(32px, 4vw, 44px);
+  letter-spacing: 0;
+  border-bottom: 0;
+  padding-bottom: 12px;
+  background: var(--wave) repeat-x left bottom / 120px 8px;
+}
+.tale-page .human-text p {
+  font-family: var(--pen);
+  font-size: 19.5px;
+  line-height: 1.5;
+  color: #2f2c25;
+  /* Ragged, as a hand writes it: set justified, the pen's words were
+     pulled apart into rivers. */
+  text-align: left;
+}
+.tale-page .human-text p.human-stage {
+  font-family: var(--hand);
+  font-size: 23px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+.tale-page .human-stage::after {
+  height: 8px;
+  background: var(--wave) repeat-x left center / 120px 8px;
+  opacity: 0.55;
+}
+.tale-page .human-text p.human-waiting {
+  font-family: var(--pen);
+  font-size: 17.5px;
+  letter-spacing: 0;
+  border: 2px dashed #b9b0a0;
+  border-radius: var(--drawn);
+}
+
+/* THE FRAGRANCES: each row ruled off with a drawn wave rather than a
+   line, its number circled, its drawing pinned on crooked. */
+.tale-page .human-part {
+  border-bottom: 0;
+  background: var(--wave) repeat-x left bottom / 150px 8px;
+  padding-bottom: 6px;
+}
+.tale-page .human-no {
+  font-family: var(--hand);
+  font-size: 19px;
+  color: var(--ink);
+  width: 40px;
+  text-align: center;
+  padding: 7px 0;
+  background: var(--loop) no-repeat center / 100% 100%;
+}
+.tale-page .human-thumb {
+  width: 68px;
+  height: 68px;
+  border: 2px solid var(--ink);
+  border-radius: var(--drawn);
+  background: #fff;
+  overflow: hidden;
+  transform: rotate(-3deg);
+}
+.tale-page .human-part:nth-child(even) .human-thumb { transform: rotate(2.5deg); }
+.tale-page .human-title {
+  font-family: var(--hand);
+  font-size: clamp(26px, 3vw, 34px);
+}
+.tale-page .human-part > summary::after {
+  height: 8px;
+  background: var(--wave) repeat-x left center / 60px 6px;
+  opacity: 0.35;
+}
+.tale-page .human-cue {
+  font-family: var(--pen);
+  font-size: 17px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--drawn);
+  padding: 2px 13px 3px;
+  transition: transform 0.25s var(--menu-ease), background-color 0.25s ease;
+}
+.tale-page .human-part > summary:hover .human-cue { transform: rotate(-3deg); border-color: var(--ink); }
+.tale-page .human-part[open] > summary .human-cue { background: rgba(239, 179, 146, 0.4); border-color: var(--ink); }
+
+/* THE PICTURES, pinned to the page with a strip of tape, crooked. */
+.tale-page .human-plate { position: relative; }
+.tale-page .human-plate > img {
+  border: 2px solid var(--ink);
+  border-radius: var(--drawn);
+  background: #fff;
+  transform: rotate(-1.4deg);
+}
+.tale-page .human-plate::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 96px;
+  height: 26px;
+  background: rgba(226, 212, 168, 0.72);
+  transform: translateX(-50%) rotate(-5deg);
+  z-index: 1;
+}
+.tale-page .human-plate-more img {
+  border: 2px solid var(--ink);
+  border-radius: var(--drawn);
+  background: #fff;
+  transform: rotate(2deg);
+}
+.tale-page .human-plate-more img + img { transform: rotate(-1.6deg); }
+.tale-page .human-plate figcaption { font-family: var(--pen); font-size: 16px; }
+
+/* THE CHROME, in the pen. */
+.tale-page .human-readout { font-family: var(--pen); font-size: 16px; letter-spacing: 0.02em; }
+.tale-page .human-readout-where { font-size: 13px; letter-spacing: 0.04em; text-transform: none; }
+.tale-page .human-back,
+.tale-page .human-on { font-family: var(--pen); font-size: 17px; letter-spacing: 0.02em; }
+.tale-page .human-foot { border-top: 0; background: var(--wave) repeat-x left top / 150px 8px; }
+.tale-page .house-credit { font-family: var(--pen); font-size: 15.5px; letter-spacing: 0; }
+.tale-page .note-open {
+  font-family: var(--pen);
+  font-size: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+  border: 2px solid var(--ink);
+  border-radius: var(--drawn);
+}
+
+@media (max-width: 860px) {
+  .tale-head-doodle { right: 20px; top: 64px; width: 104px; height: 104px; }
+  .tale-by-1 { left: -26px; top: 18px; width: 22px; height: 22px; }
+  .tale-by-2 { left: 92px; top: 84px; width: 22px; height: 22px; }
+  .tale-by-3 { left: 84px; top: -8px; width: 16px; height: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tale-to-draw path { stroke-dasharray: none; stroke-dashoffset: 0; }
+  .tale-to-draw .tale-tint { opacity: 0.95; }
+  .tale-to-draw.tale-drawn path,
+  .tale-to-draw.tale-drawn .tale-tint { transition: none; }
 }

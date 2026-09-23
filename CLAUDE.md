@@ -67,7 +67,7 @@ via GitHub Pages from the repo root, so the default branch is the live site.
 ## Every page, and what draws it
 
 **Where a page lives says what it is.** There are four folders of pages, and the split is
-the owner's: `houses/` holds the six fragrance houses, `individual-fragrances/` holds the
+the owner's: `houses/` holds the seven fragrance houses, `individual-fragrances/` holds the
 perfumes that belong to no house, `categories/` holds the category pages, and `works/`
 holds everything else — the essays, the researches, the two templates and the two sandbox
 pages. The houses were in `works/` with all the rest until 2026-09-22.
@@ -97,7 +97,8 @@ which talk through five `window` globals; see the landing page's report).
 | `houses/almost-human.html` | **Almost Human**, the third house: five fragrances standing in a **crowd** — people drawn entirely in specks, standing in whatever room the page leaves and over nothing, each of them nearly a person and never quite one, resolving under the pointer and glitching into the house's **mark** — with a ticked **rank** down the side | `search.js`, `almost-human.js` | [Almost Human](docs/features/2026-09-20-almost-human.md) |
 | `houses/ataraxia.html` | **Ataraxia**, the fourth house: five named fragrances (writing still to come) on **dark gray**, crossed side to side by **bands** of glowing white particles at their own angles — each with a **crest** of light travelling along it, passing behind the writing and quietened where it does, and **kindling** under the pointer | `search.js`, `house.js`, `ataraxia.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `houses/grande-parfums.html` | **Grande Parfums**, the fifth house: seventeen fragrances — fifteen written up alphabetically, two at the foot not smelled yet — over a **drift** of fine specks rising slowly up the window, which claims no theme because the owner has not given one | `search.js`, `house.js`, `grande.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
-| `houses/les-abstraits.html` | **Les Abstraits**, the sixth house: four named fragrances, none written yet, all four with notes off the house's own page | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `houses/les-abstraits.html` | **Les Abstraits**, the sixth house: four fragrances, written, all four with notes off the house's own page — with a **drawing** of Des Cendres' road standing in its writing, and a **last word** at the foot whose link opens a new window | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `houses/tale-parfums.html` | **Tale Parfums**, the seventh house: four fragrances in alphabetical order, three pictures each, on a page **drawn by hand** — two handwriting faces, uneven boxes, wavy rules, and **doodles** after the house's label drawings down both margins, drawing themselves in and **boiling** under the pointer | `search.js`, `house.js`, `tale.js`, `notes-data.js`, `notes.js` | [Tale Parfums](docs/features/2026-09-23-tale-parfums.md) |
 | `individual-fragrances/individual-fragrances.html` | the **individual fragrances**: the ones that belong to no house, each with the house it did come from. What the Fragrances view of Scent descriptions opens into | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the notes](docs/features/2026-09-21-the-notes.md) |
 | `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html`, `works/cold-vs-warm-incense.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/theory-03.html` | the same, and the longest piece on the site: **The Note Dissemination Framework**, which argues in **diagrams** and carries a **calculator** standing in the same page | `essay.js`, `calculator.js` | [the framework](docs/features/2026-09-20-the-note-dissemination-framework.md) |
@@ -110,7 +111,7 @@ Four of those page scripts are elaborate: `chamber.js` (~3,240 lines), `structur
 `almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
 (~780), `paper.js` (~580), `sun.js` (~560), `notes.js` (~475), `essay.js` (~430),
 `ataraxia.js` (~385),
-`fragrance-reader.js` (~380), `pineward-gallery.js`
+`fragrance-reader.js` (~600), `tale.js` (~480), `pineward-gallery.js`
 (~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `grande.js` (~265), `search.js`
 (~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230), `nav.js` (~220),
 `search-page.js` (~190), `photography.js` (~190), `find-ground.js` (~180) and
@@ -193,7 +194,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 254 passed, 0 failed, and takes seven to ten minutes.** If you get a
+**A clean run is 268 passed, 0 failed, and takes seven to twelve minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -284,7 +285,7 @@ Two states are easy to forget when reviewing a change:
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
   `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
   `adar.js`, `almost-human.js`, `ataraxia.js`, `grande.js`, `house.js`, `essay.js`,
-  `calculator.js`, `sun.js`,
+  `calculator.js`, `sun.js`, `tale.js`,
   `index-page.js`, `fragrance-reader.js` and `style.css`, each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
   fade to nothing) do *not* check it beyond that; if you add motion there, add the guard
@@ -302,6 +303,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| Tale Parfums, drawn by hand | `tale.js` | [report](docs/features/2026-09-23-tale-parfums.md) |
 | The fragrance reader | `fragrance-reader.js` | [report](docs/features/2026-09-22-the-fragrance-reader.md) |
 | View notes, and the Fragrances page | `notes.js`, `notes-data.js` | [report](docs/features/2026-09-21-the-notes.md) |
 | Ataraxia, Grande Parfums and Les Abstraits | `house.js`, `ataraxia.js`, `grande.js` | [report](docs/features/2026-09-21-the-newer-houses.md) |
@@ -427,7 +429,7 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   there are two tests, and the one that matters says a house source has no caution. A fragrance with no entry is fine — it gets the
   button and a panel saying the notes have not been found yet.
 - **A NEW HOUSE THAT WANTS NOTES** sets `window.HOUSE_NOTES` beside `SITE_ROOT` and loads
-  `notes-data.js` then `notes.js` after its own script. **Five of the six houses do now**,
+  `notes-data.js` then `notes.js` after its own script. **All seven houses do now** — Tale's with no entries yet, so every one of its windows says the notes have not been found —
   and so does the Fragrances view of the contact sheet, which has no house of its own and
   loads them only for the renderer `notes.js` hands out as `window.NOTE_PANEL`. **Renumbering a house means
   renumbering `notes-data.js` in the same turn**, exactly as it means re-pointing the
@@ -502,10 +504,18 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   (a 1600px long edge and a 520px square thumbnail) made from the original in
   `images/Pineward/The Pinewards Gallery Page/`. The order they stand in is the order
   they are shown and numbered in.
+- **A FRAGRANCE WITH MORE THAN ONE PICTURE** puts the first in its plate as usual and the
+  rest in a `<span class="human-plate-more">` under it — a `<span>`, because
+  `.human-plate:has(img) > div` takes any `<div>` for the placeholder and would hide it.
+  Haxan and every Tale fragrance carry three. The fragrance reader carries all of them,
+  and on the way back all of them fly home. **A photograph arriving at 5152 × 7728 gets a
+  web copy before the page points at it** — Haxan's are in `Haxan/web/`.
 - **A PICTURE IS CREDITED WHERE IT IS USED.** The owner asked for it in as many words,
   and it is one `<p class="house-credit">` at the foot of a house, above the way on to the
-  next, naming the source the pictures were actually taken from. Five houses carry one:
-  Pineward and ADAR from the houses' own sites, Les Abstraits from its own, Ataraxia from
+  next, naming the source the pictures were actually taken from. Six houses carry one:
+  Pineward and ADAR from the houses' own sites, Les Abstraits from its own (and its drawing
+  of Des Cendres' road, made for the page), Tale from its own — an assumption, see its
+  report — Ataraxia from
   its own with the logo credit the house published, and **Grande Parfums from the MEUS
   website and Profumix Luxury Perfumes rather than from the house** — which is exactly why
   the line says where it came from instead of assuming. A favourite may also name a
@@ -605,7 +615,14 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **it says nothing about the house** | Why the drift is what it is. Every other drawing here is its house said as a behaviour — a wood, a void, a crowd, bands of light. The owner still has not said what Grande Parfums is (*"Idk the theme to be honest"*), so its ground is a ground rather than a statement. **When they say, `grande.js` is the file to replace**, not to extend. |
 | **mote** | One of the larger, plainer specks in that drift, about one in fourteen. The only thing in it you would call a shape. |
 | **the star** (Grande Parfums) | The owner's own standout mark, asked for by hand: a five-pointed star **drawn** rather than typed — an SVG path with every point nudged off true and every edge bowed. On Vintage Memoir, their favourite of the house, and nowhere else yet. `.human-star`. |
-| **Les Abstraits** | The sixth house: `houses/les-abstraits.html`, four fragrances for now, none of them named or written yet. One name is known and deliberately unused — the owner mentions *Belle Ame by Les Abstraits* in Grande Parfums' Vintage Memoir. |
+| **Les Abstraits** | The sixth house: `houses/les-abstraits.html`, *Eugen’s ideas and Antoine Lie’s execution*. Four fragrances — Belle Âme, Des Cendres, La Douleur Exquise, Philosopher's Walk — **written** since 2026-09-23, with one sentence in the introduction left unfinished on purpose because the owner left it so. |
+| **the drawing** (Des Cendres) | The ink drawing standing in Des Cendres' writing — the road, the pines, the gated yards, the fire and its smoke — which the owner asked for in the writing itself (*"claude, maybe try to generate a picture of this"*). `images/Les-Abstraits/des-cendres-road.svg`, `.human-scene`. Generated, not photographed, and credited as drawn for the page. |
+| **the last word** | A paragraph at the very foot of a house, after the fragrances and before the credit — `.human-after`. Les Abstraits' is the only one: it sends the reader to Antoine Lie's own paragraph, in a **new window**, as the owner asked in capitals. |
+| **Tale Parfums** | The seventh house: `houses/tale-parfums.html`, in the frame on the sheet that was the first empty one — the owner's **placeholder 7**. Four fragrances in alphabetical order: Bad Lily, Fleurt, Rouse, Water Me. The house styles itself *TALE Parfum*; the page uses the owner's name for it. |
+| **the emblems** (Tale) | The four drawings off Tale's labels — the lily with an **eye**, the heart in a **sweet** on a stick, the **rose**, the **sprout** in its pot — which the owner called *"the pictures that come with the number 2"*. The small squares in that house's list, and what `tale.js` draws again in a pen line. The lily is the house's mark and stands at the head. |
+| **the doodles** | Tale's ground: the emblems and the small things a person doodles in a margin (stars, a moon, drops, a sun, a heart, a swirl, a cloud, a sparkle, a flower, a leaf), drawn in a wobbling line down both margins and never over the writing. They **draw themselves in** the first time they are seen. None on a window without margins. `tale.js`. |
+| **the boil** | What a doodle does under the pointer: it is redrawn every 140ms, each time slightly differently — how a drawing moves in hand-drawn animation. Away from the pointer it is perfectly still. `BOIL_*` in `tale.js`. |
+| **the hands** (Tale) | Gochi Hand (a marker, for headings) and Patrick Hand (a pen, for the reading): the only handwriting on the site, loaded by Tale's page alone. With them, the **drawn box** (`--drawn`, eight radii), the **wave** that replaces every rule, and a strip of **tape** over each picture — all in the stylesheet, so the page still looks drawn without its script. Its reading is ragged rather than justified, on that page only. |
 | **the house shape** | What every house page is, and since 2026-09-21 what `house.js` gives the newer ones: the parts opening on a measured height, the rank down the side, and a photograph taken off the page when its file is not there. It uses the `human-*` class names, which were written for Almost Human and are the shape's names now. Pineward, ADAR and Almost Human still carry their own copies of it. |
 | **the rank** (Almost Human) | The scale down the side of that page: Pineward's **trunk** and ADAR's **sounding** by a third name, in plain ink. (Not the chromatogram's **rank / ridge**, above.) The fill is how far down the page you are, from its very first pixel; the ticks are how many fragrances you have been past. |
 | **the void** | ADAR's ground: a hole standing off to one side of the window with soundings ringing out from it and specks falling round its rim. Drawn by taking the disc back out of the finished drawing, not by painting one over it. |
@@ -700,7 +717,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the two halves** | A window carrying two lists, the house’s own above and Fragrantica’s below, each with its own heading and source. **Haxan** was the first and **all five of Ataraxia** followed, at the owner’s word ("split the exact same way as they were with haxan"). Haxan’s lower list is the only one on the site read off a screenshot the owner sent rather than through a search summary. |
 | **not disclosed yet** | What Ataraxia’s My Doll’s Makeup says in the upper half of its window: the house has published no notes for it, and saying so is different from quietly standing on the fallback alone — which is what the owner asked for. It is the only entry whose FIRST half is a `missing` and whose second is a list. |
 | **the fragrance reader** | What a fragrance in the **Fragrances** view opens into now: not another page but this one, gone blank, with that fragrance’s picture, writing and notes on it and an arrow back. The writing is FETCHED from `individual-fragrances/individual-fragrances.html` rather than copied, so there is still one copy of the owner’s words. `fragrance-reader.js`. |
-| **the flier** | A picture on its way home, on the way back out of the reader: lifted out of the article onto the window at exactly the box it occupied, squared up, and sent receding into one square of **the grid**, picked at random and never the same one twice. It comes to rest at exactly one cell's size, on the cell's own corner. They all fade together once they are home. |
+| **the flier** | A picture on its way home, on the way back out of the reader: lifted out of the article onto the window at exactly the box it occupied, squared up, and sent receding into one square of **the grid**, picked at random and never the same one twice — **in a straight line**, its place, size and squaring all on one clock, by transform alone. It used to turn, which the owner asked to have taken out. It comes to rest at exactly one cell's size, on the cell's own corner. They all fade together once they are home. While any of this is running, **scrolling is held** and does nothing. |
 | **home** (the reader) | The part of **the grid** a picture may land in — centre-ish and on the right, which is where the owner asked for it. `HOME` in `fragrance-reader.js`, given as fractions of the window so it means the same on every screen. The whole window was fair game for one round and the same movement read differently every time. **The four numbers are provisional**: the owner said they would send a picture of the grid they want. |
 | **the grid** (the sheet) | The squared ground the contact sheet page is ruled into: 46px squares, `--grid-cell` on `:root`, painted by a pair of gradients in `.sheet-page`. **The fragrance reader is ruled into the same ones by the same declaration**, because a picture on its way back recedes into ONE OF THESE SQUARES and would otherwise land on nothing. The reader drew a grid of its own for one round, at about 90px, and it read as a second grid over the first. Its cells are arithmetic rather than elements — a cell is n × `--grid-cell`, not a span in the page. |
 | **the caution** (notes) | The small box that comes up on hovering **Fragrantica** in a notes window: *Fragrantica's notes are not to be trusted as 100% fact.* — the owner's own sentence. A `CAUTION` table in `notes.js` keyed by source name, so it is **only** on the fallback; put it on a house's own page and it stops meaning anything, and there is a test saying so. It stands above the source line because the source is the last thing in a window that scrolls. |
@@ -711,8 +728,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the run** | **Removed.** The line between two pictures drawn as specks rather than as a stroke. Replaced by the trace, which is dashed — a solid stroke is the one thing the line must not be, and there is a test saying so. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
 | **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter`, a `data-house`, optionally a `data-notes` key into `notes-data.js`, and an `href` pointing at wherever that fragrance lives on the site. It carried a `data-date` until 2026-09-22; if the owner uses the word, that is what it was. |
-| **the credit** | The line at the foot of a house saying where its pictures came from — `<p class="house-credit">`, above the way on to the next house. The owner asked for pictures to be credited wherever they are used. Five houses carry one; the source is the one the pictures were actually taken from, which for Grande Parfums is **not** the house's own site. |
-| **work** | An individual piece, one page in `works/` — the essays, the researches and the templates. A **house** is not one of these any more: since 2026-09-22 the six houses live in `houses/` and the individual fragrances in `individual-fragrances/`. |
+| **the credit** | The line at the foot of a house saying where its pictures came from — `<p class="house-credit">`, above the way on to the next house. The owner asked for pictures to be credited wherever they are used. Six houses carry one; the source is the one the pictures were actually taken from, which for Grande Parfums is **not** the house's own site. |
+| **work** | An individual piece, one page in `works/` — the essays, the researches and the templates. A **house** is not one of these any more: since 2026-09-22 the houses live in `houses/` (seven since 2026-09-23) and the individual fragrances in `individual-fragrances/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 
 ## Where things stand
@@ -765,21 +782,24 @@ worth knowing before touching anything shared:
   overlay's links and the global focus ring, on every page including the chamber. Why it
   was left is in [the page shell's
   report](docs/features/2026-09-11-the-page-shell-and-menu.md).
-- **There are six houses now** (Pineward, ADAR, Almost Human, Ataraxia, Grande Parfums,
-  Les Abstraits), and the three newest are three different states of finished: Ataraxia
+- **There are seven houses now** (Pineward, ADAR, Almost Human, Ataraxia, Grande Parfums,
+  Les Abstraits, Tale Parfums), and they are in different states of finished: Ataraxia
   has its drawing, its names and its notes and **no writing**; Grande Parfums has its
   writing and a drawing that **deliberately says nothing about the house**, because the
-  owner has still not said what it is; Les Abstraits has its names and its notes and
-  neither of the other two. **Named is not written**, and since 2026-09-22 the site has
+  owner has still not said what it is; Les Abstraits has its names, its notes and — since
+  2026-09-23 — its writing, and no drawing of its own; Tale Parfums has its writing, its
+  pictures and its hand-drawn page and **no notes yet**, because its own site could not be
+  read to take them from. **Named is not written**, and since 2026-09-22 the site has
   houses in that state — the test that used to conflate them now keeps them apart. What
   each is waiting for is in [their
   report](docs/features/2026-09-21-the-newer-houses.md).
-- **All six houses now carry a real picture on the contact sheet**, and five of the six
+- **All seven houses now carry a real picture on the contact sheet**, and six of the seven
   have a photograph with every fragrance — see [the images
   report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's
   fragrance pictures and its gallery arrived on 2026-09-18; Almost Human's own two — its
   **mark** and the photograph `This one` — on 2026-09-21; and Ataraxia's, Grande Parfums'
-  and Les Abstraits' on 2026-09-22, along with Haxan's in the individual fragrances. The
+  and Les Abstraits' on 2026-09-22, along with Haxan's in the individual fragrances;
+  Tale's twelve and Haxan's other two on 2026-09-23. The
   mark is not printed on any page at all, and is only ever drawn by the crowd's glitch.
   **What is still waiting** is Almost Human's five fragrance pictures and five of the six
   individual fragrances: each names the file it wants and shows it the moment it is there.

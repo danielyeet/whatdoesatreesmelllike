@@ -1,19 +1,27 @@
-LES ABSTRAITS — the pictures for works/les-abstraits.html.
+LES ABSTRAITS — the pictures for houses/les-abstraits.html.
 
-Four fragrances for now, and none of them named yet, so the page asks
-for its files by number:
+The fragrances are named now, and the files are the owner's own, under
+their own names:
 
-  les-abstraits-01.jpg  part 01
-  les-abstraits-02.jpg  part 02
-  les-abstraits-03.jpg  part 03
-  les-abstraits-04.jpg  part 04
+  Les Abstraits Cover.webp        the house, on the contact sheet
+  Perfumes/Belle Ame.webp         part 01
+  Perfumes/Des cendres 1.jpg      part 02 (and its Favourites card)
+  Perfumes/des cendres 2.webp     part 02, spare
+  Perfumes/Des Cendres 3.webp     part 02, spare
+  Perfumes/La Doulour Excuise.webp  part 03
+  Perfumes/Philosophers walk.webp   part 04
 
-When the fragrances are named, rename each file after its fragrance and
-change the two places the page points at it — the small square in the
-list and the full picture inside.
+  des-cendres-road.svg            THE DRAWING in Des Cendres' writing:
+                                  the road, the pines, the gated yards
+                                  and the fire, drawn for the page from
+                                  the owner's own description of it.
+                                  Not a photograph, and not the house's.
 
-A file that is not here yet is not a problem: house.js takes the <img>
-off the page, which puts the hatched placeholder back.
+Each fragrance is pointed at in two places on the page — the small
+square in the list and the full picture inside. A file that is not here
+is not a problem: house.js takes the <img> off the page, which puts the
+hatched placeholder back.
 
-This file is also the only thing keeping this folder in the repository —
-git does not store an empty directory. Don't delete it.
+Where the photographs came from is credited at the foot of the page
+(the house's own site). "Source Les Abstraits Website.txt" is empty; the
+credit was taken from its name.

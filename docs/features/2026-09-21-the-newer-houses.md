@@ -21,7 +21,7 @@ why the three pages are three different states of finished:
 |---|---|---|
 | **04 Ataraxia** | a theme, then the bands that replaced it, then on 2026-09-22 the five fragrances' **names** | the drawing, whole and rebuilt once; five named fragrances with two-part notes. The writing is still the owner's. |
 | **05 Grande Parfums** | an introduction, fifteen write-ups, a list of the house's fragrances, and *"Idk the theme to be honest"* — then, a round later, *"subtle designs please"* | the writing, whole, and a ground that claims no theme. |
-| **06 Les Abstraits** | *"make the page for four fragrances for now"*, then on 2026-09-22 the four **names** | four named fragrances, all four with notes off the house's own page. The writing is still the owner's. |
+| **06 Les Abstraits** | *"make the page for four fragrances for now"*, then on 2026-09-22 the four **names**, then on 2026-09-23 the **writing** | four named fragrances, all four with notes off the house's own page, and the owner's writing for the house and every one of them. |
 
 ## The shared shape, and why house.js exists at all
 
@@ -285,7 +285,8 @@ it is too strong.
 
 ## Known issues / TODO
 
-- **Ataraxia and Les Abstraits are named now, and still unwritten.** The owner gave both
+- **Les Abstraits is written now** (2026-09-23) — see the section at the foot. **Ataraxia
+  is named and still unwritten.** The owner gave both
   houses their fragrances' names and their notes on 2026-09-22 and kept the writing, which
   is a state this site had not had before: a house that reads as researched and unwritten
   rather than unstarted. Neither page has an *Untitled* on it any more; both still say on
@@ -310,3 +311,47 @@ it is too strong.
 - **The three older houses still carry their own copies** of what `house.js` now does.
   Moving them over is a clean follow-up and was deliberately not done in the same round
   as adding three houses.
+
+## 2026-09-23 — Les Abstraits, written
+
+The owner sent the whole house: a tagline under the name (*Eugen’s ideas and Antoine
+Lie’s execution*, which is also its line on the contact sheet now), an introduction, all
+four fragrances, and a paragraph for the very end of the page.
+
+- **The writing is theirs, verbatim.** The only thing taken out was the invisible
+  left-to-right marks the paste carried, which are formatting, not writing. Their spellings
+  stay in the prose — *Bella Âme*, *La Doulour excuise*, *oppoponax*, *Antoine lee* — and
+  the **titles** stay as the house spells them, which is the one correction this site
+  makes.
+- **One sentence stops half way** — *The vibe I get from Les Abstraits is that it is
+  stuff* — and is printed that way on purpose. It is theirs to finish.
+- **Stages** where they wrote them (Belle Âme and La Douleur Exquise: Top, Mid, Dry Down);
+  plain paragraphs where they did not (Des Cendres, Philosopher's Walk).
+- **La Douleur Exquise quotes Fragrantica** on where its materials come from. It is set as a
+  quotation (`.human-quote`), set in and muted, with the source under it as a link.
+- **The last word opens a new window**, as asked in capitals — *"CLAUDE MAKE THIS OPEN A
+  NEW WINDOW"*. It is `.human-after`, after the fragrances and before the credit, linking
+  to lesabstraits.com/pages/about with `target="_blank"` and `rel="noopener noreferrer"`.
+- **The drawing in Des Cendres.** In the middle of the writing the owner left a note:
+  *"(claude, maybe try to generate a picture of this)"*. That was addressed to whoever
+  built the page, so it is not printed; a drawing stands where it was
+  (`images/Les-Abstraits/des-cendres-road.svg`, `.human-scene`). It is an ink drawing in
+  the site's own manner, of their scenario exactly: a two-lane road running away to the
+  horizon, a pine forest of Scots pines and ponderosas on the left with weeds and small
+  white flowers along the verge, gated front yards with houses on the right, a fire of
+  logs lit in the nearest yard, and its smoke billowing across the road into the pines,
+  under a low summer-evening sun. It was generated from a seeded script and is about 90KB
+  as served. The credit line at the foot says it was drawn for the page.
+- **Links inside the writing** are styled on this page only (`.abstraits-page .human-text
+  a`): Almost Human already has links in its writing, and a site-wide rule would have
+  restyled them.
+
+Tested in `tests/houses.spec.js`: *Les Abstraits ends with Antoine Lie's paragraph, in a
+new window* and *Des Cendres carries its drawing, and not the note that asked for it*; and
+the *an unwritten fragrance says it is unwritten* test now holds Les Abstraits to having
+**no** dashed boxes, beside Grande Parfums.
+
+**Left alone, and worth the owner knowing:** Des Cendres' card on the Favourites page still
+says its own description has not been written. That card's writing is a separate thing
+(a description and a commentary, matched by name), and copying this into it would be two
+copies of the same words.

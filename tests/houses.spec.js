@@ -17,18 +17,20 @@ const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 const ATARAXIA = "/houses/ataraxia.html";
 const GRANDE = "/houses/grande-parfums.html";
 const ABSTRAITS = "/houses/les-abstraits.html";
+const TALE = "/houses/tale-parfums.html";
 const SHEET = "/categories/scent-descriptions.html";
 
 test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
 });
 
-/* SIX HOUSES, IN THE ORDER THEY ARE NUMBERED. The sheet is the way in
+/* SEVEN HOUSES, IN THE ORDER THEY ARE NUMBERED. Tale Parfums is the
+   seventh, in the frame that was the first empty one. The sheet is the way in
    to all of them, and a house that is not on it cannot be reached from
    the category at all. The ORDER matters as much as the names: the
    contact sheet's report says the pictures run in order down the page,
    and every house's own kicker says which number it is. */
-test("all six houses stand on the contact sheet, in their own order",
+test("all seven houses stand on the contact sheet, in their own order",
   async ({ page }) => {
   await page.goto(SHEET);
 
@@ -36,6 +38,7 @@ test("all six houses stand on the contact sheet, in their own order",
     all.map((n) => n.textContent.trim()));
   expect(names).toEqual([
     "Pineward", "ADAR", "Almost Human", "Ataraxia", "Grande Parfums", "Les Abstraits",
+    "Tale Parfums",
   ]);
 
   // And every one of them is a link to a page that opens.
@@ -48,6 +51,7 @@ test("all six houses stand on the contact sheet, in their own order",
     "../houses/ataraxia.html",
     "../houses/grande-parfums.html",
     "../houses/les-abstraits.html",
+    "../houses/tale-parfums.html",
   ]);
 });
 
@@ -138,6 +142,7 @@ for (const [name, url, parts] of [
   ["Ataraxia", ATARAXIA, 5],
   ["Grande Parfums", GRANDE, 15],
   ["Les Abstraits", ABSTRAITS, 4],
+  ["Tale Parfums", TALE, 4],
 ]) {
   test(`${name} opens a fragrance and carries a rank of ${parts}`, async ({ page }) => {
     // NOT ONE OF THESE HOUSES HAS ITS PHOTOGRAPHS YET, and every part
@@ -407,8 +412,9 @@ test("without the scripts the new houses are all of their writing",
   async ({ page }) => {
   await page.route("**/house.js", (route) => route.abort());
   await page.route("**/ataraxia.js", (route) => route.abort());
+  await page.route("**/tale.js", (route) => route.abort());
 
-  for (const [url, parts] of [[ATARAXIA, 5], [GRANDE, 15], [ABSTRAITS, 4]]) {
+  for (const [url, parts] of [[ATARAXIA, 5], [GRANDE, 15], [ABSTRAITS, 4], [TALE, 4]]) {
     await page.goto(url);
     await expect(page.locator(".human-part")).toHaveCount(parts);
     // Nothing is hidden: the class that holds the parts back is put on
@@ -427,10 +433,10 @@ test("without the scripts the new houses are all of their writing",
 test("an unwritten fragrance says it is unwritten", async ({ page }) => {
   // NAMED IS NOT WRITTEN, and the two came apart on 2026-09-22: the
   // owner gave Ataraxia and Les Abstraits their fragrances' names and
-  // their notes, and kept the WRITING. So neither page has an Untitled
-  // on it any more, and both still say on every part that the writing
-  // has not arrived — which is the state this test now guards.
-  for (const [url, parts] of [[ATARAXIA, 5], [ABSTRAITS, 4]]) {
+  // their notes, and kept the WRITING. Les Abstraits' writing arrived
+  // on 2026-09-23, so it is Ataraxia alone that still says on every
+  // part that the writing has not arrived.
+  for (const [url, parts] of [[ATARAXIA, 5]]) {
     await page.goto(url);
     // Every part, and the introduction as well.
     await expect(page.locator(".human-waiting")).toHaveCount(parts + 1);
@@ -446,8 +452,195 @@ test("an unwritten fragrance says it is unwritten", async ({ page }) => {
     });
   }
 
-  // And the written house has neither.
-  await page.goto(GRANDE);
-  await expect(page.locator(".human-waiting")).toHaveCount(0);
-  await expect(page.locator(".human-untitled")).toHaveCount(0);
+  // And the written houses have neither.
+  for (const url of [GRANDE, ABSTRAITS]) {
+    await page.goto(url);
+    await expect(page.locator(".human-waiting"), url).toHaveCount(0);
+    await expect(page.locator(".human-untitled"), url).toHaveCount(0);
+  }
+});
+
+// ============================================================
+// LES ABSTRAITS, WRITTEN — 2026-09-23
+// ============================================================
+
+/* THE LAST WORD OPENS A NEW WINDOW. The owner asked for it in capitals:
+   "CLAUDE MAKE THIS OPEN A NEW WINDOW". So the link to Antoine Lie's
+   own paragraph is checked for the thing that makes that true — a
+   target of its own — and for the `noopener` a link into a new window
+   should always carry. */
+test("Les Abstraits ends with Antoine Lie's paragraph, in a new window",
+  async ({ page }) => {
+  await page.goto(ABSTRAITS);
+  const link = page.locator(".human-after a");
+  await expect(link).toHaveCount(1);
+  await expect(link).toHaveAttribute("href", "https://lesabstraits.com/pages/about");
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(link).toHaveAttribute("rel", /noopener/);
+  // It is the LAST thing written on the page: after every fragrance.
+  const after = await page.evaluate(() => {
+    const parts = document.querySelectorAll(".human-part");
+    const last = parts[parts.length - 1];
+    return !!(last.compareDocumentPosition(document.querySelector(".human-after"))
+      & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(after, "the paragraph should come after the fragrances").toBe(true);
+});
+
+/* THE DRAWING IN DES CENDRES. The owner wrote "(claude, maybe try to
+   generate a picture of this)" in the middle of the writing. That was a
+   note to whoever built the page, not something for the reader — so it
+   must NOT be printed, and the drawing must stand where it was, and have
+   actually loaded. */
+test("Des Cendres carries its drawing, and not the note that asked for it",
+  async ({ page }) => {
+  await page.goto(ABSTRAITS + "#part-02");
+  await page.waitForTimeout(600);
+  const text = await page.locator("#part-02").textContent();
+  expect(text.toLowerCase()).not.toContain("claude");
+  const scene = page.locator("#part-02 .human-scene img");
+  await expect(scene).toHaveCount(1);
+  const loaded = await scene.evaluate((img) => img.complete && img.naturalWidth > 0);
+  expect(loaded, "the drawing should load").toBe(true);
+  // Straight after the scenario it draws, and before the notes of it.
+  const before = await page.evaluate(() => {
+    const fig = document.querySelector("#part-02 .human-scene");
+    return fig.previousElementSibling.textContent.trim().endsWith("That is what this smells like.");
+  });
+  expect(before, "it should stand after the paragraph it pictures").toBe(true);
+});
+
+// ============================================================
+// TALE PARFUMS — 2026-09-23
+// ============================================================
+
+/* ALPHABETICAL, which the owner asked for: "Order them alphabetically."
+   Compared with the list SORTED rather than a list written out again,
+   for the reason Grande Parfums' test gives. And the four the owner
+   named, no more and no fewer. */
+test("Tale Parfums carries its four, in alphabetical order", async ({ page }) => {
+  await page.goto(TALE);
+  const names = await page.$$eval(".human-part .human-title",
+    (all) => all.map((n) => n.textContent.trim()));
+  expect([...names].sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" })))
+    .toEqual(names);
+  expect([...names].sort()).toEqual(["Bad Lily", "Fleurt", "Rouse", "Water Me"]);
+  const numbers = await page.$$eval(".human-part .human-no", (all) => all.map((n) => n.textContent.trim()));
+  expect(numbers).toEqual(["01", "02", "03", "04"]);
+  // Bad Lily's dry down is a heading with nothing under it yet, and it
+  // says so rather than being left blank or being filled in.
+  await expect(page.locator("#part-01 .human-waiting")).toHaveCount(1);
+  await expect(page.locator(".human-part .human-waiting")).toHaveCount(1);
+});
+
+/* EVERY PICTURE IS THERE: three to a fragrance, the house's own, and
+   the drawing on the label as the small square in the list. And NOT the
+   one the owner marked "dont use". */
+test("Tale Parfums shows all twelve of its pictures, and not the one marked don't use",
+  async ({ page }) => {
+  await page.goto(TALE);
+  await page.waitForTimeout(600);
+  const plates = await page.$$eval(".human-plate img", (all) =>
+    all.map((img) => ({ src: img.getAttribute("src"), ok: img.complete && img.naturalWidth > 0 })));
+  expect(plates.length).toBe(12);
+  plates.forEach((one) => expect(one.ok, `${one.src} should load`).toBe(true));
+  const thumbs = await page.$$eval(".human-thumb img", (all) => all.map((img) => img.getAttribute("src")));
+  thumbs.forEach((src) => expect(src, "the list shows each label's drawing").toMatch(/ 2\.webp$/));
+  const every = await page.$$eval("img", (all) => all.map((img) => img.getAttribute("src")));
+  every.forEach((src) => expect(src).not.toContain("dont use"));
+});
+
+/* THE PAGE IS DRAWN BY HAND. "simple and very 'drawn by hand' ...
+   almost childish", after the label drawings.
+
+   What is checked is what can be: that the doodles are THERE, that all
+   four emblems are among them, that each one is drawn with curves and
+   not with straight lines (a straight line is a line a computer drew),
+   and that NONE OF THEM STANDS OVER THE WRITING — they are in the
+   margins, where a person doodles. */
+test("the doodles are in the margins, curved, and all four emblems are there",
+  async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const errors = collectPageErrors(page);
+  await page.goto(TALE);
+  await page.waitForTimeout(800);
+
+  const seen = await page.evaluate(() => {
+    const column = document.querySelector(".human-parts").getBoundingClientRect();
+    const textLeft = column.left + 64, textRight = column.right - 64;
+    const all = [...document.querySelectorAll(".tale-doodles .tale-doodle")];
+    return {
+      // The lily is the house's mark and stands at the head, so the
+      // four are counted across the head and the margins together.
+      kinds: [...new Set([...document.querySelectorAll(".tale-doodle")].map((svg) => svg.dataset.kind))],
+      count: all.length,
+      over: all.filter((svg) => {
+        const b = svg.getBoundingClientRect();
+        return b.right > textLeft && b.left < textRight;
+      }).length,
+      straight: all.filter((svg) =>
+        [...svg.querySelectorAll("path")].some((p) => /L/.test(p.getAttribute("d")))).length,
+      head: document.querySelectorAll(".tale-head-doodle .tale-doodle[data-kind='lily']").length,
+    };
+  });
+  expect(seen.count, "there should be doodles down the margins").toBeGreaterThan(6);
+  ["sweet", "rose", "sprout", "lily"].forEach((k) =>
+    expect(seen.kinds, `the ${k} should be among them`).toContain(k));
+  expect(seen.over, "no doodle may stand over the writing").toBe(0);
+  expect(seen.straight, "every line is drawn curved").toBe(0);
+  expect(seen.head, "the house's lily stands at the head").toBe(1);
+  expect(errors).toEqual([]);
+});
+
+/* THEY DRAW THEMSELVES IN, and they BOIL under the hand: a doodle near
+   the pointer is redrawn a few times a second, each time a little
+   differently, and holds still again once the pointer has gone. */
+test("a doodle draws itself in, and boils under the pointer", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(TALE);
+  await page.waitForTimeout(2600);
+
+  const mark = page.locator(".tale-mark");
+  await expect(mark).toHaveClass(/tale-drawn/);
+  const dash = await mark.locator("path").first().evaluate((p) => getComputedStyle(p).strokeDashoffset);
+  expect(parseFloat(dash), "drawn all the way in").toBeLessThan(0.01);
+
+  const box = await mark.boundingBox();
+  const shape = () => mark.locator("path").nth(1).getAttribute("d");
+  await page.mouse.move(40, 880);
+  await page.waitForTimeout(400);
+  const still = await shape();
+  await page.waitForTimeout(400);
+  expect(await shape(), "away from the pointer it holds still").toBe(still);
+
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const seen = new Set();
+  for (let i = 0; i < 8; i++) { seen.add(await shape()); await page.waitForTimeout(90); }
+  expect(seen.size, "near the pointer it is drawn again and again").toBeGreaterThan(1);
+
+  await page.mouse.move(40, 880);
+  await page.waitForTimeout(500);
+  const settled = await shape();
+  await page.waitForTimeout(500);
+  expect(await shape(), "and holds still once the pointer has gone").toBe(settled);
+});
+
+/* ON A PHONE there are no margins, so there are no margin doodles —
+   and the house's lily still stands at the head, clear of the name. */
+test("on a phone Tale keeps its lily and nothing stands over the writing",
+  async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(TALE);
+  await page.waitForTimeout(900);
+  await expect(page.locator(".tale-doodles .tale-doodle")).toHaveCount(0);
+  const clear = await page.evaluate(() => {
+    const lily = document.querySelector(".tale-mark").getBoundingClientRect();
+    const name = document.querySelector(".human-head h1").getBoundingClientRect();
+    const kicker = document.querySelector(".human-kicker").getBoundingClientRect();
+    const apart = (a, b) => a.bottom <= b.top || a.top >= b.bottom || a.right <= b.left || a.left >= b.right;
+    return { name: apart(lily, name), kicker: apart(lily, kicker), wide: document.documentElement.scrollWidth - innerWidth };
+  });
+  expect(clear.name, "the lily should not stand over the name").toBe(true);
+  expect(clear.kicker, "nor over the line above it").toBe(true);
+  expect(clear.wide, "and the page should not scroll sideways").toBe(0);
 });

@@ -2,7 +2,7 @@
 
 Date: 2026-09-22
 
-Files: `fragrance-reader.js` (~380 lines, new), the `frag-*` rules in `style.css`, the
+Files: `fragrance-reader.js` (~600 lines, new; the way back rewritten 2026-09-23), the `frag-*` rules in `style.css`, the
 script list in `categories/scent-descriptions.html`, the renderer `notes.js` now hands
 out, `tests/fragrance-reader.spec.js` (new).
 
@@ -119,6 +119,9 @@ right place proves nothing about a shuffle.
 
 ## It is slower, and smoother
 
+**Superseded on 2026-09-23** — see the section at the foot. The table below is the round
+before.
+
 Asked for in as many words — *"a tad bit slower and smoother"*. Every duration went up by
 about a third:
 
@@ -220,10 +223,9 @@ that replaced it watches what the table actually does, frame by frame.
 
 ## Known issues / TODO
 
-- **None of the individual fragrances has a photograph yet**, so what recedes into the
-  grid is the hatched placeholder rather than a picture. It will be a picture the moment
-  the files are in `images/Individual Fragrances/`, and the transition does not care
-  which it is.
+- **Only Haxan has photographs** among the individual fragrances — three of them, which
+  all fly home. The rest recede as their hatched placeholder, and will be pictures the
+  moment their files are in `images/Individual Fragrances/`.
 - **It needs `fetch`**, which means it needs the page served over HTTP. The site already
   does — `file://` is unsupported for other reasons — but with the fetch refused the
   reader says so and links to the fragrance on its own page.
@@ -236,3 +238,79 @@ that replaced it watches what the table actually does, frame by frame.
   squares" means literally. If that reads as too small a thing to end on, the honest fix
   is a bigger `--grid-cell` — and that would move the page's own ground with it, which is
   the owner's call rather than a number to tune here.
+
+## 2026-09-23 — in a straight line, slower, and whatever the wheel does
+
+The owner, in one message:
+
+> make the transition in the individual fragrances from perfume page to the main tab of
+> fragrances smoother, and make it a bit slower too. I want it not to do any turning but
+> rather a straight path from the place the picture of the fragrance is on the screen to
+> the square in which it will fade away. The fading away can be made slower too. Make it
+> so that this happens independently of scrolling please, because when you scroll the
+> whole page glitches out.
+
+### What was actually wrong — measured, not guessed
+
+Before touching anything, the way back was recorded frame by frame in a browser.
+
+- **The turning.** The picture's *size* ran on a 560ms clock and its *place* on a 900ms
+  one, and it shrank towards its own top-left corner. So its middle first went **up and
+  away** from the square it was headed for (from y 129 to 118 while the square was at 299)
+  and then swung round towards it: **37px off the straight line** on a still page, 59px
+  with the wheel going.
+- **A stall.** The flier copied the picture from its original — for Haxan, a 5152 × 7728
+  photograph — and decoding it mid-movement froze the page for about **700ms**. Only 54
+  frames were drawn in 2.6 seconds.
+- **The scrolling.** The reader stayed on the page, invisible, until the very end, still
+  catching the wheel: scrolling during the way back scrolled the fading article about
+  under the picture (its position jumped between 140 and 390), and once the list was back
+  the wheel reached the table too. On a phone, hiding the list also shortened the page, so
+  the browser pulled the window to the top and the list came back somewhere other than
+  where it was left.
+
+### What it does now
+
+- **One clock for everything.** The picture's place, its size and its squaring all read one
+  progress, so its middle moves along one line. It travels by **transform alone** — a move
+  and a scale on the box, and the picture inside scaled back the other way so it is
+  cropped into a square rather than squashed — which the browser can run apart from the
+  page. Recorded again: **0.06–0.09px off the line**, no step backwards, about 210 frames.
+  The flier has no border any more, because a hairline scaled unevenly into a square
+  smears.
+- **Slower** — the writing going 460 → **640ms**, the travel (squaring and receding
+  together) 900 → **1500ms**, a **220ms** rest in the square, the fade 560 → **1200ms**,
+  and the reader's ground going under it over **1000ms**. One soft ease, in and out.
+- **Scrolling is held** for the length of any transition — the wheel, a drag and the
+  scrolling keys do nothing — and let go the moment it ends. The page is put back exactly
+  where it was left, window and table both, under a reader that is still standing.
+- **The picture that flies is the one on the screen** — the copy already loaded, never
+  the original.
+- **The reader's grid follows the page's on a phone.** The page's grid scrolls with the
+  page and the reader's is pinned to the window, so on a page scrolled part of a square
+  down they disagreed by that part; the reader's grid, and the squares it deals out, are
+  now shifted to match.
+- **Every picture a fragrance has comes with it.** Haxan now has three, and the reader
+  carries all three — one full width, two in a row under it — and on the way back all
+  three square up and go home to three different squares, which is the owner's original
+  *"If there is more than one picture, then they all become squares"*.
+
+### How to test it
+
+Three new tests, and two were proved against the fault:
+
+- **`every picture goes home in a straight line`** — watches the middle of each of
+  Haxan's three pictures every frame. With the old shape put back (shrinking towards its
+  corner on a faster clock than it travels) it reports *"picture 0 strayed 68.0px off its
+  line"*. Worth knowing: the first fault tried — only a faster size clock — did **not**
+  fail it, because the new flier scales about its own middle and cannot be bent that way
+  at all.
+- **`scrolling during the way back moves nothing, and is let go after`** — turns the wheel
+  the whole way through and asks that the reader, the table and the window never moved,
+  then that the wheel works again. With the hold switched off it fails on *the reader
+  should not scroll under the pictures*.
+- **`Haxan carries all three of its pictures, here and on its own page`** — and that they
+  are the web copies, never the originals.
+
+The older tests' waits were lengthened to the new timings; that is the deliberate change
+the owner asked for, not a loosening.

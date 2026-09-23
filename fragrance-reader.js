@@ -47,6 +47,24 @@
 //   4  THEY GO AT ONCE.    Once they are all home they fade together,
 //                          on one clock rather than each on its own.
 //
+// IN A STRAIGHT LINE. The owner: "I want it not to do any turning but
+// rather a straight path from the place the picture of the fragrance
+// is on the screen to the square in which it will fade away." It used
+// to turn, because its SIZE ran on a shorter clock than its PLACE —
+// the picture shrank towards its own corner faster than it travelled,
+// so its middle first went up and away from the square it was headed
+// for and then swung round towards it. Its place, its size and its
+// squaring are one clock now, so its middle cannot leave the line.
+//
+// AND WHATEVER THE WHEEL DOES. "Make it so that this happens
+// independently of scrolling please, because when you scroll the
+// whole page glitches out." The reader was still standing over the
+// page, invisible, catching the wheel — so scrolling during the way
+// back scrolled the fading article about underneath the picture, and
+// the table came back wherever it happened to be. Scrolling is held
+// for the length of it now, and the page comes back exactly where it
+// was left.
+//
 // AND THE TABLE IS ALREADY BACK BEHIND THEM by the time they fade, so
 // there is nothing to replay: the owner asked for the way back NOT to
 // run the opening again, and this is how it does not. What you see is
@@ -94,10 +112,23 @@
   const BLANK_MS = 560;         // the page going blank when one is opened
   const COME_MS = 700;          // and the fragrance arriving on it
 
-  const CLEAR_MS = 460;         // the writing going, on the way back
-  const SQUARE_MS = 560;        // the picture becoming a square
-  const RECEDE_MS = 900;        // and travelling back into the grid
-  const GONE_MS = 560;          // then all of them fading, together
+  // THE WAY BACK, slower again at the owner's word — "make it a bit
+  // slower too", and "the fading away can be made slower too".
+  const CLEAR_MS = 640;         // the writing going
+  const TRAVEL_MS = 1500;       // squaring up and travelling home: ONE clock
+  const REST_MS = 220;          // sitting in its square for a moment
+  const GONE_MS = 1200;         // then all of them fading, together
+  const LEAVE_MS = 1000;        // the reader's own ground going, under them
+
+  // ONE EASE FOR THE WHOLE MOVEMENT, soft at both ends. It is the
+  // reason the path is straight: the place, the size and the squaring
+  // all read the same progress, so the middle of the picture moves
+  // along one line from where it stood to where it lands.
+  const EASE = "cubic-bezier(0.45, 0.05, 0.2, 1)";
+  // How finely the picture's inside is worked out along the way. The
+  // outside is a straight line and needs two; the inside is a ratio of
+  // two straight lines, which is not one, and needs to be sampled.
+  const STEPS = 40;
 
   // WHERE THE PICTURES GO HOME TO, as a share of the window: the owner
   // asked for it "somewhere in the center, ish and on the right side"
@@ -162,21 +193,44 @@
 
   const inside = reader.querySelector(".frag-in");
   const plate = reader.querySelector(".frag-plate");
+  // The table's own scrolling box. Taking the page off the screen
+  // loses where it had been scrolled to, so it is written down first.
+  const scroller = page.querySelector(".index-scroll");
+
+  /** WHERE THE PAGE WAS when a fragrance was opened: the window's own
+      scroll and the table's. Hiding the list shortens the page, and the
+      browser pulls the window back to the top to fit — so without this
+      the list came back somewhere other than where it was left, which
+      is one of the ways "the whole page glitches out" on a phone. */
+  let left = { y: 0, list: 0 };
+
+  function cellSize() {
+    const said = getComputedStyle(document.documentElement)
+      .getPropertyValue("--grid-cell");
+    return parseFloat(said) || 46;
+  }
 
   /** THE SQUARES, WORKED OUT RATHER THAN BUILT.
 
-      The grid is painted by two gradients at `--grid-cell` starting at
-      the window's own corner, so a cell is arithmetic: the nth column
-      begins at n × cell. Reading the size off the stylesheet rather
-      than writing it here again is the whole point — the page's ground
-      and the place a picture lands are then one decision. */
+      The grid is painted by two gradients at `--grid-cell`, so a cell is
+      arithmetic: the nth column begins at n × cell. Reading the size off
+      the stylesheet rather than writing it here again is the whole
+      point — the page's ground and the place a picture lands are then
+      one decision.
+
+      AND THEY ARE THE PAGE'S SQUARES WHEREVER IT IS SCROLLED TO. The
+      page's grid scrolls with the page and the reader's is pinned to the
+      window, so on a page scrolled a part-square down — a phone, where
+      the list is longer than the screen — the two disagreed by that
+      part, and a picture landed in the reader's square and was then left
+      straddling two of the page's. The reader's grid is shifted by the
+      same part (`shift`), and so are the squares it deals out. */
   let cells = [];
+  let shift = 0;
   function rule() {
     const wide = window.innerWidth;
     const tall = window.innerHeight;
-    const said = getComputedStyle(document.documentElement)
-      .getPropertyValue("--grid-cell");
-    const cell = parseFloat(said) || 46;
+    const cell = cellSize();
 
     // ONLY PART OF THE GRID IS HOME. Every square on the window was
     // fair game for one round and the pictures went wherever the
@@ -187,26 +241,27 @@
     const from = Math.floor((wide * HOME.from) / cell);
     const to = Math.ceil((wide * HOME.to) / cell);
     const top = Math.floor((tall * HOME.top) / cell);
-    const down = Math.ceil((tall * HOME.down) / cell);
+    const down = Math.ceil((tall * HOME.down) / cell) + 1;
 
     cells = [];
     for (let row = top; row < down; row++) {
       for (let col = from; col < to; col++) {
-        const left = col * cell;
-        const up = row * cell;
+        const at = col * cell;
+        const up = row * cell - shift;
         // A square that hangs off the window is not somewhere to land.
-        if (left + cell > wide || up + cell > tall) continue;
-        cells.push({ left: left, top: up, width: cell, height: cell });
+        if (up < 0 || at + cell > wide || up + cell > tall) continue;
+        cells.push({ left: at, top: up, width: cell, height: cell });
       }
     }
     // A window too small for that block still has to have somewhere to
     // send a picture, so fall back to the middle square of whatever
     // there is.
     if (!cells.length) {
+      let up = Math.floor(((tall - cell) / 2 + shift) / cell) * cell - shift;
+      if (up < 0) up += cell;
       cells.push({
         left: Math.max(0, Math.floor((wide - cell) / 2 / cell) * cell),
-        top: Math.max(0, Math.floor((tall - cell) / 2 / cell) * cell),
-        width: cell, height: cell,
+        top: up, width: cell, height: cell,
       });
     }
   }
@@ -214,14 +269,41 @@
   window.addEventListener("resize", () => { if (open) rule(); });
 
   // ============================================================
+  // SCROLLING IS HELD WHILE ANYTHING IS MOVING
+  //
+  // The owner: "Make it so that this happens independently of
+  // scrolling please, because when you scroll the whole page glitches
+  // out." What the wheel did during the way back was scroll the reader
+  // — still standing over the page, invisible — so the fading article
+  // slid about under the pictures, and once the list was back it
+  // scrolled the table under them too. For the few seconds a
+  // transition takes, the wheel, a drag and the scrolling keys do
+  // nothing at all, and everything is let go again the moment it ends.
+  // ============================================================
+  const SCROLL_KEYS = new Set([" ", "Spacebar", "PageUp", "PageDown", "Home", "End",
+    "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+  const still = (event) => { if (event.cancelable) event.preventDefault(); };
+  const stillKeys = (event) => {
+    if (SCROLL_KEYS.has(event.key) && event.cancelable) event.preventDefault();
+  };
+  let held = false;
+  function hold(on) {
+    if (on === held) return;
+    held = on;
+    const how = on ? "addEventListener" : "removeEventListener";
+    window[how]("wheel", still, { passive: false, capture: true });
+    window[how]("touchmove", still, { passive: false, capture: true });
+    window[how]("keydown", stillKeys, { capture: true });
+    document.documentElement.classList.toggle("frag-still", on);
+  }
+
+  // ============================================================
   // OPENING ONE
   // ============================================================
-  const safe = (t) => String(t).replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
   function show(no, row) {
     if (busy) return;
     busy = true;
+    hold(true);
     const named = row.querySelector(".index-what");
     const house = row.querySelector("td:nth-child(3)");
     reader.querySelector(".frag-no").textContent = no;
@@ -231,7 +313,7 @@
     // The picture and the writing, out of the page they live in.
     const text = reader.querySelector(".frag-text");
     text.innerHTML = '<p class="frag-waiting">Fetching the writing…</p>';
-    plate.querySelectorAll("img").forEach((img) => img.remove());
+    plate.querySelectorAll("img, .frag-plate-more").forEach((el) => el.remove());
 
     theSheet().then((doc) => {
       const part = doc.getElementById("part-" + no);
@@ -245,21 +327,35 @@
       // the notes are already printed below here.
       text.querySelectorAll(".note-open").forEach((b) => b.remove());
 
-      const shot = part.querySelector(".human-plate img");
-      if (shot && shot.getAttribute("src")) {
+      // EVERY PICTURE THE PART HAS, not only the first. Haxan carries
+      // three, and the owner's own description of the way back already
+      // allowed for it: "If there is more than one picture, then they
+      // all become squares and then move backwards into the grid." The
+      // first stands full width; the rest stand in a row under it, the
+      // way they do on the page they came from.
+      const shots = [...part.querySelectorAll(".human-plate img")]
+        .filter((shot) => shot.getAttribute("src"));
+      let more = null;
+      shots.forEach((shot, n) => {
         const img = document.createElement("img");
-        // The fetched page's paths are relative to works/, and this
-        // page stands in categories/ — same depth, so they resolve the
-        // same way. Taken off the attribute rather than off `.src`,
-        // which the parser has already made absolute against THIS
-        // page's address and would have been right by luck.
+        // The fetched page's paths are relative to its own folder, and
+        // this page stands in categories/ — the same depth, so they
+        // resolve the same way. Taken off the attribute rather than off
+        // `.src`, which the parser has already made absolute against
+        // THIS page's address and would have been right by luck.
         img.src = shot.getAttribute("src");
-        img.alt = "";
+        img.alt = shot.getAttribute("alt") || "";
         // A PICTURE THAT IS NOT THERE YET LEAVES THE HATCHING SHOWING,
         // which is what house.js does on every other page.
         img.addEventListener("error", () => img.remove());
-        plate.appendChild(img);
-      }
+        if (n === 0) { plate.insertBefore(img, plate.children[1] || null); return; }
+        if (!more) {
+          more = document.createElement("span");
+          more.className = "frag-plate-more";
+          plate.appendChild(more);
+        }
+        more.appendChild(img);
+      });
     }).catch(() => {
       text.innerHTML = '<p class="frag-waiting">The writing could not be fetched. ' +
         'It is on <a href="' + WHERE + '#part-' + no + '">its own page</a>.</p>';
@@ -274,8 +370,17 @@
           panel.html(all["individual:" + no], "frag-notes-" + no)
       : "";
 
+    left = {
+      y: window.scrollY || window.pageYOffset || 0,
+      list: scroller ? scroller.scrollTop : 0,
+    };
+    const cell = cellSize();
+    shift = left.y % cell;
+    reader.style.backgroundPosition = shift ? "0 " + (-shift) + "px" : "";
+
     rule();
     reader.hidden = false;
+    reader.classList.remove("is-leaving");
     open = true;
     page.classList.add("is-going");
     document.body.classList.add("frag-open");
@@ -288,35 +393,104 @@
       const back = reader.querySelector(".frag-back");
       if (back) back.focus({ preventScroll: true });
       busy = false;
+      hold(false);
     }, REDUCE_MOTION ? 0 : BLANK_MS);
+  }
+
+  /** The list, back exactly where it was left. */
+  function restore() {
+    page.hidden = false;
+    window.scrollTo(0, left.y);
+    if (scroller) scroller.scrollTop = left.list;
   }
 
   // ============================================================
   // THE WAY BACK
   // ============================================================
+
+  /** ONE PICTURE, SENT HOME IN A STRAIGHT LINE.
+
+      The flier is the picture's own box, and it travels by TRANSFORM
+      alone — a move and a scale — so the browser can run it apart from
+      the page, and nothing the page is doing at the same moment can
+      make it stutter.
+
+      ITS MIDDLE MOVES ALONG ONE LINE because its place and its size are
+      read off one progress: at every moment it has gone the same share
+      of the way AND shrunk the same share of the way. It used to shrink
+      on a shorter clock than it travelled, which is what swung it off
+      the line — "turning", in the owner's word.
+
+      SQUARING UP without squashing the photograph: the box is scaled
+      unevenly into a square, and the picture inside it is scaled back
+      the other way, so it is only ever cropped — the long side is cut
+      down to the short one, from both ends — and never stretched. */
+  function send(flier, face, from, home) {
+    const W = from.width, H = from.height, S = home.width;
+    const dx = (home.left + S / 2) - (from.left + W / 2);
+    const dy = (home.top + S / 2) - (from.top + H / 2);
+    const ax = S / W, ay = S / H, u = S / Math.min(W, H);
+
+    const outside = [];
+    const within = [];
+    for (let i = 0; i <= STEPS; i++) {
+      const p = i / STEPS;
+      const sx = 1 + (ax - 1) * p;
+      const sy = 1 + (ay - 1) * p;
+      const su = 1 + (u - 1) * p;
+      outside.push({
+        offset: p,
+        transform: "translate(" + (dx * p).toFixed(2) + "px," + (dy * p).toFixed(2) + "px) " +
+          "scale(" + sx.toFixed(5) + "," + sy.toFixed(5) + ")",
+      });
+      within.push({
+        offset: p,
+        transform: "scale(" + (su / sx).toFixed(5) + "," + (su / sy).toFixed(5) + ")",
+      });
+    }
+    const timing = { duration: TRAVEL_MS, easing: EASE, fill: "forwards" };
+    const going = flier.animate(outside, timing);
+    face.animate(within, timing);
+    return going.finished.then(() => {
+      // AT REST IT IS SIMPLY A SQUARE IN A SQUARE: the moving parts are
+      // taken off and the box is set to exactly the cell. It looks the
+      // same — the photograph cropped to its middle — and it sits on
+      // whole pixels rather than on wherever the arithmetic came to.
+      flier.style.left = home.left + "px";
+      flier.style.top = home.top + "px";
+      flier.style.width = S + "px";
+      flier.style.height = S + "px";
+      flier.getAnimations().forEach((a) => a.cancel());
+      face.getAnimations().forEach((a) => a.cancel());
+    });
+  }
+
   function hide() {
     if (busy || !open) return;
     busy = true;
+    hold(true);
 
     const done = () => {
       reader.hidden = true;
-      reader.classList.remove("is-here", "is-clearing");
+      reader.classList.remove("is-here", "is-clearing", "is-leaving");
+      reader.style.backgroundPosition = "";
       inside.style.opacity = "";
       document.querySelectorAll(".frag-flier").forEach((f) => f.remove());
       open = false;
       busy = false;
       document.body.classList.remove("frag-open");
+      hold(false);
       const first = page.querySelector(".index-search-field");
       if (first) first.focus({ preventScroll: true });
     };
 
-    if (REDUCE_MOTION) { page.hidden = false; done(); return; }
+    if (REDUCE_MOTION) { restore(); done(); return; }
 
     // 1 — THE PICTURES COME OUT OF THE LAYOUT FIRST, measured where
     // they actually stand, so nothing moves when the writing goes.
     const shots = [...reader.querySelectorAll(".frag-plate img, .frag-plate > div")]
-      .filter((el) => el.offsetWidth > 4);
-    const fliers = shots.map((el) => {
+      .filter((el) => el.offsetWidth > 4 && el.offsetHeight > 4);
+    const flying = shots.map((el) => {
       const box = el.getBoundingClientRect();
       const flier = document.createElement("div");
       flier.className = "frag-flier";
@@ -324,20 +498,27 @@
       flier.style.top = box.top + "px";
       flier.style.width = box.width + "px";
       flier.style.height = box.height + "px";
+      let face;
       if (el.tagName === "IMG") {
-        const copy = document.createElement("img");
-        copy.src = el.src;
-        copy.alt = "";
-        flier.appendChild(copy);
+        face = document.createElement("img");
+        // The very picture that is on the screen, already decoded — not
+        // the original it was copied from. A 5152 × 7728 photograph
+        // being opened half way through the movement is what used to
+        // stop it dead for most of a second.
+        face.src = el.currentSrc || el.src;
+        face.alt = "";
       } else {
-        flier.classList.add("frag-flier-blank");
+        face = document.createElement("span");
+        face.className = "frag-flier-blank";
       }
+      face.classList.add("frag-flier-face");
+      flier.appendChild(face);
       document.body.appendChild(flier);
-      return flier;
+      return { flier, face, box };
     });
 
     // 2 — THE WRITING GOES, and the pictures stay where they were.
-    reader.classList.add("is-clearing");
+    reader.classList.add("is-clearing", "is-leaving");
 
     // THE CELLS THEY GO HOME TO, one each and never twice the same:
     // two pictures receding into the same square would read as one
@@ -350,42 +531,30 @@
     }
 
     window.setTimeout(() => {
-      // 3 — THEY SQUARE UP AND RECEDE. The square and the travel are
-      // one movement rather than two: a picture that squared up,
-      // stopped, and then set off would read as two decisions.
-      fliers.forEach((flier, n) => {
-        const home = cells[free[n % Math.max(1, cells.length)]];
-        if (!home) return;
-        // ONE EASING FOR THE WHOLE MOVEMENT, and a gentle one. It was
-        // two different curves — a sharper one for the travel than for
-        // the squaring — and at these longer durations that read as the
-        // picture changing its mind half way. A single soft ease in and
-        // out is what "smoother" turned out to mean.
-        const ease = "cubic-bezier(0.33, 0, 0.18, 1)";
-        flier.style.transition =
-          "left " + RECEDE_MS + "ms " + ease + "," +
-          "top " + RECEDE_MS + "ms " + ease + "," +
-          "width " + SQUARE_MS + "ms " + ease + "," +
-          "height " + SQUARE_MS + "ms " + ease;
-        flier.style.left = home.left + "px";
-        flier.style.top = home.top + "px";
-        flier.style.width = home.width + "px";
-        flier.style.height = home.height + "px";
-      });
-
       // THE LIST IS ALREADY BACK BEHIND THEM, which is the owner's
       // "does not replay the animation": there is nothing to run
       // again, because the page they are receding onto is the page
-      // they came from.
-      page.hidden = false;
+      // they came from. It comes back under a reader that is still
+      // standing, exactly where it was left.
+      restore();
       reader.classList.remove("is-here");
 
-      window.setTimeout(() => {
-        // 4 — AND THEY GO AT ONCE, on one clock rather than each on
-        // its own.
-        fliers.forEach((f) => f.classList.add("is-gone"));
-        window.setTimeout(done, GONE_MS + 40);
-      }, RECEDE_MS + 40);
+      // 3 — THEY SQUARE UP AND RECEDE, in one movement each.
+      const landed = flying.map((one, n) => {
+        const home = cells[free[n % Math.max(1, cells.length)]];
+        return home ? send(one.flier, one.face, one.box, home) : Promise.resolve();
+      });
+
+      Promise.all(landed).then(() => {
+        window.setTimeout(() => {
+          // 4 — AND THEY GO AT ONCE, on one clock rather than each on
+          // its own.
+          const fading = flying.map((one) => one.flier.animate(
+            [{ opacity: 1 }, { opacity: 0 }],
+            { duration: GONE_MS, easing: "ease-in-out", fill: "forwards" }).finished);
+          Promise.all(fading).then(done, done);
+        }, REST_MS);
+      }, done);
     }, CLEAR_MS);
   }
 
@@ -423,11 +592,13 @@
     if (event.target.closest(".sheet-filter")) {
       page.hidden = false;
       reader.hidden = true;
-      reader.classList.remove("is-here", "is-clearing");
+      reader.classList.remove("is-here", "is-clearing", "is-leaving");
+      reader.style.backgroundPosition = "";
       document.querySelectorAll(".frag-flier").forEach((f) => f.remove());
       document.body.classList.remove("frag-open");
       open = false;
       busy = false;
+      hold(false);
     }
   }, true);
 })();

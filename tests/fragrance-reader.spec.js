@@ -118,7 +118,8 @@ test("going back sends the picture into the grid, and the list is behind it",
     .evaluate((el) => el.getBoundingClientRect().width);
 
   await page.locator(".frag-back").click();
-  await page.waitForTimeout(900);
+  // Past the writing's 640ms and some way into the 1500ms travel.
+  await page.waitForTimeout(1300);
 
   // MID-FLIGHT. The picture is out of the article and on the window.
   const flying = await page.evaluate(() => {
@@ -147,9 +148,10 @@ test("going back sends the picture into the grid, and the list is behind it",
   // AND IT COMES TO REST ON A SQUARE OF THAT GRID, which is the whole
   // of "recede into one of the squares of the background": both its
   // corners land on a multiple of the cell, and it is one cell big.
-  // Long enough for the recede to have finished — it is 900ms after a
-  // 460ms clearing, and the owner asked for all of it to be slower.
-  await page.waitForTimeout(700);
+  // Long enough for the recede to have finished — it is 1500ms after a
+  // 640ms clearing, and the owner has asked twice for all of it to be
+  // slower — and before the 1200ms fade has finished taking it away.
+  await page.waitForTimeout(1050);
   const cell = parseFloat(ruled.cell);
   const home = await page.evaluate(() => {
     const f = document.querySelector(".frag-flier");
@@ -164,7 +166,7 @@ test("going back sends the picture into the grid, and the list is behind it",
   expect(home.top % cell, `top ${home.top} is not on the grid`).toBeLessThan(1.5);
 
   // AND IT ALL CLEARS UP.
-  await page.waitForTimeout(1600);
+  await page.waitForTimeout(1900);
   await expect(page.locator(".frag-flier")).toHaveCount(0);
   await expect(page.locator(".frag-reader")).toBeHidden();
   await expect(page.locator(".index-table")).toBeVisible();
@@ -245,7 +247,8 @@ test("a picture goes home to the right of centre, every time",
     await page.locator('.index-what a[href*="part-' + no + '"]').click();
     await page.waitForTimeout(1500);
     await page.locator(".frag-back").click();
-    await page.waitForTimeout(1500);
+    // Landed: 640ms of clearing and 1500ms of travel.
+    await page.waitForTimeout(2350);
     const at = await page.evaluate(() => {
       const f = document.querySelector(".frag-flier");
       if (!f) return null;
@@ -254,7 +257,7 @@ test("a picture goes home to the right of centre, every time",
     });
     expect(at, `part ${no} should still be landing`).toBeTruthy();
     landings.push(at);
-    await page.waitForTimeout(1300);
+    await page.waitForTimeout(1700);
   }
 
   landings.forEach((at, i) => {
@@ -265,6 +268,152 @@ test("a picture goes home to the right of centre, every time",
     expect(at.y, `landing ${i} at y=${Math.round(at.y)} of ${at.h}`)
       .toBeGreaterThan(at.h * 0.18);
     expect(at.y).toBeLessThan(at.h * 0.82);
+  });
+});
+
+/* IN A STRAIGHT LINE. The owner: "I want it not to do any turning but
+   rather a straight path from the place the picture of the fragrance
+   is on the screen to the square in which it will fade away."
+
+   IT TURNED because its size ran on a shorter clock than its place: it
+   shrank towards its own corner faster than it travelled, so its middle
+   first went UP AND AWAY from the square it was headed for and then
+   swung round towards it — measured, 37px off the line on a still page
+   and 59px with the wheel going.
+
+   SO THIS WATCHES EVERY PICTURE'S MIDDLE, every frame, and asks two
+   things: that it never strays from the line between where it started
+   and where it landed, and that it never takes a step backwards along
+   it. Haxan, because it has three pictures and every one of them has
+   to go straight. */
+test("every picture goes home in a straight line", async ({ page }) => {
+  await toTheList(page);
+  await page.locator('.index-what a[href*="part-03"]').click();
+  await page.waitForTimeout(1800);
+
+  const watching = page.evaluate(() => new Promise((done) => {
+    const seen = [];
+    const began = performance.now();
+    (function tick() {
+      document.querySelectorAll(".frag-flier").forEach((f, k) => {
+        const b = f.getBoundingClientRect();
+        (seen[k] = seen[k] || []).push({ x: b.left + b.width / 2, y: b.top + b.height / 2 });
+      });
+      if (performance.now() - began < 2600) requestAnimationFrame(tick);
+      else done(seen);
+    })();
+  }));
+  await page.locator(".frag-back").click();
+  const paths = await watching;
+
+  expect(paths.length, "Haxan's three pictures should all fly").toBe(3);
+  paths.forEach((path, k) => {
+    const a = path[0];
+    const z = path[path.length - 1];
+    const dx = z.x - a.x;
+    const dy = z.y - a.y;
+    const long = Math.hypot(dx, dy);
+    expect(long, `picture ${k} should travel`).toBeGreaterThan(60);
+    let worst = 0;
+    let backwards = 0;
+    path.forEach((p, i) => {
+      worst = Math.max(worst, Math.abs((p.x - a.x) * dy - (p.y - a.y) * dx) / long);
+      if (i && ((p.x - path[i - 1].x) * dx + (p.y - path[i - 1].y) * dy) / long < -0.5) backwards += 1;
+    });
+    expect(worst, `picture ${k} strayed ${worst.toFixed(1)}px off its line`).toBeLessThan(2);
+    expect(backwards, `picture ${k} stepped backwards ${backwards} times`).toBe(0);
+  });
+});
+
+/* AND WHATEVER THE WHEEL DOES. "Make it so that this happens
+   independently of scrolling please, because when you scroll the whole
+   page glitches out."
+
+   What the wheel did was scroll the reader, which was still standing
+   over the page and invisible, so the fading article slid about under
+   the pictures — and once the list was back, the table under them.
+   So this turns the wheel the whole way through the way back and asks
+   that NOTHING moved: not the reader, not the table, not the window,
+   and not the picture off its line. And then that the wheel works again
+   afterwards, because holding it for good would be a worse fault. */
+test("scrolling during the way back moves nothing, and is let go after",
+  async ({ page }) => {
+  await toTheList(page);
+  await page.locator('.index-what a[href*="part-03"]').click();
+  await page.waitForTimeout(1800);
+  await page.mouse.move(700, 450);
+  // Down to the arrow, which is at the foot of the writing.
+  for (let i = 0; i < 10; i++) { await page.mouse.wheel(0, 300); await page.waitForTimeout(40); }
+  await page.waitForTimeout(400);
+
+  const before = await page.evaluate(() => ({
+    reader: document.querySelector(".frag-reader").scrollTop,
+    win: window.scrollY,
+  }));
+  expect(before.reader, "the reader should have been scrolled to its arrow").toBeGreaterThan(0);
+
+  const watching = page.evaluate(() => new Promise((done) => {
+    const seen = [];
+    const began = performance.now();
+    (function tick() {
+      seen.push({
+        reader: document.querySelector(".frag-reader").scrollTop,
+        list: document.querySelector(".index-scroll").scrollTop,
+        win: window.scrollY,
+      });
+      if (performance.now() - began < 3000) requestAnimationFrame(tick);
+      else done(seen);
+    })();
+  }));
+  await page.locator(".frag-back").click();
+  for (let i = 0; i < 24; i++) {
+    await page.mouse.wheel(0, i % 2 ? -260 : 260);
+    await page.waitForTimeout(60);
+  }
+  const seen = await watching;
+
+  const readers = [...new Set(seen.map((s) => s.reader))];
+  const lists = [...new Set(seen.map((s) => s.list))];
+  const wins = [...new Set(seen.map((s) => s.win))];
+  expect(readers, "the reader should not scroll under the pictures").toEqual([before.reader]);
+  expect(lists, "nor the table").toEqual([0]);
+  expect(wins, "nor the window").toEqual([before.win]);
+
+  // Let go afterwards: a wheel on the page is an ordinary wheel again.
+  await page.waitForTimeout(1500);
+  await expect(page.locator(".frag-reader")).toBeHidden();
+  const stopped = await page.evaluate(() => {
+    const e = new WheelEvent("wheel", { deltaY: 100, bubbles: true, cancelable: true });
+    document.querySelector(".index-scroll").dispatchEvent(e);
+    return e.defaultPrevented;
+  });
+  expect(stopped, "the wheel should be let go once the way back is over").toBe(false);
+});
+
+/* HAXAN CARRIES THREE PICTURES, at the owner's word: "For Haxan please
+   also add the other two pictures." On its own page they stand one over
+   a row of two, and the reader carries all three — they are what
+   "if there is more than one picture, then they all become squares"
+   was written for. Every one of them has to have actually loaded. */
+test("Haxan carries all three of its pictures, here and on its own page",
+  async ({ page }) => {
+  await toTheList(page);
+  await page.locator('.index-what a[href*="part-03"]').click();
+  await page.waitForTimeout(2000);
+  const here = await page.$$eval(".frag-plate img",
+    (all) => all.map((img) => ({ src: img.getAttribute("src"), w: img.naturalWidth })));
+  expect(here.length, "the reader should carry three").toBe(3);
+  here.forEach((one) => expect(one.w, `${one.src} should have loaded`).toBeGreaterThan(0));
+
+  await page.goto("/individual-fragrances/individual-fragrances.html#part-03");
+  await page.waitForTimeout(800);
+  const there = await page.$$eval("#part-03 .human-plate img",
+    (all) => all.map((img) => ({ src: img.getAttribute("src"), w: img.naturalWidth })));
+  expect(there.length).toBe(3);
+  there.forEach((one) => {
+    expect(one.w, `${one.src} should have loaded`).toBeGreaterThan(0);
+    // THE WEB COPIES, never the 5152 x 7728 originals.
+    expect(one.src).toContain("/web/");
   });
 });
 

@@ -38,6 +38,7 @@ const PAGES = [
   "/houses/ataraxia.html",
   "/houses/grande-parfums.html",
   "/houses/les-abstraits.html",
+  "/houses/tale-parfums.html",
   "/works/theory-03.html",
   "/works/cold-vs-warm-incense.html",
   "/search.html",

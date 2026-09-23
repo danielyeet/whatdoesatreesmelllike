@@ -198,3 +198,23 @@ One thing the walk found and fixed: `.house-credit` was written with the footer'
 measure but **without its 64px gutter**, so the credit ran wider than the writing above it
 on a desktop and hard into both edges of a phone. It now carries the same padding as the
 foot, and drops to 24px below 720px exactly as the three house feet do.
+
+## 2026-09-23 — Haxan's other two, Tale's folder, and a drawing
+
+- **Haxan's three photographs are all on the page now**, one full width with two in a row
+  under it (`.human-plate-more`). They are the owner's own photographs at **5152 × 7728 and
+  about 2MB each** — and the page had been loading the first of them as it came, for a
+  56px square and a 320px plate. Web copies are in `Individual Fragrances/Haxan/web/`
+  (1067 × 1600 at about 120KB, and 320 × 480 thumbs), and the originals are kept with
+  nothing pointing at them, as this report's rule says. The full-size original was also
+  what stalled the fragrance reader's way back for most of a second.
+- **`images/Tale/`** arrived with twelve 600 × 600 pictures — three per fragrance — the
+  house picture (byte for byte Bad Lily 2) and one marked *dont use*, which is not used.
+  Nothing needed a web copy. Its README says which number is which.
+- **`images/Les-Abstraits/des-cendres-road.svg`** is the first picture on the site that is
+  neither a photograph nor the house's: a drawing made for the page, at the owner's
+  request, from their own description of Des Cendres. The credit at the foot of Les
+  Abstraits says so.
+- **Tale's credit names the house's own site, taleparfum.com, and that is an assumption**:
+  no source note came with the files, and the site could not be reached to check. Written
+  down in [Tale Parfums' report](2026-09-23-tale-parfums.md).
