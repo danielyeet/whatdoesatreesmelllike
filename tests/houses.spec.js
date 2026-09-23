@@ -451,3 +451,68 @@ test("an unwritten fragrance says it is unwritten", async ({ page }) => {
   await expect(page.locator(".human-waiting")).toHaveCount(0);
   await expect(page.locator(".human-untitled")).toHaveCount(0);
 });
+
+/* GRANDE'S CIRCLES.
+   The owner: "i would ike you to add some animation; like circles that
+   get bigger when you hoer them, and when you hover them they also gain
+   particles on an outer perimiter."
+
+   Three claims, and the third is the one that would rot quietly: the
+   circles are THERE at rest, they SWELL and brighten under the hand,
+   and they LET GO again. A drawing that lights up and never releases
+   looks fine in a screenshot and wrong in use. */
+test("a circle swells under the hand, gains a perimeter, and lets go again",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(GRANDE);
+  await page.waitForSelector(".human-field");
+  await page.waitForTimeout(2200);
+
+  /** How much ink is on the ground, sampled rather than counted whole:
+      this is asked thirty-odd times below and the canvas is millions of
+      pixels. Every fourth pixel says the same thing far cheaper. */
+  const inked = () => page.evaluate(() => {
+    const c = document.querySelector(".human-field");
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    let lit = 0;
+    for (let n = 3; n < d.length; n += 16) if (d[n] > 6) lit += 1;
+    return lit;
+  });
+
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(900);
+  const rest = await inked();
+  expect(rest, "the circles should be drawn even at rest").toBeGreaterThan(20);
+
+  // FIND ONE. Nothing in the page says where the circles are — they are
+  // rolled from the window's own size — so the hand is walked over a
+  // coarse grid and the brightest place it finds is a circle.
+  const box = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  let best = null;
+  for (let x = 60; x < box.w; x += Math.round(box.w / 7)) {
+    for (let y = 70; y < box.h; y += Math.round(box.h / 6)) {
+      await page.mouse.move(x, y);
+      await page.waitForTimeout(70);
+      const now = await inked();
+      if (!best || now > best.lit) best = { x, y, lit: now };
+    }
+  }
+
+  await page.mouse.move(best.x, best.y);
+  await page.waitForTimeout(1300);
+  const held = await inked();
+
+  // IT SWELLS AND GATHERS. Half as much ink again is a low bar on
+  // purpose — what is being pinned is that something plainly happens,
+  // not a number that a nudge to the tuning would break.
+  expect(held, `the hand should wake a circle: ${rest} → ${held}`)
+    .toBeGreaterThan(rest * 1.5);
+
+  // AND IT LETS GO. Back towards where it started, not merely "less".
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(1600);
+  const gone = await inked();
+  expect(gone, `and let go again: ${held} → ${gone}`).toBeLessThan(held * 0.75);
+
+  expect(errors).toEqual([]);
+});

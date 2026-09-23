@@ -28,6 +28,24 @@
 // do not stop; they lean. Eased in and out, so it arrives rather than
 // switching on.
 //
+// AND THE CIRCLES, which the owner asked for: "circles that get bigger
+// when you hover them, and when you hover them they also gain
+// particles on an outer perimiter." A handful of faint rings standing
+// about the window, each wandering a few pixels around its own place
+// so none of them is ever quite still. Bring the pointer on to one —
+// anywhere on it or inside it — and it SWELLS, brightens, and grows a
+// ring of specks just outside its rim, turning slowly. Take the
+// pointer away and all of that eases back off; at rest a circle is a
+// hairline and has no perimeter at all.
+//
+// The circles do NOT rise with the drift, and that is deliberate
+// twice over: a thing you are meant to hover has to be findable, and
+// the rise is the drift's own job. They breathe in place instead, so
+// the page still has nothing in it that is perfectly still.
+//
+// THIS IS STILL NOT A THEME. The owner has said what they want the
+// page to DO, not what the house IS — the note below stands.
+//
 // IT LIVES ON THE WINDOW, NOT DOWN THE DOCUMENT, which is the opposite
 // of the wood on Pineward and the bands on Ataraxia and is right for
 // the same reason Almost Human's rain is: a thing that is FALLING or
@@ -86,6 +104,38 @@
   const MOTE_SIZE = 2;
   const MOTE_ALPHA = [0.16, 0.34];
 
+  // ---- THE CIRCLES ------------------------------------------------
+  // HOW MANY comes off the window like everything else here, held
+  // between a floor and a ceiling: too few and the page looks like it
+  // forgot them, too many and a quiet ground becomes a pattern.
+  const RING_PER = 210000;         // one circle per so many square pixels
+  const RING_LEAST = 4;
+  const RING_MOST = 9;
+  const RING_R = [46, 148];        // their radii, in pixels
+  const RING_LINE = [0.05, 0.10];  // how heavily the hairline is drawn at rest
+  const RING_LIT = 4.2;            // and how much brighter under the hand
+  const RING_FILL = 0.035;         // the barely-there wash inside a lit one
+  const RING_SWELL = 0.22;         // how much bigger it gets, as a share of itself
+  const RING_REACH = 84;           // how far outside the rim the hand still counts
+  const RING_EASE = 3.6;           // how fast it swells, and how fast it lets go
+  // Each wanders a little around its own place, on its own clock, so
+  // that nothing on this page is ever perfectly still.
+  const RING_DRIFT = [4, 13];
+  const RING_DRIFT_EVERY = [15, 31];
+
+  // THE PERIMETER: the specks a circle gains while it is held. They
+  // stand just outside the rim, scattered rather than spaced, and the
+  // whole ring of them turns slowly on its own.
+  const PERIM = [26, 52];          // how many
+  const PERIM_GAP = [3, 19];       // how far outside the rim they stand
+  const PERIM_SIZE = [1, 2];
+  const PERIM_ALPHA = [0.26, 0.55];
+  const PERIM_TURN = [0.05, 0.15]; // radians a second, either way
+  // They arrive a little after the swell rather than with it, so the
+  // circle grows and THEN gathers its specks — two beats, which reads
+  // as a thing waking up rather than a state being switched.
+  const PERIM_LAG = 0.35;
+
   const HAND = 170;                // how far the lean reaches, in pixels
   const HAND_LEAN = 9;             // and how far it draws one over, in pixels
   const HAND_LIFT = 1.8;           // how much more plainly it draws one
@@ -108,6 +158,66 @@
   // ============================================================
   let width = 0, height = 0;
   let drift = [];
+  let rings = [];
+
+  /** THE CIRCLES, built with the drift and from the same rolled
+      numbers, so the page comes out the same way every time it is
+      opened at a given size.
+
+      THEY ARE PLACED WITH ELBOW ROOM. Rolled freely, two of them land
+      on top of each other often enough to notice, and a pair of
+      concentric-looking rings reads as a mistake rather than as a
+      scatter. Each one is offered a few places and takes the first
+      that is not sitting on a circle already; if none of them is, it
+      takes the last one offered rather than not existing — a floor,
+      because a rule that can refuse to place anything is a rule that
+      can empty the page. */
+  function buildRings() {
+    rings = [];
+    if (!width || !height) return;
+    const many = Math.max(RING_LEAST,
+      Math.min(RING_MOST, Math.round((width * height) / RING_PER)));
+    for (let n = 0; n < many; n++) {
+      const r = between(RING_R[0], RING_R[1]);
+      let x = 0, y = 0;
+      for (let go = 0; go < 6; go++) {
+        // Allowed to hang off the edge by up to a third of itself: a
+        // circle cut by the window edge says the drawing carries on
+        // past it, which a page full of whole circles does not.
+        x = between(-r / 3, width + r / 3);
+        y = between(-r / 3, height + r / 3);
+        const clear = rings.every((o) =>
+          Math.hypot(o.x - x, o.y - y) > (o.r + r) * 0.62);
+        if (clear) break;
+      }
+      const count = Math.round(between(PERIM[0], PERIM[1]));
+      const perim = [];
+      for (let m = 0; m < count; m++) {
+        perim.push({
+          // Scattered round the rim rather than spaced along it —
+          // evenly spaced they read as a dial, and this is weather.
+          a: random() * Math.PI * 2,
+          gap: between(PERIM_GAP[0], PERIM_GAP[1]),
+          size: between(PERIM_SIZE[0], PERIM_SIZE[1]) < 1.5 ? 1 : 2,
+          base: between(PERIM_ALPHA[0], PERIM_ALPHA[1]),
+          // Each fades in at its own moment across the first part of
+          // the swell, so the perimeter gathers rather than appears.
+          when: random() * 0.55,
+        });
+      }
+      rings.push({
+        x: x, y: y, r: r,
+        line: between(RING_LINE[0], RING_LINE[1]),
+        drift: between(RING_DRIFT[0], RING_DRIFT[1]),
+        every: between(RING_DRIFT_EVERY[0], RING_DRIFT_EVERY[1]),
+        at: random(),
+        turn: between(PERIM_TURN[0], PERIM_TURN[1]) * (random() < 0.5 ? -1 : 1),
+        spun: random() * Math.PI * 2,
+        perim: perim,
+        on: 0,              // how far it is woken, 0 to 1, eased
+      });
+    }
+  }
 
   function build() {
     seed = SEED;
@@ -145,6 +255,10 @@
           : between(ALPHA[0], ALPHA[1]),
       });
     }
+    // AFTER the drift, and never before it: the circles take their
+    // numbers from the same run of `random()`, so asking for them
+    // first would move every speck on the page.
+    buildRings();
   }
 
   function size() {
@@ -179,14 +293,129 @@
     return QUIET + (1 - QUIET) * Math.max(0, 1 - Math.min(1, inside));
   }
 
+  /** THE QUIET, AS A GRADIENT ACROSS THE WINDOW.
+
+      A speck is a point, so `quiet()` above answers for it exactly. A
+      CIRCLE is not: a ring 300 pixels across can have one side out in
+      the margin at full strength and the other over the writing, and
+      one alpha for the whole stroke is wrong at both ends.
+
+      Drawing it in sixty-odd separate arcs would answer that and cost
+      sixty-odd strokes a ring a frame. A gradient laid across the
+      window costs one object and says exactly the same thing: its
+      stops ARE `quiet()`, at the same four boundaries. */
+  function quietStroke(alpha) {
+    const edge = width > COLUMN ? (width - COLUMN) / 2 : 0;
+    const soft = Math.min(SOFT, width * 0.14);
+    const from = Math.max(0, edge - soft), to = Math.min(width, width - edge + soft);
+    const full = "rgba(" + INK + "," + Math.min(1, alpha).toFixed(3) + ")";
+    const hush = "rgba(" + INK + "," + Math.min(1, alpha * QUIET).toFixed(3) + ")";
+    const g = ink.createLinearGradient(0, 0, width, 0);
+    g.addColorStop(0, full);
+    if (from > 0) g.addColorStop(from / width, full);
+    g.addColorStop(Math.min(1, (from + soft) / width), hush);
+    g.addColorStop(Math.max(0, (to - soft) / width), hush);
+    if (to < width) g.addColorStop(to / width, full);
+    g.addColorStop(1, full);
+    return g;
+  }
+
   let handX = -99999, handY = -99999, handOn = 0;
+  let last = 0;
+
+  /** Eased at both ends, so nothing here starts or stops abruptly. */
+  const ease = (q) => q * q * (3 - 2 * q);
+
+  /** THE CIRCLES. Drawn under the drift, so the weather passes in
+      front of them rather than the other way round. */
+  function drawRings(clock, dt) {
+    for (let n = 0; n < rings.length; n++) {
+      const ring = rings[n];
+
+      // Its own slow wander, which is the whole of its movement at
+      // rest. Two waves at different rates so it does not pace.
+      const t = REDUCE_MOTION ? ring.at : ring.at + clock / ring.every;
+      const wander = REDUCE_MOTION ? 0 : ring.drift;
+      const cx = ring.x + Math.cos(t * Math.PI * 2) * wander;
+      const cy = ring.y + Math.sin(t * Math.PI * 2 * 0.73) * wander;
+
+      // HOW FAR THE HAND IS ON TO IT. Anywhere on the circle or inside
+      // it counts fully; outside, it falls away over RING_REACH. The
+      // owner asked for hovering the circle, and the inside of a
+      // circle is part of the circle.
+      let want = 0;
+      // WITH MOTION TURNED OFF A CIRCLE IS JUST A CIRCLE. It does not
+      // swell, it grows no perimeter, and it does not wander — the
+      // whole of this is movement, so the still version of it is the
+      // hairline on its own. Every other drawing here degrades the
+      // same way.
+      if (!REDUCE_MOTION && handX > -9000) {
+        const d = Math.hypot(handX - cx, handY - cy);
+        want = d <= ring.r ? 1
+          : Math.max(0, 1 - (d - ring.r) / RING_REACH);
+      }
+      // Eased towards what it wants rather than set to it, which is
+      // the whole of "smooth" here. Framerate-independent, so it takes
+      // the same time to swell on a slow machine as on a fast one.
+      ring.on += (want - ring.on) * Math.min(1, RING_EASE * dt);
+      const on = ease(Math.max(0, Math.min(1, ring.on)));
+
+      const r = ring.r * (1 + RING_SWELL * on);
+      if (cx + r < -10 || cx - r > width + 10) continue;
+
+      // The wash inside, which only exists while it is held.
+      if (on > 0.01 && RING_FILL > 0) {
+        ink.beginPath();
+        ink.arc(cx, cy, r, 0, Math.PI * 2);
+        ink.fillStyle = quietStroke(RING_FILL * on);
+        ink.fill();
+      }
+
+      ink.beginPath();
+      ink.arc(cx, cy, r, 0, Math.PI * 2);
+      ink.lineWidth = 1;
+      ink.strokeStyle = quietStroke(ring.line * (1 + (RING_LIT - 1) * on));
+      ink.stroke();
+
+      // THE PERIMETER, which a circle has only while it is held. It
+      // comes in behind the swell (PERIM_LAG) and each speck at its
+      // own moment, so the ring gathers rather than switching on.
+      if (on <= PERIM_LAG) continue;
+      const gathered = (on - PERIM_LAG) / (1 - PERIM_LAG);
+      ring.spun += ring.turn * dt;
+      for (let m = 0; m < ring.perim.length; m++) {
+        const one = ring.perim[m];
+        if (gathered <= one.when) continue;
+        const up = Math.min(1, (gathered - one.when) / (1 - one.when));
+        const a = one.a + ring.spun;
+        const at = r + one.gap * up;      // and they stand out as they arrive
+        const px = cx + Math.cos(a) * at;
+        const py = cy + Math.sin(a) * at;
+        if (px < -4 || px > width + 4 || py < -4 || py > height + 4) continue;
+        const shown = one.base * ease(up) * quiet(px);
+        if (shown < 0.008) continue;
+        ink.fillStyle = "rgba(" + INK + "," + Math.min(1, shown).toFixed(3) + ")";
+        ink.fillRect(Math.round(px), Math.round(py), one.size, one.size);
+      }
+    }
+  }
 
   function draw(clock) {
     if (!width) return;
+    // Seconds since the last frame, held to a sane maximum so a tab
+    // coming back from the background does not jump everything.
+    const dt = REDUCE_MOTION ? 0 : Math.min(0.05, Math.max(0, clock - last));
+    last = clock;
     ink.clearRect(0, 0, width, height);
 
+    drawRings(clock, dt);
+
     const want = handX < -9000 ? 0 : 1;
-    handOn += (want - handOn) * Math.min(1, HAND_EASE * (REDUCE_MOTION ? 1 : 0.016));
+    // THE REAL TIME SINCE THE LAST FRAME, now that there is one. This
+    // was a hard-coded 0.016 — one sixtieth — which is right only on a
+    // machine actually managing sixty frames a second, and made the
+    // lean arrive at different speeds on different screens.
+    handOn += (want - handOn) * Math.min(1, HAND_EASE * (REDUCE_MOTION ? 1 : dt));
 
     drift.forEach((one) => {
       // WHERE IT IS IN ITS OWN LIFE, 0 to 1 and round again. With

@@ -310,3 +310,95 @@ it is too strong.
 - **The three older houses still carry their own copies** of what `house.js` now does.
   Moving them over is a clean follow-up and was deliberately not done in the same round
   as adding three houses.
+
+## 2026-09-23 — Grande's circles
+
+The owner: *"for grande parfums; i would ike you to add some animation; like circles that
+get bigger when you hoer them, and when you hover them they also gain particles on an
+outer perimiter. you have some liberty, make it smooth and appealing."*
+
+**It is added to the drift, not in place of it.** This report and CLAUDE.md both say
+`grande.js` is the file to *replace* when the owner says what the house is — and they have
+not. What they have said is what the page should **do**, which is a different thing, so the
+drift still rises behind the circles and the house still claims no theme.
+
+### What a circle is
+
+Between four and nine faint hairline rings, the count off the window's own area like
+everything else here, at radii from 46 to 148 pixels. At rest that is all they are: a
+hairline at 0.05–0.10 alpha, wandering four to thirteen pixels around its own place on a
+clock of its own, so nothing on the page is ever perfectly still.
+
+Bring the pointer on to one — **anywhere on it or inside it**, because the inside of a
+circle is part of the circle — and three things happen together, all eased:
+
+| | |
+|---|---|
+| **it swells** | the radius grows by `RING_SWELL`, a fifth of itself again |
+| **it brightens** | the hairline to `RING_LIT`, and a barely-there wash appears inside it |
+| **it gathers a perimeter** | specks just outside the rim, turning slowly, which it has *only* while it is held |
+
+**The perimeter comes in behind the swell** (`PERIM_LAG`), and each speck at its own moment
+across the first half of it. Two beats rather than one: the circle grows, and *then*
+gathers. Arriving together it read as a state being switched; arriving apart it reads as a
+thing waking up. That is the whole of "smooth and appealing" in this drawing, along with
+every value being eased towards what it wants rather than set to it.
+
+### Three things worth knowing
+
+**They do not rise with the drift, and that is deliberate twice over.** A thing the owner
+means to hover has to be findable, and a target sliding up the window is not; and the rise
+is the drift's own job. They breathe in place instead.
+
+**They are placed with elbow room.** Rolled freely, two of them land on top of each other
+often enough to notice, and a pair of near-concentric rings reads as a mistake rather than
+as a scatter. Each is offered six places and takes the first that is clear — but takes the
+last one offered if none is, because a placement rule that can refuse is a rule that can
+empty the page. They are also allowed to hang a third of themselves off the window's edge:
+a circle cut by the edge says the drawing carries on past it.
+
+**They are built AFTER the drift and never before it.** Both come off the same run of
+`random()` from the same seed, so asking for the circles first would move every speck on
+the page. This is the same trap the structure's report sets out at length.
+
+### The quiet, as a gradient
+
+A speck is a point, so `quiet()` answers for it exactly. **A circle is not**: a ring three
+hundred pixels across can have one side out in the margin at full strength and the other
+over the writing, and one alpha for the whole stroke is wrong at both ends.
+
+Drawing it as sixty-odd separate arcs would answer that and cost sixty-odd strokes per ring
+per frame. A **linear gradient laid across the window** costs one object and says exactly
+the same thing: its stops *are* `quiet()`, at the same four boundaries. `quietStroke()`.
+
+### One thing this fixed on the way
+
+The drift's own lean at the pointer eased with a **hard-coded `0.016`** — one sixtieth of a
+second — which is right only on a machine actually managing sixty frames a second. The
+circles needed a real frame time, and now that there is one the lean uses it too, so it
+arrives at the same speed on every screen instead of being faster on a fast one.
+
+### With motion turned off
+
+A circle is just a circle: no swell, no perimeter, no wander, the hairline on its own. The
+whole of this feature is movement, so that is the honest still version of it.
+
+### How to test it
+
+```bash
+npm test -- tests/houses.spec.js --grep "swells under the hand"
+```
+
+**`a circle swells under the hand, gains a perimeter, and lets go again`** walks the
+pointer over a coarse grid — nothing in the page says where the circles are, since they are
+rolled from the window's size — keeps the brightest place it finds, and asks for three
+things: that the circles are drawn at rest, that holding one puts half as much ink again on
+the ground, and that **it lets go**. The third is the one that would rot quietly: a drawing
+that lights up and never releases looks right in a screenshot and wrong in use.
+
+Proved against the fault rather than assumed: with the hand disabled in `grande.js` the
+reading goes 200 → 196 and the test fails on the swell.
+
+Checked on a phone as well, where there is no hovering: a **tap** takes the ground from 612
+lit pixels to 4,529, which is the existing `pointerdown` handler doing its job, and the page
+still does not scroll sideways at 390px.
