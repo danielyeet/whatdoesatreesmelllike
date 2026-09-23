@@ -158,3 +158,31 @@ again for a different function.
   decision made in one place, not a per-page fix.
 - `README.md` still describes an earlier near-black-background palette. The CSS is the
   truth; the README has not been corrected.
+
+## 2026-09-23 — the cursor over pictures, and over everything
+
+Two faults the owner found, both site-wide:
+
+- **"The cursor disappears when you hover pineward in SD."** The cursor stood at layer
+  900, and the old contact sheet put its first picture — Pineward — at 1000, so the
+  picture was drawn over the cursor. The cursor now stands at the top layer there is
+  (`z-index: 2147483000`), above anything any page can put up.
+- **"…and doesnt turn white when hovering something black"**, on the Houses view and on
+  Haxan. The cursor worked out whether to go light by walking up from the element under
+  the pointer to the first thing painting a background colour. **A photograph paints no
+  background**, so over a black bottle it went straight through the picture to the white
+  page behind it. It now **reads the picture itself**: a 5 × 5 patch round the point,
+  taken at the picture's own resolution and honouring `object-fit`, averaged for
+  lightness, with the same threshold as before. A transparent patch says nothing and
+  falls through to what is behind; a picture from another site cannot be read by the
+  page and falls through the same way. It looks down **everything** under the point
+  (`elementsFromPoint`) rather than up from the top element, so a picture behind a
+  transparent link or caption is still found.
+- Because a picture's colour changes from one point to the next, it is read again whenever
+  the pointer has moved six pixels, not only when the element under it changes, and every
+  400ms regardless, so a page moving under a still pointer is caught too.
+
+Tested in `tests/background-and-cursor.spec.js`: `stands above everything, including the
+pictures on the Houses view` (fails with the cursor at 900 under a picture at 1000), and
+`goes light over the dark parts of a photograph, and dark over the light` (fails against
+the old background-only reading).

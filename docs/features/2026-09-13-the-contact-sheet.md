@@ -7,6 +7,15 @@ and `0e3b8b4` on 2026-09-17. Migrated from CLAUDE.md on 2026-09-17.
 Files: `categories/scent-descriptions.html`, `contact-sheet.js` (~1,360 lines), the
 `sheet-*` block in `style.css`, `tests/contact-sheet.spec.js`
 
+> **This page is not what the report below describes any more.** On 2026-09-23 the owner
+> asked for the startup animation "completely" removed and for the houses to be drawn as a
+> chain instead; the flick, the scatter, the depth, the specks, the dated lines, the
+> traces and everything else below were taken out of the code. What the Houses view is
+> now is in [the chain and its motifs](2026-09-23-the-chain-and-its-motifs.md). This
+> report is kept for why each of those things was the way it was — several of its
+> lessons (the `js-coming` hold, the chrome living inside `.sheet-head`, the scrollbar
+> gutter, the plain grid without the script) still hold and are still in the page.
+
 ## What it is
 
 The **houses** view of `categories/scent-descriptions.html`: one picture per house —
@@ -726,3 +735,10 @@ loads, watched every frame) — with the old picking put back it fails on *no pi
 twice* — and `the sheet carries the seven houses and one empty frame`. Two older tests
 counted on fourteen frames (*more than eight arrive*, *more than four unwritten*) and now
 count the eight there are.
+
+## 2026-09-23, later — replaced by the chain
+
+The owner: *"You know what, remove the animation for the SD page. I want you to completly
+remove that startup animatiob. Instead, I want you to create something like image 1."*
+Everything this report describes was taken out of `contact-sheet.js` and `style.css` that
+round, and its tests with it. See [the chain and its motifs](2026-09-23-the-chain-and-its-motifs.md).

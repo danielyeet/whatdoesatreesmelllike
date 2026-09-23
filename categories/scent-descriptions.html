@@ -35,10 +35,12 @@
   looked at TWO WAYS, which the two buttons across the top switch
   between:
 
-    HOUSES, the contact sheet. The page opens white with one square
-    window in the middle, every picture below flicks through it, it
-    lands on the first one, and lines then reach out across the page to
-    the rest, each carrying a date. One picture is one house.
+    HOUSES, the chain. One picture per house, joined one to the next
+    in a single chain that runs left to right, down, right to left, and
+    so on — the owner's drawing of 2026-09-23. It draws itself in from
+    the first house to the last. Resting the pointer on a house brings
+    that house's own motifs up over the page while the rest goes out of
+    focus; pressing it opens the house.
 
     FRAGRANCES, an index of every fragrance written up anywhere on
     this site: its number, its name, the house it belongs
@@ -56,37 +58,24 @@
 
   views.js switches the two; neither view knows about the other.
 
-  EVERYTHING ON IT IS DRAWN IN PARTICLES: a picture is bounded by a
-  fine chain of specks rather than by a ruled border, and every line
-  between two pictures is a run of specks rather than a stroke. They
-  are still — they are placed once, and the page does not answer the
-  pointer.
-
   A FRAME'S CAPTION IS IN TWO PARTS. <span class="sheet-name"> is the
   house's name and is always printed; <span class="sheet-say"> is the
   line about it and is only shown while the picture is pointed at. Keep
   the space between the two spans — the page's own search reads the
-  caption's text, and butted together they read as one run-on word. The
-  say is taken out of the flow, so the room a line has to route around
-  is the NAME's — which is why a long say no longer pushes the lines off
-  the map or gets crossed by one. A caption written as plain text with
-  no spans inside it is simply always printed, which is what the empty
-  frames below do.
+  caption's text, and butted together they read as one run-on word.
+  The name is printed inside the picture's bottom left corner; the say
+  hangs under the picture. A house with no say yet simply has none.
 
-  TO ADD A PIECE: copy one whole <a class="sheet-frame"> block below,
-  point its href at the piece's page in /works/, DROP data-open="no"
-  (a frame carrying it has nothing written behind it yet, and the dates
-  on the lines that reach it are printed as xxxxxxxxxxxxx rather than
-  as a date that means nothing), uncomment the <img>
-  and point it at your picture, and write the caption. Nothing else
-  needs changing — the flick, the scatter and the lines all come from
-  however many of these blocks are here.
+  TO ADD A HOUSE: copy one whole <a class="sheet-frame"> block below,
+  point its href at the house's page in /houses/, point the <img> at
+  its picture, write the caption, and give it a data-motif naming its
+  motifs in motifs.js (or leave that off, and resting on it only puts
+  the rest of the page out of focus). Nothing else needs changing —
+  the chain comes from however many of these blocks are here, in the
+  order they stand.
 
-  TO FEATURE A DIFFERENT PICTURE: move its block to the front. The
-  sheet always lands on the first one.
-
-  The pictures are square (1:1). A picture that isn't square is
-  cropped to fit rather than squashed.
+  Every box in the chain is its own size, and a picture is cropped to
+  fill its box rather than squashed.
 
   TO ADD A NEW CATEGORY ENTIRELY: duplicate this whole file, rename
   it inside /categories/, update the <h1> and the lede, and add a
@@ -138,12 +127,12 @@
 
 <div class="sheet" id="sheet">
 
-  <a class="sheet-frame" href="../houses/pineward.html">
+  <a class="sheet-frame" data-motif="pineward" href="../houses/pineward.html">
     <img src="../images/Pineward/batch-1-photograph-40-web.jpg" alt="Pineward">
     <span class="sheet-caption"><span class="sheet-name">Pineward</span> <span class="sheet-say">the house that smells like trees</span></span>
   </a>
 
-  <a class="sheet-frame" href="../houses/adar.html">
+  <a class="sheet-frame" data-motif="adar" href="../houses/adar.html">
     <img src="../images/ADAR/adar-title-page-web.jpg" alt="ADAR">
     <span class="sheet-caption"><span class="sheet-name">ADAR</span> <span class="sheet-say">the house that you have never heard of</span></span>
   </a>
@@ -153,7 +142,7 @@
        4.2MB, so what is loaded is the 1600px copy in house-web/ beside
        it. It is portrait and this frame is square, so it is cropped to
        its middle, which is where the bottle stands. -->
-  <a class="sheet-frame" href="../houses/almost-human.html">
+  <a class="sheet-frame" data-motif="almost-human" href="../houses/almost-human.html">
     <img src="../images/Almost-Human/house-web/this-one.webp" alt="Almost Human">
     <span class="sheet-caption"><span class="sheet-name">Almost Human</span> <span class="sheet-say">Abstraction done quite well</span></span>
   </a>
@@ -162,19 +151,19 @@
        uncommented here once it is there; until then this frame is
        drawn as the hatch every placeholder on this site is drawn as,
        and it is still a link to the house. -->
-  <a class="sheet-frame" href="../houses/ataraxia.html">
+  <a class="sheet-frame" data-motif="ataraxia" href="../houses/ataraxia.html">
     <img src="../images/Ataraxia/Ataraxia House.jpg" alt="Ataraxia">
     <span class="sheet-caption"><span class="sheet-name">Ataraxia</span> <span class="sheet-say">angels, and the stones they are cut from</span></span>
   </a>
 
   <!-- The fifth house. -->
-  <a class="sheet-frame" href="../houses/grande-parfums.html">
+  <a class="sheet-frame" data-motif="grande" href="../houses/grande-parfums.html">
     <img src="../images/Grande/House Picture.webp" alt="Grande Parfums">
     <span class="sheet-caption"><span class="sheet-name">Grande Parfums</span> <span class="sheet-say">the house I met at an expo</span></span>
   </a>
 
   <!-- The sixth house. -->
-  <a class="sheet-frame" href="../houses/les-abstraits.html">
+  <a class="sheet-frame" data-motif="les-abstraits" href="../houses/les-abstraits.html">
     <img src="../images/Les-Abstraits/Les Abstraits Cover.webp" alt="Les Abstraits">
     <span class="sheet-caption"><span class="sheet-name">Les Abstraits</span> <span class="sheet-say">Eugen’s ideas and Antoine Lie’s execution</span></span>
   </a>
@@ -182,20 +171,30 @@
   <!-- The seventh house, in the frame that was the first empty one.
        The picture is the drawing off Bad Lily's label, which the owner
        named "Tale - Use image for the house". -->
-  <a class="sheet-frame" href="../houses/tale-parfums.html">
+  <a class="sheet-frame" data-motif="tale" href="../houses/tale-parfums.html">
     <img src="../images/Tale/Tale - Use image for the house.webp" alt="Tale Parfums">
     <span class="sheet-caption"><span class="sheet-name">Tale Parfums</span> <span class="sheet-say">A house that very deservedly won the Art and Olfaction Awards in 2025</span></span>
   </a>
 
-  <!--
-    One empty frame, here so the sheet has somewhere to send a line
-    while the next house is being made. Give it an href and a picture
-    when there is one. Frames 09 to 14 were empty too and were taken
-    off on 2026-09-23 at the owner's word.
-  -->
-  <a class="sheet-frame" data-open="no" href="../works/example-gallery-work.html">
-    <span class="sheet-caption">Untitled</span>
+  <!-- The eighth house. The picture is the owner's "Picture of House
+       (tombstone)". -->
+  <a class="sheet-frame" data-motif="tombstone" href="../houses/tombstone.html">
+    <img src="../images/Tombstone/Picture of House (tombstone).webp" alt="Tombstone">
+    <span class="sheet-caption"><span class="sheet-name">Tombstone</span></span>
   </a>
+
+  <!-- The ninth house. The picture is the record sleeve the owner sent
+       with its four bottles. -->
+  <a class="sheet-frame" data-motif="qimu" href="../houses/qimu-and-musicians.html">
+    <img src="../images/Qimu and Musicians/Qimu_Musicians_1.webp" alt="Qimu &amp; Musicians">
+    <span class="sheet-caption"><span class="sheet-name">Qimu &amp; Musicians</span></span>
+  </a>
+
+  <!--
+    NINE HOUSES, and the chain stops at nine for now — the owner's
+    "Keep houses only up to 9". A tenth is another block like the ones
+    above, with a `data-motif` naming its motifs in motifs.js (or none).
+  -->
 
 </div>
 
@@ -309,6 +308,7 @@
 <script src="../nav.js"></script>
 <script src="../search.js"></script>
 <script src="../contact-sheet.js"></script>
+<script src="../motifs.js"></script>
 <script src="../index-page.js"></script>
 <script src="../notes-data.js"></script>
 <script src="../notes.js"></script>

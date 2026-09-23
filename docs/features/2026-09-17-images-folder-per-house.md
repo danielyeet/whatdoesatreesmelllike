@@ -228,3 +228,14 @@ above and below, and the words stand in a column of their own beside the label
 (`.house-credit-text`, a two-column grid), so a second line starts under the first. The
 line is the same component on all six houses that carry one, so it was fixed there once
 rather than on one page.
+
+## 2026-09-23, later — Tombstone and Qimu & Musicians
+
+Two new folders, both the owner's, both named as they uploaded them:
+`images/Tombstone/` (the house picture, and in `Fragrances/` two to a fragrance — the
+bottle and the house's card for it) and `images/Qimu and Musicians/` (the record sleeve
+that stands on the Houses view, and in `Perfumes/` the four bottles, numbered). Each has a
+README saying what every file is. The owner's filenames are irregular in case and in
+extension ("3 foot 5 2.webp", "No need to come by 2.jpg"), so the pages ask for each
+exactly as it is. None is large enough to need a web copy. See [the newer
+houses](2026-09-21-the-newer-houses.md).

@@ -18,19 +18,22 @@ const ATARAXIA = "/houses/ataraxia.html";
 const GRANDE = "/houses/grande-parfums.html";
 const ABSTRAITS = "/houses/les-abstraits.html";
 const TALE = "/houses/tale-parfums.html";
+const TOMBSTONE = "/houses/tombstone.html";
+const QIMU = "/houses/qimu-and-musicians.html";
 const SHEET = "/categories/scent-descriptions.html";
 
 test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
 });
 
-/* SEVEN HOUSES, IN THE ORDER THEY ARE NUMBERED. Tale Parfums is the
-   seventh, in the frame that was the first empty one. The sheet is the way in
+/* NINE HOUSES, IN THE ORDER THEY ARE NUMBERED. Tale Parfums is the
+   seventh, Tombstone the eighth and Qimu & Musicians the ninth — and the
+   chain stops at nine for now, at the owner's word. The sheet is the way in
    to all of them, and a house that is not on it cannot be reached from
    the category at all. The ORDER matters as much as the names: the
    contact sheet's report says the pictures run in order down the page,
    and every house's own kicker says which number it is. */
-test("all seven houses stand on the contact sheet, in their own order",
+test("all nine houses stand on the contact sheet, in their own order",
   async ({ page }) => {
   await page.goto(SHEET);
 
@@ -38,7 +41,7 @@ test("all seven houses stand on the contact sheet, in their own order",
     all.map((n) => n.textContent.trim()));
   expect(names).toEqual([
     "Pineward", "ADAR", "Almost Human", "Ataraxia", "Grande Parfums", "Les Abstraits",
-    "Tale Parfums",
+    "Tale Parfums", "Tombstone", "Qimu & Musicians",
   ]);
 
   // And every one of them is a link to a page that opens.
@@ -52,6 +55,8 @@ test("all seven houses stand on the contact sheet, in their own order",
     "../houses/grande-parfums.html",
     "../houses/les-abstraits.html",
     "../houses/tale-parfums.html",
+    "../houses/tombstone.html",
+    "../houses/qimu-and-musicians.html",
   ]);
 });
 
@@ -143,6 +148,8 @@ for (const [name, url, parts] of [
   ["Grande Parfums", GRANDE, 15],
   ["Les Abstraits", ABSTRAITS, 4],
   ["Tale Parfums", TALE, 4],
+  ["Tombstone", TOMBSTONE, 5],
+  ["Qimu & Musicians", QIMU, 4],
 ]) {
   test(`${name} opens a fragrance and carries a rank of ${parts}`, async ({ page }) => {
     // NOT ONE OF THESE HOUSES HAS ITS PHOTOGRAPHS YET, and every part
@@ -414,7 +421,7 @@ test("without the scripts the new houses are all of their writing",
   await page.route("**/ataraxia.js", (route) => route.abort());
   await page.route("**/tale.js", (route) => route.abort());
 
-  for (const [url, parts] of [[ATARAXIA, 5], [GRANDE, 15], [ABSTRAITS, 4], [TALE, 4]]) {
+  for (const [url, parts] of [[ATARAXIA, 5], [GRANDE, 15], [ABSTRAITS, 4], [TALE, 4], [TOMBSTONE, 5], [QIMU, 4]]) {
     await page.goto(url);
     await expect(page.locator(".human-part")).toHaveCount(parts);
     // Nothing is hidden: the class that holds the parts back is put on
@@ -435,8 +442,9 @@ test("an unwritten fragrance says it is unwritten", async ({ page }) => {
   // owner gave Ataraxia and Les Abstraits their fragrances' names and
   // their notes, and kept the WRITING. Les Abstraits' writing arrived
   // on 2026-09-23, so it is Ataraxia alone that still says on every
-  // part that the writing has not arrived.
-  for (const [url, parts] of [[ATARAXIA, 5]]) {
+  // part that the writing has not arrived. Tombstone arrived the same
+  // way on 2026-09-23: names, notes and pictures, and no writing.
+  for (const [url, parts] of [[ATARAXIA, 5], [TOMBSTONE, 5]]) {
     await page.goto(url);
     // Every part, and the introduction as well.
     await expect(page.locator(".human-waiting")).toHaveCount(parts + 1);
@@ -672,7 +680,7 @@ test("Tale's rules are straight, and its pictures are still pinned on", async ({
    in." It used to be drawn in the site's own face and then jump when the
    handwriting arrived. So: the name is not visible at all until the
    page's script has brought it in, and it fades rather than appearing. */
-test("Tale comes in rather than flicking into its handwriting", async ({ page }) => {
+test("Tale comes in rather than flicking into being", async ({ page }) => {
   await page.addInitScript(() => {
     window.__seen = [];
     const t0 = performance.now();
@@ -696,4 +704,163 @@ test("Tale comes in rather than flicking into its handwriting", async ({ page })
   const between = seen.filter((s) => s.o > 0.05 && s.o < 0.95).length;
   expect(between, "it fades in over several frames rather than appearing").toBeGreaterThan(3);
   expect(seen[seen.length - 1].o, "and ends fully there").toBeGreaterThan(0.99);
+});
+
+// ============================================================
+// TALE, IN THE SITE'S OWN FACE — 2026-09-23, later
+// ============================================================
+
+/* "for the tale parfums, make the font the same as normal please. the
+   other stuff keep." Every line of type on the page is set exactly as
+   on Les Abstraits, the page no longer asks for either handwriting
+   face — and the doodles, the tape and the loops are all still there. */
+test("Tale is set in the site's own face, and keeps its drawings", async ({ page }) => {
+  const faces = async (url) => {
+    await page.goto(url);
+    await page.waitForTimeout(2600);
+    return page.evaluate(() => {
+      const of = (sel) => {
+        const el = document.querySelector(sel);
+        return el ? getComputedStyle(el).fontFamily + " " + getComputedStyle(el).fontSize : null;
+      };
+      return {
+        h1: of(".human-head h1"), title: of(".human-title"), text: of(".human-intro .human-text p"),
+        no: of(".human-no"), kicker: of(".human-kicker"),
+        asked: [...document.querySelectorAll('link[href*="fonts.googleapis"]')].map((l) => l.href).join(" "),
+      };
+    });
+  };
+  const normal = await faces(ABSTRAITS);
+  const tale = await faces(TALE);
+  expect(tale.asked, "no handwriting face is loaded").not.toMatch(/Gochi|Patrick/);
+  for (const key of ["h1", "title", "text", "no", "kicker"]) {
+    expect(tale[key], `Tale's ${key} should be set as it is everywhere else`).toBe(normal[key]);
+  }
+  await expect(page.locator(".tale-doodle").first()).toBeAttached();
+  const kept = await page.evaluate(() => ({
+    tape: getComputedStyle(document.querySelector(".human-plate"), "::before").content,
+    loop: getComputedStyle(document.querySelector(".human-no")).backgroundImage,
+  }));
+  expect(kept.tape, "the tape stays").toBe('""');
+  expect(kept.loop, "and the loop round each number").toMatch(/svg/);
+});
+
+// ============================================================
+// TOMBSTONE AND QIMU & MUSICIANS — 2026-09-23
+// ============================================================
+
+/* TOMBSTONE: five, in alphabetical order, each with the owner's two
+   pictures — the bottle, and the house's card for it — every one of
+   which loads. */
+test("Tombstone carries its five, in alphabetical order, with both pictures each",
+  async ({ page }) => {
+  await page.goto(TOMBSTONE);
+  await page.waitForTimeout(700);
+  const names = await page.locator(".human-part .human-title").allTextContents();
+  expect(names).toEqual(["3 Feet 5", "Evergrow", "No Need to Come By", "Sing at My Funeral", "Sweet Coffin"]);
+  const plates = await page.$$eval(".human-plate img", (all) =>
+    all.map((img) => ({ src: img.getAttribute("src"), ok: img.complete && img.naturalWidth > 0 })));
+  expect(plates.length, "two pictures to a fragrance").toBe(10);
+  plates.forEach((one) => expect(one.ok, `${one.src} should load`).toBe(true));
+  await expect(page.locator(".human-kicker")).toHaveText("Scent descriptions · 08");
+});
+
+/* QIMU & MUSICIANS: four, in the order the owner numbered them, and the
+   two they asked for by name say exactly what they asked for. */
+test("Qimu & Musicians carries its four, and Guitarist and Drummer say description coming soon",
+  async ({ page }) => {
+  await page.goto(QIMU);
+  await page.waitForTimeout(700);
+  const names = await page.locator(".human-part .human-title").allTextContents();
+  expect(names).toEqual(["Guitarist", "Vocal", "Bassist", "Drummer"]);
+  const plates = await page.$$eval(".human-plate img", (all) =>
+    all.map((img) => ({ src: img.getAttribute("src"), ok: img.complete && img.naturalWidth > 0 })));
+  expect(plates.length).toBe(4);
+  plates.forEach((one) => expect(one.ok, `${one.src} should load`).toBe(true));
+  for (const [n, says] of [[0, true], [1, false], [2, false], [3, true]]) {
+    const text = (await page.locator(".human-part").nth(n).locator(".human-text p").first().textContent()).trim();
+    if (says) expect(text, names[n]).toBe("Description coming soon.");
+    else expect(text, `${names[n]} is the owner's to write`).toMatch(/has not arrived yet/);
+  }
+  await expect(page.locator(".human-kicker")).toHaveText("Scent descriptions · 09");
+});
+
+/* THE WAY ON, FROM HOUSE TO HOUSE: every house's last link points at the
+   next one, and the ninth wraps round to the first. */
+test("the houses are chained one to the next, and the last wraps round", async ({ page }) => {
+  const order = ["pineward", "adar", "almost-human", "ataraxia", "grande-parfums",
+    "les-abstraits", "tale-parfums", "tombstone", "qimu-and-musicians"];
+  for (let i = 0; i < order.length; i++) {
+    await page.goto(`/houses/${order[i]}.html`);
+    const on = page.locator(".human-on, .pine-on, .adar-on").last();
+    const href = await on.getAttribute("href");
+    expect(href, `${order[i]} leads on`).toBe(`${order[(i + 1) % order.length]}.html`);
+  }
+});
+
+// ============================================================
+// THE WAY IN — every house, 2026-09-23
+// ============================================================
+
+/* "It just kinda blinks on the screen and then thats it." Every house
+   now eases in: its contents come up over several frames, from nothing
+   to whole — and its GROUND is there from the first frame, so the dark
+   houses never flash white on the way. */
+test("every house eases in rather than blinking on", async ({ page }) => {
+  test.setTimeout(90000);
+  await page.addInitScript(() => {
+    window.__seen = [];
+    const t0 = performance.now();
+    (function tick() {
+      if (document.body) window.__seen.push(parseFloat(getComputedStyle(document.body).opacity));
+      if (performance.now() - t0 < 1800) requestAnimationFrame(tick);
+    })();
+  });
+  for (const url of ["/houses/pineward.html", "/houses/adar.html", "/houses/almost-human.html",
+    ATARAXIA, GRANDE, ABSTRAITS, TOMBSTONE, QIMU, "/individual-fragrances/individual-fragrances.html"]) {
+    await page.goto(url);
+    await page.waitForTimeout(2000);
+    const seen = await page.evaluate(() => window.__seen);
+    expect(Math.min(...seen), `${url} should start faint`).toBeLessThan(0.3);
+    expect(seen.filter((o) => o > 0.1 && o < 0.9).length,
+      `${url} should come up over several frames`).toBeGreaterThan(3);
+    expect(seen[seen.length - 1], `${url} should end whole`).toBe(1);
+  }
+});
+
+test("a dark house keeps its dark ground while it eases in", async ({ page }) => {
+  // The fade is slowed right down so the test can look at it: the body
+  // is all but invisible, and what shows is the ground.
+  await page.addInitScript(() => {
+    document.addEventListener("DOMContentLoaded", () => {
+      const style = document.createElement("style");
+      style.textContent = "body { animation-duration: 60s !important; }";
+      document.head.appendChild(style);
+    });
+  });
+  await page.goto("/houses/adar.html");
+  await page.waitForTimeout(800);
+  const shot = await page.screenshot();
+  const light = await page.evaluate(async (data) => {
+    const img = new Image();
+    img.src = "data:image/png;base64," + data;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.width; c.height = img.height;
+    const x = c.getContext("2d");
+    x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height).data;
+    let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += (d[i] + d[i + 1] + d[i + 2]) / 3;
+    return sum / (d.length / 4);
+  }, shot.toString("base64"));
+  expect(light, "the window should be ADAR's dark, not white").toBeLessThan(40);
+});
+
+/* WITH ANIMATION TURNED OFF, a house is simply there. */
+test("with animation turned off a house does not fade in", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(TOMBSTONE);
+  const o = await page.evaluate(() => getComputedStyle(document.body).opacity);
+  expect(o).toBe("1");
 });

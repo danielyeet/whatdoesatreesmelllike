@@ -162,3 +162,28 @@ those are 10/10. make the lines straight and keep the images as they are."*
 
 Tested by `Tale's rules are straight, and its pictures are still pinned on` and `Tale
 comes in rather than flicking into its handwriting`.
+
+## 2026-09-23, later still — the site's own face
+
+*"for the tale parfums, make the font the same as normal please. the other stuff keep."*
+
+- **Both handwriting faces are gone.** Gochi Hand and Patrick Hand are no longer loaded,
+  and nothing in Tale's block of `style.css` sets a face, a size, a spacing or a case any
+  more — every line of type is the house shape's own, exactly as on Les Abstraits. The
+  reading is justified again like every other house's (it was ragged only because the pen
+  face opened rivers).
+- **Kept, as asked**: the warm paper, every doodle with its drawing-in and boil, the lily
+  at the head, the loops round the numbers and the section mark, the straight underline
+  under the name, the pictures' uneven corners, tilt and tape, the outlined cue and View
+  notes button, the dashed box, and the page coming in piece by piece.
+- **The way in still waits for the page's faces**, now the site's own, for at most 1.5s,
+  so it never arrives in a stand-in face and changes as it lands.
+- **All four emblems are always placed.** Set in the site's face the page is shorter than
+  it was, and the sprout, which was the ninth doodle down the margin, fell off the foot
+  and the emblems test caught it. Now every other doodle is an emblem until the three that
+  are not at the head have been drawn, and every third after that.
+- Tale's page is left out of the new way in that every other house has (see [the
+  chain](2026-09-23-the-chain-and-its-motifs.md)), because it has its own.
+
+Tested by `Tale is set in the site's own face, and keeps its drawings` (fails with the
+handwriting put back on the name) and the existing doodle and entrance tests.

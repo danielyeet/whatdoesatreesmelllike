@@ -722,7 +722,7 @@ html.has-cursor, html.has-cursor * { cursor: none !important; }
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 900;
+  z-index: 2147483000;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s ease, width 0.22s ease, height 0.22s ease, border-color 0.2s ease, background 0.2s ease;
@@ -1046,79 +1046,43 @@ body.view-fragrances .sheet-search { display: none; }
    sheet is given its height rather than deriving one. */
 .sheet.scripted { display: block; }
 
-/* WHAT IS DRAWN, AND WHAT ONLY SAYS WHERE. Everything on this sheet is
-   drawn in specks on `.sheet-specks`, the canvas below: a picture is
-   bounded by a chain of them rather than by a ruled border, and a line
-   between two pictures is a run of them rather than a stroke.
+/* THE CHAIN. With the script running, every house is placed by hand
+   along a snake — left to right, down, right to left — and joined to
+   the next by a bar (see contact-sheet.js). Everything below is written
+   under `.scripted`, so the plain grid above is what the page is
+   without it. */
 
-   The SVG is what the drawing is drawn FROM. Each `.sheet-route` is
-   one line of the map, carrying which two pictures it joins and where
-   it runs; the canvas strings its specks along that, and the dates
-   ride on it as text, which is the one thing a canvas is the wrong
-   place for. So a route is not stroked here — it is the route, not the
-   drawing of it. */
-.sheet-lines { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-.sheet-route { fill: none; stroke: none; }
-/* The specks themselves, under the pictures and over nothing: they are
-   placed once and never move again, so this canvas is drawn while the
-   map arrives and then left exactly as it is. */
-.sheet-specks {
+/* THE BARS between one house and the next: either one solid stroke or
+   two hairlines with the paper showing between them, the two the owner
+   drew. They run OUT from the house they leave, which is what the
+   transform's origin is for. */
+.sheet-lines { position: absolute; inset: 0; pointer-events: none; }
+.sheet-link {
   position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
+  box-sizing: border-box;
+  transform: scale(0, 1);
+  transform-origin: left center;
+  transition: transform 0.38s cubic-bezier(0.55, 0.05, 0.3, 1);
 }
-/* The date a line carries, riding along it. Knocked out of the line
-   rather than printed over it — the same thing a map does where a road
-   number crosses the road. */
-.sheet-date {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  fill: var(--muted);
-  /* The date knocks its own line out behind it, so it stays readable
-     where it crosses one. The halo is the page's own ground, which is
-     what makes this work on the dark sheet as it did on the white. */
-  paint-order: stroke;
-  stroke: var(--bg);
-  stroke-width: 4px;
-  stroke-linejoin: round;
-  /* Written on rather than faded up: the date is uncovered from its
-     first character to its last, in the direction it is read. The line
-     it rides on has just been drawn the same way. */
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 0.55s var(--menu-ease), opacity 0.4s var(--menu-ease);
-}
-.sheet-date.shown { clip-path: inset(0 -2px 0 0); }
+.sheet-link[data-run="left"] { transform-origin: right center; }
+.sheet-link[data-run="down"] { transform: scale(1, 0); transform-origin: center top; }
+.sheet-link.drawn { transform: none; }
+.sheet-link.solid { background: var(--ink); }
+.sheet-link.double { border: 0 solid var(--ink); }
+.sheet-link.double:not([data-run="down"]) { border-top-width: 1.5px; border-bottom-width: 1.5px; }
+.sheet-link.double[data-run="down"] { border-left-width: 1.5px; border-right-width: 1.5px; }
 
 .sheet-frame {
   position: relative;
   display: block;
   aspect-ratio: 1 / 1;
-  /* THE CLASSIC BORDER. A picture is ruled, the way every frame on
-     this site is. It was taken off for a round — the chain of specks
-     the canvas draws was the whole of the edge — and the owner asked
-     for it back, with the specks kept only where the map is tied to a
-     picture. So the border is the edge and the specks are where
-     something meets it.
-
-     AND IT STANDS OUT MORE THAN IT DID, which the owner asked for: it
-     was a hairline in `--line`, which on this paper is barely there.
-     Two pixels of the page's own ink at a third of its weight reads as
-     a printed edge, and what is further back gives some of it up with
-     the rest of its ink. */
-  border: 2px solid rgba(26, 26, 24, calc(0.34 * (1 - 0.55 * var(--depth, 0))));
+  /* A picture is ruled in the page's own ink, the same weight as the
+     bars that join it on — the drawing is boxes and bars and nothing
+     else. */
+  border: 2px solid var(--ink);
   background-color: var(--bg-2);
-  /* HOW FAR BACK IT IS STANDING, written on it by contact-sheet.js: 0
-     at the front of the volume and 1 at the back. What is further away
-     gives up some of its ink, which is the second half of the depth —
-     the first being that it is drawn smaller and nearer the vanishing
-     point, which the script does to its position and size. */
-  opacity: calc(1 - 0.42 * var(--depth, 0));
   /* Hatching, as everywhere else on this site that a picture is still
-     to come. The angle and spacing are set per frame by the script so
-     that flicking through them reads as different pictures going past
-     rather than as one still image. */
+     to come. */
   background-image: repeating-linear-gradient(
     var(--hatch-angle, -45deg),
     var(--line) 0px, var(--line) 1px,
@@ -1131,32 +1095,30 @@ body.view-fragrances .sheet-search { display: none; }
   position: absolute;
   left: 0;
   top: 0;
+  z-index: 2;
   aspect-ratio: auto;
-  visibility: hidden;
-  /* Placed by --x and --y, and that is all that is ever done to it.
-     A picture used to tip in three dimensions towards the pointer
-     (`--turn-x`, `--turn-y`, `--lift`, and `.peeking` on the sheet for
-     the rest of the sheet stepping back); the owner asked for nothing
-     on this page to answer the hand for now, and it was taken out
-     rather than switched off. */
+  box-sizing: border-box;
   transform: translate(var(--x, 0px), var(--y, 0px));
-  transition: opacity 0.45s var(--menu-ease);
+  /* HOW A HOUSE ARRIVES: uncovered from the side its bar comes in at,
+     the way the bar itself was drawn. `data-enter` is that side. */
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  transition: clip-path 0.76s cubic-bezier(0.6, 0.04, 0.25, 1),
+              opacity 0.3s ease,
+              filter 0.8s var(--menu-ease);
 }
-/* The first layout is where the pictures START, not somewhere they
-   move to: with the transition above running, every one of them slid
-   in from the corner of the sheet as the page opened. contact-sheet.js
-   takes this off again on the frame after that first layout. */
-.sheet.placing .sheet-frame { transition: none; }
-/* WHILE THE PICTURES ARE CYCLING nothing on the sheet can be pressed:
-   what is under the pointer changes nine times a second, so a press
-   would land on whatever happened to be showing. */
-.sheet.flicking .sheet-frame { pointer-events: none; cursor: default; }
+.sheet.scripted .sheet-frame[data-enter="right"] { clip-path: inset(0 0 0 100%); }
+.sheet.scripted .sheet-frame[data-enter="top"] { clip-path: inset(0 0 100% 0); }
+.sheet.scripted .sheet-frame.landed { clip-path: inset(0 0 0 0); opacity: 1; }
+/* Once it is uncovered the clip comes off altogether, or the line
+   about the house could not hang below the picture. */
+.sheet.scripted .sheet-frame.whole { clip-path: none; }
 .sheet-frame:has(img) { background-image: none; background-color: transparent; }
 .sheet-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sheet-number {
   position: absolute;
-  top: 7px;
-  left: 8px;
+  top: 6px;
+  left: 6px;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.08em;
@@ -1164,9 +1126,9 @@ body.view-fragrances .sheet-search { display: none; }
   background: var(--bg);
   padding: 1px 4px;
 }
-/* Captions are printed on the page's own ground so that a line passing
-   behind one is knocked out by it, the way a name on a map knocks out
-   what it crosses. */
+/* THE NAME IS PRINTED IN THE BOX, bottom left, on its own chip of
+   paper — where the owner wrote the names in their drawing. Under the
+   plain grid it hangs below the picture instead. */
 .sheet-frame .sheet-caption {
   position: absolute;
   left: 0;
@@ -1179,25 +1141,29 @@ body.view-fragrances .sheet-search { display: none; }
   background: var(--bg);
   padding: 2px 5px 2px 0;
 }
+.sheet.scripted .sheet-frame .sheet-caption {
+  top: auto;
+  bottom: 6px;
+  left: 6px;
+  max-width: calc(100% - 12px);
+  padding: 2px 6px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: visible;
+}
+.sheet.scripted .sheet-frame .sheet-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* A CAPTION IS THE NAME, AND THE LINE ABOUT IT ONLY WHEN POINTED AT.
-   The owner asked for the sheet to read as names — "Pineward", "ADAR" —
-   with the rest kept back until you ask for it, and for the writing to
-   stop getting in the way of the lines. Both come out of the same
-   arrangement: the say is taken OUT OF THE FLOW, so the box the caption
-   measures (and therefore the room every line is routed around) is the
-   name's alone. A long say cost the map a line before this; now it
-   costs it nothing, because as far as the layout is concerned it is not
-   there until it is wanted. */
+   The say is taken out of the flow and hung under the picture. */
 .sheet-frame .sheet-name { display: block; }
 .sheet-frame .sheet-say {
   position: absolute;
   left: 0;
   top: calc(100% + 3px);
   width: max-content;
-  /* WIDE ENOUGH FOR THE LINE, NEVER WIDER THAN THE PAGE. It is taken
-     out of the flow but it still counts towards how wide the document
-     is. See the narrow-window rule below for what that costs on a
-     phone. */
   max-width: 220px;
   color: var(--ink);
   background: var(--bg);
@@ -1206,107 +1172,88 @@ body.view-fragrances .sheet-search { display: none; }
   pointer-events: none;
   transition: opacity 0.28s var(--menu-ease);
 }
-/* `hot` is the drawing's own word for the picture under the pointer;
-   :hover and :focus-within are what answers when the script is not
-   running, so the say still works on the plain page. */
-/* ON A PHONE IT IS KEPT INSIDE ITS OWN PICTURE. The line is taken out
-   of the flow but it still counts towards how wide the DOCUMENT is, so
-   a line 220px long hanging off a picture near the right-hand edge
-   pushed the whole page sideways — a horizontal scrollbar on a page
-   with nothing to the right of it. Held to the picture's own width and
-   allowed to wrap, it cannot reach past anything. On a wide window it
-   stays one line, which is the whole point of it. */
+.sheet.scripted .sheet-frame .sheet-say {
+  left: -8px;
+  top: calc(100% + 16px);
+  max-width: min(340px, 80vw);
+  white-space: normal;
+  padding: 4px 8px;
+}
+.sheet.scripted .sheet-frame[data-say="end"] .sheet-say {
+  left: auto;
+  right: -8px;
+  text-align: right;
+}
+/* ON A PHONE IT IS KEPT INSIDE ITS OWN PICTURE'S WIDTH, so a line
+   hanging off a picture near the right-hand edge cannot push the page
+   sideways. */
 @media (max-width: 700px) {
-  .sheet-frame .sheet-say {
+  .sheet-frame .sheet-say,
+  .sheet.scripted .sheet-frame .sheet-say,
+  .sheet.scripted .sheet-frame[data-say="end"] .sheet-say {
     width: auto;
     max-width: 100%;
+    left: 0;
+    right: auto;
     white-space: normal;
   }
 }
 .sheet-frame:hover .sheet-say,
 .sheet-frame:focus-within .sheet-say,
 .sheet-frame.hot .sheet-say { opacity: 1; }
-/* THE SAY IS ALWAYS BELOW THE NAME, AND ALWAYS OUTSIDE THE PICTURE.
-   For one round the settled picture's say was put ABOVE its name, on
-   the reasoning that that caption is printed inside the print's own
-   bottom corner so below would fall off it. The owner saw what that
-   actually looks like — the line about the house set over the top of
-   the photograph, above its own name — and asked for it below, out of
-   the frame. So the plate's say is taken out of the corner and hung
-   under the picture entirely, where every other frame's already is.
 
-   `left: 0` on the say would put it under the caption, which on the
-   plate is inset 9px; it is anchored to the FRAME instead, so it lines
-   up with the picture's own left edge. */
-.sheet.scripted .sheet-frame.is-plate .sheet-caption { overflow: visible; }
-.sheet.scripted .sheet-frame.is-plate .sheet-say {
-  position: absolute;
-  top: auto;
-  bottom: -9px;
-  left: -9px;
-  transform: translateY(100%);
-  max-width: min(420px, 90vw);
-  padding: 4px 7px;
+/* RESTING ON A HOUSE: everything else goes out of focus, softly, while
+   that house's motifs come up over the page (motifs.js). The house
+   itself stands in front of them and does not move. Coming back into
+   focus is slower than going out of it — the owner asked for the
+   motifs to fade rather than vanish, and the page with them. */
+.sheet.scripted.drawn .sheet-frame,
+.sheet.scripted.drawn .sheet-lines {
+  transition: clip-path 0.76s cubic-bezier(0.6, 0.04, 0.25, 1),
+              opacity 1.2s var(--menu-ease),
+              filter 1.2s var(--menu-ease);
 }
-/* A picture comes up as its line reaches it, over a moment rather than
-   in one frame: the map draws itself rather than switching itself on.
-   ONLY once the sheet has settled, though. Every picture takes its turn
-   in the middle window during the flick, and hiding the ones that have
-   not landed yet hides the flick itself — which is exactly what this
-   rule did when it was written without .settled on the front of it. */
-.sheet.scripted.settled .sheet-frame:not(.landed) {
+.sheet.scripted.musing .sheet-frame:not(.hot),
+.sheet.scripted.musing .sheet-lines {
+  filter: blur(5px);
+  opacity: 0.38;
+  transition: opacity 0.8s var(--menu-ease), filter 0.8s var(--menu-ease);
+}
+.sheet.scripted .sheet-frame.hot { z-index: 6; }
+
+/* The canvas the motifs are drawn on: over the page, under the house
+   being rested on, and never in the way of a press. */
+.sheet-motifs {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* PRESSING A HOUSE: the page steps back and the picture comes forward
+   — then the house is opened, and eases in on its own side. */
+body.sheet-leaving .sheet-head,
+body.sheet-leaving .menu-trigger,
+body.sheet-leaving .sheet-where,
+body.sheet-leaving .sheet.scripted .sheet-frame:not(.chosen),
+body.sheet-leaving .sheet.scripted .sheet-lines,
+body.sheet-leaving .sheet-motifs {
+  opacity: 0 !important;
+  filter: blur(6px);
+  transition: opacity 0.5s var(--menu-ease), filter 0.5s var(--menu-ease) !important;
+}
+body.sheet-leaving .sheet.scripted .sheet-frame.chosen {
+  z-index: 8;
+  transform: translate(var(--x, 0px), var(--y, 0px)) scale(1.08);
   opacity: 0;
+  transition: transform 0.56s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.45s ease 0.1s !important;
 }
-.sheet.scripted.settled .sheet-frame {
-  transition: opacity 0.45s var(--menu-ease);
-}
-/* While the pictures are still stacked in the middle window they have
-   no captions — a caption belongs to a picture on the map, not to the
-   flick. */
-.sheet.scripted .sheet-frame .sheet-caption { opacity: 0; transition: opacity 0.5s var(--menu-ease) 0.15s; }
 
-/* POINTING AT A PICTURE isolates it: everything else on the sheet
-   steps back, and the one under the pointer is left where it is. The
-   picture does not move — what answers is drawn round it, on the
-   canvas (see contact-sheet.js). The specks are dimmed there rather
-   than here, because they are all on one canvas and cannot be dimmed
-   one at a time by a stylesheet. */
-.sheet.drawn.holding .sheet-frame { opacity: 0.45; transition: opacity 0.4s var(--menu-ease); }
-.sheet.drawn.holding .sheet-frame.hot { opacity: 1; }
-.sheet.drawn .sheet-frame { transition: opacity 0.5s var(--menu-ease); }
-.sheet.drawn.holding .sheet-lines { opacity: 0.4; transition: opacity 0.4s var(--menu-ease); }
-.sheet.drawn .sheet-lines { transition: opacity 0.5s var(--menu-ease); }
-.sheet.scripted .sheet-frame.landed .sheet-caption { opacity: 1; }
-/* Nothing here answers the pointer for now — see the note on the
-   frame's transform above.
-
-   Whatever is in the middle window carries the window's own edge, so
-   flicking through the pictures does not flicker the border along with
-   them; once a picture has landed on the map it goes back to the
-   hairline every other frame on the site is drawn with. */
-.sheet.scripted .sheet-frame:not(.landed) { border-color: var(--ink); }
-.sheet-frame.is-plate { border-color: var(--ink); }
-/* The settled picture's caption is printed inside its own bottom
-   corner, the way a caption is written on a print — outside it is
-   where the lines leave from. */
-.sheet.scripted .sheet-frame.is-plate .sheet-caption {
-  top: auto;
-  bottom: 9px;
-  left: 9px;
-  max-width: calc(100% - 18px);
-  padding: 3px 7px;
-  color: var(--ink);
-}
-/* Searching: everything that doesn't match steps back. The routes are
-   drawn on the canvas now, so it is the canvas that steps back with
-   the dates rather than the (unstroked) route elements. */
-.sheet-frame.dimmed { opacity: 0.16; }
-.sheet.searching .sheet-specks, .sheet.searching .sheet-date { opacity: 0.12; }
-/* Only the canvas: `.sheet-date` already carries its own transition,
-   and the clip-path in it is what writes a date on rather than
-   switching it on. Naming the date here as well replaced that whole
-   declaration and the writing went with it. */
-.sheet-specks { transition: opacity 0.4s var(--menu-ease); }
+/* Searching: everything that doesn't match steps back. */
+.sheet-frame.dimmed { opacity: 0.16 !important; }
+.sheet.searching .sheet-lines { opacity: 0.2; }
 
 /* With the script running the page opens white, so the name, the lede
    and the three buttons are not there to begin with — and must not be
@@ -8285,9 +8232,6 @@ a.note-cite:hover { color: var(--ink); }
    draws the doodles in the margins; EVERYTHING ELSE THAT LOOKS DRAWN
    IS HERE, and needs no script:
 
-     THE HANDS    Gochi Hand, a thick marker, for anything that is a
-                  heading; Patrick Hand, a neat pen, for the reading.
-                  This page is the only one that loads either.
      THE PICTURES Uneven corners — `border-radius` given eight
                   different radii, `--drawn` — tilted, and held to the
                   page with a strip of TAPE.
@@ -8299,14 +8243,17 @@ a.note-cite:hover { color: var(--ink); }
    lines straight and keep the images as they are." So every RULE on
    the page is straight — it was a drawn wave for one round — and the
    boxes (the cue, View notes, the not-yet-written box) have straight
-   edges. The doodles, the circles, the pictures and the two faces are
-   what stayed.
+   edges. The doodles, the circles and the pictures are what stayed.
 
-   IT COMES IN RATHER THAN SWAPPING. With the faces arriving after the
-   page, it used to be drawn in the site's own face for a moment and
-   then jump to the handwriting. `tale-coming` on <html> holds the page
-   back until both faces are in, and tale.js then brings it in —
-   see THE ENTRANCE below.
+   AND IN THE SITE'S OWN FACE. It was set in two handwriting faces —
+   Gochi Hand for the headings, Patrick Hand for the reading — for two
+   rounds, and the owner's third word on it was "make the font the same
+   as normal please. the other stuff keep." So every line of type on the
+   page is the house shape's own, exactly as on Les Abstraits, and
+   nothing here sets a face, a size or a spacing.
+
+   IT COMES IN piece by piece rather than all at once — see THE
+   ENTRANCE below.
 
    The page's colour is the five tokens, redefined on its own body class
    the way Ataraxia's are, and it is warm paper rather than white — the
@@ -8319,8 +8266,6 @@ a.note-cite:hover { color: var(--ink); }
   --ink: #1f1d18;
   --muted: #6c6556;
   --ink-rgb: 31, 29, 24;
-  --hand: "Gochi Hand", "Archivo", sans-serif;
-  --pen: "Patrick Hand", "Archivo", sans-serif;
   --drawn: 255px 15px 225px 15px / 15px 225px 15px 255px;
   --loop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 34'%3E%3Cpath d='M30 4C18 1 5 6 4 17S15 32 25 31S41 23 40 14S31 3 22 5' fill='none' stroke='%231f1d18' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
 }
@@ -8369,69 +8314,24 @@ a.note-cite:hover { color: var(--ink); }
 .tale-by-2 { left: 166px; top: 150px; }
 .tale-by-3 { left: 150px; top: -14px; width: 22px; height: 22px; transform: rotate(14deg); }
 
-.tale-page .human-kicker {
-  font-family: var(--pen);
-  font-size: 17px;
-  letter-spacing: 0.04em;
-  text-transform: none;
-}
 .tale-page .human-head h1 {
-  font-family: var(--hand);
-  font-weight: 400;
-  font-size: clamp(54px, 8.6vw, 104px);
-  line-height: 0.96;
-  letter-spacing: 0;
   display: inline-block;
   padding-bottom: 14px;
   /* ONE STRAIGHT STROKE under the name. It was a drawn double wave for
      a round; the owner asked for the lines straight. */
   border-bottom: 3px solid var(--ink);
 }
-.tale-page .human-standfirst {
-  font-family: var(--pen);
-  font-size: 22px;
-  line-height: 1.35;
-  color: var(--ink);
-  max-width: 30ch;
-}
-
 .tale-page .human-section-mark {
-  font-family: var(--hand);
-  font-size: 18px;
-  letter-spacing: 0;
   color: var(--ink);
   display: inline-block;
   padding: 7px 11px;
   background: var(--loop) no-repeat center / 100% 100%;
 }
 .tale-page .human-intro h2 {
-  font-family: var(--hand);
-  font-weight: 400;
-  font-size: clamp(32px, 4vw, 44px);
-  letter-spacing: 0;
   padding-bottom: 12px;
   border-bottom: 1.5px solid rgba(var(--ink-rgb), 0.55);
 }
-.tale-page .human-text p {
-  font-family: var(--pen);
-  font-size: 19.5px;
-  line-height: 1.5;
-  color: #2f2c25;
-  /* Ragged, as a hand writes it: set justified, the pen's words were
-     pulled apart into rivers. */
-  text-align: left;
-}
-.tale-page .human-text p.human-stage {
-  font-family: var(--hand);
-  font-size: 23px;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--ink);
-}
 .tale-page .human-text p.human-waiting {
-  font-family: var(--pen);
-  font-size: 17.5px;
-  letter-spacing: 0;
   border: 1.5px dashed #b9b0a0;
 }
 
@@ -8439,8 +8339,6 @@ a.note-cite:hover { color: var(--ink); }
    its number circled, its drawing pinned on crooked. The rules were
    drawn waves for a round, and the owner asked for them straight. */
 .tale-page .human-no {
-  font-family: var(--hand);
-  font-size: 19px;
   color: var(--ink);
   width: 40px;
   text-align: center;
@@ -8457,15 +8355,7 @@ a.note-cite:hover { color: var(--ink); }
   transform: rotate(-3deg);
 }
 .tale-page .human-part:nth-child(even) .human-thumb { transform: rotate(2.5deg); }
-.tale-page .human-title {
-  font-family: var(--hand);
-  font-size: clamp(26px, 3vw, 34px);
-}
 .tale-page .human-cue {
-  font-family: var(--pen);
-  font-size: 17px;
-  letter-spacing: 0;
-  text-transform: none;
   color: var(--ink);
   border: 1.5px solid var(--ink);
   padding: 2px 13px 3px;
@@ -8500,22 +8390,7 @@ a.note-cite:hover { color: var(--ink); }
   transform: rotate(2deg);
 }
 .tale-page .human-plate-more img + img { transform: rotate(-1.6deg); }
-.tale-page .human-plate figcaption { font-family: var(--pen); font-size: 16px; }
-
-/* THE CHROME, in the pen. */
-.tale-page .human-readout { font-family: var(--pen); font-size: 16px; letter-spacing: 0.02em; }
-.tale-page .human-readout-where { font-size: 13px; letter-spacing: 0.04em; text-transform: none; }
-.tale-page .human-back,
-.tale-page .human-on { font-family: var(--pen); font-size: 17px; letter-spacing: 0.02em; }
-
-.tale-page .house-credit { font-family: var(--pen); font-size: 15.5px; letter-spacing: 0; }
-.tale-page .note-open {
-  font-family: var(--pen);
-  font-size: 16px;
-  letter-spacing: 0;
-  text-transform: none;
-  border: 1.5px solid var(--ink);
-}
+.tale-page .note-open { border: 1.5px solid var(--ink); }
 
 /* THE ENTRANCE. Everything is held back while `tale-coming` is on the
    page (set in its own <head>), and tale.js brings the pieces in one
@@ -8833,4 +8708,43 @@ html.tale-coming .tale-page .human-readout { opacity: 0 !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .primer-tip { transition: none; }
+}
+
+/* ==================================================================
+   THE WAY IN — every house
+   A house used to simply be there the moment it was opened, which the
+   owner described as it "just kinda blinks on the screen and then
+   thats it". It eases in instead: the page's ground is there at once —
+   the body's background is the window's, and fading the body does not
+   fade it, so ADAR and Ataraxia never flash white on the way — and the
+   page's contents come up over it, the head rising a little as it does.
+
+   On every house and on the individual fragrances, and whichever way
+   the page was reached. Tale is left out on purpose: it has a way in of
+   its own, piece by piece (`tale-coming`, tale.js), and the two on top
+   of each other would be one too many.
+
+   Opacity and a short rise on the head only — never a transform on the
+   body or on anything holding the page's fixed chrome, which a
+   transform would take off the window and carry with it.
+   ================================================================== */
+@keyframes house-arrive { from { opacity: 0; } to { opacity: 1; } }
+@keyframes house-rise { from { transform: translateY(14px); } to { transform: none; } }
+body.pineward-page,
+body.adar-page,
+body.human-page:not(.tale-page) {
+  animation: house-arrive 0.95s cubic-bezier(0.3, 0, 0.2, 1) both;
+}
+body.pineward-page > .pine-head,
+body.adar-page > .adar-head,
+body.human-page:not(.tale-page) > .human-head {
+  animation: house-rise 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.pineward-page,
+  body.adar-page,
+  body.human-page:not(.tale-page),
+  body.pineward-page > .pine-head,
+  body.adar-page > .adar-head,
+  body.human-page:not(.tale-page) > .human-head { animation: none; }
 }

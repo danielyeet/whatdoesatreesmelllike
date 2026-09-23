@@ -241,3 +241,80 @@ test.describe("the custom cursor", () => {
     expect(hasClass).toBe(true);
   });
 });
+
+/* THE CURSOR OVER A PICTURE, AND OVER WHAT IS DRAWN ON TOP. Two faults
+   the owner found on 2026-09-23 and both are site-wide:
+
+   - "The cursor disappears when you hover pineward in SD": the first
+     picture on the Houses view stood in front of the cursor, because it
+     was given a higher layer than the cursor's. The cursor now stands
+     above everything on every page.
+   - "doesnt turn white when hovering something black", on the Houses
+     view and on Haxan: the cursor read only BACKGROUND colours, and a
+     photograph paints none — it went straight through the picture to
+     the white page behind it. It now reads the picture itself. */
+test.describe("the cursor over pictures", () => {
+  const ring = (page) => page.evaluate(() => {
+    const r = document.querySelector(".cursor-ring");
+    return r.classList.contains("on-dark");
+  });
+
+  test("stands above everything, including the pictures on the Houses view", async ({ page }) => {
+    await page.goto("/categories/scent-descriptions.html");
+    await page.waitForFunction(() => document.getElementById("sheet").classList.contains("drawn"), null, { timeout: 20000 });
+    const box = await page.locator(".sheet-frame").first().boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 2 });
+    await page.waitForTimeout(200);
+    const layers = await page.evaluate(() => {
+      const z = (el) => { const v = parseInt(getComputedStyle(el).zIndex, 10); return Number.isNaN(v) ? 0 : v; };
+      const ring = z(document.querySelector(".cursor-ring"));
+      const highest = Math.max(...[...document.querySelectorAll("body *")]
+        .filter((el) => !el.classList.contains("cursor-ring") && !el.classList.contains("cursor-dot"))
+        .map(z));
+      return { ring, highest };
+    });
+    expect(layers.ring, "nothing on the page should stand above the cursor").toBeGreaterThan(layers.highest);
+  });
+
+  test("goes light over the dark parts of a photograph, and dark over the light", async ({ page }) => {
+    await page.goto("/individual-fragrances/individual-fragrances.html");
+    const part = page.locator(".human-part", { hasText: "Haxan" }).first();
+    await part.locator("summary").click();
+    await page.waitForTimeout(900);
+    const img = part.locator(".human-plate > img");
+    await img.scrollIntoViewIfNeeded();
+    const b = await img.boundingBox();
+    // Where on the picture is darkest and where lightest, read off the
+    // picture itself.
+    const spots = await img.evaluate((el) => {
+      const c = document.createElement("canvas");
+      c.width = 40; c.height = 40;
+      const x = c.getContext("2d");
+      x.drawImage(el, 0, 0, 40, 40);
+      const d = x.getImageData(0, 0, 40, 40).data;
+      let dark = null, light = null;
+      for (let i = 6; i < 34; i++) for (let j = 6; j < 34; j++) {
+        let sum = 0;
+        for (let di = -2; di <= 2; di++) for (let dj = -2; dj <= 2; dj++) {
+          const k = ((j + dj) * 40 + (i + di)) * 4;
+          sum += 0.2126 * d[k] + 0.7152 * d[k + 1] + 0.0722 * d[k + 2];
+        }
+        const v = sum / 25;
+        if (!dark || v < dark.v) dark = { i, j, v };
+        if (!light || v > light.v) light = { i, j, v };
+      }
+      return { dark, light };
+    });
+    expect(spots.dark.v, "the picture has a dark part").toBeLessThan(70);
+    expect(spots.light.v, "and a light one").toBeGreaterThan(150);
+    const at = (s) => ({ x: b.x + (s.i + 0.5) / 40 * b.width, y: b.y + (s.j + 0.5) / 40 * b.height });
+
+    await page.mouse.move(at(spots.dark).x, at(spots.dark).y, { steps: 3 });
+    await page.waitForTimeout(200);
+    expect(await ring(page), "over the dark of the picture the cursor goes light").toBe(true);
+
+    await page.mouse.move(at(spots.light).x, at(spots.light).y, { steps: 3 });
+    await page.waitForTimeout(200);
+    expect(await ring(page), "over the light of it, dark again").toBe(false);
+  });
+});

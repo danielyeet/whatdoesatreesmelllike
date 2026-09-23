@@ -135,6 +135,8 @@ test("every key points at a part that is really on its page", () => {
     ataraxia: ["houses/ataraxia.html", "human"],
     abstraits: ["houses/les-abstraits.html", "human"],
     tale: ["houses/tale-parfums.html", "human"],
+    tombstone: ["houses/tombstone.html", "human"],
+    qimu: ["houses/qimu-and-musicians.html", "human"],
     individual: ["individual-fragrances/individual-fragrances.html", "human"],
   };
   const missing = [];

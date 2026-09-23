@@ -32,6 +32,8 @@
     { url: "houses/grande-parfums.html", trail: ["Scent descriptions", "Houses", "Grande Parfums"] },
     { url: "houses/les-abstraits.html", trail: ["Scent descriptions", "Houses", "Les Abstraits"] },
     { url: "houses/tale-parfums.html", trail: ["Scent descriptions", "Houses", "Tale Parfums"] },
+    { url: "houses/tombstone.html", trail: ["Scent descriptions", "Houses", "Tombstone"] },
+    { url: "houses/qimu-and-musicians.html", trail: ["Scent descriptions", "Houses", "Qimu & Musicians"] },
     { url: "individual-fragrances/individual-fragrances.html", trail: ["Scent descriptions", "Fragrances"] },
     { url: "categories/theories.html", trail: ["Theories"] },
     { url: "works/theory-01.html", trail: ["Theories", "The Architecture of Sunscreen"] },

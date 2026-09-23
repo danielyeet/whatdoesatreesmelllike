@@ -67,7 +67,7 @@ via GitHub Pages from the repo root, so the default branch is the live site.
 ## Every page, and what draws it
 
 **Where a page lives says what it is.** There are four folders of pages, and the split is
-the owner's: `houses/` holds the seven fragrance houses, `individual-fragrances/` holds the
+the owner's: `houses/` holds the nine fragrance houses, `individual-fragrances/` holds the
 perfumes that belong to no house, `categories/` holds the category pages, and `works/`
 holds everything else — the essays, the researches, the two templates and the two sandbox
 pages. The houses were in `works/` with all the rest until 2026-09-22.
@@ -87,7 +87,7 @@ which talk through five `window` globals; see the landing page's report).
 | page | what it is | scripts it loads beyond `nav.js` | report |
 |---|---|---|---|
 | `index.html` | three scroll-snapped **slides**: the title, the italic line, the 3D **node map** | `landing.js`, `node-scene.js`, `paper.js`, `thread.js`, `extras.js` (and Three.js from a CDN — the only page that uses it) | [node map](docs/features/2026-09-11-the-node-map.md), [slides](docs/features/2026-09-11-the-landing-slides-and-exit.md), [paper](docs/features/2026-09-11-the-paper.md), [thread](docs/features/2026-09-11-the-thread.md), [chromatogram](docs/features/2026-09-11-the-chromatogram.md) |
-| `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **contact sheet** of pictures scattered and joined by dated lines, all of it drawn in specks — and the **fragrances**, an **index** of the perfumes with no house, each of which opens **in the page** rather than navigating away | `search.js`, `contact-sheet.js`, `index-page.js`, `notes-data.js`, `notes.js`, `fragrance-reader.js`, `views.js` | [contact sheet](docs/features/2026-09-13-the-contact-sheet.md), [index and views](docs/features/2026-09-17-the-index-pages-and-views.md), [the reader](docs/features/2026-09-22-the-fragrance-reader.md) |
+| `categories/scent-descriptions.html` | two **views** of one category: the **houses** — a **chain** of boxes joined by bars, left to right and back again, drawing itself in, with each house's own **motifs** rising over the page when it is rested on — and the **fragrances**, an **index** of the perfumes with no house, each of which opens **in the page** rather than navigating away | `search.js`, `contact-sheet.js`, `motifs.js`, `index-page.js`, `notes-data.js`, `notes.js`, `fragrance-reader.js`, `views.js` | [the chain](docs/features/2026-09-23-the-chain-and-its-motifs.md), [the old contact sheet](docs/features/2026-09-13-the-contact-sheet.md), [index and views](docs/features/2026-09-17-the-index-pages-and-views.md), [the reader](docs/features/2026-09-22-the-fragrance-reader.md) |
 | `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `search.js`, `page-search.js`, `structure.js` | [structure](docs/features/2026-09-14-the-structure.md) |
 | `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu of **chapters** — and opening one **bursts** into that chapter's own page, black and silver, with arrows either side of its name to step to the next, its favourites opening where they stand, and **the sun** standing behind Chapter 1 | `search.js`, `page-search.js`, `notes-data.js`, `notes.js`, `sun.js`, `chamber.js` | [chamber](docs/features/2026-09-15-the-chamber.md) |
 | `categories/researches.html` | **Explorations &amp; Researches**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left, each row saying whether it is a research or an exploration | `search.js`, `index-page.js` | [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
@@ -98,7 +98,9 @@ which talk through five `window` globals; see the landing page's report).
 | `houses/ataraxia.html` | **Ataraxia**, the fourth house: five named fragrances (writing still to come) on **dark gray**, crossed side to side by **bands** of glowing white particles at their own angles — each with a **crest** of light travelling along it, passing behind the writing and quietened where it does, and **kindling** under the pointer | `search.js`, `house.js`, `ataraxia.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `houses/grande-parfums.html` | **Grande Parfums**, the fifth house: seventeen fragrances — fifteen written up alphabetically, two at the foot not smelled yet — over a **drift** of fine specks rising slowly up the window, which claims no theme because the owner has not given one | `search.js`, `house.js`, `grande.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `houses/les-abstraits.html` | **Les Abstraits**, the sixth house: four fragrances, written, all four with notes off the house's own page — with a **drawing** of Des Cendres' road standing in its writing, and a **last word** at the foot whose link opens a new window | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
-| `houses/tale-parfums.html` | **Tale Parfums**, the seventh house: four fragrances in alphabetical order, three pictures each, on a page **drawn by hand** — two handwriting faces, pictures pinned on with tape, straight rules, and **doodles** after the house's label drawings down both margins, drawing themselves in and **boiling** under the pointer | `search.js`, `house.js`, `tale.js`, `notes-data.js`, `notes.js` | [Tale Parfums](docs/features/2026-09-23-tale-parfums.md) |
+| `houses/tale-parfums.html` | **Tale Parfums**, the seventh house: four fragrances in alphabetical order, three pictures each, on a page **drawn by hand** — in the site's own face, with pictures pinned on with tape, straight rules, and **doodles** after the house's label drawings down both margins, drawing themselves in and **boiling** under the pointer | `search.js`, `house.js`, `tale.js`, `notes-data.js`, `notes.js` | [Tale Parfums](docs/features/2026-09-23-tale-parfums.md) |
+| `houses/tombstone.html` | **Tombstone**, the eighth house: five fragrances in alphabetical order, two pictures each, named and noted and not yet written | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `houses/qimu-and-musicians.html` | **Qimu & Musicians**, the ninth house: four fragrances, one to a player in a band — two saying "Description coming soon." at the owner's word | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `individual-fragrances/individual-fragrances.html` | the **individual fragrances**: the ones that belong to no house, each with the house it did come from. What the Fragrances view of Scent descriptions opens into | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the notes](docs/features/2026-09-21-the-notes.md) |
 | `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html`, `works/cold-vs-warm-incense.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/my-personal-introduction-to-perfume.html` | **Explorations 000**, the first result on Explorations &amp; Researches: the owner's guide to perfume on an essay page of its own — **gold** in place of the steel blue, a **mist** of drops rising behind the writing and turning to vapour, and the accords table, the two **pyramids**, a dropdown and footnotes drawn in the page | `essay.js`, `primer.js` | [the primer](docs/features/2026-09-23-my-personal-introduction-to-perfume.md) |
@@ -107,14 +109,15 @@ which talk through five `window` globals; see the landing page's report).
 | `search.html` | the **search page**: one field over the whole site on a dark ground of drifting specks, the answers as ruled rows carrying the trail that says where each lives, and a row of **filters** narrowing them by kind | `search.js`, `search-page.js`, `find-ground.js` | [search](docs/features/2026-09-17-the-search.md) |
 | `contact.html` | a plain page | none | — |
 
-Four of those page scripts are elaborate: `chamber.js` (~3,240 lines), `structure.js`
-(~1,560), `contact-sheet.js` (~1,550) and `node-scene.js` (~1,520). The rest are smaller:
+Three of those page scripts are elaborate: `chamber.js` (~3,240 lines), `structure.js`
+(~1,560) and `node-scene.js` (~1,520). The rest are smaller:
 `almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
-(~780), `paper.js` (~580), `sun.js` (~560), `notes.js` (~475), `essay.js` (~430),
-`ataraxia.js` (~385),
-`fragrance-reader.js` (~600), `tale.js` (~480), `primer.js` (~230), `pineward-gallery.js`
-(~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `grande.js` (~265), `search.js`
-(~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230), `nav.js` (~220),
+(~780), `motifs.js` (~640), `paper.js` (~580), `sun.js` (~560), `notes.js` (~475),
+`contact-sheet.js` (~440, down from ~1,570 when the chain replaced the map), `essay.js`
+(~430), `ataraxia.js` (~385),
+`fragrance-reader.js` (~600), `tale.js` (~590), `primer.js` (~230), `pineward-gallery.js`
+(~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `nav.js` (~290), `grande.js` (~265), `search.js`
+(~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230),
 `search-page.js` (~190), `photography.js` (~190), `find-ground.js` (~180) and
 `page-search.js` (~110).
 These drift with every round; `wc -l *.js` is the answer, not this paragraph.
@@ -264,15 +267,17 @@ Seven things follow, and they are the ones to keep in mind when adding a drawing
   reaches it. Fixed chrome below 700px gets a box of `--chrome-ground` behind it — the
   Menu, the contact sheet's view buttons and search, and the three houses' readings all
   carry one. A new piece of fixed chrome should too.
-- **A z-index worked out from a drawing can outrank the chrome.** A picture on the contact
-  sheet carries one up to 1000, from how far back it stands; the chrome sits at 30, so the
-  pictures were drawn over the buttons. Below 700px the chrome is raised above them.
+- **A z-index worked out from a drawing can outrank the chrome.** A picture on the old
+  contact sheet carried one up to 1000, from how far back it stood; the chrome sits at 30,
+  so the pictures were drawn over the buttons, and below 700px the chrome was raised above
+  them. It also stood over the **cursor**, which is why the cursor now stands at the top
+  layer there is. The chain that replaced the sheet keeps its pictures at 2.
 - **A drawing placed by a window's shorter side gets narrower in portrait.** The theories
   stations are placed against the lens, which is taken off the shorter side, so on a phone
   they were thrown half off the edge; they are drawn in towards the middle by however much
   narrower the view is (`pull`). Anything placed the same way needs the same.
 - **A fix keyed to the fault rather than to the width will leak above 700px**, because the
-  faults do not stop at 700 — the sheet overlaps its own pictures up to about 820, Pineward
+  faults do not stop at 700 — the old sheet overlapped its own pictures up to about 820, Pineward
   has no wood up to about 1036, and a squarish desktop window throws a station off its edge
   at any size. Every one of those is keyed to the width anyway (`tighten`, `ONE_WIDEST`,
   `SIDE_NARROW`), because the rule is a rule. Key a new one the same way and say in the
@@ -284,10 +289,11 @@ drawn, and a tap brings a figure home.
 Two states are easy to forget when reviewing a change:
 
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
-  `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
+  `node-scene.js`, `contact-sheet.js`, `motifs.js`, `structure.js`, `chamber.js`, `pineward.js`,
   `adar.js`, `almost-human.js`, `ataraxia.js`, `grande.js`, `house.js`, `essay.js`,
   `calculator.js`, `sun.js`, `tale.js`, `primer.js`,
-  `index-page.js`, `fragrance-reader.js` and `style.css`, each degrading to a still
+  `index-page.js`, `fragrance-reader.js` and `style.css` (which also turns off every
+  house's way in), each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
   fade to nothing) do *not* check it beyond that; if you add motion there, add the guard
   too.
@@ -304,6 +310,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| The Houses view as a chain, each house's motifs, and every house's way in | `contact-sheet.js`, `motifs.js` | [report](docs/features/2026-09-23-the-chain-and-its-motifs.md) |
 | My Personal Introduction to Perfume | `primer.js` | [report](docs/features/2026-09-23-my-personal-introduction-to-perfume.md) |
 | Tale Parfums, drawn by hand | `tale.js` | [report](docs/features/2026-09-23-tale-parfums.md) |
 | The fragrance reader | `fragrance-reader.js` | [report](docs/features/2026-09-22-the-fragrance-reader.md) |
@@ -321,7 +328,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 | Pineward | `pineward.js` | [report](docs/features/2026-09-16-pineward.md) |
 | The chamber | `chamber.js` | [report](docs/features/2026-09-15-the-chamber.md) |
 | The structure | `structure.js` | [report](docs/features/2026-09-14-the-structure.md) |
-| The contact sheet | `contact-sheet.js` | [report](docs/features/2026-09-13-the-contact-sheet.md) |
+| The contact sheet — **replaced by the chain**; kept for the reasoning | (was `contact-sheet.js`) | [report](docs/features/2026-09-13-the-contact-sheet.md) |
 | The 3D node map | `node-scene.js` | [report](docs/features/2026-09-11-the-node-map.md) |
 | The landing page's slides and exit | `landing.js` | [report](docs/features/2026-09-11-the-landing-slides-and-exit.md) |
 | The paper | `paper.js` | [report](docs/features/2026-09-11-the-paper.md) |
@@ -342,10 +349,10 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   `theory-01.html` for a long essay on the dark ground — then add it to the relevant
   `categories/` page. There are **four kinds of category page** now, and they take a new
   piece differently: the **row list** (`other-2`) takes another `<a class="work-row">`
-  block; the **contact sheet** (`scent-descriptions`, Houses view) takes another
-  `<a class="sheet-frame">` block — with `data-open="no"` on it until there is a page
-  behind it, which is what makes the dates on the lines reaching it print as
-  `xxxxxxxxxxxxx` rather than as a date that says nothing; the **structure** (`theories`) takes another
+  block; the **chain** (`scent-descriptions`, Houses view) takes another
+  `<a class="sheet-frame">` block, which becomes the next box along — with a
+  `data-motif` naming its motifs in `motifs.js`, and `data-open="no"` on it until there is
+  a page behind it; the **structure** (`theories`) takes another
   `<a class="work-row">` block, which becomes a station of its own and lengthens the
   road — optionally with a `data-note`, a line about the piece that the station's card
   shows when it is clicked; and the **index** (`researches`, and the Individual
@@ -388,13 +395,12 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
 - **A NEW HOUSE** is `houses/<house>.html` on `body.human-page`, loading `search.js` and
   **`house.js`** — the shared house shape, which gives it the parts opening on a measured
   height, the rank down the side, and taking a photograph off the page when its file is
-  not there. A fragrance is a `<details class="human-part" id="part-NN">`. The three
+  not there. A fragrance is a `<details class="human-part" id="part-NN">`. The six
   newest houses use it; **Pineward, ADAR and Almost Human still carry their own copies**
   and were deliberately left alone. A ground of its own is a `<canvas class="human-field">`
   and a script of its own (`ataraxia.js` and `grande.js` are the two models — one loud,
-  one nearly invisible); a house with no theme yet simply has neither. Then: a frame on the contact sheet, a line in `PAGES` in `search-page.js`,
-  a row per named fragrance in the Fragrances table, an `images/<House>/` folder with a
-  README, and the **footer chain** — every house's `human-on` link points at the next one
+  one nearly invisible); a house with no theme yet simply has neither. Then: a frame on the Houses view (with a `data-motif`, and motifs for it in `motifs.js`), a line in `PAGES` in `search-page.js`,
+  an `images/<House>/` folder with a README, and the **footer chain** — every house's `human-on` link points at the next one
   and the last wraps round to Pineward.
 - **NOTES FOR A FRAGRANCE** go in `notes-data.js`, never in the markup, keyed by the
   page's own `window.HOUSE_NOTES` and the part's number — `"pineward:01"`. An entry is
@@ -431,7 +437,7 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   there are two tests, and the one that matters says a house source has no caution. A fragrance with no entry is fine — it gets the
   button and a panel saying the notes have not been found yet.
 - **A NEW HOUSE THAT WANTS NOTES** sets `window.HOUSE_NOTES` beside `SITE_ROOT` and loads
-  `notes-data.js` then `notes.js` after its own script. **All seven houses do now** — Tale's with no entries yet, so every one of its windows says the notes have not been found —
+  `notes-data.js` then `notes.js` after its own script. **All nine houses do now** — Tale's with no entries yet, so every one of its windows says the notes have not been found —
   and so does the Fragrances view of the contact sheet, which has no house of its own and
   loads them only for the renderer `notes.js` hands out as `window.NOTE_PANEL`. **Renumbering a house means
   renumbering `notes-data.js` in the same turn**, exactly as it means re-pointing the
@@ -514,10 +520,10 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   web copy before the page points at it** — Haxan's are in `Haxan/web/`.
 - **A PICTURE IS CREDITED WHERE IT IS USED.** The owner asked for it in as many words,
   and it is one `<p class="house-credit">` at the foot of a house, above the way on to the
-  next, naming the source the pictures were actually taken from. Six houses carry one:
+  next, naming the source the pictures were actually taken from. Eight houses carry one:
   Pineward and ADAR from the houses' own sites, Les Abstraits from its own (and its drawing
-  of Des Cendres' road, made for the page), Tale from its own — an assumption, see its
-  report — Ataraxia from
+  of Des Cendres' road, made for the page), Tale, Tombstone and Qimu & Musicians from
+  their own — an assumption for all three, see their reports — Ataraxia from
   its own with the logo credit the house published, and **Grande Parfums from the MEUS
   website and Profumix Luxury Perfumes rather than from the house** — which is exactly why
   the line says where it came from instead of assuming. A favourite may also name a
@@ -621,10 +627,12 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the drawing** (Des Cendres) | The ink drawing standing in Des Cendres' writing — the road, the pines, the gated yards, the fire and its smoke — which the owner asked for in the writing itself (*"claude, maybe try to generate a picture of this"*). `images/Les-Abstraits/des-cendres-road.svg`, `.human-scene`. Generated, not photographed, and credited as drawn for the page. |
 | **the last word** | A paragraph at the very foot of a house, after the fragrances and before the credit — `.human-after`. Les Abstraits' is the only one: it sends the reader to Antoine Lie's own paragraph, in a **new window**, as the owner asked in capitals. |
 | **Tale Parfums** | The seventh house: `houses/tale-parfums.html`, in the frame on the sheet that was the first empty one — the owner's **placeholder 7**. Four fragrances in alphabetical order: Bad Lily, Fleurt, Rouse, Water Me. The house styles itself *TALE Parfum*; the page uses the owner's name for it. |
+| **Tombstone** | The eighth house: `houses/tombstone.html`. Five fragrances in alphabetical order — 3 Feet 5, Evergrow, No Need to Come By, Sing at My Funeral, Sweet Coffin — named, noted and pictured, **not written**. The owner's picture calls the first *3 Foot 5*; the page uses the house's name. |
+| **Qimu & Musicians** | The ninth house: `houses/qimu-and-musicians.html`. Four fragrances, one to a player in a band — Guitarist, Vocal, Bassist, Drummer, in the order the owner numbered them. Guitarist and Drummer say **Description coming soon.**, the owner's own words; Vocal and Bassist are still to be written. Only Vocal's notes could be checked. |
 | **the emblems** (Tale) | The four drawings off Tale's labels — the lily with an **eye**, the heart in a **sweet** on a stick, the **rose**, the **sprout** in its pot — which the owner called *"the pictures that come with the number 2"*. The small squares in that house's list, and what `tale.js` draws again in a pen line. The lily is the house's mark and stands at the head. |
 | **the doodles** | Tale's ground: the emblems and the small things a person doodles in a margin (stars, a moon, drops, a sun, a heart, a swirl, a cloud, a sparkle, a flower, a leaf), drawn in a wobbling line down both margins and never over the writing. They **draw themselves in** the first time they are seen. None on a window without margins. `tale.js`. |
 | **the boil** | What a doodle does under the pointer: it is redrawn every 140ms, each time slightly differently — how a drawing moves in hand-drawn animation. Away from the pointer it is perfectly still. `BOIL_*` in `tale.js`. |
-| **the hands** (Tale) | Gochi Hand (a marker, for headings) and Patrick Hand (a pen, for the reading): the only handwriting on the site, loaded by Tale's page alone. With them, the pictures' **drawn corners** (`--drawn`, eight radii), their tilt and a strip of **tape**, and a loop round each number. **The rules are straight** — they were drawn waves for one round, and the owner asked for "SOME additions of handdrawn-ness" and "the lines straight". The page is held back until both faces are in and then **comes in** piece by piece (`tale-coming`, the entrance in `tale.js`), rather than flicking from the site's face to the handwriting. Its reading is ragged rather than justified, on that page only. |
+| **the hands** (Tale) | **Removed.** Gochi Hand (a marker, for headings) and Patrick Hand (a pen, for the reading) set the whole of Tale's page for two rounds; the owner then asked for "the font the same as normal", and the page is in the site's own face now, loading neither. What stayed of the hand-drawn page: the pictures' **drawn corners** (`--drawn`, eight radii), their tilt and a strip of **tape**, a loop round each number, **straight rules**, the doodles, and the page **coming in** piece by piece (`tale-coming`, the entrance in `tale.js`). |
 | **the house shape** | What every house page is, and since 2026-09-21 what `house.js` gives the newer ones: the parts opening on a measured height, the rank down the side, and a photograph taken off the page when its file is not there. It uses the `human-*` class names, which were written for Almost Human and are the shape's names now. Pineward, ADAR and Almost Human still carry their own copies of it. |
 | **the rank** (Almost Human) | The scale down the side of that page: Pineward's **trunk** and ADAR's **sounding** by a third name, in plain ink. (Not the chromatogram's **rank / ridge**, above.) The fill is how far down the page you are, from its very first pixel; the ticks are how many fragrances you have been past. |
 | **the void** | ADAR's ground: a hole standing off to one side of the window with soundings ringing out from it and specks falling round its rim. Drawn by taking the disc back out of the finished drawing, not by painting one over it. |
@@ -647,7 +655,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **exploration** | One of the two kinds of thing on the Works page: going out after a smell and writing down what is there, as against a **research**, which is a material at a time. A row says which on itself, in `data-kind`. |
 | **the ground** (Pineward) | That page's paper, turned very faintly towards `--pine-green`: a 2% wash, two soft pools of it high on each side where the wood stands, and the green gathering towards the foot — which is the Roots stratum. It must stay faint; this page's accent is worth something because it is spent in so few places. |
 | **the bark** / **the two colours** | Pineward's wood is drawn in `--pine-bark` (`#4a3422`) and `--pine-green` (`#1a4a2c`) rather than in ink: the trunk is bark the whole way up, a branch runs bark at the trunk to green at its tip, and a needle is mostly green wherever it stands. One `tone()` in `pineward.js` mixes them; `BARK` and `GREEN` there keep the same pair as the stylesheet. |
-| **the say** (the sheet) | The line about a house on the contact sheet — "the house that smells like trees" — shown only while its picture is pointed at. Taken out of the flow, so the room every line on the map is routed around is the **name's** alone. |
+| **the say** (the sheet) | The line about a house on the Houses view — "the house that smells like trees" — shown only while its picture is pointed at, hung under the picture (leftwards from a house in the right half, so it never runs off the page). Tombstone and Qimu & Musicians have none yet. |
 | **index** | The way `categories/researches.html` is laid out: readings across the top, plates on the right, and a sortable, searchable table in the bottom left corner. `index-page.js`. The contact sheet's **Fragrances** view is built from the same markup and script but laid out again for itself — one centred column, the table given the room — under `body.view-fragrances`. The copyright line that used to sit under the board is gone from both. |
 | **the board** | That table and the search above it, taken together (`.index-board`). It scrolls inside its own box so the page around it does not grow. |
 | **the search page** | `search.html`: the one place that looks over the whole site. One field ruled across a dark ground of drifting specks, a row of filters under it, and the answers as rows carrying a number, a name, what kind of thing it is and the **trail**. |
@@ -656,13 +664,13 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the filters** (search) | The row of words under the search field — All, Houses, Fragrances, Researches, Favourites, Pieces, Sections — narrowing the answers to one kind, each carrying the number it would give. The kinds are the ones `search.js` already puts on an entry, so there is no second list of the site's categories anywhere. |
 | **the trail** | Where a thing lives, said as a path: *Scent descriptions · Houses · Pineward*. Every answer a search gives carries one. |
 | **a page's own search** | The small mark in the top right of a page that opens into a field and looks over THAT PAGE only. What it cannot answer it hands to the search page. |
-| **the trace** | What joins two pictures on the contact sheet now: one straight hairline broken into even dashes, minimal and measured. It replaced the run, the rails, the rungs, the knots and the tufts, all in one round, when the owner asked for the connections to be reworked "minimal, futuristic, and interesting". |
-| **the pulse** | The short lit run of dashes travelling along a trace, each on its own clock. The whole of the movement on that page, and what makes the map read as live rather than printed. |
-| **the pull** | What the pulses do while a picture is pointed at: **every** one of them on the map turns round to run towards that picture — into it on the traces tied to it, towards its end of the line on all the rest — and they run faster, longer and brighter while they do. `PULL_*` in `contact-sheet.js`. |
-| **the tie** | The small open square where a trace meets a picture, with a stub of line into the edge — a registration mark. It does the job the knot and the tuft used to. |
+| **the trace** | **Removed** with the contact sheet (2026-09-23). What joined two pictures on it: one straight hairline broken into even dashes, minimal and measured. It replaced the run, the rails, the rungs, the knots and the tufts, all in one round, when the owner asked for the connections to be reworked "minimal, futuristic, and interesting". |
+| **the pulse** | **Removed** with the contact sheet. The short lit run of dashes travelling along a trace, each on its own clock. The whole of the movement on that page, and what makes the map read as live rather than printed. |
+| **the pull** | **Removed** with the contact sheet. What the pulses did while a picture is pointed at: **every** one of them on the map turns round to run towards that picture — into it on the traces tied to it, towards its end of the line on all the rest — and they run faster, longer and brighter while they do. `PULL_*` in `contact-sheet.js`. |
+| **the tie** | **Removed** with the contact sheet. The small open square where a trace meets a picture, with a stub of line into the edge — a registration mark. It does the job the knot and the tuft used to. |
 | **the knot** | **Removed.** The crowd of specks where a line met a picture — the rails of a run drawing together to a point. Replaced by the tie. |
 | **rail** / **rung** | **Removed.** The two or three parallel lines of specks a run between two pictures was made of, and the ties across them. Replaced by the trace. |
-| **hot** (the sheet) | The picture the pointer is on: its specks come loose and drift, drawn softer and heavier, while the rest of the sheet steps back. The picture itself never moves. |
+| **hot** (the sheet) | The house being **rested on** (`.hot`), which stays sharp and in front while its motifs come up. On the old contact sheet it was the picture the pointer was on, whose specks came loose and drift, drawn softer and heavier, while the rest of the sheet steps back. The picture itself never moves. |
 | **the spotlight** | What the ADAR void does under the pointer: the house's own mark is drawn inside the hole and nowhere else, coming up as the hand nears it. |
 | **the log** / **the dust** | The hairline depth scale ruled down the left of the ADAR page, and the slow fall of specks through it. What fills that margin. |
 | **the mark** | The one plate on an index page that is drawn rather than photographed: a slow ring of specks with lines between the near ones — the chamber's orbit printed small, on white. |
@@ -702,19 +710,24 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the disc** | What the chamber's orbit is made of: a band with a width and a thickness rather than a single line of specks. Each particle stands at its own radius within `DISC` of the orbit either way, and a little off its plane (`DISC_LIFT`). |
 | **the web** | What the chamber's **cursor** does (not the burst's lattice, which is **the mesh**): the specks near it are joined up with fine lines, each coming and going on its own clock and drawn a hair off the two it joins, so the net is always a slightly different net. `WEB_*` in `chamber.js`. |
 | **ranged** | What the chamber briefly did to a particle it was answering with: a fine hollow square drawn round it. Removed with the rest of the reaction-by-emphasis — there is no `MARK_*` in the file. If the owner uses the word, they mean that removed treatment; what is there now is **the web**. |
-| **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way `categories/scent-descriptions.html` is laid out: `contact-sheet.js`. |
-| **frame** | One picture on the contact sheet (`<a class="sheet-frame">`), square, and a link to the piece it belongs to. It stands at a **depth** of its own, and one carrying `data-open="no"` has no page written behind it yet. |
-| **the depth** (the sheet) | The contact sheet stands in three dimensions: every picture but the middle window is given a depth and then projected, so what is further back is drawn smaller, fainter and nearer the vanishing point, and what is in front is drawn over it. It is done in the SCRIPT rather than with a CSS `perspective`, because the lines between the pictures are drawn from the same numbers — a transform in the stylesheet would move the pictures and leave every line behind. `DEPTH_MAX`, `FOCAL`, `--depth`. |
-| **plate** | On the contact sheet: the frame it settles on and keeps at the top — the first one in the page. |
-| **the flick** | The pictures going past in the middle window, hard cuts, fast then slowing to a stop. It ends on the picture it keeps rather than cutting to it. **Every picture but the one it lands on comes up exactly once, in a fresh random order each visit** — the owner's "randomized but any one thing is never repeated" (2026-09-23); it used to pick at random for every cut and only avoid the same picture twice running. So it is as many cuts as there are pictures, nine at most, and **nothing on the sheet can be pressed while it runs**. The beat before it starts (`FLIP_HOLD_MS`), on the landing picture, is not part of that. `FLIP_*` in `contact-sheet.js`. |
-| **link** / **route** | A line between two pictures on the sheet, at whatever angle they lie at, carrying a date. Every picture has at least one. |
+| **contact sheet** | The strip of every frame on a roll of film, printed together so you can pick one — and the way the Houses view of `categories/scent-descriptions.html` was laid out until 2026-09-23: pictures scattered in depth and joined by dated lines, after a **flick**. **Replaced by the chain**, and taken out of the code; the owner may still call the page that. `contact-sheet.js` keeps its name and draws the chain. |
+| **frame** | One house's box on the Houses view (`<a class="sheet-frame">`), a link to its page, with its number in the corner and its name printed inside. Every one is its own size. One carrying `data-open="no"` has no page written behind it yet; `data-motif` names its motifs. |
+| **the depth** (the sheet) | **Removed** with the contact sheet. It stood in three dimensions: every picture but the middle window is given a depth and then projected, so what is further back is drawn smaller, fainter and nearer the vanishing point, and what is in front is drawn over it. It is done in the SCRIPT rather than with a CSS `perspective`, because the lines between the pictures are drawn from the same numbers — a transform in the stylesheet would move the pictures and leave every line behind. `DEPTH_MAX`, `FOCAL`, `--depth`. |
+| **plate** | **Removed** with the contact sheet: the frame the flick settled on and kept at the top. |
+| **the flick** | **Removed.** The pictures going past in a middle window on hard cuts, fast then slowing, when the Houses view opened — each shown once in a fresh random order in its last round. The owner asked for "that startup animation" gone completely on 2026-09-23, and the chain drawing itself in is what the page does instead. There is no `FLIP_*` and no `.flicking` anywhere, and a test says so. |
+| **link** / **route** | **Removed** with the contact sheet: a line between two pictures at whatever angle they lay at, carrying a date. What joins two houses now is a **bar**. |
 | **the swipe** | How the contact sheet's two views change over **once both have been opened**: the page travels sideways, what you are leaving going off one edge as what you are going to comes in from the other. The first time a view is opened there is no swipe — it is the plain swap, because a swipe says "these two stand side by side", which is only worth saying to somebody who has seen both. The chrome does not travel: the Menu, the category's name, the buttons and the search all live outside the box that slides. `views.js`. |
-| **view** | One of the two ways the contact sheet page shows its category, behind the two buttons across the top: the **houses** (the sheet itself) and the **individual fragrances** (the index). `views.js` switches them, and only one is ever on the page except during the swipe. It briefly had a different pair — the **map** and **Favorites**, the second of which was the removed **register** — so if the owner says "Description portfolio" or "the Favorites view", they mean those. |
-| **houses** | The contact sheet view: one picture per house, scattered and joined by dated lines. The pictures run in order down the page — 01 at the top, then 02, 03 and so on. |
+| **view** | One of the two ways the Scent descriptions page shows its category, behind the two buttons across the top: the **houses** (the chain) and the **individual fragrances** (the index). `views.js` switches them, and only one is ever on the page except during the swipe. It briefly had a different pair — the **map** and **Favorites**, the second of which was the removed **register** — so if the owner says "Description portfolio" or "the Favorites view", they mean those. |
+| **houses** | The Houses view: one box per house, in the **chain**, in order — 01 at the top left. |
+| **the chain** (houses) | How the Houses view is laid out since 2026-09-23, after the owner's own drawing: the houses in one line of boxes of different sizes, left to right along the first row, down, right to left along the next — a snake — each joined to the next by a **bar**. It **draws itself in** from the first house to the last. `contact-sheet.js`. (Not the removed **chain** of specks round a picture, below.) |
+| **bar** | What joins one house to the next in the chain: either one solid stroke or two hairlines with the paper between them, as the owner drew them. A bar turning the chain down to the next row is always the double one. `.sheet-link`. |
+| **motifs** | What comes up over the Houses view while a house is **rested on**: that house's own things, taken from its page — Pineward's trees and needles, ADAR's void and dust, Almost Human's figures and rain, Ataraxia's bands, Grande's drift, Les Abstraits' smoke and embers, Tale's doodles, Tombstone's stones in mist, Qimu's notes and records. They gather one at a time and **fade** when the house is left, never vanishing. `motifs.js`, named per frame by `data-motif`. |
+| **resting** (on a house) | The pointer staying on one house for a moment (`HOVER_WAIT_MS`, 420ms) — the owner's "after momentarily hovering". Only then do the motifs come and the rest of the page go out of focus (`musing`); passing over a house on the way somewhere else sets nothing off. |
+| **the way in** (a house) | What every house but Tale does when it opens: its contents come up over nearly a second over a ground that is there from the first frame, the head rising a little — the owner's "It just kinda blinks on the screen" fixed. On the Houses view a press first **steps the page back** (`sheet-leaving`) and only then opens the house. At the foot of `style.css`. |
 | **fragrances** (the view) | The index view of the contact sheet page. It **used to list every fragrance on the whole site** and point back into the houses; it does not any more. It is now the way in to `individual-fragrances/individual-fragrances.html` — the perfumes that belong to no house — and carries only those. If the owner remembers it as "every one of them", that is what it was until 2026-09-21. |
 | **the glitch on the way out** | What the notes window used to do when you clicked away, and why it is worth knowing: the window is built on the `<body>` (it has to be — a fixed thing inside a transformed box is fixed to that box), which put it in reach of `body > *:not(...)`, the rule that dims the page while the Menu is open. Four `:not()` outrank `.note-panel`, so the window got the menu's `opacity 0.85s` instead of its own `opacity 300ms, transform 300ms` — and the script hid it on a 260ms timer, cutting the window AND the scrim from 0.606 opacity to nothing in one frame. Both selectors now exclude it, and the close waits for `transitionend` rather than a number. **Anything else added as a child of `body` is in the same trap** — and the primer's footnote pop-up (`.primer-tip`) fell into it on 2026-09-23 and is excluded the same way. There is a test for each. |
 | **view notes** | The button at the foot of every fragrance's writing, and the **window** it opens over the page carrying the notes and the source. A real dialog: centred, over a scrim, with the page behind held still, closing on the scrim, on escape and on its own close. **It goes with the fragrance**: collapse the part and the window goes too, and opening the part again leaves it shut. It opened BESIDE the writing for a round, as a column in the part's own row — if the owner remembers it that way, that is what it was until they asked for a window. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
-| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 54 of the 103 sources in the file are the house's own, against 49 on the fallback — the houses overtook it on 2026-09-22 and Les Abstraits is the first house where the fallback does not appear at all. Named per entry in `notes-data.js`, with the link the owner can check. |
+| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 56 of the 108 sources in the file are the house's own, against 52 on the fallback — the houses overtook it on 2026-09-22 and Les Abstraits is the first house where the fallback does not appear at all. Named per entry in `notes-data.js`, with the link the owner can check. |
 | **the olfactory landscape** | What Almost Human publishes INSTEAD of notes: five impressions rather than a list of materials. Its five fragrances carry a second button and window of their own, standing **before** View notes, with the house's own landscape in it; the notes beside it are the fallback's. It is never called a list of notes, because it is not one. |
 | **the version** (notes) | Which edition a fragrance's notes belong to, printed as a boxed line at the top of its window. Several Pineward fragrances have been reformulated and the note list changes underneath the name, so a list with no year on it is a list you cannot check. Five entries carry one, and four of the five carry the NEWEST version — De Profundis is the 2011 original because the owner asked for that one. |
 | **said nothing** | An entry that was looked up and came back with nothing, which is not the same as no entry at all. `{ missing: "…" }` — ADAR's Root Code and Lithos Diaphanes say *No information as of yet.* and still name the house's page; Grande's "Cookie something (?)" says it could not be found online and names nothing. A fragrance with NO key says instead that the notes "have not been found yet", which means nobody has looked. |
@@ -728,12 +741,12 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
 | **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |
 | **individual fragrances** | `individual-fragrances/individual-fragrances.html`: the perfumes that belong to no house on the Houses view, each carrying the house it DID come from. Shaped like a house so it gets the parts, the rank and the notes panel. The **Fragrances** view is the index into it. |
-| **the chain** / **the tuft** | **Removed.** The specks round a picture on the contact sheet, kept only within reach of a point where a line tied on. The pictures keep their ruled border; what stands where a line meets one is the tie. |
+| **the chain** (specks) / **the tuft** | **Removed.** The specks round a picture on the old contact sheet, kept only within reach of a point where a line tied on. (Not **the chain** the Houses view is now, above.) |
 | **the run** | **Removed.** The line between two pictures drawn as specks rather than as a stroke. Replaced by the trace, which is dashed — a solid stroke is the one thing the line must not be, and there is a test saying so. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
 | **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter`, a `data-house`, optionally a `data-notes` key into `notes-data.js`, and an `href` pointing at wherever that fragrance lives on the site. It carried a `data-date` until 2026-09-22; if the owner uses the word, that is what it was. |
 | **the credit** | The line at the foot of a house saying where its pictures came from — `<p class="house-credit">`: a **Pictures** label and, beside it in a column of its own (`.house-credit-text`), where they came from, with the same space above and below between two rules. The owner asked for pictures to be credited wherever they are used. Six houses carry one; the source is the one the pictures were actually taken from, which for Grande Parfums is **not** the house's own site. |
-| **work** | An individual piece, one page in `works/` — the essays, the researches and the templates. A **house** is not one of these any more: since 2026-09-22 the houses live in `houses/` (seven since 2026-09-23) and the individual fragrances in `individual-fragrances/`. |
+| **work** | An individual piece, one page in `works/` — the essays, the researches and the templates. A **house** is not one of these any more: since 2026-09-22 the houses live in `houses/` (nine since 2026-09-23) and the individual fragrances in `individual-fragrances/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 
 ## Where things stand
@@ -786,24 +799,28 @@ worth knowing before touching anything shared:
   overlay's links and the global focus ring, on every page including the chamber. Why it
   was left is in [the page shell's
   report](docs/features/2026-09-11-the-page-shell-and-menu.md).
-- **There are seven houses now** (Pineward, ADAR, Almost Human, Ataraxia, Grande Parfums,
-  Les Abstraits, Tale Parfums), and they are in different states of finished: Ataraxia
+- **There are nine houses now** (Pineward, ADAR, Almost Human, Ataraxia, Grande Parfums,
+  Les Abstraits, Tale Parfums, Tombstone, Qimu & Musicians) — the owner said to stop at
+  nine for now — and they are in different states of finished: Ataraxia
   has its drawing, its names and its notes and **no writing**; Grande Parfums has its
   writing and a drawing that **deliberately says nothing about the house**, because the
   owner has still not said what it is; Les Abstraits has its names, its notes and — since
   2026-09-23 — its writing, and no drawing of its own; Tale Parfums has its writing, its
   pictures and its hand-drawn page and **no notes yet**, because its own site could not be
-  read to take them from. **Named is not written**, and since 2026-09-22 the site has
+  read to take them from; Tombstone has its names, notes and pictures and **no writing**,
+  and Qimu & Musicians has two fragrances saying "Description coming soon.", two waiting,
+  and notes for only one. **Named is not written**, and since 2026-09-22 the site has
   houses in that state — the test that used to conflate them now keeps them apart. What
   each is waiting for is in [their
   report](docs/features/2026-09-21-the-newer-houses.md).
-- **All seven houses now carry a real picture on the contact sheet**, and six of the seven
+- **All nine houses now carry a real picture on the Houses view**, and eight of the nine
   have a photograph with every fragrance — see [the images
   report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's
   fragrance pictures and its gallery arrived on 2026-09-18; Almost Human's own two — its
   **mark** and the photograph `This one` — on 2026-09-21; and Ataraxia's, Grande Parfums'
   and Les Abstraits' on 2026-09-22, along with Haxan's in the individual fragrances;
-  Tale's twelve and Haxan's other two on 2026-09-23. The
+  Tale's twelve and Haxan's other two on 2026-09-23, and Tombstone's ten and Qimu &
+  Musicians' four later the same day. The
   mark is not printed on any page at all, and is only ever drawn by the crowd's glitch.
   **What is still waiting** is Almost Human's five fragrance pictures and five of the six
   individual fragrances: each names the file it wants and shows it the moment it is there.

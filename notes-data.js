@@ -668,4 +668,90 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Grande/Choco-Powder-124252.html" },
   },
 
+  // ============================================================
+  // TOMBSTONE — houses/tombstone.html
+  //
+  // The house's own site first, as always; it publishes a divided list
+  // for Sweet Coffin and No Need to Come By. For Sing at My Funeral it
+  // names the top and the heart and only DESCRIBES the base ("earthy
+  // and woody elements"), so the house's two tiers stand above and
+  // Fragrantica's full list below — the arrangement Haxan and Ataraxia
+  // use. 3 Feet 5 and Evergrow have no page on the house's site that
+  // could be found, so theirs are the fallback's.
+  // ============================================================
+  "tombstone:01": {
+    top: ["Heliotrope"],
+    mid: ["Jasmine", "Mimosa"],
+    base: ["Orris", "Smoke"],
+    note: "The house\u2019s own site has no page for it that could be found, so this is the fallback. The name is a height: three feet five, a child of five to seven \u2014 the age, the house says, of a first conscious meeting with death.",
+    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/TOMBSTONE/3-Feet-5-103665.html" },
+  },
+  "tombstone:02": {
+    top: ["Galbanum", "Bergamot"],
+    mid: ["Rose", "Labdanum", "Orris"],
+    base: ["Oakmoss", "Patchouli", "Musk"],
+    note: "The house\u2019s own site has no page for it that could be found, so this is the fallback. A green chypre, on decay feeding what grows next \u2014 the house\u2019s card for it reads \u201cFade and flourish, forever growing\u201d.",
+    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/TOMBSTONE/Evergrow-103666.html" },
+  },
+  "tombstone:03": {
+    top: ["Mint", "Thyme", "Pepper", "Turpentine"],
+    mid: ["Myrrh", "Olibanum", "Jasmine"],
+    base: ["Patchouli", "Tonka Beans", "Sandalwood"],
+    source: { name: "TOMBSTONE", url: "https://tombstonefragrances.shop/products/no-need-to-come-by-1" },
+  },
+  "tombstone:04": {
+    say: "The house\u2019s own notes",
+    top: ["Mint", "Honey", "Neroli"],
+    mid: ["Jasmine", "Lily of the Valley", "Orris"],
+    note: "The house names no materials for the base; it says only that it is \u201cearthy and woody elements, marking a warm return to the earth\u201d. The full list below is the fallback\u2019s. The perfumer, Yenchi Lin, pictures her own funeral with a light spirit and a joyful air.",
+    source: { name: "TOMBSTONE", url: "https://tombstonefragrances.shop/products/sing-at-my-funeral-1" },
+    also: {
+      say: "Interpreted notes",
+      top: ["Honey", "Neroli", "Mint"],
+      mid: ["Lily", "Jasmine", "Orris"],
+      base: ["Amber", "Cedarwood", "Vetiver"],
+      source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/TOMBSTONE/Sing-at-My-Funeral-103669.html" },
+    },
+  },
+  "tombstone:05": {
+    top: ["Willow Bark", "Apricot"],
+    mid: ["Moldy Cedarwood", "Nutmeg"],
+    base: ["Dead Water"],
+    note: "Xiao Lan\u2019s, \u201cto illustrate the sweet coffin she wishes to return to\u201d \u2014 dusty and rotten-woody, with nutmeg running from top to bottom.",
+    source: { name: "TOMBSTONE", url: "https://tombstonefragrances.shop/products/product_96dfccf6-9558-1964-5d89-1505be7abf53" },
+  },
+
+  // ============================================================
+  // QIMU & MUSICIANS — houses/qimu-and-musicians.html
+  //
+  // Vocal's list is off the house's own page. The other three have none
+  // that could be CHECKED: the house's site could not be read from here,
+  // no fallback carries them, and the one list that turned up for
+  // Drummer came from a search summary that the page it named did not
+  // bear out. A list nobody can check is the one thing this file does
+  // not carry, so they say so and name the house's page, which is where
+  // the lists will be.
+  // ============================================================
+  "qimu:01": {
+    missing: "No information as of yet.",
+    note: "Nothing that could be checked names its materials.",
+    source: { name: "Qimu & Musicians", url: "https://qimunmusicians.com/collections/all" },
+  },
+  "qimu:02": {
+    top: ["Mint", "Lily of the Valley"],
+    mid: ["Saffron", "Violet"],
+    base: ["Orris", "Musk"],
+    source: { name: "Qimu & Musicians", url: "https://qimunmusicians.com/products/vocal" },
+  },
+  "qimu:03": {
+    missing: "No information as of yet.",
+    note: "Nothing that could be checked names its materials.",
+    source: { name: "Qimu & Musicians", url: "https://qimunmusicians.com/collections/all" },
+  },
+  "qimu:04": {
+    missing: "No information as of yet.",
+    note: "Nothing that could be checked names its materials.",
+    source: { name: "Qimu & Musicians", url: "https://qimunmusicians.com/collections/all" },
+  },
+
 };

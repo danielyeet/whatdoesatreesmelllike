@@ -149,17 +149,88 @@ const SITE_LINKS = [
     };
   }
 
-  function isDark(el) {
-    let node = el;
-    while (node && node.nodeType === 1) {
+  /* WHAT A PICTURE IS, UNDER THE POINTER. A background colour is not
+     the whole of what can be dark: a photograph paints no background at
+     all, so over a dark bottle on the contact sheet, or over Haxan's
+     pictures, the walk above went straight through the picture to the
+     white page behind it and the cursor stayed black ON black. This
+     reads the picture itself — a small patch of it round the point, at
+     the picture's own resolution, honouring `object-fit` — and returns
+     its lightness, or null if it cannot be read (not loaded yet, or from
+     another site, which the browser will not let a page read). */
+  const probe = document.createElement("canvas");
+  probe.width = probe.height = 5;
+  const probeCtx = probe.getContext("2d", { willReadFrequently: true });
+  function lightOfImage(img, x, y) {
+    if (!img.complete || !img.naturalWidth) return null;
+    const box = img.getBoundingClientRect();
+    if (!box.width || !box.height) return null;
+    const nw = img.naturalWidth, nh = img.naturalHeight;
+    const fit = getComputedStyle(img).objectFit;
+    let sx = nw / box.width, sy = nh / box.height, ox = 0, oy = 0;
+    if (fit === "cover" || fit === "contain") {
+      const s = fit === "cover"
+        ? Math.min(nw / box.width, nh / box.height)
+        : Math.max(nw / box.width, nh / box.height);
+      sx = sy = s;
+      ox = (nw - box.width * s) / 2;
+      oy = (nh - box.height * s) / 2;
+    }
+    const px = ox + (x - box.left) * sx, py = oy + (y - box.top) * sy;
+    if (px < 0 || py < 0 || px >= nw || py >= nh) return null;
+    const half = Math.max(2, 3 * sx);
+    try {
+      probeCtx.clearRect(0, 0, 5, 5);
+      probeCtx.drawImage(img, px - half, py - half, half * 2, half * 2, 0, 0, 5, 5);
+      const d = probeCtx.getImageData(0, 0, 5, 5).data;
+      let sum = 0, weight = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const a = d[i + 3] / 255;
+        sum += (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) * a;
+        weight += a;
+      }
+      // A transparent patch (a logo on nothing) says nothing about the
+      // colour; let whatever is behind it answer instead.
+      if (weight < 12) return null;
+      return sum / weight;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  // Everything under the point, from the top down — rather than the
+  // top element and its parents — so a picture that stands BEHIND a
+  // transparent link or caption is still found and read.
+  function isDarkAt(x, y) {
+    const stack = document.elementsFromPoint(x, y);
+    for (const node of stack) {
+      if (node === ring || node === dot) continue;
       if (node.classList && node.classList.contains("dark-surface")) return true;
+      if (node.tagName === "IMG") {
+        const light = lightOfImage(node, x, y);
+        if (light !== null) return light < 115;
+      }
       const found = colourOf(getComputedStyle(node).backgroundColor);
       if (found && found.a > 0.5) {
         return 0.2126 * found.r + 0.7152 * found.g + 0.0722 * found.b < 115;
       }
-      node = node.parentElement;
     }
     return false;
+  }
+
+  // Re-read when what is underneath changes, or when the pointer has
+  // moved far enough to be over a different part of a picture, whose
+  // colour changes from one point to the next.
+  let readAt = { x: -99, y: -99 };
+  function reread(force) {
+    const under = document.elementFromPoint(tx, ty);
+    const moved = Math.abs(tx - readAt.x) + Math.abs(ty - readAt.y);
+    if (!force && under === lastUnder && moved <= 6) return;
+    lastUnder = under;
+    readAt = { x: tx, y: ty };
+    const onDark = isDarkAt(tx, ty);
+    ring.classList.toggle("on-dark", onDark);
+    dot.classList.toggle("on-dark", onDark);
   }
 
   window.addEventListener("pointermove", (e) => {
@@ -172,17 +243,15 @@ const SITE_LINKS = [
       document.documentElement.classList.add("cursor-awake");
     }
     dot.style.transform = "translate(" + tx + "px," + ty + "px) translate(-50%,-50%)";
-
     // pointer-events:none on the ring/dot means elementFromPoint sees
     // straight through them to whatever's actually underneath.
-    const under = document.elementFromPoint(tx, ty);
-    if (under !== lastUnder) {
-      lastUnder = under;
-      const onDark = isDark(under);
-      ring.classList.toggle("on-dark", onDark);
-      dot.classList.toggle("on-dark", onDark);
-    }
+    reread(false);
   }, { passive: true });
+
+  // A page that moves under a still pointer — scrolling, a picture
+  // arriving, a drawing opening over the page — changes what is under
+  // it without a pointermove, so it is read again every so often too.
+  setInterval(() => { if (awake) reread(true); }, 400);
 
   document.addEventListener("mouseleave", () => document.documentElement.classList.remove("cursor-awake"));
   document.addEventListener("mouseenter", () => { if (awake) document.documentElement.classList.add("cursor-awake"); });

@@ -57,8 +57,8 @@
 // IT ALSO BRINGS THE PAGE IN — see THE ENTRANCE below.
 //
 // WITHOUT THIS SCRIPT the page is all of its writing, and everything
-// else that looks drawn — the two handwriting faces, the pictures'
-// corners, tilt and tape — is the stylesheet's and is still there.
+// else that looks drawn — the pictures' corners, tilt and tape, the
+// loops round the numbers — is the stylesheet's and is still there.
 // ============================================================
 (function () {
   const page = document.querySelector(".tale-page");
@@ -346,25 +346,24 @@
   // THE ENTRANCE
   //
   // The page is held back from its first paint (`tale-coming`, set in
-  // its own <head>) until both handwriting faces are in, and then brought
-  // in piece by piece. The owner saw it "randomly flick into the
-  // handwritten ... page" — drawn for a moment in the site's own face,
-  // then jumping to the handwriting when the faces arrived — and asked
-  // for it animated in instead.
+  // its own <head>) until its faces are in, and then brought in piece by
+  // piece. The owner saw it "randomly flick into the handwritten ...
+  // page" and asked for it animated in instead; the handwriting itself
+  // was taken off a round later, and the way in stayed.
   //
   // The doodles wait for it too: `entered` is what `show` waits on, so
   // nothing starts drawing itself on a page nobody can see yet.
   // ============================================================
   const ENTER_STEP = 130;      // ms between one piece coming in and the next
-  const FACES_AT_MOST = 2500;  // never wait longer than this for the faces
+  const FACES_AT_MOST = 1500;  // never wait longer than this for the faces
 
+  // The page is set in the site's own faces now (the handwriting faces
+  // were taken off at the owner's word), and it still waits for them,
+  // so it never comes in in a stand-in face and changes as it arrives.
   const facesIn = new Promise((done) => {
     window.setTimeout(done, FACES_AT_MOST);
-    if (!document.fonts || !document.fonts.load) { done(); return; }
-    Promise.all([
-      document.fonts.load('400 1em "Gochi Hand"'),
-      document.fonts.load('400 1em "Patrick Hand"'),
-    ]).then(done, done);
+    if (!document.fonts || !document.fonts.ready) { done(); return; }
+    document.fonts.ready.then(done, done);
   });
 
   const entered = facesIn.then(() => new Promise((done) => {
@@ -497,9 +496,17 @@
     let y = intro ? intro.getBoundingClientRect().top + window.scrollY + 40 : 520;
     let side = 1;
     let n = 1;
+    let emblems = 0;
     while (y < tall - 160) {
-      const emblem = n % 3 === 0;
-      const kind = emblem ? EMBLEMS[(n / 3) % EMBLEMS.length] : SMALL[Math.floor(rand() * SMALL.length)];
+      // Every other doodle is an emblem until the three that are not at
+      // the head have all been drawn, and every third after that — so
+      // all four are on the page however short it is. (Set in the
+      // site's own face the page is shorter than it was in the
+      // handwriting, and the sprout, which used to be the ninth, fell
+      // off the foot.)
+      const emblem = emblems < 3 ? n % 2 === 0 : n % 3 === 0;
+      const kind = emblem ? EMBLEMS[(emblems + 1) % EMBLEMS.length] : SMALL[Math.floor(rand() * SMALL.length)];
+      if (emblem) emblems += 1;
       const most = Math.min(room - 30, emblem ? 150 : 66);
       const size = Math.max(34, emblem ? most * (0.82 + rand() * 0.18) : most * (0.55 + rand() * 0.45));
       if (rand() < 0.78) side = -side;

@@ -355,3 +355,59 @@ the *an unwritten fragrance says it is unwritten* test now holds Les Abstraits t
 says its own description has not been written. That card's writing is a separate thing
 (a description and a commentary, matched by name), and copying this into it would be two
 copies of the same words.
+
+## 2026-09-23, later — Tombstone and Qimu & Musicians
+
+Two more houses on the same shape (`house.js`), the eighth and the ninth, and the chain on
+the Houses view stops at nine for now at the owner's word ("Keep houses only up to 9").
+
+> make house 8 Tombstone. Tombstone has 5 fragrances. I want you to look them up, add
+> them and add their notes. Ive added some pictures so you can add them too. Make house 9
+> Qimu & Musicians. they have 4 fragrances I want you to look them up, add them and add
+> their notes. […] to the two fragrances called Drummer and Guitarist, I want you to
+> write: Description coming soon. in the description
+
+- **`houses/tombstone.html`** — five, in alphabetical order: 3 Feet 5, Evergrow, No Need
+  to Come By, Sing at My Funeral, Sweet Coffin. **3 Feet 5** is the house's own name (the
+  owner's picture is called *3 Foot 5*). Each carries the owner's two pictures, the bottle
+  and the house's card for it. **None is written**, so every part and the introduction say
+  so in the dashed box, as Ataraxia's do.
+- **`houses/qimu-and-musicians.html`** — four, in the order the owner numbered their
+  pictures: Guitarist, Vocal, Bassist, Drummer, one picture each. **Guitarist and Drummer
+  say "Description coming soon."** — the owner's words, as a paragraph of their writing,
+  not as a placeholder box. Vocal and Bassist say in the dashed box that they are the
+  owner's to write.
+- **Nothing was written for either house.** The owner asked for the fragrances looked up
+  and added, and for their notes; the writing on this site is theirs, so the standfirsts
+  say only what the house is ("Five fragrances. The writing is still to come."; "Four
+  fragrances, one to a player in a band, to be worn alone or together.") and neither page
+  has a subtitle under its name.
+- **The notes** are in `notes-data.js` under `tombstone:` and `qimu:`, by the rules in
+  [the notes' report](2026-09-21-the-notes.md):
+  - Tombstone's own site gave **Sweet Coffin** and **No Need to Come By** a divided list.
+  - For **Sing at My Funeral** it names the top and heart and only *describes* the base
+    ("earthy and woody elements"), so the house's two tiers stand above and Fragrantica's
+    full list below — the two halves Haxan and Ataraxia use.
+  - **3 Feet 5** and **Evergrow** have no page on the house's site that could be found,
+    so theirs are Fragrantica's.
+  - Qimu's own page gives **Vocal**. **Guitarist, Bassist and Drummer have none that could
+    be checked**, and say *No information as of yet.* while naming the house's page. One
+    search came back with a confident list for Drummer, said to be Parfumo's; asked again
+    without leading it, the same search said that page carries no notes at all. That is
+    the near miss the notes' report warns about — a list nobody can check — so it is not
+    in the file.
+- **Neither house has a ground of its own on its own page.** The owner has not said what
+  either is. Each has **motifs** on the Houses view, though (stones in mist and petals;
+  notes, a record and a line of sound) — see [the chain](2026-09-23-the-chain-and-its-motifs.md).
+- **The credits** name the houses' own sites, **as an assumption**, as Tale's does: the
+  owner left no note of where the pictures came from, and they look like the houses' own.
+- **The footer chain** runs Tale → Tombstone → Qimu & Musicians → back to Pineward.
+- `images/Tombstone/README.txt` and `images/Qimu and Musicians/README.txt` say what each
+  file is. The owner's own names are kept, spaces and all, and none is big enough to need a
+  web copy.
+
+Tested in `tests/houses.spec.js`: `all nine houses stand on the contact sheet, in their
+own order`, the shared-shape test run on both, the no-script test, the unwritten test on
+Tombstone, `Tombstone carries its five, in alphabetical order, with both pictures each`,
+`Qimu & Musicians carries its four, and Guitarist and Drummer say description coming
+soon`, and `the houses are chained one to the next, and the last wraps round`.
