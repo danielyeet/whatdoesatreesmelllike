@@ -704,3 +704,48 @@ does not change where anything else on the map ends up.
   that.
 - The look of this page is a live subject; the owner has asked for several rounds on it
   and may ask for more.
+
+## 2026-09-23 — six frames off, and a reel that never repeats
+
+**The sheet lost six empty frames.** 09 to 14 were placeholders — somewhere for the flick
+to go and for lines to reach while the work is being made — and the owner asked for them
+off. Six houses and two empties are left, and nothing in the script changed: the sheet is
+built from whatever frames the page carries.
+
+### The reel is a shuffle now
+
+The owner: the cycling should be *"randomized but any one thing is never repeated"*.
+
+It used to roll a fresh pick for each cut and refuse only **the same picture twice
+running**. That is random, and on a long sheet it looked it — but the sheet just got
+shorter, and with seven pictures to draw from and eight cuts to fill, the same two or
+three came round again and again inside one run. Plainly repeating, which is what the
+owner saw.
+
+It is **Fisher-Yates without replacement** now: every picture but the one it will land on,
+each of them exactly once, in a shuffled order, and then the landing picture last.
+Fisher-Yates rather than a sort with a random comparator, which is the usual way this gets
+written and is not uniform.
+
+**That settles how many cuts there are — one per picture — so the slowing had to be turned
+round.** `FLIP_SLOW` used to say how much longer each cut was held than the one before,
+and the number of cuts fell out of ramping from `FLIP_FIRST_MS` to `FLIP_LAST_MS` at that
+rate. Now the count comes first and the ramp is fitted to it: the multiplier is worked out
+so that however many pictures there are, the reel still starts at `FLIP_FIRST_MS` and
+still comes to rest at `FLIP_LAST_MS`. `FLIP_SLOW` is gone.
+
+This also means **adding or removing a frame changes the length of the flick**, which is
+new and is the right behaviour: a sheet of three pictures should not sit through a
+fourteen-picture reel.
+
+### How to test it
+
+**`the flick shows each picture once, in no fixed order`** watches frame by frame from
+inside the page — the cuts are tens of milliseconds apart, far too fast to sample over the
+wire — squashes each held picture into one cut, and fails if any picture but the landing
+one comes round twice. It also checks the landing picture is not flicked past in the
+middle of the run, which is a fault this page has had before.
+
+Proved against the fault rather than assumed: with the old pick-and-refuse-a-repeat reel
+put back, it reports `no picture may come round twice: 0 2 4 5 4 3 5 0` and names pictures
+5 and 6 as the ones shown twice.

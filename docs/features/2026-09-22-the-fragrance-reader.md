@@ -236,3 +236,62 @@ that replaced it watches what the table actually does, frame by frame.
   squares" means literally. If that reads as too small a thing to end on, the honest fix
   is a bigger `--grid-cell` — and that would move the page's own ground with it, which is
   the owner's call rather than a number to tune here.
+
+## 2026-09-23 — the notes open in a window here too
+
+The owner: *"I want you to change the format of the notes of the perfumes in haxan (and
+other individual fragrances) so that it is also click to open."*
+
+They were right that this was the odd one out. Every other place on the site — a house
+page, and now a Favourites card — puts a fragrance's notes behind **View notes** and opens
+a window. The reader printed them **flat**, under a `Notes` heading, down the page.
+
+It matters more here than anywhere. Some of these windows carry **two lists** — Haxan's is
+the perfumer's own account above and the fallback's reading below — and laid out flat that
+is a wall of material between the writing and the foot of the page, which is exactly where
+the way back lives.
+
+So the reader carries the same button, opening the same window, written by the same
+renderer, with the same classes. Two things about where it stands:
+
+- **It is on the `<body>`, not inside the reader.** The reader is a scrolling box, and a
+  thing fixed to the viewport from inside a scrolling box scrolls away with it.
+  `.note-panel` and `.note-scrim` are already excluded from the rule that dims the page
+  behind the Menu, so putting it there costs nothing — see the note in `style.css` about
+  what happens to anything on the body that is not.
+- **Escape steps out of the window first**, and leaves the reader where it is. Getting
+  that the other way round throws away the fragrance you were reading.
+
+Closing the reader takes the window with it, at once and without animating — the same
+thing collapsing a part does on a house page. There is no sense easing a window shut over
+a page that is already leaving.
+
+## The landing test was asking the wrong question, three ways
+
+`a picture goes home to the right of centre` began failing about half the time, and the
+reason is worth writing down because neither the test nor the code makes it obvious.
+
+**The flier's size and its position ease over different durations.** Width and height run
+on `SQUARE_MS`, left and top on `RECEDE_MS` — 560ms against 900ms. That is deliberate, and
+it is what makes the squaring and the travel read as one movement rather than two. But it
+means **a picture reaches its final size a third of a second before it reaches its final
+place.**
+
+The test read the position at the wrong moment three times over:
+
+| it waited for | and caught |
+|---|---|
+| a fixed time after the press | under load, the picture before it had set off — its starting box, at x=227 of 1280 |
+| the picture to stop moving | the beat where it squares up, during which it is stationary on that same starting box |
+| the picture to stop changing size | the `SQUARE_MS` moment, a third of the journey early — x=615 of 1280, still in flight |
+
+All three are the same mistake: **a question about a state, asked with a stopwatch.**
+
+What is unambiguous is that the script *writes the destination* onto the element as an
+inline `left`. So the test waits for that to change from where the picture started — it
+has been sent — and then for the computed value to catch up with it. That is arrival,
+exactly, and it can fire neither early nor late. It also now says out loud that the picture
+reached the square it was sent to, rather than inferring it from where the picture happens
+to be.
+
+Four runs of the whole spec in a row, 6 of 6 each. **Nothing about the page changed.**

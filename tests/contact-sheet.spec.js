@@ -250,10 +250,25 @@ test("the pictures arrive one after another, spreading outwards", async ({ page 
 
   await waitForSheet(page);
   const arrivals = await page.evaluate(() => window.__arrivals);
+  const frames = await page.locator(".sheet-frame").count();
 
-  expect(arrivals.length).toBeGreaterThan(8);
+  // EVERY PICTURE ARRIVES, however many there are. This asked for more
+  // than eight, which was a number taken from the sheet as it stood
+  // when the test was written — fourteen frames, six of which the owner
+  // took off on 2026-09-23. What the test is really about is that they
+  // come one after another rather than all at once, and that claim does
+  // not care how many there are; a count that does is a count that
+  // fails the day the owner edits the page, which is exactly what
+  // happened.
+  expect(arrivals.length, "every picture should arrive").toBe(frames);
+  expect(frames, "and there should be a few of them to watch").toBeGreaterThan(3);
+
   const spread = arrivals[arrivals.length - 1] - arrivals[1];
-  expect(spread, "the map should take its time about it").toBeGreaterThan(1800);
+  // Likewise measured per picture rather than as a lump: the run is
+  // shorter with fewer pictures, and should be.
+  expect(spread / Math.max(1, frames - 2),
+    `the map should take its time about it — arrived at ${arrivals.join(", ")}`)
+    .toBeGreaterThan(150);
 
   // No two pictures land in the same instant. A little tolerance: two
   // lines can finish within a frame or two of each other.
@@ -1100,8 +1115,15 @@ test("a line reaching a picture with no page carries crosses, not a date",
     };
   });
 
-  expect(read.unwritten, "most of this sheet is still to be written")
-    .toBeGreaterThan(4);
+  // THERE HAS TO BE AT LEAST ONE UNWRITTEN PICTURE for this test to
+  // have anything to look at. It asked for more than four, which was
+  // true of the sheet as it stood — eight empty frames — until the
+  // owner took six of them off on 2026-09-23. The claim below is about
+  // what a line to an unwritten picture CARRIES, and one such picture
+  // is enough to make it.
+  expect(read.unwritten,
+    "the sheet needs a picture with no page behind it for this to mean anything")
+    .toBeGreaterThan(0);
   const crosses = read.dates.filter((d) => /^x+$/.test(d));
   expect(crosses.length, "a line to an unwritten picture should carry crosses")
     .toBeGreaterThan(0);
@@ -1133,4 +1155,63 @@ test("nothing on the sheet can be pressed while the pictures are cycling",
   const open = await page.locator(".sheet-frame").first()
     .evaluate((el) => getComputedStyle(el).pointerEvents);
   expect(open, "and should once it has settled").not.toBe("none");
+});
+
+/* AND NO PICTURE IS EVER SHOWN TWICE IN ONE RUN.
+   The owner: the cycling should be "randomized but any one thing is
+   never repeated". It used to roll a fresh pick per cut and refuse only
+   the same picture TWICE RUNNING, which on a short sheet meant the same
+   two or three came round again and again inside a single run — random,
+   but plainly repeating.
+
+   Watched frame by frame from inside the page: the flick is about a
+   second and a half and its cuts are tens of milliseconds apart, which
+   is far too fast to sample over the wire. */
+test("the flick shows each picture once, in no fixed order", async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(SHEET);
+  await page.waitForSelector(".sheet-frame");
+
+  await page.evaluate(() => {
+    window.__cuts = [];
+    const tick = () => {
+      const on = [...document.querySelectorAll(".sheet-frame")]
+        .findIndex((f) => getComputedStyle(f).visibility === "visible");
+      // Only the CHANGES: a picture held for eight frames is one cut.
+      if (on >= 0 && on !== window.__cuts[window.__cuts.length - 1]) {
+        window.__cuts.push(on);
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
+  await page.waitForFunction(() => !document.querySelector(".sheet.flicking"),
+    null, { timeout: 15000 });
+  await page.waitForTimeout(300);
+
+  const cuts = await page.evaluate(() => window.__cuts);
+  const frames = await page.locator(".sheet-frame").count();
+  expect(cuts.length, `the flick should have cut several times, saw ${cuts}`)
+    .toBeGreaterThan(2);
+
+  // THE LANDING PICTURE IS THE EXCEPTION, and deliberately: it is held
+  // for a beat before the reel starts and landed on at the end, so it
+  // is allowed to appear at both ends and nowhere in between.
+  const seen = {};
+  cuts.forEach((c) => { seen[c] = (seen[c] || 0) + 1; });
+  const twice = Object.entries(seen)
+    .filter(([which, times]) => Number(which) !== cuts[0] && times > 1)
+    .map(([which, times]) => `picture ${Number(which) + 1} shown ${times} times`);
+  expect(twice, `no picture may come round twice: ${cuts.join(" ")}`).toEqual([]);
+
+  // And the landing picture is not flicked past in the MIDDLE of the
+  // run — it may only be the first and the last.
+  const middle = cuts.slice(1, -1);
+  expect(middle.includes(cuts[0]),
+    `the picture it lands on should not come round mid-run: ${cuts.join(" ")}`)
+    .toBe(false);
+
+  // Every cut is a real picture.
+  cuts.forEach((c) => expect(c).toBeLessThan(frames));
+  expect(errors).toEqual([]);
 });

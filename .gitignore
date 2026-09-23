@@ -22,7 +22,20 @@ blob-report/
 npm-debug.log*
 
 # Scratch scripts used to drive a browser at the site while working on
-# it (screenshots, one-off measurements). One of these was committed by
-# accident on 2026-09-21 by a `git add -A`; it is not part of the site.
+# it (screenshots, one-off measurements). They are not part of the site.
+#
+# THIS HAS NOW HAPPENED TWICE, and the second time is why the patterns
+# below are broader than they look. One was committed on 2026-09-21 by a
+# `git add -A`, and the guard written then only covered the name that
+# had slipped through — `*-tmp.js`. On 2026-09-23 four more went in
+# under a different naming (`__reel.js`, `__notes.js` and friends),
+# which that pattern did not match at all.
+#
+# So: match the SHAPE of a scratch file rather than the one name that
+# got away. Anything double-underscored at the root, anything -tmp, and
+# the scratch directory. Better still, write them in the scratchpad
+# outside the repository, which is what it is for.
 look-tmp.js
 *-tmp.js
+__*.js
+/scratch/
