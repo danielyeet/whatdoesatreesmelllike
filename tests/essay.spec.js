@@ -144,7 +144,10 @@ test("the theories and the researches reach their own pieces", async ({ page }) 
   await expect(first).toHaveAttribute("href", "../works/theory-01.html");
 
   await page.goto("/categories/researches.html");
+  // 000 stands first since 2026-09-23; the research is the next row.
   await expect(page.locator(".index-table tbody a").first())
+    .toHaveAttribute("href", "../works/my-personal-introduction-to-perfume.html");
+  await expect(page.locator(".index-table tbody a").nth(1))
     .toHaveAttribute("href", "../works/resins-in-perfumery.html");
 
   // And the research carries the owner's own writing rather than a

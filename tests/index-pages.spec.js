@@ -55,7 +55,11 @@ test("the researches are a numbered, dated table, and the first one opens",
 
   const rows = await showing(page);
   expect(rows.length, "the table should have rows").toBeGreaterThan(1);
-  expect(rows[0].name, "the first research is the owner's own").toBe("Resins in Perfumery");
+  // 000 STANDS FIRST, at the owner's word — "make it 000. It should be
+  // the first result." It was Resins in Perfumery until 2026-09-23.
+  expect(rows[0].name, "000 is the first result").toBe("My Personal Introduction to Perfume");
+  expect(rows[0].no, "and it is numbered nought").toBe(0);
+  expect(rows[1].name, "the first research is the owner's own").toBe("Resins in Perfumery");
 
   // Four columns, in the order asked for: the number, the work, which
   // KIND of work it is, and the date it was made. The third was added
@@ -86,7 +90,7 @@ test("the researches are a numbered, dated table, and the first one opens",
 
   // And the first one is a link to a page that is really there.
   const href = await page.locator(".index-table tbody tr a").first().getAttribute("href");
-  expect(href).toContain("resins-in-perfumery.html");
+  expect(href).toContain("my-personal-introduction-to-perfume.html");
   const opened = await page.request.get(new URL(href, page.url()).toString());
   expect(opened.status(), "the research it points at should be served").toBe(200);
 
@@ -315,7 +319,8 @@ test("without the script the table is still the table", async ({ page }) => {
 
   const rows = await showing(page);
   expect(rows.length, "the rows are the page's own").toBeGreaterThan(1);
-  expect(rows[0].name).toBe("Resins in Perfumery");
+  // As written in the page: 000 first, since 2026-09-23.
+  expect(rows[0].name).toBe("My Personal Introduction to Perfume");
   await expect(page.locator(".index-table tbody tr a").first()).toBeVisible();
   expect(errors, "no errors beyond the blocked file").toEqual([]);
 });

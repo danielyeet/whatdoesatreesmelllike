@@ -39,6 +39,7 @@
     { url: "works/theory-03.html", trail: ["Theories", "The Note Dissemination Framework"] },
     { url: "categories/favorites.html", trail: ["Favourites"] },
     { url: "categories/researches.html", trail: ["Explorations & Researches"] },
+    { url: "works/my-personal-introduction-to-perfume.html", trail: ["Explorations & Researches", "My Personal Introduction to Perfume"] },
     { url: "works/resins-in-perfumery.html", trail: ["Explorations & Researches", "Resins in Perfumery"] },
     { url: "works/cold-vs-warm-incense.html", trail: ["Explorations & Researches", "Cold vs Warm Incense"] },
     { url: "categories/other-2.html", trail: ["Photography"] },

@@ -235,7 +235,9 @@ than on the lettering in the cell — and a row that is neither yet sorts to the
 the same way an unwritten date does and for the same reason: nothing unfinished should
 head a list.
 
-*Resins in Perfumery* is a research. Two new entries — *Exploring the smell of a forest
+*Resins in Perfumery* is a research. (Since 2026-09-23 the first row is **000**, *My
+Personal Introduction to Perfume*, an exploration, at the owner's word — a number of
+nought sorts before every other, so nothing in `index-page.js` changed.) Two new entries — *Exploring the smell of a forest
 part 1* and *Exploring the smell of rain part 1* — are explorations with no page yet, so
 they are written the way this page already writes one of those: `data-open="no"`, drawn
 quieter, and not a link.

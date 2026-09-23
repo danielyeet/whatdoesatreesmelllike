@@ -77,6 +77,13 @@ six). The theories category's first three rows point at the three theory pages.
 
 ### The explorations use the same shape
 
+**Since 2026-09-23 one of them has a look of its own**: *My Personal Introduction to
+Perfume* (Explorations 000) keeps the rule but replaces the swarm with a mist of its own
+and the steel blue with gold, all scoped to `.primer-page` — see [its
+report](2026-09-23-my-personal-introduction-to-perfume.md). `essay.js` runs without its
+canvas and simply draws no swarm.
+
+
 `works/cold-vs-warm-incense.html` (2026-09-21) is the first **exploration** on this
 ground, and it is an essay page like any other — the swarm behind it, the sights at the
 corners, the rule down the left. An exploration goes out after a smell and writes down

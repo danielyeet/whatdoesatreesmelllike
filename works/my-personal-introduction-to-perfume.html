@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Personal Introduction to Perfume — The Taste of Aldehydes</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<!--
+  MY PERSONAL INTRODUCTION TO PERFUME — Explorations 000, the first row
+  on categories/researches.html, at the owner's word: "make it 000. It
+  should be the first result. It should be an exploration."
+
+  IT IS AN ESSAY PAGE, the same shape as the other explorations: the
+  RULE down the left with one tick per section (essay.js), on the dark
+  ground. What is its own is THE MIST behind the writing (primer.js):
+  drops of perfume rising up the window and, as they rise, coming apart
+  into vapour — the page's own "From liquid to gas", said as a
+  drawing — in the warm gold of perfume in a bottle, which is also the
+  page's accent in place of the essays' steel blue.
+
+  THE DIAGRAMS are the ones the owner asked for, drawn in the page:
+  the table of notes and the accords they make; the empty pyramid and
+  the citrus / woods / musks one; and alongside them three that show
+  what the words say — the concentrations, the three measures of
+  performance, and the top bleeding into the heart into the base.
+
+  THE WRITING IS THE OWNER'S. They asked for the formatting to be fixed
+  and said "Feel free to spellcheck", so spelling and small slips were
+  corrected (the list of them is in docs/features/ under this piece's
+  report). The voice was left alone.
+
+  THE FOOTNOTES are numbered in the writing and set out at the foot;
+  primer.js also shows each one beside its number when it is pointed
+  at. Without the script they are ordinary links to the foot.
+
+  TO ADD A SECTION: copy a whole <section class="essay-section"> block
+  and number it; the rule grows a tick on its own, and the count in the
+  head is the one thing to change by hand.
+-->
+<body class="essay-page primer-page dark-surface">
+
+<canvas class="primer-mist" aria-hidden="true"></canvas>
+
+<header class="essay-head">
+  <p class="essay-kicker">Explorations · 000</p>
+  <h1>My Personal Introduction<br><em>to Perfume</em></h1>
+  <dl class="essay-facts">
+    <div><dt>Written</dt><dd>23.09.2026</dd></div>
+    <div><dt>Sections</dt><dd>12</dd></div>
+    <div><dt>Filed under</dt><dd>Explorations · 000</dd></div>
+  </dl>
+</header>
+
+<article class="essay-body">
+
+  <section class="essay-section" id="section-01">
+    <h2><span class="essay-no">01</span>Introduction</h2>
+    <p class="essay-lead">Perfumes have gained a lot of popularity recently, and whenever something does gain popularity, the main source that people get information from is TikTok or Instagram or some other short form content. I do not like that, so I will be introducing perfume in my own way. This article is intended to clarify everything a person might need to understand perfume.</p>
+  </section>
+
+  <section class="essay-section" id="section-02">
+    <h2><span class="essay-no">02</span>What is a perfume?</h2>
+    <p>A perfume is an oil and alcohol. The oil is what gives the perfume its smell, and the alcohol is used to dilute it.<sup class="primer-fn"><a href="#fn-1" id="fnref-1" aria-describedby="footnotes-name">1</a></sup></p>
+    <figure class="primer-figure primer-mix" aria-label="A perfume is oil diluted in alcohol">
+      <svg viewBox="0 0 520 170" role="img" aria-hidden="true">
+        <g class="pd-soft">
+          <path d="M40 38h60v8h-6v84a10 10 0 0 1-10 10H56a10 10 0 0 1-10-10V46h-6z"/>
+          <path d="M226 38h60v8h-6v84a10 10 0 0 1-10 10h-28a10 10 0 0 1-10-10V46h-6z"/>
+          <path d="M412 26h40v12h10v12h-6v80a10 10 0 0 1-10 10h-38a10 10 0 0 1-10-10V50h-6V38h10z"/>
+        </g>
+        <path class="pd-gold-fill" d="M47 92h40v38a4 4 0 0 1-4 4H51a4 4 0 0 1-4-4z"/>
+        <path class="pd-pale-fill" d="M233 62h40v68a4 4 0 0 1-4 4h-32a4 4 0 0 1-4-4z"/>
+        <path class="pd-mix-fill" d="M405 78h52v52a4 4 0 0 1-4 4h-44a4 4 0 0 1-4-4z"/>
+        <g class="pd-ink">
+          <path d="M163 76v24M151 88h24"/>
+          <path d="M326 88h42M360 80l8 8-8 8"/>
+        </g>
+        <text class="pd-label" x="70" y="22" text-anchor="middle">oil</text>
+        <text class="pd-label" x="256" y="22" text-anchor="middle">alcohol</text>
+        <text class="pd-label" x="432" y="14" text-anchor="middle">perfume</text>
+        <text class="pd-small" x="70" y="162" text-anchor="middle">the smell</text>
+        <text class="pd-small" x="256" y="162" text-anchor="middle">dilutes it</text>
+      </svg>
+    </figure>
+  </section>
+
+  <section class="essay-section" id="section-03">
+    <h2><span class="essay-no">03</span>Concentrations</h2>
+    <!-- THE HEADING ARRIVED WITH NOTHING UNDER IT — most likely a table
+         that did not survive being pasted. What stands here is the
+         common rule of thumb for how much oil each name means; houses
+         vary, and it is the owner's to replace. -->
+    <figure class="primer-figure primer-bars" aria-label="How much perfume oil each concentration usually holds">
+      <div class="primer-bar"><span class="primer-bar-name">Extrait de Parfum</span><span class="primer-bar-track"><span class="primer-bar-fill" style="--from: 20; --to: 40"></span></span><span class="primer-bar-say">20–40%</span></div>
+      <div class="primer-bar"><span class="primer-bar-name">Eau de Parfum</span><span class="primer-bar-track"><span class="primer-bar-fill" style="--from: 15; --to: 20"></span></span><span class="primer-bar-say">15–20%</span></div>
+      <div class="primer-bar"><span class="primer-bar-name">Eau de Toilette</span><span class="primer-bar-track"><span class="primer-bar-fill" style="--from: 5; --to: 15"></span></span><span class="primer-bar-say">5–15%</span></div>
+      <div class="primer-bar"><span class="primer-bar-name">Eau de Cologne</span><span class="primer-bar-track"><span class="primer-bar-fill" style="--from: 2; --to: 5"></span></span><span class="primer-bar-say">2–5%</span></div>
+      <div class="primer-bar"><span class="primer-bar-name">Eau Fraîche</span><span class="primer-bar-track"><span class="primer-bar-fill" style="--from: 1; --to: 3"></span></span><span class="primer-bar-say">1–3%</span></div>
+      <p class="primer-scale" aria-hidden="true"><span>0%</span><span>10</span><span>20</span><span>30</span><span>40%</span></p>
+      <figcaption>How much of the bottle is perfume oil. The rest is alcohol. These are the usual ranges; they differ from house to house.</figcaption>
+    </figure>
+  </section>
+
+  <section class="essay-section" id="section-04">
+    <h2><span class="essay-no">04</span>From liquid to gas</h2>
+    <p>For you to be able to smell something, it needs to be a gas. In a bottle, all perfumes are liquid, and when you spray them on your wrist or neck, they are still liquids. Only after they are sprayed do they start evaporating, which allows us to smell them.</p>
+    <figure class="primer-figure primer-steps" aria-label="In the bottle it is a liquid, on the skin it is still a liquid, in the air it is a gas, and that is when it can be smelled">
+      <svg viewBox="0 0 600 170" role="img" aria-hidden="true">
+        <g class="pd-soft">
+          <path d="M70 40h40v10h10v12h-6v70a10 10 0 0 1-10 10H76a10 10 0 0 1-10-10V62h-6V50h10z"/>
+        </g>
+        <path class="pd-gold-fill" d="M71 90h38v42a4 4 0 0 1-4 4H75a4 4 0 0 1-4-4z"/>
+        <g class="pd-ink">
+          <path d="M240 128c40-10 80-10 120 0"/>
+          <path d="M160 96h40M192 88l8 8-8 8"/>
+          <path d="M400 96h40M432 88l8 8-8 8"/>
+        </g>
+        <g class="pd-gold-fill">
+          <ellipse cx="276" cy="119" rx="7" ry="4"/>
+          <ellipse cx="300" cy="117" rx="9" ry="5"/>
+          <ellipse cx="324" cy="119" rx="6" ry="3.5"/>
+        </g>
+        <g class="pd-vapour">
+          <path d="M488 132c-10-14 10-22 0-36s10-22 0-36"/>
+          <path d="M512 132c-10-14 10-22 0-36s10-22 0-36"/>
+          <path d="M536 132c-10-14 10-22 0-36s10-22 0-36"/>
+        </g>
+        <g class="pd-gold-fill pd-motes">
+          <circle cx="494" cy="48" r="2"/><circle cx="520" cy="40" r="1.6"/><circle cx="540" cy="52" r="2.2"/><circle cx="506" cy="30" r="1.4"/>
+        </g>
+        <text class="pd-label" x="90" y="24" text-anchor="middle">in the bottle</text>
+        <text class="pd-label" x="300" y="24" text-anchor="middle">on the skin</text>
+        <text class="pd-label" x="512" y="24" text-anchor="middle">in the air</text>
+        <text class="pd-small" x="90" y="164" text-anchor="middle">liquid</text>
+        <text class="pd-small" x="300" y="164" text-anchor="middle">still liquid</text>
+        <text class="pd-small pd-gold" x="512" y="164" text-anchor="middle">gas — now you smell it</text>
+      </svg>
+    </figure>
+  </section>
+
+  <section class="essay-section" id="section-05">
+    <h2><span class="essay-no">05</span>Notes</h2>
+    <p>Notes are akin to characters or smells that you can find within a perfume. If something has notes of &ldquo;citruses,&rdquo; then somewhere in that perfume you will find the character of a citrus. These can be as specific or as broad as a perfumer might want; where for example a perfume might list &ldquo;citruses&rdquo; in its notes, which could realistically be anything from a lemon to a pomelo; and another perfume might list &ldquo;Sicilian bergamot,&rdquo; which is a specific type of citrus from a specific location.</p>
+    <p>It is important to note that notes do not equal ingredients. Often, notes are characters presented to us – the consumers – for the sake of simplifying complex chemicals and reducing them to what they are supposed to smell like. For example, vanillin, labdanum and benzoin might all be combined to make a note of &ldquo;amber.&rdquo;</p>
+  </section>
+
+  <section class="essay-section" id="section-06">
+    <h2><span class="essay-no">06</span>Accords</h2>
+    <p>Accords are also characters but in a broader sense. When you use the term note, you often refer to a singular character that takes part in the fragrance. For example, clove and cumin are both notes. An accord is a character in a broader sense of the word. It does not encompass individual smells, but rather describes their combined character. In the previous example, you have clove and cumin. Adding those two up would give you an accord of &ldquo;warm spicy&rdquo; or simply &ldquo;spicy.&rdquo;</p>
+    <p>I will give you some examples here:</p>
+    <!-- THE TABLE THE OWNER ASKED FOR: "Notes" and "Accord", several
+         rows of notes making up one accord, filled with the notes that
+         most often make up each — and no amber, at their word. -->
+    <div class="primer-table-wrap">
+      <table class="primer-accords">
+        <thead>
+          <tr><th scope="col">Notes</th><th scope="col">Accord</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Bergamot</td><th scope="rowgroup" rowspan="4">Citrus</th></tr>
+          <tr><td>Lemon</td></tr>
+          <tr><td>Mandarin</td></tr>
+          <tr><td>Grapefruit</td></tr>
+          <tr class="primer-group"><td>Jasmine</td><th scope="rowgroup" rowspan="4">White floral</th></tr>
+          <tr><td>Tuberose</td></tr>
+          <tr><td>Orange blossom</td></tr>
+          <tr><td>Gardenia</td></tr>
+          <tr class="primer-group"><td>Cedarwood</td><th scope="rowgroup" rowspan="4">Woody</th></tr>
+          <tr><td>Sandalwood</td></tr>
+          <tr><td>Vetiver</td></tr>
+          <tr><td>Patchouli</td></tr>
+          <tr class="primer-group"><td>Clove</td><th scope="rowgroup" rowspan="4">Warm spicy</th></tr>
+          <tr><td>Cumin</td></tr>
+          <tr><td>Cinnamon</td></tr>
+          <tr><td>Nutmeg</td></tr>
+          <tr class="primer-group"><td>Lavender</td><th scope="rowgroup" rowspan="4">Aromatic</th></tr>
+          <tr><td>Rosemary</td></tr>
+          <tr><td>Sage</td></tr>
+          <tr><td>Thyme</td></tr>
+          <tr class="primer-group"><td>Galbanum</td><th scope="rowgroup" rowspan="4">Green</th></tr>
+          <tr><td>Cut grass</td></tr>
+          <tr><td>Violet leaf</td></tr>
+          <tr><td>Fig leaf</td></tr>
+          <tr class="primer-group"><td>Vanilla</td><th scope="rowgroup" rowspan="4">Sweet (gourmand)</th></tr>
+          <tr><td>Tonka bean</td></tr>
+          <tr><td>Caramel</td></tr>
+          <tr><td>Praline</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="essay-section" id="section-07">
+    <h2><span class="essay-no">07</span>The pyramid</h2>
+    <p>Most fragrances come with a distinction of &ldquo;top,&rdquo; &ldquo;mid,&rdquo; and &ldquo;base.&rdquo; These are terms used to denote the chronology of a smell. The top is what you smell when you initially spray a perfume; the mid (also called heart) is what you smell 20–30 minutes into spraying the perfume; and the base (also called the dry down) is what you smell hours after you have sprayed it. These are often presented in the classical &ldquo;note pyramid&rdquo; diagram.</p>
+    <figure class="primer-figure primer-pyramid" aria-label="An empty note pyramid: top, mid and base">
+      <svg viewBox="0 0 420 250" role="img" aria-hidden="true">
+        <path class="pd-tier pd-tier-1" d="M210 16 L268 94 L152 94 Z"/>
+        <path class="pd-tier pd-tier-2" d="M152 94 L268 94 L326 172 L94 172 Z"/>
+        <path class="pd-tier pd-tier-3" d="M94 172 L326 172 L384 240 L36 240 Z"/>
+        <text class="pd-tier-name" x="210" y="72" text-anchor="middle">Top</text>
+        <text class="pd-tier-name" x="210" y="140" text-anchor="middle">Mid</text>
+        <text class="pd-tier-name" x="210" y="214" text-anchor="middle">Base</text>
+      </svg>
+    </figure>
+    <p>So let&rsquo;s say we have a perfume like this:</p>
+    <figure class="primer-figure primer-pyramid" aria-label="A note pyramid: citruses at the top, woods in the middle, musks at the base">
+      <svg viewBox="0 0 420 250" role="img" aria-hidden="true">
+        <path class="pd-tier pd-tier-1 pd-on" d="M210 16 L268 94 L152 94 Z"/>
+        <path class="pd-tier pd-tier-2 pd-on" d="M152 94 L268 94 L326 172 L94 172 Z"/>
+        <path class="pd-tier pd-tier-3 pd-on" d="M94 172 L326 172 L384 240 L36 240 Z"/>
+        <text class="pd-tier-note" x="210" y="76" text-anchor="middle">Citruses</text>
+        <text class="pd-tier-note" x="210" y="142" text-anchor="middle">Woods</text>
+        <text class="pd-tier-note" x="210" y="216" text-anchor="middle">Musks</text>
+        <text class="pd-small" x="286" y="58">top</text>
+        <text class="pd-small" x="340" y="136">mid</text>
+        <text class="pd-small" x="396" y="210" text-anchor="end">base</text>
+      </svg>
+    </figure>
+    <p>This pyramid shows a perfume where the top notes are citruses, mid notes are woods and the base notes are musks. This means that when you first spray it, you will smell mostly citruses, which will then gradually turn into a woody smell, and then eventually a musky smell.</p>
+    <p>It is important to note that this is not absolute, rather gradual. The perfume does not SUDDENLY go from top to mid, but rather it bleeds into it.</p>
+    <figure class="primer-figure primer-bleed" aria-label="Over time the citruses fade as the woods rise, and the woods fade as the musks rise: each stage bleeds into the next">
+      <svg viewBox="0 0 560 190" role="img" aria-hidden="true">
+        <path class="pd-axis" d="M40 150H530"/>
+        <path class="pd-wave pd-wave-1" d="M40 150C60 30 110 30 150 90S220 150 260 150"/>
+        <path class="pd-wave pd-wave-2" d="M90 150C150 150 170 44 250 44S350 120 400 150"/>
+        <path class="pd-wave pd-wave-3" d="M200 150C280 150 320 60 400 60S500 96 530 118"/>
+        <text class="pd-small" x="92" y="30" text-anchor="middle">citruses</text>
+        <text class="pd-small" x="252" y="34" text-anchor="middle">woods</text>
+        <text class="pd-small" x="410" y="50" text-anchor="middle">musks</text>
+        <text class="pd-small" x="40" y="174">spray</text>
+        <text class="pd-small" x="206" y="174" text-anchor="middle">20–30 minutes</text>
+        <text class="pd-small" x="530" y="174" text-anchor="end">hours</text>
+      </svg>
+      <figcaption>Not three steps but three waves: each one is already rising while the one before it fades.</figcaption>
+    </figure>
+  </section>
+
+  <section class="essay-section" id="section-08">
+    <h2><span class="essay-no">08</span>A perfume&rsquo;s performance</h2>
+    <p>Generally, there are three words that a person might use to describe a perfume&rsquo;s performance. Those terms are: projection, longevity and sillage.</p>
+    <figure class="primer-figure primer-perform" aria-label="Projection is how far the scent reaches around you; longevity is how long it lasts on the skin; sillage is the trail it leaves behind you">
+      <svg viewBox="0 0 660 200" role="img" aria-hidden="true">
+        <!-- projection -->
+        <g class="pd-ring">
+          <circle cx="110" cy="102" r="30"/><circle cx="110" cy="102" r="50"/><circle cx="110" cy="102" r="70"/>
+        </g>
+        <g class="pd-person"><circle cx="110" cy="86" r="8"/><path d="M110 94v28M98 104h24M110 122l-9 16M110 122l9 16"/></g>
+        <!-- longevity -->
+        <path class="pd-axis" d="M258 132H408"/>
+        <path class="pd-life" d="M258 132V70C300 70 330 82 360 104S400 128 408 132Z"/>
+        <text class="pd-small" x="258" y="150">sprayed</text>
+        <text class="pd-small" x="408" y="150" text-anchor="end">gone</text>
+        <!-- sillage -->
+        <g class="pd-person"><circle cx="604" cy="86" r="8"/><path d="M604 94v28M592 104l12 4 12-4M604 122l-10 16M604 122l10 16"/></g>
+        <g class="pd-gold-fill pd-trail">
+          <circle cx="580" cy="108" r="6" opacity=".85"/><circle cx="556" cy="110" r="6" opacity=".7"/><circle cx="532" cy="106" r="5.5" opacity=".55"/><circle cx="508" cy="110" r="5" opacity=".42"/><circle cx="486" cy="106" r="4.5" opacity=".3"/><circle cx="466" cy="110" r="4" opacity=".2"/>
+        </g>
+        <text class="pd-label" x="110" y="196" text-anchor="middle">projection</text>
+        <text class="pd-label" x="333" y="196" text-anchor="middle">longevity</text>
+        <text class="pd-label" x="540" y="196" text-anchor="middle">sillage</text>
+      </svg>
+    </figure>
+    <p><strong>Projection</strong> is how far a smell reaches. You can think about it as a sphere around the wearer of a perfume, in which if anyone stands, they will catch a whiff of what he or she is wearing. If the projection of something is strong, then it will be smelled from some distance away, whereas if the projection is weak, it will only be smelled if someone gets very close to you.<sup class="primer-fn"><a href="#fn-2" id="fnref-2" aria-describedby="footnotes-name">2</a></sup></p>
+    <p><strong>Longevity</strong> is how long the perfume will last on your skin. This is considered to be from the time it is sprayed on someone until the base part of a fragrance (or dry down) is no longer smellable.</p>
+    <p><strong>Sillage</strong> (pronounced see-yahj) is a measure of how long the fragrance persists in your wake. Let&rsquo;s say you are walking, then the scent trail left behind you is measured by the sillage. If something has a strong sillage, then the smell stays for some time even after you leave; whereas a weak sillage means that you can only be smelled when you are there.</p>
+    <p>It is important to note that despite short form content often pushing for maximizing all three aforementioned metrics, a person seldom needs that. In an office for example, a person (in my humble opinion) should not have a smell strong enough to choke out the entire floor. A fragrance should be considered the same way that clothing should: you would not wear a red onesie to a business meeting.</p>
+
+    <!-- THE DROPDOWN the owner asked for: "MAKE THIS A DROPDOWN". A real
+         <details>, so it opens without the script too. -->
+    <details class="primer-more">
+      <summary><span class="primer-more-name">Some nuances about longevity, sillage and projection</span><span class="primer-more-cue">some details</span></summary>
+      <div class="primer-more-body">
+        <p>Sillage, projection and longevity can be affected by several things, such as the climate. Generally things tend to evaporate faster when it is warm, so fragrances might last longer in the colder months of the year than they would in the warmer months. That is longevity. This is also related to projection and sillage, in the sense that if the rate of evaporation is faster (warmer months), then there will be more gas molecules of that perfume in the air, which will lead to a stronger projection. So, the scent will sit closer to you in the colder months, while having a better projection in the warmer months.</p>
+        <p>Another thing that affects a perfume&rsquo;s longevity, projection and sillage is the oil concentration. In very unconcentrated perfumes, such as Eau de Toilette, the rate of evaporation will be relatively high. This means that the projection will be good, while the longevity will not. On the other hand, if you have an Extrait, then the projection will be bad, and the longevity will be good. Do note that this does not apply to every perfume, and only exists as a rule of thumb.</p>
+        <p>The main reason I emphasize this is because often, perfumes will be marketed as &ldquo;HIGH CONCENTRATION OF OIL! INCREDIBLE PROJECTION AND LONGEVITY!&rdquo; but more often than not, those terms are unrelated. Yes, the concentration is related to the longevity, but it depends a lot from perfume to perfume, so try it on your skin, assess it yourself and only then pull the trigger and buy it.<sup class="primer-fn"><a href="#fn-3" id="fnref-3" aria-describedby="footnotes-name">3</a></sup></p>
+        <p>There are other factors that affect a perfume&rsquo;s performance characteristics, but I don&rsquo;t want to get into too much detail.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="essay-section" id="section-09">
+    <h2><span class="essay-no">09</span>Seasons</h2>
+    <p>Frequently, you can hear people talking about &ldquo;winter&rdquo; fragrances or &ldquo;summer&rdquo; fragrances, but what does that actually mean? The short of it is that the character of a perfume is interpreted as being intended for a specific season. The rationale behind it is that sometimes a fragrance is heavy and dark and has a characteristic density to it, which would make a person think of the heaviness of winter, and so they would label that fragrance as a winter scent. Conversely, a fragrance might be bright and airy and full of notes that one might associate with the summer, and so it will be labelled a summer fragrance.</p>
+    <p>In truth I do think that there is some benefit to this distinction, as I found myself often repulsed (in an olfactory manner) by people who wear dense and heavy things in the summer, as in combination with the moist air and the burning sun, it can induce headaches.</p>
+    <p>However, this is a mere personal (or communal) interpretation, and a person is free to wear any fragrance in any season. I will ask for you to be mindful though.</p>
+  </section>
+
+  <section class="essay-section" id="section-10">
+    <h2><span class="essay-no">10</span>Time of day</h2>
+    <p>What determines if something is an evening or a daytime fragrance? Well the explanation is almost identical to that explaining the seasons: sometimes the vibe a fragrance gives off is evening-y and other times it&rsquo;s daytime-y. You might find the deeper and darker fragrances to be used during the evening and conversely the bright fragrances during the day.</p>
+  </section>
+
+  <section class="essay-section" id="section-11">
+    <h2><span class="essay-no">11</span>Smelling strip and skin</h2>
+    <p>In a lot of fragrances, you will find that they smell quite differently on one&rsquo;s skin when compared to the paper, which can be explained by several things:</p>
+    <ol class="primer-list">
+      <li><strong>Your skin pH:</strong> Basically, how acidic your skin is determines how fragrances will react. The more acidic your skin, the harsher the fragrance.</li>
+      <li><strong>Your skin microbiome:</strong> The density and type of colonizing bacteria on one&rsquo;s body can also interact with the perfume on your skin.</li>
+      <li><strong>Your skin type:</strong> Oily skin holds and amplifies fragrance oils, making scents last longer and project stronger. Dry skin lacks natural oils (sebum), causing perfume to evaporate quickly.</li>
+      <li><strong>Your body temperature:</strong> Warmer skin speeds up evaporation, making base notes like vanilla and amber bloom faster and project more intensely. Cool skin slows down scent development.</li>
+      <li><strong>Your diet and lifestyle:</strong> Foods like garlic, spices, or cumin release volatile compounds through your sweat, which blend directly with your perfume.</li>
+      <li><strong>Hormones:</strong> Fluctuations from stress, medication, or menstrual cycles temporarily alter your skin&rsquo;s oil production, temperature, and pH.</li>
+    </ol>
+    <p>This is VERY nuanced and interesting in my opinion, so if you would like to read more, please find that information in this research about skin.</p>
+  </section>
+
+  <section class="essay-section" id="section-12">
+    <h2><span class="essay-no">12</span>Some common myths</h2>
+    <h3 class="primer-myth">Women&rsquo;s vs men&rsquo;s fragrances</h3>
+    <p>This is a distinction mainly made by the market more so than anything else. Whenever I see people refer to the fact that men can&rsquo;t wear feminine fragrances (or the opposite), I remember the fact that Snoop Dogg&rsquo;s daily scent is Delina by Parfums de Marly; which is to say, a very girly scent by the industry standards.</p>
+    <p>The idea here is simply that you can wear whatever you like whenever you like.</p>
+    <h3 class="primer-myth">Natural vs synthetic</h3>
+    <p>There is this general belief in some of the fragrance world that natural ingredients are always better than synthetic. That is wrong for the most part. This is an appeal to nature fallacy. You will find safe and dangerous chemicals in nature just as you can synthesize safe and dangerous chemicals in the lab.</p>
+  </section>
+
+  <div class="primer-close">
+    <p>That is all I think. I may add a thing here or there later but that should be the gist of it. I would however like to add that if there is any single takeaway from all of this; then it is that <strong>you can wear anything you want, whenever you want, however you want.</strong> If you choose to wear it mindful of where you are going and who you are meeting, then all the better, but nevertheless, you are not limited by labels.</p>
+    <p class="primer-motto"><em>Wear what you like</em></p>
+  </div>
+
+  <section class="primer-endnotes" aria-labelledby="footnotes-name">
+    <h2 id="footnotes-name">Footnotes</h2>
+    <ol class="primer-footnotes">
+      <li id="fn-1">Diluting a perfume oil with an alcohol makes it safer for the skin, easier to spray, makes evaporation easier (if it was just oil then it would not be nearly as volatile), decreases the greasiness and residue left on clothes, allows the perfumer to control longevity and acts as a preservative. <a class="primer-back" href="#fnref-1" aria-label="Back to the writing">↩</a></li>
+      <li id="fn-2">When a fragrance projects incredibly strongly, it is sometimes called &ldquo;nuclear.&rdquo; The opposite of this is &ldquo;intimate projection.&rdquo; <a class="primer-back" href="#fnref-2" aria-label="Back to the writing">↩</a></li>
+      <li id="fn-3">The nuances here are truly endless. The first and easiest I can think of is that some perfumes use fixatives, while others do not. The perfumes with fixatives tend to last longer than their counterparts. Another might be the type of molecules used. Some perfume ingredients just tend to have an absurd longevity. So if you hear someone trying to sell you a perfume because it is &ldquo;incredibly concentrated,&rdquo; just test it out yourself before making any decisions. <a class="primer-back" href="#fnref-3" aria-label="Back to the writing">↩</a></li>
+    </ol>
+
+    <h2>Sources</h2>
+    <ul class="primer-sources">
+      <li><a href="https://www.houseofscent.com/community/blogs/everything-you-need-to-know-about-perfumers-alcohol" target="_blank" rel="noopener noreferrer">House of Scent — everything you need to know about perfumer&rsquo;s alcohol</a></li>
+      <li><a href="https://www.edenbotanicals.com/articles-and-education/alcohol-oil-or-solid-how-to-dilute-perfume" target="_blank" rel="noopener noreferrer">Eden Botanicals — alcohol, oil or solid: how to dilute perfume</a></li>
+      <li><a href="https://lescento.com/blogs/news/why-perfume-smells-different-on-everyone-skin-chemistry-memory-and-longevity-explained" target="_blank" rel="noopener noreferrer">Lescento — why perfume smells different on everyone</a></li>
+      <li><a href="https://www.alphaaromatics.com/blog/perfumes-smell-differently/" target="_blank" rel="noopener noreferrer">Alpha Aromatics — why perfumes smell differently</a></li>
+      <li>I am also a source here, as I am talking from experience with a lot of this.</li>
+    </ul>
+  </section>
+
+</article>
+
+<footer class="essay-foot">
+  <a class="essay-back" href="../categories/researches.html">← Explorations &amp; Researches</a>
+</footer>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../nav.js"></script>
+<script src="../essay.js"></script>
+<script src="../primer.js"></script>
+</body>
+</html>

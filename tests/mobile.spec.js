@@ -41,6 +41,7 @@ const PAGES = [
   "/houses/tale-parfums.html",
   "/works/theory-03.html",
   "/works/cold-vs-warm-incense.html",
+  "/works/my-personal-introduction-to-perfume.html",
   "/search.html",
   "/contact.html",
 ];

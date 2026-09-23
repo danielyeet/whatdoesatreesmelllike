@@ -318,14 +318,17 @@ body.chapter-open { --chrome-ground: rgba(11, 12, 15, 0.62); }
    glitches slightly when you click away".
 
    The window is over the menu overlay anyway (z-index 91 against 25),
-   so there was never anything for the dimming to do to it. Both
+   so there was never anything for the dimming to do to it. THE
+   FOOTNOTE POP-UP on the perfume primer (`.primer-tip`) is built on the
+   body for the same reason and fell into the same trap — it faded in
+   over 0.85s and was read see-through — so it is excluded too. Both
    selectors carry the same exclusions, and have to: the transition
    living on one and not the other is the fault the paragraph above
    this one is about. */
-body > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot):not(.note-panel):not(.note-scrim) {
+body > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot):not(.note-panel):not(.note-scrim):not(.primer-tip) {
   transition: opacity 0.85s var(--menu-ease);
 }
-body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot):not(.note-panel):not(.note-scrim) {
+body.menu-open > *:not(.menu-trigger):not(.menu-overlay):not(.cursor-ring):not(.cursor-dot):not(.note-panel):not(.note-scrim):not(.primer-tip) {
   opacity: 0.1;
 }
 
@@ -8522,4 +8525,279 @@ a.note-cite:hover { color: var(--ink); }
   .tale-to-draw .tale-tint { opacity: 0.95; }
   .tale-to-draw.tale-drawn path,
   .tale-to-draw.tale-drawn .tale-tint { transition: none; }
+}
+
+/* ==================================================================
+   MY PERSONAL INTRODUCTION TO PERFUME — an essay page of its own
+
+   works/my-personal-introduction-to-perfume.html. The essay shell —
+   the dark ground, the rule down the left — with its own ground and its
+   own accent: THE MIST (primer.js) rising behind the writing, drops of
+   perfume turning to vapour as they climb, and the warm GOLD of perfume
+   in a bottle in place of the essays' steel blue. Everything below is
+   scoped to `.primer-page`, so no other essay changes.
+
+   THE DIAGRAMS are inline SVG drawn in four classes — `pd-ink` for a
+   line, `pd-soft` for glass, `pd-gold-fill` for the liquid, `pd-label`
+   and `pd-small` for words — so the whole set is recoloured here.
+   ================================================================== */
+.primer-page { --gold: #e0b672; --gold-rgb: 224, 182, 114; }
+.primer-mist {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.primer-page .essay-head h1 { font-size: clamp(34px, 6vw, 72px); }
+.primer-page .essay-head h1 em { color: var(--gold); font-size: 0.5em; }
+.primer-page .essay-facts { border-top-color: rgba(var(--gold-rgb), 0.35); }
+.primer-page .essay-section h2 .essay-no { color: var(--gold); }
+.primer-page .essay-rule-run,
+.primer-page .essay-mark.here .essay-mark-tick { background: var(--gold); }
+.primer-page .essay-section a { color: #f1dcb4; border-bottom-color: rgba(var(--gold-rgb), 0.6); }
+.primer-page .essay-section a:hover { color: #fff; border-bottom-color: var(--gold); }
+.primer-page .essay-section strong { color: #eef1f6; font-weight: 600; }
+
+/* A FIGURE in the writing: the drawing, then a line saying what it is. */
+.primer-figure { margin: 8px 0 30px; }
+.primer-figure svg { display: block; width: 100%; height: auto; overflow: visible; }
+.primer-figure figcaption {
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  color: #8d94a3;
+}
+.primer-mix, .primer-steps { max-width: 560px; }
+.primer-pyramid { max-width: 380px; margin-left: auto; margin-right: auto; }
+.primer-bleed { max-width: 560px; }
+.primer-perform { max-width: 640px; }
+
+.primer-page .pd-ink { fill: none; stroke: #cfd6e2; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.primer-page .pd-soft path { fill: rgba(207, 214, 226, 0.04); stroke: #9aa2b2; stroke-width: 1.3; stroke-linejoin: round; }
+.primer-page .pd-gold-fill { fill: rgba(var(--gold-rgb), 0.78); }
+.primer-page .pd-pale-fill { fill: rgba(207, 214, 226, 0.16); }
+.primer-page .pd-mix-fill { fill: rgba(var(--gold-rgb), 0.42); }
+.primer-page .pd-vapour { fill: none; stroke: rgba(var(--gold-rgb), 0.7); stroke-width: 1.4; stroke-linecap: round; }
+.primer-page .pd-label { fill: #dbe1ea; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.primer-page .pd-small { fill: #8d94a3; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; }
+.primer-page .pd-gold { fill: var(--gold); }
+.primer-page .pd-axis { fill: none; stroke: rgba(150, 160, 176, 0.45); stroke-width: 1; }
+
+/* THE PYRAMID: three tiers, ruled; the second one lit in gold, getting
+   deeper towards the base the way a perfume gets heavier. */
+.primer-page .pd-tier { fill: rgba(207, 214, 226, 0.03); stroke: #9aa2b2; stroke-width: 1.3; stroke-linejoin: round; }
+.primer-page .pd-tier-1.pd-on { fill: rgba(var(--gold-rgb), 0.18); }
+.primer-page .pd-tier-2.pd-on { fill: rgba(var(--gold-rgb), 0.32); }
+.primer-page .pd-tier-3.pd-on { fill: rgba(var(--gold-rgb), 0.5); }
+.primer-page .pd-tier.pd-on { stroke: var(--gold); }
+.primer-page .pd-tier-name { fill: #8d94a3; font-family: var(--mono); font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; }
+.primer-page .pd-tier-note { fill: #f5f1e8; font-family: var(--sans); font-size: 19px; font-weight: 500; }
+
+/* THE BLEED: three waves, each rising as the one before it fades. */
+.primer-page .pd-wave { fill: none; stroke-width: 2; stroke-linecap: round; }
+.primer-page .pd-wave-1 { stroke: rgba(var(--gold-rgb), 0.55); }
+.primer-page .pd-wave-2 { stroke: rgba(var(--gold-rgb), 0.8); }
+.primer-page .pd-wave-3 { stroke: var(--gold); }
+
+/* PERFORMANCE: a sphere round the wearer, a life on the skin, a trail. */
+.primer-page .pd-ring circle { fill: none; stroke: rgba(var(--gold-rgb), 0.55); stroke-width: 1.2; stroke-dasharray: 3 5; }
+.primer-page .pd-ring circle:first-child { stroke-dasharray: none; fill: rgba(var(--gold-rgb), 0.08); }
+.primer-page .pd-person circle { fill: none; stroke: #dbe1ea; stroke-width: 1.6; }
+.primer-page .pd-person path { fill: none; stroke: #dbe1ea; stroke-width: 1.6; stroke-linecap: round; }
+.primer-page .pd-life { fill: rgba(var(--gold-rgb), 0.35); stroke: var(--gold); stroke-width: 1.3; }
+
+/* THE CONCENTRATIONS: one bar per name, placed on a 0–40% scale. */
+.primer-bars { max-width: 620px; }
+.primer-bar {
+  display: grid;
+  grid-template-columns: 150px 1fr 64px;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(150, 160, 176, 0.14);
+}
+.primer-bar-name { color: #dbe1ea; font-size: 15px; }
+.primer-bar-track { position: relative; height: 10px; background: rgba(150, 160, 176, 0.1); }
+.primer-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--from) / 40 * 100%);
+  width: calc((var(--to) - var(--from)) / 40 * 100%);
+  background: linear-gradient(90deg, rgba(var(--gold-rgb), 0.55), var(--gold));
+}
+.primer-bar-say { font-family: var(--mono); font-size: 12px; color: var(--gold); text-align: right; }
+.primer-scale {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 78px 0 164px !important;
+  font-family: var(--mono);
+  font-size: 10px !important;
+  color: #767e8d !important;
+  text-align: left !important;
+}
+
+/* THE ACCORDS: notes on the left, several to a row each, and the accord
+   they make standing tall on the right across all of them. */
+.primer-table-wrap { overflow-x: auto; margin: 6px 0 30px; }
+.primer-accords { width: 100%; max-width: 520px; border-collapse: collapse; font-size: 15px; }
+.primer-accords thead th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 0 14px 10px;
+  border-bottom: 1px solid rgba(var(--gold-rgb), 0.5);
+}
+.primer-accords td { color: #aab2c1; padding: 5px 14px; }
+.primer-accords tbody th {
+  text-align: left;
+  vertical-align: middle;
+  font-weight: 500;
+  color: #f1e3c8;
+  padding: 0 14px;
+  border-left: 1px solid rgba(var(--gold-rgb), 0.45);
+  background: rgba(var(--gold-rgb), 0.06);
+}
+.primer-accords tr.primer-group td,
+.primer-accords tr.primer-group th { border-top: 1px solid rgba(150, 160, 176, 0.22); }
+.primer-accords tr.primer-group td { padding-top: 10px; }
+
+/* THE DROPDOWN the owner asked for, on a real <details>. */
+.primer-more {
+  margin: 10px 0 20px;
+  border: 1px solid rgba(var(--gold-rgb), 0.35);
+  background: rgba(var(--gold-rgb), 0.04);
+}
+.primer-more summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  cursor: pointer;
+  list-style: none;
+  color: #eef1f6;
+  font-weight: 500;
+}
+.primer-more summary::-webkit-details-marker { display: none; }
+.primer-more-cue {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.primer-more-cue::after { content: " +"; }
+.primer-more[open] .primer-more-cue::after { content: " −"; }
+.primer-more summary:hover { background: rgba(var(--gold-rgb), 0.07); }
+.primer-more-body { padding: 2px 18px 6px; }
+
+/* A NUMBERED LIST and a MYTH'S heading. */
+.primer-list { margin: 0 0 20px; padding-left: 22px; color: #aab2c1; }
+.primer-list li { margin: 0 0 12px; padding-left: 4px; }
+.primer-list li::marker { color: var(--gold); font-family: var(--mono); font-size: 13px; }
+.primer-myth {
+  margin: 26px 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #f1e3c8;
+}
+.primer-myth::before { content: "— "; color: var(--gold); }
+
+/* THE LAST WORD, and the motto in the middle of the page, set large in
+   italics as asked: "middle of the page, somehow italics and
+   emphasized". */
+/* The block runs the whole width of the column so the motto can stand
+   in its middle; the paragraph above it keeps the writing's measure. */
+.primer-close { padding-top: clamp(40px, 7vh, 80px); }
+.primer-close p { color: #cdd4df; margin: 0 0 18px; max-width: 66ch; }
+.primer-close strong { color: #fff; font-weight: 600; }
+.primer-page .primer-motto {
+  max-width: none;
+  margin: clamp(50px, 10vh, 110px) 0 clamp(50px, 10vh, 110px);
+  text-align: center !important;
+  font-size: clamp(38px, 7vw, 84px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--gold);
+}
+.primer-motto em { font-style: italic; font-weight: 500; }
+.primer-motto::before,
+.primer-motto::after {
+  content: "";
+  display: block;
+  width: 64px;
+  height: 1px;
+  margin: 0 auto 26px;
+  background: rgba(var(--gold-rgb), 0.6);
+}
+.primer-motto::after { margin: 26px auto 0; }
+
+/* THE FOOTNOTES: a raised number in the writing, the notes at the foot,
+   and — with primer.js — each note shown beside its number too. */
+.primer-fn { font-size: 0.72em; line-height: 0; margin-left: 2px; }
+.primer-page .primer-fn a { font-family: var(--mono); color: var(--gold); border: 0; padding: 0 2px; }
+.primer-endnotes {
+  max-width: 66ch;
+  margin-top: clamp(20px, 4vh, 40px);
+  padding-top: 26px;
+  border-top: 1px solid rgba(150, 160, 176, 0.25);
+}
+.primer-endnotes h2 {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 14px;
+}
+.primer-endnotes h2 + ol, .primer-endnotes h2 + ul { margin-bottom: 34px; }
+.primer-footnotes, .primer-sources { padding-left: 20px; color: #8d94a3; font-size: 14px; line-height: 1.7; }
+.primer-footnotes li, .primer-sources li { margin: 0 0 10px; }
+.primer-footnotes li:target { color: #e8ecf3; }
+.primer-endnotes a { color: #cdd4df; text-decoration: none; border-bottom: 1px solid rgba(var(--gold-rgb), 0.5); overflow-wrap: anywhere; }
+.primer-endnotes a:hover { color: #fff; }
+.primer-back { margin-left: 4px; }
+.primer-tip {
+  position: fixed;
+  z-index: 50;
+  padding: 12px 14px;
+  background: #15171d;
+  border: 1px solid rgba(var(--gold-rgb), 0.55);
+  color: #cdd4df;
+  font-size: 13.5px;
+  line-height: 1.6;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.primer-tip.is-on { opacity: 1; transform: none; }
+.primer-tip[hidden] { display: none; }
+.primer-tip-no {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #e0b672;
+}
+
+@media (max-width: 700px) {
+  .primer-bar { grid-template-columns: 1fr 58px; gap: 4px 10px; }
+  .primer-bar-name { grid-column: 1 / -1; font-size: 14px; }
+  .primer-scale { margin: 6px 68px 0 0 !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .primer-tip { transition: none; }
 }

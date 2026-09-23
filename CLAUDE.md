@@ -101,6 +101,7 @@ which talk through five `window` globals; see the landing page's report).
 | `houses/tale-parfums.html` | **Tale Parfums**, the seventh house: four fragrances in alphabetical order, three pictures each, on a page **drawn by hand** — two handwriting faces, uneven boxes, wavy rules, and **doodles** after the house's label drawings down both margins, drawing themselves in and **boiling** under the pointer | `search.js`, `house.js`, `tale.js`, `notes-data.js`, `notes.js` | [Tale Parfums](docs/features/2026-09-23-tale-parfums.md) |
 | `individual-fragrances/individual-fragrances.html` | the **individual fragrances**: the ones that belong to no house, each with the house it did come from. What the Fragrances view of Scent descriptions opens into | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the notes](docs/features/2026-09-21-the-notes.md) |
 | `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html`, `works/cold-vs-warm-incense.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
+| `works/my-personal-introduction-to-perfume.html` | **Explorations 000**, the first result on Explorations &amp; Researches: the owner's guide to perfume on an essay page of its own — **gold** in place of the steel blue, a **mist** of drops rising behind the writing and turning to vapour, and the accords table, the two **pyramids**, a dropdown and footnotes drawn in the page | `essay.js`, `primer.js` | [the primer](docs/features/2026-09-23-my-personal-introduction-to-perfume.md) |
 | `works/theory-03.html` | the same, and the longest piece on the site: **The Note Dissemination Framework**, which argues in **diagrams** and carries a **calculator** standing in the same page | `essay.js`, `calculator.js` | [the framework](docs/features/2026-09-20-the-note-dissemination-framework.md) |
 | `works/*.html` | the other individual pieces — two templates and two sandbox pages — **and seven forwarding pages** standing where the houses used to be | none | — |
 | `search.html` | the **search page**: one field over the whole site on a dark ground of drifting specks, the answers as ruled rows carrying the trail that says where each lives, and a row of **filters** narrowing them by kind | `search.js`, `search-page.js`, `find-ground.js` | [search](docs/features/2026-09-17-the-search.md) |
@@ -111,7 +112,7 @@ Four of those page scripts are elaborate: `chamber.js` (~3,240 lines), `structur
 `almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
 (~780), `paper.js` (~580), `sun.js` (~560), `notes.js` (~475), `essay.js` (~430),
 `ataraxia.js` (~385),
-`fragrance-reader.js` (~600), `tale.js` (~480), `pineward-gallery.js`
+`fragrance-reader.js` (~600), `tale.js` (~480), `primer.js` (~230), `pineward-gallery.js`
 (~350), `house.js` (~310), `index-page.js` (~310), `thread.js` (~290), `grande.js` (~265), `search.js`
 (~270), `extras.js` (~250), `views.js` (~240), `landing.js` (~230), `nav.js` (~220),
 `search-page.js` (~190), `photography.js` (~190), `find-ground.js` (~180) and
@@ -194,7 +195,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 268 passed, 0 failed, and takes seven to twelve minutes.** If you get a
+**A clean run is 277 passed, 0 failed, and takes seven to twelve minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -285,7 +286,7 @@ Two states are easy to forget when reviewing a change:
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
   `node-scene.js`, `contact-sheet.js`, `structure.js`, `chamber.js`, `pineward.js`,
   `adar.js`, `almost-human.js`, `ataraxia.js`, `grande.js`, `house.js`, `essay.js`,
-  `calculator.js`, `sun.js`, `tale.js`,
+  `calculator.js`, `sun.js`, `tale.js`, `primer.js`,
   `index-page.js`, `fragrance-reader.js` and `style.css`, each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
   fade to nothing) do *not* check it beyond that; if you add motion there, add the guard
@@ -303,6 +304,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| My Personal Introduction to Perfume | `primer.js` | [report](docs/features/2026-09-23-my-personal-introduction-to-perfume.md) |
 | Tale Parfums, drawn by hand | `tale.js` | [report](docs/features/2026-09-23-tale-parfums.md) |
 | The fragrance reader | `fragrance-reader.js` | [report](docs/features/2026-09-22-the-fragrance-reader.md) |
 | View notes, and the Fragrances page | `notes.js`, `notes-data.js` | [report](docs/features/2026-09-21-the-notes.md) |
@@ -640,6 +642,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **Photography** | What the second **Other** page is now (`categories/other-2.html`): the frames in **sets**, in a grid that a **wide** one breaks, numbered down the margin, each with what a photographer writes on the back of a print. `photography.js`. If the owner says "Other", they mean this page before it was that. |
 | **set** (Photography) | One grouping of frames on that page, with its own number, title and line. The unit the page is read in — which is why a frame's arrival is staggered within its set rather than down the whole page. |
 | **Explorations & Researches** | What the **Researches** category is called now (`categories/researches.html`, which keeps its filename). It was **Works** for a round, which the owner then made specific. Same index layout, with a third column saying whether each piece is a **research** or an **exploration**. |
+| **the primer** | *My Personal Introduction to Perfume*, `works/my-personal-introduction-to-perfume.html` — Explorations **000**, the first row on that page. An essay page in **gold**, with the diagrams the owner asked for. Its Concentrations section arrived empty and holds the usual ranges until they replace them. |
+| **the mist** | The primer's ground: drops of perfume rising up the window and coming apart into vapour as they climb — its "From liquid to gas" as a drawing. Near the pointer they turn to gas sooner (the hand warms them), and over the writing they are drawn quietly. `primer.js`. |
 | **exploration** | One of the two kinds of thing on the Works page: going out after a smell and writing down what is there, as against a **research**, which is a material at a time. A row says which on itself, in `data-kind`. |
 | **the ground** (Pineward) | That page's paper, turned very faintly towards `--pine-green`: a 2% wash, two soft pools of it high on each side where the wood stands, and the green gathering towards the foot — which is the Roots stratum. It must stay faint; this page's accent is worth something because it is spent in so few places. |
 | **the bark** / **the two colours** | Pineward's wood is drawn in `--pine-bark` (`#4a3422`) and `--pine-green` (`#1a4a2c`) rather than in ink: the trunk is bark the whole way up, a branch runs bark at the trunk to green at its tip, and a needle is mostly green wherever it stands. One `tone()` in `pineward.js` mixes them; `BARK` and `GREEN` there keep the same pair as the stylesheet. |
@@ -708,7 +712,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **view** | One of the two ways the contact sheet page shows its category, behind the two buttons across the top: the **houses** (the sheet itself) and the **individual fragrances** (the index). `views.js` switches them, and only one is ever on the page except during the swipe. It briefly had a different pair — the **map** and **Favorites**, the second of which was the removed **register** — so if the owner says "Description portfolio" or "the Favorites view", they mean those. |
 | **houses** | The contact sheet view: one picture per house, scattered and joined by dated lines. The pictures run in order down the page — 01 at the top, then 02, 03 and so on. |
 | **fragrances** (the view) | The index view of the contact sheet page. It **used to list every fragrance on the whole site** and point back into the houses; it does not any more. It is now the way in to `individual-fragrances/individual-fragrances.html` — the perfumes that belong to no house — and carries only those. If the owner remembers it as "every one of them", that is what it was until 2026-09-21. |
-| **the glitch on the way out** | What the notes window used to do when you clicked away, and why it is worth knowing: the window is built on the `<body>` (it has to be — a fixed thing inside a transformed box is fixed to that box), which put it in reach of `body > *:not(...)`, the rule that dims the page while the Menu is open. Four `:not()` outrank `.note-panel`, so the window got the menu's `opacity 0.85s` instead of its own `opacity 300ms, transform 300ms` — and the script hid it on a 260ms timer, cutting the window AND the scrim from 0.606 opacity to nothing in one frame. Both selectors now exclude it, and the close waits for `transitionend` rather than a number. **Anything else added as a child of `body` is in the same trap.** There is a test. |
+| **the glitch on the way out** | What the notes window used to do when you clicked away, and why it is worth knowing: the window is built on the `<body>` (it has to be — a fixed thing inside a transformed box is fixed to that box), which put it in reach of `body > *:not(...)`, the rule that dims the page while the Menu is open. Four `:not()` outrank `.note-panel`, so the window got the menu's `opacity 0.85s` instead of its own `opacity 300ms, transform 300ms` — and the script hid it on a 260ms timer, cutting the window AND the scrim from 0.606 opacity to nothing in one frame. Both selectors now exclude it, and the close waits for `transitionend` rather than a number. **Anything else added as a child of `body` is in the same trap** — and the primer's footnote pop-up (`.primer-tip`) fell into it on 2026-09-23 and is excluded the same way. There is a test for each. |
 | **view notes** | The button at the foot of every fragrance's writing, and the **window** it opens over the page carrying the notes and the source. A real dialog: centred, over a scrim, with the page behind held still, closing on the scrim, on escape and on its own close. **It goes with the fragrance**: collapse the part and the window goes too, and opening the part again leaves it shut. It opened BESIDE the writing for a round, as a column in the part's own row — if the owner remembers it that way, that is what it was until they asked for a window. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
 | **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 54 of the 103 sources in the file are the house's own, against 49 on the fallback — the houses overtook it on 2026-09-22 and Les Abstraits is the first house where the fallback does not appear at all. Named per entry in `notes-data.js`, with the link the owner can check. |
 | **the olfactory landscape** | What Almost Human publishes INSTEAD of notes: five impressions rather than a list of materials. Its five fragrances carry a second button and window of their own, standing **before** View notes, with the house's own landscape in it; the notes beside it are the fallback's. It is never called a list of notes, because it is not one. |
