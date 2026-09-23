@@ -214,6 +214,127 @@
   window.addEventListener("resize", () => { if (open) rule(); });
 
   // ============================================================
+  // THE NOTES, AND THE WINDOW THEY OPEN
+  //
+  // The SAME window the house pages open, down to the class names, so
+  // that what a reader is told about a fragrance and how they are told
+  // it does not depend on which door they came in by. Built once and
+  // refilled, because there is only ever one fragrance in the reader.
+  //
+  // IT STANDS ON THE BODY, not inside the reader, and it has to: the
+  // reader is a scrolling box, and a window fixed to the viewport from
+  // inside one scrolls away with it. `.note-panel` and `.note-scrim`
+  // are already excluded from the rule that dims the page behind the
+  // Menu — the note in style.css sets out what happens to anything on
+  // the body that is not, and it has caught features before.
+  // ============================================================
+  const openNote = { body: "", name: "" };
+  let noteShut = null;
+
+  function noteWindow() {
+    if (noteShut) return noteShut;
+    const scrim = document.createElement("div");
+    scrim.className = "note-scrim";
+    scrim.hidden = true;
+    document.body.appendChild(scrim);
+
+    const win = document.createElement("div");
+    win.className = "note-panel";
+    win.id = "frag-note";
+    win.hidden = true;
+    win.setAttribute("role", "dialog");
+    win.setAttribute("aria-modal", "true");
+    win.setAttribute("aria-labelledby", "frag-note-head");
+    win.innerHTML =
+      '<div class="note-bar">' +
+        '<p class="note-head" id="frag-note-head">' +
+          '<span class="note-head-say">Notes</span>' +
+          '<span class="note-head-of"></span>' +
+        "</p>" +
+        '<button class="note-shut" type="button" aria-label="Close this">' +
+          '<span aria-hidden="true">\u00d7</span></button>' +
+      "</div>" +
+      '<div class="note-in"></div>';
+    document.body.appendChild(win);
+
+    let back = null;
+    let waiting = null;
+    let timer = 0;
+
+    function settle() {
+      window.clearTimeout(timer);
+      if (waiting) { win.removeEventListener("transitionend", waiting); waiting = null; }
+      win.hidden = true;
+      win.classList.remove("is-up");
+      scrim.hidden = true;
+      scrim.classList.remove("is-on");
+      document.body.classList.remove("note-holding");
+    }
+
+    /** THE FADE SAYS WHEN IT IS DONE, and the timer is only the
+        backstop. Cutting a window and its scrim on a number is the bug
+        that shipped once on the house pages; it is not repeated. */
+    function close(atOnce) {
+      if (win.hidden) return;
+      win.classList.remove("is-up");
+      scrim.classList.remove("is-on");
+      const to = back; back = null;
+      if (atOnce || REDUCE_MOTION) settle();
+      else {
+        waiting = (e) => {
+          if (e.target !== win || e.propertyName !== "opacity") return;
+          settle();
+        };
+        win.addEventListener("transitionend", waiting);
+        timer = window.setTimeout(settle, 900);
+      }
+      if (to && !atOnce) to.focus({ preventScroll: true });
+    }
+
+    function up(from) {
+      settle();
+      back = from || null;
+      win.querySelector(".note-head-of").textContent = openNote.name;
+      win.querySelector(".note-in").innerHTML = openNote.body;
+      scrim.hidden = false;
+      win.hidden = false;
+      document.body.classList.add("note-holding");
+      if (REDUCE_MOTION) {
+        scrim.classList.add("is-on");
+        win.classList.add("is-up");
+      } else {
+        // Two frames: one for the browser to take the window as being
+        // where it starts from, one to move it.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          scrim.classList.add("is-on");
+          win.classList.add("is-up");
+        }));
+      }
+      const shut = win.querySelector(".note-shut");
+      if (shut) shut.focus({ preventScroll: true });
+    }
+
+    scrim.addEventListener("click", () => close(false));
+    win.querySelector(".note-shut").addEventListener("click", () => close(false));
+    noteShut = { up: up, close: close, showing: () => !win.hidden };
+    return noteShut;
+  }
+
+  /** The button at the foot of the writing. One per opening, because
+      the reader's contents are rebuilt for each fragrance. */
+  function noteButton() {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "note-open";
+    button.setAttribute("aria-haspopup", "dialog");
+    button.setAttribute("aria-controls", "frag-note");
+    button.innerHTML = '<span class="note-open-mark" aria-hidden="true"></span>' +
+      '<span class="note-open-say">View notes</span>';
+    button.addEventListener("click", () => noteWindow().up(button));
+    return button;
+  }
+
+  // ============================================================
   // OPENING ONE
   // ============================================================
   const safe = (t) => String(t).replace(/&/g, "&amp;")
@@ -265,14 +386,29 @@
         'It is on <a href="' + WHERE + '#part-' + no + '">its own page</a>.</p>';
     });
 
-    // The notes, by the same renderer every house page uses.
+    // THE NOTES, BEHIND A BUTTON — the same renderer AND the same shape
+    // every other page on the site uses.
+    //
+    // They were printed flat here, under a "Notes" heading, which made
+    // this the one place on the site where a fragrance's notes were
+    // simply laid out down the page. The owner asked for it to be "also
+    // click to open", and they are right that it was the odd one out:
+    // a house page, the Favourites card and now this all put the notes
+    // behind View notes and open the same window.
+    //
+    // It matters more here than anywhere, in fact. Some of these
+    // windows carry TWO lists — Haxan's is the perfumer's own account
+    // above and the fallback's reading below — and printed flat that is
+    // a wall of material between the writing and the foot of the page.
     const notes = reader.querySelector(".frag-notes");
     const all = window.FRAGRANCE_NOTES || {};
     const panel = window.NOTE_PANEL;
-    notes.innerHTML = panel
-      ? '<p class="frag-notes-head">Notes</p>' +
-          panel.html(all["individual:" + no], "frag-notes-" + no)
-      : "";
+    notes.innerHTML = "";
+    if (panel) {
+      openNote.body = panel.html(all["individual:" + no], "frag-notes-" + no);
+      openNote.name = reader.querySelector(".frag-name").textContent.trim();
+      notes.appendChild(noteButton());
+    }
 
     rule();
     reader.hidden = false;
@@ -297,6 +433,12 @@
   function hide() {
     if (busy || !open) return;
     busy = true;
+    // THE NOTES WINDOW GOES WITH THE FRAGRANCE, exactly as it does on a
+    // house page when a part is collapsed: there is no sense easing a
+    // window shut over a page that is already leaving. At once, and
+    // without handing the keyboard back to a button that is about to
+    // stop existing.
+    if (noteShut) noteShut.close(true);
 
     const done = () => {
       reader.hidden = true;
@@ -412,7 +554,11 @@
 
   document.addEventListener("keydown", (event) => {
     if (!open) return;
-    if (event.key === "Escape" || event.key === "Esc") hide();
+    if (event.key !== "Escape" && event.key !== "Esc") return;
+    // OUT OF THE NOTES WINDOW FIRST, then out of the reader — one level
+    // at a time, which is what Escape does everywhere else on this site.
+    if (noteShut && noteShut.showing()) { noteShut.close(false); return; }
+    hide();
   });
 
   // Leaving the Fragrances view by its own button closes whatever is

@@ -51,20 +51,26 @@
   // beat before the flicking starts. Going straight into the cuts from
   // a blank page is a jolt; a moment of the piece itself first reads
   // as a projector being started rather than as a page loading.
-  // NINE CUTS, AND HALF AGAIN AS LONG AS THEY FIRST WERE. It was 18
-  // cuts over about three seconds; halving both was too much of a good
-  // thing, and the owner asked for the flashing back up by half. So it
-  // is 9 cuts over about a second and a half: the count stays where it
-  // was asked to be and each cut is held longer. They slow steeply
-  // (FLIP_SLOW), so it still ends by coming to rest rather than
-  // stopping.
+  // HOW MANY CUTS IS NOW THE NUMBER OF PICTURES, and it used to be a
+  // number of its own. It was 18 cuts over about three seconds, then 9
+  // over about a second and a half when the owner asked for the
+  // flashing halved. Then they asked that no picture ever be repeated
+  // inside a run, and that settles the count for them: one cut per
+  // picture, and no more to be had. The cuts still slow steeply from
+  // FLIP_FIRST_MS to FLIP_LAST_MS, so however many there are it still
+  // ends by coming to rest rather than stopping.
   // The BEAT BEFORE IT STARTS is not part of what the owner asked to
   // be halved — that was the cycling — and it is what makes the page
   // read as a projector being started. Left where it was.
   const FLIP_HOLD_MS = 250;
   const FLIP_FIRST_MS = 48;
-  const FLIP_SLOW = 1.29;
   const FLIP_LAST_MS = 375;
+  // FLIP_SLOW, which used to be how much longer each cut was held than
+  // the one before it, is gone: the ramp is worked out from the number
+  // of cuts now rather than the number of cuts from the ramp. See the
+  // reel in `flick()` — no picture may be shown twice, so how many cuts
+  // there are is decided by how many pictures there are, and the
+  // slowing has to fit that rather than the other way round.
 
   // The map. Sizes are shares of the sheet's own width, so the whole
   // arrangement scales rather than being pinned to one screen.
@@ -1307,13 +1313,17 @@
   }
 
   function flick() {
-    // How many cuts there will be, worked out before any of them run.
-    let steps = 0;
-    for (let held = FLIP_FIRST_MS; held <= FLIP_LAST_MS; held *= FLIP_SLOW) steps++;
-
     // THE REEL: the order the pictures go past in, worked out in full
-    // before the first cut. It is every picture BUT the one it will land
-    // on, cycling, and then that one last.
+    // before the first cut. Every picture BUT the one it will land on,
+    // each of them ONCE, in a shuffled order — and then the landing
+    // picture last.
+    //
+    // NO PICTURE IS EVER SHOWN TWICE. The owner asked for the cycling
+    // to be "randomized but any one thing is never repeated". It used
+    // to roll a fresh pick for each cut and only refuse the same
+    // picture TWICE RUNNING, which on a short sheet meant the same two
+    // or three came round again and again inside one run — random, but
+    // plainly repeating. A shuffle without replacement cannot do that.
     //
     // THE LANDING PICTURE MUST NOT COME ROUND IN THE MIDDLE OF THE RUN.
     // The reel used to be the whole list cycling by index, so the first
@@ -1326,28 +1336,31 @@
     // Ending the reel ON the landing picture is the other half of it:
     // `settle` shows that same picture, so settling is not a cut and
     // there is no last blink.
-    // AND IN NO ORDER. It used to run straight down the list, which on
-    // a page whose pictures are mostly hatching read as a counter
-    // ticking rather than as a reel; the owner asked for it random.
+    //
     // `Math.random` rather than the map's own seeded one, on purpose:
     // the ARRANGEMENT has to come out the same every visit and the reel
     // has to not, and drawing from the seeded run here would shift
     // every picture on the page.
     const reel = [];
-    let last = -1;
-    for (let n = 0; n < Math.max(1, steps - 1); n++) {
-      let pick = 0;
-      if (frames.length > 1) {
-        // Never twice running: the same picture held for two cuts is a
-        // stall, not a cut.
-        do {
-          pick = 1 + Math.floor(Math.random() * (frames.length - 1));
-        } while (pick === last && frames.length > 2);
-      }
-      last = pick;
-      reel.push(pick);
+    for (let n = 1; n < frames.length; n++) reel.push(n);
+    // Fisher-Yates, which is the only shuffle that is actually uniform:
+    // sorting by a random comparator is not, and it is the usual way
+    // this gets written wrong.
+    for (let n = reel.length - 1; n > 0; n--) {
+      const m = Math.floor(Math.random() * (n + 1));
+      const swap = reel[n]; reel[n] = reel[m]; reel[m] = swap;
     }
     reel.push(0);
+
+    // AND THE SLOWING IS FITTED TO THE REEL, not the reel to the
+    // slowing. How many cuts there are is now decided by how many
+    // pictures there are — which changes when the owner adds or removes
+    // a frame — so the hold is ramped from FLIP_FIRST_MS to
+    // FLIP_LAST_MS across however many that is. However long the reel,
+    // it still starts fast and still comes to rest.
+    const ramp = reel.length > 1
+      ? Math.pow(FLIP_LAST_MS / FLIP_FIRST_MS, 1 / (reel.length - 1))
+      : 1;
 
     let at = 0;
     let hold = FLIP_FIRST_MS;
@@ -1362,7 +1375,7 @@
     const step = () => {
       show(reel[at]);
       at++;
-      hold *= FLIP_SLOW;
+      hold *= ramp;
       if (at >= reel.length) {
         setTimeout(settle, Math.round(hold));
         return;

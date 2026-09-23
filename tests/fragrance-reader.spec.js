@@ -77,11 +77,33 @@ test("it carries the picture, the writing and the notes", async ({ page }) => {
   expect(said.trim().length, "the writing should have been fetched").toBeGreaterThan(20);
   expect(said, "and it should not still be waiting on the fetch").not.toContain("Fetching");
 
-  // THE NOTES, by the same renderer a house page uses — Haxan's two
-  // halves, two headings, two sources.
-  await expect(reader.locator(".frag-notes .note-half")).toHaveCount(2);
-  await expect(reader.locator(".frag-notes .note-cite")).toHaveCount(2);
-  await expect(reader.locator(".frag-notes .note-row")).toHaveCount(2);
+  // THE NOTES, BEHIND A BUTTON. They were printed flat here, which made
+  // this the one place on the site where a fragrance's notes were laid
+  // out down the page instead of opening in a window. The owner asked
+  // for it to be "also click to open", so what stands at the foot of
+  // the writing is the same View notes button every house page carries.
+  await expect(reader.locator(".frag-notes .note-open")).toHaveCount(1);
+  await expect(reader.locator(".frag-notes .note-row"),
+    "the notes should not be printed flat any more").toHaveCount(0);
+
+  // And pressing it opens the same window, with the same contents by
+  // the same renderer — Haxan's two halves, two headings, two sources,
+  // which is the most a window on this site has to render.
+  await reader.locator(".frag-notes .note-open").click();
+  const win = page.locator("#frag-note");
+  await expect(win).toBeVisible();
+  await expect(win.locator(".note-head-of")).toHaveText("Haxan");
+  await expect(win.locator(".note-half")).toHaveCount(2);
+  await expect(win.locator(".note-cite")).toHaveCount(2);
+  await expect(win.locator(".note-row")).toHaveCount(2);
+
+  // ESCAPE STEPS OUT OF THE WINDOW FIRST, and leaves the reader where
+  // it is — one level at a time, which is what Escape does everywhere
+  // else on this site. Getting this wrong throws the reader away with
+  // the window and loses the fragrance you were reading.
+  await page.keyboard.press("Escape");
+  await expect(win).toBeHidden();
+  await expect(reader).toBeVisible();
 });
 
 /* THE WAY BACK, which the owner described in full: "making everything
@@ -245,14 +267,47 @@ test("a picture goes home to the right of centre, every time",
     await page.locator('.index-what a[href*="part-' + no + '"]').click();
     await page.waitForTimeout(1500);
     await page.locator(".frag-back").click();
-    await page.waitForTimeout(1500);
-    const at = await page.evaluate(() => {
+    // WAIT FOR IT TO COME TO REST, rather than sampling at a time.
+    // This read the flier at a fixed moment after the press and asked
+    // where it was — which is a question about a state asked with a
+    // stopwatch. It passed alone and failed inside a loaded run, where
+    // a heavy frame is enough to catch the picture before it has set
+    // off and read its ORIGINAL place as its landing. Haxan's own
+    // photograph arriving made that likelier, being the largest file
+    // the reader loads.
+    const at = await page.evaluate(() => new Promise((done) => {
       const f = document.querySelector(".frag-flier");
-      if (!f) return null;
-      const box = f.getBoundingClientRect();
-      return { x: box.left, y: box.top, w: window.innerWidth, h: window.innerHeight };
-    });
+      if (!f) { done(null); return; }
+      const where = () => {
+        const b = f.getBoundingClientRect();
+        return b.left + "," + b.top;
+      };
+      // HOME IS A SIZE, NOT A STILLNESS, and that is the whole trick.
+      // Waiting for the picture to stop moving catches it during the
+      // beat where it SQUARES UP — it is stationary then, still sitting
+      // on the article's own box — and reads that as its landing. What
+      // is unambiguous is that it comes to rest at exactly ONE CELL of
+      // the grid, which is nothing like the size it set off at.
+      const cell = parseFloat(getComputedStyle(document.documentElement)
+        .getPropertyValue("--grid-cell")) || 46;
+      const began = performance.now();
+      const look = () => {
+        // Gone home and faded out from under us: nothing to measure.
+        if (!f.isConnected) { done(null); return; }
+        const b = f.getBoundingClientRect();
+        if (Math.abs(b.width - cell) < 4 || performance.now() - began > 4000) {
+          done({ x: b.left, y: b.top, w: window.innerWidth, h: window.innerHeight,
+                 wide: b.width, cell: cell });
+          return;
+        }
+        requestAnimationFrame(look);
+      };
+      requestAnimationFrame(look);
+    }));
     expect(at, `part ${no} should still be landing`).toBeTruthy();
+    expect(Math.abs(at.wide - at.cell),
+      `part ${no} should have come to rest at one cell, not ${Math.round(at.wide)}px`)
+      .toBeLessThan(4);
     landings.push(at);
     await page.waitForTimeout(1300);
   }
