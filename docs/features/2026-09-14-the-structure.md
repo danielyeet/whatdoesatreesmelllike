@@ -316,3 +316,8 @@ convention any row may use — and no row uses it at the moment.
   show yet.
 - The look of this page is a live subject; the owner has asked for several rounds on it
   and may ask for more.
+
+**And again on 2026-09-23**, in the full run of the primer's corrections (0.642 against
+0.65). Checked the way the paragraph above says: `theories.html`, `structure.js`,
+`nav.js`, `search.js` and `page-search.js` unchanged, and the only lines `style.css` gained
+were inside `.primer-*` rules this page never uses. It then passed 5 of 5 on its own.

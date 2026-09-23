@@ -131,3 +131,36 @@ nuances; point at a footnote number.
 - **"this research about skin"** in *Smelling strip and skin* points at a research that
   does not exist on the site yet, so it is not a link. When it is written, link it there.
 - The row's date is the day the piece was put on the site, 23.09.2026.
+
+## 2026-09-23, later — the owner's corrections
+
+- **Concentrations is written.** The owner sent the section: a paragraph on what the names
+  mean and that they are unregulated, **their own table of ranges** (Extrait de parfum /
+  parfum 15–30%, Eau de parfum 10–20%, Eau de toilette 5–15%, Eau de cologne 2–5%, Eau
+  fraîche / brume 1–3%) drawn as the bars on a 0–30% scale so the **overlap** the next
+  paragraph points at can be seen, the source (Premiere Peau, opening in a new window —
+  the address given without the search engine's tracking tag on the end), and three
+  paragraphs after it: the overlap, Amouage's Epic 56 Woman at 56%, and *Esprit*. The
+  "arrived empty" note above no longer holds. Spellcheck: *Notice that the overlap* →
+  *Notice the overlap*, *gague* → *gauge*.
+- **The oil + alcohol drawing adds up.** *"make the third diagram's volume be the sum of
+  the first two"* — all three are now the same vial, so the levels add as heights: oil 16,
+  alcohol 56, perfume 72. The oil is now a small part of it, which is also truer. The
+  perfume keeps a spray cap and is captioned *both together*.
+- **The liquid-to-gas drawing is gone**, at the owner's word; its words stay.
+- **After the accords table**, the owner's paragraph on describing a perfume by its accord.
+- **The pyramid is a true triangle.** *"why is it weird"* — its base band flared out at a
+  steeper slope than the two above it, so the sides kinked at the second line. Both
+  pyramids are now one triangle cut into three bands of equal height.
+- **The motto has its full stop**: *Wear what you like.*
+- **The rule said "Introduction" near the end.** Past the last section — the motto, the
+  footnotes, the sources — no section is on the window, and `essay.js` fell back to the
+  first one. It now names the last section passed. That is a fix to the shared essay
+  script, and changes nothing on any page while a section is in view.
+
+Tested in `tests/primer.spec.js`: the perfume holds exactly the other two (same width,
+heights adding); the ranges are the owner's and each reaches the next; the liquid-to-gas
+section has no figure; **the pyramids' sides do not bend** (with the old base band put
+back it reports *a side bends by 3.17*); and **past the last section the rule names it**
+(with the old fallback it reads *Introduction*). The motto test now asks for the full
+stop.

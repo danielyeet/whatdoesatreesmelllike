@@ -374,7 +374,20 @@
       const room2 = filling(section);
       if (room2 > most) { most = room2; biggest = i; }
     });
-    return arrived >= 0 ? arrived : biggest;
+    if (arrived >= 0) return arrived;
+    // NO SECTION ON THE WINDOW AT ALL — past the last one, reading what
+    // stands after it (the perfume primer's last word, its footnotes and
+    // its sources). It used to fall through to the first section, so the
+    // rule said "Introduction" three screens from the end. The last
+    // section you have passed is where you are.
+    if (most === 0) {
+      let passed = 0;
+      sections.forEach((section, i) => {
+        if (section.getBoundingClientRect().top < 0) passed = i;
+      });
+      return passed;
+    }
+    return biggest;
   }
 
   // How far through the piece the reading is. It is the SCROLL and

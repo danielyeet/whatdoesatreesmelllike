@@ -173,3 +173,11 @@ is the only place on the site set in a serif. See
   out waiting for a file.
 - The rule is built from the sections in the markup, so a page whose writing arrives
   with a different number of sections needs nothing done to it.
+
+## 2026-09-23 — past the last section
+
+`readingAt` had no answer for a window with **no section on it at all** — reading what
+stands after the last one, as the perfume primer's motto, footnotes and sources do — and
+fell through to the first section, so the rule said "Introduction" a few screens from the
+end. It now names the last section whose top has been passed. Nothing changes while any
+section is in view. Tested in `tests/primer.spec.js`.

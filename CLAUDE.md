@@ -195,7 +195,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 282 passed, 0 failed, and takes seven to twelve minutes.** If you get a
+**A clean run is 287 passed, 0 failed, and takes seven to twelve minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -642,7 +642,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **Photography** | What the second **Other** page is now (`categories/other-2.html`): the frames in **sets**, in a grid that a **wide** one breaks, numbered down the margin, each with what a photographer writes on the back of a print. `photography.js`. If the owner says "Other", they mean this page before it was that. |
 | **set** (Photography) | One grouping of frames on that page, with its own number, title and line. The unit the page is read in — which is why a frame's arrival is staggered within its set rather than down the whole page. |
 | **Explorations & Researches** | What the **Researches** category is called now (`categories/researches.html`, which keeps its filename). It was **Works** for a round, which the owner then made specific. Same index layout, with a third column saying whether each piece is a **research** or an **exploration**. |
-| **the primer** | *My Personal Introduction to Perfume*, `works/my-personal-introduction-to-perfume.html` — Explorations **000**, the first row on that page. An essay page in **gold**, with the diagrams the owner asked for. Its Concentrations section arrived empty and holds the usual ranges until they replace them. |
+| **the primer** | *My Personal Introduction to Perfume*, `works/my-personal-introduction-to-perfume.html` — Explorations **000**, the first row on that page. An essay page in **gold**, with the diagrams the owner asked for: oil + alcohol (the perfume holding exactly the two), the concentrations as overlapping bars from the owner's own table, the accords table, and two pyramids that are one true triangle cut in three. |
 | **the mist** | The primer's ground: drops of perfume rising up the window and coming apart into vapour as they climb — its "From liquid to gas" as a drawing. Near the pointer they turn to gas sooner (the hand warms them), and over the writing they are drawn quietly. `primer.js`. |
 | **exploration** | One of the two kinds of thing on the Works page: going out after a smell and writing down what is there, as against a **research**, which is a material at a time. A row says which on itself, in `data-kind`. |
 | **the ground** (Pineward) | That page's paper, turned very faintly towards `--pine-green`: a 2% wash, two soft pools of it high on each side where the wood stands, and the green gathering towards the foot — which is the Roots stratum. It must stay faint; this page's accent is worth something because it is spent in so few places. |
