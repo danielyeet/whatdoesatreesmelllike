@@ -91,8 +91,9 @@
     no description.
 
     `data-ground` is the drawing that stands behind that chapter's
-    page. There is one at the moment — "sun" — and a chapter without
-    the attribute gets plain black, as it always did.
+    page. There are two — "sun" (sun.js) behind Chapter 1 and "moon"
+    (moon.js) behind Chapter 2 — and a chapter without the attribute
+    gets plain black, as it always did.
 
     A <p class="gallery-aside"> inside a block is set apart from the
     writing above it: a note about the chapter rather than part of the
@@ -106,7 +107,7 @@
       <p class="gallery-aside">The fragrances are not ranked nor ordered in any way. This is not a &quot;top-10 list&quot; and shouldn&#8217;t be treated like one.</p>
     </section>
 
-    <section class="gallery-chapter" data-chapter="Chapter 2">
+    <section class="gallery-chapter" data-chapter="Chapter 2" data-ground="moon">
       <p>To be determined...</p>
     </section>
 
@@ -144,6 +145,7 @@
 <script src="../notes-data.js"></script>
 <script src="../notes.js"></script>
 <script src="../sun.js"></script>
+<script src="../moon.js"></script>
 <script src="../chamber.js"></script>
 </body>
 </html>

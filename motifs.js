@@ -11,8 +11,9 @@
 // own page — Pineward's trees and needles, ADAR's soundings and dust,
 // Almost Human's figures that nearly come together and its rain,
 // Ataraxia's bands of light, Grande's drift, Les Abstraits' smoke and
-// embers off Des Cendres' fire, Tale's doodles, Tombstone's stones in
-// the mist, and Qimu & Musicians' notes, records and a line of sound.
+// embers off Des Cendres' fire, Tale's doodles, Tombstone's names cut
+// into the wall and its roots and flowers, and Qimu & Musicians' staves
+// with notes coming and going on them.
 //
 // THEY GATHER RATHER THAN APPEAR. Nothing is there the moment a house
 // is rested on: things are born one at a time and each comes up over
@@ -377,173 +378,229 @@
     };
   }
 
-  // ---------- TOMBSTONE: stones standing up out of the mist, petals ----------
-  function stone() {
-    const w = rand(26, 54), h = w * rand(1.3, 2.1);
-    const at = spot(h * 0.6, H * 0.35, H - 10);
-    if (!at) return null;
-    const round = Math.random() < 0.5;
-    const tone = Math.round(rand(96, 170));
+  // ---------- TOMBSTONE: epitaphs chiselled and weathering, roots, flowers ----------
+  // It was stones standing up out of mist for a round; the owner asked
+  // for "something different". So: the house's own five names cut into
+  // the wall letter by letter, as an epitaph is, and worn away again;
+  // and roots creeping in from the edges of the page with small red
+  // flowers opening at their tips — the house's card for Evergrow,
+  // "Fade and flourish, forever growing".
+  const EPITAPHS = ["3 Feet 5", "Evergrow", "No Need to Come By", "Sing at My Funeral", "Sweet Coffin"];
+  function epitaph() {
+    const words = pick(EPITAPHS);
+    const big = rand(22, 36);
+    const wide = words.length * big * 0.56;
+    const at = spot(Math.max(wide / 2, 30));
+    if (!at || at.x - wide / 2 < 8 || at.x + wide / 2 > W - 8) return null;
+    const rule = Math.random() < 0.6;
     return {
-      life: rand(6000, 9000),
+      life: rand(5200, 7600),
       draw(c, age, a) {
-        const rise = (1 - ease(age / 2400)) * 18;
-        const x = at.x - w / 2, y = at.y - h + rise;
-        c.beginPath();
-        if (round) {
-          c.moveTo(x, at.y + rise);
-          c.lineTo(x, y + w / 2);
-          c.arc(x + w / 2, y + w / 2, w / 2, Math.PI, 0);
-          c.lineTo(x + w, at.y + rise);
-        } else {
-          c.rect(x, y, w, h);
+        // Cut in a letter at a time, and worn away evenly at the end.
+        const cut = Math.min(words.length, Math.floor(age / 85));
+        const shown = words.slice(0, cut);
+        c.save();
+        c.font = "italic " + big.toFixed(0) + "px Georgia, 'Times New Roman', serif";
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        // The cut: a dark stroke with a pale edge under it, which is how
+        // letters cut into stone read.
+        c.fillStyle = "rgba(255,255,255," + (0.8 * a) + ")";
+        c.fillText(shown, at.x + 0.8, at.y + 1);
+        c.fillStyle = "rgba(" + INK + "," + (0.62 * a) + ")";
+        c.fillText(shown, at.x, at.y);
+        if (rule && cut === words.length) {
+          const half = Math.min(wide / 2, 90) * ease((age - words.length * 85) / 600);
+          c.strokeStyle = "rgba(" + INK + "," + (0.35 * a) + ")";
+          c.lineWidth = 0.8;
+          c.beginPath();
+          c.moveTo(at.x - half, at.y + big * 0.8);
+          c.lineTo(at.x + half, at.y + big * 0.8);
+          c.stroke();
         }
-        c.closePath();
-        c.fillStyle = "rgba(" + tone + "," + tone + "," + (tone + 2) + "," + (0.55 * a) + ")";
-        c.fill();
-        c.strokeStyle = "rgba(" + INK + "," + (0.6 * a) + ")";
-        c.lineWidth = 1.1;
-        c.stroke();
-        // The mist at its foot.
-        const g = c.createLinearGradient(0, at.y - 22, 0, at.y + 4);
-        g.addColorStop(0, "rgba(255,255,255,0)");
-        g.addColorStop(1, "rgba(255,255,255," + (0.95 * a) + ")");
-        c.fillStyle = g;
-        c.fillRect(x - 12, at.y - 22, w + 24, 30);
-      },
-    };
-  }
-  function mist() {
-    const at = spot(10, H * 0.2, H);
-    if (!at) return null;
-    const wide = rand(160, 380), tall = rand(20, 46), drift = rand(-0.012, 0.012);
-    return {
-      life: rand(6000, 9000),
-      draw(c, age, a) {
-        const x = at.x + drift * age;
-        const g = c.createRadialGradient(x, at.y, 0, x, at.y, wide / 2);
-        g.addColorStop(0, "rgba(150,152,154," + (0.16 * a) + ")");
-        g.addColorStop(1, "rgba(150,152,154,0)");
-        c.save();
-        c.translate(x, at.y);
-        c.scale(1, tall / wide);
-        c.translate(-x, -at.y);
-        c.fillStyle = g;
-        c.beginPath();
-        c.arc(x, at.y, wide / 2, 0, Math.PI * 2);
-        c.fill();
         c.restore();
       },
     };
   }
-  function petal() {
-    const at = spot(3, -10, H * 0.7);
-    if (!at) return null;
-    let spin = rand(0, 6);
+  function roots() {
+    // In from one of the four edges, mostly the bottom.
+    const edge = Math.random() < 0.55 ? "bottom" : pick(["left", "right", "top"]);
+    let x, y, dir;
+    if (edge === "bottom") { x = rand(0, W); y = H + 4; dir = -Math.PI / 2; }
+    else if (edge === "top") { x = rand(0, W); y = CHROME; dir = Math.PI / 2; }
+    else if (edge === "left") { x = -4; y = rand(CHROME, H); dir = 0; }
+    else { x = W + 4; y = rand(CHROME, H); dir = Math.PI; }
+    // The whole root is worked out at birth, as segments with the time
+    // each is reached; drawing it is drawing the segments reached so far.
+    const segs = [];
+    const tips = [];
+    const grow = (px, py, d, len, width, at, depth) => {
+      let cx = px, cy = py, t = at;
+      const steps = Math.round(len / 7);
+      for (let s = 0; s < steps; s++) {
+        d += (Math.random() - 0.5) * 0.5;
+        const nx = cx + Math.cos(d) * 7, ny = cy + Math.sin(d) * 7;
+        segs.push({ x0: cx, y0: cy, x1: nx, y1: ny, t, w: width * (1 - s / steps * 0.7) });
+        cx = nx; cy = ny; t += 38;
+        if (depth < 3 && Math.random() < 0.09) {
+          grow(cx, cy, d + (Math.random() < 0.5 ? -1 : 1) * rand(0.5, 1.1), len * rand(0.35, 0.6), width * 0.6, t, depth + 1);
+        }
+      }
+      tips.push({ x: cx, y: cy, t, bloom: Math.random() < 0.55 });
+    };
+    grow(x, y, dir, rand(140, 300), rand(1.6, 2.6), 0, 0);
     return {
-      life: rand(3500, 6000),
+      life: rand(7000, 9500),
       draw(c, age, a) {
-        spin += 0.03;
-        c.fillStyle = "rgba(" + PETAL + "," + (0.7 * a) + ")";
-        c.save();
-        c.translate(at.x + Math.sin(age / 700) * 14, at.y + age * 0.028);
-        c.rotate(spin);
-        c.beginPath();
-        c.ellipse(0, 0, 3.4, 1.7, 0, 0, Math.PI * 2);
-        c.fill();
-        c.restore();
+        c.lineCap = "round";
+        for (const s of segs) {
+          if (s.t > age) continue;
+          if (!clearOf((s.x0 + s.x1) / 2, (s.y0 + s.y1) / 2, 2)) continue;
+          c.strokeStyle = "rgba(92, 70, 52," + (0.7 * a) + ")";
+          c.lineWidth = s.w;
+          c.beginPath();
+          c.moveTo(s.x0, s.y0);
+          c.lineTo(s.x1, s.y1);
+          c.stroke();
+        }
+        for (const tip of tips) {
+          if (!tip.bloom || tip.t > age || !clearOf(tip.x, tip.y, 6)) continue;
+          const open = ease((age - tip.t) / 900);
+          for (let k = 0; k < 5; k++) {
+            const pa = (k / 5) * Math.PI * 2 + tip.x;
+            c.fillStyle = "rgba(" + PETAL + "," + (0.78 * a) + ")";
+            c.beginPath();
+            c.ellipse(tip.x + Math.cos(pa) * 3 * open, tip.y + Math.sin(pa) * 3 * open, 2.8 * open, 1.6 * open, pa, 0, Math.PI * 2);
+            c.fill();
+          }
+          c.fillStyle = "rgba(60, 30, 20," + (0.8 * a) + ")";
+          c.fillRect(tip.x - 1, tip.y - 1, 2, 2);
+        }
+      },
+    };
+  }
+  function soil() {
+    const at = spot(2, H * 0.3, H);
+    if (!at) return null;
+    return {
+      life: rand(3000, 5000),
+      draw(c, age, a) {
+        c.fillStyle = "rgba(92, 70, 52," + (0.45 * a) + ")";
+        c.fillRect(at.x + Math.sin(age / 600 + at.y) * 3, at.y - age * 0.006, 1.6, 1.6);
       },
     };
   }
 
-  // ---------- QIMU & MUSICIANS: notes rising, a record turning, a line of sound ----------
-  function note() {
-    const at = spot(14, H * 0.3, H + 10);
-    if (!at) return null;
-    const two = Math.random() < 0.4, size = rand(12, 20), rise = rand(0.02, 0.045), sway = rand(8, 18);
-    return {
-      life: rand(4000, 6500),
+  // ---------- QIMU & MUSICIANS: staves, and notes that come and go on them ----------
+  // The owner: "make it so that it is 5 lines like music sheets, and add
+  // ephemeral notes to that." A stave is five lines drawn across the
+  // page from left to right; notes appear on its lines and in its
+  // spaces, a few at a time, sit there for a moment and are gone.
+  const staves = [];
+  const GAP = 9;                         // between one line of a stave and the next
+  function stave() {
+    // Forget the staves that have gone.
+    for (let i = staves.length - 1; i >= 0; i--) if (!things.includes(staves[i])) staves.splice(i, 1);
+    // Kept clear of the other staves standing, so two never print over
+    // each other.
+    let y = null;
+    for (let i = 0; i < 10; i++) {
+      const tryY = rand(CHROME + 24, H - 70);
+      if (staves.every((s) => s.ending || Math.abs(s.y - tryY) > GAP * 9)) { y = tryY; break; }
+    }
+    if (y === null) return null;
+    const x0 = rand(-40, W * 0.25), x1 = rand(W * 0.7, W + 40);
+    const bars = [];
+    for (let x = x0 + rand(140, 220); x < x1 - 40; x += rand(150, 240)) bars.push(x);
+    const one = {
+      y, x0, x1, bars,
+      life: rand(8000, 11000),
       draw(c, age, a) {
-        const x = at.x + Math.sin(age / 500) * sway, y = at.y - rise * age;
-        c.fillStyle = c.strokeStyle = "rgba(" + QIMU_BLUE + "," + (0.75 * a) + ")";
-        c.lineWidth = 1.4;
-        const heads = two ? [[0, 0], [size * 0.9, -size * 0.25]] : [[0, 0]];
-        heads.forEach(([hx, hy]) => {
+        const reach = x0 + (x1 - x0) * ease(age / 1300);
+        c.strokeStyle = "rgba(" + QIMU_BLUE + "," + (0.55 * a) + ")";
+        c.lineWidth = 0.9;
+        for (let k = 0; k < 5; k++) {
           c.beginPath();
-          c.ellipse(x + hx, y + hy, size * 0.3, size * 0.21, -0.35, 0, Math.PI * 2);
-          c.fill();
+          c.moveTo(x0, y + k * GAP);
+          c.lineTo(reach, y + k * GAP);
+          c.stroke();
+        }
+        // The bar lines, as the stave reaches them, and the time at the
+        // head of it.
+        bars.forEach((bx) => {
+          if (bx > reach) return;
           c.beginPath();
-          c.moveTo(x + hx + size * 0.27, y + hy - 1);
-          c.lineTo(x + hx + size * 0.27, y + hy - size * 1.2);
+          c.moveTo(bx, y);
+          c.lineTo(bx, y + 4 * GAP);
           c.stroke();
         });
-        c.beginPath();
-        if (two) {
-          c.lineWidth = 3;
-          c.moveTo(x + size * 0.27, y - size * 1.2);
-          c.lineTo(x + size * 1.17, y - size * 1.45);
-        } else {
-          c.moveTo(x + size * 0.27, y - size * 1.2);
-          c.quadraticCurveTo(x + size * 0.8, y - size * 0.9, x + size * 0.6, y - size * 0.45);
+        if (x0 + 30 < reach) {
+          c.fillStyle = "rgba(" + QIMU_BLUE + "," + (0.7 * a) + ")";
+          c.font = "bold " + Math.round(GAP * 2) + "px Georgia, serif";
+          c.textAlign = "center";
+          c.textBaseline = "middle";
+          c.fillText("4", Math.max(x0, 0) + 22, y + GAP);
+          c.fillText("4", Math.max(x0, 0) + 22, y + GAP * 3);
         }
-        c.stroke();
       },
     };
+    staves.push(one);
+    return one;
   }
-  function record() {
-    const r = rand(34, 60);
-    const at = spot(r + 6);
-    if (!at) return null;
-    const turn = rand(0.0025, 0.004);
+  function note() {
+    const live = staves.filter((s) => !s.ending && things.includes(s));
+    if (!live.length) return null;
+    const s = pick(live);
+    const x = rand(Math.max(s.x0, 0) + 50, Math.min(s.x1, W) - 20);
+    // A place on the stave: a line or a space, a little above or below.
+    const step = Math.floor(rand(-2, 11));
+    const y = s.y + 4 * GAP - step * (GAP / 2);
+    if (!clearOf(x, y, 14)) return null;
+    const up = step < 4;
+    const kind = pick(["crotchet", "crotchet", "quaver", "minim", "pair"]);
+    const drift = rand(-0.006, -0.002);
     return {
-      life: rand(5000, 7000),
+      life: rand(1500, 3200),
       draw(c, age, a) {
-        c.fillStyle = "rgba(" + INK + "," + (0.7 * a) + ")";
-        c.beginPath();
-        c.arc(at.x, at.y, r, 0, Math.PI * 2);
-        c.fill();
-        c.strokeStyle = "rgba(255,255,255," + (0.18 * a) + ")";
-        c.lineWidth = 0.6;
-        for (let g = r * 0.42; g < r - 2; g += 3.2) {
-          c.beginPath();
-          c.arc(at.x, at.y, g, 0, Math.PI * 2);
-          c.stroke();
-        }
-        // The light catching the grooves goes round with it.
-        const spin = age * turn;
-        c.strokeStyle = "rgba(255,255,255," + (0.5 * a) + ")";
+        const px = x + drift * age;
+        c.fillStyle = c.strokeStyle = "rgba(" + QIMU_BLUE + "," + (0.9 * a) + ")";
         c.lineWidth = 1.2;
-        c.beginPath();
-        c.arc(at.x, at.y, r * 0.72, spin, spin + 0.5);
-        c.stroke();
-        c.fillStyle = "rgba(240, 238, 230," + a + ")";
-        c.beginPath();
-        c.arc(at.x, at.y, r * 0.32, 0, Math.PI * 2);
-        c.fill();
-        c.fillStyle = "rgba(" + QIMU_BLUE + "," + a + ")";
-        c.beginPath();
-        c.arc(at.x, at.y, 2.2, 0, Math.PI * 2);
-        c.fill();
-      },
-    };
-  }
-  function wave() {
-    const y0 = rand(H * 0.15, H * 0.9);
-    const freq = rand(0.012, 0.03), amp = rand(10, 26);
-    return {
-      life: rand(4000, 6000),
-      draw(c, age, a) {
-        c.strokeStyle = "rgba(" + QIMU_BLUE + "," + (0.4 * a) + ")";
-        c.lineWidth = 1;
-        c.beginPath();
-        let open = false;
-        for (let x = 0; x <= W; x += 4) {
-          const env = Math.sin((x / W) * Math.PI);
-          const y = y0 + Math.sin(x * freq + age / 180) * amp * env * Math.sin(x * freq * 0.37 + age / 400);
-          if (!clearOf(x, y, 3)) { open = false; continue; }
-          if (!open) { c.moveTo(x, y); open = true; } else c.lineTo(x, y);
+        const head = (hx, hy, open) => {
+          c.beginPath();
+          c.ellipse(hx, hy, GAP * 0.62, GAP * 0.42, -0.35, 0, Math.PI * 2);
+          if (open) c.stroke(); else c.fill();
+          // Ledger lines, above or below the stave.
+          for (let l = s.y - GAP; l >= hy - 1; l -= GAP) { c.beginPath(); c.moveTo(hx - GAP, l); c.lineTo(hx + GAP, l); c.stroke(); }
+          for (let l = s.y + 5 * GAP; l <= hy + 1; l += GAP) { c.beginPath(); c.moveTo(hx - GAP, l); c.lineTo(hx + GAP, l); c.stroke(); }
+        };
+        const stem = (hx, hy) => {
+          const sx = up ? hx + GAP * 0.55 : hx - GAP * 0.55;
+          c.beginPath();
+          c.moveTo(sx, hy);
+          c.lineTo(sx, up ? hy - GAP * 3.4 : hy + GAP * 3.4);
+          c.stroke();
+          return sx;
+        };
+        if (kind === "pair") {
+          const hx2 = px + GAP * 2.6, hy2 = y;
+          head(px, y, false); head(hx2, hy2, false);
+          const s1 = stem(px, y), s2 = stem(hx2, hy2);
+          c.lineWidth = 3;
+          c.beginPath();
+          c.moveTo(s1, up ? y - GAP * 3.4 : y + GAP * 3.4);
+          c.lineTo(s2, up ? hy2 - GAP * 3.4 : hy2 + GAP * 3.4);
+          c.stroke();
+        } else {
+          head(px, y, kind === "minim");
+          const sx = stem(px, y);
+          if (kind === "quaver") {
+            const end = up ? y - GAP * 3.4 : y + GAP * 3.4;
+            c.beginPath();
+            c.moveTo(sx, end);
+            c.quadraticCurveTo(sx + GAP * 1.2, end + (up ? GAP * 1.2 : -GAP * 1.2), sx + GAP * 0.7, end + (up ? GAP * 2.4 : -GAP * 2.4));
+            c.stroke();
+          }
         }
-        c.stroke();
       },
     };
   }
@@ -557,8 +614,8 @@
     grande: [{ make: drift, rate: 45, most: 320 }],
     "les-abstraits": [{ make: smoke, rate: 1.4, most: 9 }, { make: ember, rate: 12, most: 50 }, { make: ash, rate: 8, most: 50 }],
     tale: [{ make: doodle, rate: 2.6, most: 20 }],
-    tombstone: [{ make: stone, rate: 1.8, most: 14 }, { make: mist, rate: 1, most: 8 }, { make: petal, rate: 3, most: 20 }],
-    qimu: [{ make: note, rate: 2.4, most: 18 }, { make: record, rate: 0.35, most: 2 }, { make: wave, rate: 0.5, most: 3 }],
+    tombstone: [{ make: epitaph, rate: 0.9, most: 5 }, { make: roots, rate: 1.6, most: 11 }, { make: soil, rate: 6, most: 40 }],
+    qimu: [{ make: stave, rate: 1.2, most: 5 }, { make: note, rate: 9, most: 40 }],
   };
 
   // ============================================================

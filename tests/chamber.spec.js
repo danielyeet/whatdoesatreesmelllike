@@ -934,13 +934,15 @@ test("a favourite's notes are the site's own, in this page's colours",
   expect(errors).toEqual([]);
 });
 
-/* THE SUN.
+/* THE SUN AND THE MOON.
    The owner: "The theme of chapter 1's page should be the sun; I want a
    3D massive sun in the background made of particles and geometry that
-   turns and has a character." It is asked for in the page's own markup
-   — `data-ground` on the chapter's block — so a chapter that does not
-   ask for one gets the plain black every chapter used to get. */
-test("the sun stands behind the chapter that asks for it, and nowhere else",
+   turns and has a character." And a round later: "make chapter 2 from
+   favorites have a moon spin the same way that the sun is spinning."
+   Each is asked for in the page's own markup — `data-ground` on the
+   chapter's block — and a chapter that asks for none would get the plain
+   black every chapter used to get. */
+test("the sun stands behind Chapter 1 and the moon behind Chapter 2, and both keep the writing legible",
   async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(PAGE);
@@ -951,10 +953,8 @@ test("the sun stands behind the chapter that asks for it, and nowhere else",
       name: (b.dataset.chapter || "").trim(),
       ground: (b.dataset.ground || "").trim(),
     })));
-  const withOne = asked.findIndex((c) => c.ground);
-  const without = asked.findIndex((c) => !c.ground);
-  expect(withOne, "one chapter should ask for a drawing").toBeGreaterThan(-1);
-  expect(without, "and one should not").toBeGreaterThan(-1);
+  expect(asked.map((c) => c.name + ":" + c.ground)).toEqual(["Chapter 1:sun", "Chapter 2:moon"]);
+  const withOne = 0;
 
   const rows = await page.$$eval(".chamber-chapter .chamber-name",
     (all) => all.map((el) => el.textContent.trim()));
@@ -1030,16 +1030,43 @@ test("the sun stands behind the chapter that asks for it, and nowhere else",
     "a speck over the writing is drawn at a fraction of its strength")
     .toBeLessThan(0.8);
 
-  // The other chapter has no drawing at all. Stepped to rather than
-  // opened afresh, which also says the drawing is taken off again.
-  for (let n = 0; n < rows.length; n++) {
-    if ((await page.locator(".chapter-name").textContent()).trim() === asked[without].name) break;
-    await page.locator(".chapter-step-on").click();
-    await page.waitForTimeout(900);
-  }
-  await expect(page.locator(".chapter-name")).toHaveText(asked[without].name);
-  expect(await page.locator(".chapter-ground").isVisible(),
-    asked[without].name + " asks for no drawing and should have none").toBe(false);
+  // THE MOON, stepped to rather than opened afresh — which also says
+  // one drawing is taken off and the other put on.
+  await page.locator(".chapter-step-on").click();
+  await page.waitForTimeout(2200);
+  await expect(page.locator(".chapter-name")).toHaveText("Chapter 2");
+  const moon = await page.evaluate(() => {
+    const c = document.querySelector(".chapter-ground");
+    if (!c || c.hidden) return { hidden: true };
+    const ratio = c.width / c.clientWidth;
+    const box = document.querySelector(".chapter-sheet").getBoundingClientRect();
+    const shot = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    const SOFT = 74;
+    // Compared ON THE MOON'S OWN DISC, behind the writing and beside it:
+    // the moon stands half behind the sheet, and the sky round it is
+    // nearly empty, so the whole window would compare a moon with a sky.
+    const W = innerWidth, H = innerHeight;
+    const mx = W * 0.8, my = H * 0.38, mr = Math.max(W, H) * 0.29 * 0.9;
+    let lit = 0, inSum = 0, inN = 0, outSum = 0, outN = 0;
+    for (let y = 0; y < c.height; y += 2) {
+      for (let x = 0; x < c.width; x += 2) {
+        const a = shot[(y * c.width + x) * 4 + 3];
+        if (a > 8) lit++;
+        const px = x / ratio, py = y / ratio;
+        if ((px - mx) * (px - mx) + (py - my) * (py - my) > mr * mr) continue;
+        if (px > box.left + SOFT && px < box.right - SOFT && py > box.top + SOFT && py < box.bottom - SOFT) { inSum += a; inN++; }
+        else if (px < box.left - SOFT || px > box.right + SOFT || py < box.top - SOFT || py > box.bottom + SOFT) { outSum += a; outN++; }
+      }
+    }
+    return { hidden: false, lit: lit * 4 / (c.width * c.height), in: inSum / Math.max(1, inN), out: outSum / Math.max(1, outN) };
+  });
+  expect(moon.hidden, "Chapter 2 should have its drawing").toBe(false);
+  expect(moon.lit, "and it should draw something").toBeGreaterThan(0.004);
+  // PROVED AGAINST THE FAULT: with `QUIET` set to 1 in moon.js this
+  // reads 1.91; as it stands, 0.87. The side of the disc beside the
+  // writing is also the side turned from the light, which is why the
+  // quiet one is not lower still.
+  expect(moon.in / moon.out, "and quieten itself over the writing too").toBeLessThan(1.3);
   expect(errors).toEqual([]);
 });
 
@@ -1652,4 +1679,53 @@ test("the chapter page's writing waits for the drawing to be taken off",
     "the heading comes in once the drawing is off").toBeGreaterThan(0.9);
   expect(Math.max.apply(null, after.map((one) => one.card)),
     "and so do the cards").toBeGreaterThan(0.9);
+});
+
+/* THE MOON TURNS THE SAME WAY AS THE SUN — "a moon spin the same way
+   that the sun is spinning". The same tilt of axis, the same rate, the
+   same way round: read off the two scripts, which are the only place
+   either number lives. */
+test("the moon turns on the sun's own axis, at the sun's own rate", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const read = (f) => fs.readFileSync(path.join(__dirname, "..", f), "utf8");
+  const num = (src, name) => {
+    const m = new RegExp("const " + name + " = (-?[\\d.]+);").exec(src);
+    return m ? Number(m[1]) : NaN;
+  };
+  const sun = read("sun.js"), moon = read("moon.js");
+  expect(num(moon, "TILT"), "the same tilt").toBe(num(sun, "TILT"));
+  expect(num(moon, "SPIN"), "the same rate, the same way round").toBe(num(sun, "SPIN"));
+  expect(num(sun, "SPIN")).toBeGreaterThan(0);
+});
+
+/* NEITHER CHAPTER'S PAGE IS EMPTY DOWN THE LEFT. "put some particles on
+   the left hand side of the page, it looks empty (favorites, chapters 1
+   and 2)". The sun blows its wind that way and the moon has its stars
+   there; measured in the strip between the window's left edge and the
+   writing. */
+test("both chapters have something drawn down the left of the page", async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+  const strip = () => page.evaluate(() => {
+    const c = document.querySelector(".chapter-ground");
+    const ratio = c.width / c.clientWidth;
+    const box = document.querySelector(".chapter-sheet").getBoundingClientRect();
+    const right = Math.max(40, box.left - 80);
+    const shot = c.getContext("2d").getImageData(0, 0, Math.round(right * ratio), c.height).data;
+    let lit = 0;
+    for (let i = 3; i < shot.length; i += 4) if (shot[i] > 10) lit++;
+    return lit / (shot.length / 4);
+  });
+  await page.waitForTimeout(1500);
+  const one = await strip();
+  await page.locator(".chapter-step-on").click();
+  await page.waitForTimeout(2200);
+  const two = await strip();
+  expect(one, "Chapter 1's left side has the sun's wind in it").toBeGreaterThan(0.004);
+  expect(two, "Chapter 2's left side has the moon's stars in it").toBeGreaterThan(0.004);
+  expect(errors).toEqual([]);
 });

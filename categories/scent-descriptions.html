@@ -35,12 +35,12 @@
   looked at TWO WAYS, which the two buttons across the top switch
   between:
 
-    HOUSES, the chain. One picture per house, joined one to the next
-    in a single chain that runs left to right, down, right to left, and
-    so on — the owner's drawing of 2026-09-23. It draws itself in from
-    the first house to the last. Resting the pointer on a house brings
-    that house's own motifs up over the page while the rest goes out of
-    focus; pressing it opens the house.
+    HOUSES, the hang. Every house hangs from a picture rail on a hook,
+    high and low in turn, with a museum label under it — its number and
+    its name. The wall is hung picture by picture as the page arrives,
+    and a picture swings when the pointer brushes it. Resting the pointer
+    on a house brings that house's own motifs up over the wall while the
+    rest goes out of focus; pressing it opens the house.
 
     FRAGRANCES, an index of every fragrance written up anywhere on
     this site: its number, its name, the house it belongs
@@ -63,19 +63,19 @@
   line about it and is only shown while the picture is pointed at. Keep
   the space between the two spans — the page's own search reads the
   caption's text, and butted together they read as one run-on word.
-  The name is printed inside the picture's bottom left corner; the say
-  hangs under the picture. A house with no say yet simply has none.
+  The name is printed on the label under the picture, after its
+  number; the say hangs under that when the picture is pointed at. A house with no say yet simply has none.
 
   TO ADD A HOUSE: copy one whole <a class="sheet-frame"> block below,
   point its href at the house's page in /houses/, point the <img> at
   its picture, write the caption, and give it a data-motif naming its
   motifs in motifs.js (or leave that off, and resting on it only puts
   the rest of the page out of focus). Nothing else needs changing —
-  the chain comes from however many of these blocks are here, in the
+  the hang comes from however many of these blocks are here, in the
   order they stand.
 
-  Every box in the chain is its own size, and a picture is cropped to
-  fill its box rather than squashed.
+  Every picture on the hang is its own size, and a picture is cropped
+  to fill its frame rather than squashed.
 
   TO ADD A NEW CATEGORY ENTIRELY: duplicate this whole file, rename
   it inside /categories/, update the <h1> and the lede, and add a
@@ -191,7 +191,7 @@
   </a>
 
   <!--
-    NINE HOUSES, and the chain stops at nine for now — the owner's
+    NINE HOUSES, and the hang stops at nine for now — the owner's
     "Keep houses only up to 9". A tenth is another block like the ones
     above, with a `data-motif` naming its motifs in motifs.js (or none).
   -->

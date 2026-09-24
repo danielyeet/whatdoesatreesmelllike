@@ -766,12 +766,11 @@ html.cursor-awake .cursor-ring, html.cursor-awake .cursor-dot { opacity: 1; }
 
 /* ==================================================================
    CONTACT SHEET CATEGORY PAGE
-   A category laid out as a sheet of frames, and then as a map of
-   them. Without JavaScript it is a plain grid of square pictures
-   with their captions — a working page. contact-sheet.js puts
-   .scripted on the sheet and takes over: one window in the middle,
-   every picture flicking through it, then lines reaching out across
-   the page. Everything below is how it looks; the timing and the
+   The Houses view. Without JavaScript it is a plain grid of square
+   pictures with their captions — a working page. contact-sheet.js puts
+   .scripted on the sheet and takes over: the houses are HUNG from a
+   picture rail, high and low in turn, each with a numbered label (see
+   THE HANG below). Everything below is how it looks; the timing and the
    arithmetic are in that file.
    ================================================================== */
 /* The page grows a lot taller the moment the sheet lands, and on a
@@ -1046,39 +1045,35 @@ body.view-fragrances .sheet-search { display: none; }
    sheet is given its height rather than deriving one. */
 .sheet.scripted { display: block; }
 
-/* THE CHAIN. With the script running, every house is placed by hand
-   along a snake — left to right, down, right to left — and joined to
-   the next by a bar (see contact-sheet.js). Everything below is written
-   under `.scripted`, so the plain grid above is what the page is
-   without it. */
+/* THE HANG. With the script running, every house hangs from a picture
+   rail on a hook, high and low in turn, with a museum label under it
+   (see contact-sheet.js). Everything below that is written under
+   `.scripted` is the hang; without it the page is the plain grid. */
 
-/* THE BARS between one house and the next: either one solid stroke or
-   two hairlines with the paper showing between them, the two the owner
-   drew. They run OUT from the house they leave, which is what the
-   transform's origin is for. */
-.sheet-lines { position: absolute; inset: 0; pointer-events: none; }
-.sheet-link {
-  position: absolute;
-  box-sizing: border-box;
-  transform: scale(0, 1);
-  transform-origin: left center;
-  transition: transform 0.38s cubic-bezier(0.55, 0.05, 0.3, 1);
+/* THE RAIL, THE HOOKS AND THE WIRES — one SVG under the pictures. The
+   rail is drawn across the wall as the page arrives. */
+.sheet-lines { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.sheet-rail line {
+  stroke: var(--ink);
+  stroke-width: 1.2;
+  stroke-dasharray: 3000;
+  stroke-dashoffset: 3000;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.6, 0.05, 0.2, 1);
 }
-.sheet-link[data-run="left"] { transform-origin: right center; }
-.sheet-link[data-run="down"] { transform: scale(1, 0); transform-origin: center top; }
-.sheet-link.drawn { transform: none; }
-.sheet-link.solid { background: var(--ink); }
-.sheet-link.double { border: 0 solid var(--ink); }
-.sheet-link.double:not([data-run="down"]) { border-top-width: 1.5px; border-bottom-width: 1.5px; }
-.sheet-link.double[data-run="down"] { border-left-width: 1.5px; border-right-width: 1.5px; }
+.sheet-rail line + line { stroke-width: 0.8; opacity: 0.55; transition-delay: 0.08s; }
+.sheet-rail.drawn line { stroke-dashoffset: 0; }
+.sheet-wire path {
+  fill: none;
+  stroke: rgba(var(--ink-rgb), 0.62);
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+}
+.sheet-hook { fill: var(--bg); stroke: var(--ink); stroke-width: 1.2; }
 
 .sheet-frame {
   position: relative;
   display: block;
   aspect-ratio: 1 / 1;
-  /* A picture is ruled in the page's own ink, the same weight as the
-     bars that join it on — the drawing is boxes and bars and nothing
-     else. */
   border: 2px solid var(--ink);
   background-color: var(--bg-2);
   /* Hatching, as everywhere else on this site that a picture is still
@@ -1098,23 +1093,24 @@ body.view-fragrances .sheet-search { display: none; }
   z-index: 2;
   aspect-ratio: auto;
   box-sizing: border-box;
-  transform: translate(var(--x, 0px), var(--y, 0px));
-  /* HOW A HOUSE ARRIVES: uncovered from the side its bar comes in at,
-     the way the bar itself was drawn. `data-enter` is that side. */
-  clip-path: inset(0 100% 0 0);
-  opacity: 0;
-  transition: clip-path 0.76s cubic-bezier(0.6, 0.04, 0.25, 1),
-              opacity 0.3s ease,
-              filter 0.8s var(--menu-ease);
+  /* A frame on a gallery wall: a mount of the wall's own white inside
+     the ruled edge, and a shadow under it that says it is hanging off
+     the wall rather than printed on it. Placed and swung by the script
+     alone — `transform` and its origin are written every frame it moves,
+     so nothing here may transition it. */
+  border-width: 2px;
+  padding: 7px;
+  background-color: var(--bg);
+  box-shadow: 0 10px 22px -12px rgba(var(--ink-rgb), 0.45), 0 2px 4px rgba(var(--ink-rgb), 0.08);
+  opacity: var(--shown, 1);
+  transition: opacity 0.3s ease, filter 0.8s var(--menu-ease), box-shadow 0.5s var(--menu-ease);
 }
-.sheet.scripted .sheet-frame[data-enter="right"] { clip-path: inset(0 0 0 100%); }
-.sheet.scripted .sheet-frame[data-enter="top"] { clip-path: inset(0 0 100% 0); }
-.sheet.scripted .sheet-frame.landed { clip-path: inset(0 0 0 0); opacity: 1; }
-/* Once it is uncovered the clip comes off altogether, or the line
-   about the house could not hang below the picture. */
-.sheet.scripted .sheet-frame.whole { clip-path: none; }
+.sheet.scripted .sheet-frame:not(:has(img)) { padding: 0; }
 .sheet-frame:has(img) { background-image: none; background-color: transparent; }
-.sheet-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sheet-frame img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.56s cubic-bezier(0.5, 0, 0.2, 1); }
+
+/* THE LABEL, under every picture, as a museum labels its wall: the
+   number large, and the name under it. The number is the owner's. */
 .sheet-number {
   position: absolute;
   top: 6px;
@@ -1126,9 +1122,6 @@ body.view-fragrances .sheet-search { display: none; }
   background: var(--bg);
   padding: 1px 4px;
 }
-/* THE NAME IS PRINTED IN THE BOX, bottom left, on its own chip of
-   paper — where the owner wrote the names in their drawing. Under the
-   plain grid it hangs below the picture instead. */
 .sheet-frame .sheet-caption {
   position: absolute;
   left: 0;
@@ -1142,22 +1135,37 @@ body.view-fragrances .sheet-search { display: none; }
   padding: 2px 5px 2px 0;
 }
 .sheet.scripted .sheet-frame .sheet-caption {
-  top: auto;
-  bottom: 6px;
-  left: 6px;
-  max-width: calc(100% - 12px);
-  padding: 2px 6px;
+  top: calc(100% + 16px);
+  left: 34px;
+  right: -2px;
+  max-width: none;
+  padding: 0;
+  background: none;
   color: var(--ink);
-  white-space: nowrap;
-  overflow: visible;
+}
+.sheet.scripted .sheet-frame > .sheet-number {
+  top: calc(100% + 10px);
+  left: -2px;
+  font-family: var(--sans);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  background: none;
+  padding: 0;
 }
 .sheet.scripted .sheet-frame .sheet-name {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  /* A long name at the end of the rail, where a picture has least room,
+     goes on to a second line rather than being cut short. */
+  white-space: normal;
+  border-top: 1px solid rgba(var(--ink-rgb), 0.35);
+  padding-top: 3px;
 }
-/* A CAPTION IS THE NAME, AND THE LINE ABOUT IT ONLY WHEN POINTED AT.
-   The say is taken out of the flow and hung under the picture. */
+/* A CAPTION IS THE NAME, AND THE LINE ABOUT IT ONLY WHEN POINTED AT. */
 .sheet-frame .sheet-name { display: block; }
 .sheet-frame .sheet-say {
   position: absolute;
@@ -1173,20 +1181,14 @@ body.view-fragrances .sheet-search { display: none; }
   transition: opacity 0.28s var(--menu-ease);
 }
 .sheet.scripted .sheet-frame .sheet-say {
-  left: -8px;
-  top: calc(100% + 16px);
-  max-width: min(340px, 80vw);
+  left: 0;
+  top: calc(100% + 6px);
+  max-width: min(320px, 80vw);
   white-space: normal;
   padding: 4px 8px;
+  border: 1px solid rgba(var(--ink-rgb), 0.2);
 }
-.sheet.scripted .sheet-frame[data-say="end"] .sheet-say {
-  left: auto;
-  right: -8px;
-  text-align: right;
-}
-/* ON A PHONE IT IS KEPT INSIDE ITS OWN PICTURE'S WIDTH, so a line
-   hanging off a picture near the right-hand edge cannot push the page
-   sideways. */
+.sheet.scripted .sheet-frame[data-say="end"] .sheet-say { left: auto; right: 0; text-align: right; }
 @media (max-width: 700px) {
   .sheet-frame .sheet-say,
   .sheet.scripted .sheet-frame .sheet-say,
@@ -1203,25 +1205,21 @@ body.view-fragrances .sheet-search { display: none; }
 .sheet-frame.hot .sheet-say { opacity: 1; }
 
 /* RESTING ON A HOUSE: everything else goes out of focus, softly, while
-   that house's motifs come up over the page (motifs.js). The house
-   itself stands in front of them and does not move. Coming back into
-   focus is slower than going out of it — the owner asked for the
-   motifs to fade rather than vanish, and the page with them. */
-.sheet.scripted.drawn .sheet-frame,
-.sheet.scripted.drawn .sheet-lines {
-  transition: clip-path 0.76s cubic-bezier(0.6, 0.04, 0.25, 1),
-              opacity 1.2s var(--menu-ease),
-              filter 1.2s var(--menu-ease);
-}
+   that house's motifs come up over the wall (motifs.js); the house
+   itself comes a little off the wall and stays sharp. */
 .sheet.scripted.musing .sheet-frame:not(.hot),
 .sheet.scripted.musing .sheet-lines {
   filter: blur(5px);
   opacity: 0.38;
-  transition: opacity 0.8s var(--menu-ease), filter 0.8s var(--menu-ease);
+  transition: opacity 0.7s var(--menu-ease), filter 0.7s var(--menu-ease);
 }
-.sheet.scripted .sheet-frame.hot { z-index: 6; }
+.sheet.scripted.drawn .sheet-lines { transition: opacity 1.2s var(--menu-ease), filter 1.2s var(--menu-ease); }
+.sheet.scripted .sheet-frame.hot {
+  z-index: 6;
+  box-shadow: 0 26px 44px -18px rgba(var(--ink-rgb), 0.55), 0 3px 6px rgba(var(--ink-rgb), 0.1);
+}
 
-/* The canvas the motifs are drawn on: over the page, under the house
+/* The canvas the motifs are drawn on: over the wall, under the house
    being rested on, and never in the way of a press. */
 .sheet-motifs {
   position: fixed;
@@ -1246,10 +1244,10 @@ body.sheet-leaving .sheet-motifs {
 }
 body.sheet-leaving .sheet.scripted .sheet-frame.chosen {
   z-index: 8;
-  transform: translate(var(--x, 0px), var(--y, 0px)) scale(1.08);
-  opacity: 0;
-  transition: transform 0.56s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.45s ease 0.1s !important;
+  opacity: 0 !important;
+  transition: opacity 0.45s ease 0.1s !important;
 }
+body.sheet-leaving .sheet.scripted .sheet-frame.chosen img { transform: scale(1.08); }
 
 /* Searching: everything that doesn't match steps back. */
 .sheet-frame.dimmed { opacity: 0.16 !important; }
@@ -2410,11 +2408,9 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
 /* ==================================================================
    CONTACT
    ================================================================== */
-.contact-email { display: inline-block; font-size: 19px; text-decoration: none; border-bottom: 1px solid var(--brass); padding-bottom: 2px; }
-.contact-email:hover { color: var(--brass); }
-.contact-links { margin-top: 32px; display: flex; gap: 24px; }
-.contact-links a { font-family: var(--mono); color: var(--muted); text-decoration: none; font-size: 13px; }
-.contact-links a:hover { color: var(--ink); }
+/* One sentence, and nothing else: "Get in touch, send a carrier pigeon."
+   The address and the links came off at the owner's word. */
+.contact-page h1 { max-width: 16ch; }
 
 /* ==================================================================
    FOCUS STATES

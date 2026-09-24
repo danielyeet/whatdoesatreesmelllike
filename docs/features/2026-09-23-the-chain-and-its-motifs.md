@@ -7,6 +7,13 @@ Files touched: `contact-sheet.js` (rewritten, ~430 lines, down from ~1,570), `mo
 chain's), `categories/scent-descriptions.html` (a `data-motif` on every frame, frames 08
 and 09, the new script), `tests/contact-sheet.spec.js` (rewritten).
 
+> **The chain lasted one round.** On 2026-09-24 the owner asked for the page "completly
+> differnet … a gallery like view", and the Houses view is now [a gallery
+> hang](2026-09-24-the-hang.md). What this report says about the **motifs**, the
+> **resting** (whose wait is shorter now), **pressing a house** and **the way in to a
+> house** all still holds, except that Tombstone's and Qimu & Musicians' motifs were
+> replaced. The chain itself and its bars are gone from the code.
+
 ## What changed
 
 The Houses view of Scent descriptions is no longer a map of pictures scattered across the

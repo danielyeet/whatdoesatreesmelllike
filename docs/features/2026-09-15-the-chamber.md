@@ -1320,3 +1320,52 @@ movement, so there is a whole picture to stand still.
   thirty rather than fifty, and thirty is proved against the fault: pointing inside the
   menu but NOT at a row — so no row is hot and there can be no swell — moves the same
   reading by −5 and −7.
+
+## 2026-09-24 — the moon, and something down the left
+
+> make chapter 2 from favorites have a moon spin the same way that the sun is spinning.
+> Make it complex and look cool please
+>
+> also put some particles on the left hand side of the page, it looks empty (favorites,
+> chapters 1 and 2)
+
+**Chapter 2 has a ground now: the moon** (`moon.js`, `data-ground="moon"` on its block).
+It is built exactly as the sun is — a Fibonacci sphere of specks, rings and meridians
+turning with it, a registration ring that does not — and it turns **on the sun's own
+tilt, at the sun's own rate, the same way round**: `TILT` and `SPIN` are the same numbers
+in both files, and a test reads them out of both. It stands where the sun stands, a
+little smaller, so stepping between the two chapters with the arrows swaps one body for
+another in the same sky. What it has that the sun does not:
+
+- **The light and the phases.** A moon is lit, not lit up: one side bright, the other in
+  shadow with a faint earthshine, a soft terminator between them — and the light swings
+  slowly to and fro over about a minute and a half, **from full to a thick crescent and
+  back**. It never goes to a new moon: the first version went all the way round, and for a
+  quarter of every cycle the page was black.
+- **Craters** — rings of specks with a bright rim, a darker floor and a central peak, some
+  throwing **rays** across the surface — and **maria**, the dark seas, fixed on the
+  surface. All in the sphere's own coordinates, so they turn with it and ride over the
+  limb.
+- **A ring of debris**, tilted further over than the moon and turning faster than it, its
+  far half drawn behind the disc and its near half in front.
+
+**Down the left of both chapter pages** — the side the owner saw empty:
+
+- **Chapter 1: the solar wind** (`WIND_*` in `sun.js`). Eighteen strands leaving the
+  sun's left limb and fanning out across the page to the left edge, with specks running
+  along them at every stage of the crossing, brightening as they get clear of the sun
+  and fading at the very edge.
+- **Chapter 2: the sky** (`STARS`, `DUST` in `moon.js`). Stars at three depths, thinning
+  out across the window from the left edge, each twinkling on its own clock; fine dust
+  drifting down through them; and now and then a **shooting star** across the left of the
+  page.
+
+Both are quietened behind the writing exactly as everything else on these pages is
+(`QUIET`, `SOFT`, the bloom going first).
+
+Tested in `tests/chamber.spec.js`: `the sun stands behind Chapter 1 and the moon behind
+Chapter 2, and both keep the writing legible` (the moon's quiet is measured on its own
+disc, behind the writing against beside it; 0.87 as it stands, 1.91 with the quiet taken
+out), `the moon turns on the sun's own axis, at the sun's own rate` (fails with the moon
+turned the other way), and `both chapters have something drawn down the left of the
+page` (fails with the wind and the stars taken out).

@@ -29,6 +29,12 @@
 //                 clock: one is always going up as another is falling.
 //   THE CORONA    one soft gradient behind all of it, and a bloom on
 //                 every speck bright enough to earn one.
+//   THE WIND      added 2026-09-24, when the owner said the left of the
+//                 page "looks empty": the solar wind — strands of warm
+//                 specks leaving the sun and streaming away across the
+//                 page to the left edge, each strand a gently bent line
+//                 that the specks run along, so the empty side of the
+//                 page is the side the wind is blowing towards.
 //
 // LEGIBILITY, WHICH THE OWNER ASKED FOR BY NAME: "I want it to make
 // the text legible, so that particles exist in behind the text the
@@ -138,6 +144,15 @@
   const CORONA = 3;                // how far out it reaches, as a share of the sun
   const CORONA_LIT = 0.13;         // and the most of it that is ever laid down
 
+  // THE WIND. So many strands, so many specks along them in all (a
+  // desktop, a phone), how long a speck takes to cross the page, and
+  // how far a strand bends up or down on its way.
+  const WIND_STRANDS = 18;
+  const WIND = [1100, 420];
+  const WIND_CROSS = [16, 34];      // seconds, sun to the left edge
+  const WIND_BEND = [0.04, 0.16];   // as a share of the window's height
+  const WIND_LIT = 0.62;
+
   // THE TWO NUMBERS THE READING RESTS ON, and they are Ataraxia's own.
   const QUIET = 0.3;
   const SOFT = 74;
@@ -189,7 +204,7 @@
     const between = (a, b) => a + (b - a) * random();
 
     let width = 0, height = 0, ratio = 1;
-    let surface = [], wires = [], reg = [], arcs = [];
+    let surface = [], wires = [], reg = [], arcs = [], wind = [], strands = [];
     let built = 0;                  // how many surface specks the pool was built for
     let running = true;
     let frame = 0;
@@ -267,6 +282,34 @@
 
       arcs = [];
       for (let n = 0; n < ARCS; n++) arcs.push(newArc(random() * -12));
+
+      // THE WIND: strands leaving the sun at heights spread about its
+      // middle, fanning out as they go, and specks strung along them
+      // at every stage of the crossing, so the page is full from the
+      // first frame rather than filling up.
+      strands = [];
+      for (let n = 0; n < WIND_STRANDS; n++) {
+        strands.push({
+          from: between(-0.75, 0.75),          // where it leaves the sun, up or down
+          fan: between(-0.9, 0.9),             // how far it spreads by the left edge
+          bend: between(WIND_BEND[0], WIND_BEND[1]) * (random() < 0.5 ? -1 : 1),
+          waves: between(1.2, 3.2),
+          phase: random() * Math.PI * 2,
+        });
+      }
+      wind = [];
+      const count = many === SURFACE[0] ? WIND[0] : WIND[1];
+      for (let n = 0; n < count; n++) {
+        wind.push({
+          strand: Math.floor(random() * WIND_STRANDS),
+          at: random(),
+          cross: between(WIND_CROSS[0], WIND_CROSS[1]),
+          off: (random() + random() - 1) * 7,
+          size: between(0.6, 1.7),
+          base: between(0.3, 1),
+          flick: random() * Math.PI * 2,
+        });
+      }
     }
 
     /** ONE PROMINENCE: two feet on the surface and a bow between them.
@@ -472,6 +515,22 @@
         const lit = s.base * (1 + CHURN * cell) *
           (front ? 1 : BEHIND) * (1 + LIMB * round * round);
         speck(at[0], at[1], lit, s.size * (front ? 1 : 0.8), 0.35 + 0.45 * round);
+      }
+
+      // THE WIND, blowing to the left edge. A speck's place along its
+      // strand is how far through its crossing it is; it brightens as it
+      // gets clear of the sun's glare and fades out at the very edge.
+      for (let n = 0; n < wind.length; n++) {
+        const w = wind[n];
+        const s = strands[w.strand];
+        const p = (w.at + t / w.cross) % 1;
+        const x0 = cx - R * 0.95;
+        const x = x0 + (-24 - x0) * p;
+        const lean = s.from * R * 0.8 + s.fan * height * 0.45 * p;
+        const y = cy + lean + s.bend * height * Math.sin(p * Math.PI * s.waves + s.phase) + w.off * (0.4 + p);
+        const up = p < 0.12 ? p / 0.12 : p > 0.9 ? (1 - p) / 0.1 : 1;
+        const lit = w.base * WIND_LIT * up * (0.35 + 0.65 * p) * (0.8 + 0.2 * Math.sin(t * 3 + w.flick));
+        speck(x, y, lit, w.size, 0.55 + 0.4 * p);
       }
 
       // THE GEOMETRY, turning with it
