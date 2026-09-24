@@ -2,23 +2,30 @@
 // THE NOTE LIBRARY — categories/note-library.html
 //
 // The page's markup is the catalogue: one <article class="lib-record">
-// per note, standing in the <section class="lib-shelf"> of its family.
-// This stands every record up as a BOOK on its shelf and puts a
-// catalogue terminal in front of the stacks:
+// per note, standing in the <section class="lib-shelf"> of its family —
+// its ACCORD, as the page calls it (the owner's word for what was
+// "shelves"; the code still says shelf). This stands every record up as
+// a FOLDER on its shelf and puts a catalogue terminal in front of the
+// stacks:
 //
-//   THE SPINES      every book's thickness is how many fragrances on the
-//                   site use that note, and its height is its own
+//   THE FOLDERS     every folder's thickness is how many fragrances on
+//                   the site use that note, and its height is its own
 //                   (seeded, so the stacks stand the same way every
-//                   visit). Its name runs down the spine and its CALL
-//                   NUMBER is on a label at the foot — the shelf's code
-//                   and its place on the shelf, counted alphabetically.
+//                   visit). Its name runs down it and its CALL NUMBER is
+//                   at the foot — the accord's code and its place in it,
+//                   counted alphabetically. They are DIGITAL FILES: a
+//                   pixel glyph of their own at the head, a segmented
+//                   meter of how much they are used, a barcode, a dot
+//                   screen for a face — and a name that decodes itself
+//                   under the hand. All of it in grey; the one colour on
+//                   a folder is its tab.
 //   THE TERMINAL    one field over the whole catalogue. Books that
 //                   answer light up and everything else goes dim; a
 //                   shelf with nothing on it folds away. It reads names
 //                   and every other spelling folded into a record, by
 //                   DIRECT WORDS only: whole words, no near misses, and
 //                   nothing found by what a note is said to be.
-//   THE INDEX       a tab per shelf, to stand in front of that one.
+//   THE INDEX       a tab per accord, to stand in front of that one.
 //   THE CARD        pressing a book pulls it off the shelf and opens its
 //                   catalogue card beside the stacks: the call number,
 //                   the explanation, the other spellings, and every
@@ -78,10 +85,10 @@
   const THICK_PER = 7;     // px per square root of the fragrances using it
   const THICK_MAX = 58;
   const THICK_JITTER = 9;  // px, so books used equally are not all one thickness
-  const TALL_MIN = 128;    // px
-  const TALL_MAX = 186;
+  const TALL_MIN = 140;    // px
+  const TALL_MAX = 204;    // and every row of the shelf is --row (214px) high
   const TALL_PER_LETTER = 7.4; // the name has to fit down the spine
-  const TALL_SPARE = 72;   // the data bar at the head, the barcode and label at the foot
+  const TALL_SPARE = 90;   // the meter and the glyph at the head, the barcode and label at the foot
   const FULL = 40;         // fragrances using a note for its data bar to be full   // the bands at the head and the label at the foot
 
   // ============================================================
@@ -227,6 +234,36 @@
     el.style.setProperty("--fill", Math.round(100 * Math.min(1, Math.sqrt(r.keys.size / FULL))) + "%");
     el.appendChild(bands);
 
+    // THE GLYPH: a five-by-five square of pixels drawn off the name and
+    // mirrored down its middle, as a file's icon is — the folder's own,
+    // the same every visit, and in grey. Each lit pixel is a shadow of a
+    // three-pixel square, so the whole glyph is one element.
+    const glyph = document.createElement("span");
+    glyph.className = "lib-glyph";
+    glyph.setAttribute("aria-hidden", "true");
+    let gseed = Math.floor(hash(r.name + "glyph") * 4294967295) || 7;
+    const gnext = () => {
+      gseed ^= gseed << 13; gseed >>>= 0;
+      gseed ^= gseed >>> 17;
+      gseed ^= gseed << 5; gseed >>>= 0;
+      return gseed / 4294967296;
+    };
+    const cells = [];
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 3; col++) {
+        if (gnext() < 0.5) continue;
+        cells.push([col, row]);
+        if (col < 2) cells.push([4 - col, row]);
+      }
+    }
+    if (cells.length < 4) cells.push([2, 1], [2, 2], [2, 3], [1, 2], [3, 2]);
+    glyph.dataset.cells = cells.map((c) => c.join(",")).sort().join(" ");
+    glyph.style.boxShadow = cells.map(([col, row]) => (col * 3) + "px " + (row * 3) + "px 0 0 var(--glyph)").join(", ");
+    // A shadow is never drawn under its own square, so the top left
+    // pixel, when it is lit, is the square itself.
+    if (cells.some(([col, row]) => !col && !row)) glyph.style.background = "var(--glyph)";
+    el.appendChild(glyph);
+
     // The barcode: bars of one or two pixels and gaps of one to three,
     // read off the name's own hash, so every book's is its own.
     const code = document.createElement("span");
@@ -275,19 +312,37 @@
 
   const readout = document.createElement("dl");
   readout.className = "lib-readout";
+  // THE FIGURES. "Names as written" — every different way a note is
+  // spelled in the site's notes — was taken off at the owner's word, and
+  // "Shelves" is "Accords" now. In its place, the note the site leans on
+  // most, and in how many fragrances.
+  const shelved = records.filter((r) => r.code !== "RET");
+  const most = shelved.reduce((a, b) => (b.keys.size > a.keys.size ? b : a), shelved[0]);
   const figures = [
-    ["Records", records.filter((r) => r.code !== "RET").length],
-    ["Shelves", shelves.filter((s) => s.dataset.shelf !== "RET").length],
-    ["Names as written", spellings.size],
+    ["Records", shelved.length],
+    ["Accords", shelves.filter((s) => s.dataset.shelf !== "RET").length],
     ["Fragrances", fragrances.size],
+    ["Most used", most ? most.name : "—", most ? "in " + most.keys.size + " fragrances" : ""],
   ];
-  figures.forEach(([word, n]) => {
+  figures.forEach(([word, n, small]) => {
     const box = document.createElement("div");
     const dt = document.createElement("dt");
     dt.textContent = word;
     const dd = document.createElement("dd");
-    dd.dataset.to = String(n);
-    dd.textContent = still ? String(n) : "0";
+    if (typeof n === "number") {
+      dd.dataset.to = String(n);
+      dd.textContent = still ? String(n) : "0";
+    } else {
+      // A word rather than a figure: set as it is, with what it counts
+      // under it.
+      dd.className = "lib-readout-word";
+      dd.textContent = n;
+      if (small) {
+        const s = document.createElement("small");
+        s.textContent = small;
+        dd.appendChild(s);
+      }
+    }
     box.append(dt, dd);
     readout.appendChild(box);
   });
@@ -302,7 +357,7 @@
       '<output class="lib-count" aria-live="polite"></output>' +
     '</form>' +
     '<div class="lib-tools">' +
-      '<div class="lib-order" role="group" aria-label="Order the shelves">' +
+      '<div class="lib-order" role="group" aria-label="Order the accords">' +
         '<button type="button" class="lib-order-by is-on" data-order="alpha">A–Z</button>' +
         '<button type="button" class="lib-order-by" data-order="uses">Most used</button>' +
       '</div>' +
@@ -312,9 +367,9 @@
 
   const index = document.createElement("nav");
   index.className = "lib-index";
-  index.setAttribute("aria-label", "Shelves");
+  index.setAttribute("aria-label", "Accords");
   const tabs = [];
-  makeTab("", "All", records.length, "Every shelf");
+  makeTab("", "All", records.length, "Every accord");
   shelves.forEach((shelf) => {
     const code = shelf.dataset.shelf;
     const r = records.find((x) => x.shelf === shelf);
@@ -407,7 +462,7 @@
   }
 
   function tick() {
-    const dds = [...readout.querySelectorAll("dd")];
+    const dds = [...readout.querySelectorAll("dd[data-to]")];
     const t0 = performance.now();
     const LONG = 1300;
     const step = (now) => {
@@ -593,7 +648,7 @@
   }
   stacks.addEventListener("pointerover", (event) => {
     const el = event.target.closest(".lib-record");
-    if (el && event.pointerType !== "touch") slipOver(el);
+    if (el && event.pointerType !== "touch") { slipOver(el); decode(el); }
   });
   stacks.addEventListener("pointerleave", () => slipOver(null));
   stacks.addEventListener("focusin", (event) => {
@@ -601,6 +656,41 @@
     if (el) slipOver(el);
   });
   stacks.addEventListener("focusout", () => slipOver(null));
+
+  // THE NAME DECODES under the hand, as a file's name does on a screen
+  // that is still reading it: every letter a run of stray characters
+  // settling, left to right, into the name — in the folder's own grey,
+  // and over in under half a second. It is drawn over the name
+  // (`data-code`, shown by the stylesheet) rather than written into it,
+  // so the name itself — which is what the search and a reader read —
+  // never changes. Nothing with animation turned off.
+  const NOISE = "01#%&*+=/<>:ABCDEFXZ";
+  const DECODE_MS = 420;
+  let decoding = null;
+  function decode(el) {
+    if (still || decoding === el) return;
+    const name = el.querySelector(".lib-name");
+    if (!name) return;
+    const text = name.textContent.toUpperCase();
+    if (decoding) decoding.classList.remove("is-decoding");
+    decoding = el;
+    el.classList.add("is-decoding");
+    const t0 = performance.now();
+    const step = (now) => {
+      if (decoding !== el) return;
+      const t = Math.min(1, (now - t0) / DECODE_MS);
+      const settled = Math.floor(text.length * t);
+      let out = text.slice(0, settled);
+      for (let i = settled; i < text.length; i++) {
+        out += text[i] === " " ? " " : NOISE[Math.floor(Math.random() * NOISE.length)];
+      }
+      name.dataset.code = out;
+      if (t < 1) { requestAnimationFrame(step); return; }
+      el.classList.remove("is-decoding");
+      decoding = null;
+    };
+    requestAnimationFrame(step);
+  }
 
   // ============================================================
   // THE CARD
@@ -623,7 +713,7 @@
     card.style.setProperty("--hue", r.el.style.getPropertyValue("--hue"));
 
     cardCall.textContent = r.call;
-    cardShelf.textContent = "Shelf " + r.code + " — " + r.shelfName;
+    cardShelf.textContent = "Accord " + r.code + " — " + r.shelfName;
     cardName.textContent = r.name;
     type(cardSay, r.say);
 

@@ -10,8 +10,8 @@
 // So each house has a small set of things of its own, taken from its
 // own page — Pineward's trees and needles, ADAR's soundings and dust,
 // Almost Human's figures that nearly come together and its rain,
-// Ataraxia's bands of light, Grande's drift, Les Abstraits' smoke and
-// embers off Des Cendres' fire, Tale's doodles, Tombstone's names cut
+// Ataraxia's bands of light, Grande's drift, Les Abstraits' point, line
+// and circle, Tale's doodles, Tombstone's names cut
 // into the wall and its roots and flowers, and Qimu & Musicians' staves
 // with notes coming and going on them.
 //
@@ -304,105 +304,125 @@
     };
   }
 
-  // ---------- LES ABSTRAITS: abstract compositions, drawn in and let go ----------
-  // It was smoke off Des Cendres' fire, embers and ash for two rounds;
-  // the owner asked for the effect changed. The house is "the abstracts",
-  // so its effect is ABSTRACT COMPOSITIONS: a few forms at a time — a
-  // circle, an arc, a line cutting across, a triangle, a small solid
-  // disc, a row of dots — laid out round one point as a composition is,
-  // each drawn in by a pen line over about a second, holding, and let
-  // go. In the page's ink and the amber of the house's bottles, with a
-  // solid shape now and then; and loose points drifting very slowly
-  // between them.
+  // ---------- LES ABSTRAITS: a point, a line and a circle ----------
+  // It was smoke off Des Cendres' fire for two rounds, and then abstract
+  // compositions — circles, arcs, lines, triangles and dots, several at a
+  // time. The owner asked for it "more profound and yet minimalist". So
+  // it is ONE composition over the whole page, and three things in it,
+  // each coming in its turn — the house's own "Eugen's ideas and Antoine
+  // Lie's execution" said as a drawing:
+  //
+  //   THE POINT    the idea: one small point of the bottles' amber, set
+  //                down first, and then breathing, very slowly.
+  //   THE LINE     a horizon through it, drawn out from the point to both
+  //                edges of the window — a hairline, at the golden
+  //                section of the page's height.
+  //   THE CIRCLE   the execution: one great circle round the point, laid
+  //                down in a single stroke of a brush that starts heavy
+  //                and runs dry, and is never quite closed (an ensō).
+  //
+  // And now and then a ring goes out from the point to the circle and is
+  // gone, so the page is never quite still. Nothing else: no scatter of
+  // points, no second composition. It all stands BEHIND the houses, so
+  // the point is set to one side, where no house stands over it.
   const ABSTRAIT_AMBER = "184, 128, 46";
-  function composition() {
-    const r0 = rand(46, 86);
-    // Each composition stands on its own: kept well clear of the others
-    // on the page.
-    let at = null;
-    for (let i = 0; i < 12 && !at; i++) {
-      const tryAt = spot(r0 + 24);
-      if (tryAt && !things.some((t) => t.centre && Math.hypot(t.centre.x - tryAt.x, t.centre.y - tryAt.y) < (t.reach + r0) * 1.6)) at = tryAt;
-    }
-    if (!at) return null;
-    const forms = [];
-    const count = 3 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < count; i++) {
-      const kind = i === 0 ? pick(["circle", "arc", "triangle"]) : pick(["circle", "arc", "line", "line", "dot", "dots", "triangle"]);
-      const a = rand(0, Math.PI * 2);
-      const d = i === 0 ? 0 : rand(0.2, 1) * r0;
-      forms.push({
-        kind,
-        x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d,
-        r: i === 0 ? r0 : rand(8, r0 * 0.6),
-        turn: rand(0, Math.PI * 2),
-        sweep: rand(Math.PI * 0.6, Math.PI * 1.5),
-        len: rand(r0 * 1.2, r0 * 2.6),
-        colour: Math.random() < 0.35 ? ABSTRAIT_AMBER : INK,
-        solid: kind === "dot" || (kind === "circle" && i > 0 && Math.random() < 0.3),
-        wait: i * rand(180, 320),
-      });
-    }
-    return {
-      centre: at,
-      reach: r0,
-      life: rand(6000, 8500),
-      draw(c, age, al) {
-        forms.forEach((f) => {
-          const p = ease((age - f.wait) / 1100);
-          if (p <= 0) return;
-          c.strokeStyle = c.fillStyle = "rgba(" + f.colour + "," + ((f.solid ? 0.5 : 0.62) * al) + ")";
-          c.lineWidth = f.colour === INK ? 1.1 : 1.6;
-          c.lineCap = "round";
-          c.beginPath();
-          if (f.kind === "circle" && f.solid) {
-            c.arc(f.x, f.y, f.r * 0.35 * p, 0, Math.PI * 2);
-            c.fill();
-          } else if (f.kind === "circle") {
-            c.arc(f.x, f.y, f.r, f.turn, f.turn + Math.PI * 2 * p);
-            c.stroke();
-          } else if (f.kind === "arc") {
-            c.arc(f.x, f.y, f.r, f.turn, f.turn + f.sweep * p);
-            c.stroke();
-          } else if (f.kind === "line") {
-            const dx = Math.cos(f.turn) * f.len / 2, dy = Math.sin(f.turn) * f.len / 2;
-            c.moveTo(f.x - dx, f.y - dy);
-            c.lineTo(f.x - dx + 2 * dx * p, f.y - dy + 2 * dy * p);
-            c.stroke();
-          } else if (f.kind === "triangle") {
-            const pts = [0, 1, 2].map((k) => [f.x + Math.cos(f.turn + k * 2.094) * f.r, f.y + Math.sin(f.turn + k * 2.094) * f.r]);
-            // Drawn round, side after side.
-            const upto = p * 3;
-            c.moveTo(pts[0][0], pts[0][1]);
-            for (let k = 0; k < 3 && k < upto; k++) {
-              const from = pts[k], to = pts[(k + 1) % 3];
-              const q = Math.min(1, upto - k);
-              c.lineTo(from[0] + (to[0] - from[0]) * q, from[1] + (to[1] - from[1]) * q);
-            }
-            c.stroke();
-          } else if (f.kind === "dot") {
-            c.arc(f.x, f.y, 3.2 * p, 0, Math.PI * 2);
-            c.fill();
-          } else if (f.kind === "dots") {
-            const n = Math.ceil(7 * p);
-            for (let k = 0; k < n; k++) {
-              c.fillRect(f.x + Math.cos(f.turn) * k * 9 - 1.2, f.y + Math.sin(f.turn) * k * 9 - 1.2, 2.4, 2.4);
-            }
-          }
-        });
-      },
+  const ENSO_SWEEP = Math.PI * 2 * 0.91;   // the gap is the circle's
+  const ENSO_MS = 2600;                    // the stroke, from first touch to lifting off
+  const RIPPLE_EVERY = 6500;               // ms between one ring and the next
+  const RIPPLE_MS = 4200;                  // one ring going out
+  function stillness() {
+    const y = H * 0.618;
+    const r = Math.max(110, Math.min(300, Math.min(W, H) * 0.3));
+    // The side of the page the point can be seen on: whichever third has
+    // no house standing over it, the right one if both are clear.
+    const under = (x) => readAround.some((b) => x > b.left - 24 && x < b.right + 24 && y > b.top - 24 && y < b.bottom + 24);
+    const sides = [W * 0.76, W * 0.24];
+    const x = sides.find((sx) => !under(sx)) || sides[0];
+    // The brush: where it first touches, and the dry streaks it leaves
+    // as it runs out of ink — each a little way across the stroke, and
+    // starting where that part of the brush gave out.
+    const from = -Math.PI / 2 - rand(0.35, 0.75);
+    const wobble = rand(0, Math.PI * 2);
+    const streaks = [];
+    for (let k = 0; k < 5; k++) streaks.push({ across: rand(-0.34, 0.34), start: rand(0.38, 0.8), thin: rand(0.6, 1.3) });
+    const WIDE = 12;                                  // px, where the brush lands
+    const wideAt = (u) => WIDE * Math.pow(1 - u, 1.25) + 1.2;
+    const along = (u, across) => {
+      const t = from + ENSO_SWEEP * u;
+      const rr = r * (1 + 0.018 * Math.sin(3 * t + wobble)) + across * wideAt(u);
+      return [x + Math.cos(t) * rr, y + Math.sin(t) * rr];
     };
-  }
-  function point() {
-    const at = spot(3);
-    if (!at) return null;
-    const drift = rand(-0.004, 0.004), fall = rand(-0.003, 0.003);
-    const amber = Math.random() < 0.3;
+    const STEP = 0.003;
     return {
-      life: rand(4000, 7000),
+      centre: { x, y },
       draw(c, age, a) {
-        c.fillStyle = "rgba(" + (amber ? ABSTRAIT_AMBER : INK) + "," + (0.45 * a) + ")";
-        c.fillRect(at.x + drift * age, at.y + fall * age, 2, 2);
+        c.save();
+        c.lineCap = "round";
+
+        // THE CIRCLE, in one stroke of a brush running dry: heavy where
+        // it lands, narrowing as it goes round, and split by dry streaks
+        // towards its end — cut out of the stroke, as the paper shows
+        // through where a brush has run out. Drawn before the line and
+        // the point, so the cuts go through nothing of theirs.
+        const q = ease((age - 1500) / ENSO_MS);
+        if (q > 0) {
+          c.fillStyle = "rgba(" + INK + "," + (0.66 * a) + ")";
+          c.beginPath();
+          for (let u = 0; u <= q; u += STEP) { const [px, py] = along(u, 0.5); if (u === 0) c.moveTo(px, py); else c.lineTo(px, py); }
+          for (let u = q; u >= 0; u -= STEP) { const [px, py] = along(u, -0.5); c.lineTo(px, py); }
+          c.closePath();
+          c.fill();
+          // Where it landed, round.
+          const [hx, hy] = along(0, 0);
+          c.beginPath();
+          c.arc(hx, hy, wideAt(0) / 2, 0, Math.PI * 2);
+          c.fill();
+          c.globalCompositeOperation = "destination-out";
+          c.strokeStyle = "rgba(0, 0, 0, 0.9)";
+          streaks.forEach((k) => {
+            if (q <= k.start) return;
+            c.lineWidth = k.thin;
+            c.beginPath();
+            for (let u = k.start; u <= q; u += STEP) { const [px, py] = along(u, k.across); if (u === k.start) c.moveTo(px, py); else c.lineTo(px, py); }
+            c.stroke();
+          });
+          c.globalCompositeOperation = "source-over";
+        }
+
+        // THE LINE, drawn out from the point to both edges.
+        const reach = ease((age - 500) / 1900);
+        if (reach > 0) {
+          c.strokeStyle = "rgba(" + INK + "," + (0.34 * a) + ")";
+          c.lineWidth = 1;
+          c.beginPath();
+          c.moveTo(x - (x + 10) * reach, y);
+          c.lineTo(x + (W - x + 10) * reach, y);
+          c.stroke();
+        }
+
+        // A RING going out from the point to the circle, now and then.
+        const since = age - 4400;
+        if (since > 0) {
+          const k = (since % RIPPLE_EVERY) / RIPPLE_MS;
+          if (k < 1) {
+            c.strokeStyle = "rgba(" + ABSTRAIT_AMBER + "," + (0.42 * (1 - k) * (1 - k) * a) + ")";
+            c.lineWidth = 0.8;
+            c.beginPath();
+            c.arc(x, y, 6 + (r - 6) * ease(k), 0, Math.PI * 2);
+            c.stroke();
+          }
+        }
+
+        // THE POINT, first of all, and breathing.
+        const set = ease(age / 700);
+        if (set > 0) {
+          const breath = 1 + 0.16 * Math.sin(age / 1400);
+          c.fillStyle = "rgba(" + ABSTRAIT_AMBER + "," + (0.92 * a) + ")";
+          c.beginPath();
+          c.arc(x, y, 4.2 * set * breath, 0, Math.PI * 2);
+          c.fill();
+        }
+        c.restore();
       },
     };
   }
@@ -787,7 +807,7 @@
     "almost-human": [{ make: figure, rate: 1.3, most: 8 }, { make: rain, rate: 26, most: 80 }],
     ataraxia: [{ make: band, rate: 0.7, most: 6 }],
     grande: [{ make: drift, rate: 45, most: 320 }],
-    "les-abstraits": [{ make: composition, rate: 0.9, most: 6 }, { make: point, rate: 4, most: 26 }],
+    "les-abstraits": [{ make: stillness, rate: 5, most: 1 }],
     tale: [{ make: doodle, rate: 2.6, most: 20 }],
     tombstone: [{ make: epitaph, rate: 0.9, most: 5 }, { make: roots, rate: 1.6, most: 11 }, { make: soil, rate: 6, most: 40 },
       { make: petal, rate: 2.6, most: 360 }],

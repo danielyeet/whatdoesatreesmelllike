@@ -110,9 +110,9 @@ body class, the way the search page and the contact sheet do. Every `human-*` ru
 already draws in those, so setting them turns the whole page over at once and touches no
 other page.
 
-**Dark gray, not black.** ADAR next door is `#07070a` and means it; this is `#212328`,
-which is dark enough for white additive specks to read as light and light enough not to
-be a hole.
+**Dark gray, not black.** ADAR next door is `#07070a` and means it; this is `#1b1d21`
+(it was `#212328` until the owner asked for it *slightly* darker on 2026-09-24), which is
+dark enough for white additive specks to read as light and light enough not to be a hole.
 
 **One shared token had to be added for it.** A handful of rules spend the ink *at an
 alpha* — the hatched placeholder, the dotted leader in a fragrance's row, the rank down
@@ -243,7 +243,8 @@ direction:
   hex, because a page turned over by redefining its tokens can be turned **half** over,
   and light-on-light is what that looks like. With the token block cut back to `--bg`
   alone, it fails on the heading.
-- **`the specks kindle under the pointer, and go out again`** — it counts one corner
+- **`the specks kindle under the pointer, linger a moment, and go out again`** (it was
+  *…and go out again* until they lingered — see the foot) — it counts one corner
   rather than the whole canvas, because the crest travelling along each band moves the
   total on its own and would swamp the reading. With `HAND_LIFT` at 1 it fails.
 - **`Grande Parfums has a drift, and it is a quiet one`** — three failures in one, and
@@ -534,3 +535,26 @@ Dry Down`.
 Tested in `tests/houses.spec.js`: `no house has a line under its subtitle, and every
 subtitle is in title case` — every house page and every say on the Houses view. Fails with
 a subtitle put back in sentence case, and with a standfirst put back.
+
+
+## 2026-09-24, night — Ataraxia slightly darker, and its kindle lingers
+
+> Make the ataraxia gray background SLIGHtly darker. also make there to be a delay of the
+> particles turning off after you hover them.
+
+- **The ground is `#1b1d21`**, from `#212328`, and `--bg-2` and `--line` came down with it
+  (`#24262b`, `#373a42`). Its luminance is about 29 against ADAR's 7: still gray.
+- **The kindle lingers.** A speck the pointer has passed over stays lit for `LINGER_HOLD`
+  (0.5s) after the pointer has gone and then goes out over `LINGER_FADE` (1.5s). Each speck
+  keeps how hot it was last made and when (`warm`, `warmAt`), so the glow stays with the
+  speck itself — it does not smear across the page when it is scrolled — and the hand
+  making it hotter than it is keeping starts its clock again. With reduced motion it is as
+  it was. The owner did not say which particles; this and the Houses view's are the two
+  that light under the hand on the pages that note was about (see [the
+  axis](2026-09-24-the-axis.md)).
+
+Tested in `tests/houses.spec.js`: `the specks kindle under the pointer, linger a moment, and
+go out again` — the same corner as before, now also read 150ms after the pointer has left
+(still over 1.15 times the ink with the pointer away; it fails there against the old code)
+and 2.6 seconds after, by when it has gone back down. `Ataraxia is dark gray` still holds
+at the darker ground.

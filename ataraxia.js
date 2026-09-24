@@ -17,7 +17,9 @@
 //               than as printed.
 //   THE KINDLE  what answers the hand: the specks within reach of the
 //               pointer burn brighter, eased in and out so it arrives
-//               rather than switching on.
+//               rather than switching on — and each one the hand has
+//               passed over stays lit a moment after it has gone, and
+//               only then goes out.
 //
 // THIS REPLACED A CHURCHYARD. Angels and crosses stood down both
 // margins here for one round, every one of them cut out of specks and
@@ -124,6 +126,14 @@
   const HAND = 200;                // how far the kindle reaches, in pixels
   const HAND_LIFT = 2.1;           // how much brighter it burns
   const HAND_EASE = 2.8;           // how fast it arrives and leaves
+  // AND IT LINGERS: a speck the pointer has passed over stays lit for a
+  // moment after the pointer has gone, and only then goes out — "a delay
+  // of the particles turning off after you hover them". It used to go out
+  // the instant the pointer moved on. Each speck keeps how hot it was
+  // last made and when (`warm`, `warmAt`), so the glow stays with the
+  // speck itself, wherever the page has scrolled it to.
+  const LINGER_HOLD = 0.5;         // s at full once the pointer has gone
+  const LINGER_FADE = 1.5;         // s it then takes to go out
 
   let seed = SEED;
   const random = () => {
@@ -310,12 +320,24 @@
           : 1 + TWINKLE * Math.sin((clock * sp.rate + sp.phase) * Math.PI * 2);
 
         // THE KINDLE. Taken from where the speck actually lands on the
-        // window, so it follows the hand rather than the band.
-        let hot = 1;
+        // window, so it follows the hand rather than the band — and kept
+        // by the speck a moment after the hand has passed.
+        let live = 0;
         if (handOn > 0.004) {
           const d = Math.hypot(x - handX, y - handY);
-          if (d < HAND) hot += (HAND_LIFT - 1) * handOn * Math.pow(1 - d / HAND, 1.6);
+          if (d < HAND) live = handOn * Math.pow(1 - d / HAND, 1.6);
         }
+        let kept = 0;
+        if (!REDUCE_MOTION && sp.warm) {
+          const since = clock - sp.warmAt;
+          kept = since <= LINGER_HOLD ? sp.warm
+            : sp.warm * Math.pow(Math.max(0, 1 - (since - LINGER_HOLD) / LINGER_FADE), 2);
+        }
+        // The hand making it hotter than it is keeping starts its clock
+        // again; otherwise it keeps what it had, and lets it go.
+        if (!REDUCE_MOTION && live > 0.004 && live >= kept) { sp.warm = live; sp.warmAt = clock; }
+        else if (kept <= 0.001) sp.warm = 0;
+        const hot = 1 + (HAND_LIFT - 1) * Math.max(live, kept);
 
         const hush = quiet(x);
         const shown = sp.base * body * lift * flick * hot * hush;

@@ -1,9 +1,10 @@
 // ============================================================
 // THE NOTE LIBRARY — categories/note-library.html, note-library.js
 //
-// Every note named in a fragrance on the site, shelved by family, each
-// with a line on what it is. The page's markup is the catalogue; the
-// script stands the records up as books. What these hold:
+// Every note named in a fragrance on the site, filed by accord (the
+// page's word; the markup still says shelf), each with a line on what
+// it is. The page's markup is the catalogue; the script stands the
+// records up as folders. What these hold:
 //
 //   - every note the site uses HAS a record (the owner asked for "all
 //     the notes that I have used so far"), and none is shelved twice;
@@ -210,6 +211,78 @@ test("every book carries a data bar and a barcode of its own", async ({ page }) 
   expect(out.all).toBe(true);
   expect(out.codes, "barcodes are the books' own").toBeGreaterThan(out.books * 0.9);
   expect(out.often).toBeGreaterThan(out.once);
+});
+
+/* ACCORDS, NOT SHELVES, AND NO "NAMES AS WRITTEN". The owner: "Replace
+   the word shelves with accords. removes names as written. If you want
+   give me other statistics". So the readout counts records, accords
+   and fragrances, and names the note the site uses most — which is
+   worked out, so it is checked against the folders themselves — and
+   the word "shelf" is nowhere a reader sees it: not in the readout, not
+   on the index's labels, not on the card. */
+test("the page says accords rather than shelves, and no longer counts names as written", async ({ page }) => {
+  await arrive(page);
+  const out = await page.evaluate(() => {
+    const most = [...document.querySelectorAll(".lib-record")].reduce((a, b) => (+b.dataset.uses > +a.dataset.uses ? b : a));
+    return {
+      terms: [...document.querySelectorAll(".lib-readout dt")].map((dt) => dt.textContent),
+      most: document.querySelector(".lib-readout-word").firstChild.textContent,
+      mostUses: document.querySelector(".lib-readout-word small").textContent,
+      expected: most.querySelector(".lib-name").textContent, expectedUses: most.dataset.uses,
+      said: [document.querySelector(".lib-head").innerText, document.querySelector(".lib-readout").innerText,
+        document.querySelector(".lib-index").getAttribute("aria-label"),
+        document.querySelector(".lib-order").getAttribute("aria-label"),
+        ...[...document.querySelectorAll(".lib-tab")].map((t) => t.title)].join(" | "),
+    };
+  });
+  expect(out.terms).toEqual(["Records", "Accords", "Fragrances", "Most used"]);
+  expect(out.most, "the note used most").toBe(out.expected);
+  expect(out.mostUses).toBe("in " + out.expectedUses + " fragrances");
+  expect(out.said, "no shelves where a reader sees them").not.toMatch(/shel/i);
+  expect(out.said, "and no names as written").not.toMatch(/names as written/i);
+  await page.locator("#note-cedarwood").click();
+  await expect(page.locator(".lib-card-shelf")).toHaveText(/^Accord WOO/);
+});
+
+/* THE FOLDERS ARE DIGITAL FILES: "make the files still more digital" —
+   from an owner who had found the glowing version "too annoyingly
+   neony", so none of this glows or takes a colour. Every folder carries
+   a pixel glyph of its own (read as the set of pixels it lights), its
+   meter is segmented, and its name decodes itself under the hand — drawn
+   OVER the name, so the name a reader or a search reads never changes. */
+test("every folder is a digital file: a pixel glyph of its own, a segmented meter, a name that decodes", async ({ page }) => {
+  await arrive(page);
+  const out = await page.evaluate(() => {
+    const folders = [...document.querySelectorAll(".lib-record")];
+    const glyphs = folders.map((f) => f.querySelector(".lib-glyph"));
+    return {
+      folders: folders.length,
+      all: glyphs.every(Boolean),
+      own: new Set(glyphs.filter(Boolean).map((g) => g.dataset.cells)).size,
+      sized: glyphs.every((g) => g && g.getBoundingClientRect().width === 3),
+      masked: getComputedStyle(document.querySelector(".lib-bands")).maskImage ||
+        getComputedStyle(document.querySelector(".lib-bands")).webkitMaskImage,
+    };
+  });
+  expect(out.all, "every folder has a glyph").toBe(true);
+  expect(out.own, "and they are the folders' own").toBeGreaterThan(out.folders * 0.8);
+  expect(out.masked, "the meter is segmented").toMatch(/repeating-linear-gradient/);
+
+  const folder = page.locator("#note-vetiver");
+  await folder.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(900);
+  const b = await folder.boundingBox();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  const mid = await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => {
+    const el = document.getElementById("note-vetiver");
+    const name = el.querySelector(".lib-name");
+    done({ decoding: el.classList.contains("is-decoding"), code: name.dataset.code, text: name.textContent });
+  }))));
+  expect(mid.decoding, "the name is decoding").toBe(true);
+  expect(mid.code, "stray characters over it").not.toBe("VETIVER");
+  expect(mid.text, "and the name itself untouched").toBe("Vetiver");
+  await expect(folder).not.toHaveClass(/is-decoding/, { timeout: 2000 });
+  expect(await folder.locator(".lib-name").textContent()).toBe("Vetiver");
 });
 
 /* THE FOLDERS ARE QUIET, AND ONLY THEIR TABS ARE COLOURED. The owner:

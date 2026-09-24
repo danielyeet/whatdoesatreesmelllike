@@ -12,9 +12,11 @@
 //
 // These check what can be WRONG rather than merely ugly: the front house
 // really on the axis and the rest in order round it, every way of
-// travelling actually travelling, the particles moving, nothing leaving
-// the window, the motifs waiting before they come and fading when they
-// go, and the old startup flick staying gone.
+// travelling actually travelling, the particles moving, the page
+// arriving one thing after another, the axis reaching both ends of the
+// window, nothing cut off short of the window's edge, the motifs waiting
+// before they come and fading when they go, and the old startup flick
+// staying gone.
 // ============================================================
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
@@ -200,30 +202,182 @@ test("pressing a house at the side brings it to the front", async ({ page }) => 
   await expect(page.locator(".sheet-frame").nth(1)).toHaveClass(/front/);
 });
 
-/* THE HOUSES COME OUT OF THE AXIS as the page arrives, the front one
-   first and the rest after it, nearest first — not all at once. */
-test("the houses come out of the axis one after another, nearest first", async ({ page }) => {
+/* ONE THING AFTER ANOTHER as the page arrives: "the animation should be
+   sequential, so you first have the central line, then the spiral of
+   particles and only then the images. the images should load
+   chronologically yet relatively quickly." Watched in the page itself,
+   a few times a second: when the axis is first drawn down the middle of
+   the particles' canvas, when there is first ink anywhere off it (the
+   helix and the dust round it), and when each house first shows. It
+   used to bring the houses out while the axis was still being drawn,
+   with the helix coming up alongside it. */
+test("first the axis, then the helix, and only then the houses, in order", async ({ page }) => {
   await page.addInitScript(() => {
     window.__cameAt = [];
+    window.__axisAt = null;
+    window.__helixAt = null;
     const t0 = performance.now();
+    let frame = 0;
     const watch = () => {
+      const now = performance.now() - t0;
       document.querySelectorAll(".sheet-frame").forEach((f, i) => {
         if (window.__cameAt[i] == null && parseFloat(getComputedStyle(f).getPropertyValue("--shown") || "0") > 0.05) {
-          window.__cameAt[i] = performance.now() - t0;
+          window.__cameAt[i] = now;
         }
       });
-      if (performance.now() - t0 < 6000) requestAnimationFrame(watch);
+      const c = document.querySelector(".sheet-field");
+      if (c && c.width && frame++ % 3 === 0 && (window.__axisAt == null || window.__helixAt == null)) {
+        const g = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+        const ratio = c.width / c.clientWidth;
+        const mid = Math.round(c.width / 2), keep = Math.round(40 * ratio);
+        let axis = 0, rows = 0, off = 0;
+        for (let y = 0; y < c.height; y += 4) {
+          rows++;
+          if (g[(y * c.width + mid) * 4 + 3] > 60 || g[(y * c.width + mid - 1) * 4 + 3] > 60) axis++;
+          for (let x = 0; x < c.width; x += 3) {
+            if (Math.abs(x - mid) > keep && g[(y * c.width + x) * 4 + 3] > 20) off++;
+          }
+        }
+        if (window.__axisAt == null && axis / rows > 0.3) window.__axisAt = now;
+        if (window.__helixAt == null && off > 120) window.__helixAt = now;
+      }
+      if (now < 6000) requestAnimationFrame(watch);
     };
     requestAnimationFrame(watch);
   });
   await page.goto(SHEET);
   await waitForSheet(page);
-  const came = await page.evaluate(() => window.__cameAt);
-  // The front house and the two either side of it along the helix — the
-  // ones seen at the start — in order of how far they are from it.
-  expect(came[0], "the front house").toBeLessThan(came[1]);
-  expect(came[1], "then the next").toBeLessThan(came[2]);
-  expect(came[2] - came[0], "and not at once").toBeGreaterThan(120);
+  const t = await page.evaluate(() => ({ axis: window.__axisAt, helix: window.__helixAt, came: window.__cameAt }));
+  expect(t.axis, "the axis is drawn").not.toBeNull();
+  expect(t.helix, "and then the helix").not.toBeNull();
+  expect(t.helix, "the helix comes after the axis").toBeGreaterThan(t.axis + 150);
+  expect(t.came[0], "the first house comes after the helix").toBeGreaterThan(t.helix + 250);
+  // The houses in order, 01 first — and quickly, one after another
+  // rather than all at once.
+  expect(t.came[0], "01 first").toBeLessThan(t.came[1]);
+  expect(t.came[1], "then 02").toBeLessThan(t.came[2]);
+  expect(t.came[2] - t.came[0], "not at once").toBeGreaterThan(80);
+  expect(t.came[2] - t.came[0], "but quickly").toBeLessThan(800);
+});
+
+/* THE AXIS RUNS THE WHOLE HEIGHT OF THE WINDOW, "all the way up" and "all
+   the way down": ink at the axis in the top rows of the window and in
+   the bottom ones, where it used to stop short at both ends — and it
+   runs up BETWEEN the two words across the top, which are set apart
+   either side of it and a little larger than they were. */
+test("the axis runs from the top of the window to its foot, between Houses and Fragrances", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await page.mouse.move(4, 4);
+  const out = await page.evaluate(() => {
+    const c = document.querySelector(".sheet-field");
+    const at = c.getBoundingClientRect();
+    const ratio = c.width / c.clientWidth;
+    const g = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    const mid = Math.round((c.clientWidth / 2) * ratio);
+    // How many of the rows between two heights on the window have the
+    // axis drawn in them.
+    const inked = (from, to) => {
+      let n = 0, rows = 0;
+      for (let y = Math.round((from - at.top) * ratio); y < Math.round((to - at.top) * ratio); y++) {
+        if (y < 0 || y >= c.height) continue;
+        rows++;
+        if ([-1, 0, 1].some((d) => g[(y * c.width + mid + d) * 4 + 3] > 120)) n++;
+      }
+      return rows ? n / rows : 0;
+    };
+    const houses = document.querySelector(".sheet-filter[data-view='houses']").getBoundingClientRect();
+    const frags = document.querySelector(".sheet-filter[data-view='fragrances']").getBoundingClientRect();
+    return {
+      axisX: at.left + c.clientWidth / 2,
+      top: inked(0, 40), foot: inked(innerHeight - 40, innerHeight),
+      houses: { left: houses.left, right: houses.right },
+      frags: { left: frags.left, right: frags.right },
+      size: parseFloat(getComputedStyle(document.querySelector(".sheet-filter")).fontSize),
+    };
+  });
+  expect(out.top, "the axis reaches the top of the window").toBeGreaterThan(0.9);
+  expect(out.foot, "and its foot").toBeGreaterThan(0.9);
+  expect(out.houses.right, "Houses stands to the left of the axis").toBeLessThan(out.axisX - 20);
+  expect(out.frags.left, "Fragrances to the right of it").toBeGreaterThan(out.axisX + 20);
+  // Split evenly about it.
+  expect(Math.abs((out.axisX - out.houses.right) - (out.frags.left - out.axisX)), "evenly either side").toBeLessThan(6);
+  expect(out.size, "and larger than the 11px they were").toBeGreaterThan(11.5);
+});
+
+/* A HOUSE TURNED AWAY ABOVE OR BELOW IS NOT CUT OFF partway down the
+   window: "I also dont want the houses to disappear midway through the
+   white (2nd house to the left of current one, so if im hovering 5, then
+   3 is weirdly disappearing) ... do this for the bottom of the page
+   too." The sheet that clips them is the whole window now, so house 3
+   reaches up to the window's top edge and house 7 down to its foot, and
+   both are still there to be seen. They used to be cut off by the edge
+   of a sheet that began 80px down, under the chrome. */
+test("a house two away from the front runs off the window's edge rather than stopping short of it", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await bringToFront(page, 4);
+  const out = await page.evaluate(() => {
+    const sheet = document.getElementById("sheet").getBoundingClientRect();
+    const frames = [...document.querySelectorAll(".sheet-frame")];
+    const look = (f) => {
+      const r = f.getBoundingClientRect();
+      return { top: r.top, bottom: r.bottom, seen: getComputedStyle(f).visibility !== "hidden" &&
+        parseFloat(getComputedStyle(f).opacity) > 0.05 };
+    };
+    return { sheetTop: sheet.top, sheetBottom: sheet.bottom, above: look(frames[2]), below: look(frames[6]),
+      tall: innerHeight, scroll: document.documentElement.scrollHeight - innerHeight };
+  });
+  expect(out.sheetTop, "the houses' sheet begins at the top of the window").toBeLessThanOrEqual(0.5);
+  expect(out.sheetBottom, "and ends at its foot").toBeGreaterThanOrEqual(out.tall - 0.5);
+  expect(out.above.seen, "house 3 is still there to be seen").toBe(true);
+  expect(out.above.top, "and runs up off the top of the window").toBeLessThan(40);
+  expect(out.below.seen, "house 7 is still there to be seen").toBe(true);
+  expect(out.below.bottom, "and runs off its foot").toBeGreaterThan(out.tall - 20);
+  expect(out.scroll, "the page itself still does not scroll").toBeLessThanOrEqual(1);
+});
+
+/* THE SPECKS THE POINTER PASSES OVER STAY LIT A MOMENT: "make there to be
+   a delay of the particles turning off after you hover them". Read off
+   the particles' canvas round a stretch of the axis with nothing in
+   front of it: brighter with the pointer there, STILL brighter a moment
+   after it has gone, and back as it was a couple of seconds later. They
+   used to go out the instant the pointer left. */
+test("the specks the pointer passes over stay lit a moment after it has gone", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  // Away is a corner INSIDE the window: a pointer sent outside it may
+  // never be heard of again, and a speck left lit by a pointer the page
+  // still thinks is there proves nothing.
+  const { spot, far } = await page.evaluate(() => {
+    const r = document.querySelector(".sheet-field").getBoundingClientRect();
+    return { spot: { x: r.left + r.width / 2 + 30, y: 180 }, far: { x: 8, y: innerHeight - 8 } };
+  });
+  await page.mouse.move(far.x, far.y);
+  const ink = () => page.evaluate(({ x, y }) => {
+    const c = document.querySelector(".sheet-field");
+    const at = c.getBoundingClientRect();
+    const ratio = c.width / c.clientWidth;
+    const half = Math.round(110 * ratio);
+    const d = c.getContext("2d").getImageData(Math.round((x - at.left) * ratio) - half,
+      Math.round((y - at.top) * ratio) - half, half * 2, half * 2).data;
+    let n = 0;
+    for (let i = 3; i < d.length; i += 4) n += d[i];
+    return n;
+  }, spot);
+  await page.waitForTimeout(2200);
+  const away = await ink();
+  await page.mouse.move(spot.x, spot.y, { steps: 3 });
+  await page.waitForTimeout(500);
+  const near = await ink();
+  await page.mouse.move(far.x, far.y, { steps: 2 });
+  await page.waitForTimeout(150);
+  const after = await ink();
+  await page.waitForTimeout(2600);
+  const later = await ink();
+  expect(near, `away ${away}, near ${near}`).toBeGreaterThan(away * 1.1);
+  expect(after, `a moment after leaving: ${after}, against ${away} with the pointer away`).toBeGreaterThan(away * 1.1);
+  expect(later, `and gone out again: ${later}`).toBeLessThan(after);
 });
 
 /* THE PARTICLES MOVE: specks fall down the axis and the dust turns round
@@ -656,26 +810,49 @@ test("the axis is drawn as a firm line with a light either side", async ({ page 
   expect(out.lit, "and has a light beside it").toBeGreaterThan(0.5);
 });
 
-/* LES ABSTRAITS' EFFECT, CHANGED: abstract compositions — circles, arcs,
-   lines, triangles and dots, drawn in by a pen line, in ink and the amber
-   of the house's bottles — in place of the smoke, embers and ash off Des
-   Cendres' fire. Read off what the motifs' canvas is asked to draw. */
-test("Les Abstraits' motifs are abstract compositions, not smoke and embers", async ({ page }) => {
+/* LES ABSTRAITS, PROFOUND AND MINIMAL: "change the hover effect of les
+   abstraits, i want it to be somehow more profound and yet minimalist."
+   One composition over the whole page — a point of the bottles' amber,
+   a horizon through it and one great circle round it in a single brush
+   stroke — in place of several compositions of circles, triangles and
+   dots at once and a scatter of points round them. Read off what the
+   motifs' canvas is asked to draw once it has all come: never more than
+   a handful of things in a frame (it was dozens), the amber there, a
+   hairline across nearly the whole width of the window, and one filled
+   shape — the circle's stroke — hundreds of pixels across. */
+test("Les Abstraits' motif is one point, one line and one circle", async ({ page }) => {
   await page.addInitScript(() => {
-    window.__arcs = 0;
+    window.__frame = 0;
+    window.__watch = false;
+    window.__ops = {};
     window.__colours = new Set();
+    window.__longest = 0;
+    window.__widest = 0;
+    const tick = () => { window.__frame++; requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
     const P = CanvasRenderingContext2D.prototype;
-    const arc = P.arc;
-    P.arc = function () {
-      if (this.canvas.classList.contains("sheet-motifs")) window.__arcs++;
-      return arc.apply(this, arguments);
+    const mine = (c) => window.__watch && c.canvas.classList.contains("sheet-motifs");
+    let box = null;
+    const grow = (x, y) => { if (box) { box.l = Math.min(box.l, x); box.r = Math.max(box.r, x); box.t = Math.min(box.t, y); box.b = Math.max(box.b, y); } };
+    const own = { beginPath: P.beginPath, moveTo: P.moveTo, lineTo: P.lineTo, fill: P.fill, stroke: P.stroke };
+    P.beginPath = function () { if (mine(this)) box = { l: Infinity, r: -Infinity, t: Infinity, b: -Infinity }; return own.beginPath.apply(this, arguments); };
+    P.moveTo = function (x, y) { if (mine(this)) grow(x, y); return own.moveTo.apply(this, arguments); };
+    P.lineTo = function (x, y) { if (mine(this)) grow(x, y); return own.lineTo.apply(this, arguments); };
+    const count = (c) => { window.__ops[window.__frame] = (window.__ops[window.__frame] || 0) + 1; };
+    P.fill = function () {
+      if (mine(this)) { count(this); if (box) window.__widest = Math.max(window.__widest, Math.min(box.r - box.l, box.b - box.t)); }
+      return own.fill.apply(this, arguments);
+    };
+    P.stroke = function () {
+      if (mine(this)) { count(this); if (box && box.b - box.t < 2) window.__longest = Math.max(window.__longest, box.r - box.l); }
+      return own.stroke.apply(this, arguments);
     };
     for (const key of ["fillStyle", "strokeStyle"]) {
       const d = Object.getOwnPropertyDescriptor(P, key);
       Object.defineProperty(P, key, {
         get() { return d.get.call(this); },
         set(v) {
-          if (this.canvas.classList.contains("sheet-motifs")) window.__colours.add(String(v).replace(/,\s*[\d.]+\)$/, ")"));
+          if (mine(this)) window.__colours.add(String(v).replace(/,\s*[\d.]+\)$/, ")"));
           d.set.call(this, v);
         },
       });
@@ -684,10 +861,20 @@ test("Les Abstraits' motifs are abstract compositions, not smoke and embers", as
   await page.goto(SHEET);
   await waitForSheet(page);
   await pointAt(page, 5);
-  await page.waitForTimeout(4000);
-  const seen = await page.evaluate(() => ({ arcs: window.__arcs, colours: [...window.__colours] }));
-  expect(seen.arcs, "circles and arcs are drawn").toBeGreaterThan(20);
-  expect(seen.colours.some((c) => c.startsWith("rgba(184, 128, 46")), "in the bottles' amber").toBe(true);
+  await page.waitForTimeout(4600);
+  await page.evaluate(() => { window.__watch = true; });
+  await page.waitForTimeout(1200);
+  const seen = await page.evaluate(() => {
+    window.__watch = false;
+    const ops = Object.values(window.__ops);
+    return { frames: ops.length, most: Math.max(0, ...ops), colours: [...window.__colours],
+      longest: window.__longest, widest: window.__widest, width: innerWidth };
+  });
+  expect(seen.frames, "it was drawn").toBeGreaterThan(20);
+  expect(seen.most, "a handful of things in a frame, not dozens").toBeLessThanOrEqual(12);
+  expect(seen.colours.some((c) => c.startsWith("rgba(184, 128, 46")), "the point, in the bottles' amber").toBe(true);
+  expect(seen.longest, "a horizon across nearly the whole window").toBeGreaterThan(seen.width * 0.9);
+  expect(seen.widest, "and one great circle").toBeGreaterThan(200);
   expect(seen.colours.some((c) => c.startsWith("rgba(196, 86, 31") || c.startsWith("rgba(80, 78, 74")),
     "and no embers or smoke").toBe(false);
 });

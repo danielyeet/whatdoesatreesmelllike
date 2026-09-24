@@ -128,7 +128,7 @@ Taken from each house's own page. `data-motif` on the frame names which set.
 | Almost Human | figures of specks that gather most of the way into a person and come apart again, never quite arriving; and rain |
 | Ataraxia | bands of specks crossing the window at their own angles, with a crest of light travelling along each |
 | Grande Parfums | the drift, rising, with a few larger motes — the quietest, as the house's own ground is |
-| Les Abstraits | smoke rising in strands off Des Cendres' fire, embers, and falling ash |
+| Les Abstraits | smoke rising in strands off Des Cendres' fire, embers, and falling ash (then abstract compositions; since 2026-09-24, night, one point, one line and one circle — see the foot) |
 | Tale Parfums | doodles drawing themselves in — stars, hearts, moons, spirals, flowers, sparkles, drops — the heart and the flowers coloured in with the labels' peach and green |
 | Tombstone | stones standing up out of mist, drifting mist, and red petals |
 | Qimu & Musicians | notes rising, a record turning, and a line of sound across the page |
@@ -311,3 +311,42 @@ into the window, since a root from the side can wander up past the edge. Fails w
 petals, with petals given a life of four seconds, and — three runs of three — with the
 roots starting under the chrome again). The Tombstone names test still passes seeded:
 adding the petals changes what the seeded chance draws, and it was run again.
+
+
+## 2026-09-24, night — Les Abstraits, profound and minimal
+
+> I want you to change the hover effect of les abstraits, i want it to be somehow more
+> profound and yet minimalist.
+
+The abstract compositions — several at once, each three to five circles, arcs, lines,
+triangles, discs and rows of dots, with a scatter of loose points between them — are gone
+(`composition`, `point`). In their place, `stillness()`: **one composition over the whole
+page, of three things, each coming in its turn** — the house's own *Eugen's ideas and
+Antoine Lie's execution* said as a drawing:
+
+- **The point** — the idea: one small solid point of the bottles' amber
+  (`ABSTRAIT_AMBER`), set down first, then breathing very slowly.
+- **The line** — a horizon through it, a hairline at the golden section of the window's
+  height (0.618), drawn out from the point to both edges.
+- **The circle** — the execution: one great circle round the point, laid down in **a
+  single stroke of a brush** (an *ensō*) over `ENSO_MS`: heavy and round where the brush
+  lands, narrowing as it goes, never quite closed (`ENSO_SWEEP`, 91% of a turn), and split
+  by **dry streaks** towards its end. The stroke is one filled shape of changing width; the
+  streaks are cut out of it (`destination-out`), which is how paper shows through where a
+  brush has run dry. It is drawn before the line and the point so the cuts go through
+  nothing of theirs.
+- And now and then (`RIPPLE_EVERY`) a hairline **ring** of amber goes out from the point to
+  the circle and is gone, so the page is never quite still.
+
+Everything stands behind the houses, so **the point is set on whichever side of the
+window has no house standing over it** at the horizon (read off `readAround`, the boxes
+the Houses view hands over), the right third if both are clear. It has no life of its
+own: it stays whole until the house is left, and then fades with everything else.
+
+Tested in `tests/contact-sheet.spec.js`: **`Les Abstraits' motif is one point, one line and
+one circle`** replaces *abstract compositions, not smoke and embers*. It reads what the
+motifs' canvas is asked to draw once it has all come: never more than twelve things
+filled or stroked in a frame (the compositions drew dozens — it fails there against the
+old code), the amber there, a stroke one pixel high across more than 90% of the window
+(the horizon), a filled shape more than 200px each way (the circle's stroke), and no
+embers or smoke.

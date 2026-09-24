@@ -357,13 +357,13 @@ test("Ataraxia is dark gray, and its writing is light on it", async ({ page }) =
 
 /* THE KINDLE — the one thing on that page that answers the hand. The
    specks within reach of the pointer burn brighter, so what this
-   measures is the ink going UP where the pointer arrives and back down
-   when it leaves.
+   measures is the ink going UP where the pointer arrives, STAYING up a
+   moment after it leaves, and then coming back down.
 
    IT COUNTS ONE CORNER rather than the whole canvas, because the crest
    travelling along each band changes the total on its own and would
    swamp the reading. */
-test("the specks kindle under the pointer, and go out again",
+test("the specks kindle under the pointer, linger a moment, and go out again",
   async ({ page }) => {
   await page.goto(ATARAXIA);
   await page.waitForTimeout(1500);
@@ -388,11 +388,19 @@ test("the specks kindle under the pointer, and go out again",
   await page.waitForTimeout(700);
   const near = await ink();
   await page.mouse.move(900, 700);
-  await page.waitForTimeout(900);
+  // AND THEY LINGER: "a delay of the particles turning off after you
+  // hover them". A moment after the pointer has gone they are still
+  // burning; they go out over the next second or two. They used to go
+  // out the instant it moved on.
+  await page.waitForTimeout(150);
+  const after = await ink();
+  await page.waitForTimeout(2600);
   const gone = await ink();
 
   expect(near, `away ${away}, near ${near}`).toBeGreaterThan(away * 1.15);
-  expect(gone, `near ${near}, gone ${gone}`).toBeLessThan(near);
+  expect(after, `a moment after the pointer left: ${after}, against ${away} away`).toBeGreaterThan(away * 1.15);
+  expect(gone, `after ${after}, gone ${gone}`).toBeLessThan(after);
+  expect(gone, `and back about where it was: away ${away}, gone ${gone}`).toBeLessThan(near * 0.95);
 });
 
 /* GRANDE PARFUMS HAS A GROUND NOW, and it is the quietest one on the

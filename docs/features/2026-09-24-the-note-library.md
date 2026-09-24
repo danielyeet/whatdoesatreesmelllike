@@ -3,7 +3,7 @@
 Date: 2026-09-24
 
 Files touched: `categories/note-library.html` (new), `note-library.js` (new, ~870
-lines), the `lib-*` rules at the foot of `style.css`, `nav.js` (a line in `SITE_LINKS`),
+lines; ~990 by the last section), the `lib-*` rules at the foot of `style.css`, `nav.js` (a line in `SITE_LINKS`),
 `search.js` (a note is findable, by any of its spellings), `search-page.js` (a line in
 `PAGES`), `search.html` (a **Notes** filter), `tests/note-library.spec.js` (new), and the
 page lists in `tests/menu.spec.js`, `tests/pages.spec.js` and `tests/mobile.spec.js`.
@@ -267,3 +267,51 @@ their tabs` (reads every record's drawn colours: the folder near-grey with nothi
 the tab coloured and different from shelf to shelf; fails against the old books) and `the
 lamp follows the pointer a beat behind it` (fails against the old lamp). Sixteen tests in
 the file.
+
+
+## 2026-09-24, night — accords, a new figure, and digital files
+
+> make the files still more digital in the notes library. Replace the word shelves with
+> "accords". removes names as written. If you want give me other statistics that you can
+> use here.
+
+- **"Shelves" is "Accords"** wherever a reader sees it: the readout, the index's label
+  (*Accords*, and *Every accord* on the All tab), the order buttons' label, the card
+  (*Accord WOO — Woods*), the lede (*filed by accord*) and the comments at the head of the
+  page that tell the owner how to add a note. **The code still says shelf** —
+  `.lib-shelf`, `data-shelf`, `#shelf-woo`, `onShelf` — because those are names nobody
+  reads and every test and link into the page uses them; *Old Books*' explanation keeps its
+  *library shelves*, which are real shelves.
+- **"Names as written" is gone** from the readout. In its place, **Most used**: the note
+  the most fragrances name, worked out like everything else here — *Cedarwood, in 28
+  fragrances* when it was written — set as a word rather than ticked up to, with what it
+  counts under it (`.lib-readout-word`). Other figures that could stand here, offered to
+  the owner rather than put up: notes named by only one fragrance; how many houses a note
+  is found across; the average number of notes a fragrance names; how many notes come
+  from a house's own page against Fragrantica.
+- **The folders are digital files now** — and still nothing glows or takes a colour but
+  the tab, because the last round's note was "too annoyingly neony":
+  - a **pixel glyph** of each folder's own at its head (`.lib-glyph`): five pixels by five,
+    drawn off the name by the same kind of seeded generator as the barcode and mirrored down
+    its middle, as a file's icon is. Every lit pixel is a `box-shadow` of one 3px square, so
+    a glyph is one element; the top left pixel is the square itself (a shadow is never
+    drawn under its own box). `data-cells` carries which are lit.
+  - the **meter** under the tab **segmented**, like a level meter (a repeating mask), and
+    a pixel taller;
+  - a fine **dot screen** over the folder's face;
+  - the tab's corners **stepped** a pixel at a time rather than rounded (`clip-path`);
+  - and the name **decoding** under the hand (`decode()`): for 420ms it is a run of stray
+    characters settling, left to right, into the name. It is drawn **over** the name — the
+    name is set transparent and `data-code` shown by a `::after` — so the name itself, which
+    the search and a screen reader read, never changes. Nothing with reduced motion.
+  To make room for the glyph the name starts 34px down rather than 16, and the folders and
+  the rows are 18px taller (`TALL_MIN` 140, `TALL_MAX` 204, `--row` 214px).
+
+Tested in `tests/note-library.spec.js`, both failing against the page before:
+**`the page says accords rather than shelves, and no longer counts names as written`** (the
+four figures by name, Most used checked against the folders' own counts, no *shel* in
+anything a reader sees, and the card's *Accord WOO*) and **`every folder is a digital file:
+a pixel glyph of its own, a segmented meter, a name that decodes`** (a glyph on every
+folder and over 80% of them different, the meter masked, and Vetiver decoding under the
+pointer with its own text untouched and back once it has finished). Eighteen tests in the
+file.

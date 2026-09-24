@@ -19,7 +19,7 @@
 //                 turned away round the axis, above and below, smaller
 //                 and fainter the further round they are. Every house
 //                 is joined to the axis by a TETHER of specks.
-//   THE FRONT     the house you are on: a ring of specks turns round it,
+//   THE FRONT     the house you are on: four corners of specks mark it,
 //                 and pressing it opens the house. Pressing any other
 //                 brings IT to the front. Its line about the house shows
 //                 only while it is pointed at, as every house's does.
@@ -27,13 +27,21 @@
 //                 the arrow keys, by the numbers on the axis, and by the
 //                 two buttons at the side with where you are between
 //                 them — the owner's "navigatable".
-//   THE ARRIVAL   the axis is drawn out from the middle of the page, and
-//                 the houses come out of it one after another, nearest
-//                 first, on a burst of specks.
+//   THE ARRIVAL   one thing after another, at the owner's word: first the
+//                 axis, drawn out from the middle to the top and the foot
+//                 of the window; then the helix, winding out along it;
+//                 and only then the houses, 01 first and the rest in
+//                 order after it, quickly, each on a burst of specks.
 //
-// RESTING ON A HOUSE still brings its motifs over the page while the
-// rest goes out of focus (motifs.js), and PRESSING the front one still
-// steps the page back and opens it.
+// THE WHOLE WINDOW IS THE HOUSES' — the axis runs from its very top to
+// its very foot, between the two buttons across the top, and a house
+// turned away above or below goes off the window's own edge rather than
+// being cut off partway across the white.
+//
+// RESTING ON A HOUSE still brings its motifs over the page (motifs.js),
+// and PRESSING the front one still steps the page back and opens it.
+// Specks the pointer passes over stay lit for a moment after it has
+// gone, and only then go out.
 //
 // The houses are the <a class="sheet-frame"> blocks in the page, in
 // order, so adding a house is an HTML edit and nothing here changes.
@@ -81,10 +89,14 @@
   const SNAP_MS = 170;             // how long after the last movement it settles
   const EASE = 7.5;                // how quickly it follows where it is sent
 
-  // THE ARRIVAL
-  const AXIS_MS = 760;             // the axis drawn out from the middle
-  const EMERGE_MS = 820;           // a house coming out of it
-  const EMERGE_STEP = 110;         // between one house and the next
+  // THE ARRIVAL, one thing after another: "first the central line, then
+  // the spiral of particles and only then the images ... chronologically
+  // yet relatively quickly". It used to bring the houses out while the
+  // axis was still being drawn, and the helix with the axis.
+  const AXIS_MS = 700;             // the axis drawn out from the middle to both ends
+  const HELIX_MS = 900;            // then the helix winding out along it
+  const EMERGE_MS = 560;           // then a house coming out of the axis
+  const EMERGE_STEP = 85;          // and the next, in order, 01 first
 
   // THE PARTICLES
   const FALL = 46;                 // px a second down the axis
@@ -107,6 +119,14 @@
   const CORNER_LEG = 26;           // px each arm reaches
   const CORNER_STEP = 3.2;         // px between its specks
   const CORNER_OUT = 16;           // px outside the picture and its label
+
+  // THE HAND'S AFTERGLOW: specks the pointer has passed over stay lit a
+  // moment after it has gone, and only then go out — the owner asked for
+  // "a delay of the particles turning off after you hover them". They
+  // used to go out the instant the pointer left them.
+  const HAND_REACH = 140;          // px, how far round the pointer specks are lit
+  const GLOW_HOLD = 0.45;          // s they stay at full once it has gone
+  const GLOW_FADE = 1.1;           // s they then take to go out
 
   // How long the pointer has to rest on a house before its motifs come.
   // It was 420ms and the owner found it "too long".
@@ -185,18 +205,34 @@
   // ============================================================
   let W = 0, H = 0, ratio = 1;
   let cx = 0, cy = 0, R = 0, span = 0, frontH = 0, frontW = 0;
+  // THE ROOM the helix is laid out in: the window below the chrome, as it
+  // always was, so the front house stands exactly where it did.
+  let roomTop = 0, room = 0;
   function layout() {
-    // The houses have the window below the chrome, and no more: the
-    // page does not scroll under them, it travels along the helix.
-    const top = sheet.getBoundingClientRect().top + window.scrollY;
-    W = sheet.clientWidth;
-    H = Math.max(420, Math.round(window.innerHeight - top - 8));
+    // THE HOUSES HAVE THE WHOLE WINDOW, top to bottom. The owner asked
+    // for the axis to go "all the way up" and "all the way down", and for
+    // a house turned away above or below not to "disappear midway through
+    // the white" — which it did, cut off by the edge of a sheet that
+    // began under the chrome and ended short of the foot. So the sheet is
+    // pulled up to the window's top edge (a negative margin as tall as
+    // the room the chrome takes) and runs to its foot; everything drawn
+    // and everything clipped reaches the window's own edges; and the
+    // helix itself is still laid out in the room below the chrome. The
+    // page still does not scroll: it is exactly the window.
+    sheet.style.marginTop = "";
+    roomTop = sheet.getBoundingClientRect().top + window.scrollY;
+    room = Math.max(420, Math.round(window.innerHeight - roomTop - 8));
+    H = Math.round(roomTop + room + 8);
+    sheet.style.marginTop = (-roomTop).toFixed(1) + "px";
     sheet.style.height = H + "px";
+    // The way round stands at the middle of the room, where it stood.
+    sheet.style.setProperty("--room-middle", (roomTop + room / 2).toFixed(1) + "px");
+    W = sheet.clientWidth;
     cx = W / 2;
-    cy = H * 0.47;
-    span = H * (W < NARROW ? SPAN_NARROW : SPAN);
+    cy = roomTop + room * 0.47;
+    span = room * (W < NARROW ? SPAN_NARROW : SPAN);
     R = Math.min(W * RADIUS, RADIUS_MOST);
-    frontH = Math.max(FRONT_FEWEST, Math.min(FRONT_MOST, H * FRONT, (W - 40) / SHAPE * 0.72));
+    frontH = Math.max(FRONT_FEWEST, Math.min(FRONT_MOST, room * FRONT, (W - 40) / SHAPE * 0.72));
     frontW = frontH * SHAPE;
     ratio = Math.min(window.devicePixelRatio || 1, W < 700 ? 1.5 : 2);
     field.width = Math.round(W * ratio);
@@ -234,6 +270,7 @@
   let pos = 0, target = 0;
   const shown = frames.map(() => (REDUCE_MOTION ? 1 : 0));   // each house's arrival, 0 to 1
   let axisShown = REDUCE_MOTION ? 1 : 0;
+  let helixShown = REDUCE_MOTION ? 1 : 0;
   let front = -1;
 
   function place() {
@@ -248,10 +285,14 @@
       // slide in from anywhere.
       const x = cx + (p.x - cx) * come;
       const s = p.s * (0.94 + 0.06 * come);
-      // Faint the further round it is, and gone a little way off the
-      // page's top and bottom.
-      const off = Math.max(0, Math.abs(p.y - cy) - H * 0.42) / (H * 0.2);
-      const seen = come * Math.max(0, 1 - off) * (0.3 + 0.7 * (p.z + 1) / 2);
+      // Faint the further round it is — and NOT faded as it nears the top
+      // or the foot: it goes off the window's own edge. It used to fade
+      // from partway down and was then cut off by the sheet's edge, under
+      // the chrome, which is what "disappearing midway through the white"
+      // was. Only once it is wholly off the window is it let go of.
+      const half = frontH * s / 2 + 30;   // and its label under it
+      const gone = p.y + half < 0 || p.y - half > H;
+      const seen = gone ? 0 : come * (0.3 + 0.7 * (p.z + 1) / 2);
       frame.style.transform = "translate(" + (x - frontW / 2).toFixed(1) + "px," +
         (p.y - frontH / 2).toFixed(1) + "px) scale(" + s.toFixed(4) + ")";
       frame.style.setProperty("--shown", seen.toFixed(3));
@@ -266,7 +307,7 @@
 
       const mark = marks[i];
       const my = p.y;
-      const markSeen = Math.max(0, 1 - Math.abs(my - cy) / (H * 0.55)) * axisShown;
+      const markSeen = Math.max(0, 1 - Math.abs(my - cy) / (room * 0.55)) * axisShown;
       mark.style.transform = "translate(" + (cx + 12).toFixed(1) + "px," + (my - 9).toFixed(1) + "px)";
       mark.style.opacity = markSeen.toFixed(3);
       mark.classList.toggle("is-on", atFront);
@@ -302,12 +343,27 @@
   const bursts = [];  // specks thrown out as a house arrives
   let corners = null; // where the corners stand, eased
   let px = -9999, py = -9999;
+  // WHERE THE POINTER HAS BEEN, for the afterglow: points along its way,
+  // each with the moment it was last there. `lit` is the ones still
+  // glowing this frame, each with how much.
+  const trail = [];
+  let lit = [];
+  const glowOf = (age) => age <= GLOW_HOLD ? 1
+    : Math.max(0, 1 - (age - GLOW_HOLD) / GLOW_FADE) ** 2;
 
   const INK = getComputedStyle(document.body).getPropertyValue("--ink-rgb").trim() || "23, 23, 15";
   function speck(x, y, size, a) {
     if (a <= 0.01 || x < -10 || x > W + 10 || y < -10 || y > H + 10) return;
-    // Specks near the pointer are drawn plainer.
-    const near = Math.max(0, 1 - Math.hypot(x - px, y - py) / 140);
+    // Specks near the pointer are drawn plainer — and so, for a moment,
+    // are the ones it has just passed over.
+    let near = Math.max(0, 1 - Math.hypot(x - px, y - py) / HAND_REACH);
+    for (let k = 0; k < lit.length; k++) {
+      const p = lit[k];
+      const dx = x - p.x, dy = y - p.y;
+      if (dx > HAND_REACH || dx < -HAND_REACH || dy > HAND_REACH || dy < -HAND_REACH) continue;
+      const here = (1 - Math.sqrt(dx * dx + dy * dy) / HAND_REACH) * p.glow;
+      if (here > near) near = here;
+    }
     ink.globalAlpha = Math.min(1, a * (1 + near * 1.4));
     const s = size * (1 + near * 0.5);
     ink.fillRect(x - s / 2, y - s / 2, s, s);
@@ -320,39 +376,44 @@
     ink.clearRect(0, 0, W, H);
     ink.fillStyle = "rgb(" + INK + ")";
 
-    // THE AXIS: drawn out from the middle as the page arrives — its
-    // light, its line, and the pulses running down it.
-    const reach = (H / 2 + 20) * axisShown;
+    // Which of the places the pointer has passed are still glowing.
+    const clock = now / 1000;
+    while (trail.length && glowOf(clock - trail[0].at) <= 0) trail.shift();
+    lit = REDUCE_MOTION ? [] : trail.map((p) => ({ x: p.x, y: p.y, glow: glowOf(clock - p.at) }));
+
+    // THE AXIS, from the very top of the window to its very foot: drawn
+    // out from the middle to both ends as the page arrives — its light,
+    // its line, and the pulses running down it.
+    const top = cy - (cy + 20) * axisShown;
+    const foot = cy + (H - cy + 20) * axisShown;
     const glow = ink.createLinearGradient(cx - AXIS_GLOW, 0, cx + AXIS_GLOW, 0);
     glow.addColorStop(0, "rgba(" + INK + ", 0)");
     glow.addColorStop(0.5, "rgba(" + INK + ", 0.1)");
     glow.addColorStop(1, "rgba(" + INK + ", 0)");
     ink.globalAlpha = axisShown;
     ink.fillStyle = glow;
-    ink.fillRect(cx - AXIS_GLOW, cy - reach, AXIS_GLOW * 2, reach * 2);
+    ink.fillRect(cx - AXIS_GLOW, top, AXIS_GLOW * 2, foot - top);
     if (!REDUCE_MOTION) {
-      const lap = H + PULSE_LEN;
+      const lap = H + 40 + PULSE_LEN;
       for (let k = 0; k < AXIS_PULSES; k++) {
-        const y = cy - reach + ((t * PULSE_SPEED + k * lap / AXIS_PULSES) % lap);
+        const y = -20 + ((t * PULSE_SPEED + k * lap / AXIS_PULSES) % lap);
         const tail = ink.createLinearGradient(0, y - PULSE_LEN, 0, y);
         tail.addColorStop(0, "rgba(" + INK + ", 0)");
         tail.addColorStop(1, "rgba(" + INK + ", 0.75)");
         ink.fillStyle = tail;
-        const top = Math.max(cy - reach, y - PULSE_LEN), foot = Math.min(cy + reach, y);
-        if (foot > top) ink.fillRect(cx - 1.75, top, 3.5, foot - top);
+        const from = Math.max(top, y - PULSE_LEN), to = Math.min(foot, y);
+        if (to > from) ink.fillRect(cx - 1.75, from, 3.5, to - from);
       }
     }
     ink.fillStyle = "rgb(" + INK + ")";
     ink.globalAlpha = 0.8 * axisShown;
-    ink.fillRect(cx - 0.9, cy - reach, 1.8, reach * 2);
+    ink.fillRect(cx - 0.9, top, 1.8, foot - top);
     // Its ticks travel with you: one every quarter house, a long one at
     // each house.
     const quarter = span / 4;
-    const lead = Math.ceil(reach / quarter) + 1;
-    const base = Math.round(pos * 4);
-    for (let k = base - lead; k <= base + lead; k++) {
-      const y = cy + k * quarter - pos * span;
-      if (Math.abs(y - cy) > reach) continue;
+    const shift = pos * span;
+    for (let k = Math.ceil((top - cy + shift) / quarter); k <= Math.floor((foot - cy + shift) / quarter); k++) {
+      const y = cy + k * quarter - shift;
       const long = ((k % 4) + 4) % 4 === 0;
       ink.globalAlpha = (long ? 0.7 : 0.34) * axisShown;
       ink.fillRect(cx - (long ? 9 : 4.5), y, long ? 18 : 9, 1);
@@ -360,28 +421,36 @@
     // Specks falling down it, always.
     for (const a of axisSpecks) {
       const y = ((a.y * H + (REDUCE_MOTION ? 0 : t * FALL * (0.6 + a.lit))) % H + H) % H;
-      if (Math.abs(y - cy) > reach) continue;
+      if (y < top || y > foot) continue;
       const bright = 1 - Math.abs(y - cy) / (H * 0.7);
       speck(cx + a.off, y, a.size, a.lit * (0.25 + bright) * 0.85 * axisShown);
     }
 
+    // THE HELIX comes second, once the axis is drawn: its strands wind
+    // out along the axis from the middle, up and down at once, the dust
+    // gathering round it as they go (`helixShown`).
+    const wound = helixShown * 3;
+
     // THE DUST, behind and in front of the axis alike.
     const many = W < 700 ? Math.round(DUST * 0.45) : DUST;
-    const band = H * 1.4;
+    const column = H * 1.4;
     for (let n = 0; n < many; n++) {
       const d = dust[n];
       const a = d.a + (REDUCE_MOTION ? 0 : t * DUST_SPIN) + pos * TURN * 0.5;
-      const y = cy + ((((d.y * band / 2 - pos * span * 0.6) % band) + band * 1.5) % band) - band / 2;
+      const y = cy + ((((d.y * column / 2 - pos * span * 0.6) % column) + column * 1.5) % column) - column / 2;
       const z = Math.cos(a);
       const depth = (z + 1) / 2;
-      speck(cx + R * 1.1 * d.r * Math.sin(a), y, d.size * (0.6 + depth * 0.8), d.lit * (0.07 + 0.28 * depth) * axisShown);
+      speck(cx + R * 1.1 * d.r * Math.sin(a), y, d.size * (0.6 + depth * 0.8), d.lit * (0.07 + 0.28 * depth) * helixShown);
     }
 
     // THE HELIX: two strands, one either side of the axis, winding
     // through where the houses stand.
-    const from = pos - 3, to = pos + 3;
+    const from = pos - Math.min(3, wound), to = pos + Math.min(3, wound);
     for (let u = Math.floor(from / STRAND_STEP) * STRAND_STEP; u < to; u += STRAND_STEP) {
       const d = u - pos;
+      // The growing ends are drawn brighter, so the strands are seen to
+      // wind out rather than simply fade up.
+      const tip = helixShown < 1 ? Math.max(0, 1 - (wound - Math.abs(d)) * 4) : 0;
       for (let strand = 0; strand < 2; strand++) {
         const a = d * TURN + strand * Math.PI;
         const z = Math.cos(a);
@@ -389,7 +458,7 @@
         const y = cy + d * span;
         const depth = (z + 1) / 2;
         const fade = Math.max(0, 1 - Math.abs(d) / 2.6);
-        speck(x, y, 0.9 + depth * 1.6, (0.16 + 0.62 * depth) * fade * axisShown * (strand ? 0.6 : 1));
+        speck(x, y, 0.9 + depth * 1.6 + tip * 1.4, ((0.16 + 0.62 * depth) * fade + tip * 0.5) * (strand ? 0.6 : 1));
       }
     }
     // Bright specks travelling along the strands.
@@ -397,10 +466,10 @@
       if (!REDUCE_MOTION) f.u += f.v * 0.016;
       if (f.u > N + 2) f.u = -2;
       const d = f.u - pos;
-      if (Math.abs(d) > 2.6) continue;
+      if (Math.abs(d) > 2.6 || Math.abs(d) > wound) continue;
       const a = d * TURN + f.strand * Math.PI;
       const z = Math.cos(a);
-      speck(cx + R * Math.sin(a), cy + d * span, 1.6 + z, (0.35 + 0.5 * (z + 1) / 2) * (1 - Math.abs(d) / 2.6) * axisShown);
+      speck(cx + R * Math.sin(a), cy + d * span, 1.6 + z, (0.35 + 0.5 * (z + 1) / 2) * (1 - Math.abs(d) / 2.6) * helixShown);
     }
 
     // THE TETHERS: from the axis to every house, a line of specks with
@@ -527,9 +596,23 @@
     dragTarget = target;
     dragId = e.pointerId;
   });
+  /** Leave where the pointer was on its trail, to go on glowing a
+      moment after it has moved on. Points are kept a little apart, and
+      one the pointer is still standing on is simply kept fresh. */
+  function mark(x, y) {
+    if (REDUCE_MOTION || x < -999) return;
+    const at = performance.now() / 1000;
+    const last = trail[trail.length - 1];
+    if (last && Math.hypot(last.x - x, last.y - y) < 14) { last.x = x; last.y = y; last.at = at; return; }
+    trail.push({ x: x, y: y, at: at });
+    if (trail.length > 160) trail.shift();
+  }
   window.addEventListener("pointermove", (e) => {
-    px = e.clientX - (sheet.getBoundingClientRect().left);
-    py = e.clientY - (sheet.getBoundingClientRect().top);
+    const box = sheet.getBoundingClientRect();
+    mark(px, py);
+    px = e.clientX - box.left;
+    py = e.clientY - box.top;
+    mark(px, py);
     if (!dragging || e.pointerId !== dragId) return;
     const dy = e.clientY - dragFrom;
     if (Math.abs(dy) > 6) dragged = true;
@@ -537,6 +620,8 @@
     target = Math.max(-0.35, Math.min(N - 1 + 0.35, dragTarget - dy / span));
     wake();
   }, { passive: true });
+  // The pointer leaving the window leaves its glow behind it, going out.
+  document.addEventListener("pointerleave", () => { mark(px, py); px = -9999; py = -9999; wake(); });
   const letGo = (e) => {
     if (!dragging || (e && e.pointerId !== dragId)) return;
     dragging = false;
@@ -573,9 +658,9 @@
       return;
     }
     const t0 = performance.now();
-    // Nearest the front first.
-    const order = frames.map((_, i) => i).sort((a, b) => Math.abs(a - target) - Math.abs(b - target));
-    const startOf = (i) => AXIS_MS * 0.55 + order.indexOf(i) * EMERGE_STEP;
+    // First the axis, then the helix, and only then the houses — in
+    // order, 01 first, which is also the one at the front.
+    const startOf = (i) => AXIS_MS + HELIX_MS + i * EMERGE_STEP;
     const burst = (i) => {
       const p = spot(i - pos);
       for (let k = 0; k < 26; k++) {
@@ -587,8 +672,8 @@
     const burstDone = frames.map(() => false);
     const step = (now) => {
       const t = now - t0;
-      axisShown = Math.min(1, t / AXIS_MS);
-      axisShown = 1 - Math.pow(1 - axisShown, 3);
+      axisShown = 1 - Math.pow(1 - Math.min(1, t / AXIS_MS), 3);
+      helixShown = 1 - Math.pow(1 - Math.max(0, Math.min(1, (t - AXIS_MS) / HELIX_MS)), 2);
       let all = true;
       frames.forEach((frame, i) => {
         const q = Math.max(0, Math.min(1, (t - startOf(i)) / EMERGE_MS));
@@ -596,7 +681,7 @@
         shown[i] = 1 - Math.pow(1 - q, 3);
         if (q < 1) all = false;
       });
-      if (!all || t < AXIS_MS) { requestAnimationFrame(step); return; }
+      if (!all || t < AXIS_MS + HELIX_MS) { requestAnimationFrame(step); return; }
       finish();
     };
     requestAnimationFrame(step);
@@ -604,6 +689,7 @@
   }
   function finish() {
     axisShown = 1;
+    helixShown = 1;
     shown.fill(1);
     sheet.classList.add("drawn");
     document.body.classList.add("sheet-named");
