@@ -315,3 +315,27 @@ a pixel glyph of its own, a segmented meter, a name that decodes`** (a glyph on 
 folder and over 80% of them different, the meter masked, and Vetiver decoding under the
 pointer with its own text untouched and back once it has finished). Eighteen tests in the
 file.
+
+
+## 2026-09-24, late night — the card's lists as dropdowns
+
+> Something I want you to do is also add the ability to make everything a dropdown list in
+> the library of notes. I want you to be able to do a dropdown list of houses, then of
+> pineward and then only see the individual fragrances. I think that way it would be a lot
+> less chaotic.
+
+The catalogue card's **Found in** is dropdowns now, all shut when the card opens: **Individual
+fragrances** and **Houses**, each with how many are inside at the far end of its line;
+Houses opens onto the houses, each with its own count; and a house opens onto its own
+fragrances. **Also catalogued as** is one too. They are real `<details>`, so they open by
+keyboard, and a small triangle turns as each opens (`.lib-drop`). **What was left open
+stays open when the card turns over to another note** (`opened`, keyed by group and house),
+so going along the stacks does not mean opening Pineward every time. The class names the
+earlier tests read — `.lib-found-head`, `.lib-found-housename` — are kept, on the names in
+the summaries, with the counts beside them rather than in them.
+
+Tested in `tests/note-library.spec.js`: **`the card's lists are dropdowns: houses, then a
+house, then its fragrances`** — Cedarwood's card opens with nothing open and no fragrance
+showing; Houses shows the houses and still no fragrance; Pineward shows exactly Pineward's,
+and its count says how many; and turned over to Vetiver, Houses and Pineward are still
+open. Fails against the card before. Nineteen tests in the file.

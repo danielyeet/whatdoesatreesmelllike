@@ -17,6 +17,13 @@ their own names:
                                   the owner's own description of it.
                                   Not a photograph, and not the house's.
 
+  les-abstraits-logo.png          THE HOUSE'S MARK, as the owner sent it
+                                  (white on black, 392 x 312). Not shown
+                                  as a picture anywhere: motifs.js reads
+                                  its white as the shape the droplets
+                                  gather into when Les Abstraits is
+                                  rested on on the Houses view.
+
 Each fragrance is pointed at in two places on the page — the small
 square in the list and the full picture inside. A file that is not here
 is not a problem: house.js takes the <img> off the page, which puts the

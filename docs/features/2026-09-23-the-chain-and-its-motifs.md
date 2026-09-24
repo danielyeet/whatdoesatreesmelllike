@@ -350,3 +350,94 @@ filled or stroked in a frame (the compositions drew dozens — it fails there ag
 old code), the amber there, a stroke one pixel high across more than 90% of the window
 (the horizon), a filled shape more than 200px each way (the circle's stroke), and no
 embers or smoke.
+
+
+## 2026-09-24, late night — five houses' motifs made over
+
+> Please undo whatever it is you did with ataraxia, I meant that the particles should be
+> more emphasized, not make a random beam where they are. please undo and make it
+> emphasized in a way of particles and shadows rather than the gray rectangle. — With
+> grande parfums, i want the particles that come up to sort of bubble. ALso double their
+> frequency and quantity. — For les abstraits, make something to do with droplets, and
+> concentrations (the chemical act of concentrating) OR EVEN BETTER, MAKE SOMETHING USING
+> THEIR LOGO — for QImu and musicians, make it complex, I dont want it to be just a simple
+> 4/4 rhythm with a note here and there, i want it to resemble proper complex compostions.
+> and then make it that sometimes they are in the 5 line grid, while othertimes it is just
+> complex notes popping up spontaneously. — make the amost human hover effect be more like
+> humans glitching into existence and then after a brief delay glitching out (i may want
+> to reverse this but lets try)
+
+- **Ataraxia: the haze is gone; particles and shadows instead.** Each band used to lay
+  one soft grey stroke 40-odd pixels wide along its whole length under its specks — the
+  owner's "random beam" and "gray rectangle". It is taken out. A band is its particles
+  now: darker, heaped towards its spine so it has a body, about one in thirty a larger
+  round **mote**, the crest swelling them as it passes — and every one **casting a soft
+  shadow** below and to the right, as a particle standing a little off the paper would.
+  The shadows are laid down once when the band is born, on a canvas of their own at half
+  the window's size and blurred (`shade`), since the particles never move; each frame
+  only draws it back at the band's strength. **The Ataraxia page itself was not touched**
+  — its darker ground and its lingering kindle from the round before stand.
+- **Grande Parfums: bubbles, twice as many.** The drift's specks are **bubbles** now
+  (`drift()` keeps its name): a ring rather than a speck, wobbling side to side as it
+  rises, growing a little as it goes, heavier on its lower edge where the light bends —
+  and at the top of its rise it **pops**, a broken ring thrown out and four droplets. The
+  smallest stay specks. Born at 90 a second rather than 45, up to 640 at once rather than
+  320, over the same lives: twice the frequency and twice the quantity.
+- **Les Abstraits: droplets concentrating into the house's mark** (`concentrate()`),
+  replacing the point, line and circle of earlier the same night. The owner sent the
+  logo (`images/Les-Abstraits/les-abstraits-logo.png`, white on black), and its white is
+  read once, when the page opens, as the places a drop may land and as the shape itself
+  (`logo`). A composition is: **the solution** — 900 droplets scattered thin across the
+  whole page, pale, in the bottles' amber; **concentrating** — each drawing in on a curve
+  and a moment of its own, darkening from amber to ink as it closes; **the concentrate** —
+  once all are in, the mark sets solid in ink and the drops sink into it; and **a drop**
+  now and then gathering at the mark's foot, hanging, falling and landing with a small
+  ring. The mark stands wherever of nine places about the page the houses cover least.
+- **Qimu & Musicians: proper music, on staves and loose.** The staves were four-four with
+  a note here and there. Now a stave is **written out, left to right**, as a score is read
+  (`QIMU_WRITE_MS`): a clef, a key signature, a time that is rarely 4/4 and changes at a
+  bar now and then, a tempo marking — then bars of real texture from a small composer
+  (`writer()`): beamed runs of semiquavers and demisemiquavers, tuplets of three, five,
+  six and seven, chords with their accidentals stacked before them and seconds set either
+  side of the stem, rolled chords, grace notes, trills, rests, slurs, staccato and accents,
+  and dynamics and hairpins under it. Nearly half are a **grand staff** — two staves braced,
+  a bass line under the melody, bar for bar. Then **loose music** (`passage()`): no staff
+  at all — a run under its tuplet and slur, a cadenza of small notes ending on a fermata,
+  a hammered cluster, a few chords — popping up on the page and gone. **The two take
+  turns**: nine seconds of staves being written, seven of loose music (`QIMU_STAVES_MS`,
+  `QIMU_LOOSE_MS`), the staves already written staying out their time. Everything is
+  drawn in paths, because a music font cannot be counted on. Still faint (nothing over
+  half strength) and still nothing drifts. The first stave is there the moment the house
+  is rested on (`first` on a kind).
+- **Almost Human: figures glitch into being, stand, and glitch out.** A figure used to
+  gather most of the way into a person and come apart. Now it arrives as a broken signal
+  does — cut into nine bands across, each thrown sideways by its own amount and
+  re-thrown every 55ms (`GLITCH_STEP`), some missing, a ghost of the whole a few pixels
+  off, all settling into place over `GLITCH_IN` — then **stands** for a moment
+  (`GLITCH_HOLD`), then tears apart the same way over `GLITCH_OUT` and is gone. It is not
+  faded in as well (`sharp`). The owner said they may want it reversed; the three beats
+  are three numbers.
+
+`window.HouseMotifs.census()` says what is standing on the page, by kind — the tests
+count bubbles and staves with it.
+
+Tested in `tests/contact-sheet.spec.js`, every one failing against the page before:
+
+- **`Ataraxia's bands are particles with shadows, few at once, and no grey haze`**
+  replaces *fewer at once, and each wider*: over a sixteen-second rest nothing wider than
+  6px is stroked on the motifs' canvas (the haze was 37px and more), every band draws its
+  shadow (which is how the bands are counted — never more than seven, more than two), and
+  each band is over 40px wide.
+- **`Grande Parfums' particles are bubbles that pop, twice as many as the drift`** — over
+  420 standing at once after eight seconds (the drift was 320 at most), drawn as rings,
+  and popping.
+- **`Les Abstraits' droplets gather out of the page into the house's mark`** replaces the
+  point-line-circle test: the owner's logo file is fetched; a moment after resting the
+  ink spans more than 60% of the window's width, in amber; six seconds later it spans
+  less than 420px and less than half what it did.
+- **`Almost Human's figures glitch in, stand a moment, and glitch out`** — frame by frame,
+  some frames catch a figure with its ghost (glitching) and some catch every figure whole
+  (standing).
+- **`Qimu & Musicians' music is complex, on staves and then loose on the page`** — times
+  other than 4/4 written, dynamics written, over forty noteheads in a frame, staves and no
+  loose music at first, and loose music later.

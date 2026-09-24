@@ -213,6 +213,44 @@ test("every book carries a data bar and a barcode of its own", async ({ page }) 
   expect(out.often).toBeGreaterThan(out.once);
 });
 
+/* EVERYTHING ON THE CARD IS A DROPDOWN: "I want you to be able to do a
+   dropdown list of houses, then of pineward and then only see the
+   individual fragrances. I think that way it would be a lot less
+   chaotic." The card opens with only the groups showing and every one
+   of them shut; Houses opens onto the houses, not their fragrances; a
+   house opens onto its own; and what was left open stays open when the
+   card turns over to another note. */
+test("the card's lists are dropdowns: houses, then a house, then its fragrances", async ({ page }) => {
+  await arrive(page);
+  await page.locator("#note-cedarwood").click();
+  const card = page.locator(".lib-card");
+  await expect(card).toBeVisible();
+  const shown = () => card.locator(".lib-card-list a:visible").count();
+  expect(await card.locator("details.lib-drop[open]").count(), "everything starts shut").toBe(0);
+  expect(await shown(), "no fragrance is showing").toBe(0);
+  await expect(card.locator(".lib-card-aka li").first()).toBeHidden();
+
+  await card.locator(".lib-found-houses > summary").click();
+  await expect(card.locator(".lib-found-houses .lib-found-housename").first()).toBeVisible();
+  expect(await shown(), "the houses, and not yet their fragrances").toBe(0);
+
+  const pineward = card.locator(".lib-found-house", { has: page.locator(".lib-found-housename", { hasText: "Pineward" }) });
+  await pineward.locator("> summary").click();
+  const inPineward = await pineward.locator("a").count();
+  expect(inPineward).toBeGreaterThan(3);
+  expect(await shown(), "only Pineward's fragrances").toBe(inPineward);
+  await expect(pineward.locator(".lib-found-count")).toHaveText(String(inPineward));
+  (await pineward.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href"))))
+    .forEach((h) => expect(h).toMatch(/pineward\.html#part-\d\d$/));
+
+  // Turned over to another note used by Pineward, the same stay open.
+  await page.locator("#note-vetiver").evaluate((el) => el.click());
+  await expect(card.locator(".lib-card-name")).toHaveText("Vetiver");
+  await expect(card.locator(".lib-found-houses")).toHaveAttribute("open", "");
+  await expect(card.locator(".lib-found-house", { has: page.locator(".lib-found-housename", { hasText: "Pineward" }) }))
+    .toHaveAttribute("open", "");
+});
+
 /* ACCORDS, NOT SHELVES, AND NO "NAMES AS WRITTEN". The owner: "Replace
    the word shelves with accords. removes names as written. If you want
    give me other statistics". So the readout counts records, accords

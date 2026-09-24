@@ -1405,8 +1405,8 @@ same frame as the page was rewritten, stopped the sun and started the moon.
 - The first frame of the flight is drawn at once, not on the next frame: the old drawing
   has already been stopped and cleared, and a frame of black between would read as a
   blink.
-- **Leaving the chapter mid-flight** stops the morph (`stopMorph` in `clearChapter`), and
-  the arrows do nothing while one is running. With reduced motion there is no flight: the
+- **Leaving the chapter mid-flight** stops the morph (`stopMorph` in `clearChapter`). The
+  arrows did nothing while one was running — until 2026-09-24, late night; see the foot. With reduced motion there is no flight: the
   chapter is simply rewritten, as before.
 
 Tested in `tests/chamber.spec.js`: `stepping between chapters morphs the sun into the moon
@@ -1450,3 +1450,20 @@ flight is aimed at it, as it comes up, and 2.3 seconds after it has been let go 
 shows it does move, so that the first two matching means something), and the flight's
 first frame against the old drawing just before the press. Fails against the old code on
 both counts, with the moon not held, and with the old drawing's copy left out.
+
+
+## 2026-09-24, late night — a press during the morph is remembered
+
+The arrows used to **do nothing while a morph was running** (2.3 seconds) — so pressing
+the arrow twice to go two chapters along went one, and the second press was lost without a
+sign. The site's own rule elsewhere is that a press landing mid-travel is remembered, not
+dropped (the two views keep it, and the houses opening a part), and the arrows keep it now:
+a press while a step or a morph is running is held (`wantStep`, only the latest) and taken
+the moment the running step is done (`takeWanted`, at the end of the turn and at the end of
+the flight). Leaving the chapter forgets it.
+
+It was found by `the arrows step through the chapters and wrap round`, which presses the
+next arrow 900ms after the last and began failing — on the code before this round as well —
+once the sun-to-moon flight ran on this machine for its full length: the second press
+landed mid-flight and was swallowed. The test is unchanged; it passes because the press is
+now taken when the flight lands.

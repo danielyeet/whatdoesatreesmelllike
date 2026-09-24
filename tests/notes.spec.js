@@ -165,10 +165,11 @@ test("the Fragrances view is its own page, not an index of the houses",
   await page.click('.sheet-filter[data-view="fragrances"]');
   await page.waitForTimeout(900);
 
-  // SIX. It was seven until the owner had the empty fifth slot removed
-  // and the ones below it moved up, on 2026-09-22.
+  // SEVEN. It was seven once before, with an empty fifth slot the owner
+  // had removed on 2026-09-22; it went to six, and Velvet Fog made it
+  // seven again on 2026-09-24.
   const rows = page.locator('.view[data-view="fragrances"] .index-table tbody tr');
-  await expect(rows).toHaveCount(6);
+  await expect(rows).toHaveCount(7);
 
   const hrefs = await page.$$eval(
     '.view[data-view="fragrances"] .index-table tbody a',
@@ -204,7 +205,7 @@ test("every fragrance gets a View notes button, and it opens a panel",
   await page.goto("/individual-fragrances/individual-fragrances.html");
   await page.waitForTimeout(700);
 
-  await expect(page.locator(".note-open")).toHaveCount(6);
+  await expect(page.locator(".note-open")).toHaveCount(7);
   await expect(page.locator(".note-panel:not([hidden])")).toHaveCount(0);
 
   const first = page.locator(".human-part").first();
@@ -324,7 +325,8 @@ test("a fragrance with no notes yet says they have not been found",
     "there is no source to name").toHaveCount(0);
 });
 
-/* AND THE SIX ARE NUMBERED 01 TO 06, WITH NO GAP. The owner's list
+/* AND THE SEVEN ARE NUMBERED 01 TO 07, WITH NO GAP (six until Velvet Fog
+   joined on 2026-09-24). The owner's list
    skipped a fifth and an empty slot was kept for it; on 2026-09-22
    they asked for it removed and the ones below moved up.
 
@@ -332,12 +334,12 @@ test("a fragrance with no notes yet says they have not been found",
    table and the keys here — and this is the check that they moved
    together. Getting it wrong is silent: every link still resolves, and
    every fragrance shows somebody else's notes. */
-test("the individual fragrances run 01 to 06 with nothing missing", () => {
+test("the individual fragrances run 01 to 07 with nothing missing", () => {
   const all = notes();
   const page = read("individual-fragrances/individual-fragrances.html");
   const ids = [...page.matchAll(/id="part-(\d+)"/g)].map((m) => m[1]);
   expect(ids, `the parts run: ${ids.join(", ")}`)
-    .toEqual(["01", "02", "03", "04", "05", "06"]);
+    .toEqual(["01", "02", "03", "04", "05", "06", "07"]);
 
   // No Untitled left, and every one of them has notes.
   expect(page).not.toContain("human-untitled");
@@ -346,7 +348,7 @@ test("the individual fragrances run 01 to 06 with nothing missing", () => {
   });
   // And no key points past the end.
   const keys = Object.keys(all).filter((k) => k.startsWith("individual:"));
-  expect(keys.length).toBe(6);
+  expect(keys.length).toBe(7);
 
   // THE TABLE AGREES, name for name and number for number.
   const sheet = read("categories/scent-descriptions.html");

@@ -108,6 +108,19 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Mancera/French-Riviera-74636.html" },
   },
 
+  // VELVET FOG, the seventh, added 2026-09-24. The owner sent its notes
+  // with the fragrance — top neroli; heart lavender, ylang-ylang; base
+  // orris, vetiver, sandalwood, honey — and Fragrantica divides them
+  // the same way. The house's own page (casagoa.ro/velvet-fog) could not
+  // be reached to check whether it publishes them, so the source named
+  // is the one that could be; if the house's page does, it goes first.
+  "individual:07": {
+    top: ["Neroli"],
+    mid: ["Lavender", "Ylang-Ylang"],
+    base: ["Orris", "Vetiver", "Sandalwood", "Honey"],
+    source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/CASA-GOA/Velvet-Fog-103840.html" },
+  },
+
   // ============================================================
   // ALMOST HUMAN — houses/almost-human.html
   //

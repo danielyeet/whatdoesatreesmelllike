@@ -440,7 +440,8 @@
     '<p class="lib-card-shelf"></p>' +
     '<h2 class="lib-card-name" tabindex="-1"></h2>' +
     '<p class="lib-card-say"></p>' +
-    '<div class="lib-card-aka"><h3>Also catalogued as</h3><ul></ul></div>' +
+    '<details class="lib-card-aka lib-drop" data-drop="aka"><summary><span class="lib-drop-name">Also catalogued as</span>' +
+      '<span class="lib-found-count"></span></summary><ul></ul></details>' +
     '<div class="lib-card-found"><h3></h3><div class="lib-card-list"></div></div>' +
     '<div class="lib-card-steps">' +
       '<button type="button" class="lib-card-step" data-step="-1"></button>' +
@@ -725,6 +726,8 @@
       ul.appendChild(li);
     });
     cardAka.hidden = !r.aka.length;
+    cardAka.querySelector(".lib-found-count").textContent = String(r.aka.length);
+    cardAka.open = opened.has("aka");
 
     found(r);
 
@@ -790,6 +793,39 @@
   // way the owner asked — the individual fragrances first, by name, and
   // then HOUSES, each house named and only then its fragrances. It had a
   // bar per house above the list for one round; the list says it.
+  //
+  // AND EVERY PART OF IT IS A DROPDOWN, at the owner's word: "a dropdown
+  // list of houses, then of pineward and then only see the individual
+  // fragrances ... that way it would be a lot less chaotic". So the card
+  // opens with only the groups showing, each with how many are in it —
+  // Individual fragrances, Houses — and Houses opens onto the houses,
+  // each of which opens onto its own fragrances. They are real
+  // <details>, so they open by keyboard too. What was left open stays
+  // open when the card turns over to the next note (`opened`), so going
+  // through the stacks does not mean opening the same things every time.
+  const opened = new Set();
+  card.addEventListener("toggle", (event) => {
+    const d = event.target;
+    if (!d.dataset || !d.dataset.drop) return;
+    if (d.open) opened.add(d.dataset.drop); else opened.delete(d.dataset.drop);
+  }, true);
+  function drop(title, n, cls, headCls, key) {
+    const box = document.createElement("details");
+    box.className = cls + " lib-drop";
+    box.dataset.drop = key;
+    const summary = document.createElement("summary");
+    const head = document.createElement("span");
+    head.className = headCls + " lib-drop-name";
+    head.textContent = title;
+    const count = document.createElement("span");
+    count.className = "lib-found-count";
+    count.textContent = String(n);
+    summary.append(head, count);
+    box.appendChild(summary);
+    box.open = opened.has(key);
+    return box;
+  }
+
   function found(r) {
     const byHouse = new Map();
     [...r.keys].forEach((key) => {
@@ -810,31 +846,21 @@
     const houses = order.filter((h) => h !== "individual");
 
     if (byHouse.has("individual")) {
-      list.appendChild(section("Individual fragrances", "lib-found-individual"))
-        .appendChild(fragrancesOf("individual", byHouse.get("individual")));
+      const nos = byHouse.get("individual");
+      list.appendChild(drop("Individual fragrances", nos.length, "lib-found-section lib-found-individual", "lib-found-head", "individual"))
+        .appendChild(fragrancesOf("individual", nos));
     }
     if (houses.length) {
-      const block = list.appendChild(section("Houses", "lib-found-houses"));
+      const block = list.appendChild(drop("Houses", houses.length === 1 ? "1 house" : houses.length + " houses",
+        "lib-found-section lib-found-houses", "lib-found-head", "houses"));
       houses.forEach((house) => {
         const where = HOUSES[house] || { name: house };
-        const group = document.createElement("div");
-        group.className = "lib-found-house";
-        const name = document.createElement("p");
-        name.className = "lib-found-housename";
-        name.textContent = where.name;
-        group.append(name, fragrancesOf(house, byHouse.get(house)));
+        const nos = byHouse.get(house);
+        const group = drop(where.name, nos.length, "lib-found-house", "lib-found-housename", "house:" + house);
+        group.appendChild(fragrancesOf(house, nos));
         block.appendChild(group);
       });
     }
-  }
-  function section(title, cls) {
-    const box = document.createElement("div");
-    box.className = "lib-found-section " + cls;
-    const head = document.createElement("p");
-    head.className = "lib-found-head";
-    head.textContent = title;
-    box.appendChild(head);
-    return box;
   }
   function fragrancesOf(house, nos) {
     const where = HOUSES[house] || { name: house, href: "" };

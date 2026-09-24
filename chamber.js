@@ -2046,8 +2046,21 @@
       (`morph`) while the writing fades out and, over the second half,
       back in. Only when the flight is home is the moon itself let
       back up, crossfaded in as the flown specks fade. */
+  // A PRESS THAT LANDS WHILE A STEP IS STILL RUNNING IS REMEMBERED, NOT
+  // DROPPED — the rule the views and the houses already keep. The morph
+  // takes 2.3 seconds, and for that long the arrows used to do nothing at
+  // all, so pressing twice to go on a chapter went one. Only the latest
+  // press is kept, and it is taken the moment the step running is done.
+  let wantStep = 0;
+  function takeWanted() {
+    if (!wantStep || turning || morphing) return;
+    const way = wantStep;
+    wantStep = 0;
+    stepChapter(way);
+  }
   function stepChapter(way) {
-    if (!burst || burst.phase !== "open" || leaving || turning || morphing) return;
+    if (!burst || burst.phase !== "open" || leaving) { wantStep = 0; return; }
+    if (turning || morphing) { wantStep = way; return; }
     if (chapters.length < 2) return;
     const to = (burst.chapter + way + chapters.length) % chapters.length;
     if (to === burst.chapter) return;
@@ -2093,6 +2106,7 @@
       void chapterPage.offsetWidth;          // so the entrance plays again
       chapterPage.classList.add("here");
       chapterPage.classList.remove("turning");
+      takeWanted();
     }, hold);
   }
 
@@ -2256,6 +2270,7 @@
       morphFrame = 0;
       g.clearRect(0, 0, w, h);
       stopMorph();
+      takeWanted();
     };
     // The first frame now, not on the next one: the old drawing has
     // already been stopped and cleared, and a frame of black between it
