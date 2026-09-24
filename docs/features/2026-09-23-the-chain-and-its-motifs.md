@@ -237,3 +237,39 @@ the names picked at random, and with them allowed behind a house) and `Qimu & Mu
 motifs are faint and their notes stay where they are put` (reads every colour and every
 note head the canvas is asked for; fails with the old strengths, and with the drift put
 back).
+
+## 2026-09-24, last — names kept apart, Ataraxia stronger, Les Abstraits changed
+
+> also, i want you to have a minimum distance away from the texts that pop up when you
+> hover over tombstone fragrances (i dont want whats in picture 1). Also emphasize the
+> ataraxia effect. Also, i want you to change the les abstraits effect
+
+- **Tombstone's names keep their distance.** Picture 1 was *Evergrow* written into *No
+  Need to Come By*. Every name now carries the box it stands in, and a new one is only
+  placed `NAME_APART` (40px) clear of every name still on the page, fading ones included
+  — and clear of the houses **with their labels**, which stand under the picture's own box
+  (*Sing at My Funeral* had been written across "09 Qimu & Musicians"). It tries 24 places
+  before giving up; a name that finds none simply waits for room.
+- **Ataraxia's bands are emphasised**: ten at most rather than seven, born more often,
+  their specks about twice as dense, heavier and darker, a soft haze laid along each band's
+  length, and a brighter, longer crest travelling along it. Measured on the canvas they put
+  ink on about seven times as much of the page as before.
+- **Les Abstraits' effect is new: abstract compositions.** The smoke off Des Cendres' fire,
+  the embers and the ash are gone from the code (`smoke`, `ember`, `ash`, `EMBER`). The
+  house is *the abstracts*, so its effect is a few forms at a time laid out round one point
+  as a composition is — a circle, an arc, a line cutting across, a triangle, a small solid
+  disc, a row of dots — each **drawn in by a pen line** over about a second, one after
+  another, holding, and let go; in the page's ink and the **amber of the house's bottles**
+  (`ABSTRAIT_AMBER`), with loose points drifting very slowly between them. Compositions
+  keep well clear of each other. The owner said only "change"; this is a guess at what
+  suits the house, and worth checking with them.
+
+Tested in `tests/contact-sheet.spec.js`: the Tombstone test now also measures the least
+room between any two names (at least 24px, edge to edge) and keeps them off the houses'
+labels. **It fixes the page's chance**: a seeded `Math.random` and a smaller window
+(`TOMB_SEED`), because with where a name lands left to chance the crowding happened on
+only some runs and the test passed with the protection taken out — seeded, it fails 3 of 3
+with either protection removed. `Ataraxia's bands cross the page strongly` (fails with the
+old number of bands) and `Les Abstraits' motifs are abstract compositions, not smoke and
+embers` (reads the arcs and colours the canvas is asked for; fails against the old
+motifs).

@@ -569,8 +569,13 @@
     // it. Nothing else on the page is blurred or dimmed while they come.
     // The houses that can be seen are handed over all the same, so that
     // anything WRITTEN — Tombstone's names — is kept off them.
+    // Each house with its label under it, which stands outside the
+    // picture's own box.
     const around = frames.filter((f) => f.style.visibility !== "hidden" && parseFloat(f.style.getPropertyValue("--shown") || "0") > 0.1)
-      .map((f) => f.getBoundingClientRect());
+      .map((f) => [f, f.querySelector(".sheet-caption"), f.querySelector(".sheet-number")].filter(Boolean)
+        .map((el) => el.getBoundingClientRect())
+        .reduce((u, r) => ({ left: Math.min(u.left, r.left), right: Math.max(u.right, r.right),
+          top: Math.min(u.top, r.top), bottom: Math.max(u.bottom, r.bottom) })));
     if (window.HouseMotifs) window.HouseMotifs.start(frame.dataset.motif, null, around);
   }
   function leave(frame) {

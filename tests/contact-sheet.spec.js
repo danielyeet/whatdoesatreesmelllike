@@ -388,16 +388,31 @@ test("the houses either side are a little smaller, and a description shows only 
   await expect.poll(shown).toBeGreaterThan(0.95);
 });
 
+const TOMB_SEED = 11;
+
 /* TOMBSTONE WRITES EACH OF ITS FIVE NAMES ONCE — "not at random as it
    currently is (i dont want duplicate names)" — and none of them behind a
    house. Read off every word the motifs' canvas is asked to write. */
 test("Tombstone's motifs write each name once, never twice and never behind a house", async ({ page }) => {
   test.setTimeout(60000);
+  // WHERE A NAME LANDS IS CHANCE, so the chance is fixed: a seeded
+  // Math.random, and a window small enough that names have to be placed
+  // with care. With it left to chance, a name written into another or on
+  // to a label happened on only some runs, and a test that passes when
+  // the page is wrong on most of them proves nothing.
+  await page.setViewportSize({ width: 1024, height: 700 });
+  await page.addInitScript((seed) => {
+    let s = seed;
+    Math.random = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+  }, Number(process.env.TOMB_SEED || TOMB_SEED));
   await page.addInitScript(() => {
     window.__written = [];
     const own = CanvasRenderingContext2D.prototype.fillText;
     CanvasRenderingContext2D.prototype.fillText = function (text, x, y) {
-      if (this.canvas.classList.contains("sheet-motifs")) window.__written.push({ text: String(text), x: x, y: y });
+      if (this.canvas.classList.contains("sheet-motifs")) {
+        const size = parseFloat((/(\d+(?:\.\d+)?)px/.exec(this.font) || [0, 20])[1]);
+        window.__written.push({ text: String(text), x: x, y: y, w: this.measureText(String(text)).width, h: size });
+      }
       return own.apply(this, arguments);
     };
   });
@@ -415,16 +430,87 @@ test("Tombstone's motifs write each name once, never twice and never behind a ho
       places[w.text] = places[w.text] || [];
       if (!places[w.text].some((p) => Math.abs(p.x - w.x) < 4 && Math.abs(p.y - w.y) < 4)) places[w.text].push(w);
     });
+    // Each house with its label, which stands under the picture's box.
     const houses = [...document.querySelectorAll(".sheet-frame")].filter((f) =>
       f.style.visibility !== "hidden" && parseFloat(f.style.getPropertyValue("--shown") || "0") > 0.1)
-      .map((f) => f.getBoundingClientRect());
-    const behind = window.__written.filter((w) => names.includes(w.text) &&
-      houses.some((r) => w.x > r.left && w.x < r.right && w.y > r.top && w.y < r.bottom)).map((w) => w.text);
-    return { counts: Object.fromEntries(Object.entries(places).map(([k, v]) => [k, v.length])), behind: [...new Set(behind)] };
+      .map((f) => [f, f.querySelector(".sheet-caption"), f.querySelector(".sheet-number")].map((el) => el.getBoundingClientRect())
+        .reduce((u, r) => ({ left: Math.min(u.left, r.left), right: Math.max(u.right, r.right), top: Math.min(u.top, r.top), bottom: Math.max(u.bottom, r.bottom) })));
+    // Where each whole name stood, as a box.
+    const boxes = Object.values(places).map((v) => v[0]).map((w) =>
+      ({ text: w.text, left: w.x - w.w / 2, right: w.x + w.w / 2, top: w.y - w.h / 2, bottom: w.y + w.h / 2 }));
+    const hits = (a, r) => a.left < r.right && a.right > r.left && a.top < r.bottom && a.bottom > r.top;
+    const behind = boxes.filter((b) => houses.some((r) => hits(b, r))).map((b) => b.text);
+    // And how near any two names came, edge to edge.
+    let nearest = Infinity;
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i], b = boxes[j];
+      const gx = Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right));
+      const gy = Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom));
+      nearest = Math.min(nearest, Math.max(gx, gy));
+    }
+    return { counts: Object.fromEntries(Object.entries(places).map(([k, v]) => [k, v.length])), behind: behind, nearest: nearest };
   });
   expect(Object.keys(out.counts).length, `names written: ${JSON.stringify(out.counts)}`).toBeGreaterThanOrEqual(4);
   Object.entries(out.counts).forEach(([name, n]) => expect(n, `${name} written in ${n} places`).toBe(1));
-  expect(out.behind, "names written behind a house").toEqual([]);
+  expect(out.behind, "names written over a house or its label").toEqual([]);
+  // "i want you to have a minimum distance away from the texts" — sent
+  // with a picture of Evergrow written into No Need to Come By.
+  expect(out.nearest, "the least room between two names").toBeGreaterThanOrEqual(24);
+});
+
+/* ATARAXIA'S BANDS, EMPHASISED: "emphasize the ataraxia effect". Read off
+   the motifs' canvas once the bands have gathered — before, a few grey
+   threads put ink on about half a percent of it. */
+test("Ataraxia's bands cross the page strongly", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 3);
+  await page.waitForTimeout(3500);
+  const ink = await page.evaluate(() => {
+    const c = document.querySelector(".sheet-motifs");
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    let n = 0, dark = 0;
+    for (let i = 3; i < d.length; i += 4) { if (d[i] > 20) n++; if (d[i] > 120) dark++; }
+    return { share: n / (d.length / 4), dark: dark / (d.length / 4) };
+  });
+  expect(ink.share, "ink across the page").toBeGreaterThan(0.02);
+  expect(ink.dark, "and a good deal of it strong").toBeGreaterThan(0.005);
+});
+
+/* LES ABSTRAITS' EFFECT, CHANGED: abstract compositions — circles, arcs,
+   lines, triangles and dots, drawn in by a pen line, in ink and the amber
+   of the house's bottles — in place of the smoke, embers and ash off Des
+   Cendres' fire. Read off what the motifs' canvas is asked to draw. */
+test("Les Abstraits' motifs are abstract compositions, not smoke and embers", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__arcs = 0;
+    window.__colours = new Set();
+    const P = CanvasRenderingContext2D.prototype;
+    const arc = P.arc;
+    P.arc = function () {
+      if (this.canvas.classList.contains("sheet-motifs")) window.__arcs++;
+      return arc.apply(this, arguments);
+    };
+    for (const key of ["fillStyle", "strokeStyle"]) {
+      const d = Object.getOwnPropertyDescriptor(P, key);
+      Object.defineProperty(P, key, {
+        get() { return d.get.call(this); },
+        set(v) {
+          if (this.canvas.classList.contains("sheet-motifs")) window.__colours.add(String(v).replace(/,\s*[\d.]+\)$/, ")"));
+          d.set.call(this, v);
+        },
+      });
+    }
+  });
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 5);
+  await page.waitForTimeout(4000);
+  const seen = await page.evaluate(() => ({ arcs: window.__arcs, colours: [...window.__colours] }));
+  expect(seen.arcs, "circles and arcs are drawn").toBeGreaterThan(20);
+  expect(seen.colours.some((c) => c.startsWith("rgba(184, 128, 46")), "in the bottles' amber").toBe(true);
+  expect(seen.colours.some((c) => c.startsWith("rgba(196, 86, 31") || c.startsWith("rgba(80, 78, 74")),
+    "and no embers or smoke").toBe(false);
 });
 
 /* QIMU & MUSICIANS KEPT QUIET: "more subtle and way less movement".

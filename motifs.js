@@ -50,7 +50,6 @@
   const PINE_BARK = "74, 52, 34";
   const TALE_GREEN = "207, 227, 194";
   const TALE_PEACH = "246, 201, 168";
-  const EMBER = "196, 86, 31";
   const PETAL = "155, 43, 43";
   const QIMU_BLUE = "44, 62, 99";
 
@@ -245,24 +244,40 @@
   }
 
   // ---------- ATARAXIA: bands of light crossing, a crest along each ----------
+  // EMPHASISED at the owner's word ("emphasize the ataraxia effect"): more
+  // bands, their specks denser, heavier and darker, a soft haze laid
+  // along each band's length, and a brighter, longer crest travelling
+  // along it — so the bands read across the whole page rather than as a
+  // few grey threads.
   function band() {
     const angle = rand(6, 26) * (Math.random() < 0.5 ? -1 : 1) * Math.PI / 180;
     const cy = rand(H * 0.1, H * 0.9);
     const len = Math.hypot(W, H) + 200;
+    const wide = rand(14, 22);
     const specks = [];
-    for (let s = 0; s < len; s += rand(2, 5)) specks.push({ s, off: rand(-12, 12), size: rand(1, 2.6) });
-    const speed = rand(0.25, 0.45);
+    for (let s = 0; s < len; s += rand(1.4, 3.2)) specks.push({ s, off: rand(-wide, wide) * Math.random(), size: rand(1.3, 3.2) });
+    const speed = rand(0.28, 0.5);
     return {
-      life: rand(6000, 9000),
+      life: rand(6500, 9500),
       draw(c, age, a) {
         const cos = Math.cos(angle), sin = Math.sin(angle);
         const crest = (age * speed) % (len + 400) - 200;
+        // THE HAZE, one soft stroke the length of the band.
+        const x0 = -100, y0 = cy - (len / 2) * sin;
+        c.strokeStyle = "rgba(52, 53, 58," + (0.06 * a) + ")";
+        c.lineWidth = wide * 1.6;
+        c.lineCap = "round";
+        c.beginPath();
+        c.moveTo(x0, y0);
+        c.lineTo(x0 + len * cos, y0 + len * sin);
+        c.stroke();
         specks.forEach((p) => {
-          const x = -100 + p.s * cos - p.off * sin, y = cy - (len / 2) * sin + p.s * sin + p.off * cos;
+          const x = x0 + p.s * cos - p.off * sin, y = y0 + p.s * sin + p.off * cos;
           if (!clearOf(x, y, 2)) return;
-          const glow = Math.exp(-Math.pow((p.s - crest) / 140, 2));
-          c.fillStyle = "rgba(52, 53, 58," + (a * (0.2 + 0.75 * glow)) + ")";
-          c.fillRect(x, y, p.size, p.size);
+          const glow = Math.exp(-Math.pow((p.s - crest) / 220, 2));
+          c.fillStyle = "rgba(38, 39, 44," + (a * (0.34 + 0.66 * glow)) + ")";
+          const size = p.size * (1 + glow * 0.6);
+          c.fillRect(x, y, size, size);
         });
       },
     };
@@ -284,51 +299,105 @@
     };
   }
 
-  // ---------- LES ABSTRAITS: smoke off Des Cendres' fire, embers, ash ----------
-  function smoke() {
-    const at = spot(30, H * 0.45, H + 10);
+  // ---------- LES ABSTRAITS: abstract compositions, drawn in and let go ----------
+  // It was smoke off Des Cendres' fire, embers and ash for two rounds;
+  // the owner asked for the effect changed. The house is "the abstracts",
+  // so its effect is ABSTRACT COMPOSITIONS: a few forms at a time — a
+  // circle, an arc, a line cutting across, a triangle, a small solid
+  // disc, a row of dots — laid out round one point as a composition is,
+  // each drawn in by a pen line over about a second, holding, and let
+  // go. In the page's ink and the amber of the house's bottles, with a
+  // solid shape now and then; and loose points drifting very slowly
+  // between them.
+  const ABSTRAIT_AMBER = "184, 128, 46";
+  function composition() {
+    const r0 = rand(46, 86);
+    // Each composition stands on its own: kept well clear of the others
+    // on the page.
+    let at = null;
+    for (let i = 0; i < 12 && !at; i++) {
+      const tryAt = spot(r0 + 24);
+      if (tryAt && !things.some((t) => t.centre && Math.hypot(t.centre.x - tryAt.x, t.centre.y - tryAt.y) < (t.reach + r0) * 1.6)) at = tryAt;
+    }
     if (!at) return null;
-    const sway = rand(10, 26), tall = rand(160, 320), phase = rand(0, 6);
+    const forms = [];
+    const count = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < count; i++) {
+      const kind = i === 0 ? pick(["circle", "arc", "triangle"]) : pick(["circle", "arc", "line", "line", "dot", "dots", "triangle"]);
+      const a = rand(0, Math.PI * 2);
+      const d = i === 0 ? 0 : rand(0.2, 1) * r0;
+      forms.push({
+        kind,
+        x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d,
+        r: i === 0 ? r0 : rand(8, r0 * 0.6),
+        turn: rand(0, Math.PI * 2),
+        sweep: rand(Math.PI * 0.6, Math.PI * 1.5),
+        len: rand(r0 * 1.2, r0 * 2.6),
+        colour: Math.random() < 0.35 ? ABSTRAIT_AMBER : INK,
+        solid: kind === "dot" || (kind === "circle" && i > 0 && Math.random() < 0.3),
+        wait: i * rand(180, 320),
+      });
+    }
     return {
-      life: rand(5500, 8000),
-      draw(c, age, a) {
-        const up = tall * ease(age / 3000);
-        c.strokeStyle = "rgba(80, 78, 74," + (0.45 * a) + ")";
-        c.lineWidth = 1.3;
-        for (let strand = 0; strand < 3; strand++) {
+      centre: at,
+      reach: r0,
+      life: rand(6000, 8500),
+      draw(c, age, al) {
+        forms.forEach((f) => {
+          const p = ease((age - f.wait) / 1100);
+          if (p <= 0) return;
+          c.strokeStyle = c.fillStyle = "rgba(" + f.colour + "," + ((f.solid ? 0.5 : 0.62) * al) + ")";
+          c.lineWidth = f.colour === INK ? 1.1 : 1.6;
+          c.lineCap = "round";
           c.beginPath();
-          for (let k = 0; k <= 24; k++) {
-            const f = k / 24;
-            const x = at.x + strand * 3 + Math.sin(f * 5 + phase + age / 900 + strand) * sway * f;
-            const y = at.y - up * f;
-            if (k === 0) c.moveTo(x, y); else c.lineTo(x, y);
+          if (f.kind === "circle" && f.solid) {
+            c.arc(f.x, f.y, f.r * 0.35 * p, 0, Math.PI * 2);
+            c.fill();
+          } else if (f.kind === "circle") {
+            c.arc(f.x, f.y, f.r, f.turn, f.turn + Math.PI * 2 * p);
+            c.stroke();
+          } else if (f.kind === "arc") {
+            c.arc(f.x, f.y, f.r, f.turn, f.turn + f.sweep * p);
+            c.stroke();
+          } else if (f.kind === "line") {
+            const dx = Math.cos(f.turn) * f.len / 2, dy = Math.sin(f.turn) * f.len / 2;
+            c.moveTo(f.x - dx, f.y - dy);
+            c.lineTo(f.x - dx + 2 * dx * p, f.y - dy + 2 * dy * p);
+            c.stroke();
+          } else if (f.kind === "triangle") {
+            const pts = [0, 1, 2].map((k) => [f.x + Math.cos(f.turn + k * 2.094) * f.r, f.y + Math.sin(f.turn + k * 2.094) * f.r]);
+            // Drawn round, side after side.
+            const upto = p * 3;
+            c.moveTo(pts[0][0], pts[0][1]);
+            for (let k = 0; k < 3 && k < upto; k++) {
+              const from = pts[k], to = pts[(k + 1) % 3];
+              const q = Math.min(1, upto - k);
+              c.lineTo(from[0] + (to[0] - from[0]) * q, from[1] + (to[1] - from[1]) * q);
+            }
+            c.stroke();
+          } else if (f.kind === "dot") {
+            c.arc(f.x, f.y, 3.2 * p, 0, Math.PI * 2);
+            c.fill();
+          } else if (f.kind === "dots") {
+            const n = Math.ceil(7 * p);
+            for (let k = 0; k < n; k++) {
+              c.fillRect(f.x + Math.cos(f.turn) * k * 9 - 1.2, f.y + Math.sin(f.turn) * k * 9 - 1.2, 2.4, 2.4);
+            }
           }
-          c.stroke();
-        }
+        });
       },
     };
   }
-  function ember() {
-    const at = spot(3, H * 0.4, H);
+  function point() {
+    const at = spot(3);
     if (!at) return null;
-    const rise = rand(0.03, 0.07);
-    return {
-      life: rand(1800, 3400),
-      draw(c, age, a) {
-        const flick = 0.5 + 0.5 * Math.sin(age / 60 + at.x);
-        c.fillStyle = "rgba(" + EMBER + "," + (a * (0.35 + 0.55 * flick)) + ")";
-        c.fillRect(at.x + Math.sin(age / 300) * 5, at.y - rise * age, 2.4, 2.4);
-      },
-    };
-  }
-  function ash() {
-    const at = spot(3, -10, H * 0.6);
-    if (!at) return null;
+    const drift = rand(-0.004, 0.004), fall = rand(-0.003, 0.003);
+    const amber = Math.random() < 0.3;
     return {
       life: rand(4000, 7000),
       draw(c, age, a) {
-        c.fillStyle = "rgba(110, 108, 104," + (0.45 * a) + ")";
-        c.fillRect(at.x + Math.sin(age / 500 + at.y) * 8, at.y + age * 0.018, 2.2, 1.2);
+        c.fillStyle = "rgba(" + (amber ? ABSTRAIT_AMBER : INK) + "," + (0.45 * a) + ")";
+        c.fillRect(at.x + drift * age, at.y + fall * age, 2, 2);
       },
     };
   }
@@ -393,6 +462,7 @@
   // were picked at random for a round, and the same name stood on the
   // wall twice. `epitaphsLeft` is filled again every time the house is
   // rested on afresh (see `start`).
+  const NAME_APART = 40;         // px, the least room between two names on the wall
   const EPITAPHS = ["3 Feet 5", "Evergrow", "No Need to Come By", "Sing at My Funeral", "Sweet Coffin"];
   let epitaphsLeft = EPITAPHS.slice();
   let readAround = [];
@@ -407,13 +477,21 @@
     // pass behind them: a name half hidden behind a picture has not been
     // written. `readAround` is the boxes of the houses on the page, handed
     // in by the page that asked for the motifs.
-    let at = null;
-    for (let i = 0; i < 16 && !at; i++) {
+    let at = null, placed = null;
+    for (let i = 0; i < 24 && !at; i++) {
       const tryAt = spot(Math.max(wide / 2, 30));
       if (!tryAt || tryAt.x - wide / 2 < 8 || tryAt.x + wide / 2 > W - 8) continue;
       const box = { left: tryAt.x - wide / 2 - 12, right: tryAt.x + wide / 2 + 12, top: tryAt.y - big, bottom: tryAt.y + big };
       if (readAround.some((r) => box.left < r.right && box.right > r.left && box.top < r.bottom && box.bottom > r.top)) continue;
+      // AND OFF EVERY OTHER NAME, by a clear margin — the owner sent a
+      // picture of "Evergrow" written into "No Need to Come By". Every
+      // name standing, fading ones included, keeps NAME_APART round it.
+      const near = things.some((t) => t.words && t.box &&
+        box.left < t.box.right + NAME_APART && box.right > t.box.left - NAME_APART &&
+        box.top < t.box.bottom + NAME_APART && box.bottom > t.box.top - NAME_APART);
+      if (near) continue;
       at = tryAt;
+      placed = box;
     }
     if (!at) return null;
     // Only taken off the list once it has found somewhere to stand.
@@ -421,6 +499,7 @@
     const rule = Math.random() < 0.6;
     return {
       words: words,
+      box: placed,
       life: rand(5200, 7600),
       draw(c, age, a) {
         // Cut in a letter at a time, and worn away evenly at the end.
@@ -642,9 +721,9 @@
     pineward: [{ make: tree, rate: 2, most: 16 }, { make: needle, rate: 5, most: 50 }],
     adar: [{ make: sounding, rate: 1.3, most: 8 }, { make: dust, rate: 22, most: 160 }],
     "almost-human": [{ make: figure, rate: 1.3, most: 8 }, { make: rain, rate: 26, most: 80 }],
-    ataraxia: [{ make: band, rate: 1.1, most: 7 }],
+    ataraxia: [{ make: band, rate: 1.6, most: 10 }],
     grande: [{ make: drift, rate: 45, most: 320 }],
-    "les-abstraits": [{ make: smoke, rate: 1.4, most: 9 }, { make: ember, rate: 12, most: 50 }, { make: ash, rate: 8, most: 50 }],
+    "les-abstraits": [{ make: composition, rate: 0.9, most: 6 }, { make: point, rate: 4, most: 26 }],
     tale: [{ make: doodle, rate: 2.6, most: 20 }],
     tombstone: [{ make: epitaph, rate: 0.9, most: 5 }, { make: roots, rate: 1.6, most: 11 }, { make: soil, rate: 6, most: 40 }],
     qimu: [{ make: stave, rate: 0.6, most: 3 }, { make: note, rate: 2.2, most: 12 }],
