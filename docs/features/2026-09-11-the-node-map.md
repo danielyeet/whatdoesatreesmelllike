@@ -11,7 +11,7 @@ Files: `node-scene.js` (~1,470 lines), `index.html`, `style.css`,
 ## What it is
 
 `node-scene.js` draws the third slide of the landing page: a dark hub at the
-origin with seven branches growing out of it, each ending at a clickable **link node** — one
+origin with eight branches growing out of it, each ending at a clickable **link node** — one
 per category. It is the only file in the site that uses Three.js (from a CDN, in
 `index.html` only) and the only one that uses a WebGL shader. `REAL_NODES` at the top is the
 intended edit surface; everything below it is graphics code.
@@ -19,15 +19,15 @@ intended edit surface; everything below it is graphics code.
 ## Why / key decisions
 
 **`REAL_NODES` and what is derived from it.** Each entry carries `label`, `sub`, `href`,
-`pos: [x, y, z]` and a `preview: { description }`. All seven carry a preview now — the owner
+`pos: [x, y, z]` and a `preview: { description }`. All but Contact carry a preview now — the owner
 asked for every node to open a window, not only Scent descriptions and Theories — so a click
 on any of them opens the window rather than navigating. The field is still optional as far
 as the code is concerned: a node without one simply follows its link, and that is the
 behaviour to keep working if a new node is added without writing a line for it. Positions
 are a Fibonacci sphere, standing 3.05–3.45 from the origin; keep a new one in that range, and
 **keep `y` clear of 0** — a node near the equator sweeps across the middle of the screen on
-every rotation, dragging its label through the centre. (The closest any of the seven comes is
-|y| = 0.93.)
+every rotation, dragging its label through the centre. (The closest any of the eight comes is
+|y| = 0.4.)
 
 **Everything else is derived, and that is the property to preserve.** Each branch is a
 `CatmullRomCurve3` that leaves the hub straight along the line to its own node, then bows
@@ -185,3 +185,28 @@ the field is for.
   that system was replaced by the per-branch wake described above.
 - `works/test-node-a.html` / `test-node-b.html` are sandbox pages reached from the two "Test
   node" entries in `REAL_NODES`; safe to repurpose or delete together.
+
+## 2026-09-24 — the Note Library, the eighth node
+
+> also add the library as one of the nodes in the main menu.
+
+The Note Library is on the map now, between Favourites and Photography as it is in the menu,
+with a `preview` of its own. The list was **recomputed whole**, as the section above says to:
+a Fibonacci sphere of eight at a radius of 3.2, the i-th one's height (1 − (2i+1)/8) of the
+radius — eight even steps with none on the equator — and each the golden angle further
+round than the last. The closest pair of branches is **66.3°** apart (it was 71.5° with
+seven), and every branch the same length.
+
+**Then the whole arrangement is turned 80° round the upright axis**, which changes nothing
+about the spacing. The plain sphere put Search's label straight on Contact's as the map came
+to rest (one in front of the hub, one behind, at the same place on the screen). The turn was
+chosen by measuring: the map was loaded with the sphere turned by every ten degrees, held
+still, and the gap between the two nearest labels read off the page. At 80°–90° it is
+**81px** on a desktop, where the seven left 39px. On a phone, at 390px, two labels graze by a
+few pixels at every turn there is — the seven only just touched there too — and the map
+turns on its own, so it passes; nothing was changed for it.
+
+Tested in `tests/node-map.spec.js`: the labels now include Note Library, the sphere test
+counts eight and its closest pair is still over 60°, and `at rest, no two node labels
+overlap` (more than 20px between the nearest two at 1440 × 900; fails with two nodes put in
+the same place on the screen). Thirteen tests in the file.

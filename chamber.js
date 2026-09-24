@@ -1720,6 +1720,7 @@
   const MORPH_MOST = 20000;     // specks flown, at most — every one of them, in practice
   const MORPH_HAZE = 0.12;      // the haze behind the flight, warm into cold
   const MORPH_GLOW_FROM = 0.62; // a speck this bright carries a bloom in the air
+  const MORPH_LEAVE = 0.2;      // the old drawing, glow and all, fades into its specks over this much of it
   /** How long a card takes to open, and to shut. */
   const CARD_MS = 420;
 
@@ -2024,7 +2025,7 @@
         return sheet ? sheet.getBoundingClientRect() : null;
       },
     });
-    if (made && made.stop) ground = { name: name, stop: made.stop, capture: made.capture };
+    if (made && made.stop) ground = { name: name, stop: made.stop, capture: made.capture, hold: made.hold };
     else chapterGround.hidden = true;
   }
 
@@ -2058,16 +2059,27 @@
     const from = ground && ground.capture && into && into !== ground.name ? ground.capture() : null;
     let hold = TURN_MS;
     if (from) {
-      // The new drawing is started now, under a veil, so its first frame
-      // can be taken as where the flight lands.
+      // The old drawing as it looks, glow and all, to fade out of — its
+      // specks alone are not all of it, and dropping the rest in one
+      // frame read as a blink at the start.
+      const was = document.createElement("canvas");
+      was.width = chapterGround.width;
+      was.height = chapterGround.height;
+      const wg = was.getContext("2d");
+      if (wg) wg.drawImage(chapterGround, 0, 0);
+      // The new drawing is started now, under a veil and HELD STILL, so
+      // its first frame is where the flight lands and is still the frame
+      // standing there when it comes up.
       chapterGround.style.transition = "none";
       chapterGround.style.opacity = "0";
       setGround(into);
+      if (ground && ground.hold) ground.hold(true);
       const onto = ground && ground.capture ? ground.capture() : null;
       if (onto) {
-        morph(from, onto);
+        morph(from, onto, wg ? was : null);
         hold = Math.max(TURN_MS, MORPH_MS * MORPH_WRITING);
       } else {
+        if (ground && ground.hold) ground.hold(false);
         chapterGround.style.transition = "";
         chapterGround.style.opacity = "";
       }
@@ -2107,9 +2119,15 @@
     chapterMorph.hidden = true;
     chapterGround.style.transition = "";
     chapterGround.style.opacity = "";
+    // The drawing the flight landed on is let go, and turns on from the
+    // very frame it was held at.
+    if (ground && ground.hold) ground.hold(false);
   }
-  function morph(from, onto) {
+  function morph(from, onto, was) {
     stopMorph();
+    // stopMorph lets the new drawing go; it is held again at once, and
+    // stays held until the flight is home.
+    if (ground && ground.hold) ground.hold(true);
     // stopMorph lifts the veil; it goes straight back on, or the new
     // drawing shows for a frame before the flight has begun.
     chapterGround.style.transition = "none";
@@ -2189,6 +2207,14 @@
       // drawing itself comes up under them.
       const hand = t < MORPH_HAND ? 0 : (t - MORPH_HAND) / (1 - MORPH_HAND);
       chapterGround.style.opacity = hand.toFixed(3);
+      // The first stretch hands over the other way: the old drawing as it
+      // looked fades as its own specks come up over it and take off.
+      const leave = Math.min(1, t / MORPH_LEAVE);
+      const lift = leave * leave * (3 - 2 * leave);
+      if (was && lift < 1) {
+        g.globalAlpha = 1 - lift;
+        g.drawImage(was, 0, 0, w, h);
+      }
       const mx0 = ax, my0 = ay, mx1 = bx, my1 = by;
       // THE HAZE: one soft gradient at the moving middle, its size and
       // colour going from the one drawing's to the other's.
@@ -2197,7 +2223,7 @@
       const hr = Math.max(20, (reachA + (reachB - reachA) * e) * 1.6);
       const hc = hazeA.map((v, i) => Math.round(v + (hazeB[i] - v) * e)).join(",");
       const haze = g.createRadialGradient(hx, hy, hr * 0.2, hx, hy, hr);
-      haze.addColorStop(0, "rgba(" + hc + "," + (MORPH_HAZE * (1 - hand)).toFixed(3) + ")");
+      haze.addColorStop(0, "rgba(" + hc + "," + (MORPH_HAZE * (1 - hand) * lift).toFixed(3) + ")");
       haze.addColorStop(1, "rgba(" + hc + ",0)");
       g.globalAlpha = 1;
       g.fillStyle = haze;
@@ -2210,7 +2236,7 @@
         const a = f.p.a + f.da * u;
         const x = mx + Math.cos(a) * r, y = my + Math.sin(a) * r;
         const air = Math.sin(Math.PI * u);
-        const on = (f.p.on + (f.q.on - f.p.on) * u) * (1 + MORPH_FLARE * air) * (1 - hand);
+        const on = (f.p.on + (f.q.on - f.p.on) * u) * (1 + MORPH_FLARE * air) * (1 - hand) * lift;
         if (on <= 0.01) continue;
         const c = f.ca, d = f.cb;
         g.fillStyle = "rgb(" + Math.round(c[0] + (d[0] - c[0]) * u) + "," +

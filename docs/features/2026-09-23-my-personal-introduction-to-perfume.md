@@ -164,3 +164,23 @@ section has no figure; **the pyramids' sides do not bend** (with the old base ba
 back it reports *a side bends by 3.17*); and **past the last section the rule names it**
 (with the old fallback it reads *Introduction*). The motto test now asks for the full
 stop.
+
+## 2026-09-24 — Footnotes and Citations on the rule
+
+> to this list in the 000 exploration, add citations and footntes
+
+The list was the **rule** down the left, which names every section as you pass it. The
+footnotes and the sources stood at the foot of the page under small gold headings, outside
+any section, so the rule never reached them. They are **two sections of their own** now,
+**13 Footnotes** and **14 Citations** — "Sources" renamed to the owner's word — headed like
+every other section, their lists still set small; a wrapper (`.primer-endnotes`) keeps the
+rule above them. The count in the head says 14. The footnote links still point at their
+notes and back, and `aria-describedby` still names the Footnotes heading.
+
+One test changed with it, deliberately: `past the writing's last section the rule names
+where you are, not the introduction`. Reading the motto used to leave no section on the
+window, which is the case it was written for; the Footnotes now stand just under the motto,
+so there the rule names **Footnotes**. The fallback it guarded is unchanged in `essay.js`.
+`the piece opens with its fourteen sections and the rule` now also reads the last three
+names on the rule and what each of the two new sections holds; it fails with the Citations
+not a section.

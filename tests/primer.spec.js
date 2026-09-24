@@ -36,15 +36,22 @@ test("it is 000, the first result, and an exploration", async ({ page }) => {
   await expect(page.locator(".index-table tbody tr").first().locator(".index-no")).toHaveText("000");
 });
 
-/* THE PAGE: twelve sections, the rule built from them, and nothing
-   thrown. */
-test("the piece opens with its twelve sections and the rule", async ({ page }) => {
+/* THE PAGE: fourteen sections, the rule built from them, and nothing
+   thrown. The last two are the Footnotes and the Citations, which the
+   owner asked to see in the rule's list with the others. */
+test("the piece opens with its fourteen sections and the rule", async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(PRIMER);
   await page.waitForTimeout(600);
-  await expect(page.locator(".essay-section")).toHaveCount(12);
-  await expect(page.locator(".essay-mark")).toHaveCount(12);
+  await expect(page.locator(".essay-section")).toHaveCount(14);
+  await expect(page.locator(".essay-mark")).toHaveCount(14);
+  const names = await page.locator(".essay-mark-name").allTextContents();
+  expect(names.slice(-3)).toEqual(["Some common myths", "Footnotes", "Citations"]);
+  await expect(page.locator(".essay-facts")).toContainText("14");
+  // Each still carries what it did: three notes, and the sources.
+  await expect(page.locator("#section-13 .primer-footnotes li")).toHaveCount(3);
+  await expect(page.locator("#section-14 .primer-sources li")).toHaveCount(5);
   await expect(page.locator("h1")).toContainText("My Personal Introduction");
   expect(errors).toEqual([]);
 });
@@ -256,23 +263,24 @@ test("the pyramids are true triangles: their sides do not bend", async ({ page }
   bends.forEach((b) => expect(b, "a side bends by " + b.toFixed(2)).toBeLessThan(0.5));
 });
 
-/* THE RULE NAMES WHERE YOU ARE AT THE END. Reading the motto, the
-   footnotes and the sources, no section is on the window, and the rule
-   used to fall back to the FIRST one — "Introduction" three screens from
-   the end. It names the last section passed. */
-test("past the last section the rule names it, not the introduction", async ({ page }) => {
+/* THE RULE NAMES WHERE YOU ARE AT THE END. Reading the motto, past the
+   last of the writing's sections, the rule used to fall back to the FIRST
+   one — "Introduction" three screens from the end. Since the Footnotes and
+   the Citations became sections of their own (2026-09-24) there is always
+   a section on the window there, and the rule names that one. */
+test("past the writing's last section the rule names where you are, not the introduction", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(PRIMER);
-  // The motto at the top of the window: the last section is off it, and
-  // the page is not yet at its very foot (where the last section wins
-  // anyway).
+  // The motto at the top of the window: the last of the writing is off
+  // it, and the page is not yet at its very foot (where the last section
+  // wins anyway).
   await page.locator(".primer-motto").evaluate((e) => e.scrollIntoView({ block: "start" }));
   await page.waitForTimeout(500);
   const where = await page.evaluate(() => ({
     lastOff: document.querySelector("#section-12").getBoundingClientRect().bottom < 0,
     atFoot: window.scrollY >= document.documentElement.scrollHeight - innerHeight - 4,
   }));
-  expect(where.lastOff, "the last section should be off the window").toBe(true);
+  expect(where.lastOff, "the last of the writing should be off the window").toBe(true);
   expect(where.atFoot, "and the page not at its very foot").toBe(false);
-  await expect(page.locator(".essay-here")).toHaveText(/common myths/i);
+  await expect(page.locator(".essay-here")).toHaveText(/footnotes/i);
 });

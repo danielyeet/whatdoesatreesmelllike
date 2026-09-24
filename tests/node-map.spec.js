@@ -20,6 +20,7 @@ const EXPECTED_LABELS = [
   "Theories",
   "Explorations & Researches",
   "Favourites",
+  "Note Library",
   "Photography",
   "Search",
   "Contact",
@@ -320,9 +321,9 @@ test("the trace has ranks of itself receding behind it", async ({ page }) => {
 
 /* EVERY PAGE IN THE MENU IS ON THE MAP, AND THEY ARE SPREAD EVENLY.
    Both asked for by name. The positions are a Fibonacci sphere rather
-   than seven hand-placed points, and this is what that buys: every
+   than hand-placed points, and this is what that buys: every
    node the same distance from the hub, and no two of them crowded. */
-test("the seven nodes stand evenly over the sphere", async ({ page }) => {
+test("the eight nodes stand evenly over the sphere", async ({ page }) => {
   await serveDependenciesLocally(page);
   await page.goto("/index.html");
   await page.waitForTimeout(600);
@@ -343,16 +344,41 @@ test("the seven nodes stand evenly over the sphere", async ({ page }) => {
              out: Math.max.apply(null, far), closest: closest };
   });
 
-  expect(spread.n, "one per page in the menu").toBe(7);
+  expect(spread.n, "one per page on the map").toBe(8);
   // The same distance from the hub, so no branch is obviously longer.
   expect(spread.out - spread.near,
     `every branch the same length — ${spread.near.toFixed(3)} to ${spread.out.toFixed(3)}`)
     .toBeLessThan(0.05);
   // And no two crowded. Seven points placed by hand came out at about
-  // 35 degrees at the closest; the sphere gives 71.5.
+  // 35 degrees at the closest; the sphere gives 71.5 for seven and 66.3
+  // for the eight there are since the Note Library joined.
   expect(spread.closest,
     `no two branches crowded — closest ${spread.closest.toFixed(1)} degrees`)
     .toBeGreaterThan(60);
+});
+
+/* NO TWO NAMES ON TOP OF EACH OTHER. With the Note Library the eighth
+   node, the plain sphere put Search's label straight on Contact's as the
+   map came to rest; the arrangement is turned round the upright axis to
+   where every label stands clear. Read with the map held still. */
+test("at rest, no two node labels overlap", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await serveDependenciesLocally(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/index.html");
+  await jumpToSlide(page, "slide-3");
+  await page.waitForTimeout(1500);
+  const nearest = await page.evaluate(() => {
+    const r = [...document.querySelectorAll(".node3d-label")].map((a) => a.getBoundingClientRect());
+    let worst = Infinity;
+    for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) {
+      const gx = Math.max(r[i].left, r[j].left) - Math.min(r[i].right, r[j].right);
+      const gy = Math.max(r[i].top, r[j].top) - Math.min(r[i].bottom, r[j].bottom);
+      worst = Math.min(worst, Math.max(gx, gy));
+    }
+    return worst;
+  });
+  expect(nearest, "pixels between the two nearest labels").toBeGreaterThan(20);
 });
 
 /* THE OWNER ASKED FOR PHOTOGRAPHY TO SAY SO. Clicking it opens the

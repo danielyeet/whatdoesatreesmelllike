@@ -1414,3 +1414,39 @@ and back, as the writing fades` — sampled every frame from inside the page, bo
 round: the specks flown on their own canvas with ink on it, the new drawing held under the
 veil while they fly, the writing gone and back, the new drawing up at the end and the
 flight's canvas put away. It fails with the morph taken out (the old cut).
+
+## 2026-09-24, last — the morph without the cut
+
+> make it so that the transition of the particles is smoother when transitioning from
+> favorites chapter 1 to 2. It kinda transitions and then cuts to the other page. Fix it
+
+Two cuts, one at each end, and both measured before they were fixed:
+
+- **At the end, the drawing that came up was not the one the specks had flown to.** The
+  moon was started under its veil, its first frame taken as where the flight lands — and
+  then it went on **turning, unseen, for the whole 2.3 seconds**. When it came up it had
+  moved on, so the flown specks faded out in one place while the moon faded in in another.
+  Read off the canvas outside the writing, the frame that came up differed from the frame
+  aimed at by 24%. Now both grounds have **`hold(on)`**: held, a drawing goes on drawing
+  every frame but at the same moment (its clock does not advance), and the chamber holds
+  the new drawing from before its first frame is taken until the flight is home, then lets
+  it go (`stopMorph`). It turns on from the very frame it was held at. The difference is
+  now nothing.
+- **At the start, the old drawing lost its glow in one frame.** The flight starts from the
+  sun's specks, but the sun as drawn is more than its specks — its bloom and corona — and
+  all of that went the moment the morph began: the flight's first frame carried 70% of the
+  light the sun had had. Now the old drawing **as it looks** is copied off its canvas
+  before it is stopped, and over the first fifth of the flight (`MORPH_LEAVE`) that copy
+  fades as its own specks come up over it and take off. The haze follows the same ramp.
+
+What it still does not do: a drawing quietens itself behind the writing, and the writing
+is rewritten half way through the flight, so behind the new chapter's writing the frame
+that comes up is quietened slightly differently from the one captured. It is under the
+writing as the writing fades in, and the test measures outside it.
+
+Tested in `tests/chamber.spec.js`: `the morph lands on the very frame that comes up, and
+leaves the old drawing without a blink` — both ways round, reading the new drawing as the
+flight is aimed at it, as it comes up, and 2.3 seconds after it has been let go (which
+shows it does move, so that the first two matching means something), and the flight's
+first frame against the old drawing just before the press. Fails against the old code on
+both counts, with the moon not held, and with the old drawing's copy left out.

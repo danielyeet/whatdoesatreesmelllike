@@ -60,6 +60,37 @@ test("all nine houses stand on the contact sheet, in their own order",
   ]);
 });
 
+/* UNDER A HOUSE'S NAME, ONLY ITS SUBTITLE — AND THE SUBTITLE IN TITLE
+   CASE. The owner: "remove the lines that are below the subtitle in the
+   houses, so that lines such as 'Replace this line with your own
+   standing first paragraph ...' should be removed from all of the
+   houses", and "the subtitles like 'The house that smells like trees'
+   should have every other word capitalized (like the titles of books in
+   the real world)". So no house carries a standfirst, and every
+   subtitle — on the house's page and under its picture on the Houses
+   view — capitalises every word but the short joining ones. */
+const HOUSE_PAGES = ["pineward", "adar", "almost-human", "ataraxia", "grande-parfums",
+  "les-abstraits", "tale-parfums", "tombstone", "qimu-and-musicians"];
+const SMALL = new Set(["a", "an", "the", "and", "but", "or", "for", "nor", "at", "by", "in", "of", "on", "to", "as", "up"]);
+const notTitled = (line) => line.split(/\s+/).filter((word, i) => {
+  const first = word.replace(/^[^\p{L}\d]+/u, "").charAt(0);
+  if (!first || !/\p{L}/u.test(first)) return false;
+  if (i > 0 && SMALL.has(word.toLowerCase())) return false;
+  return first !== first.toUpperCase();
+});
+test("no house has a line under its subtitle, and every subtitle is in title case", async ({ page }) => {
+  for (const house of HOUSE_PAGES) {
+    await page.goto(`/houses/${house}.html`);
+    await expect(page.locator(".human-standfirst, .adar-standfirst, .pine-standfirst"), `${house}: a standfirst`).toHaveCount(0);
+    const subtitle = await page.locator("h1 em").allTextContents();
+    subtitle.forEach((line) => expect(notTitled(line), `${house}: "${line}"`).toEqual([]));
+  }
+  await page.goto(SHEET);
+  const says = await page.locator(".sheet-say").allTextContents();
+  expect(says.length).toBe(9);
+  says.forEach((line) => expect(notTitled(line), `"${line}"`).toEqual([]));
+});
+
 /* THE ORDER THE OWNER ASKED FOR, in as many words: "Ill ask that you
    arrange them alphabetically, as I will input them non-
    alphabetically". They sent fifteen write-ups in no order at all, so
@@ -791,7 +822,7 @@ test("Qimu & Musicians carries its four: two written, one coming soon, one waiti
   const drummer = (await page.locator(".human-part").nth(3).locator(".human-text p").first().textContent()).trim();
   expect(drummer).toBe("Description coming soon.");
   await expect(page.locator("#introduction-name + .human-text")).toHaveText("I will write it later.");
-  await expect(page.locator(".human-head h1 em")).toHaveText("A house of music and fragrance");
+  await expect(page.locator(".human-head h1 em")).toHaveText("A House of Music and Fragrance");
   await expect(page.locator(".human-kicker")).toHaveText("Scent descriptions · 09");
 });
 
@@ -807,7 +838,7 @@ test("Qimu & Musicians carries its four: two written, one coming soon, one waiti
    and if you click no, then it will collapse it". */
 test("Ataraxia is written, and Spinal Fluid's spoiler asks before it shows", async ({ page }) => {
   await page.goto(ATARAXIA);
-  await expect(page.locator(".human-head h1 em")).toHaveText("A gothic avante garde house");
+  await expect(page.locator(".human-head h1 em")).toHaveText("A Gothic Avante Garde House");
   await expect(page.locator("#introduction-name + .human-text")).toContainText("this house has no DNA");
   for (const [id, stages, words] of [
     ["#part-01", ["Top", "Middle", "Base"], "jazz bar"],
@@ -860,7 +891,7 @@ test("Vestibule carries the notes the owner corrected", async ({ page }) => {
 test("Tombstone is written, with its bold, its link and a definition on hover",
   async ({ page }) => {
   await page.goto(TOMBSTONE);
-  await expect(page.locator(".human-head h1 em")).toHaveText("A house that expanded on death");
+  await expect(page.locator(".human-head h1 em")).toHaveText("A House That Expanded on Death");
   await expect(page.locator(".human-intro strong, #introduction-name ~ .human-text strong").first())
     .toHaveText("selectively linear");
   const site = page.locator("a[href='https://tombstonefragrances.shop']");

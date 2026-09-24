@@ -312,8 +312,9 @@ where the bottle stands.
 
 **The house's mark took its place at the head of this page, and has since gone into the
 hand.** There is no `figure.human-mark` and no `.human-mark` in the stylesheet any more:
-the head of the page is its kicker, its name and its standfirst, and then the clearing the
-crowd stands in. See "The house's mark, shown by the hand" above.
+the head of the page is its kicker and its name with the house's line under it, and then
+the clearing the crowd stands in. (Its standfirst went on 2026-09-24 with every house's —
+see [the newer houses](2026-09-21-the-newer-houses.md).) See "The house's mark, shown by the hand" above.
 
 **The file has no ground of its own**, and that is still the one thing about it worth
 knowing, because `almost-human.js` reads it for the glitch. The owner's logo is a JPEG,

@@ -88,12 +88,25 @@
 
   // THE PARTICLES
   const FALL = 46;                 // px a second down the axis
-  const AXIS_SPECKS = 280;
+  const AXIS_SPECKS = 460;
+  // THE AXIS IS THE SPINE of the whole drawing — the owner asked for it
+  // emphasised — so it is drawn as one: a soft column of light either
+  // side of it, a firm line, and now and then a pulse running down it.
+  const AXIS_GLOW = 22;            // px either side of the line
+  const AXIS_PULSES = 3;           // running down it at once
+  const PULSE_SPEED = 150;         // px a second
+  const PULSE_LEN = 90;            // px, the pulse's tail
   const STRAND_STEP = 0.022;       // houses between strand specks
   const TETHER_SPECKS = 30;
   const DUST = 520;                // specks turning round the axis (fewer on a phone)
   const DUST_SPIN = 0.07;          // radians a second
-  const HALO_SPECKS = 64;
+  // THE CORNERS: four brackets of specks standing just outside the front
+  // house and its label, as a registration mark stands outside what it
+  // registers. They replaced a ring of specks turning round the house,
+  // which ran under the picture's corners and was mostly hidden by it.
+  const CORNER_LEG = 26;           // px each arm reaches
+  const CORNER_STEP = 3.2;         // px between its specks
+  const CORNER_OUT = 16;           // px outside the picture and its label
 
   // How long the pointer has to rest on a house before its motifs come.
   // It was 420ms and the owner found it "too long".
@@ -273,7 +286,8 @@
   // ============================================================
   const axisSpecks = [];
   for (let n = 0; n < AXIS_SPECKS; n++) {
-    axisSpecks.push({ y: random(), off: (random() - 0.5) * 5, size: 0.7 + random() * 1.4, lit: 0.25 + random() * 0.6 });
+    // Gathered on the line and thinning away from it.
+    axisSpecks.push({ y: random(), off: (random() + random() + random() - 1.5) * 7, size: 0.7 + random() * 1.5, lit: 0.3 + random() * 0.6 });
   }
   // THE DUST: a column of specks turning slowly round the axis, each at
   // its own height and reach, and turning with the helix as you travel —
@@ -286,6 +300,7 @@
   const flow = [];    // bright specks riding the strands
   for (let n = 0; n < 60; n++) flow.push({ u: random() * (N + 4) - 2, v: 0.06 + random() * 0.12, strand: n % 2 });
   const bursts = [];  // specks thrown out as a house arrives
+  let corners = null; // where the corners stand, eased
   let px = -9999, py = -9999;
 
   const INK = getComputedStyle(document.body).getPropertyValue("--ink-rgb").trim() || "23, 23, 15";
@@ -305,10 +320,31 @@
     ink.clearRect(0, 0, W, H);
     ink.fillStyle = "rgb(" + INK + ")";
 
-    // THE AXIS: drawn out from the middle as the page arrives.
+    // THE AXIS: drawn out from the middle as the page arrives — its
+    // light, its line, and the pulses running down it.
     const reach = (H / 2 + 20) * axisShown;
-    ink.globalAlpha = 0.45 * axisShown;
-    ink.fillRect(cx - 0.5, cy - reach, 1, reach * 2);
+    const glow = ink.createLinearGradient(cx - AXIS_GLOW, 0, cx + AXIS_GLOW, 0);
+    glow.addColorStop(0, "rgba(" + INK + ", 0)");
+    glow.addColorStop(0.5, "rgba(" + INK + ", 0.1)");
+    glow.addColorStop(1, "rgba(" + INK + ", 0)");
+    ink.globalAlpha = axisShown;
+    ink.fillStyle = glow;
+    ink.fillRect(cx - AXIS_GLOW, cy - reach, AXIS_GLOW * 2, reach * 2);
+    if (!REDUCE_MOTION) {
+      const lap = H + PULSE_LEN;
+      for (let k = 0; k < AXIS_PULSES; k++) {
+        const y = cy - reach + ((t * PULSE_SPEED + k * lap / AXIS_PULSES) % lap);
+        const tail = ink.createLinearGradient(0, y - PULSE_LEN, 0, y);
+        tail.addColorStop(0, "rgba(" + INK + ", 0)");
+        tail.addColorStop(1, "rgba(" + INK + ", 0.75)");
+        ink.fillStyle = tail;
+        const top = Math.max(cy - reach, y - PULSE_LEN), foot = Math.min(cy + reach, y);
+        if (foot > top) ink.fillRect(cx - 1.75, top, 3.5, foot - top);
+      }
+    }
+    ink.fillStyle = "rgb(" + INK + ")";
+    ink.globalAlpha = 0.8 * axisShown;
+    ink.fillRect(cx - 0.9, cy - reach, 1.8, reach * 2);
     // Its ticks travel with you: one every quarter house, a long one at
     // each house.
     const quarter = span / 4;
@@ -318,8 +354,8 @@
       const y = cy + k * quarter - pos * span;
       if (Math.abs(y - cy) > reach) continue;
       const long = ((k % 4) + 4) % 4 === 0;
-      ink.globalAlpha = (long ? 0.5 : 0.22) * axisShown;
-      ink.fillRect(cx - (long ? 7 : 3.5), y, long ? 14 : 7, 1);
+      ink.globalAlpha = (long ? 0.7 : 0.34) * axisShown;
+      ink.fillRect(cx - (long ? 9 : 4.5), y, long ? 18 : 9, 1);
     }
     // Specks falling down it, always.
     for (const a of axisSpecks) {
@@ -383,16 +419,39 @@
       }
     });
 
-    // THE HALO, turning round the front house.
+    // THE CORNERS, round the front house and its label. Where they stand
+    // is read off the page (the label grows a line when the house is
+    // rested on) and eased, so they follow rather than jump.
     const f = Math.round(pos);
     if (Math.abs(f - pos) < 0.35 && shown[f] > 0.5) {
       const settle = (1 - Math.abs(f - pos) / 0.35) * shown[f];
-      const rx = frontW * 0.5 + 34, ry = frontH * 0.5 + 44;
-      for (let k = 0; k < HALO_SPECKS; k++) {
-        const a = (k / HALO_SPECKS) * Math.PI * 2 + (REDUCE_MOTION ? 0 : t * 0.35);
-        const wob = 1 + 0.03 * Math.sin(a * 5 + t * 1.3);
-        speck(cx + Math.cos(a) * rx * wob, cy + Math.sin(a) * ry * wob, k % 8 === 0 ? 2.4 : 1.3, (k % 8 === 0 ? 0.75 : 0.42) * settle);
+      const fr = frames[f];
+      const at = ink.canvas.getBoundingClientRect();
+      let l = Infinity, tp = Infinity, r = -Infinity, b = -Infinity;
+      for (const el of [fr, fr.querySelector(".sheet-caption"), fr.querySelector(".sheet-number")]) {
+        const q = el && el.getBoundingClientRect();
+        if (!q || !q.width) continue;
+        l = Math.min(l, q.left); tp = Math.min(tp, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom);
       }
+      const want = { l: l - at.left, t: tp - at.top, r: r - at.left, b: b - at.top };
+      if (!corners || corners.f !== f || REDUCE_MOTION) corners = { f, ...want };
+      else for (const k of ["l", "t", "r", "b"]) corners[k] += (want[k] - corners[k]) * 0.18;
+      const out = CORNER_OUT + (REDUCE_MOTION ? 0 : Math.sin(t * 1.4) * 2);
+      const grow = 1 - Math.pow(1 - settle, 3);
+      [[corners.l - out, corners.t - out, 1, 1], [corners.r + out, corners.t - out, -1, 1],
+        [corners.l - out, corners.b + out, 1, -1], [corners.r + out, corners.b + out, -1, -1]]
+        .forEach(([x, y, sx, sy], k) => {
+          // A light runs out along both arms, each corner on its own beat.
+          const run = REDUCE_MOTION ? -1 : (t * 0.55 + k * 0.25) % 1;
+          speck(x, y, 2.6, 0.85 * settle);
+          for (let d = CORNER_STEP; d <= CORNER_LEG * grow; d += CORNER_STEP) {
+            const q = d / CORNER_LEG;
+            const hot = run >= 0 ? Math.max(0, 1 - Math.abs(q - run) * 6) : 0;
+            const a = (0.78 - 0.34 * q + hot * 0.3) * settle;
+            speck(x + sx * d, y, 1.4 + hot, a);
+            speck(x, y + sy * d, 1.4 + hot, a);
+          }
+        });
     }
 
     // THE BURSTS, from houses arriving.

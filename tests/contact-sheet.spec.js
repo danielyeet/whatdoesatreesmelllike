@@ -477,6 +477,185 @@ test("Ataraxia's bands cross the page strongly", async ({ page }) => {
   expect(ink.dark, "and a good deal of it strong").toBeGreaterThan(0.005);
 });
 
+/* ATARAXIA'S STREAKS, FEWER AND MORE SIGNIFICANT: "make ataraxias effect
+   slightly less frequent with the streaks, but make the streaks more
+   significant." Every band lays one soft haze along its length each
+   frame, so the hazes drawn in a frame are the bands on the page: read
+   over a long rest, never more than seven at once — six standing and one
+   fading as the next comes (it was ten and one) — and every one half as
+   wide again as the widest used to be. */
+test("Ataraxia's bands are fewer at once, and each wider", async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => {
+    window.__frame = 0;
+    window.__hazes = {};
+    const tick = () => { window.__frame++; requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+    const P = CanvasRenderingContext2D.prototype;
+    const stroke = P.stroke;
+    P.stroke = function () {
+      if (this.canvas.classList.contains("sheet-motifs") && /52, ?53, ?58|#34353a/.test(this.strokeStyle)) {
+        (window.__hazes[window.__frame] = window.__hazes[window.__frame] || []).push(this.lineWidth);
+      }
+      return stroke.apply(this, arguments);
+    };
+  });
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 3);
+  await page.waitForTimeout(16000);
+  const seen = await page.evaluate(() => {
+    const frames = Object.values(window.__hazes);
+    return {
+      frames: frames.length,
+      most: Math.max(0, ...frames.map((f) => f.length)),
+      thinnest: Math.min(...frames.flat()),
+    };
+  });
+  expect(seen.frames, "bands were drawn").toBeGreaterThan(100);
+  expect(seen.most, "bands on the page at once").toBeLessThanOrEqual(7);
+  expect(seen.most, "but more than one").toBeGreaterThan(2);
+  expect(seen.thinnest, "each band's haze, in px").toBeGreaterThan(36);
+});
+
+/* TOMBSTONE'S PETALS FALL AND GATHER. "I want some of the red petals to
+   fall, and then not be removed Unless hovered away, so that if you keep
+   hovering tombstone, then the red petals will eventually be collected
+   on the ground." And "make the things truly grow from the top top": a
+   root from the top starts at the window's very edge, not under the
+   chrome's band. Read off the motifs' canvas: the red petals drawn along
+   its foot, the same ones still there later, all of them gone once the
+   house is left; and where the roots begin. */
+test("Tombstone's petals fall and gather on the ground until the house is left, and roots grow from the very top", async ({ page }) => {
+  test.setTimeout(90000);
+  await page.addInitScript(() => {
+    window.__frame = 0;
+    window.__petals = {};
+    window.__rootTop = Infinity;
+    const tick = () => { window.__frame++; requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+    const P = CanvasRenderingContext2D.prototype;
+    const ellipse = P.ellipse;
+    // A fallen petal is drawn 3.1px across; the petals of a flower at a
+    // root's tip are 2.8 at most, and come and go with their root.
+    P.ellipse = function (x, y, across) {
+      if (this.canvas.classList.contains("sheet-motifs") && across > 2.9 && /155, ?43, ?43|#9b2b2b/.test(this.fillStyle)) {
+        (window.__petals[window.__frame] = window.__petals[window.__frame] || []).push([x, y]);
+      }
+      return ellipse.apply(this, arguments);
+    };
+    // A root is drawn a segment at a time, moveTo then lineTo. One coming
+    // in from the top has a segment AT the top edge heading DOWN into the
+    // window — a root from the side that wanders up past the edge is
+    // heading the other way.
+    const moveTo = P.moveTo, lineTo = P.lineTo;
+    let from = null;
+    P.moveTo = function (x, y) {
+      from = [x, y];
+      return moveTo.apply(this, arguments);
+    };
+    P.lineTo = function (x, y) {
+      if (from && from[1] < 1 && y > from[1] && this.canvas.classList.contains("sheet-motifs") &&
+          /92, ?70, ?52|#5c4634/.test(this.strokeStyle)) {
+        window.__rootTop = Math.min(window.__rootTop, from[1]);
+      }
+      return lineTo.apply(this, arguments);
+    };
+  });
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 7);
+  // What lies along the foot of the window in the latest frame drawn.
+  const grounded = () => page.evaluate(() => {
+    const keys = Object.keys(window.__petals).map(Number);
+    const last = window.__petals[Math.max(...keys)] || [];
+    return last.filter(([, y]) => y > innerHeight - 24).length;
+  });
+  await page.waitForTimeout(22000);
+  const first = await grounded();
+  await page.waitForTimeout(6000);
+  const later = await grounded();
+  const top = await page.evaluate(() => window.__rootTop);
+  expect(first, "petals lying on the ground").toBeGreaterThan(12);
+  expect(later, "and still there, with more come").toBeGreaterThanOrEqual(first + 5);
+  expect(top, "a root grows down from the very top of the window").toBeLessThan(1);
+  // Left, and they go with everything else.
+  await page.mouse.move(4, 4);
+  await page.waitForTimeout(2600);
+  const after = await page.evaluate(() => {
+    const now = window.__frame;
+    return (window.__petals[now] || window.__petals[now - 1] || []).length;
+  });
+  expect(after, "gone once the house is left").toBe(0);
+});
+
+/* THE FRONT HOUSE'S CORNERS. "there is a spinning particle circle behind
+   the house being shown, that is not a really aesthetic as it is hidden
+   behind the square. I want you to replace it with something." A ring
+   round a box runs under the box's corners; four brackets of specks
+   standing just outside the picture AND its label are never under
+   anything. Read off the particles' canvas at the four corners, against
+   the same point further out. */
+test("the front house is marked by four corners standing clear of it and its label", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await page.mouse.move(4, 4);
+  await page.waitForTimeout(600);
+  const out = await page.evaluate(() => {
+    const c = document.querySelector(".sheet-field");
+    const at = c.getBoundingClientRect();
+    const ratio = c.width / c.clientWidth;
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    const front = document.querySelector(".sheet-frame.front");
+    const box = [front, front.querySelector(".sheet-caption"), front.querySelector(".sheet-number")]
+      .map((el) => el.getBoundingClientRect())
+      .reduce((u, r) => ({ l: Math.min(u.l, r.left), t: Math.min(u.t, r.top), r: Math.max(u.r, r.right), b: Math.max(u.b, r.bottom) }),
+        { l: Infinity, t: Infinity, r: -Infinity, b: -Infinity });
+    // Ink in a small square round a point on the window.
+    const ink = (x, y) => {
+      let n = 0;
+      for (let dy = -7; dy <= 7; dy++) for (let dx = -7; dx <= 7; dx++) {
+        const px = Math.round((x - at.left + dx) * ratio), py = Math.round((y - at.top + dy) * ratio);
+        if (px < 0 || py < 0 || px >= c.width || py >= c.height) continue;
+        if (d[(py * c.width + px) * 4 + 3] > 60) n++;
+      }
+      return n;
+    };
+    const corners = [[box.l, box.t, -1, -1], [box.r, box.t, 1, -1], [box.l, box.b, -1, 1], [box.r, box.b, 1, 1]];
+    return corners.map(([x, y, sx, sy]) => ({ on: ink(x + sx * 16, y + sy * 16), off: ink(x + sx * 60, y + sy * 60) }));
+  });
+  out.forEach((one, i) => {
+    expect(one.on, `corner ${i + 1} is drawn`).toBeGreaterThan(8);
+    expect(one.on, `and is more than the ground around it`).toBeGreaterThan(one.off * 2);
+  });
+});
+
+/* THE AXIS, EMPHASISED: "emphasize the middle part of the particles, the
+   one around which the houses rotate." A firm line rather than a
+   hairline — dark in the middle of the canvas down most of the window —
+   and a soft light either side of it. */
+test("the axis is drawn as a firm line with a light either side", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await page.mouse.move(4, 4);
+  const out = await page.evaluate(() => {
+    const c = document.querySelector(".sheet-field");
+    const ratio = c.width / c.clientWidth;
+    const g = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    const mid = Math.round((c.clientWidth / 2) * ratio);
+    const alpha = (x, y) => g[(y * c.width + x) * 4 + 3];
+    let firm = 0, lit = 0, rows = 0;
+    for (let y = 0; y < c.height; y += 2) {
+      rows++;
+      if (alpha(mid, y) > 170 || alpha(mid - 1, y) > 170) firm++;
+      if (alpha(mid + Math.round(10 * ratio), y) > 8) lit++;
+    }
+    return { firm: firm / rows, lit: lit / rows };
+  });
+  expect(out.firm, "the line is dark down most of the window").toBeGreaterThan(0.5);
+  expect(out.lit, "and has a light beside it").toBeGreaterThan(0.5);
+});
+
 /* LES ABSTRAITS' EFFECT, CHANGED: abstract compositions — circles, arcs,
    lines, triangles and dots, drawn in by a pen line, in ink and the amber
    of the house's bottles — in place of the smoke, embers and ash off Des
@@ -834,7 +1013,7 @@ test("the search finds a picture by what it is called", async ({ page }) => {
   const frames = await page.$$eval(".sheet-frame", (els) => els.length);
   expect(dimmed, "everything that doesn't match should step back").toBe(frames - 1);
   await expect(page.locator(".sheet-frame:not(.dimmed) .sheet-caption")).toHaveText(
-    "ADAR The house that you have never heard of"
+    "ADAR The House That You Have Never Heard Of"
   );
 
   // Escape clears it and puts the sheet back.

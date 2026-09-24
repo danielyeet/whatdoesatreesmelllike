@@ -210,6 +210,14 @@
     label.lastChild.textContent = r.call.slice(4);
     el.appendChild(label);
 
+    // The tab, the one coloured part of the folder, at one of three
+    // places along its top edge in turn.
+    const tab = document.createElement("span");
+    tab.className = "lib-folder-tab";
+    tab.setAttribute("aria-hidden", "true");
+    el.style.setProperty("--tab-k", String([0, 1, 0.5][bookNo % 3]));
+    el.appendChild(tab);
+
     // The data bar at the head: how much of the site uses the note, on
     // a root scale so a note used once still shows and the most-used
     // fill the bar.
@@ -235,7 +243,7 @@
       return seed / 4294967296;
     };
     let x = 0;
-    const ink = "hsl(" + hue.toFixed(0) + " 80% 76%)";
+    const ink = "rgb(200, 205, 212)";
     while (x < 60) {
       const bar = 1 + Math.floor(next() * 2);
       const gap = 1 + Math.floor(next() * 3);
@@ -298,7 +306,7 @@
         '<button type="button" class="lib-order-by is-on" data-order="alpha">A–Z</button>' +
         '<button type="button" class="lib-order-by" data-order="uses">Most used</button>' +
       '</div>' +
-      '<button type="button" class="lib-random">Pull a random book</button>' +
+      '<button type="button" class="lib-random">Pull a random folder</button>' +
     '</div>' +
     '<p class="lib-nothing" hidden>No record answers that. <a class="lib-elsewhere" href="#">Search the whole site →</a></p>';
 
@@ -372,7 +380,7 @@
   card.innerHTML =
     '<div class="lib-card-top">' +
       '<span class="lib-card-call"></span>' +
-      '<button type="button" class="lib-card-close" aria-label="Put the book back">×</button>' +
+      '<button type="button" class="lib-card-close" aria-label="Put the folder back">×</button>' +
     '</div>' +
     '<p class="lib-card-shelf"></p>' +
     '<h2 class="lib-card-name" tabindex="-1"></h2>' +
@@ -804,9 +812,35 @@
   // ============================================================
   // THE ROOM — the lamp over the stacks, and the dust in the air
   // ============================================================
+  // THE LAMP RUNS A BEAT BEHIND THE HAND, as the cursor's square does
+  // (the same LAG as nav.js): each frame it closes that share of the way
+  // to the pointer. It used to be set straight to the pointer on every
+  // move, which the owner found "mechanical". With animation turned
+  // off it simply stands where the pointer is.
+  const LAMP_LAG = 0.16;
+  let lampX = null, lampY = null, lampTo = [0, 0], lampFrame = 0;
+  const placeLamp = () => {
+    lamp.style.setProperty("--lx", lampX.toFixed(1) + "px");
+    lamp.style.setProperty("--ly", lampY.toFixed(1) + "px");
+  };
+  const easeLamp = () => {
+    lampFrame = 0;
+    const dx = lampTo[0] - lampX, dy = lampTo[1] - lampY;
+    lampX += dx * LAMP_LAG;
+    lampY += dy * LAMP_LAG;
+    if (Math.hypot(dx, dy) < 0.3) { lampX = lampTo[0]; lampY = lampTo[1]; }
+    placeLamp();
+    if (lampX !== lampTo[0] || lampY !== lampTo[1]) lampFrame = requestAnimationFrame(easeLamp);
+  };
   window.addEventListener("pointermove", (event) => {
-    lamp.style.setProperty("--lx", event.clientX + "px");
-    lamp.style.setProperty("--ly", event.clientY + "px");
+    lampTo = [event.clientX, event.clientY];
+    if (lampX === null || still) {
+      lampX = event.clientX;
+      lampY = event.clientY;
+      placeLamp();
+    } else if (!lampFrame) {
+      lampFrame = requestAnimationFrame(easeLamp);
+    }
     lamp.classList.add("is-on");
   }, { passive: true });
   document.addEventListener("pointerleave", () => lamp.classList.remove("is-on"));

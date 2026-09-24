@@ -212,6 +212,71 @@ test("every book carries a data bar and a barcode of its own", async ({ page }) 
   expect(out.often).toBeGreaterThan(out.once);
 });
 
+/* THE FOLDERS ARE QUIET, AND ONLY THEIR TABS ARE COLOURED. The owner:
+   the books were "too bright, and too annoyingly neony ... make them
+   folders ... make it so that the entire folder isnt coloured but a
+   part of it". Read off every record as drawn: the folder itself is a
+   near-grey with no glow on it or on its lettering, and its tab carries
+   its shelf's colour — a different colour on different shelves. */
+test("the records are quiet folders, coloured only on their tabs", async ({ page }) => {
+  await arrive(page);
+  const out = await page.evaluate(() => {
+    // How coloured a colour is: the spread between its channels.
+    const chroma = (css) => {
+      const all = (css.match(/rgba?\([^)]*\)/g) || []).map((c) => c.match(/[\d.]+/g).slice(0, 3).map(Number));
+      return Math.max(0, ...all.map(([r, g, b]) => Math.max(r, g, b) - Math.min(r, g, b)));
+    };
+    const folders = [...document.querySelectorAll(".lib-record")];
+    const tabs = new Set();
+    let loud = 0, glowing = 0, bare = 0;
+    folders.forEach((el) => {
+      const cs = getComputedStyle(el);
+      if (chroma(cs.backgroundImage + cs.backgroundColor) > 24) loud++;
+      if (/rgba?\([^)]*\)[^,]*\d+px \d+px \d+px/.test(cs.boxShadow) && chroma(cs.boxShadow) > 24) glowing++;
+      if (getComputedStyle(el.querySelector(".lib-name")).textShadow !== "none") glowing++;
+      const tab = el.querySelector(".lib-folder-tab");
+      if (!tab) { bare++; return; }
+      const colour = getComputedStyle(tab).backgroundColor;
+      if (chroma(colour) < 24) bare++;
+      tabs.add(colour);
+    });
+    return { folders: folders.length, loud, glowing, bare, tabs: tabs.size };
+  });
+  expect(out.loud, "folders drawn in colour").toBe(0);
+  expect(out.glowing, "folders or names glowing in colour").toBe(0);
+  expect(out.bare, "folders without a coloured tab").toBe(0);
+  expect(out.tabs, "the tabs differ from shelf to shelf").toBeGreaterThan(10);
+});
+
+/* THE LAMP RUNS A BEAT BEHIND THE HAND, like the cursor's square: "make
+   the light that follows the cursor have a slight delay ... so that it
+   is smoother and not so mechanical." Moved in one jump, the lamp is
+   still on its way a frame later, and has arrived within a second. */
+test("the lamp follows the pointer a beat behind it", async ({ page }) => {
+  await arrive(page);
+  await page.mouse.move(200, 300);
+  await page.waitForTimeout(900);
+  const at = () => page.evaluate(() => {
+    const lamp = document.querySelector(".lib-lamp");
+    return [parseFloat(lamp.style.getPropertyValue("--lx")), parseFloat(lamp.style.getPropertyValue("--ly"))];
+  });
+  expect((await at())[0]).toBeCloseTo(200, 0);
+  await page.mouse.move(900, 600);
+  const soon = await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => {
+    const lamp = document.querySelector(".lib-lamp");
+    done(parseFloat(lamp.style.getPropertyValue("--lx")));
+  }))));
+  expect(soon, "a frame or two on, the lamp is still on its way").toBeLessThan(820);
+  expect(soon, "but it has set off").toBeGreaterThan(200);
+  // And it arrives. Waited for rather than read at a fixed moment: on a
+  // busy machine fewer frames are drawn, and it was half a pixel short
+  // at one second.
+  await expect.poll(async () => {
+    const [x, y] = await at();
+    return Math.max(Math.abs(x - 900), Math.abs(y - 600));
+  }, { timeout: 3000 }).toBeLessThan(1);
+});
+
 /* THE BOOKS STAND ON THEIR SHELVES: each within its shelf, none on top
    of another, and each carrying its shelf's call number. */
 test("the books stand on their shelves without running into each other", async ({ page }) => {

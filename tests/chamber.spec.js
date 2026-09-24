@@ -1790,3 +1790,91 @@ test("stepping between chapters morphs the sun into the moon and back, as the wr
   }
   expect(errors).toEqual([]);
 });
+
+/* AND THE MORPH LANDS ON WHAT COMES UP — no cut at either end. "It kinda
+   transitions and then cuts to the other page." The new drawing went on
+   turning, unseen, for the whole flight, so the frame it came up on no
+   longer matched where the specks had landed; and the old drawing's glow
+   dropped in the first frame. Now the new drawing is HELD at the frame
+   the flight is aimed at until the flight is home, and the old one, glow
+   and all, fades into its own specks. Read off the canvases themselves:
+   the new drawing as the flight is aimed at it, as it comes up, and
+   again once it has been let go (which shows it does move, so that the
+   first two matching means something); and the old drawing against the
+   flight's first frame. */
+test("the morph lands on the very frame that comes up, and leaves the old drawing without a blink",
+  async ({ page }) => {
+  test.setTimeout(60000);
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+  await page.waitForTimeout(1200);
+
+  for (const [from, to] of [["Chapter 1", "Chapter 2"], ["Chapter 2", "Chapter 1"]]) {
+    await expect(page.locator(".chapter-name")).toHaveText(from);
+    const seen = await page.evaluate(() => new Promise((done) => {
+      const morph = document.querySelector(".chapter-morph");
+      const ground = document.querySelector(".chapter-ground");
+      // A coarse reading of a canvas: light in every eighth pixel of
+      // every eighth row. The drawings quieten themselves behind the
+      // writing, and the writing is rewritten half way through the
+      // flight, so the frame is compared OUTSIDE where either chapter's
+      // writing stands (`away`) — that part is the drawing's alone.
+      const sheet = () => document.querySelector(".chapter-sheet").getBoundingClientRect();
+      const away = [];
+      const read = (c, skip) => {
+        const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+        const ratio = c.width / window.innerWidth;
+        const out = [];
+        for (let y = 0; y < c.height; y += 8) for (let x = 0; x < c.width; x += 8) {
+          const i = (y * c.width + x) * 4;
+          const px = x / ratio, py = y / ratio;
+          const hid = skip && away.some((r) => px > r.left - 60 && px < r.right + 60 && py > r.top - 60 && py < r.bottom + 60);
+          out.push(hid ? 0 : (d[i] + d[i + 1] + d[i + 2]) * d[i + 3] / 255);
+        }
+        return out;
+      };
+      const apart = (a, b) => {
+        let n = 0, m = 0;
+        for (let i = 0; i < a.length; i++) { n += Math.abs(a[i] - b[i]); m += a[i] + b[i]; }
+        return m ? n / m : 0;
+      };
+      const light = (a) => a.reduce((s, v) => s + v, 0);
+      away.push(sheet());
+      const before = read(ground);
+      document.querySelector(".chapter-step-on").click();
+      // Straight after the press: the flight's first frame, and the new
+      // drawing as the flight is aimed at it.
+      const first = read(morph);
+      const aimedShot = document.createElement("canvas");
+      aimedShot.width = ground.width;
+      aimedShot.height = ground.height;
+      aimedShot.getContext("2d").drawImage(ground, 0, 0);
+      const ground0 = ground;
+      const wait = () => {
+        if (!morph.hidden) { requestAnimationFrame(wait); return; }
+        away.push(sheet());
+        const aimedNow = read(aimedShot, true);
+        const landed = read(ground0, true);
+        setTimeout(() => {
+          const later = read(ground0, true);
+          done({
+            held: apart(aimedNow, landed),
+            moves: apart(landed, later),
+            kept: light(first) / Math.max(1, light(before)),
+          });
+        }, 2300);
+      };
+      requestAnimationFrame(wait);
+    }));
+    await expect(page.locator(".chapter-name")).toHaveText(to);
+    expect(seen.moves, `${to}'s drawing turns once it is let go`).toBeGreaterThan(0.05);
+    expect(seen.held, `${from} → ${to}: it comes up on the frame the flight landed on`)
+      .toBeLessThan(seen.moves * 0.35);
+    expect(seen.kept, "the old drawing is all there in the flight's first frame").toBeGreaterThan(0.85);
+    await page.waitForTimeout(600);
+  }
+  expect(errors).toEqual([]);
+});

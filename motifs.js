@@ -249,23 +249,28 @@
   // along each band's length, and a brighter, longer crest travelling
   // along it — so the bands read across the whole page rather than as a
   // few grey threads.
+  // FEWER AND MORE SIGNIFICANT, the round after: "slightly less frequent
+  // with the streaks, but make the streaks more significant". Under half
+  // as many are born and fewer stand at once, but each is half as wide
+  // again, denser, darker, lingers longer, and carries a heavier haze and
+  // a longer crest.
   function band() {
     const angle = rand(6, 26) * (Math.random() < 0.5 ? -1 : 1) * Math.PI / 180;
     const cy = rand(H * 0.1, H * 0.9);
     const len = Math.hypot(W, H) + 200;
-    const wide = rand(14, 22);
+    const wide = rand(22, 34);
     const specks = [];
-    for (let s = 0; s < len; s += rand(1.4, 3.2)) specks.push({ s, off: rand(-wide, wide) * Math.random(), size: rand(1.3, 3.2) });
+    for (let s = 0; s < len; s += rand(0.9, 2.2)) specks.push({ s, off: rand(-wide, wide) * Math.random(), size: rand(1.5, 3.6) });
     const speed = rand(0.28, 0.5);
     return {
-      life: rand(6500, 9500),
+      life: rand(8500, 12000),
       draw(c, age, a) {
         const cos = Math.cos(angle), sin = Math.sin(angle);
         const crest = (age * speed) % (len + 400) - 200;
         // THE HAZE, one soft stroke the length of the band.
         const x0 = -100, y0 = cy - (len / 2) * sin;
-        c.strokeStyle = "rgba(52, 53, 58," + (0.06 * a) + ")";
-        c.lineWidth = wide * 1.6;
+        c.strokeStyle = "rgba(52, 53, 58," + (0.1 * a) + ")";
+        c.lineWidth = wide * 1.7;
         c.lineCap = "round";
         c.beginPath();
         c.moveTo(x0, y0);
@@ -274,9 +279,9 @@
         specks.forEach((p) => {
           const x = x0 + p.s * cos - p.off * sin, y = y0 + p.s * sin + p.off * cos;
           if (!clearOf(x, y, 2)) return;
-          const glow = Math.exp(-Math.pow((p.s - crest) / 220, 2));
-          c.fillStyle = "rgba(38, 39, 44," + (a * (0.34 + 0.66 * glow)) + ")";
-          const size = p.size * (1 + glow * 0.6);
+          const glow = Math.exp(-Math.pow((p.s - crest) / 320, 2));
+          c.fillStyle = "rgba(34, 35, 40," + (a * Math.min(1, 0.42 + 0.7 * glow)) + ")";
+          const size = p.size * (1 + glow * 0.75);
           c.fillRect(x, y, size, size);
         });
       },
@@ -533,7 +538,9 @@
     const edge = Math.random() < 0.55 ? "bottom" : pick(["left", "right", "top"]);
     let x, y, dir;
     if (edge === "bottom") { x = rand(0, W); y = H + 4; dir = -Math.PI / 2; }
-    else if (edge === "top") { x = rand(0, W); y = CHROME; dir = Math.PI / 2; }
+    // From the top, from the very top edge of the window — the owner's
+    // picture showed them starting below it, where the chrome's band ends.
+    else if (edge === "top") { x = rand(0, W); y = -4; dir = Math.PI / 2; }
     else if (edge === "left") { x = -4; y = rand(CHROME, H); dir = 0; }
     else { x = W + 4; y = rand(CHROME, H); dir = Math.PI; }
     // The whole root is worked out at birth, as segments with the time
@@ -556,6 +563,7 @@
     };
     grow(x, y, dir, rand(140, 300), rand(1.6, 2.6), 0, 0);
     return {
+      flowers: tips,   // where its petals fall from — see petal()
       life: rand(7000, 9500),
       draw(c, age, a) {
         c.lineCap = "round";
@@ -582,6 +590,62 @@
           c.fillStyle = "rgba(60, 30, 20," + (0.8 * a) + ")";
           c.fillRect(tip.x - 1, tip.y - 1, 2, 2);
         }
+      },
+    };
+  }
+  // PETALS, falling from the flowers and gathering on the ground. The
+  // owner: "I want some of the red petals to fall, and then not be removed
+  // Unless hovered away, so that if you keep hovering tombstone, then the
+  // red petals will eventually be collected on the ground." So a petal has
+  // no life of its own: it leaves an open flower, tumbles down, and once
+  // it has landed it lies there until the house is left. `heap` is how
+  // high the pile already stands every few pixels across, so a petal
+  // lands ON the ones before it and the pile grows into a drift along the
+  // foot of the window.
+  const HEAP_STEP = 6;
+  let heap = [];
+  function petal() {
+    const now = performance.now();
+    const open = [];
+    things.forEach((t) => {
+      if (!t.flowers || t.ending) return;
+      t.flowers.forEach((tip) => { if (tip.bloom && now - t.born > tip.t + 900 && tip.y < H) open.push(tip); });
+    });
+    if (!open.length) return null;
+    const from = pick(open);
+    const fall = rand(40, 70), sway = rand(8, 20), spin = rand(1.5, 3.5), phase = rand(0, 6.28);
+    const tilt = rand(0, Math.PI);
+    let landed = null;
+    return {
+      petal: true,
+      draw(c, age, a) {
+        let x, y, turn, flat;
+        if (landed) {
+          ({ x, y, turn } = landed);
+          flat = 1;
+        } else {
+          const s = age / 1000;
+          y = Math.max(from.y, 0) + s * fall;
+          x = Math.min(W - 2, Math.max(2, from.x + Math.sin(s * 1.6 + phase) * sway));
+          turn = tilt + s * spin;
+          flat = Math.abs(Math.cos(s * spin * 1.3 + phase));
+          const b = Math.floor(x / HEAP_STEP);
+          const ground = H - 3 - (heap[b] || 0);
+          if (y >= ground) {
+            // It lands on the pile, and the pile rises there — a little
+            // to either side as well, so it heaps rather than stacks.
+            heap[b] = (heap[b] || 0) + 1.2;
+            heap[b - 1] = (heap[b - 1] || 0) + 0.45;
+            heap[b + 1] = (heap[b + 1] || 0) + 0.45;
+            landed = { x, y: ground, turn: rand(-0.6, 0.6) };
+            ({ x, y, turn } = landed);
+            flat = 1;
+          }
+        }
+        c.fillStyle = "rgba(" + PETAL + "," + ((landed ? 0.72 : 0.82) * a) + ")";
+        c.beginPath();
+        c.ellipse(x, y, 3.1, 1.8 * Math.max(0.22, flat), turn, 0, Math.PI * 2);
+        c.fill();
       },
     };
   }
@@ -721,11 +785,12 @@
     pineward: [{ make: tree, rate: 2, most: 16 }, { make: needle, rate: 5, most: 50 }],
     adar: [{ make: sounding, rate: 1.3, most: 8 }, { make: dust, rate: 22, most: 160 }],
     "almost-human": [{ make: figure, rate: 1.3, most: 8 }, { make: rain, rate: 26, most: 80 }],
-    ataraxia: [{ make: band, rate: 1.6, most: 10 }],
+    ataraxia: [{ make: band, rate: 0.7, most: 6 }],
     grande: [{ make: drift, rate: 45, most: 320 }],
     "les-abstraits": [{ make: composition, rate: 0.9, most: 6 }, { make: point, rate: 4, most: 26 }],
     tale: [{ make: doodle, rate: 2.6, most: 20 }],
-    tombstone: [{ make: epitaph, rate: 0.9, most: 5 }, { make: roots, rate: 1.6, most: 11 }, { make: soil, rate: 6, most: 40 }],
+    tombstone: [{ make: epitaph, rate: 0.9, most: 5 }, { make: roots, rate: 1.6, most: 11 }, { make: soil, rate: 6, most: 40 },
+      { make: petal, rate: 2.6, most: 360 }],
     qimu: [{ make: stave, rate: 0.6, most: 3 }, { make: note, rate: 2.2, most: 12 }],
   };
 
@@ -787,6 +852,8 @@
       // FADE_IN_MS — so the page is not empty for the first second.
       owed = new Map((HOUSES[key] || []).map((kind) => [kind, Math.min(kind.most, kind.rate * 0.8)]));
       if (key === "tombstone") epitaphsLeft = EPITAPHS.slice();
+      // The pile starts again from the ground once the last one has gone.
+      if (!things.some((t) => t.petal)) heap = [];
       readAround = around || [];
       // Handed the house, the motifs keep clear of it; handed nothing,
       // they have the whole page — which is how the Houses view asks for

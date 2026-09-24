@@ -81,6 +81,9 @@ fragrances live; a test says every house in `notes-data.js` has a line in it.
 
 ### The books
 
+*Folders since the end of 2026-09-24, quiet and coloured only on their tabs — see the last
+section. What follows is the digital book they were for one round.*
+
 **They are digital now** — the owner's "a little more digitalized version of themselves".
 A book is dark glass lit from inside in its shelf's colour, with a hairline edge and its
 top right corner cut off, fine scanlines across it, its name in the mono down the spine
@@ -221,8 +224,46 @@ nothing uses any more went (Cake, Soybean, Beer, Old House).
   argued with; each is one `<p class="lib-say">` in the page, to be rewritten in place.
 - **The shelves are a choice made here**: sixteen families, with tobacco on Gourmand and
   the conceptual notes on Impressions. Moving a record is moving its `<article>`.
-- **It is on the menu and not on the node map**, because which pages the map carries is
-  the owner's to say.
+- ~~It is on the menu and not on the node map~~ — the owner asked for it on the map on
+  2026-09-24, and it is the eighth node; see [the node map](2026-09-11-the-node-map.md).
 - **On a wide window the card covers the right-hand end of the shelves** while it is open.
   The stacks are left where they are rather than squeezed aside, which would make every
   book jump.
+
+## 2026-09-24, last — folders, and a lamp that lags
+
+> fix the library. the books are too bright, and too annoyingly neony. so fix that. I also
+> want you to make the light that follows the cursor have a slight delay like the cursor's
+> square, so that it is smoother and not so mechanical. Maybe make them folders instaed of
+> books; and make it so that the entire folder isnt coloured but a part of it? work with
+> whatever is least tacky. Give me options if you dont have a specific answer. If you give
+> me otions, provide pictures of what it would look like.
+
+- **The books are folders now**, and only one part of each is coloured. The folder is a
+  quiet graphite (`hsl(220 7% 13%)`, a shade either way per note) with a hairline edge;
+  nothing on it glows — no inner light, no glowing lettering, no glowing call number — and
+  the cut corner and the scanlines are gone. **The shelf's colour is spent on the tab**
+  (`.lib-folder-tab`, made by the script) standing up off the folder's top edge, at one of
+  three places along it in turn (`--tab-k`), as the tabs in a drawer of files are
+  staggered. The data bar and the barcode are kept, in grey; the call number is grey; the
+  shelf's rail is a plain light line; the shelf's code keeps its colour without its glow.
+  A folder no longer flickers under the hand — it lifts, with a shadow. What answers the
+  terminal still takes the phosphor, as a hairline rather than a glow.
+- **Three were drawn, one shipped.** The owner asked for pictures of options: **A** quiet
+  books with the colour only in a band at the head and foot, **B** folders with the colour
+  only on the tab, **C** folders with the colour only down one edge. **B is what is on the
+  page** — the tab is the one part of a folder that is made to carry a colour, and it reads
+  as filing rather than decoration. A and C were rendered from B by a few lines of style
+  each and were not kept; either is a small change to `body.lib-built .lib-record` and
+  `.lib-folder-tab` if the owner prefers it.
+- The wording follows: *Pull a random folder*, *Put the folder back*, and the comments at
+  the head of the page.
+- **The lamp runs a beat behind the hand**: each frame it closes `LAMP_LAG` (0.16, the
+  cursor's own `LAG` in `nav.js`) of the way to the pointer, rather than being set to the
+  pointer on every move. With reduced motion it stands where the pointer is.
+
+Tested in `tests/note-library.spec.js`: `the records are quiet folders, coloured only on
+their tabs` (reads every record's drawn colours: the folder near-grey with nothing glowing,
+the tab coloured and different from shelf to shelf; fails against the old books) and `the
+lamp follows the pointer a beat behind it` (fails against the old lamp). Sixteen tests in
+the file.

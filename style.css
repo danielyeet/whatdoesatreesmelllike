@@ -2631,13 +2631,6 @@ a:focus-visible, button:focus-visible { outline: 1px solid var(--brass); outline
   letter-spacing: -0.01em;
   color: var(--muted);
 }
-.pine-standfirst {
-  margin: 28px 0 0;
-  max-width: 54ch;
-  color: var(--muted);
-  font-size: 17px;
-}
-
 /* THE INTRODUCTION, and every stratum's own heading: the same block,
    a number in the mono the site keeps for readings and then the name
    under a hairline. */
@@ -3492,13 +3485,6 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
   letter-spacing: -0.01em;
   color: #9a9aa6;
 }
-.adar-standfirst {
-  margin: 28px 0 0;
-  max-width: 54ch;
-  color: #a8a8b4;
-  font-size: 17px;
-}
-
 .adar-intro,
 .adar-group-head {
   position: relative;
@@ -8843,17 +8829,10 @@ html.tale-coming .tale-page .human-readout { opacity: 0 !important; }
   padding-top: 26px;
   border-top: 1px solid rgba(150, 160, 176, 0.25);
 }
-.primer-endnotes h2 {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin: 0 0 14px;
-}
-.primer-endnotes h2 + ol, .primer-endnotes h2 + ul { margin-bottom: 34px; }
-.primer-footnotes, .primer-sources { padding-left: 20px; color: #8d94a3; font-size: 14px; line-height: 1.7; }
+/* Footnotes and Citations are sections like any other (so they are on
+   the rule), headed the same way; only their lists are set smaller. */
+.primer-endnotes h2 + ol, .primer-endnotes h2 + ul { margin-bottom: 10px; }
+.primer-endnotes .primer-footnotes, .primer-endnotes .primer-sources { padding-left: 20px; color: #8d94a3; font-size: 14px; line-height: 1.7; }
 .primer-footnotes li, .primer-sources li { margin: 0 0 10px; }
 .primer-footnotes li:target { color: #e8ecf3; }
 .primer-endnotes a { color: #cdd4df; text-decoration: none; border-bottom: 1px solid rgba(var(--gold-rgb), 0.5); overflow-wrap: anywhere; }
@@ -9162,8 +9141,7 @@ body.lib-built .lib-shelf-code {
   margin: 0 0 8px;
   font-size: 30px;
   letter-spacing: 0.06em;
-  color: hsl(var(--hue) 55% 72%);
-  text-shadow: 0 0 18px hsl(var(--hue) 70% 50% / 0.45);
+  color: hsl(var(--hue) 28% 68%);
 }
 body.lib-built .lib-shelf-name { font-size: 17px; }
 body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.5; }
@@ -9193,18 +9171,25 @@ body.lib-built .lib-records {
   background:
     linear-gradient(to bottom,
       transparent calc(var(--row) + 3px),
-      rgba(var(--lib-glow-rgb), 0.6) calc(var(--row) + 3px),
-      rgba(var(--lib-glow-rgb), 0.6) calc(var(--row) + 4px),
-      rgba(var(--lib-glow-rgb), 0.1) calc(var(--row) + 4px),
+      rgba(255, 255, 255, 0.16) calc(var(--row) + 3px),
+      rgba(255, 255, 255, 0.16) calc(var(--row) + 4px),
+      rgba(255, 255, 255, 0.035) calc(var(--row) + 4px),
       transparent calc(var(--row) + 20px))
     0 0 / 100% calc(var(--row) + var(--gap)) repeat-y;
 }
 
-/* A BOOK, DIGITALLY: dark glass lit from inside in its shelf's colour,
-   drawn with a hairline edge and one corner cut off, fine scanlines
-   across it, its name in the mono down the spine, a data bar at the
-   head saying how much the note is used, and at the foot a barcode over
-   its call number where the paper label used to be. */
+/* A RECORD IS A FOLDER, standing on its shelf. The owner, 2026-09-24:
+   the books were "too bright, and too annoyingly neony ... Maybe make
+   them folders instead of books; and make it so that the entire folder
+   isnt coloured but a part of it ... work with whatever is least
+   tacky." So the folder is a quiet graphite with a hairline edge and
+   nothing glowing, and the shelf's colour is spent on ONE part of it:
+   the tab standing up off its top edge, at one of three places along
+   it, as the tabs in a drawer of files are staggered so that each can
+   be seen. The name runs down it in the mono, the data bar and the
+   barcode are kept in grey, and the call number stands at its foot.
+   (It was dark glass lit from inside in the shelf's colour, with a cut
+   corner, scanlines and a glow, for one round.) */
 body.lib-built .lib-record {
   position: relative;
   flex: none;
@@ -9213,32 +9198,27 @@ body.lib-built .lib-record {
   margin-top: calc(var(--row) - var(--h));
   padding: 0;
   border: none;
-  color: hsl(var(--hue) 70% 82%);
+  border-radius: 0 0 2px 2px;
+  color: #c4c8ce;
   background:
-    repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 3px),
-    linear-gradient(90deg,
-      hsl(var(--hue) 45% calc(7% + var(--tone)) / 0.92) 0%,
-      hsl(var(--hue) 50% calc(14% + var(--tone)) / 0.92) 42%,
-      hsl(var(--hue) 45% calc(9% + var(--tone)) / 0.92) 100%);
-  box-shadow:
-    inset 0 0 0 1px hsl(var(--hue) 75% 62% / 0.5),
-    inset 0 0 14px -4px hsl(var(--hue) 85% 60% / 0.45);
-  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 32%, rgba(0, 0, 0, 0.14) 100%),
+    hsl(220 7% calc(13% + var(--tone) * 0.4));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   cursor: pointer;
   outline: none;
   transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.38s, opacity 0.4s, filter 0.4s;
 }
-/* The cut corner, drawn as an edge of its own so it is lit like the
-   rest: a hairline across the corner the clip took off. */
-body.lib-built .lib-record::after {
-  content: "";
+/* THE TAB: the one coloured part. `--tab-k` (0, ½ or 1, set by the
+   script) is where along the top edge it stands. */
+.lib-folder-tab {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 6px;
+  top: -6px;
+  left: calc(45% * var(--tab-k, 0));
+  width: 55%;
+  min-width: 9px;
   height: 6px;
-  background: linear-gradient(to bottom left, transparent calc(50% - 0.7px), hsl(var(--hue) 75% 62% / 0.7) calc(50% - 0.7px), hsl(var(--hue) 75% 62% / 0.7) calc(50% + 0.7px), transparent calc(50% + 0.7px));
-  pointer-events: none;
+  border-radius: 2px 2px 0 0;
+  background: hsl(var(--hue) 30% 46%);
 }
 body.lib-built .lib-record .lib-name {
   position: absolute;
@@ -9251,30 +9231,29 @@ body.lib-built .lib-record .lib-name {
   line-height: var(--w);
   font-family: var(--mono);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 0 8px hsl(var(--hue) 90% 60% / 0.55);
 }
 body.lib-built .lib-record .lib-say { display: none; }
-/* THE DATA BAR: how much of the site uses this note, as a lit fill in
-   a track across the head of the spine (`--fill`, set by the script). */
+/* THE DATA BAR: how much of the site uses this note, as a fill in a
+   track across the head of the folder (`--fill`, set by the script). In
+   grey: the tab is the colour. */
 .lib-bands {
   position: absolute;
   top: 7px;
   left: 4px;
-  right: 7px;
-  height: 3px;
+  right: 4px;
+  height: 2px;
   background:
-    linear-gradient(90deg, hsl(var(--hue) 90% 66%) 0 var(--fill, 20%), transparent var(--fill, 20%)),
-    hsl(var(--hue) 50% 60% / 0.18);
-  box-shadow: 0 0 6px hsl(var(--hue) 90% 60% / 0.5);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.42) 0 var(--fill, 20%), transparent var(--fill, 20%)),
+    rgba(255, 255, 255, 0.08);
 }
-/* THE BARCODE, over the call number — the book's own, drawn off its
-   name by the script, so every book's is different and the same every
+/* THE BARCODE, over the call number — the folder's own, drawn off its
+   name by the script, so every one is different and the same every
    visit. */
 .lib-code {
   position: absolute;
@@ -9282,7 +9261,7 @@ body.lib-built .lib-record .lib-say { display: none; }
   right: 3px;
   bottom: 27px;
   height: 11px;
-  opacity: 0.8;
+  opacity: 0.55;
 }
 .lib-call {
   position: absolute;
@@ -9293,18 +9272,17 @@ body.lib-built .lib-record .lib-say { display: none; }
   flex-direction: column;
   align-items: center;
   padding: 2px 0 1px;
-  border-top: 1px solid hsl(var(--hue) 70% 62% / 0.45);
-  color: hsl(var(--hue) 85% 78%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8f949b;
   font-family: var(--mono);
   font-size: 7.5px;
   line-height: 1.2;
   letter-spacing: 0;
   overflow: hidden;
-  text-shadow: 0 0 6px hsl(var(--hue) 90% 60% / 0.7);
 }
 .lib-call b, .lib-call i { font-weight: 500; font-style: normal; }
 
-/* A book leaning against the one before it at the end of a shelf. */
+/* A folder leaning against the one before it at the end of a shelf. */
 body.lib-built .lib-record.lib-leans {
   margin-left: calc(var(--h) * 0.13);
   transform-origin: 0 100%;
@@ -9314,53 +9292,41 @@ body.lib-built .lib-record.lib-leans {
 body.lib-built .lib-record:hover,
 body.lib-built .lib-record:focus-visible {
   transform: translateY(-12px);
-  box-shadow:
-    inset 0 0 0 1px hsl(var(--hue) 85% 70% / 0.9),
-    inset 0 0 22px -4px hsl(var(--hue) 90% 62% / 0.7);
-  animation: lib-flicker 0.28s steps(2, end) 1;
-}
-/* A book coming under the hand flickers once, as a screen does. */
-@keyframes lib-flicker {
-  0% { filter: brightness(1.7); }
-  50% { filter: brightness(0.8); }
-  100% { filter: none; }
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 12px 18px -12px rgba(0, 0, 0, 0.9);
 }
 body.lib-built .lib-record.lib-leans:hover,
 body.lib-built .lib-record.lib-leans:focus-visible { transform: rotate(-7.5deg) translateY(-12px); }
 body.lib-built .lib-record:focus-visible { outline: 1px solid var(--lib-glow); outline-offset: 3px; }
 
-/* A book that answers the terminal, and one that does not. */
+/* A folder that answers the terminal, and one that does not. */
 body.lib-built .lib-record.is-hit {
-  box-shadow: inset 0 0 0 1px rgba(var(--lib-glow-rgb), 0.85), 0 0 22px -4px rgba(var(--lib-glow-rgb), 0.6);
+  box-shadow: inset 0 0 0 1px rgba(var(--lib-glow-rgb), 0.7);
 }
 body.lib-built .lib-record.is-hit::before {
   content: "";
   position: absolute;
-  top: -12px;
+  top: -17px;
   left: 50%;
   width: 4px;
   height: 4px;
   margin-left: -2px;
   background: var(--lib-glow);
-  box-shadow: 0 0 8px var(--lib-glow);
 }
 body.lib-built .lib-record.is-dim { opacity: 0.13; filter: saturate(0.2); }
 
-/* THE BOOK THAT IS OUT: pulled off the shelf while its card is open,
-   with a scan passing over it. */
+/* THE FOLDER THAT IS OUT: pulled off the shelf while its card is open,
+   with a faint scan passing over it. */
 body.lib-built .lib-record.is-out,
 body.lib-built .lib-record.lib-leans.is-out {
   transform: translateY(-30px);
-  box-shadow: inset 0 0 0 1px rgba(var(--lib-glow-rgb), 0.9), 0 0 30px -2px rgba(var(--lib-glow-rgb), 0.55), 0 22px 30px -12px rgba(0, 0, 0, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 22px 30px -12px rgba(0, 0, 0, 0.9);
   z-index: 2;
 }
 body.lib-built .lib-record.is-out::after {
   content: "";
   position: absolute;
   inset: 0;
-  width: auto;
-  height: auto;
-  background: linear-gradient(to bottom, transparent 0%, rgba(var(--lib-glow-rgb), 0.35) 50%, transparent 100%) 0 0 / 100% 40% no-repeat;
+  background: linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.07) 50%, transparent 100%) 0 0 / 100% 40% no-repeat;
   animation: lib-read 1.8s linear infinite;
   pointer-events: none;
 }

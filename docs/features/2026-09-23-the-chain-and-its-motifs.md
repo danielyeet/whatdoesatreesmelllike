@@ -273,3 +273,41 @@ with either protection removed. `Ataraxia's bands cross the page strongly` (fail
 old number of bands) and `Les Abstraits' motifs are abstract compositions, not smoke and
 embers` (reads the arcs and colours the canvas is asked for; fails against the old
 motifs).
+
+## 2026-09-24, later still — Ataraxia fewer and stronger, Tombstone's petals and roots
+
+> Also make ataraxias effect slightly less frequent with the streaks, but make the streaks
+> more significant. with tombstone, I want some of the red petals to fall, and then not be
+> removed Unless hovered away, so that if you keep hovering tombstone, then the red petals
+> will eventually be collected on the ground. also make the things truly grow from the top
+> top, as shown in the picture 1.
+
+- **Ataraxia: fewer bands, each more of a band.** Born at 0.7 a second rather than 1.6, at
+  most six standing rather than ten (seven can be on the page for a moment, one fading as
+  the next comes), and each lives longer (8.5–12s). Each is half as wide again (22–34px
+  either side of its line rather than 14–22), its specks denser, a little larger and darker,
+  its haze heavier and wider, and its crest longer.
+- **Tombstone's petals fall and gather** (`petal()`). A petal leaves one of the open
+  flowers at a root's tip, tumbles down with a sway — drawn narrow and wide by turns, as a
+  petal turning over is — and lands. **It has no life of its own**: once landed it lies
+  there until the house is left, when it fades with everything else. `heap` is how high
+  the pile already stands every `HEAP_STEP` px across, and a petal lands ON it and raises
+  it there (a little to either side too), so resting long enough grows a drift of red along
+  the foot of the window. At most 360 at once; the pile starts again from the ground once
+  the last petal has gone. A root carries its flowers as `flowers` so a petal knows where
+  it can fall from.
+- **Roots from the top start at the very top.** A root coming in from the top edge started
+  at `CHROME` (64px down, under the band the Menu and the buttons stand in) — the owner's
+  picture showed exactly that. It starts at −4 now, above the window.
+
+Tested in `tests/contact-sheet.spec.js`: `Ataraxia's bands are fewer at once, and each
+wider` (counts the hazes drawn in each frame over sixteen seconds and reads their widths;
+fails with the old number of bands, and with the old width), and `Tombstone's petals fall
+and gather on the ground until the house is left, and roots grow from the very top` (reads
+the fallen petals drawn along the foot of the window — told from a flower's petals by
+their size — twice, six seconds apart, and requires more the second time; then that
+they are gone once the house is left; and looks for a root at the top edge heading DOWN
+into the window, since a root from the side can wander up past the edge. Fails with no
+petals, with petals given a life of four seconds, and — three runs of three — with the
+roots starting under the chrome again). The Tombstone names test still passes seeded:
+adding the petals changes what the seeded chance draws, and it was run again.

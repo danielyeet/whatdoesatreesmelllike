@@ -538,12 +538,14 @@
       ink.globalCompositeOperation = "source-over";
     }
 
+    let held = false;
     function tick(now) {
       if (!running) return;
       frame = requestAnimationFrame(tick);
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now;
-      clock += dt;
+      // Held, it goes on drawing the same moment — see `hold` below.
+      if (!held) clock += dt;
       draw(clock);
     }
 
@@ -558,6 +560,12 @@
       /** Every speck of the frame as it stands now, as the chamber's
           morph wants them: a flat list of x, y, size, brightness and
           tone, and the tones themselves as rgb strings. */
+      /** Held still at the moment it stands at, or let go again. The
+          chamber holds a drawing while the morph flies into it, so the
+          frame the specks land on is the frame that is shown when it
+          comes up — it used to go on turning unseen for the whole
+          flight, and what came up no longer matched where they landed. */
+      hold: function (on) { held = !!on; },
       capture: function () {
         caught = [];
         draw(clock);

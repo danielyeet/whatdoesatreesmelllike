@@ -18,8 +18,8 @@
 // moves the way an arm does rather than as one rigid object.
 // ============================================================
 
-// Positions are a Fibonacci sphere: seven points spaced as evenly as
-// seven points can be on a sphere, rather than the near-flat ring they
+// Positions are a Fibonacci sphere: eight points spaced as evenly as
+// eight points can be on a sphere, rather than the near-flat ring they
 // used to be. z now carries as much of the arrangement as x and y do,
 // so branches genuinely leave the centre in every direction.
 //
@@ -33,46 +33,63 @@
 // the menu, and which of them are here is theirs to say. Nothing breaks
 // when a page is only in the menu; it simply is not a branch.
 //
-// Off the map and still in the site: Photography, Contact, and the two
-// "Test node" sandboxes (works/test-node-a.html and -b.html, which
+// The Note Library was added as the eighth on 2026-09-24, at the owner's
+// word ("add the library as one of the nodes in the main menu").
+//
+// Off the map and still in the site: the two "Test node" sandboxes (works/test-node-a.html and -b.html, which
 // nothing points at at all now and are safe to repurpose).
 const REAL_NODES = [
-  // EVERY PAGE IN THE MENU IS ON THE MAP, and the seven of them are
+  // EVERY PAGE IN THE MENU IS ON THE MAP, and the eight of them are
   // spread EVENLY over the sphere rather than placed by hand. The
-  // owner asked for both. `pos` is a Fibonacci sphere of seven points
-  // at a radius of 3.2: each one's height is one seventh of the way
-  // down from the top, and each is turned the golden angle
+  // owner asked for both. `pos` is a Fibonacci sphere of eight points
+  // at a radius of 3.2: the i-th one's height is (1 − (2i+1)/8) of the
+  // radius, so they stand in eight even steps from top to bottom and
+  // none on the equator, and each is turned the golden angle
   // (π(3−√5) ≈ 137.5°) further round than the last, which is the
   // arrangement that leaves no two of them crowded. The closest pair
-  // of branches is 71.5° apart and every one of them is the same
-  // distance from the hub.
+  // of branches is 66.3° apart (it was 71.5° with seven) and every one
+  // of them is the same distance from the hub.
+  //
+  // The whole arrangement is then turned 80° round the upright axis —
+  // which changes nothing about the spacing — because that is the turn
+  // at which no two labels touch as the map comes to rest. Unturned,
+  // Search's label stood on Contact's. Measured in the browser at every
+  // ten degrees; 80° to 90° leave 81px between the nearest two on a
+  // desktop (the seven left 39px). On a phone two labels graze by a few
+  // pixels at every turn there is; the map turns on its own, so it
+  // passes.
   //
   // So to add a page here: put it in SITE_LINKS, add a line below, and
   // recompute the whole list rather than squeezing one more in — a
   // hand-placed eighth would undo the spacing.
   {
     label: "Scent descriptions", sub: "notes on things I've smelled and tried to describe",
-    href: "categories/scent-descriptions.html", pos: [1.65, 2.74, 0.0],
+    href: "categories/scent-descriptions.html", pos: [0.27, 2.8, 1.53],
     preview: { description: "Here I describe things, from scents to houses to notes to anything else." },
   },
   {
     label: "Theories", sub: "half-formed ideas I keep coming back to",
-    href: "categories/theories.html", pos: [-1.94, 1.83, 1.77],
+    href: "categories/theories.html", pos: [-1.98, 2.0, -1.52],
     preview: { description: "Half-formed ideas, written down before I lose them." },
   },
   {
     label: "Explorations & Researches", sub: "things I looked into properly and wrote up",
-    href: "categories/researches.html", pos: [0.27, 0.91, -3.05],
+    href: "categories/researches.html", pos: [2.96, 1.2, -0.26],
     preview: { description: "Researches and explorations: where I go and find out, rather than describe." },
   },
   {
     label: "Favourites", sub: "things I like, no other reason needed",
-    href: "categories/favorites.html", pos: [1.95, 0.0, 2.54],
+    href: "categories/favorites.html", pos: [-2.15, 0.4, 2.34],
     preview: { description: "The ones I keep coming back to, kept by chapter." },
   },
   {
+    label: "Note Library", sub: "every note I have named, shelved and explained",
+    href: "categories/note-library.html", pos: [0.0, -0.4, -3.17],
+    preview: { description: "Every note named in a fragrance on this site, shelved by family, each with a brief explanation of what it is." },
+  },
+  {
     label: "Photography", sub: "frames in sets, and what is written on the back",
-    href: "categories/other-2.html", pos: [-3.02, -0.91, -0.53],
+    href: "categories/other-2.html", pos: [2.0, -1.2, 2.19],
     preview: {
       description: "The frames stand in sets, numbered down the margin, each with what a photographer writes on the back of a print.",
       // THE OWNER ASKED FOR THIS ONE TO SAY SO. It is a `note` rather
@@ -83,12 +100,12 @@ const REAL_NODES = [
   },
   {
     label: "Search", sub: "one field over the whole site",
-    href: "search.html", pos: [2.22, -1.83, -1.41],
+    href: "search.html", pos: [-2.49, -2.0, -0.22],
     preview: { description: "One field over everything written here, and where each answer lives." },
   },
   {
     label: "Contact", sub: "the ways to reach me",
-    href: "contact.html", pos: [-0.43, -2.74, 1.59],
+    href: "contact.html", pos: [1.23, -2.8, -0.94],
   },
 ];
 

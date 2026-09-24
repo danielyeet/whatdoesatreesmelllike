@@ -504,3 +504,33 @@ less the unchanged.* It stands after "this is a masterpiece" as a paragraph of i
 Des Cendres has no stage labels, so it was not given one. Tested with Tale's Water Me in
 `tests/houses.spec.js`: `Des Cendres ends on its dry down, and Water Me has a Mid and a
 Dry Down`.
+
+## 2026-09-24, last — nothing under the subtitle, and the subtitles in title case
+
+> remove the lines that are below the subtitle in the houses, so that lines such as
+> 'Replace this line with your own standing first paragraph — the one that says what the
+> house is before the introduction begins.' should be removed from all of the houses. and
+> the subtitles like 'The house that smells like trees' should have every other word
+> capitalized (like the titles of books in the real world)
+
+- **Every house's standfirst is gone** — the line under the name and subtitle — from all
+  nine that had one, taken out of the markup rather than hidden. Two were placeholders
+  (Pineward's and ADAR's, the "Replace this line…" the owner quoted), but the rest were
+  words on the page: **Almost Human's was the owner's own** (*Almost Human is a house
+  launched in 2026 …*), Grande Parfums' said the two still to smell would be revisited,
+  Tale's repeated its line from the Houses view, Qimu's said *to be worn alone or
+  together*, and Ataraxia's and Tombstone's said *Five fragrances.* The owner said all of
+  the houses, so all went. `.pine-standfirst` and `.adar-standfirst` went from the
+  stylesheet with them; `.human-standfirst` stays, because the individual fragrances'
+  page — which is not a house — still carries one.
+- **Title case**, as a book's title is set: every word capitalised but the short joining
+  ones (a, an, the, and, of, on, at, to, …) after the first — *The House That Smells Like
+  Trees*, *A House That Very Deservedly Won the Art and Olfaction Awards in 2025*, *A
+  Gothic Avante Garde House*. On each house's page under its name, on the Houses view
+  under each picture, and in Pineward's and ADAR's `<title>`s, which carry theirs.
+  Grande's page subtitle, *Art Niche Expo 2026*, was already so. The owner's own words
+  otherwise unchanged — *avante* stays.
+
+Tested in `tests/houses.spec.js`: `no house has a line under its subtitle, and every
+subtitle is in title case` — every house page and every say on the Houses view. Fails with
+a subtitle put back in sentence case, and with a standfirst put back.
