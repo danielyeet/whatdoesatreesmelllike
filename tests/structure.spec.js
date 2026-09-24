@@ -440,7 +440,20 @@ test("it is drawn white on near-black, not blue on a night sky", async ({ page }
   });
   expect(tone, "the ground should be near-black").toBeLessThan(30);
 
-  const ink = await inkNow(page);
+  // READ AT THREE MOMENTS AND TAKEN TOGETHER. The drawing moves — the
+  // carriage and the traverses carry the accent across it — so one
+  // reading is one moment's mix, and on a busy machine a single moment
+  // came out at 0.649 against 0.65 while the same page read 0.7 a
+  // second later. A page drawn in blue fails every one of the three;
+  // a moment with a traverse in it no longer decides it alone.
+  const ink = { bright: 0, neutral: 0, cool: 0 };
+  for (let k = 0; k < 3; k++) {
+    if (k) await page.waitForTimeout(250);
+    const one = await inkNow(page);
+    ink.bright += one.bright;
+    ink.neutral += one.neutral;
+    ink.cool += one.cool;
+  }
   expect(ink.bright, "there should be something drawn on it").toBeGreaterThan(400);
   // Mostly white and grey. The cool blue is kept back for the marks
   // that say a station can be opened — the brackets, the crosshair,

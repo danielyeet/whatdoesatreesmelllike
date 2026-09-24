@@ -288,6 +288,13 @@ in 3.5s and passed 13 of 13 in its own spec under load. **Check the six files fi
 time**: if they are unchanged, the failure is this, and re-running proves nothing the
 comparison has not already settled.
 
+**It went a third time on 2026-09-24**, at 0.649 against 0.65, in the full run of the
+round that rebuilt the Houses view; it passed 4 of 4 alone. This time the test was made
+steadier rather than re-run: it reads the page at **three moments a quarter of a second
+apart and judges them together**. The drawing moves — the carriage and the traverses carry
+the accent across it — so a single reading is one moment's mix, and a moment with a
+traverse in it could tip it. A page drawn in blue still fails all three.
+
 ## A second way in, at the foot of a card
 
 `data-calc` on a row is an address the card puts a boxed **OPEN CALCULATOR** at its foot,

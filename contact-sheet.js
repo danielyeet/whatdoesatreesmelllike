@@ -1,115 +1,115 @@
 // ============================================================
-// THE HOUSES — the hang (categories/scent-descriptions.html)
+// THE HOUSES — the axis (categories/scent-descriptions.html)
 //
-// The owner, 2026-09-24: "lets redisign that page entirely. I want it to
-// be completly differnet. I want to keep their numbering; I want it to
-// be a gallery like view so not a table or anything of that sort, I want
-// it to be creative, you can feel free to make it as complex as
-// neccessary. Keep the elements that come up when you hover one of them;
-// maybe make the delay before they come up smaller."
+// The owner, 2026-09-24, the second time that day: "I also want you to
+// redisign the houses part again. I want it to be something to do with
+// aprticles. give it a central axis too; and make it look impressive,
+// and navigatable."
 //
-// So the houses are HUNG, the way pictures are hung on a gallery wall:
+// So the houses stand on a HELIX round a CENTRAL AXIS, drawn in
+// particles, and you travel along it:
 //
-//   THE RAIL      a picture rail runs across the wall, and every house
-//                 hangs from it on a hook.
-//   THE HANG      alternately HIGH and LOW — a salon hang. A high picture
-//                 hangs close under the rail on two wires; a low one on a
-//                 long cord that drops between the two high pictures
-//                 either side of it and opens into two wires just above
-//                 it. So nine pictures stand in two tiers on one rail, in
-//                 their order, 01 to 09, left to right.
-//   THE LABEL     under every picture, the way a museum labels its wall:
-//                 the number, large, and the house's name. The numbering
-//                 is the owner's and is the first thing on the label.
-//   THE HANGING   is how the page arrives: the rail is drawn across the
-//                 wall, and then each picture is lowered on to its hook
-//                 in order, arriving with a swing that dies away.
-//   THE SWING     a picture is a pendulum on its hook. Brush past one
-//                 with the pointer and it swings, a long cord more slowly
-//                 than a short one, and settles again. Nothing moves that
-//                 nothing has touched.
+//   THE AXIS      a vertical line of specks down the middle of the page,
+//                 always falling, ruled with ticks that travel as you
+//                 do, and carrying each house's NUMBER where that house
+//                 stands on it. The numbers are buttons.
+//   THE HELIX     two strands of specks winding round the axis, and the
+//                 houses riding on them: one house at the front, on the
+//                 axis, large and sharp; the ones before and after it
+//                 turned away round the axis, above and below, smaller
+//                 and fainter the further round they are. Every house
+//                 is joined to the axis by a TETHER of specks.
+//   THE FRONT     the house you are on: its line about the house shows,
+//                 a ring of specks turns round it, and pressing it opens
+//                 the house. Pressing any other brings IT to the front.
+//   TRAVELLING    by the wheel, by dragging (a finger on a phone), by
+//                 the arrow keys, by the numbers on the axis, and by the
+//                 two buttons at the side with where you are between
+//                 them — the owner's "navigatable".
+//   THE ARRIVAL   the axis is drawn out from the middle of the page, and
+//                 the houses come out of it one after another, nearest
+//                 first, on a burst of specks.
 //
-// RESTING ON A HOUSE — kept, as asked, with a shorter wait (HOVER_WAIT_MS)
-// — brings its motifs up over the wall while everything else goes out of
-// focus (motifs.js). PRESSING ONE steps the page back and opens the house.
+// RESTING ON A HOUSE still brings its motifs over the page while the
+// rest goes out of focus (motifs.js), and PRESSING the front one still
+// steps the page back and opens it.
 //
-// The pictures are the <a class="sheet-frame"> blocks in the page, in
+// The houses are the <a class="sheet-frame"> blocks in the page, in
 // order, so adding a house is an HTML edit and nothing here changes.
 // Delete this file and its <script> tag and the page is still a plain,
 // working grid of links.
 // ============================================================
 (function () {
   const sheet = document.getElementById("sheet");
-  if (!sheet) return; // not a page with the hang on it
+  if (!sheet) return; // not a page with the houses on it
 
   const frames = Array.from(sheet.querySelectorAll(".sheet-frame"));
   if (!frames.length) return;
+  const N = frames.length;
 
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const NS = "http://www.w3.org/2000/svg";
 
   // ============================================================
   // TUNING
   // ============================================================
-  // THE HANGING. The rail is drawn across first; then each picture is
-  // lowered on to its hook STEP_MS after the one before, taking DROP_MS
-  // to come down from DROP_FROM pixels above where it hangs.
-  const RAIL_MS = 700;
-  const STEP_MS = 150;
-  const DROP_MS = 760;
-  const DROP_FROM = 70;
-  const ARRIVE_SWING = 0.075;       // radians it arrives swinging by
+  // THE HELIX. A house is SPAN of the page's height below the one before
+  // it, and TURN radians further round the axis. The front house stands
+  // on the axis; the next is turned 62 degrees round to the right and a
+  // little down, the one after that nearly behind it.
+  const SPAN = 0.25;               // of the page's height, house to house
+  // ON A PHONE the houses before and after the front one would stand on
+  // it, the helix having no width to turn them away in; so they stand
+  // further apart, and only their edges are seen above and below. Keyed
+  // to the width, as every phone fix on this site is.
+  const SPAN_NARROW = 0.36;
+  const NARROW = 700;
+  const TURN = 1.08;               // radians round the axis, house to house
+  const RADIUS = 0.34;             // of the page's width, the helix's reach
+  const RADIUS_MOST = 560;         // px
+  const FRONT = 0.4;               // the front house's height, of the page's
+  const FRONT_MOST = 360;          // px
+  const FRONT_FEWEST = 150;        // px
+  const SHAPE = 0.86;              // a house is this wide for its height
+  const SMALLEST = 0.46;           // the scale of a house right behind the axis
+
+  // TRAVELLING. The wheel moves the helix by a fraction of a house per
+  // pixel; it comes to rest on the nearest house once the wheel stops.
+  const WHEEL = 1 / 320;           // houses per pixel of wheel
+  const SNAP_MS = 170;             // how long after the last movement it settles
+  const EASE = 7.5;                // how quickly it follows where it is sent
+
+  // THE ARRIVAL
+  const AXIS_MS = 760;             // the axis drawn out from the middle
+  const EMERGE_MS = 820;           // a house coming out of it
+  const EMERGE_STEP = 110;         // between one house and the next
+
+  // THE PARTICLES
+  const FALL = 46;                 // px a second down the axis
+  const AXIS_SPECKS = 280;
+  const STRAND_STEP = 0.022;       // houses between strand specks
+  const TETHER_SPECKS = 30;
+  const DUST = 520;                // specks turning round the axis (fewer on a phone)
+  const DUST_SPIN = 0.07;          // radians a second
+  const HALO_SPECKS = 64;
 
   // How long the pointer has to rest on a house before its motifs come.
-  // It was 420ms and the owner found it "too long"; this is still long
-  // enough that crossing the wall sets nothing off.
+  // It was 420ms and the owner found it "too long".
   const HOVER_WAIT_MS = 200;
 
   // Pressing a house: how long the page takes to step back before the
   // house is opened.
   const LEAVE_MS = 560;
 
-  // HOW MANY TO A RAIL, off the wall's width. Nine to one rail on a wide
-  // window; on a narrower one the houses are shared out over more rails,
-  // as evenly as they go.
-  const perRail = (width) => (width >= 1060 ? 9 : width >= 820 ? 5 : width >= 560 ? 4 : 3);
-
-  // A PICTURE'S SIZE. Its width is a share of the most it may have —
-  // which is what keeps a high picture clear of the cords either side of
-  // it — and its height a multiple of its width, so the hang is a mix of
-  // upright and wide pictures, as a salon hang is.
-  const WIDE = [0.62, 0.94];
-  const TALL = [0.72, 1.3];
-  const TALLEST = 250;              // no picture is taller than this
-  const LABEL = 54;                 // the room the label takes under a picture
-  const HIGH_DROP = [30, 64];       // a high picture's wires, hook to frame
-  const LOW_GAP = 30;               // a low picture's cord opens this far above it
-  const RAIL_GAP = 84;              // between one rail's hang and the next rail
-
-  // THE SWING. A pendulum on its hook: the longer the wire, the slower it
-  // swings. The pointer brushing past gives it a push in the way it was
-  // going; it can never swing further than MOST.
-  const STIFF = 2600;               // how hard it swings back, for a 100px wire
-  const DAMP = 3.0;                 // how fast a swing dies away
-  const PUSH = 0.0011;              // how much a pixel of pointer pushes it
-  const MOST = 0.07;                // radians
-
-  // Seeded, so the hang is the same on every visit and a resize moves it
-  // rather than re-rolling it.
-  const SEED = 2409;
-  let seed = SEED;
+  // Seeded, so the specks stand the same way every visit.
+  let seed = 2409;
   function random() {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   }
-  const between = (range) => range[0] + random() * (range[1] - range[0]);
 
   // ============================================================
-  // THE FRAMES AND THEIR LABELS
+  // THE FRAMES, THEIR NUMBERS, THE AXIS AND THE WAY ROUND
   // ============================================================
-  // The number goes into the label, first — the numbering is the
-  // owner's. It is the frame's number on the wall and stays there once
-  // a real picture is in it.
   frames.forEach((frame, i) => {
     frame.style.setProperty("--hatch-angle", (-62 + ((i * 37) % 120)) + "deg");
     frame.style.setProperty("--hatch-gap", (9 + ((i * 5) % 9)) + "px");
@@ -121,309 +121,427 @@
     number.textContent = String(i + 1).padStart(2, "0");
     frame.appendChild(number);
   });
+  const nameOf = (frame) => {
+    const n = frame.querySelector(".sheet-name");
+    return n ? n.textContent.trim() : "";
+  };
 
   sheet.classList.add("scripted");
   document.body.classList.add("sheet-scripted");
 
-  // THE WIRES, THE HOOKS AND THE RAIL, drawn in one SVG laid over the
-  // wall under the pictures.
-  const lines = document.createElementNS(NS, "svg");
-  lines.setAttribute("class", "sheet-lines");
-  lines.setAttribute("aria-hidden", "true");
-  sheet.insertBefore(lines, sheet.firstChild);
+  // The particles: one canvas, standing between the houses turned away
+  // behind the axis and the ones in front of it.
+  const field = document.createElement("canvas");
+  field.className = "sheet-field";
+  field.setAttribute("aria-hidden", "true");
+  sheet.insertBefore(field, sheet.firstChild);
+  const ink = field.getContext("2d");
+
+  // THE NUMBERS ON THE AXIS, one per house, where it stands.
+  const marks = frames.map((frame, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "sheet-axis-no";
+    b.textContent = String(i + 1).padStart(2, "0");
+    b.setAttribute("aria-label", "Go to " + nameOf(frame));
+    b.addEventListener("click", () => go(i));
+    sheet.appendChild(b);
+    return b;
+  });
+
+  // THE WAY ROUND, at the side: before, where you are, after.
+  const nav = document.createElement("div");
+  nav.className = "sheet-nav";
+  nav.innerHTML =
+    '<button type="button" class="sheet-nav-step" data-step="-1" aria-label="The house before">' +
+      '<span aria-hidden="true">&#8593;</span></button>' +
+    '<p class="sheet-nav-at" aria-live="polite"><b></b><span></span></p>' +
+    '<button type="button" class="sheet-nav-step" data-step="1" aria-label="The next house">' +
+      '<span aria-hidden="true">&#8595;</span></button>';
+  sheet.appendChild(nav);
+  const navAt = nav.querySelector(".sheet-nav-at b");
+  const navName = nav.querySelector(".sheet-nav-at span");
+  nav.querySelectorAll(".sheet-nav-step").forEach((b) =>
+    b.addEventListener("click", () => go(Math.round(target) + Number(b.dataset.step))));
 
   // ============================================================
-  // LAYOUT
+  // WHERE EVERYTHING STANDS
   // ============================================================
-  /** How wide the longest word of a house's name is set, in the label's
-      own face — measured rather than guessed, because it depends on a
-      font this page does not choose. */
-  const ruler = document.createElement("canvas").getContext("2d");
-  function longestWord(frame) {
-    const name = frame.querySelector(".sheet-name");
-    if (!name || !ruler) return 0;
-    const cs = getComputedStyle(name);
-    ruler.font = cs.fontStyle + " " + cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
-    const spacing = parseFloat(cs.letterSpacing) || 0;
-    return Math.max(0, ...name.textContent.trim().split(/\s+/).map((word) =>
-      ruler.measureText(word).width + spacing * word.length));
-  }
-  let hung = [];          // one per picture: where it hangs and how it swings
-  let rails = [];         // one per rail: its height and its ends
-  let wallWidth = 0;
+  let W = 0, H = 0, ratio = 1;
+  let cx = 0, cy = 0, R = 0, span = 0, frontH = 0, frontW = 0;
   function layout() {
-    seed = SEED;
-    const width = sheet.clientWidth;
-    wallWidth = width;
-    const most = perRail(width);
-    const railCount = Math.ceil(frames.length / most);
-    const each = Math.ceil(frames.length / railCount);
-
-    const before = hung;
-    hung = [];
-    rails = [];
-    let top = 12;
-    for (let r = 0; r < railCount; r++) {
-      const members = frames.slice(r * each, (r + 1) * each);
-      const m = members.length;
-      const step = width / Math.max(m, 2);
-      // A picture may be no wider than two steps less a margin, or it
-      // would reach the cords of the low pictures either side of it.
-      const widest = Math.min(step * 2 - 30, 300);
-      const centre = (j) => (m === 1 ? width / 2 : (j + 0.5) * (width / m));
-      const sizes = members.map((frame, j) => {
-        // No narrower than the longest WORD of its name, with the number
-        // before it: a name may go on to a second line between its
-        // words, never in the middle of one ("Pinewar / d").
-        const needs = longestWord(frame) + 48;
-        // And no wider than the room between its middle and the nearer
-        // edge of the wall, or the ones at the ends hang off the page.
-        const room = Math.min(widest, 2 * Math.min(centre(j), width - centre(j)) - 6);
-        const w = Math.round(Math.min(room, Math.max(needs, widest * between(WIDE))));
-        const h = Math.round(Math.min(TALLEST, w * between(TALL)));
-        return { w, h, drop: between(HIGH_DROP), lean: random() };
-      });
-      const railY = top;
-      const highBottom = [];
-      members.forEach((frame, j) => {
-        const s = sizes[j];
-        const cx = centre(j);
-        if (j % 2 === 0) {
-          const y = railY + s.drop;
-          highBottom[j] = y + s.h + LABEL;
-          hung.push({ frame, cx, x: cx - s.w / 2, y, w: s.w, h: s.h, hookY: railY, high: true, rail: r });
-        } else {
-          hung.push({ frame, cx, x: cx - s.w / 2, y: 0, w: s.w, h: s.h, hookY: railY, high: false, rail: r, j });
-        }
-      });
-      // The low pictures hang below the lower of the two high pictures
-      // either side of them, so their cords pass between those two.
-      let deepest = railY;
-      hung.filter((one) => one.rail === r).forEach((one, j) => {
-        if (!one.high) {
-          const left = highBottom[j - 1] || railY, right = highBottom[j + 1] || railY;
-          one.y = Math.max(left, right) + LOW_GAP + 14 + Math.round(sizes[j].lean * 24);
-        }
-        deepest = Math.max(deepest, one.y + one.h + LABEL);
-      });
-      rails.push({ y: railY, from: 0, to: width });
-      top = deepest + RAIL_GAP;
-    }
-    const height = top - RAIL_GAP + 20;
-    sheet.style.height = height + "px";
-    sheet.style.marginTop = Math.max(24, Math.round((window.innerHeight - height) / 2 - 96)) + "px";
-    lines.setAttribute("width", width);
-    lines.setAttribute("height", height);
-    lines.setAttribute("viewBox", "0 0 " + width + " " + height);
-
-    // A picture keeps its swing across a layout; only where it hangs moves.
-    hung.forEach((one, i) => {
-      const was = before[i];
-      one.angle = was ? was.angle : 0;
-      one.spin = was ? was.spin : 0;
-      one.dropAt = was ? was.dropAt : null;
-      one.wire = one.y - one.hookY;
-      one.frame.style.width = one.w + "px";
-      one.frame.style.height = one.h + "px";
-      // The line about the house hangs from whichever side keeps it on
-      // the page.
-      one.frame.dataset.say = one.cx > width / 2 ? "end" : "start";
-      one.frame.dataset.tier = one.high ? "high" : "low";
+    // The houses have the window below the chrome, and no more: the
+    // page does not scroll under them, it travels along the helix.
+    const top = sheet.getBoundingClientRect().top + window.scrollY;
+    W = sheet.clientWidth;
+    H = Math.max(420, Math.round(window.innerHeight - top - 8));
+    sheet.style.height = H + "px";
+    cx = W / 2;
+    cy = H * 0.47;
+    span = H * (W < NARROW ? SPAN_NARROW : SPAN);
+    R = Math.min(W * RADIUS, RADIUS_MOST);
+    frontH = Math.max(FRONT_FEWEST, Math.min(FRONT_MOST, H * FRONT, (W - 40) / SHAPE * 0.72));
+    frontW = frontH * SHAPE;
+    ratio = Math.min(window.devicePixelRatio || 1, W < 700 ? 1.5 : 2);
+    field.width = Math.round(W * ratio);
+    field.height = Math.round(H * ratio);
+    field.style.width = W + "px";
+    field.style.height = H + "px";
+    frames.forEach((frame) => {
+      frame.style.width = frontW.toFixed(1) + "px";
+      frame.style.height = frontH.toFixed(1) + "px";
     });
-    buildLines();
-    place(performance.now());
+    place();
+    draw(performance.now());
   }
 
-  // ============================================================
-  // THE RAIL, THE HOOKS AND THE WIRES
-  // ============================================================
-  let railEls = [], wireEls = [];
-  let railDrawn = false;          // a later layout keeps the rail drawn
-  function buildLines() {
-    while (lines.firstChild) lines.removeChild(lines.firstChild);
-    railEls = rails.map((rail) => {
-      const g = document.createElementNS(NS, "g");
-      g.setAttribute("class", "sheet-rail");
-      // A picture rail is a moulding: two lines close together, and a
-      // bracket at each end.
-      [0, 5].forEach((dy) => {
-        const l = document.createElementNS(NS, "line");
-        l.setAttribute("x1", rail.from); l.setAttribute("x2", rail.to);
-        l.setAttribute("y1", rail.y + dy); l.setAttribute("y2", rail.y + dy);
-        g.appendChild(l);
-      });
-      if (railDrawn) g.classList.add("drawn");
-      lines.appendChild(g);
-      return g;
-    });
-    wireEls = hung.map((one) => {
-      const g = document.createElementNS(NS, "g");
-      g.setAttribute("class", "sheet-wire");
-      g.dataset.for = String(hung.indexOf(one));
-      const hook = document.createElementNS(NS, "circle");
-      hook.setAttribute("class", "sheet-hook");
-      hook.setAttribute("cx", one.cx); hook.setAttribute("cy", one.hookY + 2.5);
-      hook.setAttribute("r", 3.2);
-      const path = document.createElementNS(NS, "path");
-      g.appendChild(path);
-      g.appendChild(hook);
-      lines.appendChild(g);
-      return { g, path };
-    });
+  /** Where a house `d` houses from the front stands: on the window,
+      how near the eye (1 in front, -1 right behind the axis), and how
+      big it is drawn. */
+  function spot(d) {
+    const a = d * TURN;
+    const z = Math.cos(a);
+    return {
+      x: cx + R * Math.sin(a),
+      y: cy + d * span,
+      z: z,
+      s: SMALLEST + (1 - SMALLEST) * (z + 1) / 2,
+    };
   }
 
-  /** Where a point of a picture is on the wall, the picture hanging at
-      `angle` about its hook and lowered by `dy`. */
-  function swung(one, px, py, dy) {
-    const ox = one.cx, oy = one.hookY + dy;
-    const c = Math.cos(one.angle), s = Math.sin(one.angle);
-    const rx = px - one.cx, ry = py + dy - oy;
-    return [ox + rx * c - ry * s, oy + rx * s + ry * c];
-  }
+  // Where along the helix you are (`pos`) and where you are going
+  // (`target`), in houses: 0 is the first house at the front.
+  let pos = 0, target = 0;
+  const shown = frames.map(() => (REDUCE_MOTION ? 1 : 0));   // each house's arrival, 0 to 1
+  let axisShown = REDUCE_MOTION ? 1 : 0;
+  let front = -1;
 
-  /** Put every picture where it hangs this moment, and draw its wires
-      to where its corners are. */
-  function place(now) {
-    hung.forEach((one, i) => {
-      let dy = 0, shown = 1;
-      if (one.dropAt !== null && one.dropAt !== undefined) {
-        const p = Math.min(1, Math.max(0, (now - one.dropAt) / DROP_MS));
-        const eased = 1 - Math.pow(1 - p, 3);
-        dy = -DROP_FROM * (1 - eased);
-        shown = Math.min(1, p * 2.4);
-      } else if (!REDUCE_MOTION && !one.frame.classList.contains("landed")) {
-        shown = 0;
-      }
-      one.dy = dy;
-      const f = one.frame;
-      f.style.transformOrigin = (one.cx - one.x) + "px " + (one.hookY - one.y) + "px";
-      f.style.transform = "translate(" + one.x.toFixed(1) + "px," + (one.y + dy).toFixed(1) + "px) rotate(" + one.angle.toFixed(4) + "rad)";
-      f.style.setProperty("--shown", shown.toFixed(3));
+  function place() {
+    frames.forEach((frame, i) => {
+      const d = i - pos;
+      const p = spot(d);
+      const come = shown[i];
+      // A house coming out of the axis starts ON the axis, level with
+      // where it will stand, and travels out to its place along its
+      // tether, fading up and growing only a little as it comes — the
+      // front house is already where it stands, and must not be seen to
+      // slide in from anywhere.
+      const x = cx + (p.x - cx) * come;
+      const s = p.s * (0.94 + 0.06 * come);
+      // Faint the further round it is, and gone a little way off the
+      // page's top and bottom.
+      const off = Math.max(0, Math.abs(p.y - cy) - H * 0.42) / (H * 0.2);
+      const seen = come * Math.max(0, 1 - off) * (0.3 + 0.7 * (p.z + 1) / 2);
+      frame.style.transform = "translate(" + (x - frontW / 2).toFixed(1) + "px," +
+        (p.y - frontH / 2).toFixed(1) + "px) scale(" + s.toFixed(4) + ")";
+      frame.style.setProperty("--shown", seen.toFixed(3));
+      // In front of the particles or behind them, and the front house
+      // above the others in front.
+      const atFront = Math.abs(d) < 0.5;
+      frame.style.zIndex = p.z < 0 ? "1" : atFront ? "4" : "3";
+      frame.classList.toggle("behind", p.z < -0.05);
+      frame.classList.toggle("front", atFront);
+      frame.style.visibility = seen < 0.02 ? "hidden" : "";
+      frame.tabIndex = seen < 0.02 ? -1 : 0;
 
-      // The wires: to two points on the picture's top edge, from the
-      // hook for a high picture, and from the end of a long cord for a
-      // low one.
-      const inset = one.w * 0.16;
-      const A = swung(one, one.x + inset, one.y, dy);
-      const B = swung(one, one.x + one.w - inset, one.y, dy);
-      let d;
-      if (one.high) {
-        d = "M" + A[0].toFixed(1) + " " + A[1].toFixed(1) + " L" + one.cx + " " + (one.hookY + 2.5) +
-            " L" + B[0].toFixed(1) + " " + B[1].toFixed(1);
-      } else {
-        const P = swung(one, one.cx, one.y - LOW_GAP, dy);
-        d = "M" + one.cx + " " + (one.hookY + 2.5) + " L" + P[0].toFixed(1) + " " + P[1].toFixed(1) +
-            " M" + A[0].toFixed(1) + " " + A[1].toFixed(1) + " L" + P[0].toFixed(1) + " " + P[1].toFixed(1) +
-            " L" + B[0].toFixed(1) + " " + B[1].toFixed(1);
-      }
-      const w = wireEls[i];
-      if (w) {
-        w.path.setAttribute("d", d);
-        w.g.style.opacity = String(shown);
-      }
+      const mark = marks[i];
+      const my = p.y;
+      const markSeen = Math.max(0, 1 - Math.abs(my - cy) / (H * 0.55)) * axisShown;
+      mark.style.transform = "translate(" + (cx + 12).toFixed(1) + "px," + (my - 9).toFixed(1) + "px)";
+      mark.style.opacity = markSeen.toFixed(3);
+      mark.classList.toggle("is-on", atFront);
+      mark.tabIndex = markSeen < 0.05 ? -1 : 0;
     });
-  }
-
-  // ============================================================
-  // THE SWING — a pendulum per picture, run only while one is moving
-  // ============================================================
-  let running = false, lastTick = 0;
-  function moving() {
-    const now = performance.now();
-    return hung.some((one) =>
-      Math.abs(one.angle) > 0.0004 || Math.abs(one.spin) > 0.0004 ||
-      (one.dropAt !== null && one.dropAt !== undefined && now - one.dropAt < DROP_MS));
-  }
-  function tick(now) {
-    const dt = Math.min(0.034, (now - (lastTick || now)) / 1000);
-    lastTick = now;
-    hung.forEach((one) => {
-      // A longer wire swings more slowly: stiffness falls with its length.
-      const k = STIFF / Math.max(40, one.wire + one.h * 0.5);
-      one.spin += (-k * one.angle - DAMP * one.spin) * dt;
-      one.angle += one.spin * dt;
-      if (one.angle > MOST) { one.angle = MOST; one.spin *= -0.3; }
-      if (one.angle < -MOST) { one.angle = -MOST; one.spin *= -0.3; }
-    });
-    place(now);
-    if (moving()) requestAnimationFrame(tick);
-    else {
-      hung.forEach((one) => { one.angle = 0; one.spin = 0; });
-      place(now);
-      running = false;
-      lastTick = 0;
+    const now = Math.min(N - 1, Math.max(0, Math.round(pos)));
+    if (now !== front) {
+      front = now;
+      navAt.textContent = String(now + 1).padStart(2, "0") + " / " + String(N).padStart(2, "0");
+      navName.textContent = nameOf(frames[now]);
+      sheet.dataset.front = String(now + 1);
     }
   }
-  function swing() {
-    if (running || REDUCE_MOTION) return;
-    running = true;
-    lastTick = 0;
-    requestAnimationFrame(tick);
+
+  // ============================================================
+  // THE PARTICLES
+  // ============================================================
+  const axisSpecks = [];
+  for (let n = 0; n < AXIS_SPECKS; n++) {
+    axisSpecks.push({ y: random(), off: (random() - 0.5) * 5, size: 0.7 + random() * 1.4, lit: 0.25 + random() * 0.6 });
+  }
+  // THE DUST: a column of specks turning slowly round the axis, each at
+  // its own height and reach, and turning with the helix as you travel —
+  // which is what makes travelling read as the whole thing turning.
+  const dust = [];
+  for (let n = 0; n < DUST; n++) {
+    dust.push({ a: random() * Math.PI * 2, y: random() * 2 - 1, r: 0.12 + 0.98 * Math.pow(random(), 0.7),
+      size: 0.6 + random() * 1.3, lit: 0.3 + random() * 0.7 });
+  }
+  const flow = [];    // bright specks riding the strands
+  for (let n = 0; n < 60; n++) flow.push({ u: random() * (N + 4) - 2, v: 0.06 + random() * 0.12, strand: n % 2 });
+  const bursts = [];  // specks thrown out as a house arrives
+  let px = -9999, py = -9999;
+
+  const INK = getComputedStyle(document.body).getPropertyValue("--ink-rgb").trim() || "23, 23, 15";
+  function speck(x, y, size, a) {
+    if (a <= 0.01 || x < -10 || x > W + 10 || y < -10 || y > H + 10) return;
+    // Specks near the pointer are drawn plainer.
+    const near = Math.max(0, 1 - Math.hypot(x - px, y - py) / 140);
+    ink.globalAlpha = Math.min(1, a * (1 + near * 1.4));
+    const s = size * (1 + near * 0.5);
+    ink.fillRect(x - s / 2, y - s / 2, s, s);
   }
 
-  // THE POINTER BRUSHING PAST: a picture it moves across is pushed the
-  // way it is going. Read off the wall rather than off each picture, so
-  // the push is the same however the picture is turned.
-  let lastX = null, lastY = null;
+  function draw(now) {
+    if (!ink || !W) return;
+    const t = now / 1000;
+    ink.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ink.clearRect(0, 0, W, H);
+    ink.fillStyle = "rgb(" + INK + ")";
+
+    // THE AXIS: drawn out from the middle as the page arrives.
+    const reach = (H / 2 + 20) * axisShown;
+    ink.globalAlpha = 0.45 * axisShown;
+    ink.fillRect(cx - 0.5, cy - reach, 1, reach * 2);
+    // Its ticks travel with you: one every quarter house, a long one at
+    // each house.
+    const quarter = span / 4;
+    const lead = Math.ceil(reach / quarter) + 1;
+    const base = Math.round(pos * 4);
+    for (let k = base - lead; k <= base + lead; k++) {
+      const y = cy + k * quarter - pos * span;
+      if (Math.abs(y - cy) > reach) continue;
+      const long = ((k % 4) + 4) % 4 === 0;
+      ink.globalAlpha = (long ? 0.5 : 0.22) * axisShown;
+      ink.fillRect(cx - (long ? 7 : 3.5), y, long ? 14 : 7, 1);
+    }
+    // Specks falling down it, always.
+    for (const a of axisSpecks) {
+      const y = ((a.y * H + (REDUCE_MOTION ? 0 : t * FALL * (0.6 + a.lit))) % H + H) % H;
+      if (Math.abs(y - cy) > reach) continue;
+      const bright = 1 - Math.abs(y - cy) / (H * 0.7);
+      speck(cx + a.off, y, a.size, a.lit * (0.25 + bright) * 0.85 * axisShown);
+    }
+
+    // THE DUST, behind and in front of the axis alike.
+    const many = W < 700 ? Math.round(DUST * 0.45) : DUST;
+    const band = H * 1.4;
+    for (let n = 0; n < many; n++) {
+      const d = dust[n];
+      const a = d.a + (REDUCE_MOTION ? 0 : t * DUST_SPIN) + pos * TURN * 0.5;
+      const y = cy + ((((d.y * band / 2 - pos * span * 0.6) % band) + band * 1.5) % band) - band / 2;
+      const z = Math.cos(a);
+      const depth = (z + 1) / 2;
+      speck(cx + R * 1.1 * d.r * Math.sin(a), y, d.size * (0.6 + depth * 0.8), d.lit * (0.07 + 0.28 * depth) * axisShown);
+    }
+
+    // THE HELIX: two strands, one either side of the axis, winding
+    // through where the houses stand.
+    const from = pos - 3, to = pos + 3;
+    for (let u = Math.floor(from / STRAND_STEP) * STRAND_STEP; u < to; u += STRAND_STEP) {
+      const d = u - pos;
+      for (let strand = 0; strand < 2; strand++) {
+        const a = d * TURN + strand * Math.PI;
+        const z = Math.cos(a);
+        const x = cx + R * Math.sin(a);
+        const y = cy + d * span;
+        const depth = (z + 1) / 2;
+        const fade = Math.max(0, 1 - Math.abs(d) / 2.6);
+        speck(x, y, 0.9 + depth * 1.6, (0.16 + 0.62 * depth) * fade * axisShown * (strand ? 0.6 : 1));
+      }
+    }
+    // Bright specks travelling along the strands.
+    for (const f of flow) {
+      if (!REDUCE_MOTION) f.u += f.v * 0.016;
+      if (f.u > N + 2) f.u = -2;
+      const d = f.u - pos;
+      if (Math.abs(d) > 2.6) continue;
+      const a = d * TURN + f.strand * Math.PI;
+      const z = Math.cos(a);
+      speck(cx + R * Math.sin(a), cy + d * span, 1.6 + z, (0.35 + 0.5 * (z + 1) / 2) * (1 - Math.abs(d) / 2.6) * axisShown);
+    }
+
+    // THE TETHERS: from the axis to every house, a line of specks with
+    // a pulse running outward along it.
+    frames.forEach((frame, i) => {
+      const d = i - pos;
+      if (Math.abs(d) > 2.6 || !shown[i]) return;
+      const p = spot(d);
+      const x1 = cx + (p.x - cx) * shown[i];
+      const fade = Math.max(0, 1 - Math.abs(d) / 2.6) * shown[i];
+      const pulse = REDUCE_MOTION ? -1 : (t * 0.8 + i * 0.17) % 1;
+      for (let k = 0; k <= TETHER_SPECKS; k++) {
+        const q = k / TETHER_SPECKS;
+        const hot = pulse >= 0 ? Math.max(0, 1 - Math.abs(q - pulse) * 9) : 0;
+        speck(cx + (x1 - cx) * q, p.y, 1.1 + hot * 1.6, (0.22 + 0.35 * (p.z + 1) / 2 + hot * 0.5) * fade);
+      }
+    });
+
+    // THE HALO, turning round the front house.
+    const f = Math.round(pos);
+    if (Math.abs(f - pos) < 0.35 && shown[f] > 0.5) {
+      const settle = (1 - Math.abs(f - pos) / 0.35) * shown[f];
+      const rx = frontW * 0.5 + 34, ry = frontH * 0.5 + 44;
+      for (let k = 0; k < HALO_SPECKS; k++) {
+        const a = (k / HALO_SPECKS) * Math.PI * 2 + (REDUCE_MOTION ? 0 : t * 0.35);
+        const wob = 1 + 0.03 * Math.sin(a * 5 + t * 1.3);
+        speck(cx + Math.cos(a) * rx * wob, cy + Math.sin(a) * ry * wob, k % 8 === 0 ? 2.4 : 1.3, (k % 8 === 0 ? 0.75 : 0.42) * settle);
+      }
+    }
+
+    // THE BURSTS, from houses arriving.
+    for (let k = bursts.length - 1; k >= 0; k--) {
+      const b = bursts[k];
+      const age = (now - b.at) / 1000;
+      if (age > b.life) { bursts.splice(k, 1); continue; }
+      const q = age / b.life;
+      const e = 1 - Math.pow(1 - q, 3);
+      speck(b.x + b.dx * e, b.y + b.dy * e, b.size, (1 - q) * 0.7);
+    }
+    ink.globalAlpha = 1;
+  }
+
+  // ============================================================
+  // RUNNING — while the Houses view is on the page
+  // ============================================================
+  let last = 0, snapAt = 0, looping = false;
+  function loop(now) {
+    if (!sheet.offsetParent) { looping = false; return; }   // the other view is showing
+    const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+    last = now;
+    if (snapAt && now > snapAt && !dragging) {
+      snapAt = 0;
+      target = Math.round(target);
+    }
+    if (REDUCE_MOTION) pos = target;
+    else pos += (target - pos) * (1 - Math.exp(-dt * EASE));
+    if (Math.abs(target - pos) < 0.0005) pos = target;
+    place();
+    draw(now);
+    if (REDUCE_MOTION && pos === target && !snapAt && !bursts.length) { looping = false; return; }
+    requestAnimationFrame(loop);
+  }
+  function wake() {
+    if (looping) return;
+    looping = true;
+    last = 0;
+    requestAnimationFrame(loop);
+  }
+  // Coming back to the Houses view from the other one.
+  new MutationObserver(wake).observe(sheet.closest(".view") || sheet, { attributes: true, attributeFilter: ["hidden", "class"] });
+
+  /** Travel to house `i`, the nearest end if it is off either end. */
+  function go(i) {
+    target = Math.max(0, Math.min(N - 1, i));
+    snapAt = 0;
+    wake();
+  }
+
+  // ============================================================
+  // TRAVELLING
+  // ============================================================
+  // THE WHEEL: along the helix, not down the page.
+  sheet.addEventListener("wheel", (e) => {
+    if (!sheet.classList.contains("drawn")) return;
+    e.preventDefault();
+    const dy = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    const scale = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? H : 1;
+    target = Math.max(-0.35, Math.min(N - 1 + 0.35, target + dy * scale * WHEEL));
+    snapAt = performance.now() + SNAP_MS;
+    wake();
+  }, { passive: false });
+
+  // DRAGGING, with a finger or the mouse: the helix follows the hand.
+  let dragging = false, dragFrom = 0, dragTarget = 0, dragged = false, dragId = null;
+  sheet.addEventListener("pointerdown", (e) => {
+    if (!sheet.classList.contains("drawn") || e.button !== 0) return;
+    if (e.target.closest(".sheet-nav, .sheet-axis-no")) return;
+    dragging = true;
+    dragged = false;
+    dragFrom = e.clientY;
+    dragTarget = target;
+    dragId = e.pointerId;
+  });
   window.addEventListener("pointermove", (e) => {
-    if (e.pointerType !== "mouse" || REDUCE_MOTION || !sheet.classList.contains("drawn")) {
-      lastX = null;
-      return;
-    }
-    if (lastX !== null) {
-      const dx = e.clientX - lastX;
-      const box = sheet.getBoundingClientRect();
-      const x = e.clientX - box.left, y = e.clientY - box.top;
-      let pushed = false;
-      hung.forEach((one) => {
-        if (one.frame.classList.contains("hot")) return;
-        if (x < one.x - 6 || x > one.x + one.w + 6 || y < one.y - 6 || y > one.y + one.h + 6) return;
-        // Pushed harder the lower down it is caught, as a picture is.
-        const lever = (y - one.hookY) / Math.max(1, one.wire + one.h);
-        one.spin += dx * PUSH * (0.4 + lever) * 60 / Math.max(60, one.wire + one.h * 0.5);
-        pushed = true;
-      });
-      if (pushed) swing();
-    }
-    lastX = e.clientX;
-    lastY = e.clientY;
+    px = e.clientX - (sheet.getBoundingClientRect().left);
+    py = e.clientY - (sheet.getBoundingClientRect().top);
+    if (!dragging || e.pointerId !== dragId) return;
+    const dy = e.clientY - dragFrom;
+    if (Math.abs(dy) > 6) dragged = true;
+    if (!dragged) return;
+    target = Math.max(-0.35, Math.min(N - 1 + 0.35, dragTarget - dy / span));
+    wake();
   }, { passive: true });
+  const letGo = (e) => {
+    if (!dragging || (e && e.pointerId !== dragId)) return;
+    dragging = false;
+    if (dragged) { snapAt = performance.now(); wake(); }
+  };
+  window.addEventListener("pointerup", letGo);
+  window.addEventListener("pointercancel", letGo);
+
+  // THE KEYS, while nothing that takes typing has them.
+  document.addEventListener("keydown", (e) => {
+    if (!sheet.offsetParent || !sheet.classList.contains("drawn")) return;
+    if (e.target.closest && e.target.closest("input, textarea, [contenteditable]")) return;
+    if (document.body.classList.contains("menu-open")) return;
+    const at = Math.round(target);
+    let to = null;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") to = at + 1;
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp") to = at - 1;
+    else if (e.key === "Home") to = 0;
+    else if (e.key === "End") to = N - 1;
+    if (to === null) return;
+    e.preventDefault();
+    go(to);
+  });
 
   // ============================================================
-  // THE HANGING — how the page arrives
+  // THE ARRIVAL — the axis drawn out, and the houses coming out of it
   // ============================================================
-  // The rail is drawn across the wall, and then the pictures are lowered
-  // on to their hooks one after another, each arriving with a swing. The
-  // chrome — the Menu, the two buttons, the search — comes once every
-  // picture is hung.
   function arrive() {
     sheet.classList.add("settled");
     if (REDUCE_MOTION) {
-      frames.forEach((frame) => frame.classList.add("landed", "whole"));
-      railDrawn = true;
-      railEls.forEach((g) => g.classList.add("drawn"));
+      frames.forEach((frame) => frame.classList.add("landed"));
       finish();
+      wake();
       return;
     }
-    requestAnimationFrame(() => {
-      railDrawn = true;
-      railEls.forEach((g) => g.classList.add("drawn"));
-    });
-    hung.forEach((one, i) => {
-      setTimeout(() => {
-        one.dropAt = performance.now();
-        one.angle = 0;
-        one.spin = (i % 2 ? -1 : 1) * ARRIVE_SWING * 3.4;
-        one.frame.classList.add("landed");
-        swing();
-      }, RAIL_MS * 0.6 + i * STEP_MS);
-      setTimeout(() => one.frame.classList.add("whole"), RAIL_MS * 0.6 + i * STEP_MS + DROP_MS);
-    });
-    setTimeout(finish, RAIL_MS * 0.6 + (hung.length - 1) * STEP_MS + DROP_MS);
+    const t0 = performance.now();
+    // Nearest the front first.
+    const order = frames.map((_, i) => i).sort((a, b) => Math.abs(a - target) - Math.abs(b - target));
+    const startOf = (i) => AXIS_MS * 0.55 + order.indexOf(i) * EMERGE_STEP;
+    const burst = (i) => {
+      const p = spot(i - pos);
+      for (let k = 0; k < 26; k++) {
+        const a = random() * Math.PI * 2, far = 30 + random() * 90;
+        bursts.push({ x: cx, y: p.y, dx: (p.x - cx) * 0.8 + Math.cos(a) * far, dy: Math.sin(a) * far * 0.7,
+          size: 1 + random() * 1.6, at: performance.now(), life: 0.7 + random() * 0.6 });
+      }
+    };
+    const burstDone = frames.map(() => false);
+    const step = (now) => {
+      const t = now - t0;
+      axisShown = Math.min(1, t / AXIS_MS);
+      axisShown = 1 - Math.pow(1 - axisShown, 3);
+      let all = true;
+      frames.forEach((frame, i) => {
+        const q = Math.max(0, Math.min(1, (t - startOf(i)) / EMERGE_MS));
+        if (q > 0 && !burstDone[i]) { burstDone[i] = true; burst(i); frame.classList.add("landed"); }
+        shown[i] = 1 - Math.pow(1 - q, 3);
+        if (q < 1) all = false;
+      });
+      if (!all || t < AXIS_MS) { requestAnimationFrame(step); return; }
+      finish();
+    };
+    requestAnimationFrame(step);
+    wake();
   }
   function finish() {
+    axisShown = 1;
+    shown.fill(1);
     sheet.classList.add("drawn");
     document.body.classList.add("sheet-named");
+    wake();
   }
 
   // ============================================================
@@ -448,9 +566,9 @@
     sheet.classList.remove("musing");
     if (window.HouseMotifs) window.HouseMotifs.stop();
   }
-  frames.forEach((frame) => {
+  frames.forEach((frame, i) => {
     frame.addEventListener("pointerenter", (e) => {
-      if (e.pointerType !== "mouse") return;
+      if (e.pointerType !== "mouse" || dragging) return;
       clearTimeout(waiting);
       waiting = setTimeout(() => {
         waiting = null;
@@ -460,16 +578,25 @@
       }, HOVER_WAIT_MS);
     });
     frame.addEventListener("pointerleave", () => leave(frame));
+    // Tabbing to a house brings it to the front, and rests on it.
     frame.addEventListener("focus", () => {
+      if (Math.round(target) !== i) go(i);
       clearTimeout(waiting);
       waiting = setTimeout(() => { waiting = null; if (sheet.classList.contains("drawn")) rest(frame); }, HOVER_WAIT_MS);
     });
     frame.addEventListener("blur", () => leave(frame));
 
-    // PRESSING A HOUSE: the page steps back and the picture comes
-    // forward, and only then is the house opened.
+    // PRESSING A HOUSE. A house not at the front is brought there; the
+    // one at the front steps the page back and is opened. A press that
+    // was the end of a drag is neither.
     frame.addEventListener("click", (e) => {
+      if (dragged) { e.preventDefault(); dragged = false; return; }
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (Math.round(pos) !== i || Math.abs(pos - i) > 0.2) {
+        e.preventDefault();
+        go(i);
+        return;
+      }
       if (REDUCE_MOTION) return;
       e.preventDefault();
       const href = frame.href;
@@ -491,19 +618,18 @@
   // ============================================================
   // SEARCH
   //
-  // This page's own search looks over THIS CATEGORY: the houses on the
-  // sheet and every fragrance in them, which are both already in the
-  // page (the fragrances view carries the lot). It is forgiving —
-  // "murkwod" finds Murkwood — and it says WHERE each answer lives, so
-  // a fragrance is an answer you can act on rather than a word.
+  // This page's own search looks over THIS CATEGORY: the houses and
+  // every fragrance in them, which are both already in the page (the
+  // fragrances view carries the lot). It is forgiving — "murkwod" finds
+  // Murkwood — and it says WHERE each answer lives. A house it finds is
+  // brought round to the front of the helix.
   //
   // What it cannot answer it hands to the site's own search page with
-  // the question in the address, which is where a search that is not
-  // about this category belongs.
+  // the question in the address.
   // ============================================================
   const search = document.querySelector(".sheet-search");
   if (search) {
-    const field = search.querySelector(".sheet-search-field");
+    const fieldIn = search.querySelector(".sheet-search-field");
     const trigger = search.querySelector(".sheet-search-trigger");
     const found = document.createElement("div");
     found.className = "sheet-found";
@@ -517,7 +643,7 @@
     let everything = null;
 
     const applySearch = () => {
-      const term = field.value.trim();
+      const term = fieldIn.value.trim();
       sheet.classList.toggle("searching", term.length > 0);
       if (!everything) everything = mine();
 
@@ -525,17 +651,19 @@
         ? window.SiteSearch.rank(term, everything, 6)
         : [];
 
-      // The pictures dim as they always did — that is the search on
-      // the sheet itself — and a picture counts as matching if the
-      // search would have found it.
-      frames.forEach((frame) => {
+      // The houses that do not answer step back, and the first one that
+      // does is brought round to the front.
+      let firstMatch = -1;
+      frames.forEach((frame, i) => {
         const caption = frame.querySelector(".sheet-caption");
         const text = caption ? caption.textContent : "";
         const match = !term || (window.SiteSearch
           ? window.SiteSearch.score(term, text) > 0
           : text.toLowerCase().indexOf(term.toLowerCase()) >= 0);
         frame.classList.toggle("dimmed", Boolean(term) && !match);
+        if (term && match && firstMatch < 0) firstMatch = i;
       });
+      if (firstMatch >= 0) go(firstMatch);
 
       found.innerHTML = "";
       search.classList.toggle("has-found", hits.length > 0);
@@ -563,47 +691,45 @@
 
     trigger.addEventListener("click", () => {
       search.classList.toggle("open");
-      if (search.classList.contains("open")) field.focus();
-      else { field.value = ""; applySearch(); }
+      if (search.classList.contains("open")) fieldIn.focus();
+      else { fieldIn.value = ""; applySearch(); }
     });
-    field.addEventListener("input", applySearch);
-    field.addEventListener("keydown", (e) => {
+    fieldIn.addEventListener("input", applySearch);
+    fieldIn.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
         const first = found.querySelector(".sheet-found-row");
         if (first) { window.location.href = first.href; return; }
-        const term = field.value.trim();
+        const term = fieldIn.value.trim();
         if (term && window.SiteSearch) {
           window.location.href = window.SiteSearch.siteSearchHref(window.SITE_ROOT, term);
         }
         return;
       }
       if (e.key !== "Escape") return;
-      field.value = "";
+      fieldIn.value = "";
       applySearch();
       search.classList.remove("open");
       trigger.focus();
     });
   }
 
-  // The hang is laid out before the page is shown, so what the browser
-  // painted before this — the no-script grid of every picture — is never
-  // seen; and it is laid out again, never re-run, when the window changes.
-  // AND IT IS HUNG ONCE THE PAGE'S FACES ARE IN — for at most FONTS_MS —
-  // because a name's width decides how wide its picture may be, and a
-  // wall laid out again when the faces arrive moved pictures that were
-  // already on their way down to their hooks.
+  // Laid out before the page is shown, so what the browser painted
+  // before this — the no-script grid of every picture — is never seen;
+  // and laid out again, never re-run, when the window changes. The
+  // arrival waits for the page's faces, for at most FONTS_MS, so the
+  // labels do not change size under houses already on their way out.
   const FONTS_MS = 1200;
   layout();
   document.documentElement.classList.remove("js-coming");
   window.addEventListener("resize", layout);
-  let hangingStarted = false;
-  const startHanging = () => {
-    if (hangingStarted) return;
-    hangingStarted = true;
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
     layout();
     arrive();
   };
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(startHanging, startHanging);
-  setTimeout(startHanging, FONTS_MS);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(start, start);
+  setTimeout(start, FONTS_MS);
 })();

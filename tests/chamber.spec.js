@@ -1729,3 +1729,64 @@ test("both chapters have something drawn down the left of the page", async ({ pa
   expect(two, "Chapter 2's left side has the moon's stars in it").toBeGreaterThan(0.004);
   expect(errors).toEqual([]);
 });
+
+/* THE ARROWS MORPH THE ONE DRAWING INTO THE OTHER. "introduce a
+   transition when flipping from chapter 1 favorites to chapter 2 ...
+   make it so that the particles change and morph from sun to moon (and
+   vice versa), while the text fades out and in." It was a cut: the sun
+   stopped and the moon started in one frame. Read here, while it runs:
+   the flown specks on a canvas of their own, the new drawing held under
+   a veil until they are nearly home, and the writing gone and back. */
+test("stepping between chapters morphs the sun into the moon and back, as the writing fades",
+  async ({ page }) => {
+  test.setTimeout(60000);
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+  await page.waitForTimeout(800);
+
+  for (const [from, to] of [["Chapter 1", "Chapter 2"], ["Chapter 2", "Chapter 1"]]) {
+    await expect(page.locator(".chapter-name")).toHaveText(from);
+    // Sample the whole turn from inside the page, every frame.
+    const seen = await page.evaluate(() => new Promise((done) => {
+      const morph = document.querySelector(".chapter-morph");
+      const ground = document.querySelector(".chapter-ground");
+      const sheet = document.querySelector(".chapter-sheet");
+      const out = { flying: 0, inked: 0, veiled: 1, sheetLow: 1, sheetEnd: 0, groundEnd: 0, morphEnd: true };
+      const t0 = performance.now();
+      const look = () => {
+        const t = performance.now() - t0;
+        if (!morph.hidden) {
+          out.flying++;
+          if (t > 300 && t < 1200 && out.inked === 0) {
+            const g = morph.getContext("2d");
+            const im = g.getImageData(0, 0, morph.width, morph.height).data;
+            let n = 0;
+            for (let i = 3; i < im.length; i += 64) if (im[i] > 20) n++;
+            out.inked = n;
+          }
+          if (t > 200 && t < 1000) out.veiled = Math.min(out.veiled, +getComputedStyle(ground).opacity);
+        }
+        out.sheetLow = Math.min(out.sheetLow, +getComputedStyle(sheet).opacity);
+        if (t < 4200) { requestAnimationFrame(look); return; }
+        out.sheetEnd = +getComputedStyle(sheet).opacity;
+        out.groundEnd = +getComputedStyle(ground).opacity;
+        out.morphEnd = morph.hidden;
+        done(out);
+      };
+      document.querySelector(".chapter-step-on").click();
+      requestAnimationFrame(look);
+    }));
+    await expect(page.locator(".chapter-name")).toHaveText(to);
+    expect(seen.flying, `${from} → ${to}: the specks are flown`).toBeGreaterThan(20);
+    expect(seen.inked, "and there is something on the flight's canvas").toBeGreaterThan(200);
+    expect(seen.veiled, "the new drawing is held back while they fly").toBeLessThan(0.2);
+    expect(seen.sheetLow, "the writing fades out").toBeLessThan(0.1);
+    expect(seen.sheetEnd, "and back in").toBeGreaterThan(0.95);
+    expect(seen.groundEnd, "the new drawing is up at the end").toBeGreaterThan(0.95);
+    expect(seen.morphEnd, "and the flight's canvas is put away").toBe(true);
+  }
+  expect(errors).toEqual([]);
+});

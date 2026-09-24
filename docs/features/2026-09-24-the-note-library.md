@@ -2,7 +2,7 @@
 
 Date: 2026-09-24
 
-Files touched: `categories/note-library.html` (new), `note-library.js` (new, ~810
+Files touched: `categories/note-library.html` (new), `note-library.js` (new, ~870
 lines), the `lib-*` rules at the foot of `style.css`, `nav.js` (a line in `SITE_LINKS`),
 `search.js` (a note is findable, by any of its spellings), `search-page.js` (a line in
 `PAGES`), `search.html` (a **Notes** filter), `tests/note-library.spec.js` (new), and the
@@ -11,8 +11,8 @@ page lists in `tests/menu.spec.js`, `tests/pages.spec.js` and `tests/mobile.spec
 ## What changed
 
 A new page in the menu, **above Photography**: the **Note Library**. It holds every note
-named in a fragrance anywhere on the site — 558 spellings, shelved as **346 records** on
-**16 shelves** — each with a brief explanation of what it is. It is built as a library at
+named in a fragrance anywhere on the site — 533 names as written, shelved as **330 records**
+on **16 shelves** — each with a brief explanation of what it is. It is built as a library at
 night read through a catalogue terminal: every note is a **book** standing on its
 **shelf**, with its name down the spine and a **call number** on a label at its foot, and
 pressing a book pulls it off the shelf and opens its **catalogue card**.
@@ -40,18 +40,32 @@ draws from. Three things follow, and they are the reason:
 
 ### One record, many spellings
 
-The site's notes are spelled 558 ways, and many are the same material: *Tonka*, *Tonka
+The site's notes are written 533 different ways — the **names as written** in the
+readout, which is what the owner asked about ("whats the 558": it was 558 before the
+landscapes came out) — and many are the same material: *Tonka*, *Tonka
 Bean* and *Tonka Beans*; *Orris*, *Iris*, *Iris Butter* and *Iris Pallida*; a dozen ouds.
 Each record carries the name it is shelved under and, in `data-aka`, every other spelling
 the site uses for the same thing. The card lists them as **Also catalogued as**, the
 terminal searches them, and so does the site's search ("iris butter" finds Orris). A
 spelling may stand in one record only, and matching ignores case.
 
-Where a house names something that is **not a material** — Almost Human's olfactory
-landscapes (*Burning Silence*, *Glowing Dust*), Ataraxia's *Spinal Fluid* and *Gold*,
-Tombstone's *Dead Water* — it is shelved under **Impressions** and explained as what the
+Where a house names something that is **not a material** — Ataraxia's *Spinal Fluid* and
+*Gold*, Tombstone's *Dead Water* — it is shelved under **Impressions** and explained as what the
 house means by it, naming the house, rather than invented into a material. Where a house
 names a material it does not explain (Pineward's *Edelwood Oil*), the explanation says so.
+
+### Almost Human's olfactory landscapes are not in it
+
+For one round they were: *Burning Silence*, *Glowing Dust*, *Digital Warmth* and the rest
+stood on the Impressions shelf, explained in a line each. The owner asked for them to be
+reconsidered, and the answer is that they are not notes at all. Almost Human publishes
+five **impressions** per fragrance *instead of* a list of materials, and the rest of the
+site already refuses to call them notes (see **the olfactory landscape** in CLAUDE.md).
+So the library leaves the `landscape` lists out entirely: sixteen records went, and nine
+spellings folded into real notes went with them (*Fading Ash* from Ash, *Warm Resins* from
+Resins and so on). Almost Human's actual notes — the ones in its View notes window — are
+counted as usual. A test says nothing that is only ever named in a landscape stands in the
+library.
 
 ### Which fragrances use a note is worked out, not written
 
@@ -66,6 +80,16 @@ twice either. The one list kept in the script is `HOUSES`, which says where each
 fragrances live; a test says every house in `notes-data.js` has a line in it.
 
 ### The books
+
+**They are digital now** — the owner's "a little more digitalized version of themselves".
+A book is dark glass lit from inside in its shelf's colour, with a hairline edge and its
+top right corner cut off, fine scanlines across it, its name in the mono down the spine
+with a glow on it, a **data bar** across its head filled by how much the note is used
+(`--fill`, `FULL`), and at its foot a **barcode** of its own over its glowing call number,
+where a paper label stood. A book flickers once as it comes under the hand, as a screen
+does. The shelf is a lit rail rather than a board. The barcode is drawn off the name by a
+small seeded generator: the name's hash alone gave near-identical patterns for names that
+differ only at their end — half the books shared one — which the test caught.
 
 - **A book's thickness is how many fragrances use it** (`THICK_*`): Bergamot and Musk are
   fat volumes, a note used once is a slim one, with a few pixels of seeded jitter so that
@@ -87,25 +111,33 @@ fragrances live; a test says every house in `notes-data.js` has a line in it.
 
 - **The terminal** (`query>`) searches the whole catalogue as you type. Books that answer
   light up with a mark over them, the rest go dim, and a shelf with nothing on it folds
-  away. It reads the names and every other spelling; and if the word is **in what a note
-  is said to be**, that counts too — so "smoky" finds every note described as smoky, and
-  "powdery" every powdery one. Near misses count only when nothing answers properly, or
-  every short word would light half the room. **Enter** opens the best answer; nothing at
-  all hands the question to the site's search.
+  away. **It matches direct words only** — the owner's rule: every word typed must BE a
+  word in a note's name or one of its other spellings (a plural counts as the word).
+  "cedar" finds Cedar Leaf, and Cedarwood, which is also spelled Cedar; half a word finds
+  nothing yet. The first version was forgiving the way the site's search is — near misses
+  counted, and a word in what a note was **said** to be counted too — so "smoky" lit every
+  note described as smoky and "iris" lit Seaweed, by *Irish* Sea Moss. The owner asked for
+  direct words, and a starts-with match would still have lit *Irish*, so it is whole
+  words. **Enter** opens the best answer; nothing at all hands the question to the site's
+  search, which is still forgiving.
 - **The index** is a tab per shelf, which stands you in front of that shelf alone.
 - **A–Z / Most used** reorders every shelf, keeping the call numbers.
 - **Pull a random book** does exactly that.
-- **The readout** across the top counts records, shelves, spellings and fragrances, and
-  ticks up to them as the page arrives.
+- **The readout** across the top counts records, shelves, **names as written** (every
+  different way a note is written in the site's notes — *Tonka* and *Tonka Beans* are two;
+  it was labelled "Spellings", which the owner asked about) and fragrances, and ticks up to
+  them as the page arrives.
 
 ### The card
 
 Beside the stacks, not over them: pressing another book turns the card over to it, and
 the stacks stay in reach. It is ruled like an index card and carries the call number, the
 shelf, the explanation (printed out quickly, as a terminal would; the whole sentence is
-there for anyone reading it aloud), the other spellings, **Found in** — a bar per house
-for how many of its fragrances use the note, then every fragrance by name, linked to where
-it stands in its house (`#part-NN`) — and the books either side of it on the shelf. The
+there for anyone reading it aloud), the other spellings, **Found in** — set out as the
+owner drew it: the **individual fragrances** first, by name; then **Houses**, and under it
+each house named and only then its fragrances, every one linked to where it stands
+(`#part-NN`) — and the books either side of it on the shelf. There was a bar per house
+above the list for the first round, which the owner's drawing left out. The
 address carries the book (`#note-cedarwood`), which is how the site's search sends people
 straight to one. Escape or the × puts the book back. On a phone the card stands at the
 foot of the window.
@@ -135,7 +167,7 @@ card and its explanation arrive at once. The dust is drawn once and stays still.
 npm test -- tests/note-library.spec.js
 ```
 
-Twelve tests, each proved against the fault it guards:
+Fourteen tests, each proved against the fault it guards:
 
 - **`every note named in a fragrance has a record, and none is shelved twice`** — fails
   with a record renamed. Also that every explanation is more than a word or two.
@@ -164,6 +196,17 @@ Twelve tests, each proved against the fault it guards:
 The menu test lists Note Library above Photography, the page is in the every-page and
 phone lists, and by hand: `npm run serve`, open
 `http://localhost:8123/categories/note-library.html`, search, press a book, try the tabs.
+
+Added the same day, after the owner's first look:
+
+- **`a card lists the individual fragrances first, then the houses, each house named`** —
+  fails with the houses put first.
+- **`every book carries a data bar and a barcode of its own`** — fails with every book
+  given the same barcode.
+- The terminal test now holds that "smoky" lights only notes CALLED smoky, that half a
+  word finds nothing and "iris" does not light Seaweed — it fails with a starts-with match
+  and with a match on the explanations — and the first test that no landscape impression
+  is shelved, which fails with one put back.
 
 ## Known issues / TODO
 

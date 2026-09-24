@@ -1,18 +1,20 @@
 // ============================================================
-// THE HOUSES — the hang (categories/scent-descriptions.html)
+// THE HOUSES — the axis (categories/scent-descriptions.html)
 //
-// Every house hangs from a picture rail on a hook, high and low in
-// turn — a salon hang — with a museum label under it carrying its
-// number and name. The wall is hung picture by picture as the page
-// arrives, a picture swings when the pointer brushes it, and resting on
-// one brings that house's motifs up over the wall while the rest goes
-// out of focus. Pressing a house steps the page back before opening it.
+// The houses stand on a helix of particles round a central axis: one
+// at the front, on the axis, large and sharp, and the ones before and
+// after it turned away round the axis above and below. You travel along
+// it by the wheel, a drag, the keys, the numbers on the axis and the
+// two buttons at the side. Resting on a house brings that house's
+// motifs up over the page while the rest goes out of focus; pressing a
+// house at the side brings it to the front, and pressing the front one
+// steps the page back before opening it.
 //
-// These check what can be WRONG rather than merely ugly: the pictures
-// in their order and each really hanging from its hook, nothing
-// standing on anything, the numbers on the labels, the motifs waiting
-// before they come and fading when they go, and the old startup flick
-// staying gone.
+// These check what can be WRONG rather than merely ugly: the front house
+// really on the axis and the rest in order round it, every way of
+// travelling actually travelling, the particles moving, nothing leaving
+// the window, the motifs waiting before they come and fading when they
+// go, and the old startup flick staying gone.
 // ============================================================
 const { test, expect } = require("@playwright/test");
 const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
@@ -32,44 +34,38 @@ async function waitForSheet(page) {
   await page.waitForTimeout(2600);
 }
 
-/** The angle a picture is hanging at, off its own transform. */
-const angleOf = (transform) => {
-  const m = /rotate\((-?[\d.e-]+)rad\)/.exec(transform || "");
-  return m ? parseFloat(m[1]) : 0;
-};
-
-/** Every picture's box and label on the window, every wire's points, and
-    the rail. */
-const hang = (page) =>
+/** Where every house stands on the window, which is at the front, and
+    what the way round says. */
+const axis = (page) =>
   page.evaluate(() => {
     const box = (el) => {
       const r = el.getBoundingClientRect();
-      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom,
+        x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2, w: r.width };
     };
-    const svg = document.querySelector(".sheet-lines");
-    const at = svg.getBoundingClientRect();
+    const sheet = document.getElementById("sheet");
     return {
+      width: innerWidth,
+      middle: (sheet.getBoundingClientRect().left + sheet.getBoundingClientRect().right) / 2,
       frames: [...document.querySelectorAll(".sheet-frame")].map((f) => ({
-        ...box(f),
-        tier: f.dataset.tier,
-        label: box(f.querySelector(".sheet-caption")),
-        number: (f.querySelector(".sheet-number") || {}).textContent,
-        transform: f.style.transform,
+        ...box(f), front: f.classList.contains("front"), z: Number(f.style.zIndex || 0),
+        seen: getComputedStyle(f).visibility !== "hidden" && parseFloat(getComputedStyle(f).opacity) > 0.05,
       })),
-      wires: [...document.querySelectorAll(".sheet-wire")].map((g) => {
-        const nums = (g.querySelector("path").getAttribute("d") || "").match(/-?[\d.]+/g).map(Number);
-        const pts = [];
-        for (let i = 0; i + 1 < nums.length; i += 2) pts.push([nums[i] + at.left, nums[i + 1] + at.top]);
-        const hook = g.querySelector(".sheet-hook");
-        return {
-          for: Number(g.dataset.for),
-          pts,
-          hook: [Number(hook.getAttribute("cx")) + at.left, Number(hook.getAttribute("cy")) + at.top],
-        };
-      }),
-      rails: [...document.querySelectorAll(".sheet-rail line")].map((l) => Number(l.getAttribute("y1")) + at.top),
+      marks: [...document.querySelectorAll(".sheet-axis-no")].map((m) => ({ ...box(m), text: m.textContent, on: m.classList.contains("is-on") })),
+      at: document.querySelector(".sheet-nav-at b").textContent,
+      front: sheet.dataset.front,
     };
   });
+
+/** Travel to house `which` with the keys, out of the pointer's way, and
+    wait for the helix to come to rest. */
+async function bringToFront(page, which) {
+  await page.mouse.move(4, 4);
+  await page.keyboard.press("Home");
+  for (let i = 0; i < which; i++) await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#sheet")).toHaveAttribute("data-front", String(which + 1));
+  await page.waitForTimeout(1300);
+}
 
 /** How much the motifs' canvas has drawn, in pixels with any ink. */
 const motifInk = (page) =>
@@ -82,8 +78,9 @@ const motifInk = (page) =>
     return n;
   });
 
-/** Move the pointer onto the middle of a house. */
+/** Bring a house to the front, then move the pointer onto its middle. */
 async function pointAt(page, which) {
+  await bringToFront(page, which);
   const box = await page.locator(".sheet-frame").nth(which).boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 2 });
 }
@@ -92,120 +89,128 @@ test.beforeEach(async ({ page }) => {
   await serveDependenciesLocally(page);
 });
 
-/* THE HANG. Nine pictures, in their order from left to right, high and
-   low in turn, every one hanging from a hook on the rail: its wires run
-   from that hook to its own top edge. */
-test("the houses hang from the rail in their order, high and low in turn", async ({ page }) => {
+/* THE AXIS. One house at the front, on the axis — the first, to begin
+   with — and the largest; the next turned away round the axis to one
+   side and below it, and so on; every house's number standing on the
+   axis where it is. */
+test("the houses stand on a helix round a central axis, one at the front", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
-  const { frames, wires, rails } = await hang(page);
-  expect(frames.length).toBe(9);
-  expect(wires.length, "one hanging per picture").toBe(9);
-
-  const mids = frames.map((f) => (f.left + f.right) / 2);
-  for (let i = 1; i < mids.length; i++) {
-    expect(mids[i], `house ${i + 1} should hang to the right of house ${i}`).toBeGreaterThan(mids[i - 1]);
-  }
-  frames.forEach((f, i) => expect(f.tier, `house ${i + 1}`).toBe(i % 2 === 0 ? "high" : "low"));
-  // The low ones really are lower.
-  const highTop = Math.max(...frames.filter((f) => f.tier === "high").map((f) => f.top));
-  const lowTop = Math.min(...frames.filter((f) => f.tier === "low").map((f) => f.top));
-  expect(lowTop, "the low tier hangs below the high one").toBeGreaterThan(highTop);
-
-  const railY = rails[0];
-  wires.forEach((w) => {
-    const f = frames[w.for];
-    expect(Math.abs(w.hook[1] - railY), `house ${w.for + 1}'s hook is on the rail`).toBeLessThan(5);
-    expect(Math.abs(w.hook[0] - (f.left + f.right) / 2), `and above the middle of it`).toBeLessThan(3);
-    // Every wire ends on the picture's top edge, and starts at the hook
-    // or at the foot of the cord that comes down from it.
-    const onTop = w.pts.filter((p) => Math.abs(p[1] - f.top) < 4 && p[0] > f.left && p[0] < f.right);
-    expect(onTop.length, `house ${w.for + 1}'s wires reach its top edge`).toBeGreaterThanOrEqual(2);
-    const fromHook = w.pts.some((p) => Math.abs(p[0] - w.hook[0]) < 1.5 && Math.abs(p[1] - w.hook[1]) < 1.5);
-    expect(fromHook, `house ${w.for + 1} hangs from its hook`).toBe(true);
+  const a = await axis(page);
+  expect(a.frames.length).toBe(9);
+  const fronts = a.frames.filter((f) => f.front);
+  expect(fronts.length, "one house at the front").toBe(1);
+  expect(a.frames[0].front, "and it is the first").toBe(true);
+  expect(Math.abs(a.frames[0].x - a.middle), "standing on the axis").toBeLessThan(3);
+  a.frames.slice(1).forEach((f, i) =>
+    expect(f.w, `house ${i + 2} is smaller than the front one`).toBeLessThan(a.frames[0].w));
+  // The next one is turned away round the axis and stands below.
+  expect(Math.abs(a.frames[1].x - a.middle), "the next house is off the axis").toBeGreaterThan(100);
+  expect(a.frames[1].y, "and below the front one").toBeGreaterThan(a.frames[0].y + 40);
+  expect(a.frames[0].z, "the front one stands in front of it").toBeGreaterThan(a.frames[1].z);
+  // The numbers, on the axis, in order down it.
+  expect(a.marks.map((m) => m.text)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "09"]);
+  a.marks.forEach((m) => expect(Math.abs(m.left - a.middle), `${m.text} stands on the axis`).toBeLessThan(40));
+  for (let i = 1; i < a.marks.length; i++) expect(a.marks[i].y).toBeGreaterThan(a.marks[i - 1].y);
+  expect(a.marks[0].on).toBe(true);
+  expect(a.at).toBe("01 / 09");
+  // And the axis itself is drawn: a column of ink down the middle of the
+  // particles' canvas.
+  const drawn = await page.evaluate(() => {
+    const c = document.querySelector(".sheet-field");
+    const ratio = c.width / c.clientWidth;
+    const g = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    // A hairline a pixel wide, so a pixel either side of where it is
+    // asked for is read as well.
+    const col = (x) => {
+      let n = 0;
+      const at = Math.round(x * ratio);
+      for (let y = 0; y < c.height; y++) {
+        if ([-1, 0, 1].some((d) => g[(y * c.width + at + d) * 4 + 3] > 20)) n++;
+      }
+      return n / c.height;
+    };
+    return { axis: col(c.clientWidth / 2), aside: col(c.clientWidth / 2 + 60) };
   });
+  expect(drawn.axis, "the axis runs down the middle").toBeGreaterThan(0.5);
+  expect(drawn.axis).toBeGreaterThan(drawn.aside * 3);
 });
 
-/* NOTHING STANDS ON ANYTHING, and no wire runs across another picture —
-   the low pictures' cords pass BETWEEN the high ones. At four widths,
-   down to a phone, and the page never scrolls sideways. */
-test("no picture or label overlaps another, and no wire crosses another picture", async ({ page }) => {
-  test.setTimeout(90000);
-  for (const width of [1440, 1024, 800, 390]) {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto(SHEET);
-    await waitForSheet(page);
-    const { frames, wires } = await hang(page);
-    const hit = (a, b, pad = 0) =>
-      a.left < b.right - pad && a.right > b.left + pad && a.top < b.bottom - pad && a.bottom > b.top + pad;
-    const whole = frames.map((f) => ({ left: Math.min(f.left, f.label.left), right: Math.max(f.right, f.label.right), top: f.top, bottom: f.label.bottom }));
-    for (let i = 0; i < whole.length; i++) {
-      for (let j = i + 1; j < whole.length; j++) {
-        expect(hit(whole[i], whole[j]), `at ${width}px houses ${i + 1} and ${j + 1} overlap`).toBe(false);
-      }
-    }
-    // A wire is a run of straight segments; sample along each.
-    wires.forEach((w) => {
-      for (let s = 0; s + 1 < w.pts.length; s++) {
-        const [a, b] = [w.pts[s], w.pts[s + 1]];
-        for (let t = 0.05; t < 1; t += 0.05) {
-          const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t;
-          whole.forEach((f, k) => {
-            if (k === w.for) return;
-            const inside = x > f.left + 1 && x < f.right - 1 && y > f.top + 1 && y < f.bottom - 1;
-            expect(inside, `at ${width}px house ${w.for + 1}'s wire crosses house ${k + 1}`).toBe(false);
-          });
-        }
-      }
-    });
-    const wide = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
-    expect(wide, `at ${width}px the page should not scroll sideways`).toBeLessThanOrEqual(0);
-  }
-});
-
-/* THE NUMBERING IS KEPT — the owner asked for it by name — and it is the
-   first thing on every label, with the house's name after it, never cut
-   short. And it is a salon hang: the pictures are not all one size. */
-test("every label carries the house's number and name, and the pictures are of many sizes",
+/* TRAVELLING — the owner's "navigatable". Every way there is of going
+   along the helix actually goes, and the way round at the side says
+   where you are. */
+test("the wheel, the keys, the numbers, the buttons and a drag all travel along the helix",
   async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
-  const { frames } = await hang(page);
-  expect(frames.map((f) => f.number)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "09"]);
-  const labels = await page.$$eval(".sheet-frame", (all) => all.map((f) => {
-    const n = f.querySelector(".sheet-number").getBoundingClientRect();
-    const name = f.querySelector(".sheet-name");
-    const r = name.getBoundingClientRect();
-    return {
-      before: n.right <= r.left + 1,
-      level: Math.abs((n.top + n.bottom) / 2 - (r.top + r.bottom) / 2) < 16,
-      under: n.top >= f.getBoundingClientRect().bottom,
-      cut: name.scrollWidth > name.clientWidth + 1,
-    };
-  }));
-  labels.forEach((l, i) => {
-    expect(l.under, `house ${i + 1}'s number is on the label under it`).toBe(true);
-    expect(l.before && l.level, `house ${i + 1}'s label starts with its number`).toBe(true);
-    expect(l.cut, `house ${i + 1}'s name is not cut short`).toBe(false);
-  });
-  const sizes = new Set(frames.map((f) => Math.round((f.right - f.left) / 8) + "x" + Math.round((f.bottom - f.top) / 8)));
-  expect(sizes.size, "the pictures are not all one size").toBeGreaterThan(5);
+  const at = () => page.locator("#sheet").getAttribute("data-front");
+  const settle = () => page.waitForTimeout(900);
+
+  // The wheel, over empty page.
+  await page.mouse.move(60, 500);
+  await page.mouse.wheel(0, 330);
+  await settle();
+  expect(await at(), "the wheel").toBe("2");
+  await expect(page.locator(".sheet-nav-at b")).toHaveText("02 / 09");
+  await expect(page.locator(".sheet-nav-at span")).toHaveText("ADAR");
+
+  await page.keyboard.press("ArrowDown");
+  await settle();
+  expect(await at(), "the arrow keys").toBe("3");
+
+  await page.locator('.sheet-nav-step[data-step="-1"]').click();
+  await settle();
+  expect(await at(), "the button at the side").toBe("2");
+
+  await page.locator(".sheet-axis-no").nth(5).click();
+  await settle();
+  expect(await at(), "a number on the axis").toBe("6");
+  await expect(page.locator(".sheet-axis-no").nth(5)).toHaveClass(/is-on/);
+
+  await page.keyboard.press("End");
+  await settle();
+  expect(await at(), "End").toBe("9");
+  await page.keyboard.press("Home");
+  await settle();
+  expect(await at(), "Home").toBe("1");
+
+  // A drag upwards, over empty page, carries you on to the next.
+  await page.mouse.move(60, 600);
+  await page.mouse.down();
+  await page.mouse.move(60, 520, { steps: 4 });
+  await page.mouse.move(60, 360, { steps: 6 });
+  await page.mouse.up();
+  await settle();
+  expect(await at(), "a drag").toBe("2");
+  // And the page itself never scrolled under any of it.
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
-/* THE WALL IS HUNG, picture by picture, in order: each is lowered on to
-   its hook — seen partway down, and partway faded in — after the one
-   before it. */
-test("the wall is hung picture by picture, in order", async ({ page }) => {
+/* PRESSING a house at the side does not open it: it brings it round to
+   the front. */
+test("pressing a house at the side brings it to the front", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await page.mouse.move(4, 4);
+  const b = await page.locator(".sheet-frame").nth(1).boundingBox();
+  await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+  await page.waitForTimeout(1000);
+  expect(page.url(), "nothing was opened").toMatch(/scent-descriptions/);
+  await expect(page.locator("#sheet")).toHaveAttribute("data-front", "2");
+  await expect(page.locator(".sheet-frame").nth(1)).toHaveClass(/front/);
+});
+
+/* THE HOUSES COME OUT OF THE AXIS as the page arrives, the front one
+   first and the rest after it, nearest first — not all at once. */
+test("the houses come out of the axis one after another, nearest first", async ({ page }) => {
   await page.addInitScript(() => {
-    window.__landed = [];
-    window.__between = 0;
+    window.__cameAt = [];
     const t0 = performance.now();
     const watch = () => {
-      const frames = [...document.querySelectorAll(".sheet-frame")];
-      frames.forEach((f, i) => {
-        if (f.classList.contains("landed") && window.__landed[i] === undefined) window.__landed[i] = performance.now() - t0;
-        const o = parseFloat(getComputedStyle(f).opacity);
-        if (i === 4 && o > 0.05 && o < 0.95) window.__between++;
+      document.querySelectorAll(".sheet-frame").forEach((f, i) => {
+        if (window.__cameAt[i] == null && parseFloat(getComputedStyle(f).getPropertyValue("--shown") || "0") > 0.05) {
+          window.__cameAt[i] = performance.now() - t0;
+        }
       });
       if (performance.now() - t0 < 6000) requestAnimationFrame(watch);
     };
@@ -213,74 +218,72 @@ test("the wall is hung picture by picture, in order", async ({ page }) => {
   });
   await page.goto(SHEET);
   await waitForSheet(page);
-  const seen = await page.evaluate(() => ({ landed: window.__landed, between: window.__between }));
-  expect(seen.landed.length).toBe(9);
-  for (let i = 1; i < 9; i++) {
-    expect(seen.landed[i] - seen.landed[i - 1], `house ${i + 1} is hung after house ${i}`).toBeGreaterThan(90);
-  }
-  expect(seen.between, "a picture comes up over several frames").toBeGreaterThan(3);
+  const came = await page.evaluate(() => window.__cameAt);
+  // The front house and the two either side of it along the helix — the
+  // ones seen at the start — in order of how far they are from it.
+  expect(came[0], "the front house").toBeLessThan(came[1]);
+  expect(came[1], "then the next").toBeLessThan(came[2]);
+  expect(came[2] - came[0], "and not at once").toBeGreaterThan(120);
 });
 
-/* A PICTURE SWINGS. Brush one with the pointer and it swings on its hook
-   — and settles again, and a picture nothing touched does not move. */
-test("a picture brushed by the pointer swings on its hook, and settles", async ({ page }) => {
+/* THE PARTICLES MOVE: specks fall down the axis and the dust turns round
+   it whether or not anything is touched. */
+test("the particles move on their own", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
-  // The arrival's own swing dies away first.
-  await expect.poll(async () => (await hang(page)).frames.filter((f) => angleOf(f.transform) !== 0).length,
-    { timeout: 8000, message: "every picture comes to hang still" }).toBe(0);
-
-  const b = await page.locator(".sheet-frame").nth(2).boundingBox();
-  await page.mouse.move(b.x - 30, b.y + b.height * 0.8);
-  await page.mouse.move(b.x + b.width + 30, b.y + b.height * 0.8, { steps: 6 });
-  await page.waitForTimeout(120);
-  const swinging = await hang(page);
-  expect(Math.abs(angleOf(swinging.frames[2].transform)), "the brushed picture swings").toBeGreaterThan(0.004);
-  expect(angleOf(swinging.frames[7].transform), "one far away does not").toBe(0);
-
-  await page.mouse.move(5, 890);
-  await page.waitForTimeout(5500);
-  const settled = await hang(page);
-  expect(angleOf(settled.frames[2].transform), "and it settles").toBe(0);
+  await page.mouse.move(4, 4);
+  const shot = () => page.evaluate(() => {
+    const c = document.querySelector(".sheet-field");
+    return Array.from(c.getContext("2d").getImageData(0, 0, c.width, c.height).data.filter((_, i) => i % 4 === 3));
+  });
+  const one = await shot();
+  await page.waitForTimeout(500);
+  const two = await shot();
+  let changed = 0;
+  for (let i = 0; i < one.length; i++) if (Math.abs(one[i] - two[i]) > 30) changed++;
+  expect(changed, "specks have moved between two looks").toBeGreaterThan(300);
 });
 
-/* THE STARTUP FLICK IS GONE, completely, as the owner asked: nothing on
-   the sheet ever flicks, and a picture is only ever seen where it hangs —
-   coming down on to its own hook, never anywhere else on the page. */
+/* NOTHING LEAVES THE WINDOW: at four widths down to a phone, the page
+   never scrolls sideways, the front house stands whole inside the
+   window, and the way round is not printed over it. */
+test("the front house and the way round stay inside the window at every width", async ({ page }) => {
+  test.setTimeout(90000);
+  for (const width of [1440, 1024, 800, 390]) {
+    await page.setViewportSize({ width, height: width < 700 ? 844 : 900 });
+    await page.goto(SHEET);
+    await waitForSheet(page);
+    const out = await page.evaluate(() => {
+      const f = document.querySelector(".sheet-frame.front").getBoundingClientRect();
+      const n = document.querySelector(".sheet-nav").getBoundingClientRect();
+      const inside = (r) => r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight;
+      const overlap = Math.min(f.right, n.right) - Math.max(f.left, n.left) > 0 &&
+        Math.min(f.bottom, n.bottom) - Math.max(f.top, n.top) > 0;
+      return { wide: document.documentElement.scrollWidth - innerWidth, frontInside: inside(f), navInside: inside(n), overlap };
+    });
+    expect(out.wide, `sideways scroll at ${width}px`).toBeLessThanOrEqual(1);
+    expect(out.frontInside, `the front house at ${width}px`).toBe(true);
+    expect(out.navInside, `the way round at ${width}px`).toBe(true);
+    expect(out.overlap, `the way round is printed over the front house at ${width}px`).toBe(false);
+  }
+});
+
+/* THE OLD STARTUP FLICK IS GONE, and so is the hang: no house is ever
+   seen anywhere but on its own line out from the axis. */
 test("the old startup flick is gone", async ({ page }) => {
   await page.addInitScript(() => {
     window.__flicking = false;
-    window.__stray = 0;
-    const t0 = performance.now();
     const watch = () => {
       const sheet = document.getElementById("sheet");
       if (sheet && sheet.classList.contains("flicking")) window.__flicking = true;
-      if (sheet && sheet.classList.contains("scripted")) {
-        [...document.querySelectorAll(".sheet-frame")].forEach((f) => {
-          if (parseFloat(getComputedStyle(f).opacity) < 0.3) return;
-          const m = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/.exec(f.style.transform);
-          if (!m) return;
-          f.__seen = f.__seen || [];
-          f.__seen.push([parseFloat(m[1]), parseFloat(m[2])]);
-        });
-      }
-      if (performance.now() - t0 < 5000) requestAnimationFrame(watch);
-      else {
-        [...document.querySelectorAll(".sheet-frame")].forEach((f) => {
-          const seen = f.__seen || [];
-          if (!seen.length) return;
-          const [fx, fy] = seen[seen.length - 1];
-          seen.forEach(([x, y]) => { if (Math.abs(x - fx) > 1 || y > fy + 1 || y < fy - 75) window.__stray++; });
-        });
-      }
+      if (performance.now() < 5000) requestAnimationFrame(watch);
     };
     requestAnimationFrame(watch);
   });
   await page.goto(SHEET);
   await waitForSheet(page);
   expect(await page.evaluate(() => window.__flicking), "nothing flicks").toBe(false);
-  expect(await page.evaluate(() => window.__stray),
-    "a picture is only ever seen coming down on to its own hook").toBe(0);
+  await expect(page.locator(".sheet-rail, .sheet-wire, .sheet-lines")).toHaveCount(0);
 });
 
 /* RESTING ON A HOUSE, AND ONLY RESTING — and sooner than it was. The
@@ -317,7 +320,9 @@ test("resting on a house brings its motifs after a moment, and blurs the rest",
   expect(await motifInk(page), "the house's motifs are drawn").toBeGreaterThan(40);
   const looks = await page.evaluate(() => {
     const frames = [...document.querySelectorAll(".sheet-frame")];
-    return { rested: getComputedStyle(frames[0]).filter, other: getComputedStyle(frames[3]).filter };
+    // The house beside it on the helix, which is not turned away behind
+    // the axis and so is sharp until something is rested on.
+    return { rested: getComputedStyle(frames[0]).filter, other: getComputedStyle(frames[1]).filter };
   });
   expect(looks.rested, "the house itself stays sharp").toBe("none");
   expect(looks.other, "everything else goes out of focus").toMatch(/blur/);
@@ -355,13 +360,18 @@ test("passing over the houses does not set their motifs off", async ({ page }) =
       if (sheet.classList.contains("musing") && open) open.mused = true;
     }).observe(sheet, { attributes: true });
   });
-  const boxes = await page.$$eval(".sheet-frame", (all) => all.map((f) => {
+  // Only the houses that can be seen — on the helix most of them are
+  // turned away or off the window — crossed back and forth three times.
+  const boxes = await page.$$eval(".sheet-frame", (all) => all.filter((f) =>
+    getComputedStyle(f).visibility !== "hidden" && parseFloat(getComputedStyle(f).opacity) > 0.3).map((f) => {
     const r = f.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    return { x: r.left + r.width / 2, y: Math.min(innerHeight - 20, Math.max(80, r.top + r.height / 2)) };
   }));
-  await page.mouse.move(boxes[0].x - 150, boxes[0].y);
-  for (const b of boxes) await page.mouse.move(b.x, b.y);
-  await page.mouse.move(boxes[8].x, boxes[8].y + 400);
+  await page.mouse.move(8, 880);
+  for (let pass = 0; pass < 3; pass++) {
+    for (const b of (pass % 2 ? [...boxes].reverse() : boxes)) await page.mouse.move(b.x, b.y);
+    await page.mouse.move(8, 880);
+  }
   await page.waitForTimeout(700);
   const visits = await page.evaluate(() => window.__visits.map((v) => ({
     house: v.i + 1, long: v.to === null ? Infinity : Math.round(v.to - v.from), mused: v.mused,
@@ -453,6 +463,9 @@ test("Qimu & Musicians' motifs are five-line staves with notes on them", async (
 test("pressing a house steps the page back before opening it", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
+  // Brought to the front first: a house at the side is brought round
+  // rather than opened.
+  await bringToFront(page, 7);
   const target = page.locator(".sheet-frame").nth(7);
   const b = await target.boundingBox();
   await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
@@ -460,7 +473,7 @@ test("pressing a house steps the page back before opening it", async ({ page }) 
   await page.waitForTimeout(200);
   expect(page.url(), "still here a moment after the press").toMatch(/scent-descriptions/);
   const leaving = await page.evaluate(() =>
-    parseFloat(getComputedStyle(document.querySelectorAll(".sheet-frame")[2]).opacity));
+    parseFloat(getComputedStyle(document.querySelectorAll(".sheet-frame")[6]).opacity));
   expect(leaving, "the rest of the page is on its way out").toBeLessThan(0.9);
   await page.waitForURL(/houses\/tombstone\.html/, { timeout: 4000 });
 });

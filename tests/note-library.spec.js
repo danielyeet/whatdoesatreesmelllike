@@ -48,19 +48,33 @@ test("every note named in a fragrance has a record, and none is shelved twice", 
       });
     });
     const missing = [];
+    const notes = new Set();
     const N = window.FRAGRANCE_NOTES;
     Object.keys(N).forEach((key) => {
       const e = N[key];
       const lists = [e.top, e.mid, e.base, e.flat];
       if (e.also) lists.push(e.also.top, e.also.mid, e.also.base, e.also.flat);
-      if (e.landscape) lists.push(e.landscape.flat);
       lists.filter(Boolean).flat().forEach((n) => {
         if (!names.has(n.toLowerCase())) missing.push(key + " " + n);
+        notes.add(n.toLowerCase());
       });
     });
-    return { missing: missing, twice: twice, bare: bare, records: document.querySelectorAll(".lib-record").length };
+    // ALMOST HUMAN'S OLFACTORY LANDSCAPES ARE NOT NOTES, and the owner
+    // asked for them to be reconsidered: nothing that is only ever named
+    // in a landscape may stand in the library, as a record or a spelling.
+    const landscaped = [];
+    Object.keys(N).forEach((key) => {
+      const e = N[key];
+      if (!e.landscape) return;
+      e.landscape.flat.forEach((n) => {
+        if (!notes.has(n.toLowerCase()) && names.has(n.toLowerCase())) landscaped.push(n);
+      });
+    });
+    return { missing: missing, twice: twice, bare: bare, landscaped: landscaped,
+      records: document.querySelectorAll(".lib-record").length };
   });
   expect(out.missing, "notes with no record").toEqual([]);
+  expect(out.landscaped, "landscape impressions shelved as notes").toEqual([]);
   expect(out.twice, "spellings shelved in two records").toEqual([]);
   expect(out.bare, "records with no real explanation").toEqual([]);
   expect(out.records).toBeGreaterThan(300);
@@ -132,6 +146,72 @@ test("a card names the fragrances that use its note, read off their houses' page
   expect(await page.evaluate(() => window.location.hash)).toBe("");
 });
 
+/* THE CARD'S LIST IS SET OUT AS THE OWNER DREW IT: the individual
+   fragrances first, by name; then HOUSES, and under it each house named
+   and only then its fragrances. There are no bars above it any more. */
+test("a card lists the individual fragrances first, then the houses, each house named", async ({ page }) => {
+  await arrive(page);
+  // A note used both by an individual fragrance and in a house.
+  const id = await page.evaluate(() => {
+    const N = window.FRAGRANCE_NOTES;
+    const houses = new Map();
+    Object.keys(N).forEach((k) => {
+      const e = N[k];
+      [e.top, e.mid, e.base, e.flat, e.also && e.also.top, e.also && e.also.mid, e.also && e.also.base, e.also && e.also.flat]
+        .filter(Boolean).flat().forEach((n) => {
+          const key = n.toLowerCase();
+          if (!houses.has(key)) houses.set(key, new Set());
+          houses.get(key).add(k.split(":")[0]);
+        });
+    });
+    const el = [...document.querySelectorAll(".lib-record")].find((r) => {
+      const all = new Set();
+      [r.querySelector(".lib-name").textContent].concat((r.dataset.aka || "").split("|")).forEach((n) =>
+        (houses.get(n.toLowerCase()) || []).forEach((h) => all.add(h)));
+      return all.has("individual") && all.size > 2;
+    });
+    return el.id;
+  });
+  await page.locator("#" + id).evaluate((el) => el.click());
+  const card = page.locator(".lib-card");
+  await expect(card).toBeVisible();
+  await expect(card.locator(".lib-card-circ, .lib-circ")).toHaveCount(0);
+  const heads = await card.locator(".lib-found-head").allTextContents();
+  expect(heads).toEqual(["Individual fragrances", "Houses"]);
+  // The individual fragrances stand before the houses, and every
+  // fragrance under Houses stands under its house's name.
+  const order = await card.locator(".lib-card-list").evaluate((list) =>
+    [...list.querySelectorAll(".lib-found-head, .lib-found-housename, a")].map((el) =>
+      el.matches("a") ? "frag:" + el.dataset.key.split(":")[0] : el.textContent));
+  expect(order[0]).toBe("Individual fragrances");
+  const housesAt = order.indexOf("Houses");
+  order.slice(1, housesAt).forEach((x) => expect(x).toBe("frag:individual"));
+  expect(order.slice(housesAt + 1).filter((x) => x === "frag:individual")).toEqual([]);
+  expect(order[housesAt + 1].startsWith("frag:"), "a house is named before its fragrances").toBe(false);
+});
+
+/* THE BOOKS ARE DIGITAL: each carries a data bar at its head, filled by
+   how much it is used, and a barcode of its own over its call number. */
+test("every book carries a data bar and a barcode of its own", async ({ page }) => {
+  await arrive(page);
+  const out = await page.evaluate(() => {
+    const books = [...document.querySelectorAll(".lib-record")];
+    // The pattern of bars and gaps, without the colour, which differs
+    // from book to book anyway.
+    const codes = new Set(books.map((b) => b.querySelector(".lib-code").style.background
+      .replace(/(hsla?|rgba?)\([^)]*\)/g, "")));
+    const fill = (id) => parseFloat(document.getElementById(id).style.getPropertyValue("--fill"));
+    return {
+      all: books.every((b) => b.querySelector(".lib-bands") && b.querySelector(".lib-code")),
+      codes: codes.size, books: books.length,
+      often: fill("note-bergamot"), once: fill("note-holy-bread"),
+    };
+  });
+  expect(out.all).toBe(true);
+  expect(out.codes, "barcodes are the books' own").toBeGreaterThan(out.books * 0.9);
+  expect(out.often).toBeGreaterThan(out.once);
+});
+
 /* THE BOOKS STAND ON THEIR SHELVES: each within its shelf, none on top
    of another, and each carrying its shelf's call number. */
 test("the books stand on their shelves without running into each other", async ({ page }) => {
@@ -183,8 +263,9 @@ test("a note used often is a thicker book than a note used once", async ({ page 
 });
 
 /* THE TERMINAL: books that answer light up, the rest go dim, and a shelf
-   with nothing on it folds away. It reads other spellings, and what a
-   note is said to be. */
+   with nothing on it folds away. It reads other spellings — and DIRECT
+   WORDS ONLY, at the owner's word: nothing is found by what a note is
+   said to be, and no near miss counts. */
 test("the terminal lights the books that answer and folds away the rest", async ({ page }) => {
   await arrive(page);
   const query = page.locator(".lib-query");
@@ -198,18 +279,30 @@ test("the terminal lights the books that answer and folds away the rest", async 
   await expect(page.locator("#shelf-cit")).toBeHidden();
   await expect(page.locator(".lib-count")).toHaveText(/^\d+ \/ \d+$/);
 
-  // A word in the explanation: nothing is CALLED smoky.
+  // A word only in the explanations lights nothing that is not called
+  // it: "smoky" is said of a dozen notes and names only a couple.
   await query.fill("smoky");
-  // Every book lit either carries the word in one of its names or is
-  // said to be it.
   const lit = await page.locator(".lib-record.is-hit").evaluateAll((all) =>
-    all.map((el) => (el.querySelector(".lib-name").textContent + " " + (el.dataset.aka || "") + " " +
-      el.querySelector(".lib-say").textContent).toLowerCase()));
-  expect(lit.length).toBeGreaterThan(3);
-  lit.forEach((text) => expect(text).toContain("smok"));
-  const bySaying = await page.locator(".lib-record.is-hit").evaluateAll((all) =>
-    all.filter((el) => !/smok/i.test(el.querySelector(".lib-name").textContent + (el.dataset.aka || ""))).length);
-  expect(bySaying, "found by what they are said to be").toBeGreaterThan(3);
+    all.map((el) => el.querySelector(".lib-name").textContent + " | " + (el.dataset.aka || "")));
+  lit.forEach((names) => expect(names, "lit by a name, not a description").toMatch(/\bsmoky/i));
+  const saidSmoky = await page.locator(".lib-say").evaluateAll((all) =>
+    all.filter((el) => /smoky/i.test(el.textContent)).length);
+  expect(saidSmoky, "there are notes only said to be smoky").toBeGreaterThan(lit.length);
+
+  // A word typed must BE a word in a name: "cedar" finds the cedars and
+  // nothing else, half a word finds nothing, and "iris" finds Orris and
+  // not Seaweed, whose Irish Sea Moss it used to light.
+  await query.fill("cedar");
+  const cedars = await page.locator(".lib-record.is-hit .lib-name").allTextContents();
+  expect(cedars.length).toBeGreaterThan(2);
+  cedars.forEach((n) => expect(n).toMatch(/cedar/i));
+  await query.fill("iris");
+  await expect(page.locator("#note-orris")).toHaveClass(/is-hit/);
+  await expect(page.locator("#note-seaweed")).not.toHaveClass(/is-hit/);
+  await query.fill("vetiv");
+  await expect(page.locator(".lib-record.is-hit")).toHaveCount(0);
+  await query.fill("vetivr");
+  await expect(page.locator(".lib-record.is-hit")).toHaveCount(0);
 
   // Enter opens the best answer.
   await query.fill("vetiver");

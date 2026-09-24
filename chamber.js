@@ -664,6 +664,7 @@
   // turn without the drawing behind it flickering.
   chapterPage.innerHTML =
     '<canvas class="chapter-ground" aria-hidden="true" hidden></canvas>' +
+    '<canvas class="chapter-morph" aria-hidden="true" hidden></canvas>' +
     '<div class="chapter-sheet">' +
       '<button type="button" class="chapter-back">' +
         '<span aria-hidden="true">&#8592;</span> Favourites' +
@@ -687,6 +688,7 @@
   const chapterNote = chapterPage.querySelector(".chapter-note");
   const chapterCards = chapterPage.querySelector(".chapter-cards");
   const chapterGround = chapterPage.querySelector(".chapter-ground");
+  const chapterMorph = chapterPage.querySelector(".chapter-morph");
   chapterPage.querySelector(".chapter-back")
     .addEventListener("click", () => closeChapter());
   chapterPage.querySelector(".chapter-step-back")
@@ -1593,6 +1595,7 @@
     settleNote();
     noteFrom = null;
     openCard = null;
+    stopMorph();
     if (ground) { ground.stop(); ground = null; }
     chapterGround.hidden = true;
     chapterPage.classList.remove("here", "laid", "going", "clearing", "turning");
@@ -1705,6 +1708,18 @@
   let turning = 0;
   /** How long the writing takes to go before the page is rewritten. */
   const TURN_MS = 340;
+
+  // THE MORPH between two chapters' drawings — see `morph`.
+  const MORPH_MS = 2300;        // the whole flight, sun to moon
+  const MORPH_WRITING = 0.5;    // the writing comes back in half way through it
+  const MORPH_HAND = 0.8;       // the drawing itself comes up over the last fifth
+  const MORPH_STAGGER = 0.22;   // how late the latest speck may leave
+  const MORPH_SWING = 0.9;      // radians of extra turn on the way
+  const MORPH_SWELL = 0.14;     // how far out the spiral bulges half way
+  const MORPH_FLARE = 0.8;      // how much brighter a speck burns in the air
+  const MORPH_MOST = 20000;     // specks flown, at most — every one of them, in practice
+  const MORPH_HAZE = 0.12;      // the haze behind the flight, warm into cold
+  const MORPH_GLOW_FROM = 0.62; // a speck this bright carries a bloom in the air
   /** How long a card takes to open, and to shut. */
   const CARD_MS = 420;
 
@@ -2009,7 +2024,7 @@
         return sheet ? sheet.getBoundingClientRect() : null;
       },
     });
-    if (made && made.stop) ground = { name: name, stop: made.stop };
+    if (made && made.stop) ground = { name: name, stop: made.stop, capture: made.capture };
     else chapterGround.hidden = true;
   }
 
@@ -2017,15 +2032,46 @@
       "cycle through the page in order to acceess chapter 2 and 3 and 1
       again". The writing goes, the page is rewritten under it, and its
       entrance is run again, so stepping to a chapter reads like
-      arriving at one rather than like a table being refilled. */
+      arriving at one rather than like a table being refilled.
+
+      AND WHEN BOTH CHAPTERS HAVE A DRAWING BEHIND THEM, THE ONE BECOMES
+      THE OTHER — the owner's "the particles change and morph from sun to
+      moon (and vice versa), while the text fades out and in". It used to
+      be a cut: the sun was stopped and the moon started in the same
+      frame, under a writing that had faded for a third of a second. Now
+      every speck of the sun as it stands is taken (`capture`), the moon
+      is started unseen and its first frame taken the same way, and the
+      one set of specks is flown into the other on a canvas of its own
+      (`morph`) while the writing fades out and, over the second half,
+      back in. Only when the flight is home is the moon itself let
+      back up, crossfaded in as the flown specks fade. */
   function stepChapter(way) {
-    if (!burst || burst.phase !== "open" || leaving || turning) return;
+    if (!burst || burst.phase !== "open" || leaving || turning || morphing) return;
     if (chapters.length < 2) return;
     const to = (burst.chapter + way + chapters.length) % chapters.length;
     if (to === burst.chapter) return;
     burst.chapter = to;
     shutNote(true);
     if (REDUCE_MOTION) { writeChapter(to); chapterPage.scrollTop = 0; return; }
+
+    const into = grounds[chapters[to].name] || "";
+    const from = ground && ground.capture && into && into !== ground.name ? ground.capture() : null;
+    let hold = TURN_MS;
+    if (from) {
+      // The new drawing is started now, under a veil, so its first frame
+      // can be taken as where the flight lands.
+      chapterGround.style.transition = "none";
+      chapterGround.style.opacity = "0";
+      setGround(into);
+      const onto = ground && ground.capture ? ground.capture() : null;
+      if (onto) {
+        morph(from, onto);
+        hold = Math.max(TURN_MS, MORPH_MS * MORPH_WRITING);
+      } else {
+        chapterGround.style.transition = "";
+        chapterGround.style.opacity = "";
+      }
+    }
     chapterPage.classList.add("turning");
     turning = window.setTimeout(() => {
       turning = 0;
@@ -2035,7 +2081,160 @@
       void chapterPage.offsetWidth;          // so the entrance plays again
       chapterPage.classList.add("here");
       chapterPage.classList.remove("turning");
-    }, TURN_MS);
+    }, hold);
+  }
+
+  // ============================================================
+  // THE MORPH — one chapter's drawing flown into the next
+  //
+  // Both snapshots are flat lists of specks (x, y, size, brightness,
+  // tone). They are brought to the same count by taking specks from the
+  // smaller list more than once, and PAIRED BY HOW FAR EACH STANDS FROM
+  // ITS OWN DRAWING'S MIDDLE — the core of the sun goes to the core of
+  // the moon, its limb to the limb, the solar wind to the starfield —
+  // so the flight is a shape turning into a shape rather than a spray.
+  // Each speck flies on a spiral about the middle, swinging an extra
+  // part-turn as it goes and swelling a little outward half way, on a
+  // clock of its own so they do not all leave at once, and burns a
+  // little brighter while it is in the air.
+  // ============================================================
+  let morphing = 0;
+  let morphFrame = 0;
+  function stopMorph() {
+    if (morphFrame) cancelAnimationFrame(morphFrame);
+    morphFrame = 0;
+    morphing = 0;
+    chapterMorph.hidden = true;
+    chapterGround.style.transition = "";
+    chapterGround.style.opacity = "";
+  }
+  function morph(from, onto) {
+    stopMorph();
+    // stopMorph lifts the veil; it goes straight back on, or the new
+    // drawing shows for a frame before the flight has begun.
+    chapterGround.style.transition = "none";
+    chapterGround.style.opacity = "0";
+    const g = chapterMorph.getContext("2d");
+    if (!g) { chapterGround.style.transition = ""; chapterGround.style.opacity = ""; return; }
+    const w = window.innerWidth, h = window.innerHeight;
+    const ratio = Math.min(window.devicePixelRatio || 1, w < 700 ? 1.5 : 2);
+    chapterMorph.width = Math.round(w * ratio);
+    chapterMorph.height = Math.round(h * ratio);
+    chapterMorph.hidden = false;
+
+    const rgb = (list) => list.map((t) => (t.match(/\d+/g) || [255, 255, 255]).slice(0, 3).map(Number));
+    const toneA = rgb(from.tones), toneB = rgb(onto.tones);
+    const A = from.specks, B = onto.specks;
+    const na = A.length / 5, nb = B.length / 5;
+    if (!na || !nb) { stopMorph(); return; }
+    const n = Math.min(MORPH_MOST, Math.max(na, nb));
+
+    // Each drawing's middle: the brightness-weighted centre of its specks.
+    const middle = (L, count) => {
+      let x = 0, y = 0, wt = 0;
+      for (let i = 0; i < count; i++) { const on = L[i * 5 + 3]; x += L[i * 5] * on; y += L[i * 5 + 1] * on; wt += on; }
+      return wt ? [x / wt, y / wt] : [w / 2, h / 2];
+    };
+    const [ax, ay] = middle(A, na);
+    const [bx, by] = middle(B, nb);
+    // n specks from each, spread evenly over the list, ordered by reach.
+    const pick = (L, count, mx, my) => {
+      const out = [];
+      for (let k = 0; k < n; k++) {
+        const i = Math.floor((k * count) / n) * 5;
+        const dx = L[i] - mx, dy = L[i + 1] - my;
+        out.push({ x: L[i], y: L[i + 1], s: L[i + 2], on: L[i + 3], t: L[i + 4],
+          r: Math.hypot(dx, dy), a: Math.atan2(dy, dx) });
+      }
+      return out.sort((p, q) => p.r - q.r);
+    };
+    const P = pick(A, na, ax, ay), Q = pick(B, nb, bx, by);
+    let seed = 7;
+    const random = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+    const flights = P.map((p, k) => {
+      const q = Q[k];
+      let da = q.a - p.a;
+      while (da > Math.PI) da -= Math.PI * 2;
+      while (da < -Math.PI) da += Math.PI * 2;
+      return { p: p, q: q, da: da + MORPH_SWING, wait: random() * MORPH_STAGGER, ca: toneA[p.t] || [255, 255, 255], cb: toneB[q.t] || [255, 255, 255] };
+    });
+
+    // How far out each drawing reaches — nine specks in ten are closer —
+    // which is how big the haze behind the flight is drawn.
+    const reach = (L) => L[Math.floor(L.length * 0.9)].r;
+    const reachA = reach(P), reachB = reach(Q);
+    const hazeA = toneA[Math.floor(toneA.length * 0.7)] || [255, 220, 170];
+    const hazeB = toneB[Math.floor(toneB.length * 0.7)] || [190, 205, 235];
+    // A soft disc, drawn once and laid under the brightest specks as
+    // they fly — the grounds' own bloom, which is most of the sun's glow.
+    const bloom = document.createElement("canvas");
+    bloom.width = bloom.height = 48;
+    const bg = bloom.getContext("2d");
+    const soft = bg.createRadialGradient(24, 24, 0, 24, 24, 24);
+    soft.addColorStop(0, "rgba(255,255,255,0.8)");
+    soft.addColorStop(0.3, "rgba(255,255,255,0.25)");
+    soft.addColorStop(1, "rgba(255,255,255,0)");
+    bg.fillStyle = soft;
+    bg.fillRect(0, 0, 48, 48);
+
+    const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+    const t0 = performance.now();
+    morphing = 1;
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / MORPH_MS);
+      g.setTransform(ratio, 0, 0, ratio, 0, 0);
+      g.clearRect(0, 0, w, h);
+      g.globalCompositeOperation = "lighter";
+      // The last stretch hands over: the flown specks fade as the new
+      // drawing itself comes up under them.
+      const hand = t < MORPH_HAND ? 0 : (t - MORPH_HAND) / (1 - MORPH_HAND);
+      chapterGround.style.opacity = hand.toFixed(3);
+      const mx0 = ax, my0 = ay, mx1 = bx, my1 = by;
+      // THE HAZE: one soft gradient at the moving middle, its size and
+      // colour going from the one drawing's to the other's.
+      const e = ease(t);
+      const hx = mx0 + (mx1 - mx0) * e, hy = my0 + (my1 - my0) * e;
+      const hr = Math.max(20, (reachA + (reachB - reachA) * e) * 1.6);
+      const hc = hazeA.map((v, i) => Math.round(v + (hazeB[i] - v) * e)).join(",");
+      const haze = g.createRadialGradient(hx, hy, hr * 0.2, hx, hy, hr);
+      haze.addColorStop(0, "rgba(" + hc + "," + (MORPH_HAZE * (1 - hand)).toFixed(3) + ")");
+      haze.addColorStop(1, "rgba(" + hc + ",0)");
+      g.globalAlpha = 1;
+      g.fillStyle = haze;
+      g.fillRect(hx - hr, hy - hr, hr * 2, hr * 2);
+      for (let k = 0; k < flights.length; k++) {
+        const f = flights[k];
+        const u = ease(Math.max(0, Math.min(1, (t - f.wait) / (1 - MORPH_STAGGER))));
+        const mx = mx0 + (mx1 - mx0) * u, my = my0 + (my1 - my0) * u;
+        const r = (f.p.r + (f.q.r - f.p.r) * u) * (1 + MORPH_SWELL * Math.sin(Math.PI * u));
+        const a = f.p.a + f.da * u;
+        const x = mx + Math.cos(a) * r, y = my + Math.sin(a) * r;
+        const air = Math.sin(Math.PI * u);
+        const on = (f.p.on + (f.q.on - f.p.on) * u) * (1 + MORPH_FLARE * air) * (1 - hand);
+        if (on <= 0.01) continue;
+        const c = f.ca, d = f.cb;
+        g.fillStyle = "rgb(" + Math.round(c[0] + (d[0] - c[0]) * u) + "," +
+          Math.round(c[1] + (d[1] - c[1]) * u) + "," + Math.round(c[2] + (d[2] - c[2]) * u) + ")";
+        g.globalAlpha = on > 1 ? 1 : on;
+        const s = f.p.s + (f.q.s - f.p.s) * u;
+        g.fillRect(x - s / 2, y - s / 2, s, s);
+        if (on > MORPH_GLOW_FROM) {
+          const rad = s * 5;
+          g.globalAlpha = Math.min(0.35, (on - MORPH_GLOW_FROM) * 0.6);
+          g.drawImage(bloom, x - rad, y - rad, rad * 2, rad * 2);
+        }
+      }
+      g.globalAlpha = 1;
+      g.globalCompositeOperation = "source-over";
+      if (t < 1) { morphFrame = requestAnimationFrame(step); return; }
+      morphFrame = 0;
+      g.clearRect(0, 0, w, h);
+      stopMorph();
+    };
+    // The first frame now, not on the next one: the old drawing has
+    // already been stopped and cleared, and a frame of black between it
+    // and its own specks taking off reads as a blink.
+    step(t0);
   }
 
   /** The chapter, laid under the mesh at the end of the burst.

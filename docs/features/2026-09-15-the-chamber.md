@@ -1369,3 +1369,48 @@ disc, behind the writing against beside it; 0.87 as it stands, 1.91 with the qui
 out), `the moon turns on the sun's own axis, at the sun's own rate` (fails with the moon
 turned the other way), and `both chapters have something drawn down the left of the
 page` (fails with the wind and the stars taken out).
+
+## 2026-09-24, later — the sun becomes the moon
+
+> also introduce a transition when flipping from chapter 1 favorites to chapter 2. make it
+> smooth; and make it so that the particles change and morph from sun to moon (and vice
+> versa), while the text fades out and in.
+
+**It was a cut.** Pressing an arrow faded the writing for a third of a second and, in the
+same frame as the page was rewritten, stopped the sun and started the moon.
+
+**Now the one becomes the other** (`morph` in `chamber.js`, `MORPH_*`):
+
+- **Both grounds hand over their specks.** `sun.js` and `moon.js` each gained `capture()`:
+  it draws one frame with a flag set that makes `speck()` push every speck it draws —
+  where, how big, how bright after the quiet, and which tone — and returns the lot with the
+  tones. Nothing else about either drawing changed.
+- **The arrow takes the sun's specks as they stand**, starts the moon **under a veil**
+  (its canvas held at opacity 0 by an inline style) and takes the moon's first frame the
+  same way. Those are where the flight leaves from and lands.
+- **The flight** is on a canvas of its own (`.chapter-morph`) laid over the ground. The
+  two lists are brought to one count and **paired by how far each speck stands from its
+  own drawing's middle** — core to core, limb to limb, the solar wind to the starfield —
+  so a shape turns into a shape rather than spraying. Each speck flies on a spiral about
+  the moving middle, swinging a little extra turn, bulging outward half way
+  (`MORPH_SWELL`), leaving on a clock of its own (`MORPH_STAGGER`) and burning brighter
+  in the air (`MORPH_FLARE`); its colour goes from the sun's warm tones to the moon's cold
+  ones. A soft **haze** at the moving middle goes warm to cold with it, and the brightest
+  specks carry a bloom — the first version had neither, and flew only a third of the
+  specks, and the middle of the flight read as a dim scatter rather than as a sun.
+- **The writing** fades out at once, is rewritten, and comes back in half way through the
+  flight (`MORPH_WRITING`).
+- **The handover**: over the last fifth (`MORPH_HAND`) the flown specks fade as the new
+  drawing's own canvas comes up under them; then the flight's canvas is put away.
+- The first frame of the flight is drawn at once, not on the next frame: the old drawing
+  has already been stopped and cleared, and a frame of black between would read as a
+  blink.
+- **Leaving the chapter mid-flight** stops the morph (`stopMorph` in `clearChapter`), and
+  the arrows do nothing while one is running. With reduced motion there is no flight: the
+  chapter is simply rewritten, as before.
+
+Tested in `tests/chamber.spec.js`: `stepping between chapters morphs the sun into the moon
+and back, as the writing fades` — sampled every frame from inside the page, both ways
+round: the specks flown on their own canvas with ink on it, the new drawing held under the
+veil while they fly, the writing gone and back, the new drawing up at the end and the
+flight's canvas put away. It fails with the morph taken out (the old cut).

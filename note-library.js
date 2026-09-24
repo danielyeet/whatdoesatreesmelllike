@@ -14,10 +14,10 @@
 //                   and its place on the shelf, counted alphabetically.
 //   THE TERMINAL    one field over the whole catalogue. Books that
 //                   answer light up and everything else goes dim; a
-//                   shelf with nothing on it folds away. It reads names,
-//                   every other spelling folded into a record, and — if
-//                   nothing is called that — what a note is SAID to be,
-//                   so "smoky" finds everything described as smoky.
+//                   shelf with nothing on it folds away. It reads names
+//                   and every other spelling folded into a record, by
+//                   DIRECT WORDS only: whole words, no near misses, and
+//                   nothing found by what a note is said to be.
 //   THE INDEX       a tab per shelf, to stand in front of that one.
 //   THE CARD        pressing a book pulls it off the shelf and opens its
 //                   catalogue card beside the stacks: the call number,
@@ -81,11 +81,8 @@
   const TALL_MIN = 128;    // px
   const TALL_MAX = 186;
   const TALL_PER_LETTER = 7.4; // the name has to fit down the spine
-  const TALL_SPARE = 64;   // the bands at the head and the label at the foot
-
-  // THE TERMINAL
-  const STRONG = 420;      // a name answering at least this well is a hit;
-                           // anything fuzzier counts only when nothing else does
+  const TALL_SPARE = 72;   // the data bar at the head, the barcode and label at the foot
+  const FULL = 40;         // fragrances using a note for its data bar to be full   // the bands at the head and the label at the foot
 
   // ============================================================
   // WHAT THE SITE USES — every note in notes-data.js, and which
@@ -99,7 +96,9 @@
     const e = NOTES[key];
     const lists = [e.top, e.mid, e.base, e.flat];
     if (e.also) lists.push(e.also.top, e.also.mid, e.also.base, e.also.flat);
-    if (e.landscape) lists.push(e.landscape.flat);
+    // Not `landscape`: Almost Human's olfactory landscapes are
+    // impressions the house publishes instead of notes, and this is a
+    // library of notes.
     lists.filter(Boolean).forEach((list) => list.forEach((note) => {
       spellings.add(note);
       fragrances.add(key);
@@ -211,10 +210,40 @@
     label.lastChild.textContent = r.call.slice(4);
     el.appendChild(label);
 
+    // The data bar at the head: how much of the site uses the note, on
+    // a root scale so a note used once still shows and the most-used
+    // fill the bar.
     const bands = document.createElement("span");
     bands.className = "lib-bands";
     bands.setAttribute("aria-hidden", "true");
+    el.style.setProperty("--fill", Math.round(100 * Math.min(1, Math.sqrt(r.keys.size / FULL))) + "%");
     el.appendChild(bands);
+
+    // The barcode: bars of one or two pixels and gaps of one to three,
+    // read off the name's own hash, so every book's is its own.
+    const code = document.createElement("span");
+    code.className = "lib-code";
+    code.setAttribute("aria-hidden", "true");
+    const stops = [];
+    // A small xorshift generator seeded by the name: the hash alone
+    // gives near-identical patterns for names that differ at their end.
+    let seed = Math.floor(hash(r.name + "code") * 4294967295) || 1;
+    const next = () => {
+      seed ^= seed << 13; seed >>>= 0;
+      seed ^= seed >>> 17;
+      seed ^= seed << 5; seed >>>= 0;
+      return seed / 4294967296;
+    };
+    let x = 0;
+    const ink = "hsl(" + hue.toFixed(0) + " 80% 76%)";
+    while (x < 60) {
+      const bar = 1 + Math.floor(next() * 2);
+      const gap = 1 + Math.floor(next() * 3);
+      stops.push(ink + " " + x + "px " + (x + bar) + "px", "transparent " + (x + bar) + "px " + (x + bar + gap) + "px");
+      x += bar + gap;
+    }
+    code.style.background = "linear-gradient(90deg, " + stops.join(", ") + ")";
+    el.appendChild(code);
 
     el.setAttribute("role", "button");
     el.setAttribute("tabindex", "-1");
@@ -241,7 +270,7 @@
   const figures = [
     ["Records", records.filter((r) => r.code !== "RET").length],
     ["Shelves", shelves.filter((s) => s.dataset.shelf !== "RET").length],
-    ["Spellings", spellings.size],
+    ["Names as written", spellings.size],
     ["Fragrances", fragrances.size],
   ];
   figures.forEach(([word, n]) => {
@@ -261,7 +290,7 @@
     '<form class="lib-terminal" role="search">' +
       '<label class="lib-prompt" for="lib-query">query&gt;</label>' +
       '<input class="lib-query" id="lib-query" type="search" autocomplete="off" spellcheck="false"' +
-      ' placeholder="a note, a spelling, or a word like smoky" aria-label="Search the Note Library">' +
+      ' placeholder="type a note, like cedar or tonka" aria-label="Search the Note Library">' +
       '<output class="lib-count" aria-live="polite"></output>' +
     '</form>' +
     '<div class="lib-tools">' +
@@ -349,7 +378,7 @@
     '<h2 class="lib-card-name" tabindex="-1"></h2>' +
     '<p class="lib-card-say"></p>' +
     '<div class="lib-card-aka"><h3>Also catalogued as</h3><ul></ul></div>' +
-    '<div class="lib-card-found"><h3></h3><div class="lib-card-circ"></div><div class="lib-card-list"></div></div>' +
+    '<div class="lib-card-found"><h3></h3><div class="lib-card-list"></div></div>' +
     '<div class="lib-card-steps">' +
       '<button type="button" class="lib-card-step" data-step="-1"></button>' +
       '<button type="button" class="lib-card-step" data-step="1"></button>' +
@@ -392,19 +421,31 @@
   let onShelf = "";
   let hits = [];
 
-  function answer(r, q) {
-    if (!S) {
-      const t = norm(q);
-      return [r.name].concat(r.aka).some((n) => norm(n).indexOf(t) >= 0) ? 1000 : 0;
-    }
-    let best = S.score(q, r.name);
-    r.aka.forEach((a) => { best = Math.max(best, S.score(q, a) * 0.97); });
-    return best;
+  // DIRECT WORDS ONLY — the owner's rule. A book answers when every
+  // word typed IS a word in its name or in one of the other spellings
+  // folded into it (a plural counts as the word): "cedar" finds Cedar
+  // Leaf and Cedarwood, which is also spelled Cedar; "tonka" finds Tonka.
+  // Half a word finds nothing yet, nothing is found by what a note is
+  // SAID to be, and no near miss counts. A first version lit everything
+  // described as smoky, and "iris" lit Seaweed — by "Irish" Sea Moss.
+  function words(text) { return norm(text).split(" ").filter(Boolean); }
+  function same(a, b) {
+    return a === b || a === b + "s" || b === a + "s" || a === b + "es" || b === a + "es";
   }
-  function said(r, q) {
-    const t = norm(q);
-    if (t.length < 3) return false;
-    return (" " + norm(r.say) + " ").indexOf(" " + t) >= 0;
+  function answer(r, q) {
+    const asked = words(q);
+    if (!asked.length) return 0;
+    let best = 0;
+    [r.name].concat(r.aka).forEach((n, i) => {
+      const mine = words(n);
+      if (!asked.every((w) => mine.some((m) => same(m, w)))) return;
+      // A name that is exactly what was typed first, then a name that
+      // begins with it, then any; the record's own name a hair above its
+      // other spellings.
+      const whole = mine.length === asked.length ? 3 : same(mine[0], asked[0]) ? 2 : 1;
+      best = Math.max(best, whole - (i ? 0.1 : 0));
+    });
+    return best;
   }
 
   function show() {
@@ -412,14 +453,10 @@
     const pool = records.filter((r) => !onShelf || r.code === onShelf);
     hits = [];
     if (q) {
-      const scored = pool.map((r) => ({ r: r, s: answer(r, q) }));
-      let strong = scored.filter((x) => x.s >= STRONG);
-      const bySay = pool.filter((r) => said(r, q) && !strong.some((x) => x.r === r))
-        .map((r) => ({ r: r, s: 300 }));
-      strong = strong.concat(bySay);
-      if (!strong.length) strong = scored.filter((x) => x.s > 0);
-      strong.sort((a, b) => b.s - a.s);
-      hits = strong.map((x) => x.r);
+      hits = pool.map((r) => ({ r: r, s: answer(r, q) }))
+        .filter((x) => x.s > 0)
+        .sort((a, b) => b.s - a.s || a.r.name.localeCompare(b.r.name))
+        .map((x) => x.r);
     }
     const lit = new Set(hits);
     records.forEach((r) => {
@@ -651,58 +688,76 @@
     typing = requestAnimationFrame(step);
   }
 
-  // FOUND IN: every fragrance on the site naming this note, by house,
-  // with a bar for how much of each house's shelf it is.
+  // FOUND IN: every fragrance on the site naming this note, set out the
+  // way the owner asked — the individual fragrances first, by name, and
+  // then HOUSES, each house named and only then its fragrances. It had a
+  // bar per house above the list for one round; the list says it.
   function found(r) {
     const byHouse = new Map();
-    [...r.keys].sort().forEach((key) => {
+    [...r.keys].forEach((key) => {
       const [house, no] = key.split(":");
       if (!byHouse.has(house)) byHouse.set(house, []);
       byHouse.get(house).push(no);
     });
+    byHouse.forEach((nos) => nos.sort());
     const h3 = cardFound.querySelector("h3");
     h3.textContent = r.keys.size === 1 ? "Found in 1 fragrance" : "Found in " + r.keys.size + " fragrances";
-    const circ = cardFound.querySelector(".lib-card-circ");
     const list = cardFound.querySelector(".lib-card-list");
-    circ.textContent = "";
     list.textContent = "";
     cardFound.hidden = !r.keys.size;
-    const most = Math.max(1, ...[...byHouse.values()].map((v) => v.length));
-    byHouse.forEach((nos, house) => {
-      const where = HOUSES[house] || { name: house, href: "" };
-      const bar = document.createElement("div");
-      bar.className = "lib-circ";
-      bar.innerHTML = "<span></span><i><b></b></i><small></small>";
-      bar.firstChild.textContent = where.name;
-      bar.querySelector("b").style.width = (100 * nos.length / most).toFixed(1) + "%";
-      bar.lastChild.textContent = String(nos.length);
-      circ.appendChild(bar);
 
-      const group = document.createElement("div");
-      group.className = "lib-found-house";
-      const name = document.createElement("p");
-      name.textContent = where.name;
-      group.appendChild(name);
-      const ul = document.createElement("ul");
-      nos.forEach((no) => {
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = where.href ? root + where.href + "#part-" + no : "#";
-        a.dataset.key = house + ":" + no;
-        const n = document.createElement("span");
-        n.className = "lib-found-no";
-        n.textContent = no;
-        const t = document.createElement("span");
-        t.className = "lib-found-name";
-        t.textContent = titleOf(house, no) || "";
-        a.append(n, t);
-        li.appendChild(a);
-        ul.appendChild(li);
+    // In the order the houses stand in, whatever order the keys came in.
+    const order = Object.keys(HOUSES).filter((h) => byHouse.has(h))
+      .concat([...byHouse.keys()].filter((h) => !HOUSES[h]));
+    const houses = order.filter((h) => h !== "individual");
+
+    if (byHouse.has("individual")) {
+      list.appendChild(section("Individual fragrances", "lib-found-individual"))
+        .appendChild(fragrancesOf("individual", byHouse.get("individual")));
+    }
+    if (houses.length) {
+      const block = list.appendChild(section("Houses", "lib-found-houses"));
+      houses.forEach((house) => {
+        const where = HOUSES[house] || { name: house };
+        const group = document.createElement("div");
+        group.className = "lib-found-house";
+        const name = document.createElement("p");
+        name.className = "lib-found-housename";
+        name.textContent = where.name;
+        group.append(name, fragrancesOf(house, byHouse.get(house)));
+        block.appendChild(group);
       });
-      group.appendChild(ul);
-      list.appendChild(group);
-      if (where.href) learn(house, where.href);
+    }
+  }
+  function section(title, cls) {
+    const box = document.createElement("div");
+    box.className = "lib-found-section " + cls;
+    const head = document.createElement("p");
+    head.className = "lib-found-head";
+    head.textContent = title;
+    box.appendChild(head);
+    return box;
+  }
+  function fragrancesOf(house, nos) {
+    const where = HOUSES[house] || { name: house, href: "" };
+    const ul = document.createElement("ul");
+    nos.forEach((no) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = where.href ? root + where.href + "#part-" + no : "#";
+      a.dataset.key = house + ":" + no;
+      const n = document.createElement("span");
+      n.className = "lib-found-no";
+      n.textContent = no;
+      const t = document.createElement("span");
+      t.className = "lib-found-name";
+      t.textContent = titleOf(house, no) || "";
+      a.append(n, t);
+      li.appendChild(a);
+      ul.appendChild(li);
     });
+    if (where.href) learn(house, where.href);
+    return ul;
   }
 
   // THE NAMES OF THE FRAGRANCES, read off each house's own page the

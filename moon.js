@@ -363,6 +363,11 @@
         Math.round(COLD[2] + (BLUE[2] - COLD[2]) * mix) + ")");
     }
     let inked = -1;
+    // THE SNAPSHOT, for the morph between chapters (chamber.js). While
+    // it is an array every speck drawn is pushed on to it as five
+    // numbers — where, how big, how bright, and which tone — and
+    // `capture` draws one frame with it set and hands the lot over.
+    let caught = null;
 
     function speck(x, y, lit, wide, cool) {
       if (lit <= 0.006) return;
@@ -384,6 +389,8 @@
       ink.globalAlpha = on < 1 ? on : 1;
       const s = wide > 0.6 ? wide : 0.6;
       ink.fillRect(x - s / 2, y - s / 2, s, s);
+      // Kept, when asked for, as it is drawn: see `capture` below.
+      if (caught) caught.push(x, y, s, on, step);
     }
 
     function draw(t) {
@@ -548,6 +555,16 @@
     else frame = requestAnimationFrame(tick);
 
     return {
+      /** Every speck of the frame as it stands now, as the chamber's
+          morph wants them: a flat list of x, y, size, brightness and
+          tone, and the tones themselves as rgb strings. */
+      capture: function () {
+        caught = [];
+        draw(clock);
+        const out = { specks: caught, tones: tone.slice() };
+        caught = null;
+        return out;
+      },
       stop: function () {
         running = false;
         if (frame) cancelAnimationFrame(frame);
