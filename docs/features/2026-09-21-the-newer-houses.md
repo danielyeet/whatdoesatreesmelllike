@@ -495,3 +495,12 @@ Tested in `tests/houses.spec.js`: `Ataraxia is written, and Spinal Fluid's spoil
 before it shows` (fails with the paragraphs never blurred, and with No not shutting it) and
 `Vestibule carries the notes the owner corrected`. The unwritten test now expects exactly
 one waiting box on Ataraxia, in My Doll's Makeup.
+
+## 2026-09-24, last — Des Cendres' dry down
+
+The owner added a closing paragraph to Des Cendres on Les Abstraits, verbatim: *On the dry
+down, it is quite smoky, with traces of galbanum remaining, The scent profile is more or
+less the unchanged.* It stands after "this is a masterpiece" as a paragraph of its own;
+Des Cendres has no stage labels, so it was not given one. Tested with Tale's Water Me in
+`tests/houses.spec.js`: `Des Cendres ends on its dry down, and Water Me has a Mid and a
+Dry Down`.

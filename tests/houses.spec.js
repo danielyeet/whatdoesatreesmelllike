@@ -970,3 +970,17 @@ test("with animation turned off a house does not fade in", async ({ page }) => {
   const o = await page.evaluate(() => getComputedStyle(document.body).opacity);
   expect(o).toBe("1");
 });
+
+/* ADDED LATER, 2026-09-24: Des Cendres' dry down at the end of it, and
+   Water Me's middle split from a dry down of its own — the owner's words,
+   verbatim, "the unchanged" and all. */
+test("Des Cendres ends on its dry down, and Water Me has a Mid and a Dry Down", async ({ page }) => {
+  await page.goto(ABSTRAITS);
+  const last = page.locator(".human-part", { hasText: "Des Cendres" }).first().locator(".human-text > p").last();
+  await expect(last).toHaveText("On the dry down, it is quite smoky, with traces of galbanum remaining, The scent profile is more or less the unchanged.");
+  await page.goto(TALE);
+  const water = page.locator(".human-part", { hasText: "Water Me" }).first();
+  expect(await water.locator(".human-stage").allTextContents()).toEqual(["Top", "Mid", "Dry Down"]);
+  await expect(water.locator(".human-text > p").last()).toHaveText(
+    "As it settles it starts smelling a little like a drowned plant; a flower dying because it was watered too much. It still resembles the middle quite well though.");
+});

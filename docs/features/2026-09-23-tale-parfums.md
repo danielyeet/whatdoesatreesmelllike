@@ -187,3 +187,12 @@ comes in rather than flicking into its handwriting`.
 
 Tested by `Tale is set in the site's own face, and keeps its drawings` (fails with the
 handwriting put back on the name) and the existing doodle and entrance tests.
+
+## 2026-09-24 — Water Me's dry down
+
+At the owner's word, Water Me's *Mid to Dry Down* stage is now just **Mid**, and a **Dry
+Down** of its own follows it, in their words: *As it settles it starts smelling a little
+like a drowned plant; a flower dying because it was watered too much. It still resembles
+the middle quite well though.* Rouse and Fleurt keep their combined stages. Tested in
+`tests/houses.spec.js`: `Des Cendres ends on its dry down, and Water Me has a Mid and a Dry
+Down`.
