@@ -31,7 +31,7 @@ test("the piece is an introduction and forty-seven parts in five groups",
   await page.goto(PAGE);
 
   await expect(page.locator(".pine-head h1")).toContainText("Pineward");
-  await expect(page.locator(".pine-head h1")).toContainText("the house that smells like trees");
+  await expect(page.locator(".pine-head h1")).toContainText("The house that smells like trees");
   await expect(page.locator("#introduction h2")).toHaveText("Introduction");
 
   const parts = page.locator(".pine-part");
@@ -319,12 +319,12 @@ test("the piece is what the sheet's first picture points at", async ({ page }) =
   const first = page.locator(".sheet-frame").first();
   await expect(first).toHaveAttribute("href", "../houses/pineward.html");
   await expect(first.locator(".sheet-caption"))
-    .toHaveText("Pineward the house that smells like trees");
+    .toHaveText("Pineward The house that smells like trees");
   // The name is what is printed; the line about it waits to be pointed
   // at — see the contact sheet's report.
   await expect(first.locator(".sheet-name")).toHaveText("Pineward");
   await expect(first.locator(".sheet-say"))
-    .toHaveText("the house that smells like trees");
+    .toHaveText("The house that smells like trees");
 });
 
 /* AND THE BLOOM DOES NOT SNAP OFF. The owner asked for "a delay to the

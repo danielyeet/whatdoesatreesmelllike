@@ -300,6 +300,43 @@
     });
   });
 
+  // ============================================================
+  // A SPOILER — <details class="human-spoiler">, the owner's for Spinal
+  // Fluid: "a dropdown paragraph with the button saying 'spoiler
+  // alert'. And even when you click it, the paragraph should be blurry,
+  // covered with the words 'are you sure?', which if you click yes,
+  // then it will unblur it, and if you click no, then it will collapse
+  // it". Every time it is opened it asks again. Without this script it
+  // is a plain dropdown that opens onto the paragraphs.
+  // ============================================================
+  document.querySelectorAll(".human-spoiler").forEach((spoiler) => {
+    const text = spoiler.querySelector(".human-spoiler-text");
+    const ask = spoiler.querySelector(".human-spoiler-ask");
+    if (!text || !ask) return;
+    spoiler.classList.add("is-asking");
+    const hide = () => {
+      spoiler.classList.remove("is-sure");
+      ask.hidden = false;
+      text.setAttribute("aria-hidden", "true");
+      text.inert = true;
+    };
+    hide();
+    spoiler.addEventListener("toggle", () => { if (spoiler.open) hide(); });
+    ask.addEventListener("click", (event) => {
+      const answer = event.target.closest("button");
+      if (!answer) return;
+      if (answer.dataset.answer === "yes") {
+        spoiler.classList.add("is-sure");
+        ask.hidden = true;
+        text.removeAttribute("aria-hidden");
+        text.inert = false;
+      } else {
+        spoiler.open = false;
+        spoiler.querySelector("summary").focus();
+      }
+    });
+  });
+
   // A result on the search page links straight at one fragrance, and
   // being shown a closed list with it somewhere inside is not an
   // answer. `SiteSearch` is only on the pages that load it; without it

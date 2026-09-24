@@ -313,9 +313,13 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Ataraxia Perfumery", url: "https://ataraxiaperfumery.com/products/vestibule" },
     also: {
       say: "Interpreted notes",
-      top: ["Chocolate", "Carolina Reaper"],
-      mid: ["Old House", "Wasabi", "Chocolate Truffle", "Red Chilli Pepper", "Pollen", "Cake", "Turmeric", "Beer"],
-      base: ["Potato", "Old Books", "Cocoa", "Halva", "Soybean", "Pistachio"],
+      // CORRECTED BY THE OWNER, 2026-09-24, off the page itself: the first
+      // reading had "Chocolate" for the chocolate bar, "Chocolate
+      // Truffle" and "Cake" for the one chocolate cake, "Beer" for root
+      // beer, and "Old House" for an antique shop.
+      top: ["Chocolate Bar", "Carolina Reaper"],
+      mid: ["Chocolate Cake (Amandină)", "Red Hot Chilli", "Wasabi", "Pollen", "Antique Shop", "Turmeric", "Root Beer"],
+      base: ["Cocoa Pod", "Edamame", "Pistachio", "Old Book", "Halva", "Potato"],
       source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/Ataraxia-Perfumery/Vestibule-100362.html" },
     },
   },

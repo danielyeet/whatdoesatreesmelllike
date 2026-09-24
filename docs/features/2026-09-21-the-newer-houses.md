@@ -451,3 +451,47 @@ Tested in `tests/houses.spec.js`: `Tombstone is written, with its bold, its link
 definition on hover` — which fails with the definition never shown and with it always
 shown — and `Qimu & Musicians carries its four: two written, one coming soon, one
 waiting`. The unwritten test now runs on Ataraxia alone.
+
+## 2026-09-24, later — Ataraxia, written
+
+The owner sent Ataraxia's writing: its subtitle, *A gothic avante garde house* (in place of
+*light, crossing*, which was never theirs), the introduction, and four of the five —
+Amaretto Jazz in the Melting Room, Vestibule, Deity and Spinal Fluid — each in the stages
+they used (*Top / Middle / Base*; Deity's *Top 1 / Top 2 / Mid / Dry Down*; Spinal Fluid's
+*Top / Mid / Dry down*). It is theirs **verbatim**, *avante*, *oppoponax*, *im*, *0/10,
+would smell again.* and the Cyrillic *Басейн Лазурний* included, with only the invisible
+left-to-right marks that came with the paste taken out; the colons after the stage names
+are the stage labels' own. Amaretto Jazz's closing paragraph, the short of it, stands after
+its Base as a paragraph of its own. **My Doll's Makeup** is still theirs to write and says
+so in the dashed box. The standfirst is now just *Five fragrances.*, as Tombstone's is.
+
+### The spoiler
+
+> (the following paragraph will be a dropdown paragraph with the button saying "spoiler
+> alert". And even when you click it, the paragraph should be blurry, covered with the
+> words "are you sure?", which if you click yes, then it will unblur it, and if you click
+> no, then it will collapse it)
+
+Spinal Fluid's Attack on Titan paragraphs are a `<details class="human-spoiler">` with
+**Spoiler alert** on it. The owner's instruction is not printed. `house.js` makes it ask:
+opened, the paragraphs are there but **blurred**, under **Are you sure?** with **Yes** and
+**No**; Yes clears them, No shuts it again, and **every time it is opened it asks again**.
+While blurred the words are also hidden from anything reading the page aloud and cannot
+be tabbed into (`aria-hidden`, `inert`). It is drawn in the page's own tokens, so it
+follows the dark ground. **Without JavaScript** it is a plain dropdown that opens onto the
+paragraphs, never stuck blurred. Any house can use it: copy the block.
+
+### Vestibule's notes, corrected
+
+The owner gave Vestibule's divided list as it actually stands on the page — *Chocolate Bar,
+Carolina Reaper / Chocolate Cake (Amandină), Red Hot Chilli, Wasabi, Pollen, Antique Shop,
+Turmeric, Root Beer / Cocoa Pod, Edamame, Pistachio, Old Book, Halva, Potato* — and it
+replaces the lower half of its window, which had read *Chocolate*, *Chocolate Truffle* and
+*Cake*, *Beer*, *Old House*, *Soybean*. The house's own half is unchanged. The Note Library
+gained records for the names it had never seen (Chocolate Cake, Cocoa Pod, Edamame, Root
+Beer) and folded the rest into the notes they are.
+
+Tested in `tests/houses.spec.js`: `Ataraxia is written, and Spinal Fluid's spoiler asks
+before it shows` (fails with the paragraphs never blurred, and with No not shutting it) and
+`Vestibule carries the notes the owner corrected`. The unwritten test now expects exactly
+one waiting box on Ataraxia, in My Doll's Makeup.

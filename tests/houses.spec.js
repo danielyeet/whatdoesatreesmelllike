@@ -441,13 +441,13 @@ test("an unwritten fragrance says it is unwritten", async ({ page }) => {
   // NAMED IS NOT WRITTEN, and the two came apart on 2026-09-22: the
   // owner gave Ataraxia and Les Abstraits their fragrances' names and
   // their notes, and kept the WRITING. Les Abstraits' writing arrived
-  // on 2026-09-23, so it is Ataraxia alone that still says on every
-  // part that the writing has not arrived. Tombstone arrived the same
-  // way on 2026-09-23 and was written on 2026-09-24 — see its own test.
+  // on 2026-09-23, Tombstone's and four of Ataraxia's on 2026-09-24 —
+  // see their own tests. What is left waiting says so: My Doll's Makeup,
+  // on Ataraxia, and only it.
   for (const [url, parts] of [[ATARAXIA, 5]]) {
     await page.goto(url);
-    // Every part, and the introduction as well.
-    await expect(page.locator(".human-waiting")).toHaveCount(parts + 1);
+    await expect(page.locator(".human-waiting")).toHaveCount(1);
+    await expect(page.locator("#part-03 .human-waiting")).toContainText("My Doll");
     await expect(page.locator(".human-part .human-untitled"),
       "these are named now").toHaveCount(0);
     // And every one of them is named with something that is not the
@@ -799,6 +799,64 @@ test("Qimu & Musicians carries its four: two written, one coming soon, one waiti
    so many words: "selectively linear" in bold, the house's own site
    linked, and "exclusion zone" given its definition when it is pointed
    at. And 3 Feet 5 says the rest of it will be filled in later. */
+/* ATARAXIA, WRITTEN — 2026-09-24. The subtitle, the introduction and
+   four of its five in the owner's words, and Spinal Fluid's spoiler:
+   "a dropdown paragraph with the button saying 'spoiler alert'. And even
+   when you click it, the paragraph should be blurry, covered with the
+   words 'are you sure?', which if you click yes, then it will unblur it,
+   and if you click no, then it will collapse it". */
+test("Ataraxia is written, and Spinal Fluid's spoiler asks before it shows", async ({ page }) => {
+  await page.goto(ATARAXIA);
+  await expect(page.locator(".human-head h1 em")).toHaveText("A gothic avante garde house");
+  await expect(page.locator("#introduction-name + .human-text")).toContainText("this house has no DNA");
+  for (const [id, stages, words] of [
+    ["#part-01", ["Top", "Middle", "Base"], "jazz bar"],
+    ["#part-02", ["Top 1", "Top 2", "Mid", "Dry Down"], "dying god"],
+    ["#part-04", ["Top", "Mid", "Dry down"], "0/10, would smell again."],
+    ["#part-05", ["Top", "Middle", "Base"], "Басейн Лазурний"],
+  ]) {
+    expect(await page.locator(id + " .human-stage").allTextContents(), id).toEqual(stages);
+    await expect(page.locator(id + " .human-text")).toContainText(words);
+  }
+  // The request itself was not printed, nor the invisible marks the
+  // writing arrived with.
+  const text = await page.locator("body").textContent();
+  expect(text).not.toContain("dropdown paragraph");
+  expect(text).not.toContain("\u200e");
+
+  // THE SPOILER.
+  await page.locator("#part-04 > summary").click();
+  await page.waitForTimeout(900);
+  const spoiler = page.locator("#part-04 .human-spoiler");
+  const words = spoiler.locator(".human-spoiler-text");
+  await expect(spoiler.locator("summary")).toHaveText(/Spoiler alert/i);
+  await expect(words).toBeHidden();
+  await spoiler.locator("summary").click();
+  await expect(spoiler.locator(".human-spoiler-ask")).toBeVisible();
+  await expect(spoiler.locator(".human-spoiler-ask")).toContainText("Are you sure?");
+  const blurred = () => words.evaluate((el) => getComputedStyle(el).filter);
+  expect(await blurred(), "opened, it is blurred").toMatch(/blur/);
+  // No shuts it again.
+  await spoiler.locator('button[data-answer="no"]').click();
+  await expect(spoiler).not.toHaveAttribute("open", /.*/);
+  // Opened again, it asks again; Yes clears it.
+  await spoiler.locator("summary").click();
+  await expect(spoiler.locator(".human-spoiler-ask")).toBeVisible();
+  await spoiler.locator('button[data-answer="yes"]').click();
+  await expect(spoiler.locator(".human-spoiler-ask")).toBeHidden();
+  await expect.poll(blurred).toBe("none");
+  await expect(words).toContainText("Spinal fluid captures the universe really well");
+});
+
+/* VESTIBULE'S NOTES, as the owner corrected them. */
+test("Vestibule carries the notes the owner corrected", async ({ page }) => {
+  await page.goto(ATARAXIA);
+  const also = await page.evaluate(() => window.FRAGRANCE_NOTES["ataraxia:05"].also);
+  expect(also.top).toEqual(["Chocolate Bar", "Carolina Reaper"]);
+  expect(also.mid).toEqual(["Chocolate Cake (Amandină)", "Red Hot Chilli", "Wasabi", "Pollen", "Antique Shop", "Turmeric", "Root Beer"]);
+  expect(also.base).toEqual(["Cocoa Pod", "Edamame", "Pistachio", "Old Book", "Halva", "Potato"]);
+});
+
 test("Tombstone is written, with its bold, its link and a definition on hover",
   async ({ page }) => {
   await page.goto(TOMBSTONE);

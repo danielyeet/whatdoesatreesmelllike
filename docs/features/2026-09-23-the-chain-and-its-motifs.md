@@ -207,3 +207,33 @@ watch the chain draw in, rest on each house, cross the page quickly, press one.
   house's own page, but the owner has not seen them yet, and Tombstone's and Qimu's are
   guesses at houses with no drawing of their own.
 - **On a phone there is no resting**, since there is no hovering; a tap opens the house.
+
+## 2026-09-24 — the motifs behind the houses, Tombstone's names once, Qimu quieter
+
+(Tombstone's epitaphs and Qimu & Musicians' staves themselves are described in [the
+hang's report](2026-09-24-the-hang.md), where they were made.)
+
+- **Behind the houses, over the whole page, blurring nothing.** On the Houses view the
+  motifs' canvas stands under every house and under the particles, and `start()` is handed
+  no house to keep clear of — handed none, it now clears the old one (`avoid = null`)
+  rather than keeping it from the last house rested on. Nothing else on the page is
+  blurred or dimmed while they come any more. See [the axis](2026-09-24-the-axis.md).
+- **Tombstone writes each of its five names once**, in the house's order — "not at random
+  as it currently is (i dont want duplicate names)". `epitaphsLeft` is filled afresh each
+  time the house is rested on, a name is taken off it only once it has found somewhere to
+  stand, and a name still on the wall (fading from a moment ago) is never written again
+  beside itself. The names are kept off every house that can be seen (`around`, handed in
+  by the page): the roots and flowers may run behind a picture, but a name half hidden
+  behind one has not been written.
+- **Qimu & Musicians is quieter** — "more subtle and way less movement": the staves are
+  drawn in at a third of the strength they were and out over three seconds rather than one
+  and a bit; there are at most three of them and a dozen notes rather than five and forty;
+  the notes are drawn at half strength, stay three to five seconds, and **stand still where
+  they are put** — they used to drift to the left.
+
+Tested in `tests/contact-sheet.spec.js`: `Tombstone's motifs write each name once, never
+twice and never behind a house` (reads every word the canvas is asked to write; fails with
+the names picked at random, and with them allowed behind a house) and `Qimu & Musicians'
+motifs are faint and their notes stay where they are put` (reads every colour and every
+note head the canvas is asked for; fails with the old strengths, and with the drift put
+back).

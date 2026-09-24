@@ -11,7 +11,7 @@ page lists in `tests/menu.spec.js`, `tests/pages.spec.js` and `tests/mobile.spec
 ## What changed
 
 A new page in the menu, **above Photography**: the **Note Library**. It holds every note
-named in a fragrance anywhere on the site — 533 names as written, shelved as **330 records**
+named in a fragrance anywhere on the site — 534 names as written, shelved as **330 records**
 on **16 shelves** — each with a brief explanation of what it is. It is built as a library at
 night read through a catalogue terminal: every note is a **book** standing on its
 **shelf**, with its name down the spine and a **call number** on a label at its foot, and
@@ -40,7 +40,7 @@ draws from. Three things follow, and they are the reason:
 
 ### One record, many spellings
 
-The site's notes are written 533 different ways — the **names as written** in the
+The site's notes are written 534 different ways — the **names as written** in the
 readout, which is what the owner asked about ("whats the 558": it was 558 before the
 landscapes came out) — and many are the same material: *Tonka*, *Tonka
 Bean* and *Tonka Beans*; *Orris*, *Iris*, *Iris Butter* and *Iris Pallida*; a dozen ouds.
@@ -207,6 +207,13 @@ Added the same day, after the owner's first look:
   word finds nothing and "iris" does not light Seaweed — it fails with a starts-with match
   and with a match on the explanations — and the first test that no landscape impression
   is shelved, which fails with one put back.
+
+Vestibule's notes were corrected by the owner later the same day (see [the newer
+houses](2026-09-21-the-newer-houses.md)); four records came with them — Chocolate Cake
+(with *Amandină* folded in), Cocoa Pod, Edamame and Root Beer — the other new spellings
+were folded into the notes they are (*Chocolate Bar* into Chocolate, *Red Hot Chilli* into
+Chilli, *Antique Shop* into Dusty Antiques, *Old Book* into Old Books), and four records
+nothing uses any more went (Cake, Soybean, Beer, Old House).
 
 ## Known issues / TODO
 

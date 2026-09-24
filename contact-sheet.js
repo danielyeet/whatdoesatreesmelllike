@@ -19,9 +19,10 @@
 //                 turned away round the axis, above and below, smaller
 //                 and fainter the further round they are. Every house
 //                 is joined to the axis by a TETHER of specks.
-//   THE FRONT     the house you are on: its line about the house shows,
-//                 a ring of specks turns round it, and pressing it opens
-//                 the house. Pressing any other brings IT to the front.
+//   THE FRONT     the house you are on: a ring of specks turns round it,
+//                 and pressing it opens the house. Pressing any other
+//                 brings IT to the front. Its line about the house shows
+//                 only while it is pointed at, as every house's does.
 //   TRAVELLING    by the wheel, by dragging (a finger on a phone), by
 //                 the arrow keys, by the numbers on the axis, and by the
 //                 two buttons at the side with where you are between
@@ -71,6 +72,8 @@
   const FRONT_FEWEST = 150;        // px
   const SHAPE = 0.86;              // a house is this wide for its height
   const SMALLEST = 0.46;           // the scale of a house right behind the axis
+  const SIDE_FALL = 2;             // how quickly a house shrinks as it turns away:
+                                   // at 2, the ones either side are three quarters of the front
 
   // TRAVELLING. The wheel moves the helix by a fraction of a house per
   // pixel; it comes to rest on the nearest house once the wheel stops.
@@ -205,7 +208,11 @@
       x: cx + R * Math.sin(a),
       y: cy + d * span,
       z: z,
-      s: SMALLEST + (1 - SMALLEST) * (z + 1) / 2,
+      // The front house as it is; the ones either side of it a little
+      // smaller than a straight line through depth would draw them — the
+      // owner asked for 06 and 08 "a little smaller" round 07 — and the
+      // ones behind the axis smaller still.
+      s: SMALLEST + (1 - SMALLEST) * Math.pow((z + 1) / 2, SIDE_FALL),
     };
   }
 
@@ -555,7 +562,16 @@
     resting = frame;
     frame.classList.add("hot");
     sheet.classList.add("musing");
-    if (window.HouseMotifs) window.HouseMotifs.start(frame.dataset.motif, frame);
+    // THE WHOLE PAGE, not round the house: the motifs are handed no
+    // house to keep clear of, and they stand BEHIND the houses (the
+    // stylesheet puts their canvas under everything) — so they read as
+    // the page itself answering, rather than as something hovering over
+    // it. Nothing else on the page is blurred or dimmed while they come.
+    // The houses that can be seen are handed over all the same, so that
+    // anything WRITTEN — Tombstone's names — is kept off them.
+    const around = frames.filter((f) => f.style.visibility !== "hidden" && parseFloat(f.style.getPropertyValue("--shown") || "0") > 0.1)
+      .map((f) => f.getBoundingClientRect());
+    if (window.HouseMotifs) window.HouseMotifs.start(frame.dataset.motif, null, around);
   }
   function leave(frame) {
     clearTimeout(waiting);

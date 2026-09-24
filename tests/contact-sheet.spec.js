@@ -288,9 +288,12 @@ test("the old startup flick is gone", async ({ page }) => {
 
 /* RESTING ON A HOUSE, AND ONLY RESTING — and sooner than it was. The
    owner found the wait "too long"; it is a fifth of a second now. Nothing
-   in the first moment; then, within half a second, the rest of the wall
-   out of focus and the house's own motifs over it. */
-test("resting on a house brings its motifs after a moment, and blurs the rest",
+   in the first moment; then, within half a second, the house's own
+   motifs coming up. AND NOTHING IS BLURRED, and the motifs stand BEHIND
+   the houses: the owner asked for the effects not to blur anything, to
+   read as the page itself answering, and to happen behind the boxes.
+   For two rounds the rest of the page went out of focus. */
+test("resting on a house brings its motifs after a moment, behind the houses, blurring nothing",
   async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(SHEET);
@@ -320,13 +323,155 @@ test("resting on a house brings its motifs after a moment, and blurs the rest",
   expect(await motifInk(page), "the house's motifs are drawn").toBeGreaterThan(40);
   const looks = await page.evaluate(() => {
     const frames = [...document.querySelectorAll(".sheet-frame")];
-    // The house beside it on the helix, which is not turned away behind
-    // the axis and so is sharp until something is rested on.
-    return { rested: getComputedStyle(frames[0]).filter, other: getComputedStyle(frames[1]).filter };
+    const z = (el) => { const v = parseInt(getComputedStyle(el).zIndex, 10); return Number.isNaN(v) ? 0 : v; };
+    return {
+      // The house beside it on the helix, which is not turned away behind
+      // the axis: sharp, and as bright as it was.
+      rested: getComputedStyle(frames[0]).filter, other: getComputedStyle(frames[1]).filter,
+      otherShown: parseFloat(getComputedStyle(frames[1]).opacity),
+      field: getComputedStyle(document.querySelector(".sheet-field")).filter,
+      motifs: z(document.querySelector(".sheet-motifs")),
+      lowestHouse: Math.min(...frames.map(z)),
+    };
   });
   expect(looks.rested, "the house itself stays sharp").toBe("none");
-  expect(looks.other, "everything else goes out of focus").toMatch(/blur/);
+  expect(looks.other, "and so does everything else").toBe("none");
+  expect(looks.field, "the particles too").toBe("none");
+  expect(looks.otherShown, "nothing is dimmed").toBeGreaterThan(0.6);
+  expect(looks.motifs, "the motifs stand behind every house").toBeLessThan(looks.lowestHouse);
   expect(errors).toEqual([]);
+});
+
+/* THE WAY ROUND STANDS STILL while the house changes: the name under the
+   count used to wrap on "Qimu & Musicians" and push the button below it
+   down, and a shorter name narrowed the column. */
+test("the way round does not move as the house changes", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await page.mouse.move(4, 4);
+  const at = async () => ({
+    up: await page.locator(".sheet-nav-step").first().boundingBox(),
+    down: await page.locator(".sheet-nav-step").last().boundingBox(),
+  });
+  const seen = [];
+  for (const key of ["Home", "ArrowDown", "ArrowDown", "End", "ArrowUp"]) {
+    await page.keyboard.press(key);
+    await page.waitForTimeout(900);
+    seen.push(await at());
+  }
+  seen.forEach((one, i) => {
+    for (const k of ["up", "down"]) {
+      expect(Math.abs(one[k].x - seen[0][k].x), `${k} button, step ${i}`).toBeLessThan(0.5);
+      expect(Math.abs(one[k].y - seen[0][k].y), `${k} button, step ${i}`).toBeLessThan(0.5);
+    }
+  });
+});
+
+/* THE HOUSES EITHER SIDE ARE SMALLER than the front one by more than
+   depth alone — "6 and 8 to be a little smaller" — and a house's line
+   about itself shows only while it is pointed at, the front one's too. */
+test("the houses either side are a little smaller, and a description shows only on hover", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await page.mouse.move(4, 4);
+  await page.keyboard.press("ArrowDown");
+  await page.waitForTimeout(1200);
+  const w = await page.$$eval(".sheet-frame", (all) => all.map((f) => f.getBoundingClientRect().width));
+  expect(w[0] / w[1], "the one before").toBeLessThan(0.8);
+  expect(w[2] / w[1], "the one after").toBeLessThan(0.8);
+  expect(w[0] / w[1], "but not by much").toBeGreaterThan(0.6);
+  const say = page.locator(".sheet-frame").nth(1).locator(".sheet-say");
+  const shown = () => say.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+  expect(await shown(), "the front house's description is not shown on its own").toBeLessThan(0.05);
+  const b = await page.locator(".sheet-frame").nth(1).boundingBox();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 2 });
+  await expect.poll(shown).toBeGreaterThan(0.95);
+});
+
+/* TOMBSTONE WRITES EACH OF ITS FIVE NAMES ONCE — "not at random as it
+   currently is (i dont want duplicate names)" — and none of them behind a
+   house. Read off every word the motifs' canvas is asked to write. */
+test("Tombstone's motifs write each name once, never twice and never behind a house", async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => {
+    window.__written = [];
+    const own = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (text, x, y) {
+      if (this.canvas.classList.contains("sheet-motifs")) window.__written.push({ text: String(text), x: x, y: y });
+      return own.apply(this, arguments);
+    };
+  });
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 7);
+  await page.waitForTimeout(9000);
+  const out = await page.evaluate(() => {
+    const names = ["3 Feet 5", "Evergrow", "No Need to Come By", "Sing at My Funeral", "Sweet Coffin"];
+    // A name is written twice where it stands — its pale cut edge a
+    // pixel off, then the letters — so places within a few pixels of
+    // each other are one place.
+    const places = {};
+    window.__written.filter((w) => names.includes(w.text)).forEach((w) => {
+      places[w.text] = places[w.text] || [];
+      if (!places[w.text].some((p) => Math.abs(p.x - w.x) < 4 && Math.abs(p.y - w.y) < 4)) places[w.text].push(w);
+    });
+    const houses = [...document.querySelectorAll(".sheet-frame")].filter((f) =>
+      f.style.visibility !== "hidden" && parseFloat(f.style.getPropertyValue("--shown") || "0") > 0.1)
+      .map((f) => f.getBoundingClientRect());
+    const behind = window.__written.filter((w) => names.includes(w.text) &&
+      houses.some((r) => w.x > r.left && w.x < r.right && w.y > r.top && w.y < r.bottom)).map((w) => w.text);
+    return { counts: Object.fromEntries(Object.entries(places).map(([k, v]) => [k, v.length])), behind: [...new Set(behind)] };
+  });
+  expect(Object.keys(out.counts).length, `names written: ${JSON.stringify(out.counts)}`).toBeGreaterThanOrEqual(4);
+  Object.entries(out.counts).forEach(([name, n]) => expect(n, `${name} written in ${n} places`).toBe(1));
+  expect(out.behind, "names written behind a house").toEqual([]);
+});
+
+/* QIMU & MUSICIANS KEPT QUIET: "more subtle and way less movement".
+   Read off what the motifs' canvas is asked to draw: nothing in a colour
+   stronger than half its strength, and every note head drawn where it
+   was put — a note that drifted was drawn somewhere new every frame. */
+test("Qimu & Musicians' motifs are faint and their notes stay where they are put", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__heads = [];
+    window.__strongest = 0;
+    window.__watch = false;
+    const P = CanvasRenderingContext2D.prototype;
+    const ellipse = P.ellipse;
+    P.ellipse = function (x, y) {
+      if (window.__watch && this.canvas.classList.contains("sheet-motifs")) window.__heads.push([x, y]);
+      return ellipse.apply(this, arguments);
+    };
+    for (const key of ["fillStyle", "strokeStyle"]) {
+      const d = Object.getOwnPropertyDescriptor(P, key);
+      Object.defineProperty(P, key, {
+        get() { return d.get.call(this); },
+        set(v) {
+          if (window.__watch && this.canvas.classList.contains("sheet-motifs")) {
+            const m = /rgba\([^)]*,\s*([\d.]+)\)$/.exec(String(v));
+            if (m) window.__strongest = Math.max(window.__strongest, parseFloat(m[1]));
+          }
+          d.set.call(this, v);
+        },
+      });
+    }
+  });
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 8);
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => { window.__watch = true; });
+  await page.waitForTimeout(1500);
+  const out = await page.evaluate(() => {
+    window.__watch = false;
+    const places = new Set(window.__heads.map(([x, y]) => x.toFixed(1) + "," + y.toFixed(1)));
+    return { heads: window.__heads.length, places: places.size, strongest: window.__strongest };
+  });
+  expect(out.heads, "notes are drawn").toBeGreaterThan(20);
+  expect(out.strongest, "nothing drawn stronger than half").toBeLessThanOrEqual(0.5);
+  // A few new notes arrive in a second and a half; a drifting note would
+  // add a new place on every frame it is drawn.
+  expect(out.places, `${out.places} places for ${out.heads} heads drawn`).toBeLessThan(out.heads / 5);
 });
 
 /* CROSSING THE WALL SETS NOTHING OFF. The pointer passing over house
@@ -603,7 +748,7 @@ test("the search finds a picture by what it is called", async ({ page }) => {
   const frames = await page.$$eval(".sheet-frame", (els) => els.length);
   expect(dimmed, "everything that doesn't match should step back").toBe(frames - 1);
   await expect(page.locator(".sheet-frame:not(.dimmed) .sheet-caption")).toHaveText(
-    "ADAR the house that you have never heard of"
+    "ADAR The house that you have never heard of"
   );
 
   // Escape clears it and puts the sheet back.

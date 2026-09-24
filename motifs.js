@@ -27,7 +27,8 @@
 // clear of the house being rested on, so its picture is never drawn
 // over.
 //
-// window.HouseMotifs = { start(key, frame), stop(now) }
+// window.HouseMotifs = { start(key, frame, around), stop(now) } — `around`
+// is the boxes of the houses on the page, which writing is kept off.
 // ============================================================
 (function () {
   const stage = document.querySelector(".sheet-stage");
@@ -385,15 +386,41 @@
   // and roots creeping in from the edges of the page with small red
   // flowers opening at their tips — the house's card for Evergrow,
   // "Fade and flourish, forever growing".
+  //
+  // EACH NAME IS CUT ONCE, in the house's own order, and never twice while
+  // the house is rested on — the owner's "the writing of each of the
+  // fragrances once, not at random ... i dont want duplicate names". They
+  // were picked at random for a round, and the same name stood on the
+  // wall twice. `epitaphsLeft` is filled again every time the house is
+  // rested on afresh (see `start`).
   const EPITAPHS = ["3 Feet 5", "Evergrow", "No Need to Come By", "Sing at My Funeral", "Sweet Coffin"];
+  let epitaphsLeft = EPITAPHS.slice();
+  let readAround = [];
   function epitaph() {
-    const words = pick(EPITAPHS);
+    // Never a name that is still on the wall, even fading from a moment
+    // ago when the house was last rested on.
+    const words = epitaphsLeft.find((n) => !things.some((t) => t.words === n));
+    if (!words) return null;
     const big = rand(22, 36);
     const wide = words.length * big * 0.56;
-    const at = spot(Math.max(wide / 2, 30));
-    if (!at || at.x - wide / 2 < 8 || at.x + wide / 2 > W - 8) return null;
+    // A NAME IS KEPT OFF THE HOUSES, although everything else here may
+    // pass behind them: a name half hidden behind a picture has not been
+    // written. `readAround` is the boxes of the houses on the page, handed
+    // in by the page that asked for the motifs.
+    let at = null;
+    for (let i = 0; i < 16 && !at; i++) {
+      const tryAt = spot(Math.max(wide / 2, 30));
+      if (!tryAt || tryAt.x - wide / 2 < 8 || tryAt.x + wide / 2 > W - 8) continue;
+      const box = { left: tryAt.x - wide / 2 - 12, right: tryAt.x + wide / 2 + 12, top: tryAt.y - big, bottom: tryAt.y + big };
+      if (readAround.some((r) => box.left < r.right && box.right > r.left && box.top < r.bottom && box.bottom > r.top)) continue;
+      at = tryAt;
+    }
+    if (!at) return null;
+    // Only taken off the list once it has found somewhere to stand.
+    epitaphsLeft.splice(epitaphsLeft.indexOf(words), 1);
     const rule = Math.random() < 0.6;
     return {
+      words: words,
       life: rand(5200, 7600),
       draw(c, age, a) {
         // Cut in a letter at a time, and worn away evenly at the end.
@@ -496,6 +523,12 @@
   // ephemeral notes to that." A stave is five lines drawn across the
   // page from left to right; notes appear on its lines and in its
   // spaces, a few at a time, sit there for a moment and are gone.
+  //
+  // KEPT QUIET, at the owner's word: "make the effect of qimu and
+  // musicians more subtle and way less movement". Fainter lines drawn
+  // out more slowly, fewer staves and far fewer notes, and the notes
+  // stand still where they are put rather than drifting — each simply
+  // comes and goes.
   const staves = [];
   const GAP = 9;                         // between one line of a stave and the next
   function stave() {
@@ -516,8 +549,8 @@
       y, x0, x1, bars,
       life: rand(8000, 11000),
       draw(c, age, a) {
-        const reach = x0 + (x1 - x0) * ease(age / 1300);
-        c.strokeStyle = "rgba(" + QIMU_BLUE + "," + (0.55 * a) + ")";
+        const reach = x0 + (x1 - x0) * ease(age / 3200);
+        c.strokeStyle = "rgba(" + QIMU_BLUE + "," + (0.32 * a) + ")";
         c.lineWidth = 0.9;
         for (let k = 0; k < 5; k++) {
           c.beginPath();
@@ -535,7 +568,7 @@
           c.stroke();
         });
         if (x0 + 30 < reach) {
-          c.fillStyle = "rgba(" + QIMU_BLUE + "," + (0.7 * a) + ")";
+          c.fillStyle = "rgba(" + QIMU_BLUE + "," + (0.4 * a) + ")";
           c.font = "bold " + Math.round(GAP * 2) + "px Georgia, serif";
           c.textAlign = "center";
           c.textBaseline = "middle";
@@ -558,12 +591,11 @@
     if (!clearOf(x, y, 14)) return null;
     const up = step < 4;
     const kind = pick(["crotchet", "crotchet", "quaver", "minim", "pair"]);
-    const drift = rand(-0.006, -0.002);
     return {
-      life: rand(1500, 3200),
+      life: rand(3600, 5600),
       draw(c, age, a) {
-        const px = x + drift * age;
-        c.fillStyle = c.strokeStyle = "rgba(" + QIMU_BLUE + "," + (0.9 * a) + ")";
+        const px = x;
+        c.fillStyle = c.strokeStyle = "rgba(" + QIMU_BLUE + "," + (0.5 * a) + ")";
         c.lineWidth = 1.2;
         const head = (hx, hy, open) => {
           c.beginPath();
@@ -615,7 +647,7 @@
     "les-abstraits": [{ make: smoke, rate: 1.4, most: 9 }, { make: ember, rate: 12, most: 50 }, { make: ash, rate: 8, most: 50 }],
     tale: [{ make: doodle, rate: 2.6, most: 20 }],
     tombstone: [{ make: epitaph, rate: 0.9, most: 5 }, { make: roots, rate: 1.6, most: 11 }, { make: soil, rate: 6, most: 40 }],
-    qimu: [{ make: stave, rate: 1.2, most: 5 }, { make: note, rate: 9, most: 40 }],
+    qimu: [{ make: stave, rate: 0.6, most: 3 }, { make: note, rate: 2.2, most: 12 }],
   };
 
   // ============================================================
@@ -669,15 +701,22 @@
   }
 
   window.HouseMotifs = {
-    start(key, el) {
+    start(key, el, around) {
       if (REDUCE_MOTION) return;
       house = HOUSES[key] ? key : null;
       // A first handful straight away — each still comes up on its own
       // FADE_IN_MS — so the page is not empty for the first second.
       owed = new Map((HOUSES[key] || []).map((kind) => [kind, Math.min(kind.most, kind.rate * 0.8)]));
+      if (key === "tombstone") epitaphsLeft = EPITAPHS.slice();
+      readAround = around || [];
+      // Handed the house, the motifs keep clear of it; handed nothing,
+      // they have the whole page — which is how the Houses view asks for
+      // them now that they stand BEHIND the houses rather than over them.
       if (el) {
         const r = el.getBoundingClientRect();
         avoid = { left: r.left - CLEAR, right: r.right + CLEAR, top: r.top - CLEAR, bottom: r.bottom + CLEAR };
+      } else {
+        avoid = null;
       }
       // What was still fading from another house keeps fading; this
       // house's own come up among it.
