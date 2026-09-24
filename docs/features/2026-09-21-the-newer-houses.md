@@ -411,3 +411,43 @@ own order`, the shared-shape test run on both, the no-script test, the unwritten
 Tombstone, `Tombstone carries its five, in alphabetical order, with both pictures each`,
 `Qimu & Musicians carries its four, and Guitarist and Drummer say description coming
 soon`, and `the houses are chained one to the next, and the last wraps round`.
+
+> **Since written** — see the section below. The two houses' writing arrived on 2026-09-24,
+> and the tests on it changed with it.
+
+## 2026-09-24 — Tombstone and Qimu & Musicians, written
+
+The owner sent the writing for both houses. It is theirs **verbatim** — including the
+double space in Vocal's "Base  Dry down is still sweeter." — with only the invisible
+left-to-right marks that came with the paste taken out.
+
+- **Tombstone** has its subtitle, *A house that expanded on death*, its introduction, and
+  four of its five fragrances written: Evergrow, No Need to Come By, Sing at My Funeral and
+  Sweet Coffin, each in the stages the owner used. Three things were asked for in so many
+  words:
+  - **selectively linear** in bold (`<strong>`);
+  - the house's own site linked — `https://tombstonefragrances.shop`, opening in a new
+    window like every other link off the site;
+  - "exclusion zone (give the definition if hovered)" in Evergrow. The words in brackets
+    are an instruction, not writing, so they are **not printed**; the term is a
+    `<span class="human-define">` whose `data-define` is shown in a small ink box above
+    it when it is pointed at or focused (a phone gets it by tapping, which focuses it).
+    The definition is written here, not the owner's: *An area closed off to people,
+    usually after a disaster — the zone round Chernobyl is the best-known — where nobody
+    may live and whatever was left behind is taken back by nature.* `.human-define` is in
+    `style.css` beside `.human-quote`, and can be used on any house.
+- **3 Feet 5** has the owner's one paragraph, and under it the dashed box saying *The rest
+  of 3 Feet 5 will be filled in later.* — "add that the rest of the fragrance will be
+  filled in later".
+- **Qimu & Musicians** has its subtitle, *A house of music and fragrance*, an introduction
+  that reads *I will write it later.* (the owner's words, as a paragraph rather than a
+  placeholder box, because that is what they asked to be written there), and **Guitarist**
+  and **Vocal** written in Top / Mid / Dry Down. Drummer still says *Description coming
+  soon.*, and Bassist is still waiting.
+- Both subtitles are also the house's **say** on the Houses view, which had none for
+  either until now.
+
+Tested in `tests/houses.spec.js`: `Tombstone is written, with its bold, its link and a
+definition on hover` — which fails with the definition never shown and with it always
+shown — and `Qimu & Musicians carries its four: two written, one coming soon, one
+waiting`. The unwritten test now runs on Ataraxia alone.

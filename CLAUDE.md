@@ -91,6 +91,7 @@ which talk through five `window` globals; see the landing page's report).
 | `categories/theories.html` | the **structure**: a technical drawing in three dimensions you scroll *into* | `search.js`, `page-search.js`, `structure.js` | [structure](docs/features/2026-09-14-the-structure.md) |
 | `categories/favorites.html` | the **chamber**: two injectors firing particle streams into a tilted **orbit** round the word FAVOURITES, which opens into a menu of **chapters** — and opening one **bursts** into that chapter's own page, black and silver, with arrows either side of its name to step to the next, its favourites opening where they stand, **the sun** standing behind Chapter 1 and **the moon** behind Chapter 2 | `search.js`, `page-search.js`, `notes-data.js`, `notes.js`, `sun.js`, `moon.js`, `chamber.js` | [chamber](docs/features/2026-09-15-the-chamber.md) |
 | `categories/researches.html` | **Explorations &amp; Researches**: an **index** — readings across the top, plates on the right, and a sortable, searchable table in the bottom left, each row saying whether it is a research or an exploration | `search.js`, `index-page.js` | [index and views](docs/features/2026-09-17-the-index-pages-and-views.md) |
+| `categories/note-library.html` | the **Note Library**: every note named in a fragrance on the site, shelved by family and explained — books on **shelves** at night, read through a catalogue **terminal**, each book as thick as the note is used, with a **call number** at its foot, opening into a **catalogue card** that links every fragrance using it | `search.js`, `notes-data.js`, `note-library.js` | [the Note Library](docs/features/2026-09-24-the-note-library.md) |
 | `categories/other-2.html` | **Photography**: the frames in sets, a grid a wide one breaks, numbered down the margin | `search.js`, `page-search.js`, `photography.js` | [photography](docs/features/2026-09-18-the-photography-page.md) |
 | `houses/pineward.html` | **Pineward**, the first house in Scent descriptions: an introduction and 52 compacted parts — one per fragrance, each with its own photograph — in four forest **strata**, with a **wood** grown down both margins, a ticked **trunk**, a faint pine-green ground, and the **gallery** at the foot of it | `search.js`, `pineward.js`, `pineward-gallery.js` | [Pineward](docs/features/2026-09-16-pineward.md), [gallery](docs/features/2026-09-18-the-pineward-gallery.md) |
 | `houses/adar.html` | **ADAR**, the second house: eleven fragrances in four groups, standing on a **void** — a hole in the window that shows the house's mark under the pointer — with a ruled **log** and falling **dust** down the left and a **sounding** down the side | `search.js`, `adar.js` | [ADAR](docs/features/2026-09-17-adar.md) |
@@ -99,8 +100,8 @@ which talk through five `window` globals; see the landing page's report).
 | `houses/grande-parfums.html` | **Grande Parfums**, the fifth house: seventeen fragrances — fifteen written up alphabetically, two at the foot not smelled yet — over a **drift** of fine specks rising slowly up the window, which claims no theme because the owner has not given one | `search.js`, `house.js`, `grande.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `houses/les-abstraits.html` | **Les Abstraits**, the sixth house: four fragrances, written, all four with notes off the house's own page — with a **drawing** of Des Cendres' road standing in its writing, and a **last word** at the foot whose link opens a new window | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `houses/tale-parfums.html` | **Tale Parfums**, the seventh house: four fragrances in alphabetical order, three pictures each, on a page **drawn by hand** — in the site's own face, with pictures pinned on with tape, straight rules, and **doodles** after the house's label drawings down both margins, drawing themselves in and **boiling** under the pointer | `search.js`, `house.js`, `tale.js`, `notes-data.js`, `notes.js` | [Tale Parfums](docs/features/2026-09-23-tale-parfums.md) |
-| `houses/tombstone.html` | **Tombstone**, the eighth house: five fragrances in alphabetical order, two pictures each, named and noted and not yet written | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
-| `houses/qimu-and-musicians.html` | **Qimu & Musicians**, the ninth house: four fragrances, one to a player in a band — two saying "Description coming soon." at the owner's word | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `houses/tombstone.html` | **Tombstone**, the eighth house: five fragrances in alphabetical order, two pictures each, written — all but the rest of 3 Feet 5 — with a **definition** shown on hover in Evergrow | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
+| `houses/qimu-and-musicians.html` | **Qimu & Musicians**, the ninth house: four fragrances, one to a player in a band — Guitarist and Vocal written, Drummer saying "Description coming soon." at the owner's word, Bassist waiting | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the newer houses](docs/features/2026-09-21-the-newer-houses.md) |
 | `individual-fragrances/individual-fragrances.html` | the **individual fragrances**: the ones that belong to no house, each with the house it did come from. What the Fragrances view of Scent descriptions opens into | `search.js`, `house.js`, `notes-data.js`, `notes.js` | [the notes](docs/features/2026-09-21-the-notes.md) |
 | `works/theory-01.html`, `-02`, `works/resins-in-perfumery.html`, `works/cold-vs-warm-incense.html` | the **essay pages**: a long piece of writing on the theories drawing's ground, with a **rule** down the left — one tick per section, filled in as far as you have read | `essay.js` | [essay pages](docs/features/2026-09-17-the-essay-pages.md) |
 | `works/my-personal-introduction-to-perfume.html` | **Explorations 000**, the first result on Explorations &amp; Researches: the owner's guide to perfume on an essay page of its own — **gold** in place of the steel blue, a **mist** of drops rising behind the writing and turning to vapour, and the accords table, the two **pyramids**, a dropdown and footnotes drawn in the page | `essay.js`, `primer.js` | [the primer](docs/features/2026-09-23-my-personal-introduction-to-perfume.md) |
@@ -111,8 +112,8 @@ which talk through five `window` globals; see the landing page's report).
 
 Three of those page scripts are elaborate: `chamber.js` (~3,240 lines), `structure.js`
 (~1,560) and `node-scene.js` (~1,520). The rest are smaller:
-`almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `calculator.js`
-(~780), `motifs.js` (~700), `sun.js` (~620), `contact-sheet.js` (~610, down from ~1,570 when
+`almost-human.js` (~1,170), `pineward.js` (~930), `adar.js` (~890), `note-library.js`
+(~810), `calculator.js` (~780), `motifs.js` (~700), `sun.js` (~620), `contact-sheet.js` (~610, down from ~1,570 when
 the chain replaced the map, and up again as the hang), `paper.js` (~580), `moon.js` (~560),
 `notes.js` (~475), `essay.js`
 (~430), `ataraxia.js` (~385),
@@ -125,14 +126,15 @@ These drift with every round; `wc -l *.js` is the answer, not this paragraph.
 
 **Read the matching report in `docs/features/` before editing one of them.**
 
-**Four pages are drawn on a dark ground**: `categories/theories.html`,
-`houses/adar.html`, `houses/ataraxia.html` and `search.html`. A page on a dark ground must
+**Five pages are drawn on a dark ground**: `categories/theories.html`,
+`categories/note-library.html`, `houses/adar.html`, `houses/ataraxia.html` and
+`search.html`. A page on a dark ground must
 also carry `dark-surface`, or the cursor cannot see it — and it should be added to the
 dark `--chrome-ground` list in `style.css` so its fixed chrome is readable on a phone.
 
 **A page's colour is five tokens, set on its own body class.** `--bg`, `--bg-2`,
-`--line`, `--ink` and `--muted` are redefined under `.find-page`, `.sheet-page` and
-`.ataraxia-page`
+`--line`, `--ink` and `--muted` are redefined under `.find-page`, `.sheet-page`,
+`.library-page` and `.ataraxia-page`
 rather than a second set of rules being written for everything on those pages: every
 rule they use already draws in those tokens, so setting them turns the page over at once
 and touches nothing else. This is worth knowing because it has already been used in both
@@ -158,9 +160,9 @@ dotted leader in a fragrance's row, the rank down the side of a house. Written o
 hand they were the one thing that did NOT follow a page turning its tokens over, which is
 how Ataraxia's rank came out black on dark gray. Keep it and `--ink` the same colour.
 
-Three of the pages replace their own markup with a drawing, and all three hold that
+Four of the pages replace their own markup with a drawing, and all four hold that
 markup back on the way in with the **`js-coming`** class so the plain version is never
-flashed first — see the glossary entry. All three also leave that plain version working
+flashed first — see the glossary entry. All four also leave that plain version working
 when the script is blocked, and there is a test for each.
 
 ## Running it
@@ -199,7 +201,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 292 passed, 0 failed, and takes seven to twelve minutes.** If you get a
+**A clean run is 306 passed, 0 failed, and takes seven to thirteen minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -292,7 +294,7 @@ Two states are easy to forget when reviewing a change:
 - **`prefers-reduced-motion: reduce`** — read by `landing.js`, `paper.js`, `thread.js`,
   `node-scene.js`, `contact-sheet.js`, `motifs.js`, `structure.js`, `chamber.js`, `sun.js`, `moon.js`, `pineward.js`,
   `adar.js`, `almost-human.js`, `ataraxia.js`, `grande.js`, `house.js`, `essay.js`,
-  `calculator.js`, `tale.js`, `primer.js`,
+  `calculator.js`, `tale.js`, `primer.js`, `note-library.js`,
   `index-page.js`, `fragrance-reader.js` and `style.css` (which also turns off every
   house's way in), each degrading to a still
   version. `nav.js` (the cursor), `extras.js` and `views.js` (which only shortens its
@@ -311,6 +313,7 @@ built that way, what was tried and was wrong, how to test it, and anything still
 
 | feature | file | report |
 |---|---|---|
+| The Note Library | `categories/note-library.html`, `note-library.js` | [report](docs/features/2026-09-24-the-note-library.md) |
 | The Houses view as a gallery hang | `contact-sheet.js` | [report](docs/features/2026-09-24-the-hang.md) |
 | Each house's motifs, and every house's way in (and the chain, replaced by the hang) | `motifs.js` | [report](docs/features/2026-09-23-the-chain-and-its-motifs.md) |
 | My Personal Introduction to Perfume | `primer.js` | [report](docs/features/2026-09-23-my-personal-introduction-to-perfume.md) |
@@ -487,6 +490,18 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   row uses it at the moment — the summary plate came off the Note Dissemination card when
   the owner asked for it. A row may also carry **`data-calc`**, an address its card puts
   an `OPEN CALCULATOR` button at its foot for; only `theory-03.html` has one.
+- **A NOTE IN THE NOTE LIBRARY** is one `<article class="lib-record">` in
+  `categories/note-library.html`, in the `<section class="lib-shelf">` of its family, with
+  its explanation in a `<p class="lib-say">`; every other spelling the site uses for the
+  same note goes in its `data-aka`, separated by `|`. **Which fragrances use it is worked
+  out from `notes-data.js`**, so adding notes to a fragrance needs nothing here — unless
+  the note is new, in which case it lands on the **returns cart** at the end of the page
+  and a test fails until it is given a record. A new house wanting its fragrances linked
+  from the library's cards needs a line in `HOUSES` in `note-library.js`; there is a test.
+- **A WORD DEFINED ON HOVER** in a house's writing is
+  `<span class="human-define" tabindex="0" data-define="…">word</span>` — the definition
+  comes up in a small ink box when the word is pointed at or tapped. Evergrow's
+  *exclusion zone* is the one there is.
 - **A NEW PAGE HAS TO BE ADDED TO THE SEARCH'S MANIFEST** — the `PAGES` list at the top
   of `search-page.js`, one line with the trail that says where things found in it live.
   It is the only list of the site's pages anywhere, and the only thing the search needs
@@ -567,7 +582,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the collapse** / **exit** | Leaving the map going 3 → 2. `landing.js` holds the page still, runs `__exit` 0→1 (a shockwave crosses, the map falls into its centre, everything clears to **white**), then `__reform` 0→1 (an ink line draws from the sphere to the top), and only then scrolls. The reforming line stops below the slide-2 sentence, landing on the same point the downward leg leaves from. The sphere left at the end of it does not fade: `node-scene.js` holds `arrival` while `__exit` is set, so it stays solid black and rides the page off the bottom of the screen, and what fades afterwards does so off screen. |
 | **the wake** | Only the specks along a branch now — see **wake / wake speck** below. The paper's arrival going 2 → 3 used to be shaped as a duck's wake (a V trailing back from the middle of the page, `WAKE_HALF_ANGLE`); that was replaced by the top-down wipe described under **curtain**, and neither the V nor `WAKE_HALF_ANGLE` exists in `paper.js` any more. |
 | **the shockwave** | The narrow ring that closes on the centre ahead of the collapse, on its own faster clock (`WAVE_*` in `paper.js`). Distinct from the suction, which pulls everywhere at once. A second ring (`OUTWARD_*`) runs the other way at the same time, shoving the grid outward while everything else pulls in. It is **on** — `OUTWARD_STRENGTH` is 58; setting it to 0 is how you would remove it. |
-| **the chrome's ground** | The blurred box behind a piece of fixed chrome on a phone, so the page travelling underneath it cannot be read through it. `--chrome-ground` on `:root`, redefined under the five dark page bodies; below 700px it stands behind the **Menu**, the contact sheet's view buttons and search, and the three houses' readings. Nothing above 700px carries one. |
+| **the chrome's ground** | The blurred box behind a piece of fixed chrome on a phone, so the page travelling underneath it cannot be read through it. `--chrome-ground` on `:root`, redefined under the six dark page bodies; below 700px it stands behind the **Menu**, the contact sheet's view buttons and search, and the three houses' readings. Nothing above 700px carries one. |
 | **the menu** | One menu for the whole site, built by `nav.js`: the same dark overlay, fading in the same way, on every page and on all three slides of the landing page. It briefly opened three different ways on the landing page (`mode-title` / `mode-side` / `mode-map`, in a `menu-modes.js` since deleted); "uniform" is the state the owner asked for and none of that is in the code any more. |
 | **rank** / **ridge** | One of the copies of the chromatogram trace standing behind the front line, higher up the page and fainter, so the reading recedes like hills. `RIDGE_*` in `extras.js`. |
 | **suction** | The even, proportional inward pull `paper.js` applies to the whole grid during the collapse, on top of the per-node dimples — what makes the grid implode rather than just dimple near the middle. |
@@ -596,7 +611,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **rib** / **rail** | The frame you travel through: ribs across the way at fixed depths, rails running the length of it between their corners. |
 | **the spine** | The ruler drawn along the floor of the frame to the vanishing point, ticked at every whole depth. It is also the **wheel**: dragging it writes the page's own scroll, and pressing it goes on to the next station. |
 | **the opening** / **setting up** | What the theories drawing does when the page loads: the rails shoot out to the vanishing point, the ribs come up out of the depth towards you, the rule writes itself along the floor, the air fills and the corner sights snap in last. `INTRO_*` and `built` in `structure.js`; the chrome arrives with it on the `lit` class. |
-| **js-coming** | The class a page puts on `<html>` in its own `<head>` while the script that replaces its contents is on its way, so the plain fallback is never flashed first. Carried by `theories.html`, `scent-descriptions.html` and `favorites.html`; each script clears it once it has laid itself out, and `window.load` clears it if the script never arrives. |
+| **js-coming** | The class a page puts on `<html>` in its own `<head>` while the script that replaces its contents is on its way, so the plain fallback is never flashed first. Carried by `theories.html`, `scent-descriptions.html`, `favorites.html` and `note-library.html`; each script clears it once it has laid itself out, and `window.load` clears it if the script never arrives. |
 | **the breath** | The structure's own slow creep: the eye drifts a little way in and back out again on a fixed cycle (`CREEP`, `CREEP_EVERY`), so the page is never quite still but the scroll is always the whole of where you are. |
 | **carriage** | The gantry that runs down the frame towards you on its own clock, lighting each rib as it passes. |
 | **traverse** | One of the streaks that run across the frame — the mechanical version of a falling star. |
@@ -630,8 +645,8 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the drawing** (Des Cendres) | The ink drawing standing in Des Cendres' writing — the road, the pines, the gated yards, the fire and its smoke — which the owner asked for in the writing itself (*"claude, maybe try to generate a picture of this"*). `images/Les-Abstraits/des-cendres-road.svg`, `.human-scene`. Generated, not photographed, and credited as drawn for the page. |
 | **the last word** | A paragraph at the very foot of a house, after the fragrances and before the credit — `.human-after`. Les Abstraits' is the only one: it sends the reader to Antoine Lie's own paragraph, in a **new window**, as the owner asked in capitals. |
 | **Tale Parfums** | The seventh house: `houses/tale-parfums.html`, in the frame on the sheet that was the first empty one — the owner's **placeholder 7**. Four fragrances in alphabetical order: Bad Lily, Fleurt, Rouse, Water Me. The house styles itself *TALE Parfum*; the page uses the owner's name for it. |
-| **Tombstone** | The eighth house: `houses/tombstone.html`. Five fragrances in alphabetical order — 3 Feet 5, Evergrow, No Need to Come By, Sing at My Funeral, Sweet Coffin — named, noted and pictured, **not written**. The owner's picture calls the first *3 Foot 5*; the page uses the house's name. |
-| **Qimu & Musicians** | The ninth house: `houses/qimu-and-musicians.html`. Four fragrances, one to a player in a band — Guitarist, Vocal, Bassist, Drummer, in the order the owner numbered them. Guitarist and Drummer say **Description coming soon.**, the owner's own words; Vocal and Bassist are still to be written. Only Vocal's notes could be checked. |
+| **Tombstone** | The eighth house: `houses/tombstone.html`. Five fragrances in alphabetical order — 3 Feet 5, Evergrow, No Need to Come By, Sing at My Funeral, Sweet Coffin — named, noted, pictured and, since 2026-09-24, **written**, with *A house that expanded on death* under its name; 3 Feet 5 has one paragraph and says the rest will be filled in later. The owner's picture calls the first *3 Foot 5*; the page uses the house's name. |
+| **Qimu & Musicians** | The ninth house: `houses/qimu-and-musicians.html`. Four fragrances, one to a player in a band — Guitarist, Vocal, Bassist, Drummer, in the order the owner numbered them. *A house of music and fragrance*. Guitarist and Vocal are written (2026-09-24); Drummer says **Description coming soon.**, the owner's own words; Bassist is still to be written, and the introduction says *I will write it later.* Only Vocal's notes could be checked. |
 | **the emblems** (Tale) | The four drawings off Tale's labels — the lily with an **eye**, the heart in a **sweet** on a stick, the **rose**, the **sprout** in its pot — which the owner called *"the pictures that come with the number 2"*. The small squares in that house's list, and what `tale.js` draws again in a pen line. The lily is the house's mark and stands at the head. |
 | **the doodles** | Tale's ground: the emblems and the small things a person doodles in a margin (stars, a moon, drops, a sun, a heart, a swirl, a cloud, a sparkle, a flower, a leaf), drawn in a wobbling line down both margins and never over the writing. They **draw themselves in** the first time they are seen. None on a window without margins. `tale.js`. |
 | **the boil** | What a doodle does under the pointer: it is redrawn every 140ms, each time slightly differently — how a drawing moves in hand-drawn animation. Away from the pointer it is perfectly still. `BOIL_*` in `tale.js`. |
@@ -662,9 +677,19 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **index** | The way `categories/researches.html` is laid out: readings across the top, plates on the right, and a sortable, searchable table in the bottom left corner. `index-page.js`. The contact sheet's **Fragrances** view is built from the same markup and script but laid out again for itself — one centred column, the table given the room — under `body.view-fragrances`. The copyright line that used to sit under the board is gone from both. |
 | **the board** | That table and the search above it, taken together (`.index-board`). It scrolls inside its own box so the page around it does not grow. |
 | **the search page** | `search.html`: the one place that looks over the whole site. One field ruled across a dark ground of drifting specks, a row of filters under it, and the answers as rows carrying a number, a name, what kind of thing it is and the **trail**. |
+| **the Note Library** | `categories/note-library.html`: every note named in a fragrance on the site — 558 spellings as 346 **records** on 16 **shelves** — each with a brief explanation, stood up as books by `note-library.js`. In the menu above Photography, not on the map. |
+| **record** (library) | One note in the Note Library: an `<article class="lib-record">` with its name, the other spellings folded into it (`data-aka`), and what it is (`.lib-say`). Stood up as a **book**. |
+| **shelf** (library) | One family of notes in the Note Library — Citrus, Woods, Impressions and so on — with a three-letter **code** (`CIT`, `WOO`, `IMP`), a colour of its own, and its books standing on boards that wrap across the page. |
+| **book** / **spine** (library) | A record as it stands on its shelf: as thick as the number of fragrances that use it, as tall as its own (seeded), its name down the spine, and a **call number** at its foot. The last on each shelf **leans**. Pressing one **pulls it out** and opens its card. |
+| **call number** | A book's shelf code and its place on the shelf, counted alphabetically — `WOO 007`. Worked out, not written, and unchanged when the books are reordered by use. |
+| **the terminal** (library) | The `query>` field over the Note Library: books that answer light up, the rest go dim, empty shelves fold away. It reads names, other spellings, and what a note is said to be ("smoky"). |
+| **the catalogue card** | What pressing a book opens beside the stacks: call number, shelf, explanation, other spellings, and **Found in** — a bar per house and every fragrance using the note, linked to its part. (Not the theories page's **card**.) |
+| **the returns cart** | The shelf the Note Library puts at its end for any note `notes-data.js` names that no record carries. Empty, and a test keeps it so. |
+| **the lamp** / **the dust** (library) | The Note Library's room: a soft light following the pointer over the stacks, and specks in the air brighter near it. |
+| **a definition on hover** | `.human-define`: a word in a house's writing whose definition comes up in a small box when it is pointed at or tapped. Evergrow's *exclusion zone*, at the owner's word. |
 | **the plan** (search) | **Removed.** The squared ground behind the search page, first in CSS and then drawn. The owner asked for the grid gone and for the specks to carry the page on their own. Nothing of it is in `find-ground.js` now. |
 | **the specks** (search) | The field of flecks hung across the whole search page, drifting about their own places, webbed to their near neighbours, gathering towards the field and brightening while something is being typed. They are the whole of that page's ground. |
-| **the filters** (search) | The row of words under the search field — All, Houses, Fragrances, Researches, Favourites, Pieces, Sections — narrowing the answers to one kind, each carrying the number it would give. The kinds are the ones `search.js` already puts on an entry, so there is no second list of the site's categories anywhere. |
+| **the filters** (search) | The row of words under the search field — All, Houses, Fragrances, Researches, Favourites, Pieces, Sections, Notes — narrowing the answers to one kind, each carrying the number it would give. The kinds are the ones `search.js` already puts on an entry, so there is no second list of the site's categories anywhere. |
 | **the trail** | Where a thing lives, said as a path: *Scent descriptions · Houses · Pineward*. Every answer a search gives carries one. |
 | **a page's own search** | The small mark in the top right of a page that opens into a field and looks over THAT PAGE only. What it cannot answer it hands to the search page. |
 | **the trace** | **Removed** with the contact sheet (2026-09-23). What joined two pictures on it: one straight hairline broken into even dashes, minimal and measured. It replaced the run, the rails, the rungs, the knots and the tufts, all in one round, when the owner asked for the connections to be reworked "minimal, futuristic, and interesting". |
@@ -815,9 +840,9 @@ worth knowing before touching anything shared:
   owner has still not said what it is; Les Abstraits has its names, its notes and — since
   2026-09-23 — its writing, and no drawing of its own; Tale Parfums has its writing, its
   pictures and its hand-drawn page and **no notes yet**, because its own site could not be
-  read to take them from; Tombstone has its names, notes and pictures and **no writing**,
-  and Qimu & Musicians has two fragrances saying "Description coming soon.", two waiting,
-  and notes for only one. **Named is not written**, and since 2026-09-22 the site has
+  read to take them from; Tombstone is written but for the rest of 3 Feet 5, and has no
+  ground of its own; and Qimu & Musicians has Guitarist and Vocal written, Drummer saying
+  "Description coming soon.", Bassist and the introduction waiting, and notes for only one. **Named is not written**, and since 2026-09-22 the site has
   houses in that state — the test that used to conflate them now keeps them apart. What
   each is waiting for is in [their
   report](docs/features/2026-09-21-the-newer-houses.md).

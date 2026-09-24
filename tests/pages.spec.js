@@ -21,6 +21,7 @@ const PAGES = [
   { url: "/categories/favorites.html", root: "../", title: /Favourites/ },
   { url: "/categories/researches.html", root: "../", title: /Explorations/ },
   { url: "/categories/other-2.html", root: "../", title: /Photography/ },
+  { url: "/categories/note-library.html", root: "../", title: /Note Library/ },
   { url: "/works/example-gallery-work.html", root: "../", title: /Vetiver/ },
   { url: "/works/example-article-work.html", root: "../", title: /vetiver/ },
   // ADAR names the photograph it wants for each fragrance and works

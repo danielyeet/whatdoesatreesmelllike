@@ -325,28 +325,52 @@ test("resting on a house brings its motifs after a moment, and blurs the rest",
 });
 
 /* CROSSING THE WALL SETS NOTHING OFF. The pointer passing over house
-   after house on its way somewhere else must not start any of them. */
+   after house on its way somewhere else must not start any of them.
+
+   HOW LONG THE POINTER WAS ACTUALLY ON EACH HOUSE IS MEASURED IN THE
+   PAGE, not assumed. This test used to sweep and then ask only whether
+   anything had been set off at all — and on a busy machine the sweep
+   itself sometimes stayed on a house for more than the 200ms wait, so
+   the page did exactly what it should and the test failed. It could
+   not tell a slow sweep from a page that sets houses off too soon. Now
+   every visit is timed from its pointerenter to its pointerleave, and
+   the rule is: a visit shorter than the wait never sets anything off.
+   A visit longer than it may, because that is a rest. The sweep has to
+   produce enough short visits for that to mean something. */
 test("passing over the houses does not set their motifs off", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
   await page.evaluate(() => {
-    window.__mused = false;
+    const sheet = document.getElementById("sheet");
+    window.__visits = [];
+    let open = null;
+    document.querySelectorAll(".sheet-frame").forEach((frame, i) => {
+      frame.addEventListener("pointerenter", () => {
+        open = { i: i, from: performance.now(), to: null, mused: false };
+        window.__visits.push(open);
+      });
+      frame.addEventListener("pointerleave", () => { if (open && open.i === i) { open.to = performance.now(); open = null; } });
+    });
     new MutationObserver(() => {
-      if (document.getElementById("sheet").classList.contains("musing")) window.__mused = true;
-    }).observe(document.getElementById("sheet"), { attributes: true });
+      if (sheet.classList.contains("musing") && open) open.mused = true;
+    }).observe(sheet, { attributes: true });
   });
   const boxes = await page.$$eval(".sheet-frame", (all) => all.map((f) => {
     const r = f.getBoundingClientRect();
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   }));
   await page.mouse.move(boxes[0].x - 150, boxes[0].y);
-  for (const b of boxes) {
-    await page.mouse.move(b.x, b.y, { steps: 2 });
-    await page.waitForTimeout(40);
-  }
-  await page.mouse.move(boxes[8].x, boxes[8].y + 400, { steps: 2 });
+  for (const b of boxes) await page.mouse.move(b.x, b.y);
+  await page.mouse.move(boxes[8].x, boxes[8].y + 400);
   await page.waitForTimeout(700);
-  expect(await page.evaluate(() => window.__mused), "no house should have been set off").toBe(false);
+  const visits = await page.evaluate(() => window.__visits.map((v) => ({
+    house: v.i + 1, long: v.to === null ? Infinity : Math.round(v.to - v.from), mused: v.mused,
+  })));
+  const short = visits.filter((v) => v.long < 180);
+  expect(short.length, `the sweep should cross most houses quickly: ${JSON.stringify(visits)}`)
+    .toBeGreaterThanOrEqual(5);
+  expect(short.filter((v) => v.mused), "no house passed over quickly should have been set off").toEqual([]);
+  expect(await page.locator("#sheet.musing").count(), "and nothing is left set off").toBe(0);
 });
 
 /* THEY FADE, THEY DO NOT VANISH. "when you unhover, the motifs fade

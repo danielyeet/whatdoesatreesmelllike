@@ -180,6 +180,22 @@
       });
     });
 
+    // A note in the Note Library. Every other spelling folded into it
+    // is searched too, so "Iris" finds Orris.
+    doc.querySelectorAll(".lib-record[id]").forEach((record) => {
+      const shelf = record.closest(".lib-shelf");
+      const plate = shelf && shelf.querySelector(".lib-shelf-name");
+      const code = plate && plate.querySelector(".lib-shelf-code");
+      const shelfName = plate ? words(plate).replace(code ? words(code) : "", "").trim() : "";
+      add({
+        name: words(record.querySelector(".lib-name")),
+        aka: (record.dataset.aka || "").split("|").filter(Boolean),
+        kind: "Note",
+        where: trail.concat(shelfName ? [shelfName] : []),
+        href: at("#" + record.id),
+      });
+    });
+
     // A section of a long piece.
     doc.querySelectorAll(".essay-section").forEach((section) => {
       const head = section.querySelector("h2");
@@ -207,7 +223,8 @@
     const seen = new Set();
     return entries
       .map((entry) => {
-        const own = score(query, entry.name);
+        let own = score(query, entry.name);
+        (entry.aka || []).forEach((other) => { own = Math.max(own, score(query, other) * 0.97); });
         if (own) return { entry: entry, score: own };
         const trail = (entry.where || []).join(" ");
         const near = trail ? score(query, trail) * 0.45 : 0;

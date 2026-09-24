@@ -32,6 +32,7 @@ const PAGES = [
   "/categories/favorites.html",
   "/categories/researches.html",
   "/categories/other-2.html",
+  "/categories/note-library.html",
   "/houses/pineward.html",
   "/houses/adar.html",
   "/houses/almost-human.html",

@@ -230,6 +230,7 @@ body.adar-page,
 body.ataraxia-page,
 body.essay-page,
 body.find-page,
+body.library-page,
 body.chapter-open { --chrome-ground: rgba(11, 12, 15, 0.62); }
 
 @media (max-width: 700px) {
@@ -6861,6 +6862,39 @@ html.photo-viewing, html.photo-viewing body { overflow: hidden; }
    Exquise quotes Fragrantica on where its materials come from. Set in
    from the writing with a rule, in the page's muted ink, so it reads as
    somebody else's words; the line under it says whose. */
+/* A WORD THAT CARRIES ITS DEFINITION, shown when it is pointed at or
+   reached by the keyboard — the owner's "give the definition if hovered",
+   for "exclusion zone" in Tombstone's Evergrow. Underlined in dots, the
+   way a word with more to say is marked, and the definition stands in a
+   small box above it. */
+.human-define {
+  position: relative;
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+}
+.human-define::after {
+  content: attr(data-define);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  width: min(300px, 76vw);
+  transform: translate(-50%, 4px);
+  padding: 9px 11px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  text-align: left;
+  color: var(--bg);
+  background: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s var(--menu-ease), transform 0.22s var(--menu-ease);
+  z-index: 5;
+}
+.human-define:hover::after,
+.human-define:focus::after { opacity: 1; transform: translate(-50%, 0); }
+.human-define:focus { outline: none; }
+
 .human-quote {
   margin: 4px 0 20px;
   padding: 2px 0 2px 18px;
@@ -8743,4 +8777,592 @@ body.human-page:not(.tale-page) > .human-head {
   body.pineward-page > .pine-head,
   body.adar-page > .adar-head,
   body.human-page:not(.tale-page) > .human-head { animation: none; }
+}
+
+/* ==================================================================
+   THE NOTE LIBRARY — categories/note-library.html, note-library.js
+
+   A library at night, read through a catalogue terminal. The page's
+   markup is the catalogue, and without the script it is laid out as a
+   plain list (the first block below). With it, every record is a BOOK
+   standing on its shelf (everything under body.lib-built).
+
+   THE PAGE'S COLOUR IS THE FIVE TOKENS, as on every dark page, and
+   one accent of its own — the terminal's phosphor, `--lib-glow` —
+   spent on the terminal, the tabs, a book that answers a search, and
+   the card. The books take their tint from their shelf (`--hue`, set
+   by the script) and are only tinted: they are dark first.
+   ================================================================== */
+.library-page {
+  --bg: #0c0f12;
+  --bg-2: #13171b;
+  --line: #262d33;
+  --ink: #e3e8e4;
+  --ink-rgb: 227, 232, 228;
+  --muted: #89938e;
+  --lib-glow: #9cf0cb;
+  --lib-glow-rgb: 156, 240, 203;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+html.js-coming body.library-page .library { visibility: hidden; }
+
+.library {
+  position: relative;
+  z-index: 1;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 108px 44px 140px;
+}
+.lib-kicker {
+  margin: 0 0 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--lib-glow);
+}
+.lib-title {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: clamp(44px, 7vw, 84px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+.lib-lede {
+  max-width: 560px;
+  margin: 18px 0 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* THE PLAIN CATALOGUE — what the page is without its script. */
+.lib-shelf { margin: 56px 0 0; }
+.lib-shelf-name { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+.lib-shelf-code {
+  margin-right: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--lib-glow);
+}
+.lib-shelf-say { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+.lib-record { padding: 12px 0; border-top: 1px solid var(--line); }
+.lib-name { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+.lib-say { margin: 0; max-width: 680px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+/* ------------------------------------------------------------------
+   THE READOUT, THE TERMINAL AND THE INDEX
+   ------------------------------------------------------------------ */
+.lib-readout {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 44px 0 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.lib-readout > div { padding: 14px 18px 16px; border-left: 1px solid var(--line); }
+.lib-readout > div:first-child { border-left: none; padding-left: 0; }
+.lib-readout dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lib-readout dd {
+  margin: 6px 0 0;
+  font-family: var(--mono);
+  font-size: 34px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.lib-desk { margin: 34px 0 0; }
+.lib-terminal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 18px;
+  border: 1px solid rgba(var(--lib-glow-rgb), 0.34);
+  background:
+    repeating-linear-gradient(to bottom, rgba(var(--lib-glow-rgb), 0.025) 0 1px, transparent 1px 3px),
+    rgba(6, 9, 11, 0.82);
+  box-shadow: inset 0 0 38px -16px rgba(var(--lib-glow-rgb), 0.45), 0 0 0 4px rgba(var(--lib-glow-rgb), 0.04);
+  font-family: var(--mono);
+}
+.lib-prompt {
+  flex: none;
+  font-size: 14px;
+  color: var(--lib-glow);
+  text-shadow: 0 0 10px rgba(var(--lib-glow-rgb), 0.55);
+}
+.lib-query {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 15px;
+  caret-color: var(--lib-glow);
+}
+.lib-query::placeholder { color: rgba(var(--ink-rgb), 0.3); }
+.lib-query::-webkit-search-cancel-button { filter: invert(1) opacity(0.5); }
+.lib-count {
+  flex: none;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.lib-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 0;
+}
+.lib-order { display: flex; gap: 0; border: 1px solid var(--line); }
+.lib-order-by,
+.lib-random,
+.lib-tab,
+.lib-card-step,
+.lib-card-close {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.25s, border-color 0.25s, background 0.25s;
+}
+.lib-order-by { padding: 7px 12px; text-transform: uppercase; }
+.lib-order-by + .lib-order-by { border-left: 1px solid var(--line); }
+.lib-order-by.is-on { color: var(--bg); background: var(--lib-glow); }
+.lib-random {
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  text-transform: uppercase;
+}
+.lib-random:hover, .lib-order-by:not(.is-on):hover { color: var(--ink); border-color: rgba(var(--lib-glow-rgb), 0.5); }
+.lib-nothing { margin: 16px 0 0; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.lib-nothing[hidden] { display: none; }
+.lib-nothing a { color: var(--lib-glow); }
+
+.lib-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 30px 0 0;
+}
+.lib-tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 9px 6px 8px;
+  border: 1px solid var(--line);
+}
+.lib-tab::before {
+  content: "";
+  align-self: center;
+  width: 6px;
+  height: 6px;
+  background: hsl(var(--hue, 150) 45% 58%);
+  opacity: 0.8;
+}
+.lib-tab[data-shelf=""]::before { background: var(--lib-glow); }
+.lib-tab small { font-size: 9px; color: rgba(var(--ink-rgb), 0.38); }
+.lib-tab:hover { color: var(--ink); border-color: rgba(var(--ink-rgb), 0.3); }
+.lib-tab.is-on {
+  color: var(--ink);
+  border-color: rgba(var(--lib-glow-rgb), 0.7);
+  box-shadow: inset 0 0 14px -6px rgba(var(--lib-glow-rgb), 0.6);
+}
+
+/* ------------------------------------------------------------------
+   THE STACKS
+   ------------------------------------------------------------------ */
+.lib-stacks { margin: 22px 0 0; }
+body.lib-built .lib-shelf {
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+  gap: 32px;
+  margin: 0;
+  padding: 38px 0 26px;
+  border-top: 1px solid var(--line);
+}
+body.lib-built .lib-shelf.is-away { display: none; }
+body.lib-built .lib-plate { align-self: start; position: sticky; top: 84px; }
+body.lib-built .lib-shelf-code {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 30px;
+  letter-spacing: 0.06em;
+  color: hsl(var(--hue) 55% 72%);
+  text-shadow: 0 0 18px hsl(var(--hue) 70% 50% / 0.45);
+}
+body.lib-built .lib-shelf-name { font-size: 17px; }
+body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.5; }
+.lib-shelf-count {
+  margin: 12px 0 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--ink-rgb), 0.4);
+}
+
+/* THE SHELF: every row of books stands exactly `--row` high — each
+   book is pushed down by what it is short of that — so the boards can
+   be ruled under the rows by a background alone, however many rows the
+   width makes. */
+body.lib-built .lib-records {
+  --row: 196px;
+  --gap: 34px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  column-gap: 3px;
+  row-gap: var(--gap);
+  padding: 0 10px 18px;
+  background:
+    linear-gradient(to bottom,
+      transparent var(--row),
+      #2c3238 var(--row),
+      #3a4148 calc(var(--row) + 1px),
+      #1d2227 calc(var(--row) + 6px),
+      rgba(0, 0, 0, 0.55) calc(var(--row) + 6px),
+      transparent calc(var(--row) + 18px))
+    0 0 / 100% calc(var(--row) + var(--gap)) repeat-y;
+}
+body.lib-built .lib-record {
+  position: relative;
+  flex: none;
+  width: var(--w);
+  height: var(--h);
+  margin-top: calc(var(--row) - var(--h));
+  padding: 0;
+  border: none;
+  border-radius: 2px 2px 1px 1px;
+  color: hsl(var(--hue) 30% 84%);
+  background: linear-gradient(90deg,
+    hsl(var(--hue) 20% calc(9% + var(--tone))) 0%,
+    hsl(var(--hue) 25% calc(19% + var(--tone))) 36%,
+    hsl(var(--hue) 22% calc(14% + var(--tone))) 72%,
+    hsl(var(--hue) 20% calc(8% + var(--tone))) 100%);
+  box-shadow: inset 0 0 0 1px hsl(var(--hue) 40% 62% / 0.13), 0 1px 0 rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.38s, opacity 0.4s, filter 0.4s;
+}
+body.lib-built .lib-record .lib-name {
+  position: absolute;
+  top: 22px;
+  left: 0;
+  right: 0;
+  bottom: 42px;
+  margin: 0;
+  writing-mode: vertical-rl;
+  line-height: var(--w);
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.lib-built .lib-record .lib-say { display: none; }
+.lib-bands {
+  position: absolute;
+  top: calc(6px + var(--band) * 3px);
+  left: 0;
+  right: 0;
+  height: 5px;
+  border-top: 1px solid hsl(var(--hue) 55% 64% / 0.5);
+  border-bottom: 1px solid hsl(var(--hue) 55% 64% / 0.5);
+}
+.lib-call {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 0 2px;
+  border-radius: 1px;
+  background: #e6e8e1;
+  color: #15181a;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  overflow: hidden;
+}
+.lib-call b, .lib-call i { font-weight: 500; font-style: normal; }
+
+/* A book leaning against the one before it at the end of a shelf. */
+body.lib-built .lib-record.lib-leans {
+  margin-left: calc(var(--h) * 0.13);
+  transform-origin: 0 100%;
+  transform: rotate(-7.5deg);
+}
+
+body.lib-built .lib-record:hover,
+body.lib-built .lib-record:focus-visible {
+  transform: translateY(-12px);
+  box-shadow: inset 0 0 0 1px hsl(var(--hue) 60% 70% / 0.4), 0 14px 26px -10px hsl(var(--hue) 70% 50% / 0.55);
+}
+body.lib-built .lib-record.lib-leans:hover,
+body.lib-built .lib-record.lib-leans:focus-visible { transform: rotate(-7.5deg) translateY(-12px); }
+body.lib-built .lib-record:focus-visible { outline: 1px solid var(--lib-glow); outline-offset: 3px; }
+
+/* A book that answers the terminal, and one that does not. */
+body.lib-built .lib-record.is-hit {
+  box-shadow: inset 0 0 0 1px rgba(var(--lib-glow-rgb), 0.85), 0 0 22px -4px rgba(var(--lib-glow-rgb), 0.6);
+}
+body.lib-built .lib-record.is-hit::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  background: var(--lib-glow);
+  box-shadow: 0 0 8px var(--lib-glow);
+}
+body.lib-built .lib-record.is-dim { opacity: 0.13; filter: saturate(0.2); }
+
+/* THE BOOK THAT IS OUT: pulled off the shelf while its card is open,
+   with a scan passing over it. */
+body.lib-built .lib-record.is-out,
+body.lib-built .lib-record.lib-leans.is-out {
+  transform: translateY(-30px);
+  box-shadow: inset 0 0 0 1px rgba(var(--lib-glow-rgb), 0.9), 0 0 30px -2px rgba(var(--lib-glow-rgb), 0.55), 0 22px 30px -12px rgba(0, 0, 0, 0.9);
+  z-index: 2;
+}
+body.lib-built .lib-record.is-out::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(var(--lib-glow-rgb), 0.35) 50%, transparent 100%) 0 0 / 100% 40% no-repeat;
+  animation: lib-read 1.8s linear infinite;
+  pointer-events: none;
+}
+@keyframes lib-read { from { background-position: 0 -60%; } to { background-position: 0 160%; } }
+
+/* THE ARRIVAL: shelf by shelf, book by book. */
+@keyframes lib-shelve { from { opacity: 0; transform: translateY(-34px); } }
+body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--in) backwards; }
+
+/* THE SLIP naming a book in full */
+.lib-slip {
+  position: absolute;
+  z-index: 15;
+  top: 0;
+  left: 0;
+  max-width: 260px;
+  padding: 7px 10px 8px;
+  border: 1px solid hsl(var(--hue, 150) 45% 60% / 0.5);
+  background: rgba(8, 11, 13, 0.94);
+  font-family: var(--mono);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 22px));
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.lib-slip.is-on { opacity: 1; }
+.lib-slip b { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink); }
+.lib-slip small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: 0.08em; color: var(--muted); }
+
+/* ------------------------------------------------------------------
+   THE ROOM
+   ------------------------------------------------------------------ */
+.lib-ground {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.lib-lamp {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  background: radial-gradient(300px circle at var(--lx, -999px) var(--ly, -999px), rgba(255, 234, 196, 0.1), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+.lib-lamp.is-on { opacity: 1; }
+.lib-scan {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 90px;
+  z-index: 11;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(var(--lib-glow-rgb), 0.018) 80%, rgba(var(--lib-glow-rgb), 0.085) 99%, transparent);
+  mix-blend-mode: screen;
+  animation: lib-scan 13s linear infinite;
+}
+@keyframes lib-scan {
+  0% { transform: translateY(-150px); }
+  38% { transform: translateY(100vh); }
+  100% { transform: translateY(100vh); }
+}
+
+/* ------------------------------------------------------------------
+   THE CARD — a catalogue card, ruled like one, standing beside the
+   stacks. Not a dialog: the stacks stay in reach, and pressing another
+   book turns the card over to it.
+   ------------------------------------------------------------------ */
+.lib-card {
+  position: fixed;
+  top: 74px;
+  right: 24px;
+  bottom: 24px;
+  z-index: 20;
+  width: min(410px, calc(100vw - 36px));
+  overflow-y: auto;
+  padding: 20px 24px 26px;
+  border: 1px solid hsl(var(--hue, 150) 45% 60% / 0.45);
+  border-top: 3px solid hsl(var(--hue, 150) 55% 62%);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 27px, rgba(var(--ink-rgb), 0.035) 27px 28px),
+    rgba(9, 12, 14, 0.985);
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.85), inset 0 0 50px -30px hsl(var(--hue, 150) 70% 55% / 0.5);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.lib-card[hidden] { display: none; }
+.lib-card.is-in { animation: lib-card-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1); }
+@keyframes lib-card-in { from { opacity: 0; transform: translateX(26px); } }
+.lib-card-top { display: flex; justify-content: space-between; align-items: center; }
+.lib-card-call {
+  padding: 4px 8px;
+  border: 1px solid rgba(var(--lib-glow-rgb), 0.55);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--lib-glow);
+  text-shadow: 0 0 10px rgba(var(--lib-glow-rgb), 0.5);
+}
+.lib-card-close { font-size: 22px; line-height: 1; padding: 2px 6px; }
+.lib-card-close:hover { color: var(--ink); }
+.lib-card-shelf {
+  margin: 18px 0 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(var(--hue, 150) 45% 66%);
+}
+.lib-card-name {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  outline: none;
+}
+.lib-card-say { min-height: 3em; margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink); }
+.lib-card h3 {
+  margin: 22px 0 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lib-card-aka[hidden], .lib-card-found[hidden], .lib-card-step[hidden] { display: none; }
+.lib-card-aka ul { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.7; color: rgba(var(--ink-rgb), 0.8); }
+.lib-card-aka li { display: inline; }
+.lib-card-aka li + li::before { content: " · "; color: var(--muted); }
+.lib-circ {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 22px;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: rgba(var(--ink-rgb), 0.75);
+  padding: 2px 0;
+}
+.lib-circ i { display: block; height: 3px; background: rgba(var(--ink-rgb), 0.1); }
+.lib-circ b { display: block; height: 100%; background: hsl(var(--hue, 150) 55% 62%); box-shadow: 0 0 8px hsl(var(--hue, 150) 70% 55% / 0.6); }
+.lib-circ small { text-align: right; color: var(--muted); font-size: 11px; }
+.lib-card-list { margin-top: 14px; }
+.lib-found-house { margin: 12px 0 0; }
+.lib-found-house > p {
+  margin: 0 0 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--hue, 150) 40% 66%);
+}
+.lib-found-house ul { margin: 0; padding: 0; list-style: none; }
+.lib-found-house a {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(var(--ink-rgb), 0.06);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+}
+.lib-found-house a:hover .lib-found-name { color: var(--lib-glow); }
+.lib-found-no { flex: none; width: 22px; font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 2px; }
+.lib-found-name { transition: color 0.2s; }
+.lib-card-steps { display: flex; justify-content: space-between; gap: 10px; margin: 26px 0 0; }
+.lib-card-step { padding: 6px 0; text-align: left; }
+.lib-card-step[data-step="1"] { margin-left: auto; text-align: right; }
+.lib-card-step:hover { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  body.lib-arriving .lib-record,
+  .lib-card.is-in,
+  body.lib-built .lib-record.is-out::after { animation: none; }
+  .lib-scan { display: none; }
+}
+
+@media (max-width: 700px) {
+  .library { padding: 84px 16px 110px; }
+  .lib-readout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lib-readout > div:nth-child(3) { border-left: none; padding-left: 0; }
+  .lib-readout > div:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  .lib-readout dd { font-size: 26px; }
+  .lib-terminal { flex-wrap: wrap; padding: 12px 14px; }
+  .lib-count { width: 100%; }
+  body.lib-built .lib-shelf { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  body.lib-built .lib-plate { position: static; }
+  body.lib-built .lib-records { padding: 0 4px 18px; }
+  .lib-card {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-height: 70vh;
+  }
+  .lib-slip { display: none; }
 }

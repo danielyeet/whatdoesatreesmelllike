@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Note Library — The Taste of Aldehydes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<script>
+  /* Hold the plain catalogue back while note-library.js is on its way,
+     so the page does not show every record as a long list and then
+     sweep it away into the stacks. It undoes itself if the script never
+     arrives, and the plain catalogue is then the page. */
+  document.documentElement.classList.add("js-coming");
+  var ready = function () {
+    document.documentElement.classList.remove("js-coming");
+  };
+  window.addEventListener("load", ready);
+  setTimeout(ready, 4000);
+</script>
+</head>
+<!--
+  THE NOTE LIBRARY — every note named in a fragrance's notes anywhere on
+  this site, shelved by family, each with a line on what it is.
+
+  THE MARKUP BELOW IS THE CATALOGUE. Every note is one
+  <article class="lib-record">, standing in the <section class="lib-shelf">
+  of its family, in alphabetical order. note-library.js reads these and
+  stands them up as books on shelves; without the script they are simply
+  a list, and the page's search and the site's search both read them
+  from here.
+
+  TO ADD A NOTE: copy one whole <article class="lib-record"> into the
+  shelf it belongs on, give it an id of note- and its name in lower case
+  with hyphens, and write what it is in its <p class="lib-say">.
+
+  TO FOLD ANOTHER SPELLING INTO A NOTE (Tonka Beans into Tonka, Iris
+  into Orris): add it to that record's data-aka, separated by | . A
+  spelling may stand in one record only. Matching ignores case.
+
+  WHICH FRAGRANCES USE A NOTE is not written here. The page works it
+  out from notes-data.js each time it opens, so a note added to a
+  fragrance there is counted here at once. A note named in notes-data.js
+  that has NO record on this page is put on a shelf of its own at the
+  end, the returns cart, until it is given one — and there is a test
+  saying that shelf is empty.
+
+  A SHELF is its three-letter code, its name and one line. The call
+  number on a book (WOO 014) is the shelf's code and the book's place on
+  it, counted alphabetically, so it is worked out rather than written.
+-->
+<body class="library-page dark-surface">
+
+<p class="page-where">Note Library</p>
+
+<main class="library">
+
+  <header class="lib-head">
+    <p class="lib-kicker">Catalogue of notes</p>
+    <h1 class="lib-title">Note Library</h1>
+    <p class="lib-lede">Every note named in a fragrance on this site, shelved by family, each with a brief explanation of what it is.</p>
+  </header>
+
+  <section class="lib-shelf" id="shelf-cit" data-shelf="CIT">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">CIT</span> Citrus</h2>
+      <p class="lib-shelf-say">Peel oils: the brightest, quickest notes, gone first.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-bergamot" data-aka="Bergamot (Ionian Coast)|Bergamot Peel|Electric Bergamot">
+        <h3 class="lib-name">Bergamot</h3>
+        <p class="lib-say">A small, bitter orange grown mostly in Calabria. Its peel oil is bright, floral and a little peppery, and it opens more perfumes than any other note.</p>
+      </article>
+      <article class="lib-record" id="note-bitter-orange">
+        <h3 class="lib-name">Bitter Orange</h3>
+        <p class="lib-say">The Seville orange. Its peel is darker and drier than sweet orange, and the same tree gives neroli and orange blossom.</p>
+      </article>
+      <article class="lib-record" id="note-blood-orange">
+        <h3 class="lib-name">Blood Orange</h3>
+        <p class="lib-say">A red-fleshed orange: orange with a berry-like, slightly jammy tartness.</p>
+      </article>
+      <article class="lib-record" id="note-citron" data-aka="Expressed Citron">
+        <h3 class="lib-name">Citron</h3>
+        <p class="lib-say">The ancient, knobbly ancestor of the lemon, pressed from its thick peel: dry and zesty, less sweet than lemon.</p>
+      </article>
+      <article class="lib-record" id="note-citrus" data-aka="Citruses">
+        <h3 class="lib-name">Citrus</h3>
+        <p class="lib-say">No one fruit named: a mix of peel oils for a bright, sparkling opening.</p>
+      </article>
+      <article class="lib-record" id="note-clementine">
+        <h3 class="lib-name">Clementine</h3>
+        <p class="lib-say">A small, sweet mandarin cross: soft, juicy and hardly bitter at all.</p>
+      </article>
+      <article class="lib-record" id="note-grapefruit" data-aka="White Grapefruit">
+        <h3 class="lib-name">Grapefruit</h3>
+        <p class="lib-say">Tart and faintly bitter-sulphurous; its key molecule (nootkatone) also smells a little of fresh wood.</p>
+      </article>
+      <article class="lib-record" id="note-green-mandarin">
+        <h3 class="lib-name">Green Mandarin</h3>
+        <p class="lib-say">Mandarin picked before it ripens: sharper and leafier than the sweet, candied ripe fruit.</p>
+      </article>
+      <article class="lib-record" id="note-lemon" data-aka="Lemon (Italy)|Lemon Peel|Sicilian Lemon">
+        <h3 class="lib-name">Lemon</h3>
+        <p class="lib-say">Cold-pressed from the peel: sharp, clean and quick to leave.</p>
+      </article>
+      <article class="lib-record" id="note-lime" data-aka="Cold-Pressed Lime|Lime Rind">
+        <h3 class="lib-name">Lime</h3>
+        <p class="lib-say">Greener and more bitter than lemon, with a sherbet fizz. Pressed, it is fresh; distilled, it turns candied.</p>
+      </article>
+      <article class="lib-record" id="note-orange" data-aka="Brazilian Orange">
+        <h3 class="lib-name">Orange</h3>
+        <p class="lib-say">Sweet orange peel: juicy, round and cheerful rather than sharp.</p>
+      </article>
+      <article class="lib-record" id="note-tangerine">
+        <h3 class="lib-name">Tangerine</h3>
+        <p class="lib-say">Close to mandarin: sweet and juicy, with a little tartness.</p>
+      </article>
+      <article class="lib-record" id="note-yuzu" data-aka="Sweet Yuzu">
+        <h3 class="lib-name">Yuzu</h3>
+        <p class="lib-say">A Japanese citrus that smells like grapefruit, mandarin and lime at once, with a floral lift.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-aro" data-shelf="ARO">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">ARO</span> Aromatic &amp; Herbal</h2>
+      <p class="lib-shelf-say">Kitchen and hillside herbs: clean, camphorous, bitter-green.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-artemisia">
+        <h3 class="lib-name">Artemisia</h3>
+        <p class="lib-say">A family of bitter, silvery herbs: dry, green and camphorous, with a medicinal edge.</p>
+      </article>
+      <article class="lib-record" id="note-basil">
+        <h3 class="lib-name">Basil</h3>
+        <p class="lib-say">Sweet, green and touched with anise, like the fresh leaves.</p>
+      </article>
+      <article class="lib-record" id="note-chamomile">
+        <h3 class="lib-name">Chamomile</h3>
+        <p class="lib-say">Apple-like, herbal and hay-sweet, like the tea.</p>
+      </article>
+      <article class="lib-record" id="note-clary-sage" data-aka="Clary Sage Absolute (France)">
+        <h3 class="lib-name">Clary Sage</h3>
+        <p class="lib-say">A sage that smells musky, tea-like and a little boozy, softer and warmer than kitchen sage.</p>
+      </article>
+      <article class="lib-record" id="note-davana" data-aka="Davana Attar">
+        <h3 class="lib-name">Davana</h3>
+        <p class="lib-say">An Indian artemisia that smells fruity, boozy and apricot-like. As an attar it is distilled into a base oil, often sandalwood.</p>
+      </article>
+      <article class="lib-record" id="note-eucalyptus" data-aka="Blue Gum Eucalyptus">
+        <h3 class="lib-name">Eucalyptus</h3>
+        <p class="lib-say">Camphorous and cooling, like a chest rub; blue gum is the classic medicinal species.</p>
+      </article>
+      <article class="lib-record" id="note-herbal-notes">
+        <h3 class="lib-name">Herbal Notes</h3>
+        <p class="lib-say">A general herbal accord: dry, green, a little bitter, with no one herb named.</p>
+      </article>
+      <article class="lib-record" id="note-hops">
+        <h3 class="lib-name">Hops</h3>
+        <p class="lib-say">The flowers that make beer bitter: green, resinous and a little cheesy.</p>
+      </article>
+      <article class="lib-record" id="note-juniper-berry" data-aka="Juniper Berries">
+        <h3 class="lib-name">Juniper Berry</h3>
+        <p class="lib-say">The berry-like cones that flavour gin: resinous, peppery and piney.</p>
+      </article>
+      <article class="lib-record" id="note-lavender" data-aka="Lavender (three natural oils)|Lavender de Provence">
+        <h3 class="lib-name">Lavender</h3>
+        <p class="lib-say">Herbal, clean and slightly camphorous with a floral sweetness; the heart of the fougère. Lavender from Provence is the finer, sweeter kind.</p>
+      </article>
+      <article class="lib-record" id="note-lemon-verbena">
+        <h3 class="lib-name">Lemon Verbena</h3>
+        <p class="lib-say">Intensely lemony leaves with a green, herbal sweetness: citrus without the fruit.</p>
+      </article>
+      <article class="lib-record" id="note-marjoram">
+        <h3 class="lib-name">Marjoram</h3>
+        <p class="lib-say">Soft, warm and herbal; gentler and sweeter than oregano.</p>
+      </article>
+      <article class="lib-record" id="note-mint" data-aka="Peppermint|Spearmint">
+        <h3 class="lib-name">Mint</h3>
+        <p class="lib-say">Cool and sharp. Peppermint is the cold, menthol one and spearmint the sweeter, softer one; both touch the nerve that feels cold, so mint is felt as much as smelled.</p>
+      </article>
+      <article class="lib-record" id="note-myrtle">
+        <h3 class="lib-name">Myrtle</h3>
+        <p class="lib-say">A Mediterranean shrub: fresh and camphorous, somewhere between eucalyptus and bay.</p>
+      </article>
+      <article class="lib-record" id="note-oregano">
+        <h3 class="lib-name">Oregano</h3>
+        <p class="lib-say">Pungent, dry and savoury: the pizza herb.</p>
+      </article>
+      <article class="lib-record" id="note-rosemary">
+        <h3 class="lib-name">Rosemary</h3>
+        <p class="lib-say">Sharp, camphorous and woody-green, like a sprig crushed between the fingers.</p>
+      </article>
+      <article class="lib-record" id="note-sage" data-aka="Salvia Absolute">
+        <h3 class="lib-name">Sage</h3>
+        <p class="lib-say">Common sage (salvia): dry, herbal and a little camphorous.</p>
+      </article>
+      <article class="lib-record" id="note-thyme">
+        <h3 class="lib-name">Thyme</h3>
+        <p class="lib-say">Warm, dry and slightly medicinal, with a spicy herbal bite.</p>
+      </article>
+      <article class="lib-record" id="note-wormwood">
+        <h3 class="lib-name">Wormwood</h3>
+        <p class="lib-say">The artemisia that flavours absinthe: intensely bitter, green and faintly minty.</p>
+      </article>
+      <article class="lib-record" id="note-yarrow">
+        <h3 class="lib-name">Yarrow</h3>
+        <p class="lib-say">A field herb with a bitter, camphorous green smell and a hint of spice.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-grn" data-shelf="GRN">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">GRN</span> Green</h2>
+      <p class="lib-shelf-say">Leaves, stems, grass and hay: the smell of plants rather than flowers.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-crushed-leaves">
+        <h3 class="lib-name">Crushed Leaves</h3>
+        <p class="lib-say">Leaves torn or crushed: a sharp, sappy green.</p>
+      </article>
+      <article class="lib-record" id="note-fig-leaf">
+        <h3 class="lib-name">Fig Leaf</h3>
+        <p class="lib-say">The leaves of the fig tree rather than its fruit: green, milky and faintly coconut.</p>
+      </article>
+      <article class="lib-record" id="note-galbanum">
+        <h3 class="lib-name">Galbanum</h3>
+        <p class="lib-say">A resin from a Persian plant related to fennel: piercingly green, bitter and earthy, like snapping a thick stem. A little goes a very long way.</p>
+      </article>
+      <article class="lib-record" id="note-grass" data-aka="Wild Grass">
+        <h3 class="lib-name">Grass</h3>
+        <p class="lib-say">Freshly cut or wild grass: sappy, green and sunny.</p>
+      </article>
+      <article class="lib-record" id="note-green-notes" data-aka="Green Accord">
+        <h3 class="lib-name">Green Notes</h3>
+        <p class="lib-say">The general smell of cut leaves and stems, with no one plant named.</p>
+      </article>
+      <article class="lib-record" id="note-green-wheat">
+        <h3 class="lib-name">Green Wheat</h3>
+        <p class="lib-say">Unripe wheat in the field: grassy, green and a little milky.</p>
+      </article>
+      <article class="lib-record" id="note-hay" data-aka="Hay Absolute|Hay Bales">
+        <h3 class="lib-name">Hay</h3>
+        <p class="lib-say">Dried grass, sweet and warm. The sweetness is coumarin, the same molecule as in tonka.</p>
+      </article>
+      <article class="lib-record" id="note-ivy" data-aka="Climbing Ivy">
+        <h3 class="lib-name">Ivy</h3>
+        <p class="lib-say">A dark, bitter green, earthier and less sappy than grass.</p>
+      </article>
+      <article class="lib-record" id="note-poplar-bud" data-aka="Poplar Buds|Poplar">
+        <h3 class="lib-name">Poplar Bud</h3>
+        <p class="lib-say">The sticky spring buds of the poplar: resinous, honeyed and green, sold as balm of Gilead.</p>
+      </article>
+      <article class="lib-record" id="note-raspberry-leaf">
+        <h3 class="lib-name">Raspberry Leaf</h3>
+        <p class="lib-say">The soft, hay-like, tea-green leaves of the raspberry cane.</p>
+      </article>
+      <article class="lib-record" id="note-rhubarb">
+        <h3 class="lib-name">Rhubarb</h3>
+        <p class="lib-say">Tart, sappy and green, with a pink sharpness.</p>
+      </article>
+      <article class="lib-record" id="note-sugar-cane">
+        <h3 class="lib-name">Sugar Cane</h3>
+        <p class="lib-say">Grassy, green and sweet, like chewing the raw cane.</p>
+      </article>
+      <article class="lib-record" id="note-sweet-vernalgrass">
+        <h3 class="lib-name">Sweet Vernalgrass</h3>
+        <p class="lib-say">A meadow grass whose coumarin gives fresh-cut hay its sweetness.</p>
+      </article>
+      <article class="lib-record" id="note-sweetgrass" data-aka="Bison Grass">
+        <h3 class="lib-name">Sweetgrass</h3>
+        <p class="lib-say">A prairie grass that smells of vanilla and hay, from coumarin. As bison grass it flavours Polish vodka.</p>
+      </article>
+      <article class="lib-record" id="note-tomato-leaf">
+        <h3 class="lib-name">Tomato Leaf</h3>
+        <p class="lib-say">The sharp, pungent green that tomato plants leave on your fingers.</p>
+      </article>
+      <article class="lib-record" id="note-violet-leaf">
+        <h3 class="lib-name">Violet Leaf</h3>
+        <p class="lib-say">Cucumber-green and metallic-watery, nothing like the violet flower.</p>
+      </article>
+      <article class="lib-record" id="note-watercress">
+        <h3 class="lib-name">Watercress</h3>
+        <p class="lib-say">Peppery, wet and green, like the salad leaf.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-flo" data-shelf="FLO">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">FLO</span> Floral</h2>
+      <p class="lib-shelf-say">Petals and blossoms, real and reconstructed.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-alpine-sandwort">
+        <h3 class="lib-name">Alpine Sandwort</h3>
+        <p class="lib-say">A small white flower of mountain scree. It names a clean, cool, high-meadow impression rather than an oil.</p>
+      </article>
+      <article class="lib-record" id="note-azure-bluet">
+        <h3 class="lib-name">Azure Bluet</h3>
+        <p class="lib-say">A tiny pale-blue wildflower. Here it stands for something delicate and airy rather than an extract.</p>
+      </article>
+      <article class="lib-record" id="note-bluebell" data-aka="Bluebell Flowers">
+        <h3 class="lib-name">Bluebell</h3>
+        <p class="lib-say">Green, dewy woodland flowers, close to hyacinth.</p>
+      </article>
+      <article class="lib-record" id="note-carnation">
+        <h3 class="lib-name">Carnation</h3>
+        <p class="lib-say">Spicy and floral, with a clove note running through it.</p>
+      </article>
+      <article class="lib-record" id="note-champaca">
+        <h3 class="lib-name">Champaca</h3>
+        <p class="lib-say">A relative of magnolia from India: rich, tea-like, with an apricot note.</p>
+      </article>
+      <article class="lib-record" id="note-chrysanthemum">
+        <h3 class="lib-name">Chrysanthemum</h3>
+        <p class="lib-say">Bitter-green, herbal and earthy: more leaf than petal.</p>
+      </article>
+      <article class="lib-record" id="note-clear-orchid">
+        <h3 class="lib-name">Clear Orchid</h3>
+        <p class="lib-say">An orchid made transparent: an airy floral note rather than a flower oil.</p>
+      </article>
+      <article class="lib-record" id="note-freesia">
+        <h3 class="lib-name">Freesia</h3>
+        <p class="lib-say">Light, peppery and fresh, with a fruity edge.</p>
+      </article>
+      <article class="lib-record" id="note-gardenia">
+        <h3 class="lib-name">Gardenia</h3>
+        <p class="lib-say">A creamy white flower with a green, mushroomy edge. It gives almost no oil, so it is nearly always rebuilt from other materials.</p>
+      </article>
+      <article class="lib-record" id="note-geranium" data-aka="Geranium (Morocco)">
+        <h3 class="lib-name">Geranium</h3>
+        <p class="lib-say">Rosy, green and a little minty. The leaves give a rose smell at a fraction of rose&#x27;s price.</p>
+      </article>
+      <article class="lib-record" id="note-goldenrod">
+        <h3 class="lib-name">Goldenrod</h3>
+        <p class="lib-say">Yellow late-summer flowers: herbal, honeyed and faintly medicinal.</p>
+      </article>
+      <article class="lib-record" id="note-green-tea-flowers">
+        <h3 class="lib-name">Green Tea Flowers</h3>
+        <p class="lib-say">The blossom of the tea bush: soft, green and faintly honeyed.</p>
+      </article>
+      <article class="lib-record" id="note-heliotrope">
+        <h3 class="lib-name">Heliotrope</h3>
+        <p class="lib-say">Powdery and sweet, smelling of almond, vanilla and cherry pie.</p>
+      </article>
+      <article class="lib-record" id="note-honeysuckle" data-aka="Japanese Honeysuckle">
+        <h3 class="lib-name">Honeysuckle</h3>
+        <p class="lib-say">Nectar-sweet, green and honeyed.</p>
+      </article>
+      <article class="lib-record" id="note-jasmine" data-aka="Jasmine Sambac">
+        <h3 class="lib-name">Jasmine</h3>
+        <p class="lib-say">Heady, sweet and a little animalic (from indole, which also occurs in bodies). Sambac is the Arabian jasmine, greener and fruitier: the jasmine of jasmine tea.</p>
+      </article>
+      <article class="lib-record" id="note-lily">
+        <h3 class="lib-name">Lily</h3>
+        <p class="lib-say">Big lilies: spicy-sweet, with a green stem.</p>
+      </article>
+      <article class="lib-record" id="note-lily-of-the-valley" data-aka="Lily-of-the-Valley">
+        <h3 class="lib-name">Lily of the Valley</h3>
+        <p class="lib-say">Fresh, green, dewy bell-flowers. Nothing can be extracted from them, so the note is always built from molecules.</p>
+      </article>
+      <article class="lib-record" id="note-magnolia">
+        <h3 class="lib-name">Magnolia</h3>
+        <p class="lib-say">Creamy and lemony, a cool, fresh floral.</p>
+      </article>
+      <article class="lib-record" id="note-marigold" data-aka="Marigold EO">
+        <h3 class="lib-name">Marigold</h3>
+        <p class="lib-say">The essential oil of tagetes (Mexican marigold): pungent, fruity-green and a little apple-like.</p>
+      </article>
+      <article class="lib-record" id="note-mimosa">
+        <h3 class="lib-name">Mimosa</h3>
+        <p class="lib-say">Soft yellow blossoms: powdery, with almond and honey.</p>
+      </article>
+      <article class="lib-record" id="note-mountain-wildflowers">
+        <h3 class="lib-name">Mountain Wildflowers</h3>
+        <p class="lib-say">An impression of a high meadow in bloom: light, grassy and floral.</p>
+      </article>
+      <article class="lib-record" id="note-nectar">
+        <h3 class="lib-name">Nectar</h3>
+        <p class="lib-say">The sweet liquid inside a flower: honeyed floral sweetness.</p>
+      </article>
+      <article class="lib-record" id="note-neroli" data-aka="Neroli Blossom">
+        <h3 class="lib-name">Neroli</h3>
+        <p class="lib-say">Distilled from the same flowers as orange blossom: fresher, greener and more citrusy.</p>
+      </article>
+      <article class="lib-record" id="note-orange-blossom">
+        <h3 class="lib-name">Orange Blossom</h3>
+        <p class="lib-say">The flower of the bitter orange, extracted: honeyed, sweet and heady, richer than neroli.</p>
+      </article>
+      <article class="lib-record" id="note-orris" data-aka="Orris Root|Iris|Iris Butter|Iris Pallida">
+        <h3 class="lib-name">Orris</h3>
+        <p class="lib-say">What perfume calls iris comes from the root, aged for years before it is extracted: powdery, cool, earthy and buttery, with a violet edge. Orris butter is among the costliest materials in perfumery.</p>
+      </article>
+      <article class="lib-record" id="note-osmanthus" data-aka="Leathery Osmanthus">
+        <h3 class="lib-name">Osmanthus</h3>
+        <p class="lib-say">A tiny Chinese flower that smells of apricot, leather and tea.</p>
+      </article>
+      <article class="lib-record" id="note-passionflower" data-aka="Passion Flower">
+        <h3 class="lib-name">Passionflower</h3>
+        <p class="lib-say">The flower of the passion-fruit vine: light and green-floral, usually built as an accord.</p>
+      </article>
+      <article class="lib-record" id="note-plum-blossom">
+        <h3 class="lib-name">Plum Blossom</h3>
+        <p class="lib-say">Delicate, almondy and faintly fruity.</p>
+      </article>
+      <article class="lib-record" id="note-pollen">
+        <h3 class="lib-name">Pollen</h3>
+        <p class="lib-say">Dusty, honeyed and a little powdery.</p>
+      </article>
+      <article class="lib-record" id="note-rose" data-aka="Red Rose|White Rose|Rose Absolute|Rose de Mai|Rose Petals|Moroccan Rose|Taif Rose|Bulgarian Rose Absolute|Turkish Rose Absolute">
+        <h3 class="lib-name">Rose</h3>
+        <p class="lib-say">The queen of florals: honeyed, fruity and a little spicy. Rose de Mai from Grasse is honeyed and fresh; Damask rose from Bulgaria or Turkey is rich and fruity; Taif rose from Saudi Arabia is spicy and intense. An absolute is extracted with solvents and is richer than the distilled oil.</p>
+      </article>
+      <article class="lib-record" id="note-snowdrops">
+        <h3 class="lib-name">Snowdrops</h3>
+        <p class="lib-say">Delicate early-spring flowers: green, honeyed and cold.</p>
+      </article>
+      <article class="lib-record" id="note-tiare-flower">
+        <h3 class="lib-name">Tiare Flower</h3>
+        <p class="lib-say">The Tahitian gardenia, steeped in coconut oil for monoï: creamy and tropical.</p>
+      </article>
+      <article class="lib-record" id="note-tobacco-flower">
+        <h3 class="lib-name">Tobacco Flower</h3>
+        <p class="lib-say">The flower of the tobacco plant, which opens at night: sweet, heavy and white-floral, not smoky.</p>
+      </article>
+      <article class="lib-record" id="note-tuberose">
+        <h3 class="lib-name">Tuberose</h3>
+        <p class="lib-say">A creamy, buttery, narcotic white flower, almost rubbery up close.</p>
+      </article>
+      <article class="lib-record" id="note-violet">
+        <h3 class="lib-name">Violet</h3>
+        <p class="lib-say">Sweet, powdery and candy-like, from ionones, the same molecules found in orris.</p>
+      </article>
+      <article class="lib-record" id="note-waterlily">
+        <h3 class="lib-name">Waterlily</h3>
+        <p class="lib-say">A watery, lightly fresh floral.</p>
+      </article>
+      <article class="lib-record" id="note-white-lotus">
+        <h3 class="lib-name">White Lotus</h3>
+        <p class="lib-say">Aquatic, soft and powdery-sweet.</p>
+      </article>
+      <article class="lib-record" id="note-yellow-flowers">
+        <h3 class="lib-name">Yellow Flowers</h3>
+        <p class="lib-say">A general sunny floral: honeyed and bright, with no one flower named.</p>
+      </article>
+      <article class="lib-record" id="note-ylang-ylang" data-aka="Ylang-Ylang">
+        <h3 class="lib-name">Ylang Ylang</h3>
+        <p class="lib-say">A tropical yellow flower: creamy, sweet like banana, with a little spice.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-fru" data-shelf="FRU">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">FRU</span> Fruit</h2>
+      <p class="lib-shelf-say">Flesh, juice and jam.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-apple" data-aka="Fresh Red Apple">
+        <h3 class="lib-name">Apple</h3>
+        <p class="lib-say">Crisp, juicy apple: green apple is sharp and tart, red apple sweeter and rounder. Apples give no oil, so it is always rebuilt from other materials.</p>
+      </article>
+      <article class="lib-record" id="note-apricot" data-aka="Apricot Preserve">
+        <h3 class="lib-name">Apricot</h3>
+        <p class="lib-say">Soft, velvety stone fruit close to peach, jammy when preserved.</p>
+      </article>
+      <article class="lib-record" id="note-banana">
+        <h3 class="lib-name">Banana</h3>
+        <p class="lib-say">Sweet and creamy, with a slightly green, pear-drop edge.</p>
+      </article>
+      <article class="lib-record" id="note-blackberry" data-aka="Blackberry Jam">
+        <h3 class="lib-name">Blackberry</h3>
+        <p class="lib-say">A dark, tart berry, jammy when cooked.</p>
+      </article>
+      <article class="lib-record" id="note-blueberry">
+        <h3 class="lib-name">Blueberry</h3>
+        <p class="lib-say">Soft, sweet-tart and a little powdery.</p>
+      </article>
+      <article class="lib-record" id="note-cassis">
+        <h3 class="lib-name">Cassis</h3>
+        <p class="lib-say">Blackcurrant: fruity and tart, with a pungent green edge from the buds.</p>
+      </article>
+      <article class="lib-record" id="note-cherry" data-aka="Black Cherry|Cherry Compote|Cherry Jam">
+        <h3 class="lib-name">Cherry</h3>
+        <p class="lib-say">Red, sweet and almondy (the almond is benzaldehyde, which cherries share). Black cherry is darker and deeper.</p>
+      </article>
+      <article class="lib-record" id="note-cranberry">
+        <h3 class="lib-name">Cranberry</h3>
+        <p class="lib-say">Tart, bright and red.</p>
+      </article>
+      <article class="lib-record" id="note-dates">
+        <h3 class="lib-name">Dates</h3>
+        <p class="lib-say">Sticky, caramel-sweet dried fruit.</p>
+      </article>
+      <article class="lib-record" id="note-dried-fruits" data-aka="Raisin|Raisins">
+        <h3 class="lib-name">Dried Fruits</h3>
+        <p class="lib-say">The concentrated, jammy sweetness of dried fruit: raisin, fig, prune.</p>
+      </article>
+      <article class="lib-record" id="note-fig">
+        <h3 class="lib-name">Fig</h3>
+        <p class="lib-say">The fruit: soft, milky and jammy-sweet.</p>
+      </article>
+      <article class="lib-record" id="note-goldenberry" data-aka="Golden Berry">
+        <h3 class="lib-name">Goldenberry</h3>
+        <p class="lib-say">The Cape gooseberry: tart and tropical, a little like a sweet tomato.</p>
+      </article>
+      <article class="lib-record" id="note-green-apple">
+        <h3 class="lib-name">Green Apple</h3>
+        <p class="lib-say">Sharper and more tart than red apple, with a green snap.</p>
+      </article>
+      <article class="lib-record" id="note-guava">
+        <h3 class="lib-name">Guava</h3>
+        <p class="lib-say">Tropical and sweet, with a musky, green edge.</p>
+      </article>
+      <article class="lib-record" id="note-japanese-plum" data-aka="Japanese Loquat">
+        <h3 class="lib-name">Japanese Plum</h3>
+        <p class="lib-say">The loquat: sweet, apricot- and plum-like, with a floral edge.</p>
+      </article>
+      <article class="lib-record" id="note-litchi">
+        <h3 class="lib-name">Litchi</h3>
+        <p class="lib-say">Lychee: rosy, juicy and sweet.</p>
+      </article>
+      <article class="lib-record" id="note-mango" data-aka="Baby Green Mango">
+        <h3 class="lib-name">Mango</h3>
+        <p class="lib-say">Juicy and tropical, a little resinous. Green mango is sharper and more resinous still.</p>
+      </article>
+      <article class="lib-record" id="note-maninka">
+        <h3 class="lib-name">Maninka</h3>
+        <p class="lib-say">The fruit of a West African savannah tree: rendered in perfume as a juicy, nectar-sweet tropical fruit.</p>
+      </article>
+      <article class="lib-record" id="note-passionfruit">
+        <h3 class="lib-name">Passionfruit</h3>
+        <p class="lib-say">Maracuja: sharp, sweet-sour and tropical.</p>
+      </article>
+      <article class="lib-record" id="note-peach">
+        <h3 class="lib-name">Peach</h3>
+        <p class="lib-say">Soft, velvety and sweet, with a creamy skin note.</p>
+      </article>
+      <article class="lib-record" id="note-pear">
+        <h3 class="lib-name">Pear</h3>
+        <p class="lib-say">Juicy, watery and sweet.</p>
+      </article>
+      <article class="lib-record" id="note-plum" data-aka="Plum Tree">
+        <h3 class="lib-name">Plum</h3>
+        <p class="lib-say">Dark, juicy and sweet-tart, with a slightly almond stone.</p>
+      </article>
+      <article class="lib-record" id="note-quince">
+        <h3 class="lib-name">Quince</h3>
+        <p class="lib-say">A hard, fragrant fruit between apple and pear, with a floral, honeyed perfume.</p>
+      </article>
+      <article class="lib-record" id="note-raspberry">
+        <h3 class="lib-name">Raspberry</h3>
+        <p class="lib-say">Bright and tart, with a violet-like sweetness.</p>
+      </article>
+      <article class="lib-record" id="note-red-berries">
+        <h3 class="lib-name">Red Berries</h3>
+        <p class="lib-say">A general accord of red berries: tart, bright and sweet.</p>
+      </article>
+      <article class="lib-record" id="note-scorched-pineapple">
+        <h3 class="lib-name">Scorched Pineapple</h3>
+        <p class="lib-say">Pineapple charred until it caramelises: smoky, sweet and tropical.</p>
+      </article>
+      <article class="lib-record" id="note-strawberry">
+        <h3 class="lib-name">Strawberry</h3>
+        <p class="lib-say">Sweet, jammy and red.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-spi" data-shelf="SPI">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">SPI</span> Spice</h2>
+      <p class="lib-shelf-say">Seeds, barks, roots and peppers: heat, warmth and bite.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-allspice">
+        <h3 class="lib-name">Allspice</h3>
+        <p class="lib-say">One dried berry that smells like clove, cinnamon and nutmeg together.</p>
+      </article>
+      <article class="lib-record" id="note-anise">
+        <h3 class="lib-name">Anise</h3>
+        <p class="lib-say">Sweet licorice, as in aniseed and pastis.</p>
+      </article>
+      <article class="lib-record" id="note-black-pepper" data-aka="Pepper">
+        <h3 class="lib-name">Black Pepper</h3>
+        <p class="lib-say">Dry, peppery heat with a fresh, woody lift.</p>
+      </article>
+      <article class="lib-record" id="note-caraway">
+        <h3 class="lib-name">Caraway</h3>
+        <p class="lib-say">The rye-bread seed: warm and earthy, with a hint of anise.</p>
+      </article>
+      <article class="lib-record" id="note-cardamom" data-aka="Guatemalan Cardamom">
+        <h3 class="lib-name">Cardamom</h3>
+        <p class="lib-say">Fresh, citrusy and camphorous, with a warm spice underneath.</p>
+      </article>
+      <article class="lib-record" id="note-chilli" data-aka="Red Chilli Pepper|Carolina Reaper">
+        <h3 class="lib-name">Chilli</h3>
+        <p class="lib-say">Hot chilli: more idea than smell, since heat is felt rather than smelled. The Carolina Reaper is among the hottest chillies grown.</p>
+      </article>
+      <article class="lib-record" id="note-cinnamon" data-aka="Cinnamon (Ceylon)|Cinnamon Attar">
+        <h3 class="lib-name">Cinnamon</h3>
+        <p class="lib-say">Warm, sweet bark spice. Ceylon cinnamon is the lighter, more delicate kind.</p>
+      </article>
+      <article class="lib-record" id="note-clove" data-aka="Cloves">
+        <h3 class="lib-name">Clove</h3>
+        <p class="lib-say">Hot, sweet and almost medicinal, like the dentist&#x27;s office or mulled wine.</p>
+      </article>
+      <article class="lib-record" id="note-coriander">
+        <h3 class="lib-name">Coriander</h3>
+        <p class="lib-say">The seed: warm, spicy and a little citrusy and floral.</p>
+      </article>
+      <article class="lib-record" id="note-cumin" data-aka="Cumin Seed Oil">
+        <h3 class="lib-name">Cumin</h3>
+        <p class="lib-say">Warm and earthy, with a sweaty, animal side that is hard to miss.</p>
+      </article>
+      <article class="lib-record" id="note-fenugreek">
+        <h3 class="lib-name">Fenugreek</h3>
+        <p class="lib-say">Smells of maple syrup and curry at once.</p>
+      </article>
+      <article class="lib-record" id="note-ginger" data-aka="African Ginger|Fresh Ginger|Ginger Root|Icy Ginger">
+        <h3 class="lib-name">Ginger</h3>
+        <p class="lib-say">Fresh, zesty and warm-spicy. Fresh root is lemony; icy ginger leans cool and sparkling.</p>
+      </article>
+      <article class="lib-record" id="note-nutmeg">
+        <h3 class="lib-name">Nutmeg</h3>
+        <p class="lib-say">Warm, sweet and woody, with a slightly soapy edge.</p>
+      </article>
+      <article class="lib-record" id="note-pink-pepper" data-aka="Baie Rose">
+        <h3 class="lib-name">Pink Pepper</h3>
+        <p class="lib-say">Baie rose: not a true pepper but a berry. Rosy, fresh and lightly peppery.</p>
+      </article>
+      <article class="lib-record" id="note-saffron" data-aka="Indian Saffron">
+        <h3 class="lib-name">Saffron</h3>
+        <p class="lib-say">The dried threads of a crocus: leathery, metallic, honeyed and warm.</p>
+      </article>
+      <article class="lib-record" id="note-spices" data-aka="Spice">
+        <h3 class="lib-name">Spices</h3>
+        <p class="lib-say">A general warm spice accord, with no one spice named.</p>
+      </article>
+      <article class="lib-record" id="note-turmeric">
+        <h3 class="lib-name">Turmeric</h3>
+        <p class="lib-say">Earthy, warm and a little woody-bitter.</p>
+      </article>
+      <article class="lib-record" id="note-wasabi">
+        <h3 class="lib-name">Wasabi</h3>
+        <p class="lib-say">Sharp, nose-clearing heat with a green edge.</p>
+      </article>
+      <article class="lib-record" id="note-water-pepper">
+        <h3 class="lib-name">Water Pepper</h3>
+        <p class="lib-say">A wetland plant (smartweed) with a peppery, green bite.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-gou" data-shelf="GOU">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">GOU</span> Gourmand</h2>
+      <p class="lib-shelf-say">Things you could eat: sweets, grains, nuts, pastry.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-almond" data-aka="Burnt Almond">
+        <h3 class="lib-name">Almond</h3>
+        <p class="lib-say">Sweet and marzipan-like, from benzaldehyde. Burnt almond is toasted and nutty.</p>
+      </article>
+      <article class="lib-record" id="note-baked-apple" data-aka="Apple Tarte Tatin Accord">
+        <h3 class="lib-name">Baked Apple</h3>
+        <p class="lib-say">Apple cooked soft with sugar and spice; a tarte tatin accord caramelises it.</p>
+      </article>
+      <article class="lib-record" id="note-balsamic-vinegar">
+        <h3 class="lib-name">Balsamic Vinegar</h3>
+        <p class="lib-say">Sweet-sour and dark, like reduced grape must.</p>
+      </article>
+      <article class="lib-record" id="note-barley">
+        <h3 class="lib-name">Barley</h3>
+        <p class="lib-say">Toasty, nutty grain.</p>
+      </article>
+      <article class="lib-record" id="note-beeswax" data-aka="Beeswax Absolute">
+        <h3 class="lib-name">Beeswax</h3>
+        <p class="lib-say">Honeyed, waxy and a little animalic, like an old candle.</p>
+      </article>
+      <article class="lib-record" id="note-black-walnut">
+        <h3 class="lib-name">Black Walnut</h3>
+        <p class="lib-say">Walnut hull and wood: bitter, green and a little woody.</p>
+      </article>
+      <article class="lib-record" id="note-bread" data-aka="Acorn Nut Bread">
+        <h3 class="lib-name">Bread</h3>
+        <p class="lib-say">Warm, yeasty crust and crumb.</p>
+      </article>
+      <article class="lib-record" id="note-brown-sugar">
+        <h3 class="lib-name">Brown Sugar</h3>
+        <p class="lib-say">Molasses-rich sugar: deep and warm.</p>
+      </article>
+      <article class="lib-record" id="note-butter">
+        <h3 class="lib-name">Butter</h3>
+        <p class="lib-say">Rich, creamy and a little salty-sweet.</p>
+      </article>
+      <article class="lib-record" id="note-butterscotch">
+        <h3 class="lib-name">Butterscotch</h3>
+        <p class="lib-say">Brown sugar cooked with butter: rich and caramel-sweet.</p>
+      </article>
+      <article class="lib-record" id="note-cacao" data-aka="Cocoa|Dark Cocoa|Hot Cocoa">
+        <h3 class="lib-name">Cacao</h3>
+        <p class="lib-say">The bean before it is chocolate: dry, bitter, earthy and powdery.</p>
+      </article>
+      <article class="lib-record" id="note-cake">
+        <h3 class="lib-name">Cake</h3>
+        <p class="lib-say">Baked sweetness: butter, sugar and warm crumb.</p>
+      </article>
+      <article class="lib-record" id="note-caramel">
+        <h3 class="lib-name">Caramel</h3>
+        <p class="lib-say">Burnt sugar: sweet, rich and slightly bitter.</p>
+      </article>
+      <article class="lib-record" id="note-carob-pods">
+        <h3 class="lib-name">Carob Pods</h3>
+        <p class="lib-say">The pods of the carob tree: sweet and earthy, like a dry, fruity cocoa.</p>
+      </article>
+      <article class="lib-record" id="note-chantilly-cream">
+        <h3 class="lib-name">Chantilly Cream</h3>
+        <p class="lib-say">Sweetened whipped cream, often with vanilla.</p>
+      </article>
+      <article class="lib-record" id="note-chocolate" data-aka="Dark Chocolate|Hazelnut Chocolate|Chocolate Truffle|White Chocolate">
+        <h3 class="lib-name">Chocolate</h3>
+        <p class="lib-say">Cocoa made into chocolate: bitter-sweet, creamy and rich. White chocolate is the cocoa butter with milk and sugar and no cocoa solids.</p>
+      </article>
+      <article class="lib-record" id="note-cocoa-butter" data-aka="Cacao Butter">
+        <h3 class="lib-name">Cocoa Butter</h3>
+        <p class="lib-say">The fat of the cacao bean: soft, creamy and faintly chocolatey.</p>
+      </article>
+      <article class="lib-record" id="note-condensed-milk">
+        <h3 class="lib-name">Condensed Milk</h3>
+        <p class="lib-say">Cooked, sweetened milk: thick and caramel-sweet.</p>
+      </article>
+      <article class="lib-record" id="note-coumarin">
+        <h3 class="lib-name">Coumarin</h3>
+        <p class="lib-say">The molecule behind tonka and hay: sweet, almondy and warm. One of the first synthetics in modern perfumery.</p>
+      </article>
+      <article class="lib-record" id="note-halva">
+        <h3 class="lib-name">Halva</h3>
+        <p class="lib-say">The sesame sweet: nutty, sweet and a little dusty.</p>
+      </article>
+      <article class="lib-record" id="note-hazelnut">
+        <h3 class="lib-name">Hazelnut</h3>
+        <p class="lib-say">Toasted and buttery, as in praline.</p>
+      </article>
+      <article class="lib-record" id="note-holy-bread">
+        <h3 class="lib-name">Holy Bread</h3>
+        <p class="lib-say">Ataraxia&#x27;s sacramental bread: the plain, warm smell of bread, lifted into something ritual.</p>
+      </article>
+      <article class="lib-record" id="note-honey" data-aka="Black Honey|Honey Absolute|Raw Honey">
+        <h3 class="lib-name">Honey</h3>
+        <p class="lib-say">Sweet, waxy and floral, with an animal edge in larger amounts. Black honey is darker and more bitter.</p>
+      </article>
+      <article class="lib-record" id="note-honeycomb">
+        <h3 class="lib-name">Honeycomb</h3>
+        <p class="lib-say">Honey with the wax still in it: waxy, sweet and warm.</p>
+      </article>
+      <article class="lib-record" id="note-icing">
+        <h3 class="lib-name">Icing</h3>
+        <p class="lib-say">Powdered sugar: dry, sweet and powdery.</p>
+      </article>
+      <article class="lib-record" id="note-malt">
+        <h3 class="lib-name">Malt</h3>
+        <p class="lib-say">Sprouted, roasted grain: sweet, bready and a little like beer.</p>
+      </article>
+      <article class="lib-record" id="note-maple">
+        <h3 class="lib-name">Maple</h3>
+        <p class="lib-say">Maple syrup: sweet, woody and caramel.</p>
+      </article>
+      <article class="lib-record" id="note-milk" data-aka="Milk Accord">
+        <h3 class="lib-name">Milk</h3>
+        <p class="lib-say">Soft, creamy and lactonic, sometimes a little sour.</p>
+      </article>
+      <article class="lib-record" id="note-molasses" data-aka="Molasses Distillate">
+        <h3 class="lib-name">Molasses</h3>
+        <p class="lib-say">The dark syrup left when sugar is refined: bitter-sweet and smoky.</p>
+      </article>
+      <article class="lib-record" id="note-murumuru-butter">
+        <h3 class="lib-name">Murumuru Butter</h3>
+        <p class="lib-say">The fat of an Amazonian palm seed: soft, waxy and faintly nutty.</p>
+      </article>
+      <article class="lib-record" id="note-oat" data-aka="Oat Grains|Oatmeal">
+        <h3 class="lib-name">Oat</h3>
+        <p class="lib-say">Soft, milky and cereal-sweet, like porridge.</p>
+      </article>
+      <article class="lib-record" id="note-pistachio">
+        <h3 class="lib-name">Pistachio</h3>
+        <p class="lib-say">Soft, green and nutty-sweet, a little milky.</p>
+      </article>
+      <article class="lib-record" id="note-potato">
+        <h3 class="lib-name">Potato</h3>
+        <p class="lib-say">Earthy, starchy and plain.</p>
+      </article>
+      <article class="lib-record" id="note-raisin-cookies">
+        <h3 class="lib-name">Raisin Cookies</h3>
+        <p class="lib-say">Baked biscuit sweetness with dried fruit in it.</p>
+      </article>
+      <article class="lib-record" id="note-rice">
+        <h3 class="lib-name">Rice</h3>
+        <p class="lib-say">Steamed rice: soft, milky and a little powdery.</p>
+      </article>
+      <article class="lib-record" id="note-seed-cake">
+        <h3 class="lib-name">Seed Cake</h3>
+        <p class="lib-say">A caraway-seeded cake (the one Bilbo offers his dwarves): buttery, warm and a little spicy.</p>
+      </article>
+      <article class="lib-record" id="note-soybean">
+        <h3 class="lib-name">Soybean</h3>
+        <p class="lib-say">Beany, green and nutty.</p>
+      </article>
+      <article class="lib-record" id="note-sugar">
+        <h3 class="lib-name">Sugar</h3>
+        <p class="lib-say">Plain sweetness, sometimes a little burnt.</p>
+      </article>
+      <article class="lib-record" id="note-tobacco" data-aka="Tobacco Absolute|Tobacco Blonde|Blonde Tobacco|Blond Tobacco|White Tobacco|Tobacco Leaf|Soft Tobacco Leaf">
+        <h3 class="lib-name">Tobacco</h3>
+        <p class="lib-say">Cured tobacco leaf: sweet, honeyed, hay-like and warm, not smoke. Blond tobacco is lighter and more honeyed; an absolute is the richest extract.</p>
+      </article>
+      <article class="lib-record" id="note-toffee">
+        <h3 class="lib-name">Toffee</h3>
+        <p class="lib-say">Chewy, dark caramel.</p>
+      </article>
+      <article class="lib-record" id="note-tonka" data-aka="Tonka Bean|Tonka Beans">
+        <h3 class="lib-name">Tonka</h3>
+        <p class="lib-say">The seed of a South American tree. Coumarin gives it a smell of hay, almond, vanilla and tobacco.</p>
+      </article>
+      <article class="lib-record" id="note-vanilla" data-aka="Bourbon Vanilla|Madagascar Vanilla|Vanilla Absolute|Vanilla Caviar|Vanilla Sauce">
+        <h3 class="lib-name">Vanilla</h3>
+        <p class="lib-say">The cured pod of an orchid: sweet, creamy and warm. Bourbon (from Madagascar) is the classic kind; an absolute is the richest extract.</p>
+      </article>
+      <article class="lib-record" id="note-wheat" data-aka="Wheat Absolute|Bran Wheat">
+        <h3 class="lib-name">Wheat</h3>
+        <p class="lib-say">Dry grain and bread flour: warm, hay-like and cereal-sweet.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-brw" data-shelf="BRW">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">BRW</span> Brews &amp; Spirits</h2>
+      <p class="lib-shelf-say">Teas, coffee and what is poured from a bottle.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-absinthe">
+        <h3 class="lib-name">Absinthe</h3>
+        <p class="lib-say">The anise-and-wormwood spirit: green, herbal and licorice-sweet.</p>
+      </article>
+      <article class="lib-record" id="note-amaretto">
+        <h3 class="lib-name">Amaretto</h3>
+        <p class="lib-say">The almond liqueur: sweet, marzipan and boozy.</p>
+      </article>
+      <article class="lib-record" id="note-beer">
+        <h3 class="lib-name">Beer</h3>
+        <p class="lib-say">Malt, hops and yeast: bready and bitter.</p>
+      </article>
+      <article class="lib-record" id="note-coffee" data-aka="Coffee CO2">
+        <h3 class="lib-name">Coffee</h3>
+        <p class="lib-say">Roasted beans: bitter, toasty and warm. Coffee CO2 is extracted with carbon dioxide and smells closer to the fresh bean.</p>
+      </article>
+      <article class="lib-record" id="note-cognac" data-aka="Brandy">
+        <h3 class="lib-name">Cognac</h3>
+        <p class="lib-say">Aged grape brandy: fruity, woody and warm from the cask.</p>
+      </article>
+      <article class="lib-record" id="note-cola">
+        <h3 class="lib-name">Cola</h3>
+        <p class="lib-say">The soft drink: sweet, citrusy and spiced, with vanilla and cinnamon.</p>
+      </article>
+      <article class="lib-record" id="note-green-tea">
+        <h3 class="lib-name">Green Tea</h3>
+        <p class="lib-say">Unoxidised tea: grassy, fresh and faintly bitter.</p>
+      </article>
+      <article class="lib-record" id="note-herbal-tea">
+        <h3 class="lib-name">Herbal Tea</h3>
+        <p class="lib-say">An infusion of herbs: soft, green and warm.</p>
+      </article>
+      <article class="lib-record" id="note-jasmine-tea">
+        <h3 class="lib-name">Jasmine Tea</h3>
+        <p class="lib-say">Green tea scented with jasmine sambac blossoms.</p>
+      </article>
+      <article class="lib-record" id="note-lapsang-souchong" data-aka="Lapsang Souchong Tea">
+        <h3 class="lib-name">Lapsang Souchong</h3>
+        <p class="lib-say">Chinese black tea dried over pine fires: smoky, like a campfire in a cup.</p>
+      </article>
+      <article class="lib-record" id="note-liquor" data-aka="Black Cherry Liquor">
+        <h3 class="lib-name">Liquor</h3>
+        <p class="lib-say">A general boozy note, with no one spirit named.</p>
+      </article>
+      <article class="lib-record" id="note-masala-chai">
+        <h3 class="lib-name">Masala Chai</h3>
+        <p class="lib-say">Black tea brewed with milk and spices: cardamom, ginger, cinnamon, clove.</p>
+      </article>
+      <article class="lib-record" id="note-mate" data-aka="Maté Tea">
+        <h3 class="lib-name">Maté</h3>
+        <p class="lib-say">The South American herbal brew: grassy, smoky and a little like hay.</p>
+      </article>
+      <article class="lib-record" id="note-moroccan-tea" data-aka="Moroccan Tea Absolute">
+        <h3 class="lib-name">Moroccan Tea</h3>
+        <p class="lib-say">Green tea steeped with fresh mint and sugar, as it is poured in Morocco.</p>
+      </article>
+      <article class="lib-record" id="note-oolong-tea">
+        <h3 class="lib-name">Oolong Tea</h3>
+        <p class="lib-say">Half-oxidised tea: floral, toasty and a little fruity.</p>
+      </article>
+      <article class="lib-record" id="note-rum" data-aka="Rhum Agricole">
+        <h3 class="lib-name">Rum</h3>
+        <p class="lib-say">Sugar-cane spirit: sweet, boozy and molasses-dark. Rhum agricole is distilled from fresh cane juice and smells grassier.</p>
+      </article>
+      <article class="lib-record" id="note-soda-bubbles">
+        <h3 class="lib-name">Soda Bubbles</h3>
+        <p class="lib-say">The fizz of soda: sparkling, sweet and light.</p>
+      </article>
+      <article class="lib-record" id="note-sparkling-water">
+        <h3 class="lib-name">Sparkling Water</h3>
+        <p class="lib-say">Carbonated water: a cold, fizzing freshness rather than a smell.</p>
+      </article>
+      <article class="lib-record" id="note-tea" data-aka="Black Tea">
+        <h3 class="lib-name">Tea</h3>
+        <p class="lib-say">Dried tea leaves: dry, astringent and a little smoky-sweet. Black tea is the fully oxidised kind.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-woo" data-shelf="WOO">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">WOO</span> Woods</h2>
+      <p class="lib-shelf-say">Heartwood, bark and sawdust.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-amber-oud">
+        <h3 class="lib-name">Amber Oud</h3>
+        <p class="lib-say">Oud set in a warm, sweet amber accord.</p>
+      </article>
+      <article class="lib-record" id="note-amberwood">
+        <h3 class="lib-name">Amberwood</h3>
+        <p class="lib-say">Modern woody-amber molecules: dry, warm, diffusive and sometimes sharp.</p>
+      </article>
+      <article class="lib-record" id="note-amyris">
+        <h3 class="lib-name">Amyris</h3>
+        <p class="lib-say">West Indian &#x27;sandalwood&#x27;, though unrelated: soft, woody and a little balsamic.</p>
+      </article>
+      <article class="lib-record" id="note-bark">
+        <h3 class="lib-name">Bark</h3>
+        <p class="lib-say">Tree bark: dry, woody and a little bitter.</p>
+      </article>
+      <article class="lib-record" id="note-birch">
+        <h3 class="lib-name">Birch</h3>
+        <p class="lib-say">Birch wood and bark: clean, green and lightly smoky.</p>
+      </article>
+      <article class="lib-record" id="note-cashmeran">
+        <h3 class="lib-name">Cashmeran</h3>
+        <p class="lib-say">A synthetic molecule: soft, musky and woody, like warm cashmere.</p>
+      </article>
+      <article class="lib-record" id="note-cedarwood" data-aka="Cedar|Atlas Cedar|Himalayan Cedar|Cedar Wood Tincture|Cedar Planks|Blood Cedar">
+        <h3 class="lib-name">Cedarwood</h3>
+        <p class="lib-say">Dry, pencil-shaving wood. Atlas cedar is sweeter and more balsamic; Virginia cedar is the pencil. A tincture is wood steeped in alcohol.</p>
+      </article>
+      <article class="lib-record" id="note-cypriol" data-aka="Cypriol Oil or Nagarmotha|Nagarmotha">
+        <h3 class="lib-name">Cypriol</h3>
+        <p class="lib-say">Nagarmotha: the root of a sedge. Smoky, woody and leathery, close to vetiver and oud.</p>
+      </article>
+      <article class="lib-record" id="note-edelwood-oil">
+        <h3 class="lib-name">Edelwood Oil</h3>
+        <p class="lib-say">A wood oil Pineward names in Gristmill, beside cedar planks, sawdust and smouldering logs; the house does not say what tree it comes from.</p>
+      </article>
+      <article class="lib-record" id="note-guaiac-wood" data-aka="Guaiac">
+        <h3 class="lib-name">Guaiac Wood</h3>
+        <p class="lib-say">A South American wood: smoky, sweet and a little like tar and roses.</p>
+      </article>
+      <article class="lib-record" id="note-mahogany">
+        <h3 class="lib-name">Mahogany</h3>
+        <p class="lib-say">A dense, dark red wood: dry and faintly spicy.</p>
+      </article>
+      <article class="lib-record" id="note-moldy-cedarwood">
+        <h3 class="lib-name">Moldy Cedarwood</h3>
+        <p class="lib-say">Cedar gone damp and mouldy: Tombstone&#x27;s Sweet Coffin, the wood of a coffin in wet ground.</p>
+      </article>
+      <article class="lib-record" id="note-oak" data-aka="Oakwood">
+        <h3 class="lib-name">Oak</h3>
+        <p class="lib-say">Dry, tannic wood, like the inside of a barrel.</p>
+      </article>
+      <article class="lib-record" id="note-oud" data-aka="Agarwood (Oud)|Assam Oud|Cambodian Oud|Laotian Oud|Malaysian Oud|Thailand Oud|Vietnamese Oud|Clean Bright Oud|Smoky Oud|Rotting Wood (Oud)">
+        <h3 class="lib-name">Oud</h3>
+        <p class="lib-say">Agarwood: the dark, resin-soaked heartwood of the aquilaria tree, formed when it is infected by a mould. Deep, woody, leathery and animalic, and each region&#x27;s oud smells different: Cambodian sweet and fruity, Indian (Assam) barnyard-heavy, Malaysian and Thai in between.</p>
+      </article>
+      <article class="lib-record" id="note-patchouli" data-aka="Patchouli (Aceh)|Patchouli Aceh|Dark Patchouli">
+        <h3 class="lib-name">Patchouli</h3>
+        <p class="lib-say">The leaves of an Asian mint relative: earthy, damp, dark and a little chocolatey. Aceh, in Indonesia, gives a prized dark kind.</p>
+      </article>
+      <article class="lib-record" id="note-petrified-driftwood">
+        <h3 class="lib-name">Petrified Driftwood</h3>
+        <p class="lib-say">Wood that the sea has worn and time turned to stone: salty, dry and mineral.</p>
+      </article>
+      <article class="lib-record" id="note-pineboard">
+        <h3 class="lib-name">Pineboard</h3>
+        <p class="lib-say">A sawn pine plank: resinous and sweet-woody.</p>
+      </article>
+      <article class="lib-record" id="note-sandalwood" data-aka="Mysore Sandalwood|Australian Sandalwood">
+        <h3 class="lib-name">Sandalwood</h3>
+        <p class="lib-say">Creamy, milky and softly woody. Mysore sandalwood from India is the legendary, now very rare kind; Australian sandalwood is lighter and greener.</p>
+      </article>
+      <article class="lib-record" id="note-sawdust">
+        <h3 class="lib-name">Sawdust</h3>
+        <p class="lib-say">Freshly cut wood: dry, sweet and dusty.</p>
+      </article>
+      <article class="lib-record" id="note-teak-wood">
+        <h3 class="lib-name">Teak Wood</h3>
+        <p class="lib-say">A dense, oily tropical wood: dry, leathery and warm.</p>
+      </article>
+      <article class="lib-record" id="note-vetiver" data-aka="Absolute Vetiver|Bourbon Vetiver|Haitian Vetiver|Vetiver (Haiti)">
+        <h3 class="lib-name">Vetiver</h3>
+        <p class="lib-say">The root of a tropical grass: earthy, smoky, woody and a little nutty. Haitian vetiver is the cleaner kind; Bourbon vetiver, from Réunion, the smokier.</p>
+      </article>
+      <article class="lib-record" id="note-willow-bark">
+        <h3 class="lib-name">Willow Bark</h3>
+        <p class="lib-say">Bitter, green and faintly medicinal: the bark aspirin was first found in.</p>
+      </article>
+      <article class="lib-record" id="note-woody-notes" data-aka="Dry Wood|Dry Woods">
+        <h3 class="lib-name">Woody Notes</h3>
+        <p class="lib-say">A general dry wood accord, with no one tree named.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-con" data-shelf="CON">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">CON</span> Conifers</h2>
+      <p class="lib-shelf-say">Needles, cones and the trees that carry them.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-black-hemlock" data-aka="Black Hemlock Needles">
+        <h3 class="lib-name">Black Hemlock</h3>
+        <p class="lib-say">A mountain hemlock: soft, resinous needles.</p>
+      </article>
+      <article class="lib-record" id="note-cedar-leaf" data-aka="Cedar Leaf (Thuja)">
+        <h3 class="lib-name">Cedar Leaf</h3>
+        <p class="lib-say">Thuja: the leaves of the western red cedar. Sharp, green and camphorous.</p>
+      </article>
+      <article class="lib-record" id="note-cypress" data-aka="Coastal Cypress|Emerald Cypress">
+        <h3 class="lib-name">Cypress</h3>
+        <p class="lib-say">Dry, green and woody, with a smoky, resinous edge.</p>
+      </article>
+      <article class="lib-record" id="note-fir" data-aka="Noble Fir|Silver Fir|Subalpine Fir|Balsam Fir|Fir Balsam|Momi">
+        <h3 class="lib-name">Fir</h3>
+        <p class="lib-say">Soft, sweet and balsamic: the Christmas-tree smell. Balsam fir is the sweetest; silver and noble firs are fresher. Momi is the Japanese fir.</p>
+      </article>
+      <article class="lib-record" id="note-juniper" data-aka="Juniper Needles|Juniper Scales">
+        <h3 class="lib-name">Juniper</h3>
+        <p class="lib-say">The shrubby conifer itself: sharp, dry needles with a gin-like tang.</p>
+      </article>
+      <article class="lib-record" id="note-larch-cones">
+        <h3 class="lib-name">Larch Cones</h3>
+        <p class="lib-say">Small, woody cones: resinous and dry.</p>
+      </article>
+      <article class="lib-record" id="note-nootka">
+        <h3 class="lib-name">Nootka</h3>
+        <p class="lib-say">The Nootka cypress, or Alaska yellow cedar: dry, clean and woody, with a grapefruit note.</p>
+      </article>
+      <article class="lib-record" id="note-pine" data-aka="Pine Tree|Scotch Pine|Mugo Pine">
+        <h3 class="lib-name">Pine</h3>
+        <p class="lib-say">Resinous, sharp and fresh, like a forest after rain. Scotch pine is the classic; mugo is the low mountain pine.</p>
+      </article>
+      <article class="lib-record" id="note-pine-needles" data-aka="Pine Needle|Dried Needles|Frozen Pine Needles|Ponderosa Needles|Ponderosa Pine Needles">
+        <h3 class="lib-name">Pine Needles</h3>
+        <p class="lib-say">The needles themselves: green, sharp and fresh. Dried or frozen, they are drier or colder; ponderosa needles have a vanilla-butterscotch edge.</p>
+      </article>
+      <article class="lib-record" id="note-snoqualmie-forest-evergreens">
+        <h3 class="lib-name">Snoqualmie Forest Evergreens</h3>
+        <p class="lib-say">Pineward&#x27;s name for the conifers of Washington State&#x27;s Snoqualmie forest: damp, green and resinous.</p>
+      </article>
+      <article class="lib-record" id="note-spruce">
+        <h3 class="lib-name">Spruce</h3>
+        <p class="lib-say">Sharp, green and a little citrusy: the smell of spruce tips.</p>
+      </article>
+      <article class="lib-record" id="note-tamarack">
+        <h3 class="lib-name">Tamarack</h3>
+        <p class="lib-say">The American larch: soft, sweet and resinous.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-res" data-shelf="RES">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">RES</span> Resins &amp; Balsams</h2>
+      <p class="lib-shelf-say">What trees weep: incense, amber and balm.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-amber" data-aka="White Amber|Mineral Ambers">
+        <h3 class="lib-name">Amber</h3>
+        <p class="lib-say">Not a material but an accord: labdanum, benzoin and vanilla, warm, sweet and resinous. It has nothing to do with the fossil. White amber is lighter and more musky; mineral ambers are drier.</p>
+      </article>
+      <article class="lib-record" id="note-balsam">
+        <h3 class="lib-name">Balsam</h3>
+        <p class="lib-say">A general balsamic note: warm, sweet, resinous.</p>
+      </article>
+      <article class="lib-record" id="note-benzoin" data-aka="Siam Benzoin|Siam">
+        <h3 class="lib-name">Benzoin</h3>
+        <p class="lib-say">A resin that smells of vanilla, caramel and cinnamon. Siam benzoin, from Laos and Thailand, is the sweetest.</p>
+      </article>
+      <article class="lib-record" id="note-dragon-s-blood" data-aka="Dragon’s Blood Resin">
+        <h3 class="lib-name">Dragon&#x27;s Blood</h3>
+        <p class="lib-say">A deep red resin: sweet, woody and a little powdery.</p>
+      </article>
+      <article class="lib-record" id="note-elemi">
+        <h3 class="lib-name">Elemi</h3>
+        <p class="lib-say">A resin with a lemony, peppery, fresh smell, the lightest of the incenses.</p>
+      </article>
+      <article class="lib-record" id="note-frankincense" data-aka="Olibanum|Olibanum Absolute">
+        <h3 class="lib-name">Frankincense</h3>
+        <p class="lib-say">Olibanum: the resin of a desert tree. Lemony, peppery and smoky, like a church.</p>
+      </article>
+      <article class="lib-record" id="note-incense">
+        <h3 class="lib-name">Incense</h3>
+        <p class="lib-say">The smoke of burning resins: frankincense, myrrh, church and temple.</p>
+      </article>
+      <article class="lib-record" id="note-labdanum" data-aka="Labdanum Absolute|Spanish Labdanum">
+        <h3 class="lib-name">Labdanum</h3>
+        <p class="lib-say">A gum from the rockrose shrub, once combed from the beards of goats: dark, leathery, ambery and animalic. The heart of the amber accord.</p>
+      </article>
+      <article class="lib-record" id="note-myrrh" data-aka="Bitter Myrrh">
+        <h3 class="lib-name">Myrrh</h3>
+        <p class="lib-say">A resin: bitter, medicinal, mushroomy and warm. Sweet myrrh is opoponax.</p>
+      </article>
+      <article class="lib-record" id="note-opoponax" data-aka="Sweet Myrrh">
+        <h3 class="lib-name">Opoponax</h3>
+        <p class="lib-say">Sweet myrrh: warm, sweet, powdery-balsamic, softer than myrrh.</p>
+      </article>
+      <article class="lib-record" id="note-peru-balsam" data-aka="Balsam of Peru">
+        <h3 class="lib-name">Peru Balsam</h3>
+        <p class="lib-say">A balsam that smells of vanilla, cinnamon and warm resin.</p>
+      </article>
+      <article class="lib-record" id="note-ponderosa-resin">
+        <h3 class="lib-name">Ponderosa Resin</h3>
+        <p class="lib-say">The sap of the ponderosa pine: sweet and resinous, with a vanilla note.</p>
+      </article>
+      <article class="lib-record" id="note-propolis">
+        <h3 class="lib-name">Propolis</h3>
+        <p class="lib-say">The resinous glue bees seal their hives with: balsamic, honeyed and medicinal.</p>
+      </article>
+      <article class="lib-record" id="note-resins" data-aka="Resin|Warm Resins|Smoky Resins">
+        <h3 class="lib-name">Resins</h3>
+        <p class="lib-say">A general resinous accord, warm and balmy, with no one resin named.</p>
+      </article>
+      <article class="lib-record" id="note-rum-resin">
+        <h3 class="lib-name">Rum Resin</h3>
+        <p class="lib-say">A resinous note with a sweet, boozy, rum-like warmth.</p>
+      </article>
+      <article class="lib-record" id="note-sandarac" data-aka="Sandarac Resin">
+        <h3 class="lib-name">Sandarac</h3>
+        <p class="lib-say">A resin from a North African cypress, used in old varnishes: dry, resinous and a little fresh.</p>
+      </article>
+      <article class="lib-record" id="note-sawn-resin">
+        <h3 class="lib-name">Sawn Resin</h3>
+        <p class="lib-say">Resin freshly cut through with the wood: sharp, sappy and balsamic.</p>
+      </article>
+      <article class="lib-record" id="note-styrax">
+        <h3 class="lib-name">Styrax</h3>
+        <p class="lib-say">A balsam: leathery, smoky and a little like cinnamon and plastic.</p>
+      </article>
+      <article class="lib-record" id="note-tolu-balsam">
+        <h3 class="lib-name">Tolu Balsam</h3>
+        <p class="lib-say">A balsam, sweeter and lighter than Peru balsam: vanilla and toffee.</p>
+      </article>
+      <article class="lib-record" id="note-turpentine">
+        <h3 class="lib-name">Turpentine</h3>
+        <p class="lib-say">Distilled from pine resin: sharp, solvent-like and piney, the smell of an artist&#x27;s studio.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-ani" data-shelf="ANI">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">ANI</span> Musk, Skin &amp; Animalic</h2>
+      <p class="lib-shelf-say">Musks, leathers and the warmth of bodies.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-ambergris" data-aka="Pacific Ambergris">
+        <h3 class="lib-name">Ambergris</h3>
+        <p class="lib-say">A waxy substance from the sperm whale, aged by the sea for years: salty, sweet, marine and skin-like. Nearly always synthetic now.</p>
+      </article>
+      <article class="lib-record" id="note-ambrette">
+        <h3 class="lib-name">Ambrette</h3>
+        <p class="lib-say">A hibiscus seed that smells musky, pear-like and winey: the plant-world&#x27;s musk.</p>
+      </article>
+      <article class="lib-record" id="note-animal-notes" data-aka="Animal Heat">
+        <h3 class="lib-name">Animal Notes</h3>
+        <p class="lib-say">A general animalic accord: warm, dirty and skin-like.</p>
+      </article>
+      <article class="lib-record" id="note-botanical-musk">
+        <h3 class="lib-name">Botanical Musk</h3>
+        <p class="lib-say">Musk from plants rather than molecules or animals, such as ambrette seed.</p>
+      </article>
+      <article class="lib-record" id="note-castoreum" data-aka="Castoreum Absolute">
+        <h3 class="lib-name">Castoreum</h3>
+        <p class="lib-say">Once taken from the beaver, now reconstructed: leathery, smoky and animal.</p>
+      </article>
+      <article class="lib-record" id="note-civet">
+        <h3 class="lib-name">Civet</h3>
+        <p class="lib-say">Once from the civet cat, now synthetic: faecal on its own, warm and radiant in a trace.</p>
+      </article>
+      <article class="lib-record" id="note-costus">
+        <h3 class="lib-name">Costus</h3>
+        <p class="lib-say">A root whose oil smells like unwashed hair and animal fur: dirty, warm and waxy.</p>
+      </article>
+      <article class="lib-record" id="note-goat-hair" data-aka="Goat Hair Tincture">
+        <h3 class="lib-name">Goat Hair</h3>
+        <p class="lib-say">The smell of goat: warm, sweaty and animal. A tincture is the hair steeped in alcohol, most famously in Haxan.</p>
+      </article>
+      <article class="lib-record" id="note-hyrax">
+        <h3 class="lib-name">Hyrax</h3>
+        <p class="lib-say">Africa stone: the fossilised droppings of the rock hyrax. Animalic, leathery and a little like tobacco.</p>
+      </article>
+      <article class="lib-record" id="note-lanolin">
+        <h3 class="lib-name">Lanolin</h3>
+        <p class="lib-say">The fat of sheep&#x27;s wool: waxy, soft and faintly animal.</p>
+      </article>
+      <article class="lib-record" id="note-leather" data-aka="Leather Accord">
+        <h3 class="lib-name">Leather</h3>
+        <p class="lib-say">Tanned hide: smoky, birch-tarry, a little sweet.</p>
+      </article>
+      <article class="lib-record" id="note-musk" data-aka="White Musk|Deer Musk|Tonkin Musk">
+        <h3 class="lib-name">Musk</h3>
+        <p class="lib-say">Once taken from musk deer, now made from molecules: soft, clean, skin-like warmth. White musk is the laundered, cleanest kind; Tonkin musk names the old deer musk.</p>
+      </article>
+      <article class="lib-record" id="note-sheep-wool">
+        <h3 class="lib-name">Sheep Wool</h3>
+        <p class="lib-say">Warm wool: lanolin, animal and a little sweet.</p>
+      </article>
+      <article class="lib-record" id="note-skin">
+        <h3 class="lib-name">Skin</h3>
+        <p class="lib-say">The warm, slightly salty smell of skin, built from musks.</p>
+      </article>
+      <article class="lib-record" id="note-suede">
+        <h3 class="lib-name">Suede</h3>
+        <p class="lib-say">Soft, powdery leather: lighter and cleaner than leather.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-ear" data-shelf="EAR">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">EAR</span> Earth, Moss &amp; Mineral</h2>
+      <p class="lib-shelf-say">Soil, moss, fungus and stone.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-cedarmoss" data-aka="Cedar Moss Absolute (Morocco)">
+        <h3 class="lib-name">Cedarmoss</h3>
+        <p class="lib-say">Moss from Moroccan cedars: a gentler, woodier cousin of oakmoss.</p>
+      </article>
+      <article class="lib-record" id="note-concrete" data-aka="Wet Concrete">
+        <h3 class="lib-name">Concrete</h3>
+        <p class="lib-say">Cement and dust: dry, chalky and urban; wet, it smells of rain on a pavement.</p>
+      </article>
+      <article class="lib-record" id="note-damp-vegetation">
+        <h3 class="lib-name">Damp Vegetation</h3>
+        <p class="lib-say">Wet leaves and undergrowth: green, rotting-sweet and earthy.</p>
+      </article>
+      <article class="lib-record" id="note-dust">
+        <h3 class="lib-name">Dust</h3>
+        <p class="lib-say">Dry, powdery and a little sweet, like a room nobody has opened.</p>
+      </article>
+      <article class="lib-record" id="note-lichen">
+        <h3 class="lib-name">Lichen</h3>
+        <p class="lib-say">Crusty growths on rock and bark: dry, earthy and mineral.</p>
+      </article>
+      <article class="lib-record" id="note-mineral-accord" data-aka="Mineral Accords">
+        <h3 class="lib-name">Mineral Accord</h3>
+        <p class="lib-say">Stone, chalk and flint: dry, cool and mineral.</p>
+      </article>
+      <article class="lib-record" id="note-moss" data-aka="Dry Moss">
+        <h3 class="lib-name">Moss</h3>
+        <p class="lib-say">Damp green moss on stone and bark.</p>
+      </article>
+      <article class="lib-record" id="note-mushroom" data-aka="Morel Mushroom|Oyster Mushroom">
+        <h3 class="lib-name">Mushroom</h3>
+        <p class="lib-say">Damp, earthy and umami. Morel is nutty and smoky; oyster mushroom is softer.</p>
+      </article>
+      <article class="lib-record" id="note-oakmoss" data-aka="Oakmoss Absolute">
+        <h3 class="lib-name">Oakmoss</h3>
+        <p class="lib-say">A lichen that grows on oaks: damp, earthy, inky and green. The base of the chypre, now limited by safety rules.</p>
+      </article>
+      <article class="lib-record" id="note-peat">
+        <h3 class="lib-name">Peat</h3>
+        <p class="lib-say">Decayed moss: smoky, earthy and damp, as in Islay whisky.</p>
+      </article>
+      <article class="lib-record" id="note-petrichor" data-aka="Petrichor Accord">
+        <h3 class="lib-name">Petrichor</h3>
+        <p class="lib-say">The smell of rain on dry ground: geosmin and the oils stone holds.</p>
+      </article>
+      <article class="lib-record" id="note-sand" data-aka="Sun-Burnt Sand">
+        <h3 class="lib-name">Sand</h3>
+        <p class="lib-say">Warm, dry and mineral; sun-burnt sand is hot and salty.</p>
+      </article>
+      <article class="lib-record" id="note-soil" data-aka="Wet Soil|Dry Earth|Earthy Notes|Soil Tincture|Cracked Ground">
+        <h3 class="lib-name">Soil</h3>
+        <p class="lib-say">Earth: damp, rooty and dark, from geosmin, the molecule of wet earth. A tincture is earth steeped in alcohol.</p>
+      </article>
+      <article class="lib-record" id="note-spikenard" data-aka="Himalayan Nard (Jatamansi)">
+        <h3 class="lib-name">Spikenard</h3>
+        <p class="lib-say">Jatamansi, a Himalayan root: earthy, musty and woody, between valerian, patchouli and old leather.</p>
+      </article>
+      <article class="lib-record" id="note-swamp-water">
+        <h3 class="lib-name">Swamp Water</h3>
+        <p class="lib-say">Still, dark water: green, muddy and a little rotten.</p>
+      </article>
+      <article class="lib-record" id="note-treemoss">
+        <h3 class="lib-name">Treemoss</h3>
+        <p class="lib-say">A lichen from pine and fir: darker, smokier and more resinous than oakmoss.</p>
+      </article>
+      <article class="lib-record" id="note-warm-soil-steam">
+        <h3 class="lib-name">Warm Soil Steam</h3>
+        <p class="lib-say">Soil giving off warm vapour after sun or rain.</p>
+      </article>
+      <article class="lib-record" id="note-wet-stone">
+        <h3 class="lib-name">Wet Stone</h3>
+        <p class="lib-say">Rain on rock: cold, mineral and clean.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-air" data-shelf="AIR">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">AIR</span> Water &amp; Air</h2>
+      <p class="lib-shelf-say">Sea, rain, steam and open sky.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-airy-note">
+        <h3 class="lib-name">Airy Note</h3>
+        <p class="lib-say">A light, diffusive note that gives air and space rather than a smell.</p>
+      </article>
+      <article class="lib-record" id="note-aquatic-notes">
+        <h3 class="lib-name">Aquatic Notes</h3>
+        <p class="lib-say">Clean water, built from molecules such as Calone: fresh, cool and faintly melon-like.</p>
+      </article>
+      <article class="lib-record" id="note-clear-skies">
+        <h3 class="lib-name">Clear Skies</h3>
+        <p class="lib-say">An impression of open, cloudless sky: airy, cool and clean.</p>
+      </article>
+      <article class="lib-record" id="note-cold-night-air">
+        <h3 class="lib-name">Cold Night Air</h3>
+        <p class="lib-say">An impression of cold air after dark: sharp, clean and empty.</p>
+      </article>
+      <article class="lib-record" id="note-dead-water">
+        <h3 class="lib-name">Dead Water</h3>
+        <p class="lib-say">Tombstone&#x27;s water gone still and stale: the dark, unmoving water round a sunken coffin.</p>
+      </article>
+      <article class="lib-record" id="note-green-mist">
+        <h3 class="lib-name">Green Mist</h3>
+        <p class="lib-say">Fine water in green air: damp, cool and leafy.</p>
+      </article>
+      <article class="lib-record" id="note-marine-accord" data-aka="Sea Notes">
+        <h3 class="lib-name">Marine Accord</h3>
+        <p class="lib-say">The sea: salty, windy and fresh.</p>
+      </article>
+      <article class="lib-record" id="note-ozone" data-aka="Ozonic Notes|Soft Ozone">
+        <h3 class="lib-name">Ozone</h3>
+        <p class="lib-say">The smell of air after a storm: sharp, clean and metallic.</p>
+      </article>
+      <article class="lib-record" id="note-quiet-air">
+        <h3 class="lib-name">Quiet Air</h3>
+        <p class="lib-say">An impression of still air: nothing moving, nothing sharp.</p>
+      </article>
+      <article class="lib-record" id="note-rain-notes">
+        <h3 class="lib-name">Rain Notes</h3>
+        <p class="lib-say">Falling rain: wet, cool and fresh.</p>
+      </article>
+      <article class="lib-record" id="note-sea-salt">
+        <h3 class="lib-name">Sea Salt</h3>
+        <p class="lib-say">Dry salt crystals and spray: mineral, salty and skin-like.</p>
+      </article>
+      <article class="lib-record" id="note-sea-water">
+        <h3 class="lib-name">Sea Water</h3>
+        <p class="lib-say">Salt water: fresh, mineral and a little green.</p>
+      </article>
+      <article class="lib-record" id="note-seaweed" data-aka="Bladderwrack|Irish Sea Moss">
+        <h3 class="lib-name">Seaweed</h3>
+        <p class="lib-say">Kelp and bladderwrack: salty, iodine-green and a little fishy. Irish sea moss is a red seaweed.</p>
+      </article>
+      <article class="lib-record" id="note-solar-notes">
+        <h3 class="lib-name">Solar Notes</h3>
+        <p class="lib-say">The warmth of sun on skin and sand: salty, floral and a little like sunscreen.</p>
+      </article>
+      <article class="lib-record" id="note-steam">
+        <h3 class="lib-name">Steam</h3>
+        <p class="lib-say">Warm water vapour: soft, damp and clean.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-smk" data-shelf="SMK">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">SMK</span> Smoke &amp; Char</h2>
+      <p class="lib-shelf-say">Fire, tar and what burning leaves behind.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-ash" data-aka="Fading Ash">
+        <h3 class="lib-name">Ash</h3>
+        <p class="lib-say">What is left after the fire: cold, dry and grey.</p>
+      </article>
+      <article class="lib-record" id="note-birch-tar" data-aka="Natural Birch Tar">
+        <h3 class="lib-name">Birch Tar</h3>
+        <p class="lib-say">Tar distilled from birch bark: smoky, leathery and medicinal; it tans Russian leather.</p>
+      </article>
+      <article class="lib-record" id="note-dry-heat">
+        <h3 class="lib-name">Dry Heat</h3>
+        <p class="lib-say">An impression of heat without moisture: dry, hot air.</p>
+      </article>
+      <article class="lib-record" id="note-fire">
+        <h3 class="lib-name">Fire</h3>
+        <p class="lib-say">Open flame: hot, dry, crackling smoke.</p>
+      </article>
+      <article class="lib-record" id="note-gasoline">
+        <h3 class="lib-name">Gasoline</h3>
+        <p class="lib-say">Petrol: sharp, volatile and chemical.</p>
+      </article>
+      <article class="lib-record" id="note-palo-santo" data-aka="Smoked Palo Santo">
+        <h3 class="lib-name">Palo Santo</h3>
+        <p class="lib-say">A South American wood burned like incense: citrusy, minty and resinous. Smoked, it becomes sweet smoke.</p>
+      </article>
+      <article class="lib-record" id="note-pine-tar">
+        <h3 class="lib-name">Pine Tar</h3>
+        <p class="lib-say">Tar from pine wood: dark, smoky and resinous, the smell of old ships and baseball bats.</p>
+      </article>
+      <article class="lib-record" id="note-resin-heat">
+        <h3 class="lib-name">Resin Heat</h3>
+        <p class="lib-say">Resins warming until they give off their smell.</p>
+      </article>
+      <article class="lib-record" id="note-smoke">
+        <h3 class="lib-name">Smoke</h3>
+        <p class="lib-say">Burning wood and leaves: dry, bitter and warm.</p>
+      </article>
+      <article class="lib-record" id="note-smoked-herbs">
+        <h3 class="lib-name">Smoked Herbs</h3>
+        <p class="lib-say">Herbs smouldering: bitter, green smoke.</p>
+      </article>
+      <article class="lib-record" id="note-smouldering-logs">
+        <h3 class="lib-name">Smouldering Logs</h3>
+        <p class="lib-say">Wood burning slowly without flame: soft, sweet smoke.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lib-shelf" id="shelf-imp" data-shelf="IMP">
+    <header class="lib-plate">
+      <h2 class="lib-shelf-name"><span class="lib-shelf-code">IMP</span> Impressions</h2>
+      <p class="lib-shelf-say">Notes that are not materials: objects, places, feelings, named by a house.</p>
+    </header>
+    <div class="lib-records">
+      <article class="lib-record" id="note-aged-parchment" data-aka="Aged Parchment Accord|Parchment">
+        <h3 class="lib-name">Aged Parchment</h3>
+        <p class="lib-say">Old animal-skin paper: dry, dusty, a little leathery.</p>
+      </article>
+      <article class="lib-record" id="note-blush">
+        <h3 class="lib-name">Blush</h3>
+        <p class="lib-say">The powdery smell of makeup blush.</p>
+      </article>
+      <article class="lib-record" id="note-burning-silence">
+        <h3 class="lib-name">Burning Silence</h3>
+        <p class="lib-say">One of Almost Human&#x27;s olfactory landscapes: a quiet, smouldering stillness.</p>
+      </article>
+      <article class="lib-record" id="note-candle-wax">
+        <h3 class="lib-name">Candle Wax</h3>
+        <p class="lib-say">Paraffin and beeswax: warm, waxy and faintly smoky.</p>
+      </article>
+      <article class="lib-record" id="note-clear-light-ahead">
+        <h3 class="lib-name">Clear Light Ahead</h3>
+        <p class="lib-say">Almost Human&#x27;s landscape: brightness at the end of something.</p>
+      </article>
+      <article class="lib-record" id="note-co2-extracts" data-aka="African CO2">
+        <h3 class="lib-name">CO2 Extracts</h3>
+        <p class="lib-say">Materials extracted with carbon dioxide under pressure instead of heat or solvents, so they smell closer to the raw plant. Named as a note, it says how, not what.</p>
+      </article>
+      <article class="lib-record" id="note-decayed-rose">
+        <h3 class="lib-name">Decayed Rose</h3>
+        <p class="lib-say">A rose past its best: jammy, earthy and a little rotten.</p>
+      </article>
+      <article class="lib-record" id="note-digital-warmth">
+        <h3 class="lib-name">Digital Warmth</h3>
+        <p class="lib-say">Almost Human&#x27;s landscape: the warmth of screens and machines.</p>
+      </article>
+      <article class="lib-record" id="note-distant-calm">
+        <h3 class="lib-name">Distant Calm</h3>
+        <p class="lib-say">Almost Human&#x27;s landscape: peace, seen from far off.</p>
+      </article>
+      <article class="lib-record" id="note-distant-cool-light">
+        <h3 class="lib-name">Distant Cool Light</h3>
+        <p class="lib-say">Almost Human&#x27;s landscape: a cold light a long way away.</p>
+      </article>
+      <article class="lib-record" id="note-dried-blood">
+        <h3 class="lib-name">Dried Blood</h3>
+        <p class="lib-say">Metallic and iron-rich: the smell of blood gone dry.</p>
+      </article>
+      <article class="lib-record" id="note-dusty-antiques">
+        <h3 class="lib-name">Dusty Antiques</h3>
+        <p class="lib-say">An antique shop: old wood, dust, polish and metal.</p>
+      </article>
+      <article class="lib-record" id="note-dusty-sofa">
+        <h3 class="lib-name">Dusty Sofa</h3>
+        <p class="lib-say">An old upholstered chair: dust, fabric and the people who sat in it.</p>
+      </article>
+      <article class="lib-record" id="note-eye-pencil">
+        <h3 class="lib-name">Eye Pencil</h3>
+        <p class="lib-say">The waxy, woody smell of a cosmetic pencil.</p>
+      </article>
+      <article class="lib-record" id="note-fading-sunlight">
+        <h3 class="lib-name">Fading Sunlight</h3>
+        <p class="lib-say">Almost Human&#x27;s landscape: the end of a warm day.</p>
+      </article>
+      <article class="lib-record" id="note-glowing-dust">
+        <h3 class="lib-name">Glowing Dust</h3>
+        <p class="lib-say">Almost Human&#x27;s landscape: dust lit up in a sunbeam.</p>
+      </article>
+      <article class="lib-record" id="note-glowing-skin">
+        <h3 class="lib-name">Glowing Skin</h3>
+        <p class="lib-say">Almost Human&#x27;s landscape: warm skin with light on it.</p>
+      </article>
+      <article class="lib-record" id="note-gold">
+        <h3 class="lib-name">Gold</h3>
+        <p class="lib-say">Ataraxia names it and does not say what it is made of: an impression of warmth and richness.</p>
+      </article>
+      <article class="lib-record" id="note-instant-film" data-aka="Instant Film Accord">
+        <h3 class="lib-name">Instant Film</h3>
+        <p class="lib-say">The chemical smell of a freshly developing Polaroid.</p>
+      </article>
+      <article class="lib-record" id="note-lip-gloss">
+        <h3 class="lib-name">Lip Gloss</h3>
+        <p class="lib-say">Sweet, fruity and waxy.</p>
+      </article>
+      <article class="lib-record" id="note-lipstick">
+        <h3 class="lib-name">Lipstick</h3>
+        <p class="lib-say">Waxy, powdery and floral, like the inside of a lipstick tube: violet and rose.</p>
+      </article>
+      <article class="lib-record" id="note-makeup-palette">
+        <h3 class="lib-name">Makeup Palette</h3>
+        <p class="lib-say">Pressed powders and waxes: a vanity drawer.</p>
+      </article>
+      <article class="lib-record" id="note-mousse-de-saxe" data-aka="Vintage Mousse de Saxe">
+        <h3 class="lib-name">Mousse de Saxe</h3>
+        <p class="lib-say">A classic base from around 1900: geranium, licorice, vanilla and a smoky leather molecule. Sweet, powdery and animalic, the smell of old Carons.</p>
+      </article>
+      <article class="lib-record" id="note-old-books">
+        <h3 class="lib-name">Old Books</h3>
+        <p class="lib-say">Library shelves: dust, paper, glue and leather, sweetened by decaying lignin.</p>
+      </article>
+      <article class="lib-record" id="note-old-house">
+        <h3 class="lib-name">Old House</h3>
+        <p class="lib-say">An old house: dust, wood, damp and time.</p>
+      </article>
+      <article class="lib-record" id="note-oriental-notes">
+        <h3 class="lib-name">Oriental Notes</h3>
+        <p class="lib-say">The old name for the amber family: warm, sweet, spicy and resinous. The industry now calls it &#x27;amber&#x27;.</p>
+      </article>
+      <article class="lib-record" id="note-paper">
+        <h3 class="lib-name">Paper</h3>
+        <p class="lib-say">Clean paper: dry, woody and faintly sweet.</p>
+      </article>
+      <article class="lib-record" id="note-porcelain">
+        <h3 class="lib-name">Porcelain</h3>
+        <p class="lib-say">Smooth, cool and clean: a feeling more than a smell.</p>
+      </article>
+      <article class="lib-record" id="note-rose-dust">
+        <h3 class="lib-name">Rose Dust</h3>
+        <p class="lib-say">Dried rose petals: powdery, soft and faded.</p>
+      </article>
+      <article class="lib-record" id="note-rotten-flesh">
+        <h3 class="lib-name">Rotten Flesh</h3>
+        <p class="lib-say">Decay, named as a note for its darkness rather than recreated in full.</p>
+      </article>
+      <article class="lib-record" id="note-salty-tears">
+        <h3 class="lib-name">Salty Tears</h3>
+        <p class="lib-say">Salt and skin: a mineral, slightly bodily note.</p>
+      </article>
+      <article class="lib-record" id="note-soft-amber-light">
+        <h3 class="lib-name">Soft Amber Light</h3>
+        <p class="lib-say">Almost Human&#x27;s landscape: a warm glow, like late sun or lamplight.</p>
+      </article>
+      <article class="lib-record" id="note-spinal-fluid">
+        <h3 class="lib-name">Spinal Fluid</h3>
+        <p class="lib-say">Ataraxia&#x27;s conceptual note: clear, cold, clinical, bodily.</p>
+      </article>
+      <article class="lib-record" id="note-velvet">
+        <h3 class="lib-name">Velvet</h3>
+        <p class="lib-say">Soft, powdery, rich texture made into smell.</p>
+      </article>
+      <article class="lib-record" id="note-westfarthing-leaf" data-aka="Westfarthing Leaf (Tobacco)">
+        <h3 class="lib-name">Westfarthing Leaf</h3>
+        <p class="lib-say">Pipe-weed from the Shire, after Tolkien: Pineward&#x27;s tobacco, named for the Hobbits&#x27; best.</p>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<script>window.SITE_ROOT = "../";</script>
+<script src="../nav.js"></script>
+<script src="../search.js"></script>
+<script src="../notes-data.js"></script>
+<script src="../note-library.js"></script>
+</body>
+</html>

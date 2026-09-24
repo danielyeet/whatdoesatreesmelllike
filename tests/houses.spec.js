@@ -443,8 +443,8 @@ test("an unwritten fragrance says it is unwritten", async ({ page }) => {
   // their notes, and kept the WRITING. Les Abstraits' writing arrived
   // on 2026-09-23, so it is Ataraxia alone that still says on every
   // part that the writing has not arrived. Tombstone arrived the same
-  // way on 2026-09-23: names, notes and pictures, and no writing.
-  for (const [url, parts] of [[ATARAXIA, 5], [TOMBSTONE, 5]]) {
+  // way on 2026-09-23 and was written on 2026-09-24 — see its own test.
+  for (const [url, parts] of [[ATARAXIA, 5]]) {
     await page.goto(url);
     // Every part, and the introduction as well.
     await expect(page.locator(".human-waiting")).toHaveCount(parts + 1);
@@ -765,9 +765,12 @@ test("Tombstone carries its five, in alphabetical order, with both pictures each
   await expect(page.locator(".human-kicker")).toHaveText("Scent descriptions · 08");
 });
 
-/* QIMU & MUSICIANS: four, in the order the owner numbered them, and the
-   two they asked for by name say exactly what they asked for. */
-test("Qimu & Musicians carries its four, and Guitarist and Drummer say description coming soon",
+/* QIMU & MUSICIANS: four, in the order the owner numbered them. Guitarist and
+   Vocal were written on 2026-09-24 in three stages each; Drummer still
+   says exactly what the owner asked it to, and Bassist is theirs to
+   write. The introduction says, in the owner's words, that it will be
+   written later. */
+test("Qimu & Musicians carries its four: two written, one coming soon, one waiting",
   async ({ page }) => {
   await page.goto(QIMU);
   await page.waitForTimeout(700);
@@ -777,12 +780,57 @@ test("Qimu & Musicians carries its four, and Guitarist and Drummer say descripti
     all.map((img) => ({ src: img.getAttribute("src"), ok: img.complete && img.naturalWidth > 0 })));
   expect(plates.length).toBe(4);
   plates.forEach((one) => expect(one.ok, `${one.src} should load`).toBe(true));
-  for (const [n, says] of [[0, true], [1, false], [2, false], [3, true]]) {
-    const text = (await page.locator(".human-part").nth(n).locator(".human-text p").first().textContent()).trim();
-    if (says) expect(text, names[n]).toBe("Description coming soon.");
-    else expect(text, `${names[n]} is the owner's to write`).toMatch(/has not arrived yet/);
+  for (const n of [0, 1]) {
+    const stages = await page.locator(".human-part").nth(n).locator(".human-stage").allTextContents();
+    expect(stages, names[n]).toEqual(["Top", "Mid", "Dry Down"]);
   }
+  await expect(page.locator(".human-part").nth(0).locator(".human-text")).toContainText("my top fig leaf fragrance");
+  await expect(page.locator(".human-part").nth(1).locator(".human-text")).toContainText("the scene after a concert");
+  const bassist = (await page.locator(".human-part").nth(2).locator(".human-text p").first().textContent()).trim();
+  expect(bassist, "Bassist is the owner's to write").toMatch(/has not arrived yet/);
+  const drummer = (await page.locator(".human-part").nth(3).locator(".human-text p").first().textContent()).trim();
+  expect(drummer).toBe("Description coming soon.");
+  await expect(page.locator("#introduction-name + .human-text")).toHaveText("I will write it later.");
+  await expect(page.locator(".human-head h1 em")).toHaveText("A house of music and fragrance");
   await expect(page.locator(".human-kicker")).toHaveText("Scent descriptions · 09");
+});
+
+/* TOMBSTONE, WRITTEN — 2026-09-24. Three things the owner asked for in
+   so many words: "selectively linear" in bold, the house's own site
+   linked, and "exclusion zone" given its definition when it is pointed
+   at. And 3 Feet 5 says the rest of it will be filled in later. */
+test("Tombstone is written, with its bold, its link and a definition on hover",
+  async ({ page }) => {
+  await page.goto(TOMBSTONE);
+  await expect(page.locator(".human-head h1 em")).toHaveText("A house that expanded on death");
+  await expect(page.locator(".human-intro strong, #introduction-name ~ .human-text strong").first())
+    .toHaveText("selectively linear");
+  const site = page.locator("a[href='https://tombstonefragrances.shop']");
+  await expect(site).toHaveCount(1);
+  await expect(site).toHaveAttribute("target", "_blank");
+  await expect(site).toHaveAttribute("rel", /noopener/);
+
+  // Only 3 Feet 5 still waits, and it says what for.
+  await expect(page.locator(".human-part .human-waiting")).toHaveCount(1);
+  await expect(page.locator("#part-01 .human-waiting")).toContainText("filled in later");
+  for (const id of ["#part-02", "#part-03", "#part-04", "#part-05"]) {
+    expect((await page.locator(id + " .human-text").textContent()).trim().length, id).toBeGreaterThan(400);
+  }
+
+  // The definition: there when pointed at, and not before.
+  const part = page.locator("#part-02");
+  await part.locator("summary").click();
+  const term = part.locator(".human-define");
+  await expect(term).toHaveText("exclusion zone");
+  await expect(term).toHaveAttribute("data-define", /closed off/);
+  const shown = () => term.evaluate((el) => +getComputedStyle(el, "::after").opacity);
+  await page.mouse.move(5, 5);
+  expect(await shown()).toBeLessThan(0.05);
+  await term.scrollIntoViewIfNeeded();
+  await term.hover();
+  await expect.poll(shown).toBeGreaterThan(0.95);
+  // The request itself was not printed.
+  expect(await page.locator("body").textContent()).not.toContain("give the definition");
 });
 
 /* THE WAY ON, FROM HOUSE TO HOUSE: every house's last link points at the

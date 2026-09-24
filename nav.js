@@ -22,6 +22,7 @@ const SITE_LINKS = [
   { label: "Theories", href: "categories/theories.html" },
   { label: "Explorations & Researches", href: "categories/researches.html" },
   { label: "Favourites", href: "categories/favorites.html" },
+  { label: "Note Library", href: "categories/note-library.html" },
   { label: "Photography", href: "categories/other-2.html" },
   { label: "Search", href: "search.html" },
   { label: "Contact", href: "contact.html" },

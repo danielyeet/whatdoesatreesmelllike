@@ -75,6 +75,7 @@ test("menu lists every page in SITE_LINKS, in order", async ({ page }) => {
     "Theories",
     "Explorations & Researches",
     "Favourites",
+    "Note Library",
     "Photography",
     "Search",
     "Contact",

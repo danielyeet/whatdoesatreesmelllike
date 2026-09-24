@@ -167,6 +167,16 @@ A filter that would give nothing is disabled rather than left to be pressed for 
 page, and a filter is let go of if a new query has nothing of that kind, so you can never
 be left looking at an empty page with no way of telling why.
 
+### Notes, 2026-09-24
+
+The [Note Library](2026-09-24-the-note-library.md) added a seventh kind, **Note**, and a
+**Notes** filter for it. A note is read off the library's own markup like everything else
+(`.lib-record`), and it is the one kind of entry that carries **other names**: `aka`, the
+spellings folded into that record. `rank` scores a query against those too, a hair below
+the record's own name, so "iris butter" finds Orris. Nothing else carries an `aka`, so
+nothing else is ranked differently. Tested in `tests/note-library.spec.js`: `the site's
+search finds a note, by any of its spellings`, which fails with the other names ignored.
+
 ## Known issues / TODO
 
 - **The `PAGES` manifest in `search-page.js` is hand-maintained and nothing tests that it
