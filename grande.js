@@ -8,7 +8,16 @@
 // with tale), but particles that rise up and pop more or less into a
 // bunch of other smaller particles".
 //
-// WHAT IT IS: a slow RISE of fine specks through the page — each speck
+// AND THEN, the night of 2026-09-25: "Intensify the particles in grande
+// parfums particle page (make it like the hover in SD)". So the page is
+// now drawn as the Houses view's hover for this house is (motifs.js,
+// `rise`): up to 640 specks at once, half again as dark as they were and
+// a size each, every one of them BORN somewhere in the lower four fifths
+// of the window, RISING for four to eight seconds, and then BURSTING —
+// and born again somewhere else. What follows is how it was before that,
+// kept for the reasoning; the numbers in TUNING are the new ones.
+//
+// WHAT IT WAS: a slow RISE of fine specks through the page — each speck
 // on a clock of its own, fading in as it starts — and about half of
 // them, somewhere on the way up, BURST: the speck is gone and in its
 // place a small spray of finer specks flies out a few pixels, slows,
@@ -66,35 +75,29 @@
 
   // HOW MANY, AND IT COMES OFF THE WINDOW rather than being a number
   // typed in: a speck every so many square pixels, so a tall window is
-  // not emptier than a short one. The cap is there because the count
-  // is the whole of this drawing's cost.
-  const PER = 3400;
-  const MOST = 420;
+  // not emptier than a short one — capped at what the hover stands at
+  // once (640).
+  const PER = 2000;
+  const MOST = 640;
 
-  const RISE = [11, 34];           // pixels a second, upward
-  const SWAY = [0.6, 2.4];         // how far one wanders sideways as it goes
-  const SWAY_EVERY = [7, 17];      // seconds for one wander out and back
-
-  const ALPHA = [0.12, 0.3];       // how heavily one is drawn
-  const SIZE = 1.3;                // and how big, in pixels
-
-  // A FEW ARE MOTES: bigger, plainer, and the only thing here you
-  // would call a shape. One in fourteen or so.
-  const MOTE = 0.07;
-  const MOTE_SIZE = 2.2;
-  const MOTE_ALPHA = [0.18, 0.36];
-
-  // THE BURST. About half of them burst, somewhere between a third and
-  // nine tenths of the way up; each into a few finer specks (more for a
-  // mote) that fly out BURST_REACH, slow as they go, and fade over
-  // BURST_SECONDS.
-  const BURSTS = 0.5;
-  const BURST_AT = [0.32, 0.9];
-  const BURST_BITS = [4, 7];
-  const MOTE_BITS = [7, 11];
-  const BURST_REACH = [5, 13];
-  const BURST_SECONDS = 1.1;
-  const BIT_SIZE = 0.8;
+  // EACH SPECK, as the hover's are: born anywhere from a fifth of the way
+  // down to just below the foot, rising RISE pixels a second with a small
+  // sway, for LIVE seconds, then bursting over BURST_SECONDS into BITS
+  // finer specks that fly out REACH and fade — and born again elsewhere.
+  const RISE = [18, 42];           // pixels a second, upward
+  const SWAY = [2, 6];             // pixels either way
+  const SWAY_EVERY = [0.38, 0.72]; // seconds a radian, as the hover's
+  const LIVE = [4.2, 8.2];         // seconds before it bursts
+  const FADE_IN = 0.9;             // seconds to come up, as the hover's
+  const ALPHA = 0.5;               // how heavily one is drawn, as the hover's
+  const SIZE = [1.1, 2.1];
+  const MOTE = 0.1;                // one in ten is a mote, larger
+  const MOTE_SIZE = [2.3, 3.2];
+  const BURST_BITS = [3, 5];
+  const MOTE_BITS = [7, 10];
+  const BURST_REACH = [7, 16];
+  const BURST_SECONDS = 0.9;
+  const BIT_SIZE = [0.55, 1];
 
   const HAND = 170;                // how far the lean reaches, in pixels
   const HAND_LEAN = 9;             // and how far it draws one over, in pixels
@@ -126,49 +129,38 @@
     const many = Math.min(MOST, Math.round((width * height) / PER));
     for (let n = 0; n < many; n++) {
       const mote = random() < MOTE;
-      const rise = between(RISE[0], RISE[1]);
+      const live = between(LIVE[0], LIVE[1]);
+      const count = Math.round(mote ? between(MOTE_BITS[0], MOTE_BITS[1]) : between(BURST_BITS[0], BURST_BITS[1]));
+      const bits = [];
+      for (let b = 0; b < count; b++) {
+        bits.push({ a: (b / count) * Math.PI * 2 + between(-0.4, 0.4),
+          far: between(BURST_REACH[0], BURST_REACH[1]) * (mote ? 1.6 : 1),
+          s: between(BIT_SIZE[0], BIT_SIZE[1]) });
+      }
       drift.push({
-        x: random() * width,
-        rise: rise,
-        // HOW LONG IT LIVES IS NOT ROLLED, IT IS WORKED OUT: a speck
-        // lives exactly as long as it takes to rise the height of the
-        // window, so every one of them crosses the whole of it and
-        // dies where it leaves the top.
-        //
-        // Rolled independently — which is what this did first, between
-        // nine and twenty-three seconds — a slow speck lived and died
-        // in THIRTY-SIX PIXELS. Every one of them was born at the foot
-        // of the window and went out again before it had got anywhere,
-        // so the drift was a smudge along the bottom edge of the page
-        // and the other nine-tenths of it was empty. That is exactly
-        // what it looked like.
-        life: (height + 40) / rise,
-        // How far through its life it is when the page opens, so the
-        // page does not begin with every speck being born at once.
-        at: random(),
+        n: n,
+        live: live,
+        period: live + BURST_SECONDS,
+        // Where in its round it is when the page opens, so the page does
+        // not begin with every speck being born at once.
+        offset: random() * (live + BURST_SECONDS),
+        rise: between(RISE[0], RISE[1]),
         sway: between(SWAY[0], SWAY[1]),
         swayEvery: between(SWAY_EVERY[0], SWAY_EVERY[1]),
-        swayAt: random(),
-        mote: mote,
-        size: mote ? MOTE_SIZE : SIZE,
-        base: mote ? between(MOTE_ALPHA[0], MOTE_ALPHA[1])
-          : between(ALPHA[0], ALPHA[1]),
-        burst: null,
+        phase: random() * Math.PI * 2,
+        size: mote ? between(MOTE_SIZE[0], MOTE_SIZE[1]) : between(SIZE[0], SIZE[1]),
+        bits: bits,
       });
-      const one = drift[drift.length - 1];
-      if (mote || random() < BURSTS) {
-        const many = Math.round(mote ? between(MOTE_BITS[0], MOTE_BITS[1]) : between(BURST_BITS[0], BURST_BITS[1]));
-        const bits = [];
-        for (let b = 0; b < many; b++) {
-          bits.push({ a: (b / many) * Math.PI * 2 + between(-0.45, 0.45),
-            far: between(BURST_REACH[0], BURST_REACH[1]) * (mote ? 1.5 : 1) });
-        }
-        // Where in its life it bursts, and how much of its life the
-        // burst takes.
-        one.burst = { at: between(BURST_AT[0], BURST_AT[1]), long: BURST_SECONDS / one.life, bits: bits };
-      }
     }
   }
+
+  /** Where a speck is born on its `round`th time: the same every visit,
+      somewhere new every round. */
+  const born = (n, round, k) => {
+    let h = (n * 374761393 + round * 668265263 + k * 2246822519) >>> 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  };
 
   function size() {
     const w = window.innerWidth;
@@ -212,33 +204,20 @@
     handOn += (want - handOn) * Math.min(1, HAND_EASE * (REDUCE_MOTION ? 1 : 0.016));
 
     drift.forEach((one) => {
-      // WHERE IT IS IN ITS OWN LIFE, 0 to 1 and round again. With
-      // motion turned off it simply stands where it was born.
-      const age = REDUCE_MOTION ? one.at : (one.at + clock / one.life) % 1;
-
-      // FADING IN AND OUT AT THE TWO ENDS, so a speck is never seen to
-      // appear or to go. A fifth of its life either side.
-      const shade = Math.min(1, Math.min(age, 1 - age) / 0.2);
-      if (shade < 0.02) return;
-
-      // Past its burst and the burst over, it is gone until it is born
-      // again at the foot.
-      const burst = one.burst;
-      const into = burst ? (age - burst.at) / burst.long : -1;
-      if (into >= 1) return;
-
-      // Its life IS the crossing, so this runs from the foot of the
-      // window to just off the top of it and starts again.
-      let y = (height + 20) - Math.min(age, burst && into >= 0 ? burst.at : 1) * one.rise * one.life;
-
-      const wander = REDUCE_MOTION ? 0
-        : Math.sin((one.swayAt + clock / one.swayEvery) * Math.PI * 2) * one.sway;
-      let x = one.x + wander;
+      // WHICH ROUND IT IS ON, and how far into it. With motion turned off
+      // it simply stands part way up its first.
+      const clock2 = REDUCE_MOTION ? one.offset * 0.5 : clock + one.offset;
+      const round = Math.floor(clock2 / one.period);
+      const age = clock2 - round * one.period;
+      const x0 = born(one.n, round, 1) * width;
+      const y0 = height * 0.2 + born(one.n, round, 2) * (height * 0.8 + 20);
+      const t = Math.min(age, one.live);
+      let x = x0 + (REDUCE_MOTION ? 0 : Math.sin(t / one.swayEvery + one.phase) * one.sway);
+      let y = y0 - one.rise * t;
 
       // THE HAND. It leans a speck towards the pointer rather than
       // pulling it there — the drift is weather and weather does not
-      // take orders. And it is taken from where the speck actually is,
-      // so it follows the hand round the window.
+      // take orders.
       let lift = 1;
       if (handOn > 0.004) {
         const dx = handX - x, dy = handY - y;
@@ -251,23 +230,24 @@
           lift += (HAND_LIFT - 1) * pull;
         }
       }
-      if (x < -20 || x > width + 20) return;
+      if (x < -20 || x > width + 20 || y < -30) return;
 
-      const shown = one.base * shade * lift * quiet(x);
+      const up = REDUCE_MOTION ? 1 : Math.min(1, age / FADE_IN);
+      const shown = ALPHA * up * lift * quiet(x);
       if (shown < 0.008) return;
-      if (into >= 0) {
-        // THE BURST: finer specks flying out and slowing, drifting on
-        // up a little, fading.
-        const out = 1 - Math.pow(1 - into, 3);
-        const left = Math.pow(1 - into, 1.3);
-        ink.fillStyle = "rgba(" + INK + "," + Math.min(1, shown * 1.15 * left).toFixed(3) + ")";
-        burst.bits.forEach((b) => {
-          ink.fillRect(x + Math.cos(b.a) * b.far * out, y + Math.sin(b.a) * b.far * out - into * 5, BIT_SIZE, BIT_SIZE);
+      if (age >= one.live) {
+        // THE BURST: finer specks flying out and slowing, drifting on up
+        // a little, fading.
+        const q = (age - one.live) / BURST_SECONDS;
+        const out = 1 - Math.pow(1 - q, 3);
+        ink.fillStyle = "rgba(" + INK + "," + Math.min(1, shown * Math.pow(1 - q, 1.4)).toFixed(3) + ")";
+        one.bits.forEach((b) => {
+          ink.fillRect(x + Math.cos(b.a) * b.far * out - b.s / 2, y + Math.sin(b.a) * b.far * out - q * 6 - b.s / 2, b.s, b.s);
         });
         return;
       }
       ink.fillStyle = "rgba(" + INK + "," + Math.min(1, shown).toFixed(3) + ")";
-      ink.fillRect(x, y, one.size, one.size);
+      ink.fillRect(x - one.size / 2, y - one.size / 2, one.size, one.size);
     });
   }
 

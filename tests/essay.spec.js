@@ -195,3 +195,17 @@ test("the rule stands still all the way down a piece, whatever a section is call
   expect([...seen], `the rule moved down the page: ${[...seen].join(", ")}`)
     .toHaveLength(1);
 });
+
+/* NO PICTURE AT THE HEAD OF A THEORY — 2026-09-25: "Remove the picture
+   from the Note dissemination framework, and all other theories." Each
+   theory opened on a plate (the framework's was its summary sheet); none
+   does now. The framework's diagrams are the argument itself, drawn in
+   the page, and stay. */
+test("no theory carries a picture", async ({ page }) => {
+  for (const n of ["01", "02", "03"]) {
+    await page.goto(`/works/theory-${n}.html`);
+    await expect(page.locator(".essay-plate"), `theory ${n}: no plate`).toHaveCount(0);
+    await expect(page.locator(".essay-body img"), `theory ${n}: no picture`).toHaveCount(0);
+  }
+  await expect(page.locator(".zone-figure").first(), "the framework's diagrams stay").toBeVisible();
+});

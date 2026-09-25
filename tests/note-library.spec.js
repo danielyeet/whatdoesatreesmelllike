@@ -4,7 +4,7 @@
 // Every note named in a fragrance on the site, filed by accord (the
 // page's word; the markup still says shelf), each with a line on what
 // it is. The page's markup is the catalogue; the script stands the
-// records up as books, drawn in specks. What these hold:
+// records up as books — flat and geometric, on bare boards. What these hold:
 //
 //   - every note the site uses HAS a record (the owner asked for "all
 //     the notes that I have used so far"), and none is shelved twice;
@@ -263,16 +263,17 @@ test("the page says accords rather than shelves, and no longer counts names as w
 
 
 
-/* THE BOOKS ARE MADE OF SPECKS, IN THEIR ACCORDS' CLOTH. The owner, of
-   the "digital" folders: "the logos on the books I feel are
-   unneccessary ... make it feel less 3-bit ... if you can somehow make
-   them out of particles but actually look like books, with appropriate
-   colours". Read off the page: no glyph, meter, barcode, tab or
-   decoding left anywhere; every book near the window carries a spine
-   drawn on its own canvas; the spine is ink rather than a flat fill
-   (many different colours in it — specks, not a block); and the books
-   of different accords are bound in different colours. */
-test("the books are drawn in specks, in their accords' colours, and carry nothing pixelated", async ({ page }) => {
+/* THE BOOKS ARE GEOMETRIC, IN THEIR ACCORDS' CLOTH. The owner, of the
+   "digital" folders: "the logos on the books I feel are unneccessary ...
+   make it feel less 3-bit" — and then, of the books drawn in specks that
+   answered it: "make it so that th ebooks dont look granular. I want them
+   to have more of a geometric character" (2026-09-25). Read off the page:
+   no glyph, meter, barcode, tab or decoding left anywhere; every book near
+   the window carries a spine drawn on its own canvas; the spine is a few
+   FLAT shades — the speckled ones ran to a hundred and more, and eight
+   shades covered barely half of one — and the books of different accords
+   are still bound in different colours. */
+test("the books are drawn flat and geometric, in their accords' colours, and carry nothing pixelated", async ({ page }) => {
   await arrive(page);
   await page.mouse.move(700, 500);
   // Down to where two accords stand in the window at once.
@@ -289,26 +290,30 @@ test("the books are drawn in specks, in their accords' colours, and carry nothin
       if (!c || c.width < 4) return null;
       const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
       let lit = 0, r = 0, g = 0, bl = 0;
-      const shades = new Set();
+      const shades = new Map();
       for (let i = 0; i < d.length; i += 4) {
         if (d[i + 3] < 40) continue;
         lit++; r += d[i]; g += d[i + 1]; bl += d[i + 2];
-        shades.add((d[i] >> 3) + "," + (d[i + 1] >> 3) + "," + (d[i + 2] >> 3));
+        const k = (d[i] >> 3) + "," + (d[i + 1] >> 3) + "," + (d[i + 2] >> 3);
+        shades.set(k, (shades.get(k) || 0) + 1);
       }
-      return { lit: lit / (d.length / 4), shades: shades.size, mean: [r / lit, g / lit, bl / lit].map(Math.round) };
+      const eight = [...shades.values()].sort((a, b) => b - a).slice(0, 8).reduce((a, v) => a + v, 0);
+      return { lit: lit / (d.length / 4), shades: shades.size, eight: eight / lit,
+        mean: [r / lit, g / lit, bl / lit].map(Math.round) };
     };
     const seen = near.map((b) => ({ shelf: b.closest(".lib-shelf").dataset.shelf, spine: read(b) }));
     const byShelf = {};
     seen.forEach((s) => { if (s.spine) (byShelf[s.shelf] = byShelf[s.shelf] || []).push(s.spine.mean); });
     const colours = Object.fromEntries(Object.entries(byShelf).map(([k, list]) =>
       [k, [0, 1, 2].map((i) => Math.round(list.reduce((a, m) => a + m[i], 0) / list.length))]));
-    return { gone, near: near.length, drawn: seen.filter((s) => s.spine && s.spine.lit > 0.5).length,
-      speckled: seen.filter((s) => s.spine && s.spine.shades > 40).length, colours };
+    const grainy = seen.filter((s) => s.spine && (s.spine.shades > 40 || s.spine.eight < 0.75))
+      .map((s) => s.spine.shades + " shades, " + Math.round(s.spine.eight * 100) + "% in eight");
+    return { gone, near: near.length, drawn: seen.filter((s) => s.spine && s.spine.lit > 0.5).length, grainy, colours };
   });
   expect(out.gone, "nothing of the digital folders is left").toEqual([]);
   expect(out.near, "books near the window").toBeGreaterThan(10);
   expect(out.drawn, "every one of them has its spine drawn").toBe(out.near);
-  expect(out.speckled, "in specks of many shades, not a flat fill").toBe(out.near);
+  expect(out.grainy, "in a few flat shades, not specks").toEqual([]);
   const cols = Object.values(out.colours);
   expect(cols.length, `accords on the window: ${JSON.stringify(out.colours)}`).toBeGreaterThan(1);
   const apart = Math.max(...cols.map((a) => Math.max(...cols.map((b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])))));
@@ -360,42 +365,48 @@ test("the shelves breathe", async ({ page }) => {
   expect(out.top, "and above every accord").toBeGreaterThanOrEqual(56);
 });
 
-/* THE SHELVES ARE A BOOKCASE. "the library, please redesign the shelves.
-   I like everything about the library except the shelves" — they were a
-   lit rail under each row, standing on nothing. Every accord's books now
-   stand in a case drawn behind them: the rail is gone from the
-   stylesheet; the case's canvas is there, behind the books and a little
-   wider than the rows; it has a board under every row, solid across the
-   row's foot; and every board carries a label giving the call numbers on
-   it. At another width the rows wrap differently, and the case is drawn
-   again to match. */
-test("every accord's books stand in a bookcase, a labelled board under every row", async ({ page }) => {
+/* THE SHELVES ARE BOARDS, AND NOTHING ROUND THEM. "the library, please
+   redesign the shelves" — they were a lit rail under each row, and then a
+   bookcase of specks, uprights and crown and plinth and a back of boards.
+   Then: "redisgn the shelves, remove the bezel of the bookshelves"
+   (2026-09-25). So every accord's books stand on plain boards drawn behind
+   them: the rail is gone from the stylesheet; the boards' canvas is there,
+   behind the books and a little wider than the rows; there is a board
+   under every row, solid across the row's foot, and NOTHING ELSE is drawn
+   on it — no upright at either side, no crown, no back; and every board
+   carries a label giving the call numbers on it. At another width the rows
+   wrap differently, and the boards are drawn again to match. */
+test("every accord's books stand on bare boards, a labelled board under every row and no frame round them", async ({ page }) => {
   await page.addInitScript(() => {
     window.__labels = [];
     const fillText = CanvasRenderingContext2D.prototype.fillText;
     CanvasRenderingContext2D.prototype.fillText = function (t) {
-      if (this.canvas.classList.contains("lib-case")) window.__labels.push(String(t));
+      if (this.canvas.classList.contains("lib-boards")) window.__labels.push(String(t));
       return fillText.apply(this, arguments);
     };
   });
   await arrive(page);
+  await expect(page.locator(".lib-case")).toHaveCount(0);
   await page.locator("#shelf-cit").scrollIntoViewIfNeeded();
   await page.waitForTimeout(1200);
   const read = () => page.evaluate(() => {
     const holder = document.querySelector("#shelf-cit .lib-records");
-    const c = holder.querySelector(".lib-case");
+    const c = holder.querySelector(".lib-boards");
     const cr = c.getBoundingClientRect(), hr = holder.getBoundingClientRect();
     const g = c.getContext("2d"), ratio = c.width / cr.width;
     const d = g.getImageData(0, 0, c.width, c.height).data;
     const rowH = parseFloat(getComputedStyle(holder).getPropertyValue("--row"));
     const gap = parseFloat(getComputedStyle(holder).getPropertyValue("--gap"));
     const rows = +holder.dataset.rows;
+    const off = hr.top - cr.top;
     // Across the foot of each row, just under where the books stand: the
-    // board — its top and its front, in specks — all the way along.
+    // board — its top and its front — all the way along.
     const boards = [];
+    const bands = [];
     for (let k = 0; k < rows; k++) {
-      const y0 = Math.round((hr.top - cr.top + k * (rowH + gap) + rowH + 2) * ratio);
-      const y1 = Math.round((hr.top - cr.top + k * (rowH + gap) + rowH + 18) * ratio);
+      const foot = off + k * (rowH + gap) + rowH;
+      bands.push([foot - 1, foot + 36]);
+      const y0 = Math.round((foot + 2) * ratio), y1 = Math.round((foot + 18) * ratio);
       let solid = 0, n = 0;
       for (let x = Math.round(30 * ratio); x < c.width - Math.round(30 * ratio); x += 3, n++) {
         let sum = 0;
@@ -404,9 +415,16 @@ test("every accord's books stand in a bookcase, a labelled board under every row
       }
       boards.push(solid / n);
     }
+    // Everywhere else on the canvas: no ink at all.
+    let stray = 0;
+    for (let y = 0; y < c.height; y += 2) {
+      const at = y / ratio;
+      if (bands.some(([a, b]) => at >= a && at <= b)) continue;
+      for (let x = 0; x < c.width; x += 2) if (d[(y * c.width + x) * 4 + 3] > 20) stray++;
+    }
     const book = document.querySelector("#shelf-cit .lib-record");
     return {
-      drawn: c.dataset.drawn === "1", rows, boards,
+      drawn: c.dataset.drawn === "1", rows, boards, stray,
       wider: cr.left < hr.left && cr.right > hr.right,
       behind: +getComputedStyle(c).zIndex < +getComputedStyle(book).zIndex,
       rail: getComputedStyle(holder).backgroundImage,
@@ -414,18 +432,20 @@ test("every accord's books stand in a bookcase, a labelled board under every row
     };
   });
   const wide = await read();
-  expect(wide.drawn, "the case is drawn").toBe(true);
+  expect(wide.drawn, "the boards are drawn").toBe(true);
   expect(wide.rail, "and the rail is gone").toBe("none");
   expect(wide.wider, "standing out past the rows").toBe(true);
   expect(wide.behind, "behind the books").toBe(true);
   wide.boards.forEach((b, k) => expect(b, `a board under row ${k + 1}`).toBeGreaterThan(0.9));
+  expect(wide.stray, "and nothing else: no uprights, no crown, no back").toBe(0);
   expect(wide.labels, "a label on every board, giving its call numbers").toContain("CIT 001–013");
-  // Narrower, the rows wrap again, and the case is drawn to match.
+  // Narrower, the rows wrap again, and the boards are drawn to match.
   await page.setViewportSize({ width: 820, height: 900 });
   await page.waitForTimeout(900);
   const narrow = await read();
   expect(narrow.rows, "more rows at a narrower width").toBeGreaterThan(wide.rows);
   narrow.boards.forEach((b, k) => expect(b, `a board under row ${k + 1} at 820px`).toBeGreaterThan(0.9));
+  expect(narrow.stray, "still nothing but boards").toBe(0);
   expect(narrow.labels.some((t) => /^CIT 001–0\d\d$/.test(t) && t !== "CIT 001–013"), "and the labels say what is on each").toBe(true);
 });
 

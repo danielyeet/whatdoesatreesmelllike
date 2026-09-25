@@ -436,3 +436,54 @@ wide, more rows, a board under each of them, and a label for the first of them t
 of 013. `the books stand on their shelves without running into each other` still holds at all
 three widths, including no sideways scroll at 390px.
 
+
+## 2026-09-25, last — boards with no frame, and books of flat shapes
+
+> for the note library, redisgn the shelves, remove the bezel of the bookshelves, and make it
+> so that th ebooks dont look granular. I want them to have more of a geometric character
+
+**The bezel is gone.** The bookcase of the section above — two uprights, a crown, a plinth and
+a back of boards round every accord — is taken out of the code (`drawCase`, `CASE_*`,
+`.lib-case`), and what is left is **the boards**: under every row, one flat walnut board and
+nothing round it (`drawBoards`, `canvas.lib-boards`). Its top seen from a little above and lit
+(`BOARD_TOP`, 7px), a dark line along its back edge, a lit arris, its front (`BOARD_FACE`, 11px)
+a shade darker with a darker line under it, and a soft shadow falling below (`BOARD_SHADE`,
+16px). It runs `BOARD_OUT` (10px; 4px on a phone) past the row either side and stops. The
+label on each board's front stays — a cream card, `CIT 001–013`, in 7px mono — without the
+brass holder round it. The page's own dark ground shows between the rows, where the case's
+back stood.
+
+**The books are flat shapes.** `drawSpine` no longer lays a spine down in thousands of specks;
+it draws it in a handful of flat rectangles, which is what "geometric" and "not granular" both
+ask for:
+
+- the cloth, full height; a darker **edge** down the left and a darker one down the right, and
+  a lighter **lit face** a quarter of the way across, so the spine still reads as rounded;
+- a lighter **head-cap** and a darker **tail**;
+- on about a third, a **title panel** — a darker field with a gilt hairline round it — where
+  the name runs; on about one in nine a thin **stripe** down one side instead;
+- the two **raised bands**, each a lit ridge over its shadow; on about half, a **gilt rule**
+  inside each;
+- and the cream **label** at the foot with a hairline edge, where the call number is printed.
+
+Each book is still its own shade of its accord's cloth (seeded by its name), so the accords
+are still told apart by colour, and nothing else about the book — its height, its thickness,
+its lean, the pull, the card — has changed. `SPINE_STEP` and `SPINE_RATIO` (the specks' step and
+their lower drawing ratio) are gone; the spines, the boards and the card's mark draw at 2, and
+at 1.5 below 700px, as every drawing here does.
+
+### How to test it
+
+In `tests/note-library.spec.js`:
+
+- **`the books are drawn flat and geometric, in their accords' colours, and carry nothing
+  pixelated`** (replaces *the books are drawn in specks…*) — every book near the window has its
+  spine drawn, in 40 shades or fewer and with eight shades covering three quarters of it or
+  more (the speckled books ran to 108–213 shades, with eight covering barely 0.52–0.63; the
+  flat ones come out at 13–24 and 0.83–0.96); the accords on the window still bound in
+  different colours.
+- **`every accord's books stand on bare boards, a labelled board under every row and no frame
+  round them`** (replaces *…stand in a bookcase…*) — there is no `.lib-case`; the boards' canvas
+  is drawn, wider than the rows and behind the books; a board solid across the foot of every
+  row; **no ink anywhere on the canvas but the boards** (no upright, crown or back); the label
+  `CIT 001–013`; and at 820px, more rows, a board under each and still nothing else.

@@ -401,3 +401,14 @@ test("a tree stays lit for a moment after the pointer leaves it",
   const left = (gone - resting) / Math.max(1, lit - resting);
   expect(left, `a second later it kept ${(left * 100).toFixed(0)}%`).toBeLessThan(0.25);
 });
+
+/* THE INTRODUCTION, REPLACED — 2026-09-25: "replace the introduction
+   paragraph with" the owner's own two, word for word. */
+test("the introduction is the owner's two paragraphs", async ({ page }) => {
+  await page.goto(PAGE);
+  const paras = page.locator("#introduction .pine-text p");
+  await expect(paras).toHaveCount(2);
+  await expect(paras.first()).toHaveText(/^Pineward is a fragrance house that prides itself with fragrances that smell like a forest/);
+  await expect(paras.first()).toContainText("such as Fanghorn II, which smells like something from J.R. Tolkeins Works).");
+  await expect(paras.nth(1)).toHaveText(/\(both of which I feel they have done quite well\)\.$/);
+});

@@ -13,8 +13,7 @@
 // weight of line snapped to the pixel — a laboratory beaker with its lip
 // flared either side and a pouring spout on one, graduations up the
 // inside wall (a long tick every 50 ml, numbered, a short one between),
-// ml at the top, a pointer outside the wall reading how full it is, and
-// the bench it stands on ruled with the hatching a drawing puts under a
+// ml at the top, and the bench it stands on ruled with the hatching a drawing puts under a
 // fixed surface. The liquid is a flat tint with its surface ruled and a
 // meniscus turning up at each wall. A drop landing throws up a small
 // crown. Full, it OVERFLOWS: a run down the outside from the spout, and a
@@ -155,16 +154,8 @@
             c.moveTo(x + 1.5, sy); c.lineTo(x + spread, sy - up);
             c.stroke();
           }
-          // The reading: a pointer outside the wall at the surface, and
-          // what it reads.
-          const ml = Math.round((level * CAPACITY) / 5) * 5;
-          c.fillStyle = glass(0.7);
-          c.beginPath(); c.moveTo(R + 3, sy); c.lineTo(R + 8, sy - 3); c.lineTo(R + 8, sy + 3); c.closePath(); c.fill();
-          if (w > 36) {
-            c.font = Math.max(7, Math.round(w * 0.12)) + "px 'IBM Plex Mono', monospace";
-            c.textBaseline = "middle";
-            c.fillText(String(ml), R + 11, sy);
-          }
+          // (A pointer at the surface and its reading in ml stood outside
+          // the wall for a round; the owner asked for both gone.)
         }
 
         // THE GLASS: the walls, the base with its corners turned, the lip

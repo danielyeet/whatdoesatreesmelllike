@@ -286,3 +286,16 @@ test("the house is what the sheet's second picture points at", async ({ page }) 
   await expect(second.locator(".sheet-caption"))
     .toHaveText("ADAR The House That You Have Never Heard Of");
 });
+
+/* THE INTRODUCTION IS WRITTEN — 2026-09-25, in the owner's words, in
+   place of the two placeholder paragraphs that stood there; the ADAR
+   Effect™ note under it was theirs already and stays. */
+test("the introduction is the owner's, and no placeholder is left in it", async ({ page }) => {
+  await page.goto(ADAR);
+  const intro = page.locator("#introduction .adar-text");
+  await expect(intro.locator("p").first())
+    .toHaveText(/^Adar is a house I would consider myself very lucky to have smelled/);
+  await expect(intro).toContainText("my Magnus Opus at the time of writing.");
+  await expect(intro.locator(".adar-effect")).toContainText("I have coined the term ADAR Effect™");
+  await expect(intro).not.toContainText(/placeholder/i);
+});

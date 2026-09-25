@@ -117,11 +117,14 @@
   // ============================================================
   const stage = document.createElement("div");
   stage.className = "frag-stage is-list";
-  const oldHead = view.querySelector(".index-col");
+  // ITS NAME: "Individual" over "Fragrances", smaller — the owner's, the
+  // night of 2026-09-25, when the line under it ("The ones with no house
+  // here", read off the old view's head) was taken off. The old view
+  // underneath keeps its own head as it was.
   stage.innerHTML =
     '<aside class="frag-aside">' +
+      '<p class="frag-aside-kicker">Individual</p>' +
       '<p class="frag-aside-name">Fragrances</p>' +
-      '<p class="frag-aside-say"></p>' +
       '<p class="frag-aside-count"><span class="frag-aside-big"></span><span class="frag-aside-unit">written up</span></p>' +
       '<dl class="frag-readings">' +
         '<div><dt>Houses</dt><dd class="frag-read-houses"></dd></div>' +
@@ -167,7 +170,6 @@
         '</button>';
       }).join("") +
     '</div>';
-  stage.querySelector(".frag-aside-say").textContent = oldHead ? oldHead.textContent.trim() : "";
   const aside = stage.querySelector(".frag-aside");
   const list = stage.querySelector(".frag-items");
   const scroller = stage.querySelector(".frag-list-scroll");

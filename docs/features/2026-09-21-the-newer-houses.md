@@ -325,7 +325,8 @@ four fragrances, and a paragraph for the very end of the page.
   the **titles** stay as the house spells them, which is the one correction this site
   makes.
 - **One sentence stops half way** — *The vibe I get from Les Abstraits is that it is
-  stuff* — and is printed that way on purpose. It is theirs to finish.
+  stuff* — and is printed that way on purpose. It is theirs to finish. (**Taken out** at their
+  word on 2026-09-25 — see the last section.)
 - **Stages** where they wrote them (Belle Âme and La Douleur Exquise: Top, Mid, Dry Down);
   plain paragraphs where they did not (Des Cendres, Philosopher's Walk).
 - **La Douleur Exquise quotes Fragrantica** on where its materials come from. It is set as a
@@ -767,3 +768,53 @@ and/or mid.* Tested in `tests/houses.spec.js`: `Guitarist's dry down ends on the
 merging into the rest`. (The same round, Water Me gained a line — see [Tale
 Parfums](2026-09-23-tale-parfums.md).)
 
+
+## 2026-09-25, last — Grande's drift as strong as its hover; Les Abstraits' half sentence out
+
+Files touched: `grande.js` (the drift rebuilt), `houses/les-abstraits.html`, `abstraits.js`
+(the beaker's fill), `tests/houses.spec.js`.
+
+> Intensify the particles in grande parfums particle page (make it like the hover in SD)
+> Remove the sentence "The vibe I get from Les Abstraits is that it is stuff" from les abstraits
+
+**Grande Parfums' drift is drawn as its hover is.** The page's ground was the quietest thing on
+the site — up to 420 fine specks, most of them barely there, rising the whole height of the
+window over half a minute and about half bursting on the way. The Houses view's hover for the
+same house (`rise` in `motifs.js`) is much stronger, and "like the hover" is taken literally:
+`grande.js` now draws the hover's particle on the page.
+
+- **More of them, and heavier**: a speck every 2,000 square pixels (it was 3,400), up to 640
+  (it was 420), each at `ALPHA` 0.5 (it was 0.12–0.3) and 1.1–2.1px (it was 1.3), one in ten a
+  mote of 2.3–3.2px.
+- **Every one bursts.** Each is **born** somewhere in the lower four fifths of the window,
+  fades in over 0.9s, rises 18–42px a second with a quick small sway, and after 4.2–8.2 seconds
+  (`LIVE`) **bursts** into three to five finer specks (seven to ten for a mote) that fly out
+  7–16px and fade over 0.9s — and is born again somewhere else. Where it is born each round comes
+  off a hash of its number and the round (`born()`), so there is no list of positions to keep
+  and nothing is rolled while drawing.
+- **Kept**: it leans towards the pointer (`HAND`, `HAND_LEAN`); over the writing's column it is
+  still drawn at `QUIET` of its strength, so the words are never fought; it stands still, drawn
+  once, with reduced motion; below 700px it draws at the lower ratio.
+
+It is still the ground that **says nothing about the house** — the owner has still not said what
+Grande Parfums is. It is simply as loud as the hover now.
+
+**Les Abstraits' half sentence is out.** *The vibe I get from Les Abstraits is that it is stuff*
+was a paragraph of its own in the introduction, left standing because the owner left it; they
+asked for it gone, and it is. The comment at the top of the page says so.
+
+**And its beaker fills half as fast** (`FILL_DROPS` 16 → 32), with no pointer or number at its
+surface — the same change as the hover's, in the same `beaker.js`; see [the
+motifs](2026-09-23-the-chain-and-its-motifs.md).
+
+### How to test it
+
+- **`Grande Parfums has a drift as strong as its hover, quiet over the writing`** (replaces *…has
+  a drift, and it is a quiet one*) — at 1280 × 720, a second and a half in: over 600 lit pixels in the
+  margins carrying over 20,000 of alpha between them — the old drift carried about 4,700 on 280
+  — a lit pixel over the writing weighing less than one in the margins, and a fifth of them or
+  more in the top half of the window. (The mean weight of a lit pixel was tried first and is no
+  gauge: a small soft speck is mostly edge.)
+- **`Les Abstraits' introduction no longer carries the unfinished sentence`**.
+- The page's drip test runs its clock for 160 seconds and checks nothing is written on its canvas
+  but the graduations.

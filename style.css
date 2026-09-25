@@ -2123,11 +2123,13 @@ html.js-coming body.favorites-page .page-content { visibility: hidden; }
    without it the page is the plain list of rows every other category
    uses, and stays that way.
    ================================================================== */
-body.structured { background: #0a0b0e; }
+/* A little brighter since the night of 2026-09-25 ("Make the theories
+   page a little brighter"): it was #0a0b0e. */
+body.structured { background: #15171d; }
 /* Before structure.js has taken over: the ground is already the
    drawing's, so what follows is the drawing arriving rather than one
    page being swapped for another. */
-html.js-coming body.theories-page { background: #0a0b0e; }
+html.js-coming body.theories-page { background: #15171d; }
 html.js-coming body.theories-page .page-content { visibility: hidden; }
 html.js-coming body.theories-page .menu-trigger { color: #dce6f7; }
 body.structured .page-content { padding: 0; margin: 0; max-width: none; }
@@ -2161,7 +2163,7 @@ body.structured .menu-trigger { color: #dce6f7; }
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: #0a0b0e;
+  background: #15171d;
 }
 .structure-field { display: block; width: 100%; height: 100%; }
 
@@ -7457,29 +7459,39 @@ img.frag-flier-face { object-fit: cover; }
 /* THE BUTTON. "in a different font and emphasized" — so it is the
    site's mono rather than its reading face, ruled, letterspaced and
    set apart from the paragraph above it. It is a real <button>, so it
-   takes the keyboard and the global focus ring without anything here.*/
+   takes the keyboard and the global focus ring without anything here.
+   AS WIDE AS THE WRITING, and plainer to see, since the night of
+   2026-09-25: "make the notes button in all fragrances more visible, and
+   make it wider, so that it stretches from where it is to the cursor" —
+   it was a small box the width of its words in a hairline the colour of
+   the page's rules. A second one (Almost Human's landscape) stands
+   under the first. */
 .note-open {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 9px;
-  margin: 26px 0 0;
-  padding: 9px 14px;
+  gap: 11px;
+  width: 100%;
+  margin: 28px 0 0;
+  padding: 13px 16px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  text-align: left;
   color: var(--ink);
-  background: none;
-  border: 1px solid var(--line);
+  background: rgba(var(--ink-rgb), 0.035);
+  border: 1px solid rgba(var(--ink-rgb), 0.5);
   cursor: pointer;
-  transition: border-color 220ms ease, color 220ms ease;
+  transition: border-color 220ms ease, color 220ms ease, background-color 220ms ease;
 }
-.note-open:hover { border-color: var(--ink); }
+.note-open + .note-open { margin-top: 10px; }
+.note-open:hover { border-color: var(--ink); background: rgba(var(--ink-rgb), 0.07); }
 /* The registration mark this site uses for anything that opens: a
    hollow square, filled in while it is open. */
 .note-open-mark {
-  width: 7px;
-  height: 7px;
+  flex: none;
+  width: 8px;
+  height: 8px;
   border: 1px solid currentColor;
   transition: background 220ms ease;
 }
@@ -7790,7 +7802,7 @@ a.note-cite:hover { color: var(--ink); }
 .adar-page .note-scrim { background: rgba(0, 0, 0, 0.62); }
 .adar-page .note-shut { color: #a8a8b4; }
 .adar-page .note-shut:hover { color: #dcdce4; }
-.adar-page .note-open { color: #dcdce4; border-color: rgba(232, 232, 238, 0.28); }
+.adar-page .note-open { color: #dcdce4; border-color: rgba(232, 232, 238, 0.5); background: rgba(232, 232, 238, 0.04); }
 .adar-page .note-open:hover { border-color: #dcdce4; }
 
 @media (max-width: 560px) {
@@ -9010,12 +9022,12 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   letter-spacing: -0.02em;
   line-height: 1;
 }
-.frag-aside-say {
-  margin: 10px 0 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.frag-aside-kicker {
+  margin: 0 0 6px;
+  font-size: clamp(14px, 1.15vw, 17px);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
   color: var(--muted);
 }
 .frag-aside-count {
@@ -9471,7 +9483,7 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   }
   .frag-aside { grid-column: 1; grid-row: 1; padding: 0 0 12px; }
   .frag-aside-name { font-size: 26px; }
-  .frag-aside-say { margin-top: 6px; }
+  .frag-aside-kicker { font-size: 13px; margin-bottom: 4px; }
   .frag-aside-count, .frag-readings, .frag-scale, .frag-mark { display: none; }
   .frag-options {
     grid-column: 2;
@@ -9857,16 +9869,16 @@ body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.5; }
 
 /* THE SHELF: every row of books stands exactly `--row` high — each
    book is pushed down by what it is short of that — so every row's foot
-   is at a known height and the case can be drawn under them, however
+   is at a known height and a board can be drawn under each, however
    many rows the width makes.
 
-   THE CASE is drawn by note-library.js on a canvas of its own behind the
-   books (`.lib-case`): a bookcase of dark walnut in specks — uprights, a
-   crown, a back of boards, a lit board under every row with a brass
-   label holder on its front. (It was a RAIL for two rounds — one lit
-   line under each row and a glow falling off it — which the owner asked
-   to have redesigned, "I like everything about the library except the
-   shelves".) */
+   THE BOARDS are drawn by note-library.js on a canvas of its own behind
+   the books (`.lib-boards`): a flat walnut board under every row — its
+   lit top, its front, a shadow under it — with a small label giving the
+   call numbers on that row, and no frame round any of it. (It was a
+   RAIL for two rounds, and then for one a whole BOOKCASE in specks with
+   uprights, a crown, a back and a plinth, whose "bezel" the owner asked
+   to have taken off.) */
 body.lib-built .lib-records {
   --row: 214px;
   --gap: 52px;
@@ -9878,7 +9890,7 @@ body.lib-built .lib-records {
   row-gap: var(--gap);
   padding: 0 10px 18px;
 }
-.lib-case {
+.lib-boards {
   position: absolute;
   z-index: 0;
   pointer-events: none;
@@ -9886,10 +9898,13 @@ body.lib-built .lib-records {
 body.lib-built .lib-records > .lib-record { z-index: 1; }
 
 /* A RECORD IS A BOOK, standing on its shelf, and its spine is DRAWN IN
-   SPECKS — a canvas of its own (`.lib-spine`, note-library.js) in the
-   cloth of its accord: rounded by the light, raised bands at head and
-   foot, on some a gilt rule. The owner asked for the books "out of
-   particles but actually look like books, with appropriate colours".
+   FLAT SHAPES — a canvas of its own (`.lib-spine`, note-library.js) in
+   the cloth of its accord: facets for its roundness, raised bands at head
+   and foot, on some a gilt rule or a title panel, and a label at its foot.
+   It was drawn in specks for a round, at the owner's "out of particles
+   but actually look like books, with appropriate colours"; they then
+   asked for the books not to "look granular ... more of a geometric
+   character" (2026-09-25, night).
 
    WHAT WENT: for two rounds a record was a FOLDER — a graphite file with
    one coloured tab, and then a "digital" one with a pixel glyph at its

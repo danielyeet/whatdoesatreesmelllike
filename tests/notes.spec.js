@@ -263,6 +263,36 @@ test("every fragrance gets a View notes button, and it opens a panel",
   expect(errors).toEqual([]);
 });
 
+/* THE BUTTON IS PLAIN TO SEE, AND RUNS THE WIDTH OF THE WRITING —
+   2026-09-25: "mAKE THE notes button in all fragrances more visible, and
+   make it wider, so that it stretches from where it is to the cursor",
+   the cursor standing at the right edge of the writing's column. So on
+   a house of the shared shape, on Pineward and on ADAR, which carry
+   their own: the button is the column's width, its border is drawn in
+   ink at half strength or more, and it has a ground of its own. */
+test("View notes is plain to see and runs the width of the writing", async ({ page }) => {
+  await serveDependenciesLocally(page);
+  for (const [url, part] of [["/houses/tombstone.html", ".human-part"],
+    ["/houses/pineward.html", ".pine-part"], ["/houses/adar.html", ".adar-part"]]) {
+    await page.goto(url);
+    await page.waitForTimeout(500);
+    const first = page.locator(part).first();
+    await first.locator("summary").click();
+    await page.waitForTimeout(900);
+    const seen = await first.locator(".note-open").first().evaluate((b) => {
+      const col = b.parentElement.getBoundingClientRect();
+      const box = b.getBoundingClientRect();
+      const cs = getComputedStyle(b);
+      const alpha = (c) => { const m = /rgba?\(([^)]+)\)/.exec(c); const v = m ? m[1].split(",") : []; return v.length > 3 ? +v[3] : 1; };
+      return { width: box.width, col: col.width, border: alpha(cs.borderTopColor),
+        ground: alpha(cs.backgroundColor), clear: cs.backgroundColor === "rgba(0, 0, 0, 0)" };
+    });
+    expect(seen.width, `${url}: ${seen.width}px of a ${seen.col}px column`).toBeGreaterThan(seen.col * 0.95);
+    expect(seen.border, `${url}: its border at ${seen.border}`).toBeGreaterThanOrEqual(0.45);
+    expect(seen.clear, `${url}: it has a ground of its own`).toBe(false);
+  }
+});
+
 /* A FLAT LIST SAYS IT IS FLAT. Pineward publishes no pyramids at all,
    and setting one of its fragrances out as Top / Mid / Base would be
    three claims nobody made — so the panel says the source gave one

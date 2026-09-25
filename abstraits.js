@@ -98,7 +98,7 @@
   const DRIP_HANG = [0.8, 1.2];    // seconds a drop gathers before it lets go
   const DRIP_PULL = 1400;          // px a second a second, as it lets go
   const DRIP_MOST = 520;           // px a second, as fast as a drop falls
-  const FILL_DROPS = 16;           // drops to fill the beaker to its brim
+  const FILL_DROPS = 32;           // drops to fill the beaker to its brim — half as fast as 16 (2026-09-25)
   const SPILL_MOST = 48;           // px, half the spill's length at its largest
   const FOOT = 104;                // px, the bench the beaker stands on, above the
                                    // page's foot — clear of the reading in the corner

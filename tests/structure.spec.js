@@ -439,6 +439,9 @@ test("it is drawn white on near-black, not blue on a night sky", async ({ page }
     return (r + g + b) / 3;
   });
   expect(tone, "the ground should be near-black").toBeLessThan(30);
+  // ...and a little lighter than it was: "Make the theories page a little
+  // brighter" (2026-09-25). It was #0a0b0e, a tone of about 12.
+  expect(tone, "a little brighter than it was").toBeGreaterThan(18);
 
   // READ AT THREE MOMENTS AND TAKEN TOGETHER. The drawing moves — the
   // carriage and the traverses carry the accent across it — so one

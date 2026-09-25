@@ -224,7 +224,15 @@
     }
     const sheet = document.getElementById("sheet");
     const r = sheet ? sheet.getBoundingClientRect() : null;
-    return r && r.width ? r.left + r.width / 2 : window.innerWidth / 2;
+    if (!r || !r.width) return window.innerWidth / 2;
+    // WHERE THE AXIS STANDS AT REST, not where it is while its view is
+    // still drifting in: read mid-crossing, the Houses view is still 26px
+    // off to the side, and the line used to land that far from the axis
+    // (the owner, 2026-09-25: "go completely where the center line is").
+    const holder = sheet.closest(".view");
+    const moved = holder ? getComputedStyle(holder).transform : "none";
+    const off = moved && moved !== "none" ? new DOMMatrix(moved).m41 : 0;
+    return r.left - off + r.width / 2;
   }
   function placeThread(x, shown, moving) {
     // SET DOWN, it is there at once, on the axis it stands over — it

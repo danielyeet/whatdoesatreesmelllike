@@ -18,7 +18,8 @@
 //                 axis, large and sharp; the ones before and after it
 //                 turned away round the axis, above and below, smaller
 //                 and fainter the further round they are. Every house
-//                 is joined to the axis by a TETHER of specks.
+//                 is joined to the axis by a SPOKE — a tube of particles
+//                 standing in the helix's own space, turning with it.
 //   THE FRONT     the house you are on: four corners of specks mark it,
 //                 and pressing it opens the house. Pressing any other
 //                 brings IT to the front. Its line about the house shows
@@ -79,9 +80,16 @@
   const FRONT_MOST = 360;          // px
   const FRONT_FEWEST = 150;        // px
   const SHAPE = 0.86;              // a house is this wide for its height
-  const SMALLEST = 0.46;           // the scale of a house right behind the axis
-  const SIDE_FALL = 2;             // how quickly a house shrinks as it turns away:
-                                   // at 2, the ones either side are three quarters of the front
+  const SMALLEST = 0.4;            // the scale of a house right behind the axis
+  const SIDE_FALL = 2.6;           // how quickly a house shrinks as it turns away:
+                                   // at 2.6, the ones either side are two thirds of the front
+  // AND FADES as it turns away: the front house — the one the page rests
+  // on — whole, the ones either side at about two thirds, the ones beyond
+  // at under a third. "fade and make smaller the non-selected house (not
+  // hovered, but the one on which the page rests)" (2026-09-25, night);
+  // they were three quarters the size and four fifths as strong.
+  const SIDE_FADE = 0.25;          // how faint a house right behind the axis is
+  const SIDE_FADE_FALL = 1.8;
 
   // TRAVELLING. The wheel moves the helix by a fraction of a house per
   // pixel; it comes to rest on the nearest house once the wheel stops.
@@ -101,15 +109,34 @@
   // THE PARTICLES
   const FALL = 46;                 // px a second down the axis
   const AXIS_SPECKS = 460;
-  // THE AXIS IS THE SPINE of the whole drawing — the owner asked for it
-  // emphasised — so it is drawn as one: a soft column of light either
-  // side of it, a firm line, and now and then a pulse running down it.
-  const AXIS_GLOW = 22;            // px either side of the line
+  // THE AXIS IS THE SPINE of the whole drawing, drawn as one: a faint
+  // column of light either side of it, a line, and now and then a pulse
+  // running down it. It was made heavier at the owner's word (2026-09-24)
+  // and then QUIETER at it (2026-09-25, night: "de emphasize the black
+  // line in the middle ... especially with the shadow around it"): the
+  // line thinner and half as dark, the light either side a third as
+  // strong and narrower, the pulses and the specks falling down it softer.
+  const AXIS_GLOW = 12;            // px either side of the line
+  const AXIS_GLOW_LIT = 0.035;     // how strong that light is at the line
+  const AXIS_LINE = 1.2;           // px, the line
+  const AXIS_LINE_LIT = 0.55;      // and how dark
   const AXIS_PULSES = 3;           // running down it at once
   const PULSE_SPEED = 150;         // px a second
   const PULSE_LEN = 90;            // px, the pulse's tail
+  const PULSE_LIT = 0.35;
   const STRAND_STEP = 0.022;       // houses between strand specks
-  const TETHER_SPECKS = 30;
+  // THE SPOKES from the axis to every house, since the night of 2026-09-25
+  // — "connect the fragrances to the spiral in a 3d way, so that the
+  // conenctions of the fragrances to the central line will move in a 3rd
+  // dimension along with the fragrances ... make the connecting line
+  // particular": each is a loose tube of particles standing in the
+  // helix's own space, from the axis out to where its house stands, so it
+  // turns with the house as the helix turns — nearer specks larger and
+  // stronger, the half behind the axis drawn behind it — the particles
+  // flowing outward along it and the tube twisting slowly about itself.
+  const SPOKE_PARTS = 130;         // particles to a spoke
+  const SPOKE_WIDTH = 5;           // px, the tube's reach either side of its line
+  const SPOKE_TWIST = 0.25;        // radians a second the tube turns about itself
   const DUST = 520;                // specks turning round the axis (fewer on a phone)
   const DUST_SPIN = 0.07;          // radians a second
   // THE CORNERS: four brackets of specks standing just outside the front
@@ -299,7 +326,7 @@
       // was. Only once it is wholly off the window is it let go of.
       const half = frontH * s / 2 + 30;   // and its label under it
       const gone = p.y + half < 0 || p.y - half > H;
-      let seen = gone ? 0 : come * (0.3 + 0.7 * (p.z + 1) / 2);
+      let seen = gone ? 0 : come * (SIDE_FADE + (1 - SIDE_FADE) * Math.pow((p.z + 1) / 2, SIDE_FADE_FALL));
       // DRAWN IN BY ADAR'S WELLS (motifs.js): leaning towards the hole,
       // turned round it and shrunk — gently, a house being a house, and
       // never the one being rested on, which is under the pointer.
@@ -362,6 +389,10 @@
     dust.push({ a: random() * Math.PI * 2, y: random() * 2 - 1, r: 0.12 + 0.98 * Math.pow(random(), 0.7),
       size: 0.6 + random() * 1.3, lit: 0.3 + random() * 0.7 });
   }
+  const spokes = frames.map(() => Array.from({ length: SPOKE_PARTS }, () => ({
+    q: random(), r: Math.pow(random(), 0.6) * SPOKE_WIDTH, phi: random() * Math.PI * 2,
+    v: 0.04 + random() * 0.09, size: 0.7 + random() * 0.9, lit: 0.45 + random() * 0.55,
+  })));
   const flow = [];    // bright specks riding the strands
   for (let n = 0; n < 60; n++) flow.push({ u: random() * (N + 4) - 2, v: 0.06 + random() * 0.12, strand: n % 2 });
   const bursts = [];  // specks thrown out as a house arrives
@@ -397,6 +428,37 @@
     ink.fillRect(x - s / 2, y - s / 2, s, s);
   }
 
+  /** THE SPOKES — see SPOKE_* above. Drawn in two passes, so the half of
+      each that stands behind the axis is drawn behind it: `behind` says
+      which half this pass draws. A house arriving comes out along its
+      spoke, the spoke growing with it. */
+  function spokesPass(t, behind) {
+    frames.forEach((frame, i) => {
+      const d = i - pos;
+      if (Math.abs(d) > 2.6 || !shown[i]) return;
+      const a = d * TURN, sa = Math.sin(a), ca = Math.cos(a);
+      const y0 = cy + d * span;
+      const reach = R * shown[i];
+      const fade = Math.pow(Math.max(0, 1 - Math.abs(d) / 2.6), 0.7) * shown[i] * helixShown;
+      const pulse = REDUCE_MOTION ? -1 : (t * 0.8 + i * 0.17) % 1;
+      const twist = REDUCE_MOTION ? 0 : t * SPOKE_TWIST;
+      spokes[i].forEach((s) => {
+        const q = REDUCE_MOTION ? s.q : (s.q + t * s.v) % 1;
+        // Along the spoke in the helix's own space, then off it on a ring
+        // round it — thin at the axis, fullest part way out.
+        const rad = s.r * (0.3 + 0.7 * Math.sin(Math.PI * Math.min(1, q * 1.15)));
+        const phi = s.phi + twist;
+        const z = q * reach * ca - rad * Math.sin(phi) * sa;
+        if ((z < 0) !== behind) return;
+        const x = cx + q * reach * sa + rad * Math.sin(phi) * ca;
+        const y = y0 + rad * Math.cos(phi);
+        const near = Math.max(0, Math.min(1, (z / R + 1) / 2));
+        const hot = pulse >= 0 ? Math.max(0, 1 - Math.abs(q - pulse) * 9) : 0;
+        speck(x, y, s.size * (0.7 + 1.0 * near) + hot * 1.2, (0.2 + 0.65 * near + hot * 0.35) * s.lit * fade);
+      });
+    });
+  }
+
   function draw(now) {
     if (!ink || !W) return;
     const t = now / 1000;
@@ -424,9 +486,11 @@
     // its line, and the pulses running down it.
     const top = cy - (cy + 20) * axisShown;
     const foot = cy + (H - cy + 20) * axisShown;
+    // The half of every spoke that stands behind the axis, before it.
+    spokesPass(t, true);
     const glow = ink.createLinearGradient(cx - AXIS_GLOW, 0, cx + AXIS_GLOW, 0);
     glow.addColorStop(0, "rgba(" + INK + ", 0)");
-    glow.addColorStop(0.5, "rgba(" + INK + ", 0.1)");
+    glow.addColorStop(0.5, "rgba(" + INK + ", " + AXIS_GLOW_LIT + ")");
     glow.addColorStop(1, "rgba(" + INK + ", 0)");
     ink.globalAlpha = axisShown;
     ink.fillStyle = glow;
@@ -437,21 +501,21 @@
         const y = -20 + ((t * PULSE_SPEED + k * lap / AXIS_PULSES) % lap);
         const tail = ink.createLinearGradient(0, y - PULSE_LEN, 0, y);
         tail.addColorStop(0, "rgba(" + INK + ", 0)");
-        tail.addColorStop(1, "rgba(" + INK + ", 0.75)");
+        tail.addColorStop(1, "rgba(" + INK + ", " + PULSE_LIT + ")");
         ink.fillStyle = tail;
         const from = Math.max(top, y - PULSE_LEN), to = Math.min(foot, y);
         if (to > from && bend) {
-          ink.strokeStyle = tail; ink.lineWidth = 3.5;
+          ink.strokeStyle = tail; ink.lineWidth = 2;
           bentAxis(from, to); ink.stroke();
-        } else if (to > from) ink.fillRect(cx - 1.75, from, 3.5, to - from);
+        } else if (to > from) ink.fillRect(cx - 1, from, 2, to - from);
       }
     }
     ink.fillStyle = "rgb(" + INK + ")";
-    ink.globalAlpha = 0.8 * axisShown;
+    ink.globalAlpha = AXIS_LINE_LIT * axisShown;
     if (bend) {
-      ink.strokeStyle = "rgb(" + INK + ")"; ink.lineWidth = 1.8;
+      ink.strokeStyle = "rgb(" + INK + ")"; ink.lineWidth = AXIS_LINE;
       bentAxis(top, foot); ink.stroke();
-    } else ink.fillRect(cx - 0.9, top, 1.8, foot - top);
+    } else ink.fillRect(cx - AXIS_LINE / 2, top, AXIS_LINE, foot - top);
     // Its ticks travel with you: one every quarter house, a long one at
     // each house.
     const quarter = span / 4;
@@ -471,7 +535,7 @@
       const y = ((a.y * H + (REDUCE_MOTION ? 0 : t * FALL * (0.6 + a.lit))) % H + H) % H;
       if (y < top || y > foot) continue;
       const bright = 1 - Math.abs(y - cy) / (H * 0.7);
-      speck(cx + a.off, y, a.size, a.lit * (0.25 + bright) * 0.85 * axisShown);
+      speck(cx + a.off, y, a.size, a.lit * (0.25 + bright) * 0.55 * axisShown);
     }
 
     // THE HELIX comes second, once the axis is drawn: its strands wind
@@ -506,7 +570,9 @@
         const y = cy + d * span;
         const depth = (z + 1) / 2;
         const fade = Math.max(0, 1 - Math.abs(d) / 2.6);
-        speck(x, y, 0.9 + depth * 1.6 + tip * 1.4, ((0.16 + 0.62 * depth) * fade + tip * 0.5) * (strand ? 0.6 : 1));
+        // A little stronger since the night of 2026-09-25 — "slightly
+        // emphasizing the spiral line guiding the houses".
+        speck(x, y, 1.1 + depth * 1.8 + tip * 1.4, ((0.22 + 0.72 * depth) * fade + tip * 0.5) * (strand ? 0.7 : 1));
       }
     }
     // Bright specks travelling along the strands.
@@ -520,21 +586,8 @@
       speck(cx + R * Math.sin(a), cy + d * span, 1.6 + z, (0.35 + 0.5 * (z + 1) / 2) * (1 - Math.abs(d) / 2.6) * helixShown);
     }
 
-    // THE TETHERS: from the axis to every house, a line of specks with
-    // a pulse running outward along it.
-    frames.forEach((frame, i) => {
-      const d = i - pos;
-      if (Math.abs(d) > 2.6 || !shown[i]) return;
-      const p = spot(d);
-      const x1 = cx + (p.x - cx) * shown[i];
-      const fade = Math.max(0, 1 - Math.abs(d) / 2.6) * shown[i];
-      const pulse = REDUCE_MOTION ? -1 : (t * 0.8 + i * 0.17) % 1;
-      for (let k = 0; k <= TETHER_SPECKS; k++) {
-        const q = k / TETHER_SPECKS;
-        const hot = pulse >= 0 ? Math.max(0, 1 - Math.abs(q - pulse) * 9) : 0;
-        speck(cx + (x1 - cx) * q, p.y, 1.1 + hot * 1.6, (0.22 + 0.35 * (p.z + 1) / 2 + hot * 0.5) * fade);
-      }
-    });
+    // THE SPOKES, the half of each standing in front of the axis.
+    spokesPass(t, false);
 
     // THE CORNERS, round the front house and its label. Where they stand
     // is read off the page (the label grows a line when the house is

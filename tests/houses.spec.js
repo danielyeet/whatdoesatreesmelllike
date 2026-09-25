@@ -403,15 +403,18 @@ test("the specks kindle under the pointer, linger a moment, and go out again",
   expect(gone, `and back about where it was: away ${away}, gone ${gone}`).toBeLessThan(near * 0.95);
 });
 
-/* GRANDE PARFUMS HAS A GROUND NOW, and it is the quietest one on the
-   site: the owner asked for "some particles and effects... subtle
-   designs please". So what is checked is that it is THERE and that it
-   is SUBTLE, which are two different failures — a drift nobody can see
-   is as wrong as one that fights the writing.
-
-   The page is on the site's own paper and the specks are drawn in its
-   ink, so "subtle" here means a low weight per lit pixel. */
-test("Grande Parfums has a drift, and it is a quiet one", async ({ page }) => {
+/* GRANDE PARFUMS HAS A GROUND, and since the night of 2026-09-25 it is as
+   strong as its hover on the Houses view — "Intensify the particles in
+   grande parfums particle page (make it like the hover in SD)". It was
+   the quietest ground on the site ("subtle designs please"): at
+   1280 × 720, a second and a half in, about 280 lit pixels in the
+   margins weighing 4,700 of alpha between them, where the new one has
+   about 1,200 weighing over 40,000. So what is checked now is that it
+   is THERE, that it carries several times the old ink, and that it
+   still keeps off the writing — a drift that fights the words is still
+   wrong. (The mean of a lit pixel is no gauge: a small soft speck is
+   mostly edge, and its edges are partly lit.) */
+test("Grande Parfums has a drift as strong as its hover, quiet over the writing", async ({ page }) => {
   const errors = collectPageErrors(page, ["Failed to load resource"]);
   await page.goto(GRANDE);
   await page.waitForTimeout(1600);
@@ -422,24 +425,29 @@ test("Grande Parfums has a drift, and it is a quiet one", async ({ page }) => {
     const g = el.getContext("2d", { willReadFrequently: true });
     const im = g.getImageData(0, 0, el.width, el.height).data;
     const ratio = el.width / window.innerWidth;
-    let on = 0, weight = 0, top = 0, bottom = 0;
+    let on = 0, weight = 0, top = 0, bottom = 0, over = 0, overOn = 0;
+    const edge = (window.innerWidth - 940) / 2;
     for (let i = 0; i < im.length; i += 4) {
       const a = im[i + 3];
       if (a <= 4) continue;
+      const x = ((i / 4) % el.width) / ratio;
+      const y = Math.floor((i / 4) / el.width) / ratio;
+      if (x > edge + 120 && x < window.innerWidth - edge - 120) { over += a; overOn++; continue; }
       on += 1;
       weight += a;
-      const y = Math.floor((i / 4) / el.width) / ratio;
       if (y < window.innerHeight / 2) top += 1; else bottom += 1;
     }
-    return { on, mean: on ? weight / on : 0, top, bottom };
+    return { on, weight, mean: on ? weight / on : 0, top, bottom, overMean: overOn ? over / overOn : 0 };
   });
 
   expect(seen, "the page should have a canvas").toBeTruthy();
-  expect(seen.on, "there should be a drift at all").toBeGreaterThan(60);
+  expect(seen.on, "there should be a drift at all").toBeGreaterThan(600);
 
-  // SUBTLE. 255 is solid ink; this is dust on paper.
-  expect(seen.mean, `the average speck weighs ${seen.mean.toFixed(1)} of 255`)
-    .toBeLessThan(90);
+  // AS STRONG AS THE HOVER: the margins carry several times the ink the
+  // quiet drift did — and over the writing a lit pixel weighs less.
+  expect(seen.weight, `the margins carry ${seen.weight} of alpha`).toBeGreaterThan(20000);
+  expect(seen.overMean, `over the writing ${seen.overMean.toFixed(1)}, in the margins ${seen.mean.toFixed(1)}`)
+    .toBeLessThan(seen.mean);
 
   // AND IT IS SPREAD OVER THE PAGE. The first version rolled each
   // speck's lifetime apart from its speed, so a slow one lived and
@@ -562,11 +570,20 @@ test("Tombstone's stones stand in the margins with their reflections under them"
    drops and then overflows, dropping from its spout. */
 test("Les Abstraits has its armoire with iris on one side and a drip down the whole page into a beaker on the other",
   async ({ page }) => {
-  test.setTimeout(150000);
+  test.setTimeout(240000);
   await page.addInitScript(() => {
     window.__iris = false;
     window.__clothes = new Set();
+    window.__words = new Set();
     const P = CanvasRenderingContext2D.prototype;
+    // WHAT IS WRITTEN on the page's canvas: the beaker's graduations and
+    // nothing else — the pointer and its running number ("◀ 258") were
+    // taken off at the owner's word (2026-09-25).
+    const fillText = P.fillText;
+    P.fillText = function (t) {
+      if (this.canvas.classList.contains("human-field")) window.__words.add(String(t));
+      return fillText.apply(this, arguments);
+    };
     const d = Object.getOwnPropertyDescriptor(P, "strokeStyle");
     Object.defineProperty(P, "strokeStyle", {
       get() { return d.get.call(this); },
@@ -587,8 +604,9 @@ test("Les Abstraits has its armoire with iris on one side and a drip down the wh
   });
   // ON A CLOCK OF THE TEST'S OWN: the drip is slow now ("make the
   // dripping slower, less filling") — a drop every two or three seconds
-  // and sixteen to the brim — so the minute and more it takes to fill is
-  // run through rather than waited out.
+  // and thirty-two to the brim since it was halved again ("half the
+  // filling speed") — so the minute and a half it takes to fill is run
+  // through rather than waited out.
   await page.clock.install();
   await page.goto(ABSTRAITS);
   const read = () => page.evaluate(() => {
@@ -626,11 +644,14 @@ test("Les Abstraits has its armoire with iris on one side and a drip down the wh
   await page.clock.runFor(600);
   const early = await read();
   expect(early.foot, "a beaker at the foot of the page").toBeGreaterThan(200);
-  await page.clock.runFor(80000);
+  await page.clock.runFor(160000);
   const late = await read();
   expect(late.drops, "the drops land in it").toBeGreaterThan(early.drops + 5);
   expect(late.spilled, "and once it is full, it drips over").toBeGreaterThan(0);
   expect(late.foot, `and it fills: ${early.foot} then ${late.foot}`).toBeGreaterThan(early.foot * 1.3 + 30);
+  const words = await page.evaluate(() => [...window.__words].sort());
+  expect(words.every((w) => /^(50|100|150|200|ml)$/.test(w)), `only its graduations are written: ${words.join(" ")}`)
+    .toBe(true);
 });
 
 /* QIMU & MUSICIANS: A SCORE IN THE MARGINS. "add some complex notes;
@@ -792,6 +813,16 @@ test("Les Abstraits ends with Antoine Lie's paragraph, in a new window",
       & Node.DOCUMENT_POSITION_FOLLOWING);
   });
   expect(after, "the paragraph should come after the fragrances").toBe(true);
+});
+
+/* THE SENTENCE THAT STOPPED HALF WAY is gone. "The vibe I get from Les
+   Abstraits is that it is stuff" stood unfinished in the introduction,
+   left so because the owner left it so, until they asked for it out
+   (2026-09-25). */
+test("Les Abstraits' introduction no longer carries the unfinished sentence", async ({ page }) => {
+  await page.goto(ABSTRAITS);
+  await expect(page.locator("body")).not.toContainText("The vibe I get from Les Abstraits");
+  await expect(page.locator("#introduction-name + .human-text p").first()).toBeVisible();
 });
 
 /* THE DRAWING IN DES CENDRES. The owner wrote "(claude, maybe try to

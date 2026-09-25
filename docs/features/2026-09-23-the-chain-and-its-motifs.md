@@ -730,3 +730,51 @@ npm test -- tests/contact-sheet.spec.js
 - The frame rate under ADAR's wells was measured at 60 in the test browser, with three wells;
   a slower machine is the thing to watch.
 
+
+## 2026-09-25, last — ADAR's wells rarer and kept apart, Tombstone's names gone, the beaker unread
+
+Files touched: `motifs.js`, `beaker.js`, `abstraits.js` (its own beaker's fill, the same
+change), `tests/contact-sheet.spec.js`, `tests/houses.spec.js`.
+
+> Please for adar, make the frequency of the black hole a less by 1/3. Also create a minimum
+> distance of were the black holes cannot spawn next to each other … in image 2, i want you to
+> remove the triangle showing the level, and i want you to remove the number displaying the
+> volume. also, half the filling speed. Remove the names of the fragrances that pop up with the
+> tombstone hover
+
+- **ADAR's wells a third rarer**: `rate` 0.45 → 0.3 a second. Still at most three, still one as
+  the house is rested on.
+- **And never next to each other.** `WELL_APART` (0.55 of the window's shorter side — about 400px
+  on a 1280 × 720 window) is the least distance between two wells. `wellSpot()` tries its
+  twenty-four places clear of the houses and then twelve anywhere, and takes only one clear of
+  every well already standing; **where there is no such room, no well is born that time**, rather
+  than one being squeezed in beside another. A well is put on `wells` the moment it is made
+  (rather than on its first frame), so two made in the same frame still keep apart.
+  `HouseMotifs.wellsAt()` hands out where they stand, for the test, as `census()` does.
+- **Tombstone writes nothing.** The five names cut into the wall and worn away — `epitaph()`,
+  `EPITAPHS`, `epitaphsLeft`, `NAME_APART`, and the resetting of the list in `start()` — are out
+  of the code. Its motifs are the roots from the edges (the top edge too), the soil, and the red
+  flowers whose petals fall and gather along the foot. `readAround`, the houses' boxes that the
+  names were kept off, stays: ADAR's wells still use it.
+- **The beaker has no reading.** The pointer outside the wall at the liquid's surface — the
+  *triangle showing the level* — and the number in ml beside it are gone from `beaker.js`, so
+  from both beakers: the hover's and Les Abstraits' own page's. The graduations and their numbers
+  stay; they are the scale, not a reading.
+- **Half as fast to fill**, both: `BEAKER_FILL` 12 → 24 drops on the Houses view, and
+  `FILL_DROPS` 16 → 32 on the house's own page. The drops come as often as they did; each is
+  half the height of liquid it was.
+
+### How to test it
+
+- **`Tombstone's motifs write no names, and still grow their roots`** (replaces *Tombstone's
+  motifs write each name once, never twice and never behind a house*) — every word the motifs'
+  canvas is asked to write in five seconds on Tombstone: none; no epitaph in the census; roots.
+- **`ADAR's wells never stand next to each other`** — twelve seconds of ADAR, read every half
+  second through `wellsAt()`: wells came, never more than three, and no two ever nearer than
+  0.55 of the window's shorter side.
+- **`Les Abstraits' armoire stands on one side and a drip fills a beaker on the other…`** — given
+  eighteen seconds to fill rather than twelve, and now also: the only words written on the
+  motifs' canvas are 50, 100, 150, 200 and ml.
+- On the house's own page, **`Les Abstraits has its armoire … and a drip down the whole page into
+  a beaker…`** runs its own clock for 160 seconds rather than 80, and checks the same of the
+  words written on the page's canvas.

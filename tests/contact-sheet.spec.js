@@ -522,18 +522,27 @@ test("the way round does not move as the house changes", async ({ page }) => {
 });
 
 /* THE HOUSES EITHER SIDE ARE SMALLER than the front one by more than
-   depth alone — "6 and 8 to be a little smaller" — and a house's line
-   about itself shows only while it is pointed at, the front one's too. */
-test("the houses either side are a little smaller, and a description shows only on hover", async ({ page }) => {
+   depth alone — "6 and 8 to be a little smaller" — and since the night of
+   2026-09-25 smaller again and FAINTER: "fade and make smaller the
+   non-selected house (not hovered, but the one on which the page rests)".
+   The front house is whole; the ones either side about two thirds as big
+   and as strong. A house's line about itself shows only while it is
+   pointed at, the front one's too. */
+test("the houses either side are smaller and fainter, and a description shows only on hover", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
   await page.mouse.move(4, 4);
   await page.keyboard.press("ArrowDown");
   await page.waitForTimeout(1200);
   const w = await page.$$eval(".sheet-frame", (all) => all.map((f) => f.getBoundingClientRect().width));
-  expect(w[0] / w[1], "the one before").toBeLessThan(0.8);
-  expect(w[2] / w[1], "the one after").toBeLessThan(0.8);
+  expect(w[0] / w[1], "the one before").toBeLessThan(0.72);
+  expect(w[2] / w[1], "the one after").toBeLessThan(0.72);
   expect(w[0] / w[1], "but not by much").toBeGreaterThan(0.6);
+  const faint = await page.$$eval(".sheet-frame", (all) => all.slice(0, 3).map((f) => parseFloat(getComputedStyle(f).opacity)));
+  expect(faint[1], "the front house whole").toBeGreaterThan(0.97);
+  expect(faint[0], "the one before faded").toBeLessThan(0.75);
+  expect(faint[2], "the one after faded").toBeLessThan(0.75);
+  expect(faint[0], "but still there").toBeGreaterThan(0.5);
   const say = page.locator(".sheet-frame").nth(1).locator(".sheet-say");
   const shown = () => say.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
   expect(await shown(), "the front house's description is not shown on its own").toBeLessThan(0.05);
@@ -542,74 +551,30 @@ test("the houses either side are a little smaller, and a description shows only 
   await expect.poll(shown).toBeGreaterThan(0.95);
 });
 
-const TOMB_SEED = 11;
-
-/* TOMBSTONE WRITES EACH OF ITS FIVE NAMES ONCE — "not at random as it
-   currently is (i dont want duplicate names)" — and none of them behind a
-   house. Read off every word the motifs' canvas is asked to write. */
-test("Tombstone's motifs write each name once, never twice and never behind a house", async ({ page }) => {
+/* TOMBSTONE WRITES NO NAMES. For three rounds its five names were cut into
+   the wall while it was rested on — each once, off the houses and apart
+   from each other. The owner, the night of 2026-09-25: "Remove the names
+   of the fragrances that pop up with the tombstone hover". Read off every
+   word the motifs' canvas is asked to write while Tombstone is rested on:
+   none — and its roots and flowers still come. */
+test("Tombstone's motifs write no names, and still grow their roots", async ({ page }) => {
   test.setTimeout(60000);
-  // WHERE A NAME LANDS IS CHANCE, so the chance is fixed: a seeded
-  // Math.random, and a window small enough that names have to be placed
-  // with care. With it left to chance, a name written into another or on
-  // to a label happened on only some runs, and a test that passes when
-  // the page is wrong on most of them proves nothing.
-  await page.setViewportSize({ width: 1024, height: 700 });
-  await page.addInitScript((seed) => {
-    let s = seed;
-    Math.random = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
-  }, Number(process.env.TOMB_SEED || TOMB_SEED));
   await page.addInitScript(() => {
     window.__written = [];
     const own = CanvasRenderingContext2D.prototype.fillText;
-    CanvasRenderingContext2D.prototype.fillText = function (text, x, y) {
-      if (this.canvas.classList.contains("sheet-motifs")) {
-        const size = parseFloat((/(\d+(?:\.\d+)?)px/.exec(this.font) || [0, 20])[1]);
-        window.__written.push({ text: String(text), x: x, y: y, w: this.measureText(String(text)).width, h: size });
-      }
+    CanvasRenderingContext2D.prototype.fillText = function (text) {
+      if (this.canvas.classList.contains("sheet-motifs")) window.__written.push(String(text));
       return own.apply(this, arguments);
     };
   });
   await page.goto(SHEET);
   await waitForSheet(page);
   await pointAt(page, 7);
-  await page.waitForTimeout(9000);
-  const out = await page.evaluate(() => {
-    const names = ["3 Feet 5", "Evergrow", "No Need to Come By", "Sing at My Funeral", "Sweet Coffin"];
-    // A name is written twice where it stands — its pale cut edge a
-    // pixel off, then the letters — so places within a few pixels of
-    // each other are one place.
-    const places = {};
-    window.__written.filter((w) => names.includes(w.text)).forEach((w) => {
-      places[w.text] = places[w.text] || [];
-      if (!places[w.text].some((p) => Math.abs(p.x - w.x) < 4 && Math.abs(p.y - w.y) < 4)) places[w.text].push(w);
-    });
-    // Each house with its label, which stands under the picture's box.
-    const houses = [...document.querySelectorAll(".sheet-frame")].filter((f) =>
-      f.style.visibility !== "hidden" && parseFloat(f.style.getPropertyValue("--shown") || "0") > 0.1)
-      .map((f) => [f, f.querySelector(".sheet-caption"), f.querySelector(".sheet-number")].map((el) => el.getBoundingClientRect())
-        .reduce((u, r) => ({ left: Math.min(u.left, r.left), right: Math.max(u.right, r.right), top: Math.min(u.top, r.top), bottom: Math.max(u.bottom, r.bottom) })));
-    // Where each whole name stood, as a box.
-    const boxes = Object.values(places).map((v) => v[0]).map((w) =>
-      ({ text: w.text, left: w.x - w.w / 2, right: w.x + w.w / 2, top: w.y - w.h / 2, bottom: w.y + w.h / 2 }));
-    const hits = (a, r) => a.left < r.right && a.right > r.left && a.top < r.bottom && a.bottom > r.top;
-    const behind = boxes.filter((b) => houses.some((r) => hits(b, r))).map((b) => b.text);
-    // And how near any two names came, edge to edge.
-    let nearest = Infinity;
-    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
-      const a = boxes[i], b = boxes[j];
-      const gx = Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right));
-      const gy = Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom));
-      nearest = Math.min(nearest, Math.max(gx, gy));
-    }
-    return { counts: Object.fromEntries(Object.entries(places).map(([k, v]) => [k, v.length])), behind: behind, nearest: nearest };
-  });
-  expect(Object.keys(out.counts).length, `names written: ${JSON.stringify(out.counts)}`).toBeGreaterThanOrEqual(4);
-  Object.entries(out.counts).forEach(([name, n]) => expect(n, `${name} written in ${n} places`).toBe(1));
-  expect(out.behind, "names written over a house or its label").toEqual([]);
-  // "i want you to have a minimum distance away from the texts" — sent
-  // with a picture of Evergrow written into No Need to Come By.
-  expect(out.nearest, "the least room between two names").toBeGreaterThanOrEqual(24);
+  await page.waitForTimeout(5000);
+  const out = await page.evaluate(() => ({ written: window.__written.slice(0, 5), census: window.HouseMotifs.census() }));
+  expect(out.written, "nothing written on the wall").toEqual([]);
+  expect(out.census.epitaph, "no epitaphs").toBeUndefined();
+  expect(out.census.roots, "the roots still come").toBeGreaterThan(0);
 });
 
 /* ATARAXIA'S BANDS, EMPHASISED: "emphasize the ataraxia effect". Read off
@@ -810,11 +775,13 @@ test("the front house is marked by four corners standing clear of it and its lab
   });
 });
 
-/* THE AXIS, EMPHASISED: "emphasize the middle part of the particles, the
-   one around which the houses rotate." A firm line rather than a
-   hairline — dark in the middle of the canvas down most of the window —
-   and a soft light either side of it. */
-test("the axis is drawn as a firm line with a light either side", async ({ page }) => {
+/* THE AXIS, QUIETER. It was made a firm line with a soft light either side
+   at "emphasize the middle part of the particles" (2026-09-24), and then
+   "de emphasize the black line in the middle in SD. (especially with the
+   shadow around it)" (2026-09-25, night). Read off the particles' canvas
+   down the middle of the window: the line is still there the whole way
+   down, but no longer dark — and next to nothing lies beside it. */
+test("the axis is a quiet line, with hardly any light either side", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
   await page.mouse.move(4, 4);
@@ -824,16 +791,84 @@ test("the axis is drawn as a firm line with a light either side", async ({ page 
     const g = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
     const mid = Math.round((c.clientWidth / 2) * ratio);
     const alpha = (x, y) => g[(y * c.width + x) * 4 + 3];
-    let firm = 0, lit = 0, rows = 0;
+    let there = 0, dark = 0, lit = 0, rows = 0;
     for (let y = 0; y < c.height; y += 2) {
       rows++;
-      if (alpha(mid, y) > 170 || alpha(mid - 1, y) > 170) firm++;
+      const a = Math.max(alpha(mid - 1, y), alpha(mid, y), alpha(mid + 1, y));
+      if (a > 90) there++;
+      if (a > 200) dark++;
       if (alpha(mid + Math.round(10 * ratio), y) > 8) lit++;
     }
-    return { firm: firm / rows, lit: lit / rows };
+    return { there: there / rows, dark: dark / rows, lit: lit / rows };
   });
-  expect(out.firm, "the line is dark down most of the window").toBeGreaterThan(0.5);
-  expect(out.lit, "and has a light beside it").toBeGreaterThan(0.5);
+  expect(out.there, "the line runs down the window").toBeGreaterThan(0.85);
+  expect(out.dark, "and is no longer dark").toBeLessThan(0.2);
+  expect(out.lit, "with next to nothing beside it").toBeLessThan(0.3);
+});
+
+/* THE SPOKES: "connect the fragrances to the spiral in a 3d way, so that
+   the conenctions of the fragrances to the central line will move in a
+   3rd dimension along with the fragrances ... make the connecting line
+   particular". Read off the particles' canvas between the axis and the
+   house after the front one, at that house's height: a BAND of particles
+   several pixels deep rather than one dotted line, stronger towards the
+   house — which stands nearer the eye than the axis does — than towards
+   the axis. */
+test("each house is joined to the axis by a spoke of particles standing in the helix's depth", async ({ page }) => {
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await page.mouse.move(4, 4);
+  const read = () => page.evaluate(() => {
+    const c = document.querySelector(".sheet-field");
+    const at = c.getBoundingClientRect();
+    const ratio = c.width / c.clientWidth;
+    const g = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    const house = document.querySelectorAll(".sheet-frame")[1].getBoundingClientRect();
+    const midX = at.left + c.clientWidth / 2, y0 = house.top + house.height / 2;
+    const x1 = Math.min(house.left, house.right) > midX ? house.left : house.right;
+    const from = Math.min(midX, x1) + 16, to = Math.max(midX, x1) - 16;
+    const rowsWithInk = new Set();
+    let nearHouse = 0, nearAxis = 0;
+    for (let y = y0 - 14; y <= y0 + 14; y++) {
+      for (let x = from; x < to; x += 1) {
+        const px = Math.round((x - at.left) * ratio), py = Math.round((y - at.top) * ratio);
+        const a = g[(py * c.width + px) * 4 + 3];
+        if (a < 25) continue;
+        rowsWithInk.add(Math.round(y));
+        const q = (x - from) / (to - from);
+        const towardsHouse = x1 > midX ? q : 1 - q;
+        if (towardsHouse > 0.66) nearHouse += a; else if (towardsHouse < 0.34) nearAxis += a;
+      }
+    }
+    return { rows: rowsWithInk.size, nearHouse, nearAxis, span: to - from };
+  });
+  const out = await read();
+  expect(out.span, "room between the axis and the house").toBeGreaterThan(80);
+  expect(out.rows, "a band of particles, not one line").toBeGreaterThanOrEqual(5);
+  expect(out.nearHouse, "stronger towards the house, which is nearer").toBeGreaterThan(out.nearAxis);
+});
+
+/* ADAR'S WELLS KEEP APART: "make the frequency of the black hole a less by
+   1/3. Also create a minimum distance of were the black holes cannot spawn
+   next to each other". Watched for a while as they come and go: no two
+   ever stand nearer than the least distance allowed. */
+test("ADAR's wells never stand next to each other", async ({ page }) => {
+  test.setTimeout(60000);
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 1);
+  let nearest = Infinity, most = 0;
+  for (let i = 0; i < 24; i++) {
+    await page.waitForTimeout(500);
+    const wells = await page.evaluate(() => window.HouseMotifs.wellsAt());
+    most = Math.max(most, wells.length);
+    for (let a = 0; a < wells.length; a++) for (let b = a + 1; b < wells.length; b++)
+      nearest = Math.min(nearest, Math.hypot(wells[a].x - wells[b].x, wells[a].y - wells[b].y));
+  }
+  const least = await page.evaluate(() => Math.min(innerWidth, innerHeight) * 0.55);
+  expect(most, "wells came").toBeGreaterThan(0);
+  expect(most, "never more than three").toBeLessThanOrEqual(3);
+  if (Number.isFinite(nearest)) expect(nearest, "the nearest two ever stood").toBeGreaterThanOrEqual(least - 1);
 });
 
 /* LES ABSTRAITS: AN OLD ARMOIRE WITH IRIS AT ITS FEET, AND A DRIP. "i
@@ -848,13 +883,19 @@ test("the axis is drawn as a firm line with a light either side", async ({ page 
    foot of the window on the drip's side filling while the house is rested
    on. */
 test("Les Abstraits' armoire stands on one side and a drip fills a beaker on the other, and the logo never appears", async ({ page }) => {
-  test.setTimeout(60000);
+  test.setTimeout(90000);
   const logo = [];
   page.on("request", (r) => { if (/les-abstraits-logo\.png$/.test(r.url())) logo.push(r.url()); });
   await page.addInitScript(() => {
     window.__colours = new Set();
     window.__images = 0;
+    window.__words = new Set();
     const P = CanvasRenderingContext2D.prototype;
+    const fillText = P.fillText;
+    P.fillText = function (t) {
+      if (this.canvas.classList.contains("sheet-motifs")) window.__words.add(String(t));
+      return fillText.apply(this, arguments);
+    };
     const drawImage = P.drawImage;
     P.drawImage = function () {
       if (this.canvas.classList.contains("sheet-motifs")) window.__images++;
@@ -892,13 +933,20 @@ test("Les Abstraits' armoire stands on one side and a drip fills a beaker on the
   await pointAt(page, 5);
   await page.waitForTimeout(2600);
   const early = await read();
-  await page.waitForTimeout(6000);
+  // HALF AS FAST since the night of 2026-09-25 ("half the filling
+  // speed"): twenty-four drops to the brim, so it is given longer.
+  await page.waitForTimeout(18000);
   const late = await read();
   expect(logo, "the house's logo is never asked for").toEqual([]);
   expect(await page.evaluate(() => window.__images), "and no picture is drawn").toBe(0);
   expect(late.left, "the armoire on one side").toBeGreaterThan(400);
   expect(late.top, "the drip hangs from the very top of the window").toBeGreaterThan(3);
-  expect(late.foot, "the beaker fills").toBeGreaterThan(early.foot * 1.5 + 20);
+  expect(late.foot, "the beaker fills").toBeGreaterThan(early.foot * 1.3 + 20);
+  // NO READING: the pointer at the surface and its number in ml were taken
+  // off ("remove the triangle showing the level, and ... the number
+  // displaying the volume"); the only words are the scale's own.
+  const words = await page.evaluate(() => [...window.__words]);
+  expect(words.filter((w) => !["50", "100", "150", "200", "ml"].includes(w)), "nothing written but the graduations").toEqual([]);
   const colours = await page.evaluate(() => [...window.__colours]);
   expect(colours.some((c) => c.startsWith("rgba(112,94,156")), `the iris, among ${colours.join(" ")}`).toBe(true);
 });

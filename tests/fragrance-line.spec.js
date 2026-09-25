@@ -151,6 +151,26 @@ test("the table is nearly the page, with the aside on its left and the options o
   await expect(page.locator(".frag-mode[data-mode='list']")).toHaveAttribute("aria-pressed", "true");
 });
 
+/* THE ASIDE'S NAME — 2026-09-25: "remove the text "The ones with no
+   house here" and add "Individual" above the word fragrances (make it
+   smaller than the actual word "fragrances")". */
+test("the aside is headed Individual, smaller, over Fragrances, and says nothing else under them", async ({ page }) => {
+  await toTheTable(page);
+  const out = await page.evaluate(() => {
+    const k = document.querySelector(".frag-aside-kicker"), n = document.querySelector(".frag-aside-name");
+    return { kicker: k.textContent.trim(), name: n.textContent.trim(),
+      above: k.getBoundingClientRect().bottom <= n.getBoundingClientRect().top + 1,
+      smaller: parseFloat(getComputedStyle(k).fontSize) < parseFloat(getComputedStyle(n).fontSize) * 0.6,
+      say: !!document.querySelector(".frag-aside-say"),
+      aside: document.querySelector(".frag-aside").textContent };
+  });
+  expect([out.kicker, out.name]).toEqual(["Individual", "Fragrances"]);
+  expect(out.above, "Individual stands above Fragrances").toBe(true);
+  expect(out.smaller, "and is set smaller than it").toBe(true);
+  expect(out.say).toBe(false);
+  expect(out.aside).not.toContain("The ones with no house here");
+});
+
 /* IT FITS A GOOD MANY ON THE SCREEN, AND SCROLLS. With sixty-odd
    fragrances in it, the table's own box shows a good many rows at once on
    an ordinary window and scrolls inside itself; the page never does. */
@@ -367,6 +387,43 @@ test("going to the Fragrances is a quick crossing, and the axis travels across t
   await expect(page.locator(".frag-aside")).toHaveCSS("opacity", "1");
   await expect(page.locator(".frag-item").last().locator(".frag-t-name")).toHaveCSS("opacity", "1");
   await expect(page.locator(".views")).not.toHaveClass(/swiping/);
+});
+
+/* AND BACK, ALL THE WAY TO THE AXIS — 2026-09-25: "when going in SD
+   from fragrances to houses, i want the line that moves to go completely
+   where the center line is in houses (and then disappears exactly in the
+   middle of the page)". It used to land where the axis was while the
+   Houses view was still sliding in, some twenty pixels short. So: the
+   last place the line is seen is the axis as it stands once the houses
+   have settled, which is the middle of the page, and then it is gone. */
+test("coming back, the line travels all the way to the axis in the middle of the page, and goes there", async ({ page }) => {
+  test.setTimeout(60000);
+  await toTheTable(page);
+  const seen = await page.evaluate(() => new Promise((done) => {
+    const thread = document.querySelector(".views-thread");
+    const out = { xs: [] };
+    const t0 = performance.now();
+    const look = () => {
+      const cs = getComputedStyle(thread);
+      if (parseFloat(cs.opacity) > 0.3) out.xs.push(new DOMMatrix(cs.transform).m41);
+      if (performance.now() - t0 < 1500) { requestAnimationFrame(look); return; }
+      const sheet = document.getElementById("sheet").getBoundingClientRect();
+      out.axis = sheet.left + sheet.width / 2;
+      // The page's own middle: the body's, which leaves the scrollbar's
+      // gutter out of it.
+      const body = document.body.getBoundingClientRect();
+      out.middle = body.left + body.width / 2;
+      out.after = parseFloat(getComputedStyle(thread).opacity);
+      done(out);
+    };
+    document.querySelector('.sheet-filter[data-view="houses"]').click();
+    requestAnimationFrame(look);
+  }));
+  expect(seen.xs.length, "the line was seen travelling").toBeGreaterThan(3);
+  const last = seen.xs[seen.xs.length - 1];
+  expect(Math.abs(last - seen.axis), `it lands at ${last}, the axis at ${seen.axis}`).toBeLessThan(3);
+  expect(Math.abs(seen.axis - seen.middle), "which is the middle of the page").toBeLessThan(3);
+  expect(seen.after, "and then it is gone").toBeLessThan(0.05);
 });
 
 /* FREE: a press while the crossing is running is taken AT ONCE — it

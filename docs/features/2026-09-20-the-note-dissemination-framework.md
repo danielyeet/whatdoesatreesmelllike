@@ -159,6 +159,8 @@ at the right edge of the frame there is nowhere else for it to go.
 
 ## The summary plate
 
+**Taken off the page on 2026-09-25** — see the last section. What follows is what it was.
+
 `images/Theories/note-dissemination-summary.png` is the whole piece on one sheet: the
 legend it is read with, Amber Zero's notes coming out of the zone against most
 fragrances going into it, the equation, the thresholds and Amber Zero's own reading
@@ -395,10 +397,26 @@ npm run serve    # then http://localhost:8123/works/theory-03.html
 
 ## Known issues / TODO
 
-- **The plate is generated rather than photographed**, and it is the only plate on the
-  site that is. If the piece's numbers ever change, it has to be made again — the script
-  is in the scratchpad, not the repository, which is the weak point.
+- **The plate is generated rather than photographed**, and it was the only plate on the
+  site that was. It is off the page now; if it ever comes back and the piece's numbers have
+  changed, it has to be made again — the script is in the scratchpad, not the repository,
+  which is the weak point.
 - **Reading time is the owner's own** — 45 min, which they set.
 - The diagrams have no `<title>`/`<desc>` beyond their `aria-label`. Each one's label says
   what it shows, which is as much as a screen reader can do with a drawing whose content
   is an angle and a proportion; the captions carry the argument in words.
+
+## 2026-09-25 — the picture taken off
+
+> Remove the picture from the Note dissemination framework, and all other theories.
+
+The summary plate no longer stands at the top of the piece: its `<figure class="essay-plate
+essay-plate-wide">` is gone from `works/theory-03.html`, with a comment where it stood. It had
+already come off the theories page's card, so nothing on the site shows it now. **The file is
+kept** in `images/Theories/`, because it is the owner's to delete and it is the only copy of a
+generated sheet whose script is not in the repository. **The diagrams stay**: they are drawn in
+the page as the argument itself, not pictures of it, and the owner asked for *the picture*. The
+same went for the other two theories' plates — see [the essay pages](2026-09-17-the-essay-pages.md).
+
+Tested in `tests/essay.spec.js`: **`no theory carries a picture`** — none of the three has an
+`.essay-plate` or an `<img>` in its writing, and the framework's diagrams are still there.

@@ -59,6 +59,12 @@
 
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // A LITTLE BRIGHTER, the night of 2026-09-25 — "Make the theories page
+  // a little brighter": everything drawn a fifth again as strongly, the
+  // ground a shade lighter (style.css) and the dark round its edges less.
+  const BRIGHT = 1.2;
+  const VIGNETTE = 0.22;           // it was 0.34
+
   // ============================================================
   // TUNING
   // ============================================================
@@ -672,7 +678,7 @@
       midX, midY, Math.max(width, height) * 0.78
     );
     vignette.addColorStop(0, "rgba(0,0,0,0)");
-    vignette.addColorStop(1, "rgba(0,0,0,0.34)");
+    vignette.addColorStop(1, "rgba(0,0,0," + VIGNETTE + ")");
   }
 
   function fromScroll() {
@@ -698,7 +704,7 @@
     return (ahead - SHOW_TO) / (SHOW_BEST - SHOW_TO);
   }
 
-  const rgba = (tone, a) => "rgba(" + tone + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
+  const rgba = (tone, a) => "rgba(" + tone + "," + Math.max(0, Math.min(1, a * BRIGHT)).toFixed(3) + ")";
 
   // ============================================================
   // THE FRAME — ribs across the way, rails along it

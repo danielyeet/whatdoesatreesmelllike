@@ -204,6 +204,7 @@
   const RING_PUSH = 13;              // px, how far a wave pushes what it crosses
   const RING_BAND = 17;              // px, and over how wide a band
   const DISK_SPECKS = 120;
+  const WELL_APART = 0.55;           // of the window's shorter side, the least distance between two wells
   const wells = [];
   const smooth = (a, b, x) => ease((x - a) / (b - a));
   const bent = { x: 0, y: 0, s: 1, a: 1, turn: 0, cover: 0 };
@@ -298,13 +299,24 @@
   }
   /** A place for a well: clear of every house on the page if it can be,
       so its hole is not hidden behind one. */
+  // AND NEVER NEXT TO ANOTHER: a well is not born within `WELL_APART` of
+  // the window's shorter side of one already standing — the owner's
+  // "create a minimum distance of were the black holes cannot spawn next
+  // to each other". Where there is no such room, none is born this time.
   function wellSpot(R) {
-    for (let i = 0; i < 16; i++) {
+    const apart = Math.min(W, H) * WELL_APART;
+    const clear = (x, y) => wells.every((w) => Math.hypot(w.x - x, w.y - y) >= apart);
+    for (let i = 0; i < 24; i++) {
       // Not under the way round, at the right of a wide window.
       const x = rand(R * 0.3, W - (W > 700 ? Math.max(R * 0.3, 200) : R * 0.3)), y = rand(CHROME + 40, H - 40);
+      if (!clear(x, y)) continue;
       if (readAround.every((b) => x < b.left - 60 || x > b.right + 60 || y < b.top - 60 || y > b.bottom + 60)) return { x, y };
     }
-    return spot(40);
+    for (let i = 0; i < 12; i++) {
+      const at = spot(40);
+      if (at && clear(at.x, at.y)) return at;
+    }
+    return null;
   }
   function sounding() {
     const R = Math.min(WELL_REACH_MOST, Math.min(W, H) * WELL_REACH);
@@ -313,7 +325,9 @@
     const hole = rand(13, 19) * Math.max(0.7, R / WELL_REACH_MOST);
     const tilt = rand(-0.45, 0.45), flat = rand(0.24, 0.36);
     const disk = Array.from({ length: DISK_SPECKS }, () => ({ q: Math.random(), a: rand(0, Math.PI * 2), size: rand(0.8, 2), lit: rand(0.4, 1) }));
-    const well = { x: at.x, y: at.y, R, h: 0, s: 0, rings: [], seen: 0 };
+    // On the list from the moment it is made, so the next is kept from it.
+    const well = { x: at.x, y: at.y, R, h: 0, s: 0, rings: [], seen: performance.now() };
+    wells.push(well);
     let lastAge = 0;
     return {
       life: rand(6500, 8500),
@@ -716,7 +730,7 @@
   const DRIP_EVERY = [1500, 2400];       // ms from one drop to the next
   const DRIP_HANG = [650, 950];          // ms a drop gathers before it lets go
   const DRIP_FALL = 1150;                // ms, the whole height of the window
-  const BEAKER_FILL = 12;                // drops to fill the beaker to its brim
+  const BEAKER_FILL = 24;                // drops to fill the beaker to its brim — half as fast as 12 (2026-09-25)
   const BEAKER_SPILL_MOST = 44;          // px, half the spill's length at most
   let abstraitSide = -1;                 // where the armoire stands: -1 left, 1 right
 
@@ -1430,86 +1444,22 @@
     };
   }
 
-  // ---------- TOMBSTONE: epitaphs chiselled and weathering, roots, flowers ----------
+  // ---------- TOMBSTONE: roots, flowers ----------
   // It was stones standing up out of mist for a round; the owner asked
-  // for "something different". So: the house's own five names cut into
-  // the wall letter by letter, as an epitaph is, and worn away again;
-  // and roots creeping in from the edges of the page with small red
-  // flowers opening at their tips — the house's card for Evergrow,
-  // "Fade and flourish, forever growing".
+  // for "something different". So: roots creeping in from the edges of
+  // the page with small red flowers opening at their tips — the house's
+  // card for Evergrow, "Fade and flourish, forever growing".
   //
-  // EACH NAME IS CUT ONCE, in the house's own order, and never twice while
-  // the house is rested on — the owner's "the writing of each of the
-  // fragrances once, not at random ... i dont want duplicate names". They
-  // were picked at random for a round, and the same name stood on the
-  // wall twice. `epitaphsLeft` is filled again every time the house is
-  // rested on afresh (see `start`).
-  const NAME_APART = 40;         // px, the least room between two names on the wall
-  const EPITAPHS = ["3 Feet 5", "Evergrow", "No Need to Come By", "Sing at My Funeral", "Sweet Coffin"];
-  let epitaphsLeft = EPITAPHS.slice();
+  // THE NAMES ARE GONE. For three rounds the house's own five names were
+  // cut into the wall letter by letter, as an epitaph is, and worn away
+  // again — each once, kept off the houses and apart from each other. The
+  // owner, the night of 2026-09-25: "Remove the names of the fragrances
+  // that pop up with the tombstone hover". Nothing of it is left here
+  // (no `epitaph`, `EPITAPHS` or `NAME_APART`).
+  //
+  // `readAround` is the boxes of the houses on the page, handed in by the
+  // page that asks for the motifs; ADAR's wells keep clear of them.
   let readAround = [];
-  function epitaph() {
-    // Never a name that is still on the wall, even fading from a moment
-    // ago when the house was last rested on.
-    const words = epitaphsLeft.find((n) => !things.some((t) => t.words === n));
-    if (!words) return null;
-    const big = rand(22, 36);
-    const wide = words.length * big * 0.56;
-    // A NAME IS KEPT OFF THE HOUSES, although everything else here may
-    // pass behind them: a name half hidden behind a picture has not been
-    // written. `readAround` is the boxes of the houses on the page, handed
-    // in by the page that asked for the motifs.
-    let at = null, placed = null;
-    for (let i = 0; i < 24 && !at; i++) {
-      const tryAt = spot(Math.max(wide / 2, 30));
-      if (!tryAt || tryAt.x - wide / 2 < 8 || tryAt.x + wide / 2 > W - 8) continue;
-      const box = { left: tryAt.x - wide / 2 - 12, right: tryAt.x + wide / 2 + 12, top: tryAt.y - big, bottom: tryAt.y + big };
-      if (readAround.some((r) => box.left < r.right && box.right > r.left && box.top < r.bottom && box.bottom > r.top)) continue;
-      // AND OFF EVERY OTHER NAME, by a clear margin — the owner sent a
-      // picture of "Evergrow" written into "No Need to Come By". Every
-      // name standing, fading ones included, keeps NAME_APART round it.
-      const near = things.some((t) => t.words && t.box &&
-        box.left < t.box.right + NAME_APART && box.right > t.box.left - NAME_APART &&
-        box.top < t.box.bottom + NAME_APART && box.bottom > t.box.top - NAME_APART);
-      if (near) continue;
-      at = tryAt;
-      placed = box;
-    }
-    if (!at) return null;
-    // Only taken off the list once it has found somewhere to stand.
-    epitaphsLeft.splice(epitaphsLeft.indexOf(words), 1);
-    const rule = Math.random() < 0.6;
-    return {
-      words: words,
-      box: placed,
-      life: rand(5200, 7600),
-      draw(c, age, a) {
-        // Cut in a letter at a time, and worn away evenly at the end.
-        const cut = Math.min(words.length, Math.floor(age / 85));
-        const shown = words.slice(0, cut);
-        c.save();
-        c.font = "italic " + big.toFixed(0) + "px Georgia, 'Times New Roman', serif";
-        c.textAlign = "center";
-        c.textBaseline = "middle";
-        // The cut: a dark stroke with a pale edge under it, which is how
-        // letters cut into stone read.
-        c.fillStyle = "rgba(255,255,255," + (0.8 * a) + ")";
-        c.fillText(shown, at.x + 0.8, at.y + 1);
-        c.fillStyle = "rgba(" + INK + "," + (0.62 * a) + ")";
-        c.fillText(shown, at.x, at.y);
-        if (rule && cut === words.length) {
-          const half = Math.min(wide / 2, 90) * ease((age - words.length * 85) / 600);
-          c.strokeStyle = "rgba(" + INK + "," + (0.35 * a) + ")";
-          c.lineWidth = 0.8;
-          c.beginPath();
-          c.moveTo(at.x - half, at.y + big * 0.8);
-          c.lineTo(at.x + half, at.y + big * 0.8);
-          c.stroke();
-        }
-        c.restore();
-      },
-    };
-  }
   function roots() {
     // In from one of the four edges, mostly the bottom.
     const edge = Math.random() < 0.55 ? "bottom" : pick(["left", "right", "top"]);
@@ -2066,8 +2016,9 @@
   // How often each is born (per second), and how many may stand at once.
   const HOUSES = {
     pineward: [{ make: tree, rate: 2, most: 16 }, { make: needle, rate: 5, most: 50 }],
-    // Fewer wells than there were soundings, and much larger.
-    adar: [{ make: sounding, rate: 0.45, most: 3, first: 1 }, { make: dust, rate: 22, most: 160 }],
+    // Fewer wells than there were soundings, and much larger — and a third
+    // fewer again since the night of 2026-09-25 (0.45 a second, now 0.3).
+    adar: [{ make: sounding, rate: 0.3, most: 3, first: 1 }, { make: dust, rate: 22, most: 160 }],
     "almost-human": [{ make: figure, rate: 1.2, most: 6 }, { make: rain, rate: 26, most: 80 }],
     ataraxia: [{ make: band, rate: 0.75, most: 6, first: 2 }],
     grande: [{ make: rise, rate: 90, most: 640 }],
@@ -2075,7 +2026,7 @@
     // armoire first, since the drip stands on whichever side it does not.
     "les-abstraits": [{ make: armoire, rate: 5, most: 1, first: 1 }, { make: drip, rate: 5, most: 1, first: 1 }],
     tale: [{ make: doodle, rate: 2.6, most: 20 }],
-    tombstone: [{ make: epitaph, rate: 0.9, most: 5 }, { make: roots, rate: 1.6, most: 11 }, { make: soil, rate: 6, most: 40 },
+    tombstone: [{ make: roots, rate: 1.6, most: 11 }, { make: soil, rate: 6, most: 40 },
       { make: petal, rate: 2.6, most: 360 }],
     // `first`: how many are there at once when the house is rested on.
     qimu: [{ make: stave, rate: 0.6, most: 4, first: 2 }, { make: passage, rate: 0.9, most: 4 }],
@@ -2146,7 +2097,6 @@
       // A first handful straight away — each still comes up on its own
       // FADE_IN_MS — so the page is not empty for the first second.
       owed = new Map((HOUSES[key] || []).map((kind) => [kind, Math.min(kind.most, Math.max(kind.first || 0, kind.rate * 0.8))]));
-      if (key === "tombstone") epitaphsLeft = EPITAPHS.slice();
       // Qimu's music starts on its staves, every time it is rested on.
       if (key === "qimu") qimuSince = performance.now();
       // The pile starts again from the ground once the last one has gone.
@@ -2178,6 +2128,10 @@
     // far turned (`turn`, radians) — or null while there is no well.
     bend() {
       return wells.length ? bendPoint : null;
+    },
+    // Where ADAR's wells stand now — for the tests, like `census`.
+    wellsAt() {
+      return wells.map((w) => ({ x: w.x, y: w.y }));
     },
     stop(now) {
       house = null;

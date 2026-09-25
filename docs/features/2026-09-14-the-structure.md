@@ -340,3 +340,23 @@ of the mono in the page's blue with no border (`.structure-card-calc`), coming u
 on hover and focus; the `OPEN` above it takes a little less room under it when it is there
 (`.structure-card-open:has(+ .structure-card-calc:not([hidden]))`). It is still a span
 with a link's role and a link's keys, for the reason above.
+
+## 2026-09-25, night — a little brighter
+
+> Make the theories page a little brighter.
+
+Three small turns, each a little:
+
+- **The ground** is `#15171d` where it was `#0a0b0e` — still near-black, a shade lighter and a
+  touch cooler — in all three places it is set (`body.structured`, the `js-coming` ground that
+  stands before the script arrives, and `.structure`), so the page does not change tone as the
+  drawing takes over.
+- **Everything drawn is a fifth stronger**: `BRIGHT` (1.2) multiplies the alpha of every colour
+  `rgba()` hands out — ribs, rails, spine, swarm, stations, cards' marks — capped at 1.
+- **The dark round the edges is lighter**: `VIGNETTE` 0.34 → 0.22.
+
+`BRIGHT` and `VIGNETTE` are declared at the very top of the script, beside `REDUCE_MOTION`,
+because the first frame reads them before the TUNING block below would have defined them.
+
+Tested: `it is drawn white on near-black, not blue on a night sky` keeps the ground under a
+tone of 30 and now also over 18 (the old ground was about 12).

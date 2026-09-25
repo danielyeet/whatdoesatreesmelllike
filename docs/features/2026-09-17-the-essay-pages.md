@@ -181,3 +181,17 @@ stands after the last one, as the perfume primer's motto, footnotes and sources 
 fell through to the first section, so the rule said "Introduction" a few screens from the
 end. It now names the last section whose top has been passed. Nothing changes while any
 section is in view. Tested in `tests/primer.spec.js`.
+
+## 2026-09-25 — no picture at the head of a theory
+
+> Remove the picture from the Note dissemination framework, and all other theories.
+
+Each theory opened on a **plate**: `theory-01.html` and `theory-02.html` on an empty one (the
+`<img>` inside it commented out, waiting for a picture, and *What the picture shows.* under it),
+and `theory-03.html` on its summary sheet. All three `<figure class="essay-plate">` blocks are
+gone, and the comment at the top of `theory-01.html` (the template for a long essay) no longer
+tells whoever copies it to point the plate at a picture. The `.essay-plate` rules stay in
+`style.css`, because the resins research still carries one. The framework's inline diagrams are
+not pictures and stay.
+
+Tested: **`no theory carries a picture`** in `tests/essay.spec.js`.

@@ -435,3 +435,37 @@ npm test -- tests/fragrance-line.spec.js
 - The line is ink at 30% on the Houses view's white; if the Houses view ever turns dark, it
   wants its token.
 
+
+## 2026-09-25, last — the line goes all the way home, and the aside is headed Individual
+
+> Also, when going in SD from fragrances to houses, i want the line that moves to go
+> completely where the center line is in houses (and then disappears exactly in the middle
+> of the page) remove the text "The ones with no house here" and add "Individual" above the
+> word fragrances (make it smaller than the actual word "fragrances")
+
+**All the way to the axis.** Coming back from the table, the line was landing some twenty-six
+pixels short of the axis. `anchorOf("houses")` read where the axis stood at the moment of the
+press — and at that moment the Houses view is itself still drifting in from the side
+(`CROSS_SHIFT`), so what it read was the axis displaced by the view's own transform. It now
+takes that transform off (the view's `m41`) and so aims at where the axis will stand at rest,
+which is the middle of the page — the middle of the body, which on a window that keeps room
+for a scrollbar is a few pixels left of the window's own. The line lands there and fades where
+it lands, so it goes exactly where the axis is.
+
+**Individual / Fragrances.** The line under the aside's name, *The ones with no house here* —
+read off the old view's head (`.index-col`) — is gone from the aside (`.frag-aside-say` and the
+code that filled it), and over the name there is now a smaller word, **Individual**
+(`.frag-aside-kicker`: 14–17px against the name's 30-odd, in `--muted`, 13px on a phone), so it
+reads *Individual Fragrances* as the page it opens into is called. The old view underneath is
+untouched and still says *The ones with no house here* in its own head — the archive test holds
+it to the copy in `archive/`.
+
+### How to test it
+
+- **`coming back, the line travels all the way to the axis in the middle of the page, and goes
+  there`** — from the table, the Houses pressed; the last place the line is seen within 3px of
+  the axis as it stands once the houses have settled, the axis within 3px of the middle of the
+  body, and the line gone afterwards. Fails against the old aim by about 26px.
+- **`the aside is headed Individual, smaller, over Fragrances, and says nothing else under
+  them`** — *Individual* above *Fragrances* and under 0.6 of its size; no `.frag-aside-say`, and
+  the aside nowhere saying *The ones with no house here*.
