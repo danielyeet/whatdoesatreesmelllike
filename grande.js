@@ -2,25 +2,25 @@
 // GRANDE PARFUMS — houses/grande-parfums.html
 //
 // The fifth house, and the quietest ground on the site. The owner
-// asked for "some particles and effects for grande parfums. subtle
-// designs please", and the second half of that is the whole brief.
+// asked first for "some particles and effects for grande parfums.
+// subtle designs please", and then, on 2026-09-25, for "a particle
+// effect of bubbling (i dont want it to seem comical or drawn up like
+// with tale), but particles that rise up and pop more or less into a
+// bunch of other smaller particles".
 //
-// WHAT IT IS: a slow RISE of fine specks through the page — a drift
-// upward, each speck on a clock of its own, fading in as it starts and
-// out as it goes, so nothing on this page ever appears or disappears.
-// A few of them are MOTES: a little larger and a little plainer, so
-// the drift has something to catch the eye without anything in it
-// being bright.
+// WHAT IT IS: a slow RISE of fine specks through the page — each speck
+// on a clock of its own, fading in as it starts — and about half of
+// them, somewhere on the way up, BURST: the speck is gone and in its
+// place a small spray of finer specks flies out a few pixels, slows,
+// and fades (`BURST_*`). That is the whole of the bubbling: no ring, no
+// outline, nothing drawn — only a particle that becomes several smaller
+// ones. A few of the specks are MOTES: a little larger and plainer, and
+// they burst into more.
 //
-// AND IT SAYS NOTHING ABOUT THE HOUSE, deliberately. Every other
-// drawing here is its house said as a behaviour — Pineward is a wood,
-// ADAR is a void, Almost Human is a crowd that never quite resolves.
-// THIS HOUSE HAS NO THEME YET: the owner's words are "Idk the theme to
-// be honest", and inventing one and drawing it would be putting words
-// in their mouth. So this is a ground rather than a statement — the
-// site's own vocabulary, specks and a low ink, at a strength that
-// reads as paper rather than as a picture. When the owner says what
-// the house is, this is the file to replace.
+// WHAT THE HOUSE IS has still not been said, so the colour is only the
+// paper turned a hair towards champagne (`.grande-page` in style.css),
+// and the drawing is the site's own ink at a strength that reads as
+// paper rather than as a picture.
 //
 // THE HAND, and it is the one thing here that is not weather: bring
 // the pointer near and the specks around it are drawn a shade more
@@ -37,16 +37,14 @@
 //
 // READABILITY. The specks cross the whole window, the writing
 // included, and are drawn at QUIET of their strength over the column —
-// the same arrangement Ataraxia uses next door. At this ink that is
-// belt and braces rather than a necessity, but the writing is the
-// point of the page and the drawing is not.
+// the same arrangement Ataraxia uses next door.
 //
 // THE PAGE'S OWN SHAPE — the parts opening, the rank down the side,
 // the pictures — is house.js. This file draws the ground and nothing
 // else, and the two never speak to each other.
 //
 // WITHOUT THIS SCRIPT the page is exactly what it was before it: all
-// of its writing on the site's own paper.
+// of its writing on its own paper.
 // ============================================================
 (function () {
   const canvas = document.querySelector(".human-field");
@@ -70,21 +68,33 @@
   // typed in: a speck every so many square pixels, so a tall window is
   // not emptier than a short one. The cap is there because the count
   // is the whole of this drawing's cost.
-  const PER = 4200;
+  const PER = 3400;
   const MOST = 420;
 
   const RISE = [11, 34];           // pixels a second, upward
   const SWAY = [0.6, 2.4];         // how far one wanders sideways as it goes
   const SWAY_EVERY = [7, 17];      // seconds for one wander out and back
 
-  const ALPHA = [0.07, 0.21];      // how heavily one is drawn
-  const SIZE = 1;                  // and how big, in pixels
+  const ALPHA = [0.12, 0.3];       // how heavily one is drawn
+  const SIZE = 1.3;                // and how big, in pixels
 
   // A FEW ARE MOTES: bigger, plainer, and the only thing here you
   // would call a shape. One in fourteen or so.
   const MOTE = 0.07;
-  const MOTE_SIZE = 2;
-  const MOTE_ALPHA = [0.16, 0.34];
+  const MOTE_SIZE = 2.2;
+  const MOTE_ALPHA = [0.18, 0.36];
+
+  // THE BURST. About half of them burst, somewhere between a third and
+  // nine tenths of the way up; each into a few finer specks (more for a
+  // mote) that fly out BURST_REACH, slow as they go, and fade over
+  // BURST_SECONDS.
+  const BURSTS = 0.5;
+  const BURST_AT = [0.32, 0.9];
+  const BURST_BITS = [4, 7];
+  const MOTE_BITS = [7, 11];
+  const BURST_REACH = [5, 13];
+  const BURST_SECONDS = 1.1;
+  const BIT_SIZE = 0.8;
 
   const HAND = 170;                // how far the lean reaches, in pixels
   const HAND_LEAN = 9;             // and how far it draws one over, in pixels
@@ -143,7 +153,20 @@
         size: mote ? MOTE_SIZE : SIZE,
         base: mote ? between(MOTE_ALPHA[0], MOTE_ALPHA[1])
           : between(ALPHA[0], ALPHA[1]),
+        burst: null,
       });
+      const one = drift[drift.length - 1];
+      if (mote || random() < BURSTS) {
+        const many = Math.round(mote ? between(MOTE_BITS[0], MOTE_BITS[1]) : between(BURST_BITS[0], BURST_BITS[1]));
+        const bits = [];
+        for (let b = 0; b < many; b++) {
+          bits.push({ a: (b / many) * Math.PI * 2 + between(-0.45, 0.45),
+            far: between(BURST_REACH[0], BURST_REACH[1]) * (mote ? 1.5 : 1) });
+        }
+        // Where in its life it bursts, and how much of its life the
+        // burst takes.
+        one.burst = { at: between(BURST_AT[0], BURST_AT[1]), long: BURST_SECONDS / one.life, bits: bits };
+      }
     }
   }
 
@@ -198,9 +221,15 @@
       const shade = Math.min(1, Math.min(age, 1 - age) / 0.2);
       if (shade < 0.02) return;
 
+      // Past its burst and the burst over, it is gone until it is born
+      // again at the foot.
+      const burst = one.burst;
+      const into = burst ? (age - burst.at) / burst.long : -1;
+      if (into >= 1) return;
+
       // Its life IS the crossing, so this runs from the foot of the
       // window to just off the top of it and starts again.
-      let y = (height + 20) - age * one.rise * one.life;
+      let y = (height + 20) - Math.min(age, burst && into >= 0 ? burst.at : 1) * one.rise * one.life;
 
       const wander = REDUCE_MOTION ? 0
         : Math.sin((one.swayAt + clock / one.swayEvery) * Math.PI * 2) * one.sway;
@@ -226,8 +255,19 @@
 
       const shown = one.base * shade * lift * quiet(x);
       if (shown < 0.008) return;
+      if (into >= 0) {
+        // THE BURST: finer specks flying out and slowing, drifting on
+        // up a little, fading.
+        const out = 1 - Math.pow(1 - into, 3);
+        const left = Math.pow(1 - into, 1.3);
+        ink.fillStyle = "rgba(" + INK + "," + Math.min(1, shown * 1.15 * left).toFixed(3) + ")";
+        burst.bits.forEach((b) => {
+          ink.fillRect(x + Math.cos(b.a) * b.far * out, y + Math.sin(b.a) * b.far * out - into * 5, BIT_SIZE, BIT_SIZE);
+        });
+        return;
+      }
       ink.fillStyle = "rgba(" + INK + "," + Math.min(1, shown).toFixed(3) + ")";
-      ink.fillRect(Math.round(x), Math.round(y), one.size, one.size);
+      ink.fillRect(x, y, one.size, one.size);
     });
   }
 

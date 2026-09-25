@@ -631,52 +631,71 @@ test("Ataraxia's bands cross the page strongly", async ({ page }) => {
   expect(ink.dark, "and a good deal of it strong").toBeGreaterThan(0.005);
 });
 
-/* ATARAXIA'S BANDS ARE PARTICLES AND THEIR SHADOWS, AND FEW AT ONCE.
-   "make ataraxias effect slightly less frequent with the streaks, but
-   make the streaks more significant" — and then, of the soft grey haze
-   laid along each band to do it: "not make a random beam where they
-   are ... make it emphasized in a way of particles and shadows rather
-   than the gray rectangle." So: nothing wide is stroked across the page
-   (the haze was a stroke forty-odd pixels wide the length of the band),
-   every band lays down its SHADOW each frame (a canvas of its own, drawn
-   back once per band — which is also how the bands on the page are
-   counted), never more than seven at once and more than two over a long
-   rest, and every one wide. */
-test("Ataraxia's bands are particles with shadows, few at once, and no grey haze", async ({ page }) => {
+/* ATARAXIA'S BANDS ARE PLAIN PARTICLES ON A WAVE. "the shadows of the
+   particles look really ugly, please undo that. maybe give them a
+   wavelike quality, where they cause vibrations around them. Make the
+   particles just particles otherwise, quite uncomplicated." Read off
+   what the motifs' canvas is asked to draw: no shadow laid down (the
+   shadows were a canvas drawn back once per band), no round motes, no
+   stroke at all, and every speck a small square; the bands few at once;
+   and the specks MOVING — a band that stood still with only its light
+   travelling would draw its specks in the same places frame after
+   frame. */
+test("Ataraxia's bands are plain particles on a wave, with no shadows", async ({ page }) => {
   test.setTimeout(60000);
   await page.addInitScript(() => {
-    window.__frame = 0;
-    window.__shadows = {};
-    window.__widest = 0;
-    const tick = () => { window.__frame++; requestAnimationFrame(tick); };
-    requestAnimationFrame(tick);
+    window.__watch = false;
+    window.__seen = { images: 0, arcs: 0, strokes: 0, rects: 0, biggest: 0 };
+    window.__frames = [];
     const P = CanvasRenderingContext2D.prototype;
-    const stroke = P.stroke, drawImage = P.drawImage;
-    P.stroke = function () {
-      if (this.canvas.classList.contains("sheet-motifs")) window.__widest = Math.max(window.__widest, this.lineWidth);
-      return stroke.apply(this, arguments);
-    };
-    P.drawImage = function (img) {
-      if (this.canvas.classList.contains("sheet-motifs") && img && img.dataset && img.dataset.band === "shadow") {
-        (window.__shadows[window.__frame] = window.__shadows[window.__frame] || []).push(+img.dataset.wide);
+    const on = (c) => window.__watch && c.canvas.classList.contains("sheet-motifs");
+    const drawImage = P.drawImage, arc = P.arc, stroke = P.stroke, fillRect = P.fillRect;
+    P.drawImage = function () { if (on(this)) window.__seen.images++; return drawImage.apply(this, arguments); };
+    P.arc = function () { if (on(this)) window.__seen.arcs++; return arc.apply(this, arguments); };
+    P.stroke = function () { if (on(this)) window.__seen.strokes++; return stroke.apply(this, arguments); };
+    P.fillRect = function (x, y, w) {
+      if (on(this)) {
+        window.__seen.rects++;
+        window.__seen.biggest = Math.max(window.__seen.biggest, w);
+        const f = window.__frames[window.__frames.length - 1];
+        if (f && f.length < 400) f.push(Math.round(x * 10) + "," + Math.round(y * 10));
       }
-      return drawImage.apply(this, arguments);
+      return fillRect.apply(this, arguments);
     };
+    const tick = () => { if (window.__watch) window.__frames.push([]); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
   });
   await page.goto(SHEET);
   await waitForSheet(page);
   await pointAt(page, 3);
-  await page.waitForTimeout(16000);
-  const seen = await page.evaluate(() => {
-    const frames = Object.values(window.__shadows);
-    return { frames: frames.length, most: Math.max(0, ...frames.map((f) => f.length)),
-      thinnest: Math.min(...frames.flat()), widestStroke: window.__widest };
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => { window.__watch = true; });
+  let most = 0;
+  for (let i = 0; i < 16; i++) {
+    await page.waitForTimeout(500);
+    most = Math.max(most, (await page.evaluate(() => window.HouseMotifs.census().band || 0)));
+  }
+  const out = await page.evaluate(() => {
+    window.__watch = false;
+    const full = window.__frames.filter((f) => f.length === 400);
+    // Of the first specks drawn in one frame, how many are drawn in the
+    // same place in the next.
+    let same = 0, pairs = 0;
+    for (let i = 1; i < full.length; i++) {
+      const before = new Set(full[i - 1]);
+      full[i].forEach((p) => { pairs++; if (before.has(p)) same++; });
+    }
+    return { ...window.__seen, still: same / Math.max(1, pairs), frames: full.length };
   });
-  expect(seen.frames, "bands were drawn, each with its shadow").toBeGreaterThan(100);
-  expect(seen.most, "bands on the page at once").toBeLessThanOrEqual(7);
-  expect(seen.most, "but more than one").toBeGreaterThan(2);
-  expect(seen.thinnest, "each band's width, in px").toBeGreaterThan(40);
-  expect(seen.widestStroke, "no grey beam stroked along a band").toBeLessThan(6);
+  expect(out.rects, "specks were drawn").toBeGreaterThan(10000);
+  expect(out.images, "no shadow laid down").toBe(0);
+  expect(out.arcs, "no round motes").toBe(0);
+  expect(out.strokes, "nothing stroked").toBe(0);
+  expect(out.biggest, "every speck a small square").toBeLessThanOrEqual(3);
+  expect(most, "bands on the page at once").toBeLessThanOrEqual(7);
+  expect(most, "but more than two").toBeGreaterThan(2);
+  expect(out.frames, "frames read").toBeGreaterThan(30);
+  expect(out.still, "specks drawn where they were the frame before").toBeLessThan(0.5);
 });
 
 /* TOMBSTONE'S PETALS FALL AND GATHER. "I want some of the red petals to
@@ -817,56 +836,67 @@ test("the axis is drawn as a firm line with a light either side", async ({ page 
   expect(out.lit, "and has a light beside it").toBeGreaterThan(0.5);
 });
 
-/* LES ABSTRAITS: DROPLETS CONCENTRATING INTO THE HOUSE'S MARK. "make
-   something to do with droplets, and concentrations (the chemical act of
-   concentrating) OR EVEN BETTER, MAKE SOMETHING USING THEIR LOGO". Read
-   off the motifs' canvas: a moment after resting, the drops are spread
-   thin across the page, in the bottles' amber; a few seconds later the
-   ink stands together in one place the size of the mark, and it is the
-   owner's logo that was read to make it. */
-test("Les Abstraits' droplets gather out of the page into the house's mark", async ({ page }) => {
+/* LES ABSTRAITS: AN OLD ARMOIRE WITH IRIS IN IT, AND A DRIP. "i dont
+   want it to ever turn into the actual picture ... make it something
+   according to the page": an old armoire on one side with iris in it,
+   feeling like Belle Âme, and on the other a drip from the top of the
+   page into a puddle that starts as nothing and grows. Read off the
+   motifs' canvas: the logo never asked for and nothing drawn from a
+   picture; ink on both sides of the window; something at the very top
+   of it on the drip's side; the iris's violet among the colours; and
+   the puddle at the foot growing while the house is rested on. */
+test("Les Abstraits' armoire stands on one side and a drip fills a puddle on the other, and the logo never appears", async ({ page }) => {
+  test.setTimeout(60000);
   const logo = [];
-  page.on("response", (r) => { if (/les-abstraits-logo\.png$/.test(r.url())) logo.push(r.status()); });
+  page.on("request", (r) => { if (/les-abstraits-logo\.png$/.test(r.url())) logo.push(r.url()); });
   await page.addInitScript(() => {
     window.__colours = new Set();
+    window.__images = 0;
     const P = CanvasRenderingContext2D.prototype;
-    const d = Object.getOwnPropertyDescriptor(P, "fillStyle");
-    Object.defineProperty(P, "fillStyle", {
-      get() { return d.get.call(this); },
-      set(v) {
-        if (this.canvas.classList.contains("sheet-motifs")) window.__colours.add(String(v).replace(/,\s*[\d.]+\)$/, ")"));
-        d.set.call(this, v);
-      },
-    });
+    const drawImage = P.drawImage;
+    P.drawImage = function () {
+      if (this.canvas.classList.contains("sheet-motifs")) window.__images++;
+      return drawImage.apply(this, arguments);
+    };
+    for (const key of ["fillStyle", "strokeStyle"]) {
+      const d = Object.getOwnPropertyDescriptor(P, key);
+      Object.defineProperty(P, key, {
+        get() { return d.get.call(this); },
+        set(v) {
+          if (this.canvas.classList.contains("sheet-motifs")) window.__colours.add(String(v).replace(/\s+/g, "").replace(/,[\d.]+\)$/, ")"));
+          d.set.call(this, v);
+        },
+      });
+    }
   });
   await page.goto(SHEET);
   await waitForSheet(page);
-  const spread = () => page.evaluate(() => {
+  const read = () => page.evaluate(() => {
     const c = document.querySelector(".sheet-motifs");
     const ratio = c.width / innerWidth;
     const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
-    const xs = [], ys = [];
-    for (let y = 0; y < c.height; y += 3) for (let x = 0; x < c.width; x += 3) {
-      if (d[(y * c.width + x) * 4 + 3] > 30) { xs.push(x / ratio); ys.push(y / ratio); }
-    }
-    xs.sort((a, b) => a - b); ys.sort((a, b) => a - b);
-    // Where the middle nine tenths of the ink lie, across and down.
-    const band = (v) => v.length ? v[Math.floor(v.length * 0.95)] - v[Math.floor(v.length * 0.05)] : 0;
-    return { n: xs.length, across: band(xs), down: band(ys), width: innerWidth };
+    const inkIn = (x1, x2, y1, y2) => {
+      let n = 0;
+      for (let y = Math.round(y1 * ratio); y < Math.round(y2 * ratio); y += 2)
+        for (let x = Math.round(x1 * ratio); x < Math.round(x2 * ratio); x += 2) if (d[(y * c.width + x) * 4 + 3] > 20) n++;
+      return n;
+    };
+    const W = innerWidth, H = innerHeight;
+    return { left: inkIn(0, W * 0.3, 0, H), right: inkIn(W * 0.7, W, 0, H),
+      top: inkIn(W * 0.7, W, 0, 14), foot: inkIn(W * 0.7, W, H - 60, H) };
   });
   await pointAt(page, 5);
-  await page.waitForTimeout(900);
-  const early = await spread();
-  await page.waitForTimeout(5600);
-  const late = await spread();
-  expect(logo, "the owner's logo is what is read").toContain(200);
-  expect(early.n, "drops on the page").toBeGreaterThan(50);
-  expect(early.across, "spread thin across the page at first").toBeGreaterThan(early.width * 0.6);
-  expect(late.n, "and ink still there once they have gathered").toBeGreaterThan(200);
-  expect(late.across, "gathered into one mark").toBeLessThan(420);
-  expect(late.across).toBeLessThan(early.across * 0.5);
+  await page.waitForTimeout(2600);
+  const early = await read();
+  await page.waitForTimeout(6000);
+  const late = await read();
+  expect(logo, "the house's logo is never asked for").toEqual([]);
+  expect(await page.evaluate(() => window.__images), "and no picture is drawn").toBe(0);
+  expect(late.left, "the armoire on one side").toBeGreaterThan(400);
+  expect(late.top, "the drip hangs from the very top of the window").toBeGreaterThan(3);
+  expect(late.foot, "the puddle grows").toBeGreaterThan(early.foot * 1.5 + 20);
   const colours = await page.evaluate(() => [...window.__colours]);
-  expect(colours.some((c) => c.startsWith("rgba(184,128,46") || c.startsWith("rgba(184, 128, 46")), "dilute, in the bottles' amber").toBe(true);
+  expect(colours.some((c) => c.startsWith("rgba(112,94,156")), `the iris, among ${colours.join(" ")}`).toBe(true);
 });
 
 /* QIMU & MUSICIANS KEPT QUIET: "more subtle and way less movement".
@@ -910,64 +940,75 @@ test("Qimu & Musicians' motifs are faint and their notes stay where they are put
     return { heads: window.__heads.length, places: places.size, strongest: window.__strongest };
   });
   expect(out.heads, "notes are drawn").toBeGreaterThan(20);
-  expect(out.strongest, "nothing drawn stronger than half").toBeLessThanOrEqual(0.5);
+  expect(out.strongest, "nothing drawn stronger than a third").toBeLessThanOrEqual(0.32);
   // A few new notes arrive in a second and a half; a drifting note would
   // add a new place on every frame it is drawn.
   expect(out.places, `${out.places} places for ${out.heads} heads drawn`).toBeLessThan(out.heads / 5);
 });
 
-/* GRANDE PARFUMS' PARTICLES BUBBLE, AND THERE ARE TWICE AS MANY. "i want
-   the particles that come up to sort of bubble. ALso double their
-   frequency and quantity." The drift stood at most 320 at once; over a
-   long rest there are now well over that, drawn as rings rather than
-   specks, and they pop — a broken ring thrown out at the end of a rise. */
-test("Grande Parfums' particles are bubbles that pop, twice as many as the drift", async ({ page }) => {
+/* GRANDE PARFUMS' PARTICLES RISE AND BURST. It was bubbles — rings that
+   rose and popped — and the owner asked for "particles, not bubbles
+   bubbles": particles "that rise up and pop more or less into a bunch
+   of other smaller particles". Read off the motifs' canvas: no ring
+   stroked at all, twice as many particles standing as the old drift's
+   320, and the smaller specks of the bursts among them. */
+test("Grande Parfums' particles rise and burst into smaller ones, twice as many as the drift", async ({ page }) => {
   test.setTimeout(60000);
   await page.addInitScript(() => {
-    window.__rings = 0;
-    window.__pops = 0;
+    window.__strokes = 0;
+    window.__small = 0;
+    window.__whole = 0;
     const P = CanvasRenderingContext2D.prototype;
-    const stroke = P.stroke;
+    const stroke = P.stroke, fillRect = P.fillRect;
     P.stroke = function () {
-      if (this.canvas.classList.contains("sheet-motifs")) {
-        if (this.getLineDash().length) window.__pops++; else window.__rings++;
-      }
+      if (this.canvas.classList.contains("sheet-motifs")) window.__strokes++;
       return stroke.apply(this, arguments);
+    };
+    P.fillRect = function (x, y, w) {
+      if (this.canvas.classList.contains("sheet-motifs")) { if (w <= 1.0) window.__small++; else window.__whole++; }
+      return fillRect.apply(this, arguments);
     };
   });
   await page.goto(SHEET);
   await waitForSheet(page);
   await pointAt(page, 4);
   await page.waitForTimeout(8500);
-  const out = await page.evaluate(() => ({ standing: (window.HouseMotifs.census().drift || 0), rings: window.__rings, pops: window.__pops }));
-  expect(out.standing, "bubbles on the page at once — the drift was 320 at most").toBeGreaterThan(420);
-  expect(out.rings, "drawn as rings").toBeGreaterThan(1000);
-  expect(out.pops, "and they pop").toBeGreaterThan(20);
+  const out = await page.evaluate(() => ({ standing: (window.HouseMotifs.census().rise || 0),
+    strokes: window.__strokes, small: window.__small, whole: window.__whole }));
+  expect(out.standing, "particles on the page at once — the drift was 320 at most").toBeGreaterThan(420);
+  expect(out.strokes, "no ring drawn: particles, not bubbles").toBe(0);
+  expect(out.whole, "the particles").toBeGreaterThan(10000);
+  expect(out.small, "and the smaller ones they burst into").toBeGreaterThan(1000);
 });
 
-/* ALMOST HUMAN'S FIGURES GLITCH INTO BEING, STAND, AND GLITCH OUT: "make
-   the amost human hover effect be more like humans glitching into
-   existence and then after a brief delay glitching out". They used to
-   gather most of the way into a person and come apart. Read off the
-   motifs' canvas: a figure breaking carries a GHOST of itself a few
-   pixels off (drawn at 1.7px) as many specks as it has, and one standing
-   has none. Several figures stand at once, each at its own point in its
-   life, so what is counted is the ghost's share of everything drawn over
-   a long rest: none at all if figures never glitch (the old gathering
-   drew none), about as much as the figures themselves if they never
-   settle, and in between if they glitch in, stand, and glitch out. */
-test("Almost Human's figures glitch in, stand a moment, and glitch out", async ({ page }) => {
+/* ALMOST HUMAN'S FIGURES ARE CLOUDS THAT GLITCH INTO BEING. First they
+   were asked to glitch "into existence and then after a brief delay
+   glitching out"; then the band-slicing glitch that did it was "mid",
+   and the figure itself should be "made of particles ... the look of a
+   cloudy human (unclear and blurry), that kinda glitches then appears".
+   Read off what the motifs' canvas is asked to draw: each figure is
+   hundreds of specks; while it glitches in, a red and a cyan copy of it
+   stand to either side (its colour out of register) — and once it has
+   arrived they are gone, so over a long rest the split is some of what
+   is drawn and never most of it. */
+test("Almost Human's figures are clouds of specks that glitch in and then stand", async ({ page }) => {
   await page.addInitScript(() => {
     window.__frame = 0;
     window.__fig = {};
     const tick = () => { window.__frame++; requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
     const P = CanvasRenderingContext2D.prototype;
+    const d = Object.getOwnPropertyDescriptor(P, "fillStyle");
+    Object.defineProperty(P, "fillStyle", {
+      get() { return d.get.call(this); },
+      set(v) { if (this.canvas.classList.contains("sheet-motifs")) this.__tone = String(v).replace(/\s+/g, ""); d.set.call(this, v); },
+    });
     const fillRect = P.fillRect;
-    P.fillRect = function (x, y, w) {
-      if (this.canvas.classList.contains("sheet-motifs") && (w === 1.9 || w === 1.7)) {
-        const f = (window.__fig[window.__frame] = window.__fig[window.__frame] || { body: 0, ghost: 0 });
-        if (w === 1.9) f.body++; else f.ghost++;
+    P.fillRect = function (x, y, w, h) {
+      if (this.canvas.classList.contains("sheet-motifs") && this.__tone && w > 1.05 && w === h) {
+        const f = (window.__fig[window.__frame] = window.__fig[window.__frame] || { body: 0, split: 0 });
+        if (/^rgba\(210,48,70|^rgba\(0,150,196/.test(this.__tone)) f.split++;
+        else if (/^rgba\(23,23,15/.test(this.__tone)) f.body++;
       }
       return fillRect.apply(this, arguments);
     };
@@ -978,23 +1019,27 @@ test("Almost Human's figures glitch in, stand a moment, and glitch out", async (
   await page.waitForTimeout(7000);
   const out = await page.evaluate(() => {
     const frames = Object.values(window.__fig).filter((f) => f.body > 0);
-    const body = frames.reduce((n, f) => n + f.body, 0), ghost = frames.reduce((n, f) => n + f.ghost, 0);
-    return { frames: frames.length, share: ghost / Math.max(1, body) };
+    const body = frames.reduce((n, f) => n + f.body, 0), split = frames.reduce((n, f) => n + f.split, 0);
+    return { frames: frames.length, share: split / Math.max(1, body), perFrame: body / Math.max(1, frames.length),
+      figures: window.HouseMotifs.census().figure || 0 };
   });
   expect(out.frames, "figures were drawn").toBeGreaterThan(60);
-  expect(out.share, "figures glitch coming and going").toBeGreaterThan(0.12);
-  expect(out.share, "and stand whole between").toBeLessThan(0.85);
+  expect(out.perFrame, "each figure a cloud of hundreds of specks").toBeGreaterThan(300);
+  expect(out.share, "their colour comes apart as they glitch in").toBeGreaterThan(0.04);
+  expect(out.share, "and they stand whole once they have").toBeLessThan(0.9);
 });
 
-/* QIMU & MUSICIANS IS PROPER MUSIC: "make it complex, I dont want it to
-   be just a simple 4/4 rhythm with a note here and there, i want it to
-   resemble proper complex compostions. and then make it that sometimes
-   they are in the 5 line grid, while othertimes it is just complex notes
-   popping up spontaneously." Read off everything the motifs' canvas is
-   asked to write: times other than 4/4, dynamics, tuplet numbers, dozens
-   of noteheads at once; staves first and no loose music; and later,
-   loose passages popping up with no stave of their own. */
-test("Qimu & Musicians' music is complex, on staves and then loose on the page", async ({ page }) => {
+/* QIMU & MUSICIANS IS COMPLEX, AND PLAIN. First "make it complex, I
+   dont want it to be just a simple 4/4 rhythm with a note here and
+   there ... sometimes they are in the 5 line grid, while othertimes it
+   is just complex notes popping up spontaneously"; then "remove all the
+   dynamic elements of the compositions, such as the trills and
+   whatnot". Read off everything the motifs' canvas is asked to write:
+   times other than 4/4, and NOTHING written but numbers — no dynamics,
+   no "tr", no tempo words; dozens of noteheads at once; staves first
+   and no loose music; and later, loose passages popping up with no
+   stave of their own. */
+test("Qimu & Musicians' music is complex, with no dynamics or ornaments, on staves and then loose", async ({ page }) => {
   test.setTimeout(60000);
   await page.addInitScript(() => {
     window.__frame = 0;
@@ -1022,11 +1067,11 @@ test("Qimu & Musicians' music is complex, on staves and then loose on the page",
   }));
   const times = first.texts.filter((t) => /^\d+$/.test(t));
   expect(times.some((t) => t !== "4" && t !== "3" && t !== "6"), `times other than 4/4: ${times.join(" ")}`).toBe(true);
-  expect(first.texts.some((t) => /^(ppp|pp|p|mp|mf|f|ff|sfz|fp)$/.test(t)), "dynamics").toBe(true);
-  expect(first.most, "dozens of noteheads written at once").toBeGreaterThan(40);
+  expect(first.texts.filter((t) => !/^\d+$/.test(t)), "nothing written but numbers").toEqual([]);
+  expect(first.most, "dozens of noteheads written at once").toBeGreaterThan(24);
   expect(first.census.stave || 0, "staves first").toBeGreaterThan(0);
   expect(first.census.passage || 0, "and no loose music yet").toBe(0);
-  await page.waitForTimeout(7500);
+  await page.waitForTimeout(7000);
   const later = await page.evaluate(() => window.HouseMotifs.census());
   expect(later.passage || 0, "then music popping up with no stave").toBeGreaterThan(0);
 });
@@ -1123,11 +1168,13 @@ test("every house on the wall has motifs of its own, and they draw", async ({ pa
   expect(errors).toEqual([]);
 });
 
-/* QIMU & MUSICIANS IS STAVES. "make it so that it is 5 lines like music
-   sheets, and add ephemeral notes to that." Read off the motifs' own
-   canvas: somewhere on it there are five long level lines, evenly spaced
-   — a stave — and ink that is not those lines, which is the notes. */
-test("Qimu & Musicians' motifs are five-line staves with notes on them", async ({ page }) => {
+/* QIMU & MUSICIANS IS STAVES, SHORT ONES. "make it so that it is 5 lines
+   like music sheets, and add ephemeral notes to that" — and then "make
+   it shorter lines, so it dosnt span across the entire page". Read off
+   the motifs' own canvas: somewhere on it there are five level lines,
+   evenly spaced — a stave — and ink that is not those lines, which is
+   the notes; and no line anywhere on it runs half the window's width. */
+test("Qimu & Musicians' motifs are short five-line staves with notes on them", async ({ page }) => {
   await page.goto(SHEET);
   await waitForSheet(page);
   await pointAt(page, 8);
@@ -1138,26 +1185,29 @@ test("Qimu & Musicians' motifs are five-line staves with notes on them", async (
     const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
     const w = c.width;
     const long = [];
+    let longest = 0;
     for (let y = 0; y < c.height; y++) {
       let run = 0, best = 0;
       for (let x = 0; x < w; x++) {
-        if (d[(y * w + x) * 4 + 3] > 20) { run++; if (run > best) best = run; } else run = 0;
+        if (d[(y * w + x) * 4 + 3] > 12) { run++; if (run > best) best = run; } else run = 0;
       }
-      if (best > w * 0.35) long.push(Math.round(y / ratio));
+      longest = Math.max(longest, best);
+      if (best > 140 * ratio) long.push(Math.round(y / ratio));
     }
     // Rows next to each other are one line drawn a pixel thick.
     const lines = long.filter((y, i) => i === 0 || y - long[i - 1] > 2);
     let staves = 0;
     for (let i = 0; i + 4 < lines.length; i++) {
       const gaps = [1, 2, 3, 4].map((k) => lines[i + k] - lines[i + k - 1]);
-      if (gaps.every((g) => Math.abs(g - gaps[0]) <= 1.5 && g > 5 && g < 14)) staves++;
+      if (gaps.every((g) => Math.abs(g - gaps[0]) <= 1.5 && g > 4 && g < 14)) staves++;
     }
     let ink = 0;
-    for (let i = 3; i < d.length; i += 4) if (d[i] > 20) ink++;
-    return { staves, ink, lineInk: long.length * w * 0.35 };
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 12) ink++;
+    return { staves, ink, lineInk: long.length * 140 * ratio, longest: longest / ratio, width: innerWidth };
   });
   expect(read.staves, "at least one stave of five even lines").toBeGreaterThan(0);
   expect(read.ink, "and notes on it besides the lines").toBeGreaterThan(read.lineInk);
+  expect(read.longest, "no line across half the window").toBeLessThan(read.width * 0.5);
 });
 
 /* PRESSING A HOUSE does not cut to it: the page steps back first, and

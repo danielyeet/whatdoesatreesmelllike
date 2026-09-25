@@ -1,0 +1,129 @@
+<!--
+  THE FRAGRANCES VIEW, KEPT EXACTLY AS IT WAS — 2026-09-25.
+
+  The owner: "for SD fragrances, I want you to keep the current copy
+  exactly as it is; and save it somewhere in the code. Do not overwrite
+  it. At least not for now." Below is that view's markup, character for
+  character, as it stood in categories/scent-descriptions.html at commit
+  3a26713, before the new design (the line) was put in front of it.
+
+  IT IS ALSO STILL IN THE PAGE ITSELF, unchanged but for the dates the
+  owner asked for on 001 to 007: there it is what the page falls back to
+  without JavaScript, and where the line reads its fragrances from. This
+  copy is the one nothing touches.
+
+  WHAT IT NEEDS TO RUN, if it is ever put back as the view:
+    - the `index-*` rules in style.css, and the ones written for it as a
+      view, under `.view[data-view="fragrances"]` — all still there;
+    - index-page.js (sorting and searching), fragrance-reader.js (a
+      fragrance opening in the page), notes-data.js and notes.js — all
+      still loaded by the page;
+    - and taking fragrance-line.js off the page, which is what draws the
+      line in front of it.
+
+  This file is not a page: it is a keepsake, and nothing links to it.
+-->
+<!-- `hidden` is written here rather than left to views.js, and that is
+     not tidiness: a script at the foot of the page is fetched, and
+     while the parser waits for it the browser is free to paint what it
+     has — which was this view, for one frame, every time the page was
+     opened. What the page opens as has to be true in the markup. -->
+<section class="view" data-view="fragrances" aria-label="Fragrances" hidden>
+<div class="index-page">
+
+  <header class="index-head">
+    <p class="index-name">Fragrances</p>
+    <p class="index-col">The ones with no house here</p>
+    <div class="index-say">
+      <p class="index-say-lede">
+        Perfumes I have something to say about that belong to none of the
+        houses on the Houses view — one to a line, each with the house it
+        did come from, in whatever order you ask for.
+      </p>
+      <p class="index-say-head">Sorting</p>
+      <p class="index-say-meta">Press a heading to sort by it; press it again to turn it round.</p>
+    </div>
+  </header>
+
+  <div class="index-right">
+    <p class="index-line">Perfumes with no house on this site — smelled, and being written up.</p>
+    <div class="index-plates">
+      <figure class="index-plate">
+        <canvas class="index-mark" aria-hidden="true"></canvas>
+        <figcaption>001</figcaption>
+      </figure>
+      <figure class="index-plate">
+        <!-- <img src="../images/fragrances-02.jpg" alt=""> -->
+        <div aria-hidden="true"></div>
+        <figcaption>002</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="index-board">
+    <div class="index-search">
+      <span class="index-search-mark" aria-hidden="true"></span>
+      <input class="index-search-field" type="search" placeholder="Search fragrances" aria-label="Search the fragrances">
+      <span class="index-count" aria-hidden="true">007</span>
+    </div>
+
+    <div class="index-scroll" tabindex="0">
+      <table class="index-table">
+        <thead>
+          <tr>
+            <th scope="col"><button class="index-sort sorted" type="button" data-key="no">No.</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="name">Fragrance</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="house">House</button></th>
+            <th scope="col"><button class="index-sort" type="button" data-key="date">Date</button></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-no="1" data-name="CV99" data-house="Lussur" data-date="">
+            <td class="index-no">001</td>
+            <td class="index-what"><a href="../individual-fragrances/individual-fragrances.html#part-01">CV99</a></td>
+            <td class="index-of">Lussur</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="2" data-name="De Profundis" data-house="Serge Lutens" data-date="">
+            <td class="index-no">002</td>
+            <td class="index-what"><a href="../individual-fragrances/individual-fragrances.html#part-02">De Profundis</a></td>
+            <td class="index-of">Serge Lutens</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="3" data-name="Haxan" data-house="Prissana" data-date="">
+            <td class="index-no">003</td>
+            <td class="index-what"><a href="../individual-fragrances/individual-fragrances.html#part-03">Haxan</a></td>
+            <td class="index-of">Prissana</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="4" data-name="Tobacolor" data-house="Dior" data-date="">
+            <td class="index-no">004</td>
+            <td class="index-what"><a href="../individual-fragrances/individual-fragrances.html#part-04">Tobacolor</a></td>
+            <td class="index-of">Dior</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="5" data-name="Flamenco EDP" data-house="Ramon Monegal" data-date="">
+            <td class="index-no">005</td>
+            <td class="index-what"><a href="../individual-fragrances/individual-fragrances.html#part-05">Flamenco EDP</a></td>
+            <td class="index-of">Ramon Monegal</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="6" data-name="French Riviera" data-house="Mancera" data-date="">
+            <td class="index-no">006</td>
+            <td class="index-what"><a href="../individual-fragrances/individual-fragrances.html#part-06">French Riviera</a></td>
+            <td class="index-of">Mancera</td>
+            <td class="index-date">—</td>
+          </tr>
+          <tr data-no="7" data-name="Velvet Fog" data-house="Casa Goa" data-date="">
+            <td class="index-no">007</td>
+            <td class="index-what"><a href="../individual-fragrances/individual-fragrances.html#part-07">Velvet Fog</a></td>
+            <td class="index-of">Casa Goa</td>
+            <td class="index-date">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</section>

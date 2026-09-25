@@ -68,7 +68,7 @@ const REAL_NODES = [
     preview: { description: "Here I describe things, from scents to houses to notes to anything else." },
   },
   {
-    label: "Theories", sub: "half-formed ideas I keep coming back to",
+    label: "Theories", sub: "some frameworks that I came up with myself",
     href: "categories/theories.html", pos: [-1.98, 2.0, -1.52],
     preview: { description: "Half-formed ideas, written down before I lose them." },
   },
@@ -78,7 +78,7 @@ const REAL_NODES = [
     preview: { description: "Researches and explorations: where I go and find out, rather than describe." },
   },
   {
-    label: "Favourites", sub: "things I like, no other reason needed",
+    label: "Favourites", sub: "things I like",
     href: "categories/favorites.html", pos: [-2.15, 0.4, 2.34],
     preview: { description: "The ones I keep coming back to, kept by chapter." },
   },

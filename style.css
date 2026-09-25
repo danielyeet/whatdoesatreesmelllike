@@ -2408,35 +2408,26 @@ body.structured .page-where { color: rgba(226, 232, 242, 0.55); border-left-colo
 }
 .structure-stop.open:hover .structure-card-open,
 .structure-stop.open:focus-visible .structure-card-open { color: #9ecbff; }
-/* A SECOND WAY IN, at the foot of the card and over to the right, for
-   a piece that carries something of its own worth going straight to.
-   It is boxed where "OPEN →" is bare, because they lead to two
-   different places and the card would otherwise read as two lines
-   saying the same thing. `width: fit-content` with `margin-left: auto`
-   is what puts it at the right-hand end of a block. */
+/* A SECOND WAY IN, for a piece that carries something of its own worth
+   going straight to: stood directly under "OPEN →", the one on top of
+   the other, and set the same way — bare, not boxed. It was boxed and
+   over at the right-hand end of the card until the owner asked for the
+   two "on top of one another" and the calculator's "not in a box". */
 .structure-card-calc {
-  margin: 0 0 18px auto;
-  width: fit-content;
-  padding: 8px 13px;
-  border: 1px solid rgba(142, 180, 226, 0.55);
+  margin: 0 0 18px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(142, 180, 226, 0.9);
   cursor: pointer;
-  transition: color 0.25s var(--menu-ease), border-color 0.25s var(--menu-ease),
-              background-color 0.25s var(--menu-ease);
+  transition: color 0.25s var(--menu-ease);
 }
 .structure-card-calc[hidden] { display: none; }
-.structure-card-calc:hover, .structure-card-calc:focus-visible {
-  color: #0d1016;
-  background: #9ecbff;
-  border-color: #9ecbff;
-}
+.structure-card-calc:hover, .structure-card-calc:focus-visible { color: #9ecbff; }
 /* The card's own bottom padding belongs to whichever of the two is
-   last: with the button there, "OPEN →" gives its up. */
-.structure-card-open:has(+ .structure-card-calc:not([hidden])) { padding-bottom: 14px; }
+   last: with the calculator under it, "OPEN →" gives its up. */
+.structure-card-open:has(+ .structure-card-calc:not([hidden])) { padding-bottom: 10px; }
 
 /* One name, one place: the station's name is in the card while it is
    open, so the copy under the figure goes — and the names of the
@@ -8968,6 +8959,70 @@ body.human-page:not(.tale-page) > .human-head {
   body.pineward-page > .pine-head,
   body.adar-page > .adar-head,
   body.human-page:not(.tale-page) > .human-head { animation: none; }
+}
+
+/* ==================================================================
+   FOUR HOUSES' PAPER — Grande Parfums, Les Abstraits, Tombstone, Qimu
+   & Musicians (2026-09-25)
+
+   The owner: "feel free to give them some colour in the background, the
+   same way you have in the case of pineward (green) and tale (some
+   muted orange) ... Qimu should be blue though; semi light blue."
+
+   Each is the page's own tokens turned (Tale's way: everything on the
+   page already draws in them) plus a few soft pools (Pineward's way),
+   fixed to the window. All of it written as plain rgba() and hex, never
+   color-mix() — see the note under Pineward's ground for why.
+
+     GRANDE        champagne — the house has no theme, so only warmth;
+     LES ABSTRAITS iris — a grey violet, a pool of it by the armoire and
+                   one where the puddle lies;
+     TOMBSTONE     ash — a cold stone grey, lighter above the horizon
+                   and darker at the foot where the floor reflects;
+     QIMU          blue, semi-light, and the only one of the four you
+                   would call a colour, because the owner said so.
+   ================================================================== */
+body.grande-page {
+  --bg: #f6f2e8; --bg-2: #eee8da; --line: #dcd3c0;
+  --chrome-ground: rgba(246, 242, 232, 0.8);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(60% 44% at 8% 6%, rgba(176, 138, 62, 0.10) 0%, transparent 72%),
+    radial-gradient(56% 40% at 94% 94%, rgba(176, 138, 62, 0.10) 0%, transparent 72%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+body.abstraits-page {
+  --bg: #f3f0f5; --bg-2: #e9e4ee; --line: #d6cfde;
+  --chrome-ground: rgba(243, 240, 245, 0.8);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(40% 60% at 6% 86%, rgba(112, 94, 156, 0.13) 0%, transparent 74%),
+    radial-gradient(34% 30% at 94% 100%, rgba(104, 92, 132, 0.12) 0%, transparent 72%),
+    linear-gradient(to bottom, rgba(112, 94, 156, 0.02) 0%, rgba(112, 94, 156, 0.06) 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+body.tombstone-page {
+  --bg: #ecebe8; --bg-2: #e2e1dd; --line: #cfcdc7;
+  --chrome-ground: rgba(236, 235, 232, 0.8);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 60%,
+      rgba(70, 72, 78, 0.05) 76%, rgba(70, 72, 78, 0.12) 100%),
+    radial-gradient(80% 16% at 50% 76%, rgba(120, 122, 128, 0.10) 0%, transparent 76%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+body.qimu-page {
+  --bg: #e2ebf6; --bg-2: #d6e1ef; --line: #bccbdd;
+  --chrome-ground: rgba(226, 235, 246, 0.8);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(60% 46% at 4% 4%, rgba(74, 110, 160, 0.12) 0%, transparent 72%),
+    radial-gradient(56% 44% at 96% 96%, rgba(74, 110, 160, 0.10) 0%, transparent 72%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 /* ==================================================================

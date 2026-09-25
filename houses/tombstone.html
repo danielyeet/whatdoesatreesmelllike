@@ -35,13 +35,19 @@
   THE PICTURES are the owner's, two to a fragrance, in
   images/Tombstone/Fragrances/: the bottle, and the house's card for it.
 
-  THE PAGE'S SHAPE is house.js, shared with the other newer houses. It
-  has no ground of its own: the owner has not said what the house is
-  yet, and a house with no theme simply has none. Its motifs on the
+  THE PAGE'S SHAPE is house.js, shared with the other newer houses.
+  THE GROUND is tombstone.js (2026-09-25, "very dead and funerary ... a
+  reflection in the design ... ephermeral"): stones gathering out of
+  the mist on a still grey floor in the margins, standing a while and
+  going as smoke goes, each with its reflection turned over below the
+  horizon; ash falling; the reflection rings under the pointer. The
+  paper is ash grey (.tombstone-page in style.css). Its motifs on the
   Houses view — its names cut into the wall, and roots with red flowers
   — are in motifs.js.
 -->
 <body class="human-page tombstone-page">
+
+<canvas class="human-field" aria-hidden="true"></canvas>
 
 <header class="human-head">
   <p class="human-kicker">Scent descriptions · 08</p>
@@ -242,6 +248,7 @@
 <script src="../nav.js"></script>
 <script src="../search.js"></script>
 <script src="../house.js"></script>
+<script src="../tombstone.js"></script>
 <script src="../notes-data.js"></script>
 <script src="../notes.js"></script>
 </body>

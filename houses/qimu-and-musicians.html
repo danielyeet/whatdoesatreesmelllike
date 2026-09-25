@@ -35,11 +35,17 @@
   images/Qimu and Musicians/Perfumes/, and the record sleeve beside it
   that stands on the Houses view.
 
-  THE PAGE'S SHAPE is house.js. No ground of its own yet; its motifs on
-  the Houses view — music staves with notes coming and going on them —
-  are in motifs.js.
+  THE PAGE'S SHAPE is house.js. THE GROUND is qimu.js (2026-09-25):
+  short staves down both margins, carried with the page, written in as
+  they are reached and then played — a faint playhead along each, the
+  notes lifting as it passes — with real, changing time signatures and
+  no dynamics or ornaments. The paper is semi-light blue, at the
+  owner's word (.qimu-page in style.css). Its motifs on the Houses view
+  — short staves and loose music — are in motifs.js.
 -->
 <body class="human-page qimu-page">
+
+<canvas class="human-field" aria-hidden="true"></canvas>
 
 <header class="human-head">
   <p class="human-kicker">Scent descriptions · 09</p>
@@ -175,6 +181,7 @@
 <script src="../nav.js"></script>
 <script src="../search.js"></script>
 <script src="../house.js"></script>
+<script src="../qimu.js"></script>
 <script src="../notes-data.js"></script>
 <script src="../notes.js"></script>
 </body>

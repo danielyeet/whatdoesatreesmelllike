@@ -1,5 +1,5 @@
 // ============================================================
-// THE THREE NEWER HOUSES, AND THE SHAPE THEY SHARE
+// THE NEWER HOUSES, AND THE SHAPE THEY SHARE
 //
 // Ataraxia (04), Grande Parfums (05) and Les Abstraits (06) arrived
 // together, and together they are the reason house.js exists: the
@@ -451,6 +451,227 @@ test("Grande Parfums has a drift, and it is a quiet one", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+/* GRANDE'S PARTICLES BURST. "a particle effect of bubbling (i dont want
+   it to seem comical or drawn up like with tale), but particles that
+   rise up and pop more or less into a bunch of other smaller
+   particles". Read off what the page's canvas is asked to draw over a
+   few seconds: the specks themselves, the finer specks of the bursts
+   among them, and nothing stroked — no ring, no outline, no bubble. */
+test("Grande Parfums' particles rise and burst into finer ones, with no bubble drawn", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__grande = { whole: 0, fine: 0, strokes: 0 };
+    const P = CanvasRenderingContext2D.prototype;
+    const fillRect = P.fillRect, stroke = P.stroke;
+    P.fillRect = function (x, y, w) {
+      if (this.canvas.classList.contains("human-field")) { if (w < 1) window.__grande.fine++; else window.__grande.whole++; }
+      return fillRect.apply(this, arguments);
+    };
+    P.stroke = function () {
+      if (this.canvas.classList.contains("human-field")) window.__grande.strokes++;
+      return stroke.apply(this, arguments);
+    };
+  });
+  await page.goto(GRANDE);
+  await page.waitForTimeout(3000);
+  const seen = await page.evaluate(() => window.__grande);
+  expect(seen.whole, "the rising specks").toBeGreaterThan(5000);
+  expect(seen.fine, "and the finer ones they burst into").toBeGreaterThan(200);
+  expect(seen.strokes, "nothing drawn round them").toBe(0);
+});
+
+/* FOUR HOUSES ON PAPER OF THEIR OWN. "feel free to give them some
+   colour in the background, the same way you have in the case of
+   pineward (green) and tale (some muted orange) ... Qimu should be blue
+   though; semi light blue." None of the four is white any more; Qimu's
+   is blue — its blue channel well above its red — and still light. */
+test("Grande, Les Abstraits, Tombstone and Qimu each have a paper of their own, and Qimu's is blue",
+  async ({ page }) => {
+  const papers = {};
+  for (const url of [GRANDE, ABSTRAITS, TOMBSTONE, QIMU]) {
+    await page.goto(url);
+    papers[url] = await page.evaluate(() => {
+      const m = getComputedStyle(document.body).backgroundColor.match(/[\d.]+/g).map(Number);
+      return { r: m[0], g: m[1], b: m[2] };
+    });
+  }
+  Object.entries(papers).forEach(([url, c]) =>
+    expect(c.r === 255 && c.g === 255 && c.b === 255, `${url} is still white`).toBe(false));
+  const q = papers[QIMU];
+  expect(q.b - q.r, `Qimu's paper ${JSON.stringify(q)}`).toBeGreaterThan(12);
+  expect(q.r + q.g + q.b, "and light").toBeGreaterThan(600);
+  expect(new Set(Object.values(papers).map((c) => `${c.r},${c.g},${c.b}`)).size, "four different papers").toBe(4);
+});
+
+/* TOMBSTONE: STONES, AND THEIR REFLECTION. "very dead and funerary ...
+   a reflection in the design ... ephermeral". Read off the page's
+   canvas: stones in the margins above the horizon, and under it the
+   same margins holding their reflection — there, and fainter than
+   what it reflects. EPHEMERAL: a stone does not stay — over a long
+   wait what stands in the margins comes and goes. */
+test("Tombstone's stones stand in the margins with their reflections under them", async ({ page }) => {
+  test.setTimeout(60000);
+  await page.goto(TOMBSTONE);
+  const read = () => page.evaluate(() => {
+    const el = document.querySelector(".human-field");
+    const g = el.getContext("2d", { willReadFrequently: true });
+    const r = el.width / innerWidth;
+    const d = g.getImageData(0, 0, el.width, el.height).data;
+    const horizon = Math.round(innerHeight * 0.76);
+    const edge = (innerWidth - 940) / 2 - 40;
+    let above = 0, aboveInk = 0, below = 0, belowInk = 0;
+    for (let y = 0; y < el.height; y += 2) {
+      for (let x = 0; x < el.width; x += 2) {
+        const cx = x / r, cy = y / r;
+        if (cx > edge && cx < innerWidth - edge) continue;
+        const a = d[(y * el.width + x) * 4 + 3];
+        if (a <= 8) continue;
+        if (cy < horizon - 3) { above++; aboveInk += a; }
+        else if (cy > horizon + 3) { below++; belowInk += a; }
+      }
+    }
+    return { above, below, aboveMean: aboveInk / Math.max(1, above), belowMean: belowInk / Math.max(1, below) };
+  });
+  await page.waitForTimeout(9000);
+  const now = await read();
+  expect(now.above, "stones stand in the margins").toBeGreaterThan(400);
+  expect(now.below, "and their reflection lies under them").toBeGreaterThan(now.above * 0.2);
+  expect(now.belowMean, `the reflection is fainter: ${now.belowMean.toFixed(0)} under, ${now.aboveMean.toFixed(0)} over`)
+    .toBeLessThan(now.aboveMean * 0.8);
+  // A stone gathers, stands and goes, and the next is a while coming:
+  // over half a minute what stands in the margins waxes and wanes.
+  const seen = [];
+  for (let i = 0; i < 22; i++) {
+    await page.waitForTimeout(1000);
+    seen.push((await read()).above);
+  }
+  expect(Math.min(...seen), `nothing here stays: ${seen.join(" ")}`).toBeLessThan(Math.max(...seen) * 0.7);
+});
+
+/* LES ABSTRAITS: THE ARMOIRE AND THE DRIP. "an old armoire on one of
+   the sides ... has some iris notes in it ... like the perfume belle
+   ame ... On the other side ... a dripping effect from the top of the
+   page to the bottom, where there will be a puddle. This puddle should
+   start off as nonexistent and ... becomes larger and larger (capping
+   at a specific size)". Read off the page's canvas: the armoire in the
+   left margin, the iris's violet drawn in it, something at the very top
+   of the right margin where the drop gathers, and no puddle at first,
+   then one, growing. */
+test("Les Abstraits has its armoire with iris on one side and a drip filling a puddle on the other",
+  async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => {
+    window.__iris = false;
+    const P = CanvasRenderingContext2D.prototype;
+    const d = Object.getOwnPropertyDescriptor(P, "strokeStyle");
+    Object.defineProperty(P, "strokeStyle", {
+      get() { return d.get.call(this); },
+      set(v) { if (/^rgba\(112,\s*94,\s*156/.test(String(v))) window.__iris = true; d.set.call(this, v); },
+    });
+  });
+  await page.goto(ABSTRAITS);
+  const read = () => page.evaluate(() => {
+    const el = document.querySelector(".human-field");
+    const g = el.getContext("2d", { willReadFrequently: true });
+    const r = el.width / innerWidth;
+    const margin = (innerWidth - 940) / 2;
+    const count = (x1, x2, y1, y2) => {
+      const d = g.getImageData(Math.round(x1 * r), Math.round(y1 * r), Math.round((x2 - x1) * r), Math.round((y2 - y1) * r)).data;
+      let n = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 10) n++;
+      return n;
+    };
+    return { armoire: count(0, margin, innerHeight * 0.3, innerHeight),
+      top: count(innerWidth - margin, innerWidth, 0, 16),
+      puddle: count(innerWidth - margin, innerWidth, innerHeight - 22, innerHeight) };
+  });
+  await page.waitForTimeout(400);
+  const first = await read();
+  await page.waitForTimeout(3600);
+  const early = await read();
+  await page.waitForTimeout(9000);
+  const late = await read();
+  expect(first.puddle, "no puddle when the page opens").toBeLessThan(20);
+  expect(late.armoire, "the armoire in the left margin").toBeGreaterThan(1500);
+  expect(await page.evaluate(() => window.__iris), "with iris in it").toBe(true);
+  expect(late.top, "the drop gathering at the very top").toBeGreaterThan(10);
+  expect(late.puddle, `the puddle grows: ${early.puddle} then ${late.puddle}`).toBeGreaterThan(early.puddle * 1.3 + 30);
+});
+
+/* QIMU & MUSICIANS: A SCORE IN THE MARGINS. "add some complex notes;
+   and some 5 lines in which they will exist ... nicely animated ...
+   dont make them always 4/4 ... make it random (as long as its an
+   actual used notation) ... Overall ... subtle". Read off what the
+   page's canvas is asked to draw: noteheads, times other than 4/4,
+   nothing written but numbers (no dynamics, no ornaments), nothing
+   stronger than a little over half — and the staves CARRIED WITH THE
+   PAGE: scroll it and every stave is drawn that much higher. */
+test("Qimu & Musicians keeps a quiet score in its margins, carried with the page", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__q = { heads: 0, texts: new Set(), strongest: 0, tops: [] };
+    const P = CanvasRenderingContext2D.prototype;
+    const on = (c) => c.canvas.classList.contains("human-field");
+    const ellipse = P.ellipse, fillText = P.fillText, translate = P.translate;
+    P.ellipse = function () { if (on(this)) window.__q.heads++; return ellipse.apply(this, arguments); };
+    P.fillText = function (t) { if (on(this)) window.__q.texts.add(String(t)); return fillText.apply(this, arguments); };
+    P.translate = function (x, y) { if (on(this)) window.__q.tops.push(Math.round(y)); return translate.apply(this, arguments); };
+    const d = Object.getOwnPropertyDescriptor(P, "fillStyle");
+    Object.defineProperty(P, "fillStyle", {
+      get() { return d.get.call(this); },
+      set(v) {
+        if (on(this)) { const m = /,\s*([\d.]+)\)$/.exec(String(v)); if (m) window.__q.strongest = Math.max(window.__q.strongest, +m[1]); }
+        d.set.call(this, v);
+      },
+    });
+  });
+  await page.goto(QIMU);
+  await page.waitForTimeout(3500);
+  const seen = await page.evaluate(() => ({ heads: window.__q.heads, texts: [...window.__q.texts], strongest: window.__q.strongest }));
+  expect(seen.heads, "notes written").toBeGreaterThan(100);
+  const numbers = seen.texts.filter((t) => /^\d+$/.test(t));
+  expect(numbers.some((t) => t !== "4"), `times other than 4/4: ${numbers.join(" ")}`).toBe(true);
+  expect(seen.texts.filter((t) => !/^\d+$/.test(t)), "nothing written but numbers").toEqual([]);
+  expect(seen.strongest, "subtle").toBeLessThanOrEqual(0.6);
+  // Carried with the page.
+  const before = await page.evaluate(async () => {
+    window.__q.tops = [];
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    return [...new Set(window.__q.tops)];
+  });
+  await page.evaluate(() => window.scrollBy(0, 200));
+  const after = await page.evaluate(async () => {
+    window.__q.tops = [];
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    return [...new Set(window.__q.tops)];
+  });
+  expect(before.length, "staves on the window").toBeGreaterThan(0);
+  expect(before.filter((y) => after.includes(y - 200)).length, `before ${before}, after ${after}`).toBeGreaterThan(0);
+});
+
+/* WITH MOTION TURNED OFF each of the four still draws its ground, and
+   draws it still. */
+test("with motion turned off the four new grounds are drawn and stand still", async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: "reduce" });
+  const page = await context.newPage();
+  await serveDependenciesLocally(page);
+  for (const url of [GRANDE, ABSTRAITS, TOMBSTONE, QIMU]) {
+    await page.goto(url);
+    await page.waitForTimeout(500);
+    const shot = () => page.evaluate(() => {
+      const el = document.querySelector(".human-field");
+      const d = el.getContext("2d", { willReadFrequently: true }).getImageData(0, 0, el.width, el.height).data;
+      let n = 0, sum = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 6) { n++; sum += d[i] * (i % 997); }
+      return n + ":" + sum;
+    });
+    const a = await shot();
+    await page.waitForTimeout(700);
+    const b = await shot();
+    expect(Number(a.split(":")[0]), `${url} draws its ground`).toBeGreaterThan(100);
+    expect(b, `${url} stands still`).toBe(a);
+  }
+  await context.close();
+});
+
 /* WITHOUT THE SCRIPTS the writing is still all there and still opens.
    Every drawn page on this site has this test, and it is the one that
    says the drawing is decoration rather than the page. */
@@ -459,6 +680,9 @@ test("without the scripts the new houses are all of their writing",
   await page.route("**/house.js", (route) => route.abort());
   await page.route("**/ataraxia.js", (route) => route.abort());
   await page.route("**/tale.js", (route) => route.abort());
+  for (const ground of ["grande", "abstraits", "tombstone", "qimu"]) {
+    await page.route(`**/${ground}.js`, (route) => route.abort());
+  }
 
   for (const [url, parts] of [[ATARAXIA, 5], [GRANDE, 15], [ABSTRAITS, 4], [TALE, 4], [TOMBSTONE, 5], [QIMU, 4]]) {
     await page.goto(url);
