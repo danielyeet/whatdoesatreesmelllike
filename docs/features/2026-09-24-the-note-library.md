@@ -339,3 +339,58 @@ house, then its fragrances`** — Cedarwood's card opens with nothing open and n
 showing; Houses shows the houses and still no fragrance; Pineward shows exactly Pineward's,
 and its count says how many; and turned over to Vetiver, Houses and Pineward are still
 open. Fails against the card before. Nineteen tests in the file.
+
+## 2026-09-25 — books drawn in specks, more air, and a card of lines
+
+> As of now, the library feels crowded, I want you to stylistically make it more
+> breathable. Im not sure how, but for the logos on the books I feel are unneccessary. I
+> would also like you to make it feel less 3-bit. The popup windows on the left also feel
+> too futuristic. fix that, make it like the rest of the site: themed with particles and
+> geometry. The books should follow the same pattern. if you can somehow make them out of
+> particles but actually look like books, with appropriate colours, might be pretty nice.
+> If it doesnt look good (you can send screenshots and i can decide for myself), then we
+> can redesign the books themselves.
+
+**Everything "digital" is out of the code**: the pixel glyph (`.lib-glyph`), the segmented
+meter (`.lib-bands`, `FULL`), the barcode (`.lib-code`), the dot screen, the folder's tab
+(`.lib-folder-tab`), the name decoding under the hand (`decode`, `NOISE`, `is-decoding`),
+the scan passing down the window (`.lib-scan`) and the scan over a pulled-out record. The
+records are **books** again.
+
+- **A spine drawn in specks** (`drawSpine`, a `canvas.lib-spine` in every book), in the
+  cloth its accord is bound in (`CLOTH`: citrus an ochre, the herbs a sage, the greens a
+  green, the flowers a faded rose, the woods a walnut, the airs a slate blue, and so on),
+  each book a shade off its neighbours. Rounded by a light from the left and shadowed at
+  the far edge, a lighter head-cap, the tail darker where it stands, two **raised bands**
+  (a lit ridge with a shadow under it) at head and foot, and on about half a **gilt rule**
+  inside each band. At the foot a **library label** — a small square of cream specks — with
+  the call number printed on it in dark ink, as a library's own books carry one. Seeded by
+  the note's name, so every book is its own and the same every visit; drawn as each comes
+  within 700px of the window (`IntersectionObserver`), so three hundred canvases do not
+  hold up the arrival; specks of one shade drawn together.
+- **More air.** The accords further apart (`padding` 60/42px, a 210px plate, 48px between
+  the plate and the stacks), the rows of a shelf 52px apart, and 6px between books.
+- **The card, in lines and specks** rather than glass: a hairline edge with a registration
+  tick at each corner (in the card's own background, so they stay put while it scrolls),
+  no lit bar along its top, no glow, no blur behind, the call number plain with a rule
+  under it — and at its head **the mark** (`canvas.lib-card-mark`): a ring of specks, one
+  for every fragrance on the site that uses the note, joined one to the next by hairlines,
+  turning slowly in a cloud of its accord's dust, a registration cross at its centre and
+  a ticked rule run in to it from either side. Still with reduced motion.
+- **The slip** naming a book is a hairline box with a tick at two corners and a leader run
+  down to the book, with no colour on its edge.
+- "Pull a random folder" says **book**, and so does the card's close.
+
+Tested in `tests/note-library.spec.js`, three tests replacing the three about the folders:
+
+- **`the books are drawn in specks, in their accords' colours, and carry nothing
+  pixelated`** — none of the digital parts anywhere; with two accords in the window, every
+  book near it has its spine drawn, in more than forty shades (specks, not a fill), and the
+  two accords' mean colours well apart.
+- **`the card is hairlines and specks rather than glass`** — no backdrop blur, no inset
+  glow, no top border over 1px, no glow on the call number, and the mark drawn.
+- **`the shelves breathe`** — rows 48px or more apart, books 5px or more, 56px or more
+  above every accord.
+
+Nineteen tests in the file. The screenshots were sent to the owner to decide on the books,
+as they asked.

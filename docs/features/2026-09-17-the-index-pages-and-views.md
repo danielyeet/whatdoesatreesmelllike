@@ -328,3 +328,17 @@ would renumber the two after it and quietly lose whatever the fifth was meant to
   dates are placeholders" above.
 - The plates on both index pages are hatched placeholders; `images/Individual Fragrances/`
   and `images/Theories/` are empty but for their READMEs.
+
+## 2026-09-25 — the Fragrances view is a line now; this one is kept
+
+The Fragrances view was made again as a line of files round a double pyramid, and the switch
+from the Houses as a **stretch** of the axis into that line — see [the fragrance
+line](2026-09-25-the-fragrance-line.md). **Everything this report describes is kept**, at the
+owner's word ("keep the current copy exactly as it is"): the table is still in the page, is
+what the line reads and presses, and is the view again whenever `fragrance-line.js` is not
+there — with its fade and its swipe, which views.js still does for it. A copy of the view's
+markup as it stood is in `archive/fragrances-view-2026-09-24.html`. `tests/index-pages.spec.js`
+blocks the line's script so that it goes on testing this view.
+
+Rows 001 to 007 are dated **24.09.2026** at the owner's word, so the note above that the
+dates are rolled from a seed no longer holds for them.

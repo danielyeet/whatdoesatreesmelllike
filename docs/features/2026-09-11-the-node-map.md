@@ -210,3 +210,11 @@ Tested in `tests/node-map.spec.js`: the labels now include Note Library, the sph
 counts eight and its closest pair is still over 60°, and `at rest, no two node labels
 overlap` (more than 20px between the nearest two at 1440 × 900; fails with two nodes put in
 the same place on the screen). Thirteen tests in the file.
+
+## 2026-09-25 — two lines under the labels
+
+The owner changed two of the lines under the map's labels (`sub` in `REAL_NODES`):
+Favourites is *things I like* (", no other reason needed" taken off) and Theories is *some
+frameworks that I came up with myself* (it was "half-formed ideas I keep coming back to").
+Theories' preview still says *Half-formed ideas, written down before I lose them.* — the
+owner did not mention it, so it was left and asked about.

@@ -328,3 +328,15 @@ convention any row may use — and no row uses it at the moment.
 0.65). Checked the way the paragraph above says: `theories.html`, `structure.js`,
 `nav.js`, `search.js` and `page-search.js` unchanged, and the only lines `style.css` gained
 were inside `.primer-*` rules this page never uses. It then passed 5 of 5 on its own.
+
+## 2026-09-25 — OPEN over OPEN CALCULATOR, and no box
+
+> make the buttons on top of one another for the open and open calculator in the theories
+> note dissemination theory. The calculator button should not be in a box too.
+
+`OPEN →` and `OPEN CALCULATOR` stood side by side at the foot of the Note Dissemination
+card, the second boxed. They stand one over the other now, and the calculator's is a line
+of the mono in the page's blue with no border (`.structure-card-calc`), coming up brighter
+on hover and focus; the `OPEN` above it takes a little less room under it when it is there
+(`.structure-card-open:has(+ .structure-card-calc:not([hidden]))`). It is still a span
+with a link's role and a link's keys, for the reason above.

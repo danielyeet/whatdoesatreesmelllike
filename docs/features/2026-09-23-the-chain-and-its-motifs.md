@@ -441,3 +441,101 @@ Tested in `tests/contact-sheet.spec.js`, every one failing against the page befo
 - **`Qimu & Musicians' music is complex, on staves and then loose on the page`** — times
   other than 4/4 written, dynamics written, over forty noteheads in a frame, staves and no
   loose music at first, and loose music later.
+
+## 2026-09-25 — five houses' motifs made over again
+
+> Now redo the ataraxia streaks, the shadows of the particles look really ugly, please
+> undo that. maybe give them a wavelike quality, where they cause vibrations around them.
+> Make the particles just particles otherwise, quite uncomplicated. — With grande parfums,
+> i want it to be particles, not bubbles bubbles. — for les abstraits, i dont want it to
+> ever turn into the actual picture (pic 1). I want the animation changed again actually,
+> make it something according tot he page — Qimu and musicians, make it shorter lines, so
+> it dosnt span across the entire page. I want it to be more subre as well plase, not so
+> in your face. also remove all the dynamic elements of the compositions, such as the
+> trills and whatnot. — almost human humans glitching, i want them to be made of
+> particles, and not look exactly like a human wood, I want it to have the look of a
+> cloudy human (unclear and blurry), that kinda glitches then appears. feel free to get
+> your glitch animations from somewhere else ... because i dont want this mid glitch
+> effect you used
+
+- **Ataraxia: plain particles on a wave, shaking the air round them.** The shadows are
+  out of the code (no `shade` canvas, no `SHADE_DROP`), and so are the round motes. A band
+  is small square specks in one ink, and it **moves as a wave**: a ripple runs along its
+  length (`WAVE_LENGTH`, `WAVE_SPEED`), swelling where a crest travels (`CREST_SPEED`),
+  and the band's specks ride it across the band. Either side of it a looser scatter of
+  fainter specks — **the air** — is **shaken** by it: each trembles quickly about its own
+  place, hardest where the crest is and nearest the band (`SHAKE_REACH`). Nothing is
+  stroked and nothing is drawn from a picture. Six at most, two there at once when the
+  house is rested on.
+- **Grande Parfums: particles that rise and burst** (`rise()`, which replaced `drift()`).
+  Plain specks again, rising with a little sway, and at the top of each one's rise it
+  **bursts** into a small spray of finer specks that fly out, slow and fade (`BURST_MS`) —
+  a particle becoming several smaller ones, which is what the house's own page does now
+  too. No rings. Still up to 640 at once.
+- **Les Abstraits: an old armoire with iris in it, and a drip** (`armoire()`, `drip()`),
+  following the house's own page, which the owner asked for in the same message (see
+  [the newer houses](2026-09-21-the-newer-houses.md)). The logo motif is out of the code
+  entirely — nothing reads `les-abstraits-logo.png` any more, and nothing draws a picture.
+  **The armoire** stands on the floor of the window on the left (the way round stands on
+  the right, and the armoire is too big to stand behind it), drawn in walnut specks along
+  its lines: bun feet, a plinth, a drawer with two knobs, two panelled doors (one arched),
+  a key in the lock, a cornice and a broken pediment with a finial and carved scrolls,
+  a few specks worn away and the whole leaning a hair. It **builds up from the floor**
+  (`ARMOIRE_BUILD`). Its right door stands ajar on a dark inside, and in it **three
+  irises** open — three falls hanging, three standards up, a touch of gold on each fall —
+  and **orris powder** drifts out of the gap, violet-grey, slowing and rising and gone:
+  Belle Âme's iris butter. **The drip** is on the other side: a bead gathering at the
+  very top of the window, swelling, falling the whole height and landing in **the
+  puddle** with a ring and a small splash; the puddle is nothing at first and grows with
+  every drop, eased, up to `PUDDLE_MOST`.
+- **Qimu & Musicians: short staves, fainter, and no expression marks.** A stave is now a
+  phrase — a fifth to a third of the window (`QIMU_LONG`), 170 to 460px — placed anywhere
+  on the page clear of the others, with a narrower line gap (`GAP` 7). Fainter
+  (`QIMU_LINE` 0.18, `QIMU_INK` 0.3), four at most. **Taken out of the composer**: dynamics
+  and hairpins, trills, grace notes, accents, staccato dots, fermatas, rolled chords and
+  tempo words (`mHairpin`, `mWave`, `mFermata`, `grace`, `trill`, `dyn` and `TEMPI` are
+  gone). **Kept**, because they are the rhythm and the notes rather than the expression:
+  beamed runs, tuplets, chords with their accidentals, clusters, rests, slurs, clefs, key
+  signatures, and the time signatures — picked from fourteen that music actually uses
+  (`TIMES`, 4/4 among them) and changing at a bar now and then, the same in both staves of
+  a grand staff. Loose passages are a run, a flurry of small notes under a beam, a
+  cluster or a few chords.
+- **Almost Human: clouded figures, glitching in with a better glitch.** The banded
+  slicing is out of the code (`BANDS`, `GLITCH_*`). **The figure** is volumes rather than
+  a trace — a head, a neck, shoulders, a torso, two arms held a little off the body, two
+  legs a little apart, each a capsule, posed a little differently every time — filled
+  with 560 specks, each thrown off its place by a soft random amount (`FIG_BLUR`) and a
+  few by a great deal: dense in a limb, thin at its edges, no outline, breathing. **The
+  glitch in** (`FIG_IN`) is a broken signal finding itself, taken from what real ones do:
+  **stutter** (there on one step, gone on the next, `FIG_STEP`), **a colour split** (a red
+  copy to one side and a cyan one to the other, closing on the figure), **a smear** (a
+  band of it dragged sideways into streaks) and **interlace** (every other line missing).
+  It then **stands** (`FIG_HOLD`), and **goes as an old screen turned off does** —
+  pressed into a bright line across, the line to a point (`FIG_OUT`).
+
+Tested in `tests/contact-sheet.spec.js`, each replacing the test for what it replaced and
+each failing against the page before:
+
+- **`Ataraxia's bands are plain particles on a wave, with no shadows`** — no picture drawn
+  on the motifs' canvas (the shadows were one), no round mote, nothing stroked, every
+  speck a square of 3px or less, never more than seven bands and more than two over a long
+  rest, and the specks MOVING: of the first four hundred drawn in one frame, fewer than
+  half are drawn in the same place the next.
+- **`Grande Parfums' particles rise and burst into smaller ones, twice as many as the
+  drift`** — over 420 standing, nothing stroked, and specks under 1px (the bursts) among
+  the whole ones.
+- **`Les Abstraits' armoire stands on one side and a drip fills a puddle on the other, and
+  the logo never appears`** — the logo is never asked for and no picture is drawn; ink in
+  the left third; something at the very top of the right third (the drop gathering); the
+  foot of the right third growing over six seconds; the iris's violet among the colours.
+- **`Almost Human's figures are clouds of specks that glitch in and then stand`** — each
+  figure hundreds of specks; the red and cyan copies a share of what is drawn over a long
+  rest, and never most of it.
+- **`Qimu & Musicians' music is complex, with no dynamics or ornaments, on staves and
+  then loose`** — times other than 4/4, NOTHING written but numbers, dozens of noteheads,
+  staves first and loose music later; **`...motifs are short five-line staves with notes
+  on them`** — a stave of five even lines, notes besides, and no line on the canvas half
+  the window long; and the quiet test now holds everything to a third of full strength.
+
+`images/Les-Abstraits/README.txt` says the logo is used nowhere now, and is kept because
+it is the owner's.

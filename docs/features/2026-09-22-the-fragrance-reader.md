@@ -340,3 +340,12 @@ Three things the reader has to look after that a house page does not:
 Tested by `it carries the picture, the writing and the notes` (now: a button, nothing
 printed, and the window with Haxan's two halves once pressed) and `escape shuts the notes
 before the fragrance, and windows do not pile up`.
+
+## 2026-09-25 — opened from the line
+
+The Fragrances view is a line of files now ([the fragrance
+line](2026-09-25-the-fragrance-line.md)). The reader is unchanged: pressing the file in the
+middle of the line presses that fragrance's row in the table underneath, which is still in the
+page, and the reader opens it as it always has. The line fades while it is open. The tests in
+`tests/fragrance-reader.spec.js` block the line's script and open the reader from the table,
+as they always did; `tests/fragrance-line.spec.js` opens it from the line.

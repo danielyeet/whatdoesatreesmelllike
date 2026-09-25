@@ -1467,3 +1467,53 @@ next arrow 900ms after the last and began failing — on the code before this ro
 once the sun-to-moon flight ran on this machine for its full length: the second press
 landed mid-flight and was swallowed. The test is unchanged; it passes because the press is
 now taken when the flight lands.
+
+
+## 2026-09-25 — the sun and the moon on one sphere, and nine more favourites
+
+> in the favorites page, the moon and sun transition is pretty weak, as they change into
+> the other and then morph afterwards. this is choppy because they are in different places
+> on the page, and it feels weird. Fix it, smoothen it.
+
+**What was wrong, seen frame by frame.** The moon stood lower and smaller than the sun
+(`AT_Y` 0.38 against 0.36, `BIG` 0.29 against 0.34). The flight paired specks by how far
+each stood from **its own drawing's brightness-weighted middle** — the sun's lit limb on
+one side, the moon's crescent on the other — so the whole cloud swept across the window
+from one middle to the other; and every speck was given an **extra part-turn that never
+came back** (`da + MORPH_SWING`), so the flight landed nearly a radian off where the
+moon's specks really were. The moon then came up where it actually was, which is the
+owner's "change into the other and then morph afterwards".
+
+**Now:**
+
+- **One sphere.** `moon.js` stands exactly where `sun.js` does, exactly as large
+  (`AT_X` 0.8, `AT_Y` 0.36, `BIG` 0.34). A moon "a little smaller than the sun, as a moon
+  should be" was the one reason it was not; the owner's note outranks it.
+- **Each drawing says where its sphere is.** `capture()` hands back `centre` and `radius`
+  as well as its specks, and the morph uses them — the brightness-weighted middle is only
+  the fallback now.
+- **Paired by place.** Every speck of the larger drawing is paired with **the nearest
+  speck of the other**, measured on the sphere as a share of its radius (a grid of cells,
+  `CELL`, searched outward ring by ring, taken in turn so a denser patch is shared out).
+  The sun's limb becomes the moon's limb where it stands, its face the moon's face, its
+  wind the moon's sky — nothing crosses the window.
+- **The turn comes back.** The swing is `MORPH_SWING · sin(πu)` — a part-turn out and back
+  (0.28 rad, and the swell 0.05) — so every speck lands exactly on its twin, which is the
+  frame the new drawing comes up on.
+
+Tested in `tests/chamber.spec.js`: **`the sun and the moon stand on the same sphere, so one
+turns into the other where it stands`** — both drawings made on canvases of their own and
+captured: each says where it stands, the two centres and radii agree, and both are drawn in
+specks. Fails against the code before (no centre at all, and the moon lower and smaller).
+The moon's legibility test reads the moon's disc at its new place. The morph tests all
+still hold.
+
+**Nine more favourites in Chapter 1**, at the owner's word, as nine `gallery-entry` blocks
+after Des Cendres: Haxan, De Profundis, Evergrow, Sing at My Funeral, Tobacolour, Bad Lily,
+French Riviera, Amaretto Jazz in the Melting Room and Belle Âme (named as the site names
+them: Tobacolor, Belle Âme) — each pointing at where that fragrance lives on the site and
+carrying its house and its notes key, but for Bad Lily, whose notes (Tale's) have not been
+found yet. Nothing is written
+for them in `.gallery-writings` yet, so each opens onto its two links. "Second favourite"
+and "Third favourite", the two placeholders, are left as they were — the owner's to fill or
+take off.

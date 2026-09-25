@@ -558,3 +558,104 @@ go out again` — the same corner as before, now also read 150ms after the point
 (still over 1.15 times the ink with the pointer away; it fails there against the old code)
 and 2.6 seconds after, by when it has gone back down. `Ataraxia is dark gray` still holds
 at the darker ground.
+
+## 2026-09-25 — grounds for four houses, and paper of their own
+
+> to the SD page, houses tab, give Tombstone some animations. I want it to feel very dead
+> and funerary. I want there to be a reflection in the design, and I want it to feel
+> ephermeral. I will think of the particulars later. For the house grande, give it a
+> particle effect of bubbling (i dont want it to seem comical or drawn up like with tale),
+> but particles that rise up and pop more or less into a bunch of other smaller particles.
+> Les abstraits should also have an animation; i want there to be an old armoire on one of
+> the sides, which feels old, and has some iris notes in it. I want it to feel like the
+> perfume belle ame. ... On the other side, i want there to be a dripping effect from the
+> top of the page to the bottom, where there will be a puddle. This puddle should start off
+> as nonexistent and as the thing drips from the top of the page, then the puddle becomes
+> larger and larger (capping at a specific size) For Qimu and Misicians, I want you to add
+> some complex notes; and some 5 lines in which they will exist. I dont wan tit to be
+> sloppy or out of place, and I want them to be nicely animated. When there are 5 lines,
+> dont make them always 4/4 ... I want it to look complex. Overall the Qimu and musicians
+> effect should be subtle though ... feel free to give them some colour in the background,
+> the same way you have in the case of pineward (green) and tale (some muted orange) ...
+> Qimu should be blue though; semi light blue.
+
+"On the SD page, houses tab" is read as **the houses' own pages** — the Houses view's hover
+motifs were asked for separately in the same message ([the
+motifs](2026-09-23-the-chain-and-its-motifs.md)), and "the same way you have in the case of
+pineward and tale" names pages. Each of the four now has a `<canvas class="human-field">`
+and a script of its own, loaded after `house.js`, and each lives on the window except
+Qimu's, which is carried down the page.
+
+- **Tombstone — `tombstone.js`.** A still grey floor across the lower part of the window
+  (`HORIZON`), and on it in the margins **stones** made of specks — a round-topped
+  headstone, a pointed one, a cross, an obelisk — their edges kept whole and their faces
+  only in part, so each reads as a cut shape, with two short lines left out of the face
+  where an inscription would be. Under every one its **reflection**: the same specks
+  turned over below the horizon, fainter, broken into streaks as still water breaks a
+  thing, trembling more the deeper it lies (`RIPPLE_*`). **Ephemeral**: a stone gathers out
+  of the mist along the floor, foot first (`STONE_GATHER`), stands (`STONE_STAND`), goes
+  as smoke goes, top first (`STONE_GO`), and a different one gathers in its place a little
+  later. Mist drifts along the horizon; ash falls and is gone before it lands. **The
+  hand** rings the reflection where it touches it. Two stones a side on a wide window,
+  one a side on a narrower one; on a phone, one at each edge and everything at
+  `PHONE_QUIET`, because the writing runs almost to the edge there. These are a first
+  answer — the owner said they would think of the particulars later.
+- **Grande Parfums — `grande.js`, the drift made to bubble.** About half its rising specks
+  (and every mote) now **burst** somewhere between a third and nine tenths of the way up,
+  into four to seven finer specks (seven to eleven for a mote) that fly out, slow and fade
+  (`BURST_*`). No rings, nothing drawn: a particle becoming several smaller ones. A shade
+  more of them and a shade stronger than the drift was (`PER`, `ALPHA`). **"It says
+  nothing about the house"** still stands — the owner has still not said what the house
+  is, and the bubbling is what they asked for, not a theme.
+- **Les Abstraits — `abstraits.js`.** **The armoire** in the left margin, sized to it and
+  standing on the floor of the window, drawn in walnut specks — the same armoire as the
+  Houses view's motif, with its door ajar on three irises and orris powder drifting out of
+  the gap, faster while the pointer is near. It **builds up from the floor** as the page
+  opens. **The drip** in the right margin: a bead gathers at the very top of the window,
+  swells, falls the whole height and lands in **the puddle** at the window's foot, which
+  is nothing when the page opens and grows with every drop to `PUDDLE_MOST` (or less than
+  half the margin, whichever is smaller) and stops. Belle Âme, in the owner's own writing,
+  is iris and iris butter, calm, "belongs in a museum", powdery at the end — the violet,
+  the powder and the old walnut are that.
+- **Qimu & Musicians — `qimu.js`.** Short **staves** down both margins, one under another
+  the whole length of the page and **carried with it** — a score kept in the margins —
+  engraved as the Houses view's are: a clef (a bass on the lower of a braced pair), a key
+  signature, a **time signature** from fourteen real ones (4/4 one of them) and a change
+  of time at a bar now and then, beamed runs, tuplets, chords with their accidentals,
+  clusters, rests, slurs, and no dynamics or ornaments. **Animated**: a stave is written
+  in left to right the first time it is reached, and then **played** — a faint playhead
+  runs along it bar by bar, the staves taking turns, and each note lifts a little as it
+  is reached and dies away (`PLAYED`, `RING`); notes near the pointer stand a shade
+  stronger. Faint throughout (`LINE`, `NOTE`); on a window without margins the staves run
+  across it further apart and at `QUIET`.
+- **The paper.** Each page's tokens turned, Tale's way, with a few soft pools of the colour
+  fixed to the window, Pineward's way — `body.grande-page` champagne (`#f6f2e8`),
+  `body.abstraits-page` iris (`#f3f0f5`), `body.tombstone-page` ash grey (`#ecebe8`,
+  lighter above the horizon and darker at the foot), and `body.qimu-page` **semi-light
+  blue** (`#e2ebf6`), the only one you would call a colour. Plain hex and `rgba()`, never
+  `color-mix()` — see Pineward's report for why. Each carries its own `--chrome-ground`.
+
+Tested in `tests/houses.spec.js`:
+
+- **`Grande Parfums' particles rise and burst into finer ones, with no bubble drawn`** —
+  over three seconds, thousands of whole specks, hundreds of finer ones, nothing stroked.
+  `Grande Parfums has a drift, and it is a quiet one` still holds.
+- **`Grande, Les Abstraits, Tombstone and Qimu each have a paper of their own, and Qimu's
+  is blue`** — none white, four different, Qimu's blue channel well above its red and
+  still light.
+- **`Tombstone's stones stand in the margins with their reflections under them`** — ink in
+  the margins above the horizon; ink below it, and fainter; and over twenty-two seconds
+  what stands in the margins waxing and waning (a stone does not stay).
+- **`Les Abstraits has its armoire with iris on one side and a drip filling a puddle on
+  the other`** — no puddle when the page opens; the armoire in the left margin; the iris's
+  violet stroked; the drop at the very top of the right margin; the puddle growing.
+- **`Qimu & Musicians keeps a quiet score in its margins, carried with the page`** —
+  noteheads, times other than 4/4, nothing written but numbers, nothing over 0.6, and
+  after a scroll of 200px every stave drawn 200px higher.
+- **`with motion turned off the four new grounds are drawn and stand still`**.
+- `without the scripts the new houses are all of their writing` now blocks the four new
+  scripts too.
+
+**Known issues.** Tombstone's stones are the owner's particulars-to-come. On Les Abstraits
+the puddle lies under the rank's reading in the bottom right corner of a wide window; it
+is kept at the very foot of the window so that the reading stays clear of it.

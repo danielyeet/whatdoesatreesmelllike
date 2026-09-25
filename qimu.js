@@ -57,7 +57,7 @@
   const PLAYED = 0.22;             // how much a note lifts as it is played
   const HANDED = 0.14;             // and near the pointer
   const COLUMN = 940;
-  const QUIET = 0.3;               // what is left over the writing, where there are no margins
+  const QUIET = 0.24;              // what is left over the writing, where there are no margins
 
   const GAP = 6;                   // between one line of a stave and the next
   const EVERY = 210;               // px down the page from one stave to the next
@@ -327,7 +327,8 @@
     const wide = room > 150;
     while (madeTo < to) {
       const y = madeTo + between(-20, 20);
-      madeTo += EVERY;
+      // Further apart where they stand behind the writing.
+      madeTo += wide ? EVERY : EVERY * 1.7;
       // In the margins, left and right in turn; across the window,
       // quietly, where there are none.
       const side = order % 2;

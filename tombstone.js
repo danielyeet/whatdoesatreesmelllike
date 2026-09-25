@@ -53,6 +53,7 @@
   const COLUMN = 940;              // the writing's measure
   const QUIET = 0.3;               // what is left of a speck over it
   const SOFT = 80;                 // how far outside it that eases in
+  const PHONE_QUIET = 0.42;        // everything, on a window with no margins
 
   const HORIZON = 0.76;            // the floor line, down the window
   const PER_SPECK = 10;            // square pixels of stone to one speck
@@ -201,6 +202,9 @@
       window narrower than the column keeps a clear strip at each edge
       rather than none, or the stones there would be drawn at nothing. */
   function quiet(x) {
+    // A PHONE has no margins at all — the writing runs to within a
+    // finger of the edge — so there the whole drawing stands quiet.
+    if (width < 700) return PHONE_QUIET;
     const edge = width > COLUMN ? (width - COLUMN) / 2 : width * 0.16;
     const soft = Math.min(SOFT, width * 0.1);
     const from = edge - soft, to = width - edge + soft;
