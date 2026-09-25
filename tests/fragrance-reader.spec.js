@@ -152,8 +152,10 @@ test("going back sends the picture into the grid, and the list is behind it",
     .toBe(ruled.sheet);
   expect(ruled.sheet).toBe(ruled.cell + " " + ruled.cell);
 
-  const was = await page.locator(".frag-plate img, .frag-plate > div").first()
-    .evaluate((el) => el.getBoundingClientRect().width);
+  // Whichever of the two is showing: the picture, or the hatched square
+  // left where a picture has not arrived (hidden while there is one).
+  const was = await page.evaluate(() => Math.max(...[...document.querySelectorAll(".frag-plate img, .frag-plate > div")]
+    .map((el) => el.getBoundingClientRect().width)));
 
   await page.locator(".frag-back").click();
   // Past the writing's 640ms and some way into the 1500ms travel.

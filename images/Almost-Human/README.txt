@@ -1,12 +1,13 @@
-ALMOST HUMAN — the pictures for works/almost-human.html.
+ALMOST HUMAN — the pictures for houses/almost-human.html.
 
-One picture per fragrance, named after the fragrance:
+One picture per fragrance, in perfumes/, under the names the owner
+uploaded them with (2026-09-25):
 
-  burning-bridges.jpg  part 01
-  dear-future.jpg      part 02
-  desert-hope.jpg      part 03
-  ritual-code.jpg      part 04
-  silent-rain.jpg      part 05
+  perfumes/Burning_Bridges_Clean.webp  part 01
+  perfumes/Dear_Future_Clean.webp      part 02
+  perfumes/Desert_Hope_Clean.webp      part 03
+  perfumes/Ritual_Code_Clean.webp      part 04
+  perfumes/Silent_Rain_Clean.webp      part 05
 
 Each part names its file in TWO places — the small square in the list
 and the full picture inside it — so change both together.

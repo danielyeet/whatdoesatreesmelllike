@@ -16,3 +16,16 @@ loads the copies in Haxan/web/: 1.webp at 1067 x 1600 for the full
 picture, and N-thumb.webp at 320 x 480 for the small square and the two
 pictures standing under the first. Make copies the same way for any
 other photograph this size.
+
+THE OTHER SIX (2026-09-25), uploaded by the owner and kept under the
+names they came with — the page points at them as they are:
+
+  001 CV99.jpg              part 01
+  002 De Profundis.jpg      part 02
+  004 Tobacolour.webp       part 04
+  005 Flamenco.webp         part 05
+  006 French Riviera.webp   part 06
+  007 Velvet Fog.jpg        part 07
+
+008 House of Ellixirz.webp came with them and nothing points at it yet:
+there is no eighth fragrance on the page.

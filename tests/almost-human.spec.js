@@ -47,35 +47,41 @@ test("a fragrance is a title until it is opened", async ({ page }) => {
   await expect(first.locator(".human-cue")).toHaveText(/close/i);
 });
 
-/* THE PLACEHOLDER IS PUT BACK WHEN A PICTURE IS NOT THERE. None of
-   this house's photographs exist yet, and a browser's own broken-image
-   mark reads as a fault rather than as work still to come.
+/* THE PLACEHOLDER IS PUT BACK WHEN A PICTURE IS NOT THERE. A browser's
+   own broken-image mark reads as a fault rather than as work still to
+   come. All five of this house's photographs arrived on 2026-09-25, so
+   the test takes one of them away itself — Ritual Code's answers 404 —
+   and checks both sides: that one is off the page with the hatch under
+   it, and the four that are there stay.
 
    THIS IS A REGRESSION. The first go added an `error` listener and
    nothing else, which never fired: a missing picture has usually
    failed before the script has run at all, and a listener added
    afterwards is never told. Every placeholder stayed hidden behind a
    broken picture. */
-test("a photograph that is not there yet leaves the hatch showing",
+test("a photograph that is not there leaves the hatch showing, and the ones that are stay",
   async ({ page }) => {
+  await page.route(/Ritual_Code_Clean\.webp$/, (route) => route.fulfill({ status: 404, body: "" }));
   await page.goto(HOUSE);
   await page.waitForTimeout(600);
 
-  const left = await page.locator(".human-part img").count();
+  const left = await page.locator("#part-04 img").count();
   expect(left, "an <img> whose file is missing should be off the page").toBe(0);
+  const kept = await page.locator(".human-part:not(#part-04) img").count();
+  expect(kept, "the four that are there keep both their pictures").toBe(8);
 
   // And what is under it is the hatch, not nothing.
-  const hatched = await page.locator(".human-thumb").first().evaluate((el) =>
+  const hatched = await page.locator("#part-04 .human-thumb").evaluate((el) =>
     getComputedStyle(el).backgroundImage);
   expect(hatched).toContain("repeating-linear-gradient");
 });
 
 test("the crowd is drawn, and it keeps out of the writing's way",
   async ({ page }) => {
-  // A 404 for a photograph is work still to come on this house, not a
-  // fault: none of its five pictures exist yet, and the page's own
-  // answer to that — take the <img> off, leave the hatch — is what the
-  // test above watches. Everything else still has to be clean.
+  // A 404 for a photograph would be work still to come on this house,
+  // not a fault: the page's own answer to one — take the <img> off,
+  // leave the hatch — is what the test above watches. Everything else
+  // still has to be clean.
   const errors = collectPageErrors(page, ["Failed to load resource"]);
   await page.goto(HOUSE);
   await page.waitForTimeout(900);

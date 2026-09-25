@@ -563,10 +563,11 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   web copy before the page points at it** — Haxan's are in `Haxan/web/`.
 - **A PICTURE IS CREDITED WHERE IT IS USED.** The owner asked for it in as many words,
   and it is one `<p class="house-credit">` at the foot of a house, above the way on to the
-  next, naming the source the pictures were actually taken from. Eight houses carry one:
+  next, naming the source the pictures were actually taken from. All nine houses carry one:
   Pineward and ADAR from the houses' own sites, Les Abstraits from its own (and its drawing
-  of Des Cendres' road, made for the page), Tale, Tombstone and Qimu & Musicians from
-  their own — an assumption for all three, see their reports — Ataraxia from
+  of Des Cendres' road, made for the page), Tale, Tombstone, Qimu & Musicians and — since
+  its five bottles arrived on 2026-09-25 — Almost Human from their own — an assumption for
+  all four, see their reports — Ataraxia from
   its own with the logo credit the house published, and **Grande Parfums from the MEUS
   website and Profumix Luxury Perfumes rather than from the house** — which is exactly why
   the line says where it came from instead of assuming. A favourite may also name a
@@ -837,7 +838,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the run** | **Removed.** The line between two pictures drawn as specks rather than as a stroke. Replaced by the trace, which is dashed — a solid stroke is the one thing the line must not be, and there is a test saying so. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
 | **favourite** | One entry in Favorites (`<a class="gallery-entry">`), carrying a `data-chapter`, a `data-house`, optionally a `data-notes` key into `notes-data.js`, and an `href` pointing at wherever that fragrance lives on the site. It carried a `data-date` until 2026-09-22; if the owner uses the word, that is what it was. |
-| **the credit** | The line at the foot of a house saying where its pictures came from — `<p class="house-credit">`: a **Pictures** label and, beside it in a column of its own (`.house-credit-text`), where they came from, with the same space above and below between two rules. The owner asked for pictures to be credited wherever they are used. Six houses carry one; the source is the one the pictures were actually taken from, which for Grande Parfums is **not** the house's own site. |
+| **the credit** | The line at the foot of a house saying where its pictures came from — `<p class="house-credit">`: a **Pictures** label and, beside it in a column of its own (`.house-credit-text`), where they came from, with the same space above and below between two rules. The owner asked for pictures to be credited wherever they are used. All nine houses carry one; the source is the one the pictures were actually taken from, which for Grande Parfums is **not** the house's own site. |
 | **work** | An individual piece, one page in `works/` — the essays, the researches and the templates. A **house** is not one of these any more: since 2026-09-22 the houses live in `houses/` (nine since 2026-09-23) and the individual fragrances in `individual-fragrances/`. |
 | **category** / **body of work** | A page in `categories/` listing works; also an entry in `SITE_LINKS`. |
 
@@ -909,7 +910,7 @@ worth knowing before touching anything shared:
   houses in that state — the test that used to conflate them now keeps them apart. What
   each is waiting for is in [their
   report](docs/features/2026-09-21-the-newer-houses.md).
-- **All nine houses now carry a real picture on the Houses view**, and eight of the nine
+- **All nine houses now carry a real picture on the Houses view**, and all nine
   have a photograph with every fragrance — see [the images
   report](docs/features/2026-09-17-images-folder-per-house.md). Pineward's
   fragrance pictures and its gallery arrived on 2026-09-18; Almost Human's own two — its
@@ -918,8 +919,10 @@ worth knowing before touching anything shared:
   Tale's twelve and Haxan's other two on 2026-09-23, and Tombstone's ten and Qimu &
   Musicians' four later the same day. The
   mark is not printed on any page at all, and is only ever drawn by the crowd's glitch.
-  **What is still waiting** is Almost Human's five fragrance pictures and six of the seven
-  individual fragrances: each names the file it wants and shows it the moment it is there.
+  Almost Human's five and six of the individual fragrances' seven were uploaded by the
+  owner on 2026-09-25 and the pages point at them under the names they came with. **Nothing
+  is waiting now** but `008 House of Ellixirz.webp`, which came with them and has no eighth
+  individual fragrance to stand on.
 
 **The placeholders in the new pages are marked as placeholders.** Most of the site's plates
 are waiting for the owner (ADAR's introduction was, until they wrote it on 2026-09-25) (the standfirsts that waited too

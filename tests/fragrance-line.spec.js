@@ -218,9 +218,12 @@ test("the wheel scrolls the table from anywhere, and the scale fills with it", a
 /* "change the view of the table so it is either as currently, or into
    small boxes or into cards". The three options change it: boxes are
    squares, several to a row; cards are larger, fewer to a row, each with
-   its picture — Haxan's photograph, and the hatching with the number for
-   one whose picture has not arrived. And back to the list. */
+   its picture — and the hatching with the number for one whose picture
+   has not arrived. Every fragrance's picture has arrived since 2026-09-25,
+   so CV99's is taken away here (it answers 404) to see the hatching still
+   comes; De Profundis' and Haxan's show. And back to the list. */
 test("the options show the table as a list, as small boxes or as cards", async ({ page }) => {
+  await page.route(/001(%20| )CV99\.jpg$/, (route) => route.fulfill({ status: 404, body: "" }));
   await toTheTable(page);
   await page.locator(".frag-mode[data-mode='boxes']").click();
   await page.waitForTimeout(900);
@@ -243,6 +246,7 @@ test("the options show the table as a list, as small boxes or as cards", async (
   await expect(haxan).toHaveCount(1, { timeout: 5000 });
   await expect.poll(() => haxan.evaluate((img) => img.naturalWidth), { timeout: 5000 }).toBeGreaterThan(0);
   await expect(page.locator(".frag-item", { hasText: "Haxan" }).locator(".frag-t-pic")).toHaveClass(/has-picture/);
+  await expect(page.locator(".frag-item", { hasText: "De Profundis" }).locator(".frag-t-pic")).toHaveClass(/has-picture/, { timeout: 5000 });
   const cv = page.locator(".frag-item", { hasText: "CV99" }).locator(".frag-t-pic");
   await expect(cv).not.toHaveClass(/has-picture/);
   await expect(cv.locator(".frag-t-pic-no")).toHaveText("001");

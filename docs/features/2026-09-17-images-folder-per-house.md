@@ -239,3 +239,48 @@ README saying what every file is. The owner's filenames are irregular in case an
 extension ("3 foot 5 2.webp", "No need to come by 2.jpg"), so the pages ask for each
 exactly as it is. None is large enough to need a web copy. See [the newer
 houses](2026-09-21-the-newer-houses.md).
+
+## 2026-09-25 — Almost Human's five and the individual fragrances' six, wired up
+
+The owner uploaded two sets of pictures straight to the live site (two "Add files via
+upload" commits on `main`): Almost Human's five bottles in `images/Almost-Human/perfumes/`
+(`Burning_Bridges_Clean.webp` and the rest), and six of the individual fragrances in
+`images/Individual Fragrances/`, numbered as the page numbers them (`001 CV99.jpg`,
+`002 De Profundis.jpg`, `004 Tobacolour.webp`, `005 Flamenco.webp`,
+`006 French Riviera.webp`, `007 Velvet Fog.jpg`). **None of them showed**: the pages asked
+for the names written into them before the pictures existed (`burning-bridges.jpg`,
+`cv99.jpg`, …), and a page shows the hatched placeholder until the file it names is there.
+So the pages now ask for each file **exactly as it was uploaded** — the owner's names, as
+with Tombstone and Qimu — in both places a fragrance names its picture (the small square
+and the full picture). Every one is web-sized already (the largest is 1500 × 1000), so none
+needed a web copy. Both folders' READMEs list what is there.
+
+That completes the photographs: **every fragrance on every page now has one**, and the
+Fragrances view's cards, which read their pictures off the individual fragrances' page,
+all carry theirs.
+
+**`008 House of Ellixirz.webp` came with them and nothing points at it**: there are seven
+individual fragrances and no eighth to hang it on. It waits for the owner to say what it
+is — a new fragrance needs its name and writing from them, and neither is guessed.
+
+**The credit.** Almost Human now shows photographs, so it carries a `house-credit` line
+like the other eight — and `repository.spec.js` requires one of any house whose pictures
+are on disk. Where the five came from was not said; they are the house's own product shots,
+so the line names **almosthuman.store** — an assumption, as Tale's, Tombstone's and Qimu's
+are, noted in the page's comment for the owner to correct. The individual fragrances page
+has no credit line: its pictures come from six different houses and nobody has said from
+where, and the test covers only `houses/`.
+
+**Three tests had been written against the pictures being missing**, and each was changed
+to take a picture away itself rather than rely on one being absent:
+
+- `almost-human.spec.js` — **`a photograph that is not there leaves the hatch showing, and
+  the ones that are stay`** (was *a photograph that is not there yet…*): Ritual Code's
+  picture answers 404 in the test; its two `<img>` are off the page with the hatch under
+  them, and the other four fragrances keep both of theirs.
+- `fragrance-line.spec.js` — the cards test makes CV99's answer 404 to see the hatching and
+  the number still come, and now also checks De Profundis' card carries its picture.
+- `fragrance-reader.spec.js` — *going back sends the picture into the grid* measured the
+  first of the picture and its hatched square, which was the picture when the picture had
+  been taken off; now there is one, the square comes first, hidden, at width 0. It measures
+  whichever is showing.

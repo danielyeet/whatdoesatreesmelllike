@@ -373,7 +373,9 @@ the script blocked; and the five below.
 Five of them are regressions, and every one was **proved against the real fault** before
 being trusted:
 
-- **`a photograph that is not there yet leaves the hatch showing`** — the first go added an
+- **`a photograph that is not there leaves the hatch showing, and the ones that are stay`**
+  (it said *not there yet* until the five arrived on 2026-09-25; it now makes Ritual Code's
+  answer 404 itself, and checks the other four keep theirs) — the first go added an
   `error` listener and nothing else, which never fired: a missing picture has usually
   failed *before* this script has run at all, and a listener added afterwards is never
   told. Every placeholder stayed hidden behind a broken picture. The fix also asks
@@ -452,3 +454,13 @@ Put the pointer on a figure and take it away again. That is the page.
   one — because each page script here is standalone by design. It is the same treatment in
   all three for the same reason the owner gave ("smooth and gradual, not so sudden"), and
   it is the obvious candidate if a shared module is ever wanted.
+
+## 2026-09-25 — the five bottles, and a credit
+
+The owner uploaded the five fragrance pictures to `images/Almost-Human/perfumes/`
+(`Burning_Bridges_Clean.webp` and the rest) and the page now asks for each by that name, in
+the small square and the full picture both — it had asked for `burning-bridges.jpg` and so
+on, which never arrived, so nothing showed. With pictures on the page, it carries a credit
+line like every other house, naming **almosthuman.store** as where they came from: an
+assumption, since the owner did not say, noted in the page's comment. See [the images
+report](2026-09-17-images-folder-per-house.md).
