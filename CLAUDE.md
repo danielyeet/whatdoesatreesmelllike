@@ -574,7 +574,7 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   credited one picture at a time**, under the picture, in its caption
   (`<span class="human-plate-credit">Picture: <a …>Fragrantica</a></span>`), because each
   comes from somewhere different — and the fragrance reader carries that credit across with
-  the picture. Haxan's has none: no source was given. A favourite may also name a
+  the picture. Haxan's are the owner's own photographs and say *Pictures: my own*. A favourite may also name a
   picture with `data-image`, and that wants crediting too.
 - Images live in `images/`, **one folder per house or category** — `images/ADAR/`,
   `images/Pineward/`, `images/Almost-Human/`, `images/Favorites/`,
@@ -837,7 +837,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the caution** (notes) | The small box that comes up on hovering **Fragrantica** in a notes window: *Fragrantica's notes are not to be trusted as 100% fact.* — the owner's own sentence. A `CAUTION` table in `notes.js` keyed by source name, so it is **only** on the fallback; put it on a house's own page and it stops meaning anything, and there is a test saying so. It stands above the source line because the source is the last thing in a window that scrolls. |
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
 | **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |
-| **individual fragrances** | `individual-fragrances/individual-fragrances.html`: the perfumes that belong to no house on the Houses view, each carrying the house it DID come from. Shaped like a house so it gets the parts, the rank and the notes panel. The **Fragrances** view is the index into it. **Eight** since 2026-09-25, when House of Ellixirz (Matca) joined as 08 — all written, every picture but Haxan's credited under itself. |
+| **individual fragrances** | `individual-fragrances/individual-fragrances.html`: the perfumes that belong to no house on the Houses view, each carrying the house it DID come from. Shaped like a house so it gets the parts, the rank and the notes panel. The **Fragrances** view is the index into it. **Eight** since 2026-09-25, when House of Ellixirz (Matca) joined as 08 — all written, every picture credited under itself (Haxan's as the owner's own photographs). |
 | **the chain** (specks) / **the tuft** | **Removed.** The specks round a picture on the old contact sheet, kept only within reach of a point where a line tied on. (Not **the chain** of houses, also removed, above.) |
 | **the run** | **Removed.** The line between two pictures drawn as specks rather than as a stroke. Replaced by the trace, which is dashed — a solid stroke is the one thing the line must not be, and there is a test saying so. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |

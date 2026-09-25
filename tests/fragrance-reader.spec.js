@@ -496,5 +496,8 @@ test("the reader carries the picture's credit under it", async ({ page }) => {
   await page.locator('.index-what a[href*="part-03"]').click();
   await expect(page.locator(".frag-reader.is-here")).toHaveCount(1, { timeout: 5000 });
   await page.waitForTimeout(800);
-  await expect(page.locator(".frag-plate .frag-plate-credit"), "Haxan's has none").toHaveCount(0);
+  // Haxan's are the owner's own photographs, and the credit says so —
+  // and it is Haxan's, not Matca's left over from the one before.
+  await expect(page.locator(".frag-plate .frag-plate-credit")).toHaveText("Pictures: my own");
+  await expect(page.locator(".frag-plate .frag-plate-credit a")).toHaveCount(0);
 });

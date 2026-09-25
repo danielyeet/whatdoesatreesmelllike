@@ -1081,17 +1081,18 @@ test("House of Ellixirz is the eighth, in the owner's words, with Matca's own no
 
 /* EVERY PICTURE SAYS WHERE IT CAME FROM — 2026-09-25, when the owner
    gave a source for each individual fragrance's picture. Each is
-   credited under itself, with a link; Haxan's is the one no source was
-   given for. */
-test("every individual fragrance's picture is credited under itself, but Haxan's", () => {
+   credited under itself, with a link — and Haxan's, which are the
+   owner's own photographs, say so, with nothing to link to. */
+test("every individual fragrance's picture is credited under itself", () => {
   const page = read("individual-fragrances/individual-fragrances.html");
   const parts = page.split(/<details class="human-part" id=/).slice(1).map((p) => 'id=' + p);
   expect(parts.length).toBe(8);
   const seen = parts.map((p) => {
     const no = /id="part-(\d+)"/.exec(p)[1];
     const credit = /<span class="human-plate-credit">Picture: <a href="(https:\/\/[^"]+)"[^>]*>([^<]+)<\/a><\/span>/.exec(p);
-    return [no, credit ? credit[2] : null];
+    const own = /<span class="human-plate-credit">Pictures: my own<\/span>/.test(p);
+    return [no, credit ? credit[2] : own ? "my own" : null];
   });
-  expect(seen).toEqual([["01", "Fragrantica"], ["02", "Sillyage"], ["03", null], ["04", "Dior"],
+  expect(seen).toEqual([["01", "Fragrantica"], ["02", "Sillyage"], ["03", "my own"], ["04", "Dior"],
     ["05", "Aromak"], ["06", "Vivantis"], ["07", "Fragrantica"], ["08", "Matca"]]);
 });

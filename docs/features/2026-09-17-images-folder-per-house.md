@@ -299,7 +299,7 @@ plate as a `figcaption.frag-plate-credit` under the picture.
 |---|---|
 | 01 CV99 | Fragrantica (fragrantica.hu) |
 | 02 De Profundis | Sillyage (sillyage.wordpress.com) |
-| 03 Haxan | **not given** — no credit yet |
+| 03 Haxan | **the owner's own photographs** — *Pictures: my own*, no link |
 | 04 Tobacolor | Dior (dior.com) |
 | 05 Flamenco EDP | Aromak (aromak.no) |
 | 06 French Riviera | Vivantis (vivantis.hu) |
@@ -310,8 +310,11 @@ Matca's link is the product page the owner gave **without** the tracking tag a s
 engine had put on the end of it (`?srsltid=…`), which identifies a search rather than the
 page.
 
+Haxan's source was asked for at the end of the round: they are the owner's own photographs,
+and the caption says *Pictures: my own* with nothing to link to.
+
 Tested in `tests/notes.spec.js`: **`every individual fragrance's picture is credited under
-itself, but Haxan's`** — the eight parts' credits, in order, each with a link. And in
+itself`** — the eight parts' credits, in order, each with a link but Haxan's. And in
 `tests/fragrance-reader.spec.js`: **`the reader carries the picture's credit under it`** —
 House of Ellixirz opened from the list shows *Picture: Matca* under its picture, linked, and
-Haxan opened next shows none (the first's does not stay behind).
+Haxan opened next shows *Pictures: my own* and no link (the first's does not stay behind).
