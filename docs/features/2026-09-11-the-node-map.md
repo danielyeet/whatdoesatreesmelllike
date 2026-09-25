@@ -216,5 +216,6 @@ the same place on the screen). Thirteen tests in the file.
 The owner changed two of the lines under the map's labels (`sub` in `REAL_NODES`):
 Favourites is *things I like* (", no other reason needed" taken off) and Theories is *some
 frameworks that I came up with myself* (it was "half-formed ideas I keep coming back to").
-Theories' preview still says *Half-formed ideas, written down before I lose them.* — the
-owner did not mention it, so it was left and asked about.
+Theories' preview said *Half-formed ideas, written down before I lose them.*; asked, the
+owner said to change it to match, so the preview (and the Theories page's own lede, which
+was the same sentence) says *Some frameworks that I came up with myself.*

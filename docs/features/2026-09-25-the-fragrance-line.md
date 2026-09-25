@@ -1,19 +1,22 @@
-# The Fragrances, along a line — and the stretch from the Houses
+# The Fragrances, a whole-page table — and the stretch from the Houses
 
 Date: 2026-09-25
-Files touched: `fragrance-line.js` (new), `views.js`, `style.css` (the `frag-line-*`,
-`frag-file*`, `stretch-*` and `.view-stretch` rules), `categories/scent-descriptions.html`
-(the script tag; rows 001–007 dated), `archive/fragrances-view-2026-09-24.html` (new),
-`tests/fragrance-line.spec.js` (new), `tests/index-pages.spec.js` and
-`tests/fragrance-reader.spec.js` (now run against the old view — see below)
+Files touched: `fragrance-line.js` (new; rewritten twice the same day), `views.js`,
+`style.css` (the `frag-*`, `stretch-*` and `.view-stretch` rules),
+`categories/scent-descriptions.html` (the script tag; rows 001–007 dated),
+`archive/fragrances-view-2026-09-24.html` (new), `tests/fragrance-line.spec.js` (new),
+`tests/index-pages.spec.js` and `tests/fragrance-reader.spec.js` (now run against the old
+view — see below)
 
-What changed: the Fragrances view of Scent descriptions is a **horizontal line** through the
-window with a **double pyramid** of specks standing on it, and the fragrances are **files**
-along the line — 001 and the name, the house on hover — travelled along by the wheel, a drag,
-the keys and a way along at the foot; the one in the middle opens its fragrance in the page.
-Twenty stand on it, seven real and thirteen placeholders, because the owner asked the test to
-assume twenty. Going there from the Houses, the houses' **axis is stretched** into this line.
-The old view is kept, exactly, in the page and in `archive/`.
+What changed: the Fragrances view of Scent descriptions is **a table that is nearly the whole
+page** — number, name, house, date — with an **aside** on its left (the count, a few
+readings, a scale and a small ring of specks) and, on its right, **three ways of showing it**:
+a list, small boxes, or cards with each fragrance's picture. Nothing is drawn behind it.
+Going there from the Houses, the houses' **axis is stretched** and gathers into the table's
+own **rules**. The old view is kept, exactly, in the page and in `archive/`. **It was three
+things in one day**: files travelling along a line through a double pyramid of specks (the
+sections below), then a table standing over that line and pyramid (*evening*), then this
+(*night*, the last section, which is what the page is now).
 
 ## The brief
 
@@ -169,7 +172,195 @@ The swipe tests there are unchanged and still pass on the old view.
 
 ## Known issues / TODO
 
-- **The thirteen placeholders are for the test** the owner asked for; set `TEST_COUNT` to 0
-  (or take it out) when the real fragrances are in.
+(Of the first version. The placeholders and `TEST_COUNT` went in the evening; see the last
+section for what is open now.)
+
 - The sheet's own search is hidden on this view, as it was on the old one (which had its own).
-- Pressing the middle file of a placeholder does nothing — there is nothing to open.
+
+## 2026-09-25, evening — a table on the line
+
+> the design for the SD fragrances page is cool, but i want more particles, and make it
+> more of a stylistic element than something that controls the page. it needs to fit more
+> on the screen at once. I do essentially need it to be a list or a table or soemthing,
+> because it will contain a large amount of fragrances. The pixel stretch should. the
+> content of the table should be the same as before: 3 digit number, then name, then house,
+> then date of writing (all of the fragrances at the moment should be yesterdays)
+
+The files travelling along the line are gone (no `.frag-file`, no way along, no `TEST_COUNT`,
+no wheel travelling the drawing), and so are the thirteen placeholders — the owner asked for
+placeholders removed in the same message, and "the content of the table should be the same
+as before". What the view is now:
+
+- **A table** in a column in the middle of the window (`.frag-list`, 780px at most): the
+  name *Fragrances* and the old view's line *The ones with no house here*, a search field
+  with a count, and the rows — **number in three digits, name, house, date** — 34px each, so
+  an ordinary window shows a dozen and more at once, scrolling in their own box so the page
+  never does. The headings sort (pressed again, turned round; an empty value sorts last), the
+  field searches number, name, house and date. The rows are built from the old table, and a
+  row (anywhere on it) **opens its fragrance in the page** by pressing the old row's link, as
+  before. Its cells are `frag-t-*`, because the reader already uses `frag-no`, `frag-name`
+  and `frag-house` for its own heading — sharing them made every name 60px tall.
+- **The line and the pyramid behind it, as decoration.** The pyramid is far wider than the
+  table (`PY_WIDE` 0.42 of the window, up to 580px either side), so its base reaches out
+  along the line past the table and it frames it; with **more particles** — 170 specks an
+  edge, 260 a face, a cloud of 2,000 round it, 1,000 across the whole window drifting and
+  twinkling, 600 along the line — thousands a frame, a little stronger than before. Where
+  the table stands, all of it is drawn at `QUIET` (and eased in over `SOFT`), so the rows are
+  never read through a drawing.
+- **It takes nothing.** The wheel scrolls the table from anywhere on the view, over the
+  drawing too. The pyramid still **has dimension**: it turns a quarter turn for every six
+  rows the table is scrolled (`PY_TURN_ROWS`), and slowly on its own; the ticks on the line
+  travel with the scroll; and pointing at a row sends a pulse out along the line either way.
+- **The dates**: all seven are 24.09.2026, yesterday, as they were made this morning.
+- **The stretch is unchanged** — it still gathers into the line, and then the pyramid and the
+  table come in (`rows-in`, the rows one after another).
+
+Tested in `tests/fragrance-line.spec.js`, which was rewritten for the table:
+
+- `the Fragrances view is a table: number, name, house and date, all seven dated yesterday`
+  — the headings, the seven rows exactly, the count, the old table not on the window.
+- `a screen holds a good many rows, and the table scrolls in its own box` — with sixty more
+  rows written into the page for the test (`withMany`, a rewritten response): a row 38px or
+  less, twelve or more whole rows in the box at 1280 × 720, the box scrolling and the page
+  not.
+- `the wheel scrolls the table from anywhere, and the pyramid turns with it` — the wheel over
+  the drawing, well to the side of the table, scrolls the table, and the pyramid turns about
+  as far as the rows scrolled say.
+- `the headings sort the table and the field searches it`.
+- `a double pyramid of specks stands on the line either side of the table` — thousands lit,
+  and the base reaching out along the line past the table's column.
+- `pressing a row opens its fragrance in the page`.
+- The old view kept, the stretch (now waiting for the table rather than the files), motion
+  turned off, and a phone (all four columns on the window, nothing sideways) — kept.
+
+## 2026-09-25, night — a whole-page table, three views
+
+> okay, the thing in the back is downright ugly; lets change tht entirely. I want you to
+> remove the horizontal line, remove the pyramid thing, and make it an almost whole page
+> table, with some space and stylisting elements on the left. I want you to be able to
+> scroll, and change the view of the table so it is either as currently, or into small boxes
+> or into cards. These options should be on the right of the table.
+
+Asked what the left should carry, the owner chose **readings, a scale and a small mark**.
+
+### What was taken out
+
+**The line and the pyramid, and every speck of both**: the canvas behind the table
+(`.frag-line-field`), the band, the hairlines, the pulses, the ticks, the drift, the field,
+the pyramid's edges, faces and dust, `quiet()`, `project()`, the turn with the scroll and
+`data-turn`, and `data-line-y`. Not dialled down — gone, as the owner's removals always are.
+The page's own squared paper is the whole of the ground. The class names went with them:
+`.frag-line` is **`.frag-stage`**, `.view.line-on` is **`.view.table-on`**, and
+`data-arrive="line"` is **`"ruled"`**. The file keeps its name, as `contact-sheet.js` keeps
+its own.
+
+### Three columns
+
+A fixed stage below the chrome, `232px | 1fr | 64px` with a gap that grows with the window,
+so at 1440 the table is about 960px wide — two thirds of the window:
+
+- **The aside** (`.frag-aside`), on the left: *Fragrances* and the old view's line under it;
+  **the count** large in the mono (`007`, *written up*); **the readings** (`.frag-readings`) —
+  how many houses the fragrances came from, the date last written, what the table is sorted
+  by and which way, and how it is shown — all worked out from the rows, never written;
+  **the scale** (`.frag-scale`), a hairline with one tick for every fragrance shown, in the
+  order shown, filled as far down the table as has been seen and the ticks of the rows in
+  view inked (the rank of the house pages, in plain ink), the first and last numbers at its
+  ends; and **the mark** (`.frag-mark`), a small ring of specks turning slowly with lines
+  strung between the near ones — the index page's mark — and **one larger speck for every
+  fragrance** round it, of which the one being pointed at is boxed and joined to the centre.
+  The mark is the only thing on the view that moves, and it runs only while the view is on
+  the page; it is hidden on a window under 720px tall, where the aside has no room.
+- **The table** (`.frag-main`): the search and its count over it, then a box
+  (`.frag-list-scroll`) that runs to the foot of the window, fading out into it, in which the
+  sort bar sticks to the top and the items scroll. **The wheel scrolls it from anywhere on the
+  view** (the aside and the options too); the page itself never scrolls.
+- **The options** (`.frag-options`), on the right: *View*, and three square buttons — **List**
+  (three rules), **Boxes** (four small squares), **Cards** (two tall cards) — drawn in CSS,
+  with `aria-pressed`, the one in use inked solid.
+
+### One set of items, three layouts
+
+Every fragrance is one `<li class="frag-item">` with its number, name (a real link, so a
+press meant for a new tab still works), house, date and a picture slot; **the layout is a
+class on the stage** and the stylesheet does the rest:
+
+- **`is-list`** — as it was: a ruled row each, 34px, the four columns under the sort bar's.
+- **`is-boxes`** — squares, `minmax(148px, 1fr)` to a row: the number top left, the house small
+  top right, the name at the foot and the date under it.
+- **`is-cards`** — `minmax(230px, 1fr)`: the fragrance's **picture** over its number, date,
+  name and house. The pictures are fetched from the page the fragrances live on
+  (`individual-fragrances.html`) the first time Cards is chosen, so the list never pays for
+  them: each part's first `.human-plate img`. A picture that is not there yet leaves the
+  hatching with the number large on it, as every house page does — which is six of the seven
+  today; Haxan's is the one that shows.
+
+The sort bar is the same four buttons in all three: columns in the list, and a line of words
+(*Sort — No. · Fragrance · House · Date*) over the boxes and cards. Sorting and searching are
+as before and move the same items, whatever they look like. **Changing layout** fades the items
+out, lays them out again, and brings them back one after another (`switching`, `--i`); with
+motion turned off it simply changes. **The choice is kept** for the next visit, in this browser
+only (`localStorage`, `taste-of-aldehydes:fragrances-view`, wrapped so that a browser without
+storage just gets the list).
+
+### The stretch lands on the table's rules
+
+The stretch from the Houses used to gather into the line. With the line gone it gathers into
+**the table's ruling**: the stage publishes `data-rules` — the rule under the sort bar and the
+line under every row in the window (a box's or a card's top and foot, in the other two), and
+the box's left and right (`data-rule-l`, `data-rule-r`), measured against the stage itself so
+the view's travel does not move them — and views.js takes the streaks **in order** to those
+heights, pulling them in to the table's width, so the top of the stretched column becomes the
+top rule and its foot the last. The rules are measured when the view is shown, on a change of
+layout, a sort, a search and a resize; views.js reads them the first time its streaks gather.
+Then `data-arrive="ruled"`: **the rows' own rules stand at once** (`.ruled`) and only what is
+written in them comes in, one after another. Opened any other way, the aside and the sort bar's
+rule come in first (`.here`), and then the items.
+
+**One thing this found**: the stretch's canvas was drawn at the window's width but stands in a
+box a scrollbar's width narrower (the page keeps `scrollbar-gutter: stable`), so everything on
+it was squeezed by about 1%. It never showed while the streaks became a line across the whole
+window; landing on the table's own rules it put them 13px short. The canvas is sized by its own
+box now.
+
+### How to test it
+
+```bash
+npm test -- tests/fragrance-line.spec.js
+```
+
+- `the Fragrances view is a table: number, name, house and date, all seven dated yesterday`.
+- `nothing is drawn behind the table: no line, no pyramid` — no `.frag-line`, no `data-turn`
+  or `data-line-y`, and the only canvas on the view is the mark, small, in the aside.
+- `the table is nearly the page, with the aside on its left and the options on its right` — at
+  1440 × 900: the table over 55% of the window, the aside wholly left of it, the options wholly
+  right; the count, the houses and the last date; seven ticks; the mark; the three options,
+  List pressed.
+- `a screen holds a good many rows, and the table scrolls in its own box` — 67 rows (sixty
+  written into the page for the test), fourteen or more whole ones on a 1280 × 720 window.
+- `the wheel scrolls the table from anywhere, and the scale fills with it` — the wheel over the
+  aside.
+- `the options show the table as a list, as small boxes or as cards` — four or more square boxes
+  to a row; fewer cards; Haxan's photograph loaded and CV99's hatching with `001`; back to
+  rows of 38px or less.
+- `the way of showing the table is kept for the next visit`.
+- `the headings sort the table and the field searches it, in any of the three` — the reading
+  says *Fragrance ↑*, and a search leaves one tick on the scale.
+- `pressing a row or a card opens its fragrance in the page`.
+- `the old Fragrances view is kept, in the archive and in the page`.
+- `going to the Fragrances stretches the axis right, travels, and gathers into the table's
+  rules` — read off the stretch's canvas every frame: right, then left, then more than 90% of
+  its ink within 3px of a published rule and inside the table's width; the table held back
+  until it has gathered; eight rules (the sort bar and seven rows); and back again.
+- `with motion turned off the views change over at once, the table whole` — and a layout
+  changes at once too.
+- `on a phone the table fits the window, with the options beside its name` — below 700px the
+  aside is only the name and its line, the three options stand at the right of it as icons,
+  a row's four cells are on the window, and the boxes still come several to a row.
+
+### Known issues / TODO
+
+- Six of the seven cards show the hatching: their pictures are named in
+  `individual-fragrances.html` and not in `images/Individual Fragrances/` yet. They will show
+  the moment the files are there.
+- The mark is hidden on windows under 720px tall rather than squeezed.

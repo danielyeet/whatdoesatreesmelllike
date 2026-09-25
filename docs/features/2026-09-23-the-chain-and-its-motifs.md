@@ -539,3 +539,51 @@ each failing against the page before:
 
 `images/Les-Abstraits/README.txt` says the logo is used nowhere now, and is kept because
 it is the owner's.
+
+## 2026-09-25, night — Les Abstraits' armoire in lines, and irises at its feet
+
+> I also want you to change the armoire that comes up when you hover les abstraits. I want
+> that to be less particular dense, and more geometric (and the violets should be more
+> natural, anbd coming out from the legs of it, like real flowers would)
+
+Asked whether they meant violets or the irises that were there, the owner said **irises** —
+Belle Âme's orris. Only the hover changed: the armoire on Les Abstraits' own page
+(`abstraits.js`) is as it was, at their word.
+
+- **The armoire is geometry in walnut hairlines** (`armoire()` in `motifs.js`), where it was
+  thousands of specks along its lines and a fill of 520 more inside. It stands on **four
+  tapered legs** — two in front, two seen behind them standing a little higher — in place of
+  the bun feet, with a shallow V of an apron between the front pair; a plinth line; a drawer
+  with two knobs; the shut left door with an upper panel carrying **a diamond** and a lower
+  one, and its keyhole; a cornice in two straight steps; a **broken pediment** in two straight
+  rakes (an inner line under each) with a **diamond finial** on a short post. The carved
+  scrolls and the arched panel are gone: every line is straight but the knobs and the keyhole.
+- **The right door still stands ajar**, a parallelogram seen beyond the carcass, and through
+  the gap **the inside is drawn in perspective** — its back set in, the four corners run back to
+  it, two shelves — on a faint flat tone.
+- **Specks are accents only**: one at every joint of the heavier lines (`joints`; the knobs and
+  the keyhole carry none, or their circles read as dots), and the orris powder from the gap at
+  half the rate it was (`POWDER_EVERY`, 100ms). A couple of hundred a frame, drip included.
+- **It draws itself up from the floor**, as it built itself before: each line grows from its
+  lower end once the build has reached its height (`put` records how far up each starts and
+  ends), the legs first and the finial last.
+- **The irises grow at its front legs** instead of standing in the cupboard: a clump at each,
+  **a fan of sword leaves** as an iris grows — the middle ones tallest, the outer ones arching
+  away, now and then a tip flopped over — then **two stems** rising past the leaves and leaning
+  out from the leg, each with a small spathe, one opening into **three falls hanging down and
+  out** with the gold beard on them and **three standards cupped upright**, and the other left
+  **a shut bud**. Leaves first (`IRIS_FROM`, once the legs stand), stems after
+  (`IRIS_STEMS_AFTER`), flowers opening last (`IRIS_OPEN_AFTER`), and all of it swaying a
+  little from the ground (`IRIS_SWAY`). The colours are the ones it had: `STEM`, `IRIS`, and
+  the beard's gold (`BEARD`).
+- **The drip and the puddle are unchanged.**
+
+Tested in `tests/contact-sheet.spec.js`:
+
+- **`Les Abstraits' armoire is drawn in lines rather than specks, with irises growing at its
+  feet`** — while the house is rested on and everything has grown, fewer than 400 specks a
+  frame are drawn on the motifs' canvas (it was thousands); the iris's violet is at the foot of
+  the window on the armoire's side; and none of it is up in the band where the irises used to
+  stand inside the door.
+- The test before it (the armoire on one side, the drip and the puddle on the other, the logo
+  never asked for, the iris among the colours) is unchanged and still passes.

@@ -12,10 +12,10 @@
 // Almost Human's clouded figures glitching into being and its rain,
 // Ataraxia's bands of particles running as waves and shaking the air
 // round them, Grande's particles rising and bursting, Les Abstraits'
-// old armoire with iris in it and a drip filling a puddle, Tale's
-// doodles, Tombstone's names cut into the wall and its roots and
-// flowers, and Qimu & Musicians' music, written out on short staves and
-// loose on the page.
+// old armoire drawn in lines with irises at its feet and a drip
+// filling a puddle, Tale's doodles, Tombstone's names cut into the
+// wall and its roots and flowers, and Qimu & Musicians' music, written
+// out on short staves and loose on the page.
 //
 // THEY GATHER RATHER THAN APPEAR. Nothing is there the moment a house
 // is rested on: things are born one at a time and each comes up over
@@ -461,7 +461,7 @@
     };
   }
 
-  // ---------- LES ABSTRAITS: an old armoire with iris in it, and a drip ----------
+  // ---------- LES ABSTRAITS: an old armoire with irises at its feet, and a drip ----------
   // Four rounds before this — smoke, compositions, a point and a line,
   // and droplets gathering into the house's own logo, which set solid.
   // The owner did not want it "to ever turn into the actual picture",
@@ -472,12 +472,30 @@
   // will be a puddle ... start off as nonexistent ... larger and larger
   // (capping at a specific size)".
   //
-  // THE ARMOIRE is drawn in specks along its lines, in an old walnut —
-  // crown, broken pediment, two panelled doors, a drawer, bun feet, a key
-  // — building itself up from the floor, a few specks worn away and the
-  // whole leaning a hair. Its right door stands ajar, and in the dark
-  // behind it three irises stand, and ORRIS POWDER — Belle Âme's iris
-  // butter, powdery and old — drifts out of the gap.
+  // THEN (2026-09-25, night): "I want that to be less particular dense,
+  // and more geometric (and the violets should be more natural, anbd
+  // coming out from the legs of it, like real flowers would)" — and asked
+  // which, they kept the flowers IRISES, Belle Âme's orris. So:
+  //
+  // THE ARMOIRE is plain geometry in walnut hairlines, where it was
+  // thousands of specks: a carcass on four tapered legs (two in front,
+  // two seen behind them) with a shallow V of an apron, a drawer with two
+  // knobs, a shut left door with its panels and a diamond set in the
+  // upper one, a stepped cornice, a broken pediment in two straight rakes
+  // with a diamond finial. Its right door stands ajar, and through the
+  // gap the inside is drawn in perspective — the back set in, the corners
+  // run to it, two shelves — on a faint tone. Specks are only ACCENTS: one
+  // at every joint, and the orris powder, about half as much as before,
+  // drifting out of the gap. It DRAWS ITSELF UP FROM THE FLOOR, every line
+  // growing from its lower end.
+  // THE IRISES grow at its feet, a clump at each front leg, as they would
+  // come up round the legs of a piece of furniture left in a garden: a
+  // fan of sword leaves, some bending over, and a stem or two rising past
+  // them, leaning out, each opening into three falls hanging down and out
+  // with the gold beard on them and three standards cupped upright — and
+  // one bud in each clump left shut. The leaves come up first, then the
+  // stems, then the flowers open, and all of it sways a little from the
+  // ground.
   // THE DRIP is on the other side: a bead gathering at the very top of
   // the window, swelling, falling the whole height, and landing in THE
   // PUDDLE, which is nothing at first and grows with every drop up to
@@ -486,33 +504,24 @@
   const IRIS = "112, 94, 156";
   const ORRIS = "150, 136, 176";
   const STEM = "96, 112, 88";
+  const BEARD = "184, 128, 46";
   const DRIP_INK = "104, 92, 132";
   const ARMOIRE_BUILD = 1800;            // ms, drawn up from the floor
+  const IRIS_FROM = 600;                 // ms, the leaves start once the legs stand
+  const IRIS_STEMS_AFTER = 700;          // ms after the leaves, the stems
+  const IRIS_OPEN_AFTER = 1900;          // ms after the leaves, the flowers open
+  const IRIS_SWAY = 2.4;                 // px at the top of a stem, either way
+  const POWDER_EVERY = 100;              // ms between specks of orris powder
   const DRIP_EVERY = [900, 1300];        // ms from one drop to the next
   const DRIP_FALL = 760;                 // ms, the whole height of the window
   const PUDDLE_MOST = 118;               // px, half the puddle's width at most
   const PUDDLE_GROW = 7;                 // drops to reach about two thirds of it
   let abstraitSide = -1;                 // where the armoire stands: -1 left, 1 right
 
-  /** Specks along a polyline, `gap` apart, each carrying how far up the
-      armoire it is so it can be built from the floor. */
-  function specksAlong(points, gap, out, tall) {
-    for (let i = 0; i + 1 < points.length; i++) {
-      const [x1, y1] = points[i], [x2, y2] = points[i + 1];
-      const n = Math.max(1, Math.round(Math.hypot(x2 - x1, y2 - y1) / gap));
-      for (let k = 0; k < n; k++) {
-        if (Math.random() < 0.07) continue;
-        const t = k / n;
-        const x = x1 + (x2 - x1) * t + rand(-0.4, 0.4), y = y1 + (y2 - y1) * t + rand(-0.4, 0.4);
-        out.push({ x, y, up: -y / tall, s: rand(1, 1.8), tone: rand(0.35, 0.7) });
-      }
-    }
-  }
   const arcPts = (cx, cy, r, from, to, n) => Array.from({ length: n + 1 }, (_, i) => {
     const t = from + (to - from) * (i / n);
     return [cx + Math.cos(t) * r, cy + Math.sin(t) * r];
   });
-  const rectPts = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]];
 
   function armoire() {
     // On the left: the way round stands at the right of the window, and
@@ -522,114 +531,296 @@
     const wide = tall * 0.5;
     const baseY = H - Math.max(18, H * 0.04);
     const left = abstraitSide < 0 ? Math.max(14, W * 0.1 - wide / 2) : Math.min(W - wide - 14, W * 0.9 - wide / 2);
-    const lean = rand(-0.006, 0.006);
+    const lean = rand(-0.004, 0.004);
     // In the armoire's own frame: x from 0 to `wide`, y from 0 at the
     // floor up to -tall.
-    const specks = [];
-    const put = (pts, gap) => specksAlong(pts, gap || 2.3, specks, tall);
-    const foot = tall * 0.05, body = tall * 0.8, crown = tall * 0.06;
-    const top = -(foot + body), mid = wide / 2;
-    const drawerH = body * 0.13, doorTop = top + body * 0.02, doorBot = -foot - drawerH - 6;
-    // Feet: four buns, two seen.
-    [wide * 0.1, wide * 0.9].forEach((fx) => put(arcPts(fx, -foot / 2, foot / 2, 0, Math.PI * 2, 14), 1.8));
-    // The carcass, with a plinth moulding at its foot.
-    put(rectPts(0, top, wide, body));
-    put([[-4, -foot], [wide + 4, -foot]]);
-    put([[-4, -foot - 5], [wide + 4, -foot - 5]]);
+    const legH = tall * 0.13, body = tall * 0.72, crown = tall * 0.05;
+    const bottom = -legH, top = -(legH + body), mid = wide / 2;
+    const drawerH = body * 0.13;
+    const doorTop = top + 8, doorBot = bottom - drawerH - 5;
+
+    // EVERY LINE, with how far up the armoire it starts and ends, so it
+    // can be drawn from the floor up.
+    const lines = [];
+    const put = (pts, weight, bare) => {
+      let len = 0;
+      const at = [0];
+      for (let i = 1; i < pts.length; i++) {
+        len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+        at.push(len);
+      }
+      const ys = pts.map((p) => -p[1] / tall);
+      lines.push({ pts, at, len: Math.max(0.01, len), from: Math.min(...ys), to: Math.max(...ys), weight: weight || 1, bare: !!bare });
+    };
+    // A box as four lines: its sides rising from its foot, then across.
+    const box = (x1, y1, x2, y2, weight) => {
+      put([[x1, y2], [x1, y1]], weight); put([[x2, y2], [x2, y1]], weight);
+      put([[x1, y2], [x2, y2]], weight); put([[x1, y1], [x2, y1]], weight);
+    };
+    const diamond = (cx, cy, rx, ry, weight) => put([[cx, cy + ry], [cx + rx, cy], [cx, cy - ry], [cx - rx, cy], [cx, cy + ry]], weight);
+
+    // THE LEGS: two in front, tapering to the floor, and two behind them,
+    // set in and standing a little higher, as the far pair would.
+    const legAt = [wide * 0.07, wide * 0.93];
+    legAt.forEach((lx) => {
+      put([[lx - 2.5, 0], [lx - 6, bottom]]);
+      put([[lx + 2.5, 0], [lx + 6, bottom]]);
+      put([[lx - 2.5, 0], [lx + 2.5, 0]]);
+    });
+    [wide * 0.22, wide * 0.78].forEach((lx) => put([[lx, -5], [lx, bottom + 8]], 0.5));
+    // The apron: a shallow V under the carcass between the front legs.
+    put([[legAt[0] + 6, bottom], [mid - wide * 0.16, bottom + 6], [mid, bottom + 10], [mid + wide * 0.16, bottom + 6], [legAt[1] - 6, bottom]]);
+    // The carcass, and a plinth line along its foot.
+    box(0, top, wide, bottom);
+    put([[-3, bottom - 4], [wide + 3, bottom - 4]], 0.7);
     // The drawer, and its two knobs.
-    put(rectPts(8, -foot - drawerH - 1, wide - 16, drawerH - 4));
-    [wide * 0.3, wide * 0.7].forEach((kx) => put(arcPts(kx, -foot - drawerH / 2 - 3, 2.6, 0, Math.PI * 2, 8), 1.4));
-    // The crown: a cornice stepping out, and a broken pediment with a
-    // finial between its two halves.
-    put([[-6, top], [-10, top - crown * 0.4], [wide + 10, top - crown * 0.4], [wide + 6, top]]);
-    put([[-12, top - crown * 0.4], [-12, top - crown], [wide + 12, top - crown], [wide + 12, top - crown * 0.4]]);
-    const ped = top - crown;
-    put(Array.from({ length: 13 }, (_, i) => { const t = i / 12; return [-8 + t * (mid - 18), ped - Math.sin(t * Math.PI * 0.62) * tall * 0.09]; }));
-    put(Array.from({ length: 13 }, (_, i) => { const t = i / 12; return [wide + 8 - t * (mid - 18), ped - Math.sin(t * Math.PI * 0.62) * tall * 0.09]; }));
-    put(arcPts(mid, ped - tall * 0.07, 5, 0, Math.PI * 2, 12), 1.6);
-    put([[mid, ped - tall * 0.07 + 5], [mid, ped]]);
-    // A carved scroll either side of the finial.
-    [-1, 1].forEach((sd) => put(Array.from({ length: 16 }, (_, i) => {
-      const t = i / 15 * Math.PI * 2.4, r = 7 * (1 - i / 18);
-      return [mid + sd * 22 + sd * Math.cos(t) * r, ped - tall * 0.035 + Math.sin(t) * r];
-    }), 1.6));
-    // The left door, shut: an arched upper panel and a lower one.
+    box(8, bottom - drawerH, wide - 8, bottom - 8, 0.8);
+    [wide * 0.3, wide * 0.7].forEach((kx) => put(arcPts(kx, bottom - 8 - (drawerH - 8) / 2, 2.4, 0, Math.PI * 2, 10), 0.8, true));
+    // The left door, shut: an upper panel with a diamond set in it, a
+    // lower one, and the keyhole.
     const dl = 8, dr = mid - 2;
-    put(rectPts(dl, doorTop, dr - dl, doorBot - doorTop));
-    const pw = dr - dl - 16, pTop = doorTop + 14, pBot = doorTop + (doorBot - doorTop) * 0.62;
-    put([[dl + 8, pBot], [dl + 8, pTop + pw / 2]].concat(arcPts(dl + 8 + pw / 2, pTop + pw / 2, pw / 2, Math.PI, Math.PI * 2, 12), [[dl + 8 + pw, pBot], [dl + 8, pBot]]));
-    put(rectPts(dl + 8, pBot + 12, pw, doorBot - pBot - 24));
-    // The keyhole, and its key.
-    put(arcPts(dr - 7, (doorTop + doorBot) / 2, 2.2, 0, Math.PI * 2, 8), 1.2);
-    put([[dr - 7, (doorTop + doorBot) / 2 + 2], [dr - 7, (doorTop + doorBot) / 2 + 12]], 1.4);
-    put(arcPts(dr - 7, (doorTop + doorBot) / 2 + 16, 3.6, 0, Math.PI * 2, 10), 1.4);
-    // The right door, ajar: swung out on its hinge at the right edge, so
+    box(dl, doorTop, dr, doorBot);
+    const pMid = doorTop + (doorBot - doorTop) * 0.58;
+    box(dl + 9, doorTop + 12, dr - 9, pMid, 0.7);
+    diamond((dl + dr) / 2, (doorTop + 12 + pMid) / 2, (dr - dl - 18) * 0.32, (pMid - doorTop - 12) * 0.3, 0.7);
+    box(dl + 9, pMid + 10, dr - 9, doorBot - 10, 0.7);
+    put(arcPts(dr - 7, pMid + 5, 1.8, 0, Math.PI * 2, 8), 0.8, true);
+    put([[dr - 7, pMid + 7], [dr - 7, pMid + 12]], 0.8);
+    // THE RIGHT DOOR, ajar: swung out on its hinge at the right edge, so
     // it is seen narrow and in perspective beyond the carcass.
-    const hinge = wide - 8, swing = (mid + 2 - hinge);
-    const openW = Math.abs(swing) * 0.46, skew = tall * 0.035;
-    put([[hinge, doorTop], [hinge + openW, doorTop - skew], [hinge + openW, doorBot + skew], [hinge, doorBot]]);
-    put([[hinge + openW * 0.22, doorTop + 10 - skew * 0.22], [hinge + openW * 0.22, doorBot - 10 + skew * 0.22]], 2.6);
-    // The dark inside, where the door has left it: a loose fill.
-    const inside = [];
-    for (let i = 0; i < 520; i++) {
-      const x = rand(mid + 2, hinge), y = rand(doorTop + 2, doorBot - 2);
-      inside.push({ x, y, up: -y / tall, s: rand(0.9, 1.5), tone: rand(0.06, 0.16) });
-    }
-    // Three irises standing in it, of three heights.
-    const irises = [0.3, 0.55, 0.78].map((k, i) => ({
-      x: mid + 2 + (hinge - mid - 2) * k, top: doorBot - (doorBot - doorTop) * (0.52 + 0.14 * ((i * 7) % 3) / 2), turn: rand(-0.2, 0.2),
+    const hinge = wide - 8;
+    const openW = (hinge - mid - 2) * 0.46, skew = tall * 0.035;
+    put([[hinge, doorBot], [hinge + openW, doorBot + skew]]);
+    put([[hinge + openW, doorBot + skew], [hinge + openW, doorTop - skew]]);
+    put([[hinge, doorTop], [hinge + openW, doorTop - skew]]);
+    put([[hinge + openW * 0.3, doorBot + skew * 0.3 - 10], [hinge + openW * 0.3, doorTop - skew * 0.3 + 10]], 0.6);
+    // Through the gap, the inside in perspective: its back set in, the
+    // corners run back to it, and two shelves.
+    const inL = mid + 2, inR = hinge, bL = inL + 10, bR = inR - 5, bT = doorTop + 10, bB = doorBot - 7;
+    box(bL, bT, bR, bB, 0.45);
+    put([[inL, doorBot], [bL, bB]], 0.45); put([[inR, doorBot], [bR, bB]], 0.45);
+    put([[inL, doorTop], [bL, bT]], 0.45); put([[inR, doorTop], [bR, bT]], 0.45);
+    [0.36, 0.68].forEach((k) => {
+      const y = bT + (bB - bT) * k;
+      put([[inL, y + 6], [bL, y]], 0.45);
+      put([[bL, y], [bR, y]], 0.45);
+      put([[bR, y], [inR, y + 6]], 0.45);
+    });
+    // The crown: a cornice in two steps, and a broken pediment — two
+    // straight rakes stopping short of the middle — with a diamond finial.
+    const c1 = top - crown * 0.45, c2 = top - crown;
+    put([[-5, top], [-5, c1]], 0.9); put([[wide + 5, top], [wide + 5, c1]], 0.9);
+    put([[-5, top], [wide + 5, top]], 0.9);
+    put([[-10, c1], [-10, c2]]); put([[wide + 10, c1], [wide + 10, c2]]);
+    put([[-10, c1], [wide + 10, c1]]); put([[-10, c2], [wide + 10, c2]]);
+    const rise = tall * 0.1, gapHalf = 14;
+    const rake = (x) => c2 - rise * (1 - Math.abs(x - mid) / (mid + 10));
+    put([[-10, c2], [mid - gapHalf, rake(mid - gapHalf)]]);
+    put([[wide + 10, c2], [mid + gapHalf, rake(mid + gapHalf)]]);
+    put([[4, c2], [mid - gapHalf, rake(mid - gapHalf) + 7]], 0.55);
+    put([[wide - 4, c2], [mid + gapHalf, rake(mid + gapHalf) + 7]], 0.55);
+    put([[mid, c2], [mid, c2 - rise * 0.5]], 0.8);
+    diamond(mid, c2 - rise * 0.5 - 7, 6, 7, 0.9);
+
+    // THE JOINTS, one speck each — the only specks the armoire has.
+    const joints = [];
+    const seen = new Set();
+    lines.forEach((l) => l.pts.forEach((p, i) => {
+      const key = Math.round(p[0]) + "," + Math.round(p[1]);
+      if (seen.has(key) || l.weight < 0.6 || l.bare) return;
+      seen.add(key);
+      joints.push({ x: p[0], y: p[1], l, at: l.at[i] });
     }));
+
+    // THE IRISES: a clump at each front leg, leaning out from it.
+    const clumps = [
+      { x: legAt[0], out: -0.6, leaves: 7, stems: 2, big: 1 },
+      { x: legAt[1], out: 1, leaves: 6, stems: 2, big: 0.9 },
+    ].map((cl) => {
+      // A FAN, as an iris grows: the leaves stand in one flat spread off
+      // the root, the middle ones tallest, the outer ones arching away,
+      // and here and there one whose tip has flopped over.
+      const leaves = Array.from({ length: cl.leaves }, (_, i) => {
+        const f = cl.leaves > 1 ? (i / (cl.leaves - 1)) * 2 - 1 : 0;
+        return {
+          x: cl.x + f * 8 + rand(-2, 2),
+          tilt: f * 0.42 + cl.out * 0.08 + rand(-0.06, 0.06),
+          long: tall * (0.28 - Math.abs(f) * 0.11 + rand(-0.03, 0.03)) * cl.big,
+          broad: rand(5, 7.5),
+          bend: f * 0.45 + rand(-0.12, 0.12) + (Math.random() < 0.25 ? Math.sign(f || cl.out) * 0.55 : 0),
+          delay: Math.abs(f) * 360 + rand(0, 90),
+          phase: rand(0, 6.3),
+        };
+      });
+      const stems = Array.from({ length: cl.stems }, (_, i) => ({
+        x: cl.x + rand(-5, 5) + cl.out * 4,
+        tilt: cl.out * rand(0.1, 0.26) + rand(-0.05, 0.05),
+        long: tall * (i ? rand(0.24, 0.3) : rand(0.33, 0.4)) * cl.big,
+        bend: rand(-0.12, 0.12),
+        bud: i === cl.stems - 1,   // the last in each clump stays shut
+        size: rand(15, 18) * cl.big,
+        turn: rand(-0.15, 0.15),
+        delay: i * 260,
+        phase: rand(0, 6.3),
+      }));
+      return { leaves, stems };
+    });
+
     const powder = [];
     let lastPuff = 0;
     // On the right of the window it is drawn the other way round, so its
     // open door always faces into the page.
     const toWindow = (x, y) => [left + (abstraitSide < 0 ? x : wide - x) + (y * lean), baseY + y];
+    const sway = (age, phase, up) => Math.sin(age / 2100 + phase) * IRIS_SWAY * up;
+
+    /** A sword leaf from the floor: two curves meeting at its tip. */
+    function leaf(c, lf, grown, age, a) {
+      const len = lf.long * grown;
+      if (len < 2) return;
+      const dx = Math.sin(lf.tilt), dy = -Math.cos(lf.tilt);
+      const px = -dy, py = dx;                     // across the leaf
+      const s = sway(age, lf.phase, len / (tall * 0.3));
+      const tip = [lf.x + dx * len + px * lf.bend * len * 0.5 + s, dy * len + py * lf.bend * len * 0.5];
+      const mid2 = [lf.x + dx * len * 0.55 + px * lf.bend * len * 0.18 + s * 0.4, dy * len * 0.55 + py * lf.bend * len * 0.18];
+      const w = lf.broad / 2;
+      const [ax, ay] = toWindow(lf.x - w, 0), [bx, by] = toWindow(lf.x + w, 0);
+      const [tx, ty] = toWindow(tip[0], tip[1]);
+      const [m1x, m1y] = toWindow(mid2[0] - px * w * 1.1, mid2[1] - py * w * 1.1);
+      const [m2x, m2y] = toWindow(mid2[0] + px * w * 1.1, mid2[1] + py * w * 1.1);
+      c.beginPath();
+      c.moveTo(ax, ay);
+      c.quadraticCurveTo(m1x, m1y, tx, ty);
+      c.quadraticCurveTo(m2x, m2y, bx, by);
+      c.closePath();
+      c.fillStyle = "rgba(" + STEM + "," + (0.3 * a) + ")";
+      c.fill();
+      c.strokeStyle = "rgba(" + STEM + "," + (0.6 * a) + ")";
+      c.lineWidth = 0.8;
+      c.stroke();
+    }
+
+    /** One petal, from the heart of the flower out to `long`, `fat` wide,
+        its tip turned by `curl`. */
+    function petal(c, x, y, ang, long, fat, curl) {
+      const tx = x + Math.cos(ang) * long, ty = y + Math.sin(ang) * long;
+      const k = long * 0.72;
+      c.beginPath();
+      c.moveTo(x, y);
+      c.quadraticCurveTo(x + Math.cos(ang - fat) * k, y + Math.sin(ang - fat) * k, tx + Math.cos(ang + curl) * 1.5, ty + Math.sin(ang + curl) * 1.5);
+      c.quadraticCurveTo(x + Math.cos(ang + fat) * k, y + Math.sin(ang + fat) * k, x, y);
+      c.fill();
+      c.stroke();
+    }
+
+    /** A stem rising past the leaves, and what is at the top of it. */
+    function stem(c, st, grown, open, age, a) {
+      const len = st.long * grown;
+      if (len < 2) return;
+      const s = sway(age, st.phase, len / (tall * 0.3));
+      const dx = Math.sin(st.tilt), dy = -Math.cos(st.tilt);
+      const top2 = [st.x + dx * len + st.bend * len * 0.3 + s, dy * len];
+      const [bx, by] = toWindow(st.x, 0);
+      const [cx2, cy2] = toWindow(st.x + dx * len * 0.5 + st.bend * len * 0.3 + s * 0.4, dy * len * 0.5);
+      const [tx, ty] = toWindow(top2[0], top2[1]);
+      c.strokeStyle = "rgba(" + STEM + "," + (0.62 * a) + ")";
+      c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(cx2, cy2, tx, ty); c.stroke();
+      if (grown < 0.98) return;
+      // The spathe: a small sheath where the flower leaves the stem.
+      c.fillStyle = "rgba(" + STEM + "," + (0.4 * a) + ")";
+      c.beginPath(); c.moveTo(tx - 2, ty + 9); c.lineTo(tx + 1.5, ty - 2); c.lineTo(tx + 3.5, ty + 7); c.closePath(); c.fill(); c.stroke();
+      const r = st.size;
+      if (st.bud || open < 0.35) {
+        // SHUT: a furled bud, pointing up.
+        const h = r * (0.9 + (st.bud ? 0 : open * 0.6));
+        c.fillStyle = "rgba(" + IRIS + "," + (0.34 * a) + ")";
+        c.strokeStyle = "rgba(" + IRIS + "," + (0.7 * a) + ")";
+        c.lineWidth = 0.9;
+        c.beginPath();
+        c.moveTo(tx, ty);
+        c.quadraticCurveTo(tx - r * 0.34, ty - h * 0.5, tx + st.turn * 4, ty - h);
+        c.quadraticCurveTo(tx + r * 0.34, ty - h * 0.5, tx, ty);
+        c.fill(); c.stroke();
+        return;
+      }
+      // OPEN: three falls hanging down and out, the gold beard on each,
+      // and three standards cupped upright over them.
+      const o = (open - 0.35) / 0.65;
+      const fx = tx, fy = ty - r * 0.35;
+      c.lineWidth = 0.9;
+      c.fillStyle = "rgba(" + IRIS + "," + (0.3 * a) + ")";
+      c.strokeStyle = "rgba(" + IRIS + "," + (0.72 * a) + ")";
+      [-1, 0, 1].forEach((k) => petal(c, fx, fy, Math.PI / 2 + k * (0.55 + 0.45 * o) + st.turn, r * (k ? 1.35 : 1.05) * (0.5 + 0.5 * o), 0.5, k * 0.6));
+      c.fillStyle = "rgba(" + BEARD + "," + (0.6 * a * o) + ")";
+      [-1, 0, 1].forEach((k) => {
+        const ang = Math.PI / 2 + k * (0.55 + 0.45 * o) + st.turn;
+        for (let d = 0.2; d < 0.55; d += 0.12) c.fillRect(fx + Math.cos(ang) * r * d - 0.6, fy + Math.sin(ang) * r * d - 0.6, 1.2, 1.2);
+      });
+      c.fillStyle = "rgba(" + IRIS + "," + (0.2 * a) + ")";
+      c.strokeStyle = "rgba(" + IRIS + "," + (0.66 * a) + ")";
+      [-1, 0, 1].forEach((k) => petal(c, fx, fy, -Math.PI / 2 + k * 0.32 * o + st.turn, r * (k ? 1.05 : 1.25) * (0.6 + 0.4 * o), 0.3, -k * 0.4));
+    }
+
     return {
-      box: { left: left - 20, right: left + wide + 20, top: baseY - tall - 40, bottom: baseY },
+      box: { left: left - 30, right: left + wide + 40, top: baseY - tall - 40, bottom: baseY },
       draw(c, age, a) {
+        c.save();
         const built = ease(age / ARMOIRE_BUILD);
-        const all = [specks, inside];
-        all.forEach((list, which) => list.forEach((p) => {
-          if (p.up > built * 1.05) return;
-          const [x, y] = toWindow(p.x, p.y);
-          c.fillStyle = "rgba(" + (which ? "20, 16, 14" : WALNUT) + "," + (p.tone * a) + ")";
-          c.fillRect(x, y, p.s, p.s);
-        }));
-        // THE IRISES, once it is built: a stem, three falls and three
-        // standards, in a fine line.
-        const bloom = ease((age - ARMOIRE_BUILD * 0.8) / 1400);
-        if (bloom > 0) irises.forEach((f) => {
-          const [bx, by] = toWindow(f.x, doorBot - 4);
-          const [tx, ty] = toWindow(f.x + f.turn * 20, f.top);
-          c.strokeStyle = "rgba(" + STEM + "," + (0.5 * a * bloom) + ")";
-          c.lineWidth = 1;
-          c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(bx + f.turn * 10, (by + ty) / 2, tx, ty); c.stroke();
-          // A blade of a leaf.
-          c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(bx - 6, by - 26, bx - 3 + f.turn * 8, by - 48 * bloom); c.stroke();
-          const r = 12 * bloom;
-          c.strokeStyle = "rgba(" + IRIS + "," + (0.62 * a * bloom) + ")";
-          c.fillStyle = "rgba(" + IRIS + "," + (0.16 * a * bloom) + ")";
-          const petal = (ang, long, fat) => {
-            c.beginPath();
-            c.moveTo(tx, ty);
-            c.quadraticCurveTo(tx + Math.cos(ang - fat) * r * long * 0.8, ty + Math.sin(ang - fat) * r * long * 0.8, tx + Math.cos(ang) * r * long, ty + Math.sin(ang) * r * long);
-            c.quadraticCurveTo(tx + Math.cos(ang + fat) * r * long * 0.8, ty + Math.sin(ang + fat) * r * long * 0.8, tx, ty);
-            c.fill(); c.stroke();
-          };
-          // Three FALLS, hanging down and out, and three STANDARDS, up
-          // and folded in — an iris, not any flower.
-          [-1.05, 0, 1.05].forEach((k) => petal(Math.PI / 2 + k + f.turn, k ? 1.55 : 1.2, 0.42));
-          [-0.38, 0, 0.38].forEach((k) => petal(-Math.PI / 2 + k + f.turn, k ? 1.2 : 1.35, 0.3));
-          // The beard on each fall, a touch of gold.
-          c.fillStyle = "rgba(184, 128, 46," + (0.5 * a * bloom) + ")";
-          [-1.05, 0, 1.05].forEach((k) => {
-            const ang = Math.PI / 2 + k + f.turn;
-            c.fillRect(tx + Math.cos(ang) * r * 0.45 - 0.7, ty + Math.sin(ang) * r * 0.45 - 0.7, 1.4, 1.4);
-          });
+        const reach = built * 1.15;
+        // THE ARMOIRE, each line grown from its lower end as far as the
+        // build has reached.
+        c.lineCap = "round";
+        lines.forEach((l) => {
+          const k = Math.max(0, Math.min(1, (reach - l.from) / Math.max(0.06, l.to - l.from)));
+          l.k = k;
+          if (k <= 0) return;
+          const upTo = l.len * k;
+          c.strokeStyle = "rgba(" + WALNUT + "," + (0.66 * l.weight * a) + ")";
+          c.lineWidth = 1.1;
+          c.beginPath();
+          let [x, y] = toWindow(l.pts[0][0], l.pts[0][1]);
+          c.moveTo(x, y);
+          for (let i = 1; i < l.pts.length; i++) {
+            const seg = l.at[i] - l.at[i - 1];
+            if (l.at[i] <= upTo || seg <= 0) {
+              [x, y] = toWindow(l.pts[i][0], l.pts[i][1]);
+              c.lineTo(x, y);
+              continue;
+            }
+            const t = (upTo - l.at[i - 1]) / seg;
+            [x, y] = toWindow(l.pts[i - 1][0] + (l.pts[i][0] - l.pts[i - 1][0]) * t, l.pts[i - 1][1] + (l.pts[i][1] - l.pts[i - 1][1]) * t);
+            c.lineTo(x, y);
+            break;
+          }
+          c.stroke();
         });
+        // The inside, a faint tone once the door has been drawn.
+        const door = ease((reach - (-doorBot / tall)) / 0.3);
+        if (door > 0) {
+          const [x1, y1] = toWindow(inL, doorTop), [x2, y2] = toWindow(inR, doorBot);
+          c.fillStyle = "rgba(20, 16, 14," + (0.05 * door * a) + ")";
+          c.fillRect(x1, y1, x2 - x1, y2 - y1);
+        }
+        // A speck at every joint the lines have reached.
+        c.fillStyle = "rgba(" + WALNUT + "," + (0.85 * a) + ")";
+        joints.forEach((j) => {
+          if (j.l.k <= 0 || j.at > j.l.len * j.l.k + 0.01) return;
+          const [x, y] = toWindow(j.x, j.y);
+          c.fillRect(x - 1, y - 1, 2, 2);
+        });
+
+        // THE IRISES: leaves, then stems, then the flowers opening.
+        const since = age - IRIS_FROM;
+        if (since > 0) clumps.forEach((cl) => {
+          cl.leaves.forEach((lf) => leaf(c, lf, ease((since - lf.delay) / 1500), age, a));
+          cl.stems.forEach((st) => stem(c, st,
+            ease((since - IRIS_STEMS_AFTER - st.delay) / 1500),
+            ease((since - IRIS_OPEN_AFTER - st.delay) / 1400), age, a));
+        });
+
         // THE ORRIS POWDER, out of the gap: a speck at a time, drifting
         // out and up, slowing, fading.
-        if (bloom > 0.5 && age - lastPuff > 50) {
+        if (door > 0.8 && age - lastPuff > POWDER_EVERY) {
           lastPuff = age;
           const gy = rand(doorTop + 20, doorBot - 20);
           powder.push({ x: hinge + rand(0, 4), y: gy, born: age, vx: rand(0.008, 0.03), vy: -rand(0.004, 0.016), s: rand(0.9, 1.8), life: rand(3000, 5200) });
@@ -643,6 +834,7 @@
           c.fillStyle = "rgba(" + ORRIS + "," + (0.72 * a * Math.min(1, t / 400) * (1 - q)) + ")";
           c.fillRect(x, y, p.s, p.s);
         }
+        c.restore();
       },
     };
   }

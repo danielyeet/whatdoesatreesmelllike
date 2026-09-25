@@ -70,7 +70,7 @@ const REAL_NODES = [
   {
     label: "Theories", sub: "some frameworks that I came up with myself",
     href: "categories/theories.html", pos: [-1.98, 2.0, -1.52],
-    preview: { description: "Half-formed ideas, written down before I lose them." },
+    preview: { description: "Some frameworks that I came up with myself." },
   },
   {
     label: "Explorations & Researches", sub: "things I looked into properly and wrote up",

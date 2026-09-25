@@ -1517,3 +1517,7 @@ found yet. Nothing is written
 for them in `.gallery-writings` yet, so each opens onto its two links. "Second favourite"
 and "Third favourite", the two placeholders, are left as they were — the owner's to fill or
 take off.
+
+**Later the same day** the owner asked for the two placeholders to go — "Second favourite"
+and "Third favourite", which pointed at the two templates — and they are out of the page.
+Chapter 1 is ten favourites: Des Cendres and the nine above.

@@ -899,6 +899,60 @@ test("Les Abstraits' armoire stands on one side and a drip fills a puddle on the
   expect(colours.some((c) => c.startsWith("rgba(112,94,156")), `the iris, among ${colours.join(" ")}`).toBe(true);
 });
 
+/* THE ARMOIRE IN LINES, THE IRISES AT ITS FEET: "I want that to be less
+   particular dense, and more geometric (and the violets should be more
+   natural, anbd coming out from the legs of it, like real flowers
+   would)" — and they stayed irises, Belle Âme's. It was thousands of
+   specks a frame; drawn in hairlines, with a speck only at each joint and
+   the orris powder, it is a couple of hundred at most, drip and all. And
+   the iris's violet is at the foot of the window, where the flowers grow
+   up round the legs — none of it high up, where they used to stand
+   inside the open door. */
+test("Les Abstraits' armoire is drawn in lines rather than specks, with irises growing at its feet", async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => {
+    window.__rects = 0;
+    window.__frames = 0;
+    const P = CanvasRenderingContext2D.prototype;
+    const fillRect = P.fillRect;
+    P.fillRect = function () {
+      if (this.canvas.classList.contains("sheet-motifs")) window.__rects++;
+      return fillRect.apply(this, arguments);
+    };
+    const tick = () => { window.__frames++; requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 5);
+  // Built, grown and open.
+  await page.waitForTimeout(6500);
+  const r0 = await page.evaluate(() => [window.__rects, window.__frames]);
+  await page.waitForTimeout(1000);
+  const r1 = await page.evaluate(() => [window.__rects, window.__frames]);
+  const perFrame = (r1[0] - r0[0]) / Math.max(1, r1[1] - r0[1]);
+  expect(perFrame, "specks drawn a frame").toBeLessThan(400);
+  const out = await page.evaluate(() => {
+    const c = document.querySelector(".sheet-motifs");
+    const ratio = c.width / c.getBoundingClientRect().width;
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    const W = innerWidth, H = innerHeight;
+    const tall = Math.max(220, Math.min(H * 0.56, 420));
+    const iris = (y1, y2) => {
+      let n = 0;
+      for (let y = Math.round(y1 * ratio); y < Math.round(y2 * ratio); y++)
+        for (let x = 0; x < Math.round(W * 0.35 * ratio); x++) {
+          const i = (y * c.width + x) * 4;
+          if (d[i + 3] > 40 && Math.abs(d[i] - 112) < 30 && Math.abs(d[i + 1] - 94) < 30 && Math.abs(d[i + 2] - 156) < 30 && d[i + 2] > d[i] + 15) n++;
+        }
+      return n;
+    };
+    return { low: iris(H * 0.72, H), high: iris(H - tall, H - tall * 0.62) };
+  });
+  expect(out.low, "irises at the foot of the window").toBeGreaterThan(20);
+  expect(out.high, "and none up where the door is").toBe(0);
+});
+
 /* QIMU & MUSICIANS KEPT QUIET: "more subtle and way less movement".
    Read off what the motifs' canvas is asked to draw: nothing in a colour
    stronger than half its strength, and every note head drawn where it

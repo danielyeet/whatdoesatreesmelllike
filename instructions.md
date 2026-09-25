@@ -99,3 +99,57 @@ what was pushed, after the fact, so nothing arrives unannounced. And
 their writing, changing content they wrote, or anything whose blast
 radius reaches past this repository. Permission to push is not permission
 to decide.
+
+## Ask with choices, only about the whole and the look — and once, at the end (2026-09-25)
+
+> i liked the way you proposed the questions. Do that for every time there
+> is an uncertainty in my instructions. additionally, make that a rule on the
+> repository, so that any other session I open will do the same. BUT DONT ASK
+> ME EVERYTHING LIKE YOU DID WITH YOUR PREVIOUS MESSAGE, some code you can do
+> on your own, its more so the decisions i need to make for 1) the
+> entire/total 2) the stylistic details
+
+and, earlier the same day:
+
+> instead of asking for eevery single thing, just ask me if you can
+> push/pull it all at the end. You REALLY dont have to ask me to allow you to
+> wait. please dont use permissions excessively. do whatever youre instructed
+> to, find the best way to do the thing youre instructed to do, and only at
+> the end, ONE QUESTION (or a few depending on whether something needs to be
+> clarified)
+
+**How to ask.** When an instruction is genuinely uncertain, ask with the
+multiple-choice question tool (`AskUserQuestion`), not in running prose:
+- each question has **two to four options**, each a short label and a line in
+  plain English saying what it would look like or do;
+- the recommended option goes first, marked **"(Recommended)"**;
+- related questions go together, in one ask (up to four); and
+- the owner can always type an answer of their own, so no option has to be
+  "other".
+
+**What to ask about — only two kinds of decision are the owner's:**
+1. **The whole**: what the round adds up to and whether it goes out. At the
+   end of the work, whether to push it all (see below). Also the overall
+   scope, when an instruction could mean two very different amounts of work.
+2. **The stylistic details**, when the instruction leaves them open: how
+   something should look or feel, which of two readings of a word they meant
+   for a drawing, what goes in a space they left open.
+
+**Everything else, decide and do**: how to build it, the code's structure,
+names, tests, fixing what turns up on the way, waiting for the suite. Find
+the best way to do what was asked, do it, and say what was done. Don't ask
+mid-way whether to carry on, whether a plan is right, whether to show
+something first, or whether you may wait for something.
+
+**At the end, one question**, or a few if something really needs
+clarifying, and it includes **whether to push it all**. This changes the
+2026-09-17 rule above on that one point: the push is asked for now, once,
+at the end, together with anything else that is the owner's to decide. The
+work before it is still verified in full (tests, screenshots) so that the
+answer can be a yes. Commit locally as you go if a hook asks; don't push
+until the owner says so.
+
+**Keep approvals few.** Every command that needs the owner's permission is
+an interruption. Batch shell commands into one call, use the file tools
+rather than the shell to read and edit, and never run a command only to
+wait or to poll — background work reports back when it finishes.
