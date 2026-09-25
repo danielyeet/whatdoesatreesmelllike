@@ -587,3 +587,38 @@ Tested in `tests/contact-sheet.spec.js`:
   stand inside the door.
 - The test before it (the armoire on one side, the drip and the puddle on the other, the logo
   never asked for, the iris among the colours) is unchanged and still passes.
+
+### Later the same night — irises from a tuft, and a beaker
+
+> make the irises less regular, i want them to appear almost real. especially the base, I want
+> it to be like a tuft, rather than emerging from a horizontal line.
+> ... I want it to fall into a beaker, once the beaker starts overflowing, let it drip from
+> that too.
+
+- **Each clump is a tuft** (`clumps` in `armoire()`): nine to twelve leaves out of one small
+  crown, their bases within a few pixels of each other and a hair above or below one another,
+  so no line runs along their feet. **No two leaves are alike**: each has its own lean, length
+  (a few short young ones), breadth, a bend through its middle and another towards its tip, a
+  green from five (`LEAF_TONES`), and a blade that is narrow at the base, broadest a little way
+  up and tapering to its tip — drawn round a centre line rather than as two curves. About one
+  in five **flops over** part of the way up, about a third are **browned at the tip** (`DRY`),
+  and about half show **a paler midrib**. Round the crown: a little shadow, **soil** specks
+  (`SOIL`) in a low mound, a few **blades of grass** and **a dry bit of old leaf** lying on the
+  ground (`ground()`).
+- **The flowers are each their own**: three stems in the larger tuft and two in the other,
+  each its own height and lean, with **a bract** clasping it part way up; every fall and
+  standard carries its own angle, length and breadth (`falls`, `stds`), a fall's end is a
+  little waved, **veins** run out from its heart, **the beard** is a fuzz of gold specks, and a
+  pale **style arm** lies over each fall. The last stem of each tuft stays **a bud**, now
+  showing its furl.
+- **The drip falls into a beaker** (`drip()`), as on the house's own page (see [the newer
+  houses](2026-09-21-the-newer-houses.md)): glass hairlines, a spout, graduations, filling
+  with every drop (`BEAKER_FILL`, seven) and then **overflowing** — a wet run down its outside,
+  and a bead dropping from the spout to **the spill** on a short ruled **bench**, an uneven
+  wet shape that grows to `BEAKER_SPILL_MOST`. The puddle and `PUDDLE_*` are gone.
+
+Tested: `Les Abstraits' armoire stands on one side and a drip fills a beaker on the other, and
+the logo never appears` (renamed from the puddle; its foot measure now takes the beaker's whole
+height, since the glass itself was already most of the old 60px band), and `...drawn in lines
+rather than specks, with irises growing at its feet` still holds with the tufts — the specks a
+frame stay far under 400 and the violet is all low.

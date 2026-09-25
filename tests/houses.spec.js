@@ -547,18 +547,22 @@ test("Tombstone's stones stand in the margins with their reflections under them"
   expect(Math.min(...seen), `nothing here stays: ${seen.join(" ")}`).toBeLessThan(Math.max(...seen) * 0.7);
 });
 
-/* LES ABSTRAITS: THE ARMOIRE AND THE DRIP. "an old armoire on one of
-   the sides ... has some iris notes in it ... like the perfume belle
-   ame ... On the other side ... a dripping effect from the top of the
-   page to the bottom, where there will be a puddle. This puddle should
-   start off as nonexistent and ... becomes larger and larger (capping
-   at a specific size)". Read off the page's canvas: the armoire in the
-   left margin, the iris's violet drawn in it, something at the very top
-   of the right margin where the drop gathers, and no puddle at first,
-   then one, growing. */
-test("Les Abstraits has its armoire with iris on one side and a drip filling a puddle on the other",
+/* LES ABSTRAITS: THE ARMOIRE, THE DRIP AND THE BEAKER. "an old armoire
+   on one of the sides ... has some iris notes in it ... like the perfume
+   belle ame ... On the other side ... a dripping effect from the top of
+   the page to the bottom" — and then: "the dropping thing ... should go
+   all the way down, and should note the scrolling. additionally, I want
+   the puddle to be more realistic ... I want it to fall into a beaker,
+   once the beaker starts overflowing, let it drip from that too". Read off
+   the page's canvas: the armoire in the left margin with the iris's violet
+   drawn in it; the drop gathering at the very top of the right margin —
+   and gone from there once the page is scrolled, because it is the top of
+   the PAGE it hangs from; nothing at the foot of the window while the page
+   is at its top; and at the page's own foot a beaker, which fills with the
+   drops and then overflows, dropping from its spout. */
+test("Les Abstraits has its armoire with iris on one side and a drip down the whole page into a beaker on the other",
   async ({ page }) => {
-  test.setTimeout(60000);
+  test.setTimeout(90000);
   await page.addInitScript(() => {
     window.__iris = false;
     const P = CanvasRenderingContext2D.prototype;
@@ -582,19 +586,31 @@ test("Les Abstraits has its armoire with iris on one side and a drip filling a p
     };
     return { armoire: count(0, margin, innerHeight * 0.3, innerHeight),
       top: count(innerWidth - margin, innerWidth, 0, 16),
-      puddle: count(innerWidth - margin, innerWidth, innerHeight - 22, innerHeight) };
+      foot: count(innerWidth - margin, innerWidth, innerHeight - 160, innerHeight),
+      drops: +(el.dataset.drops || 0), spilled: +(el.dataset.spilled || 0) };
   });
-  await page.waitForTimeout(400);
-  const first = await read();
-  await page.waitForTimeout(3600);
-  const early = await read();
-  await page.waitForTimeout(9000);
-  const late = await read();
-  expect(first.puddle, "no puddle when the page opens").toBeLessThan(20);
-  expect(late.armoire, "the armoire in the left margin").toBeGreaterThan(1500);
+  await page.waitForTimeout(2600);
+  const atTop = await read();
+  expect(atTop.armoire, "the armoire in the left margin").toBeGreaterThan(1500);
   expect(await page.evaluate(() => window.__iris), "with iris in it").toBe(true);
-  expect(late.top, "the drop gathering at the very top").toBeGreaterThan(10);
-  expect(late.puddle, `the puddle grows: ${early.puddle} then ${late.puddle}`).toBeGreaterThan(early.puddle * 1.3 + 30);
+  expect(atTop.top, "the drop gathering at the very top of the page").toBeGreaterThan(10);
+  expect(atTop.foot, "and nothing at the foot of the window while the page is at its top").toBeLessThan(20);
+  // CARRIED WITH THE PAGE: scrolled, the top of the page — and the bead
+  // hanging from it — has gone up off the window.
+  await page.evaluate(() => window.scrollTo(0, 400));
+  await page.waitForTimeout(300);
+  expect((await read()).top, "the bead goes up with the page").toBeLessThan(3);
+  // THE BEAKER, at the page's own foot: there, filling, and in time
+  // overflowing and dropping from its spout.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(600);
+  const early = await read();
+  expect(early.foot, "a beaker at the foot of the page").toBeGreaterThan(200);
+  await page.waitForTimeout(21000);
+  const late = await read();
+  expect(late.drops, "the drops land in it").toBeGreaterThan(early.drops + 5);
+  expect(late.spilled, "and once it is full, it drips over").toBeGreaterThan(0);
+  expect(late.foot, `and it fills: ${early.foot} then ${late.foot}`).toBeGreaterThan(early.foot * 1.3 + 30);
 });
 
 /* QIMU & MUSICIANS: A SCORE IN THE MARGINS. "add some complex notes;

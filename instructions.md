@@ -161,3 +161,16 @@ without cutting any of it short to save a step, and without asking leave for
 any of it: the owner has given full permission to execute and code whatever
 is judged right. The only questions are the final one (the whole, and the
 push) and a stylistic detail the instruction genuinely leaves open.
+
+**Ambiguities, not style.** And then:
+
+> okay, listen, dont ask me about all stylistic features, just about
+> ambiguities.
+
+So point 2 above is narrower than it reads: **don't ask about stylistic
+choices at all** — how something looks is yours to decide and show. Ask only
+when an instruction is **ambiguous**: when it could honestly mean two
+different things and the two would come out differently (which of two
+drawings a word refers to, which of two pages a note is about). If one
+reading is plainly the likelier, take it, say so in the report, and don't
+ask.

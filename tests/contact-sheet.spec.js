@@ -836,16 +836,18 @@ test("the axis is drawn as a firm line with a light either side", async ({ page 
   expect(out.lit, "and has a light beside it").toBeGreaterThan(0.5);
 });
 
-/* LES ABSTRAITS: AN OLD ARMOIRE WITH IRIS IN IT, AND A DRIP. "i dont
-   want it to ever turn into the actual picture ... make it something
-   according to the page": an old armoire on one side with iris in it,
-   feeling like Belle Âme, and on the other a drip from the top of the
-   page into a puddle that starts as nothing and grows. Read off the
-   motifs' canvas: the logo never asked for and nothing drawn from a
-   picture; ink on both sides of the window; something at the very top
-   of it on the drip's side; the iris's violet among the colours; and
-   the puddle at the foot growing while the house is rested on. */
-test("Les Abstraits' armoire stands on one side and a drip fills a puddle on the other, and the logo never appears", async ({ page }) => {
+/* LES ABSTRAITS: AN OLD ARMOIRE WITH IRIS AT ITS FEET, AND A DRIP. "i
+   dont want it to ever turn into the actual picture ... make it something
+   according to the page": an old armoire on one side with iris, feeling
+   like Belle Âme, and on the other a drip from the top of the window into
+   what was a puddle and is now a beaker ("I want it to fall into a beaker,
+   once the beaker starts overflowing, let it drip from that too"). Read
+   off the motifs' canvas: the logo never asked for and nothing drawn from
+   a picture; ink on both sides of the window; something at the very top
+   of it on the drip's side; the iris's violet among the colours; and the
+   foot of the window on the drip's side filling while the house is rested
+   on. */
+test("Les Abstraits' armoire stands on one side and a drip fills a beaker on the other, and the logo never appears", async ({ page }) => {
   test.setTimeout(60000);
   const logo = [];
   page.on("request", (r) => { if (/les-abstraits-logo\.png$/.test(r.url())) logo.push(r.url()); });
@@ -882,8 +884,10 @@ test("Les Abstraits' armoire stands on one side and a drip fills a puddle on the
       return n;
     };
     const W = innerWidth, H = innerHeight;
+    // The foot: the whole height of the beaker standing there, so what is
+    // measured is the liquid rising in it and spilling, not only its base.
     return { left: inkIn(0, W * 0.3, 0, H), right: inkIn(W * 0.7, W, 0, H),
-      top: inkIn(W * 0.7, W, 0, 14), foot: inkIn(W * 0.7, W, H - 60, H) };
+      top: inkIn(W * 0.7, W, 0, 14), foot: inkIn(W * 0.7, W, H - 120, H) };
   });
   await pointAt(page, 5);
   await page.waitForTimeout(2600);
@@ -894,7 +898,7 @@ test("Les Abstraits' armoire stands on one side and a drip fills a puddle on the
   expect(await page.evaluate(() => window.__images), "and no picture is drawn").toBe(0);
   expect(late.left, "the armoire on one side").toBeGreaterThan(400);
   expect(late.top, "the drip hangs from the very top of the window").toBeGreaterThan(3);
-  expect(late.foot, "the puddle grows").toBeGreaterThan(early.foot * 1.5 + 20);
+  expect(late.foot, "the beaker fills").toBeGreaterThan(early.foot * 1.5 + 20);
   const colours = await page.evaluate(() => [...window.__colours]);
   expect(colours.some((c) => c.startsWith("rgba(112,94,156")), `the iris, among ${colours.join(" ")}`).toBe(true);
 });

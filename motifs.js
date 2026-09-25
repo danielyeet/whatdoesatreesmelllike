@@ -497,14 +497,23 @@
   // stems, then the flowers open, and all of it sways a little from the
   // ground.
   // THE DRIP is on the other side: a bead gathering at the very top of
-  // the window, swelling, falling the whole height, and landing in THE
-  // PUDDLE, which is nothing at first and grows with every drop up to
-  // `PUDDLE_MOST`.
+  // the window, swelling, falling the whole height, and landing — since
+  // the night of 2026-09-25 — in A BEAKER standing on a short bench at the
+  // foot of the window, where the puddle was: "I want the puddle to be
+  // more realistic, not just a circle of water. I want it to fall into a
+  // beaker, once the beaker starts overflowing, let it drip from that
+  // too." It fills with every drop (`BEAKER_FILL` to its brim) and then
+  // overflows: a wet run down its outside from the spout, and a bead
+  // dropping off the spout to the bench, where THE SPILL spreads — an
+  // uneven wet shape, not a circle — up to `BEAKER_SPILL_MOST`.
   const WALNUT = "88, 62, 44";
   const IRIS = "112, 94, 156";
   const ORRIS = "150, 136, 176";
   const STEM = "96, 112, 88";
   const BEARD = "184, 128, 46";
+  const LEAF_TONES = ["96, 112, 88", "84, 104, 76", "110, 124, 96", "92, 108, 70", "104, 116, 84"];
+  const DRY = "152, 132, 98";            // a leaf's browned tip, and old leaf on the ground
+  const SOIL = "98, 86, 72";
   const DRIP_INK = "104, 92, 132";
   const ARMOIRE_BUILD = 1800;            // ms, drawn up from the floor
   const IRIS_FROM = 600;                 // ms, the leaves start once the legs stand
@@ -514,8 +523,10 @@
   const POWDER_EVERY = 100;              // ms between specks of orris powder
   const DRIP_EVERY = [900, 1300];        // ms from one drop to the next
   const DRIP_FALL = 760;                 // ms, the whole height of the window
-  const PUDDLE_MOST = 118;               // px, half the puddle's width at most
-  const PUDDLE_GROW = 7;                 // drops to reach about two thirds of it
+  const BEAKER_GLASS = "70, 66, 84";
+  const BEAKER_FILL = 7;                 // drops to fill the beaker to its brim
+  const BEAKER_SPILL_MOST = 58;          // px, half the spill's width at most
+  const BEAKER_SPILL_GROW = 5;           // spilled drops to about two thirds of it
   let abstraitSide = -1;                 // where the armoire stands: -1 left, 1 right
 
   const arcPts = (cx, cy, r, from, to, n) => Array.from({ length: n + 1 }, (_, i) => {
@@ -632,38 +643,66 @@
       joints.push({ x: p[0], y: p[1], l, at: l.at[i] });
     }));
 
-    // THE IRISES: a clump at each front leg, leaning out from it.
+    // THE IRISES: a TUFT at each front leg — "less regular, i want them to
+    // appear almost real. especially the base, I want it to be like a
+    // tuft, rather than emerging from a horizontal line". So every leaf
+    // comes out of one small crown, a hair above or below its neighbours,
+    // and nothing about one leaf is quite what the next one is: its lean,
+    // its length, its breadth, how it bends through the middle and again
+    // towards the tip, its green; a few flop over part of the way up, some
+    // are browned at the tip, some show a paler midrib, a few are short
+    // new ones still. Round the crown: soil, a few blades of grass and a
+    // dry bit of old leaf lying on the ground.
+    const pick = (list) => list[Math.floor(Math.random() * list.length)];
     const clumps = [
-      { x: legAt[0], out: -0.6, leaves: 7, stems: 2, big: 1 },
-      { x: legAt[1], out: 1, leaves: 6, stems: 2, big: 0.9 },
+      { x: legAt[0] + 3, out: -0.5, big: 1, stems: 3 },
+      { x: legAt[1] - 2, out: 1, big: 0.88, stems: 2 },
     ].map((cl) => {
-      // A FAN, as an iris grows: the leaves stand in one flat spread off
-      // the root, the middle ones tallest, the outer ones arching away,
-      // and here and there one whose tip has flopped over.
-      const leaves = Array.from({ length: cl.leaves }, (_, i) => {
-        const f = cl.leaves > 1 ? (i / (cl.leaves - 1)) * 2 - 1 : 0;
+      const n = 9 + Math.floor(Math.random() * 4);
+      const fan = Array.from({ length: n }, () => rand(-1, 1)).sort((p, q) => p - q);
+      const leaves = fan.map((f) => {
+        const young = Math.random() < 0.22;
         return {
-          x: cl.x + f * 8 + rand(-2, 2),
-          tilt: f * 0.42 + cl.out * 0.08 + rand(-0.06, 0.06),
-          long: tall * (0.28 - Math.abs(f) * 0.11 + rand(-0.03, 0.03)) * cl.big,
-          broad: rand(5, 7.5),
-          bend: f * 0.45 + rand(-0.12, 0.12) + (Math.random() < 0.25 ? Math.sign(f || cl.out) * 0.55 : 0),
-          delay: Math.abs(f) * 360 + rand(0, 90),
+          x: cl.x + f * 3 + rand(-1.2, 1.2),
+          y: -rand(0, 4),
+          tilt: f * rand(0.35, 0.6) + cl.out * 0.08 + rand(-0.1, 0.1),
+          long: tall * (0.3 - Math.abs(f) * 0.12) * rand(0.65, 1.15) * cl.big * (young ? 0.4 : 1),
+          broad: rand(3.4, 6.8),
+          c1: f * rand(0.1, 0.35) + rand(-0.15, 0.15),
+          c2: f * rand(0.2, 0.6) + rand(-0.25, 0.25),
+          flop: !young && Math.random() < 0.2 ? { at: rand(0.5, 0.78), by: Math.sign(f || cl.out) * rand(0.9, 1.7) } : null,
+          tone: pick(LEAF_TONES),
+          dry: !young && Math.random() < 0.3 ? rand(0.08, 0.22) : 0,
+          rib: Math.random() < 0.45,
+          shade: rand(0.22, 0.36),
+          delay: Math.abs(f) * 380 + rand(0, 160),
           phase: rand(0, 6.3),
         };
       });
+      const grass = Array.from({ length: 5 }, () => ({ x: cl.x + rand(-13, 13), long: rand(6, 16), tilt: rand(-0.6, 0.6), bend: rand(-0.5, 0.5) }));
+      const soil = Array.from({ length: 16 }, () => {
+        const u = rand(-1, 1);
+        return { x: cl.x + u * 13, y: -Math.max(0, (1 - u * u) * rand(0, 3.2)), s: rand(0.8, 1.8), k: rand(0.25, 0.6) };
+      });
+      const litter = Array.from({ length: 2 }, () => ({ x: cl.x + rand(-15, 15), long: rand(6, 11), ang: rand(-0.3, 0.3), curl: rand(-3, 3) }));
+      // STEMS rising past the leaves, each its own height and lean; the
+      // last in each tuft stays a bud. Every petal is its own size and
+      // angle, so no flower is drawn twice.
       const stems = Array.from({ length: cl.stems }, (_, i) => ({
-        x: cl.x + rand(-5, 5) + cl.out * 4,
-        tilt: cl.out * rand(0.1, 0.26) + rand(-0.05, 0.05),
-        long: tall * (i ? rand(0.24, 0.3) : rand(0.33, 0.4)) * cl.big,
-        bend: rand(-0.12, 0.12),
-        bud: i === cl.stems - 1,   // the last in each clump stays shut
-        size: rand(15, 18) * cl.big,
-        turn: rand(-0.15, 0.15),
-        delay: i * 260,
+        x: cl.x + rand(-3, 3) + cl.out * 3,
+        tilt: cl.out * rand(0.08, 0.28) + rand(-0.08, 0.08),
+        long: tall * (i === 0 ? rand(0.33, 0.4) : rand(0.22, 0.32)) * cl.big,
+        bend: rand(-0.14, 0.14),
+        bract: rand(0.38, 0.58),
+        bud: i === cl.stems - 1,
+        size: rand(14, 18) * cl.big,
+        turn: rand(-0.22, 0.22),
+        falls: [-1, 0, 1].map((k) => ({ k, ang: rand(-0.14, 0.14), long: rand(0.85, 1.15), fat: rand(0.42, 0.56), wave: rand(-1.5, 2) })),
+        stds: [-1, 0, 1].map((k) => ({ k, ang: rand(-0.1, 0.1), long: rand(0.85, 1.12), fat: rand(0.26, 0.34) })),
+        delay: i * rand(220, 520),
         phase: rand(0, 6.3),
       }));
-      return { leaves, stems };
+      return { x: cl.x, leaves, grass, soil, litter, stems };
     });
 
     const powder = [];
@@ -672,93 +711,181 @@
     // open door always faces into the page.
     const toWindow = (x, y) => [left + (abstraitSide < 0 ? x : wide - x) + (y * lean), baseY + y];
     const sway = (age, phase, up) => Math.sin(age / 2100 + phase) * IRIS_SWAY * up;
+    const rgba = (tone, k) => "rgba(" + tone + "," + k + ")";
 
-    /** A sword leaf from the floor: two curves meeting at its tip. */
+    /** The ground a tuft stands in: a little shadow, soil, grass, and a
+        dry bit of old leaf. */
+    function ground(c, cl, grown, a) {
+      if (grown <= 0) return;
+      const [cx, cy] = toWindow(cl.x, 0);
+      c.fillStyle = rgba("58, 56, 44", 0.16 * grown * a);
+      c.beginPath(); c.ellipse(cx, cy, 12, 2.4, 0, 0, Math.PI * 2); c.fill();
+      cl.soil.forEach((p) => {
+        const [x, y] = toWindow(p.x, p.y);
+        c.fillStyle = rgba(SOIL, p.k * grown * a);
+        c.fillRect(x - p.s / 2, y - p.s / 2, p.s, p.s);
+      });
+      c.lineWidth = 0.7;
+      c.strokeStyle = rgba(DRY, 0.5 * grown * a);
+      cl.litter.forEach((l) => {
+        const [x1, y1] = toWindow(l.x, -0.5);
+        const [x2, y2] = toWindow(l.x + Math.cos(l.ang) * l.long, -0.5 + Math.sin(l.ang) * l.long * 0.3);
+        c.beginPath(); c.moveTo(x1, y1); c.quadraticCurveTo((x1 + x2) / 2, (y1 + y2) / 2 + l.curl, x2, y2); c.stroke();
+      });
+      c.strokeStyle = rgba(STEM, 0.42 * grown * a);
+      c.lineWidth = 0.6;
+      cl.grass.forEach((g) => {
+        const len = g.long * grown;
+        const [x1, y1] = toWindow(g.x, 0);
+        const [x2, y2] = toWindow(g.x + Math.sin(g.tilt) * len + g.bend * len * 0.4, -Math.cos(g.tilt) * len);
+        const [mx, my] = toWindow(g.x + Math.sin(g.tilt) * len * 0.5 + g.bend * len * 0.3, -Math.cos(g.tilt) * len * 0.5);
+        c.beginPath(); c.moveTo(x1, y1); c.quadraticCurveTo(mx, my, x2, y2); c.stroke();
+      });
+    }
+
+    /** A sword leaf out of the crown: a centre line bending twice (and
+        flopping over, for some), a blade narrow at the base, broad a
+        little way up and tapering to the tip, browned at the tip for
+        some, a paler midrib for others. */
     function leaf(c, lf, grown, age, a) {
       const len = lf.long * grown;
       if (len < 2) return;
-      const dx = Math.sin(lf.tilt), dy = -Math.cos(lf.tilt);
-      const px = -dy, py = dx;                     // across the leaf
-      const s = sway(age, lf.phase, len / (tall * 0.3));
-      const tip = [lf.x + dx * len + px * lf.bend * len * 0.5 + s, dy * len + py * lf.bend * len * 0.5];
-      const mid2 = [lf.x + dx * len * 0.55 + px * lf.bend * len * 0.18 + s * 0.4, dy * len * 0.55 + py * lf.bend * len * 0.18];
-      const w = lf.broad / 2;
-      const [ax, ay] = toWindow(lf.x - w, 0), [bx, by] = toWindow(lf.x + w, 0);
-      const [tx, ty] = toWindow(tip[0], tip[1]);
-      const [m1x, m1y] = toWindow(mid2[0] - px * w * 1.1, mid2[1] - py * w * 1.1);
-      const [m2x, m2y] = toWindow(mid2[0] + px * w * 1.1, mid2[1] + py * w * 1.1);
-      c.beginPath();
-      c.moveTo(ax, ay);
-      c.quadraticCurveTo(m1x, m1y, tx, ty);
-      c.quadraticCurveTo(m2x, m2y, bx, by);
-      c.closePath();
-      c.fillStyle = "rgba(" + STEM + "," + (0.3 * a) + ")";
+      const N = 12, sw = Math.sin(age / 2100 + lf.phase) * 0.035;
+      const pts = [[lf.x, lf.y, lf.tilt]];
+      let x = lf.x, y = lf.y;
+      for (let i = 1; i <= N; i++) {
+        const t = i / N;
+        let ang = lf.tilt + lf.c1 * t + lf.c2 * t * t + sw * t;
+        if (lf.flop && t > lf.flop.at) ang += lf.flop.by * ease(((t - lf.flop.at) / (1 - lf.flop.at)) * 1.6);
+        x += (Math.sin(ang) * len) / N;
+        y -= (Math.cos(ang) * len) / N;
+        pts.push([x, y, ang]);
+      }
+      const half = (t) => (lf.broad * (0.3 + 0.7 * Math.min(1, t / 0.18)) * Math.pow(1 - t, 0.75)) / 2;
+      const L = [], R = [];
+      pts.forEach(([px, py, ang], i) => {
+        const w = half(i / N), nx = Math.cos(ang), ny = Math.sin(ang);
+        L.push(toWindow(px - nx * w, py - ny * w));
+        R.push(toWindow(px + nx * w, py + ny * w));
+      });
+      const outline = (from) => {
+        c.beginPath();
+        c.moveTo(L[from][0], L[from][1]);
+        for (let i = from + 1; i <= N; i++) c.lineTo(L[i][0], L[i][1]);
+        for (let i = N; i >= from; i--) c.lineTo(R[i][0], R[i][1]);
+        c.closePath();
+      };
+      outline(0);
+      c.fillStyle = rgba(lf.tone, lf.shade * a);
       c.fill();
-      c.strokeStyle = "rgba(" + STEM + "," + (0.6 * a) + ")";
-      c.lineWidth = 0.8;
+      c.strokeStyle = rgba(lf.tone, (lf.shade + 0.3) * a);
+      c.lineWidth = 0.7;
       c.stroke();
+      if (lf.dry && grown > 0.9) {
+        outline(Math.round(N * (1 - lf.dry)));
+        c.fillStyle = rgba(DRY, 0.5 * a);
+        c.fill();
+      }
+      if (lf.rib) {
+        c.strokeStyle = rgba("196, 204, 176", 0.3 * a);
+        c.lineWidth = 0.6;
+        c.beginPath();
+        for (let i = 1; i < N - 1; i++) {
+          const [px, py] = toWindow(pts[i][0], pts[i][1]);
+          if (i === 1) c.moveTo(px, py); else c.lineTo(px, py);
+        }
+        c.stroke();
+      }
     }
 
-    /** One petal, from the heart of the flower out to `long`, `fat` wide,
-        its tip turned by `curl`. */
-    function petal(c, x, y, ang, long, fat, curl) {
-      const tx = x + Math.cos(ang) * long, ty = y + Math.sin(ang) * long;
-      const k = long * 0.72;
+    /** One petal from the heart of the flower: broad a little way out,
+        its end a little waved. */
+    function petal(c, x, y, ang, long, fat, wave) {
+      const ca = Math.cos(ang), sa = Math.sin(ang), px = -sa, py = ca, w = long * fat;
+      const tip = [x + ca * long, y + sa * long];
       c.beginPath();
       c.moveTo(x, y);
-      c.quadraticCurveTo(x + Math.cos(ang - fat) * k, y + Math.sin(ang - fat) * k, tx + Math.cos(ang + curl) * 1.5, ty + Math.sin(ang + curl) * 1.5);
-      c.quadraticCurveTo(x + Math.cos(ang + fat) * k, y + Math.sin(ang + fat) * k, x, y);
+      c.quadraticCurveTo(x + ca * long * 0.45 + px * w, y + sa * long * 0.45 + py * w, tip[0] + px * w * 0.45, tip[1] + py * w * 0.45);
+      c.quadraticCurveTo(tip[0] + ca * (w * 0.35 + wave), tip[1] + sa * (w * 0.35 + wave), tip[0] - px * w * 0.45, tip[1] - py * w * 0.45);
+      c.quadraticCurveTo(x + ca * long * 0.45 - px * w, y + sa * long * 0.45 - py * w, x, y);
       c.fill();
       c.stroke();
     }
 
-    /** A stem rising past the leaves, and what is at the top of it. */
+    /** A stem rising past the leaves, a bract part way up it, and what is
+        at the top of it. */
     function stem(c, st, grown, open, age, a) {
       const len = st.long * grown;
       if (len < 2) return;
       const s = sway(age, st.phase, len / (tall * 0.3));
       const dx = Math.sin(st.tilt), dy = -Math.cos(st.tilt);
-      const top2 = [st.x + dx * len + st.bend * len * 0.3 + s, dy * len];
-      const [bx, by] = toWindow(st.x, 0);
-      const [cx2, cy2] = toWindow(st.x + dx * len * 0.5 + st.bend * len * 0.3 + s * 0.4, dy * len * 0.5);
-      const [tx, ty] = toWindow(top2[0], top2[1]);
-      c.strokeStyle = "rgba(" + STEM + "," + (0.62 * a) + ")";
+      const at = (t) => toWindow(st.x + dx * len * t + st.bend * len * 0.3 * Math.sin(t * Math.PI * 0.9) + s * t * t, dy * len * t);
+      const [bx, by] = at(0), [cx2, cy2] = at(0.5), [tx, ty] = at(1);
+      c.strokeStyle = rgba(STEM, 0.62 * a);
       c.lineWidth = 1.2;
-      c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(cx2, cy2, tx, ty); c.stroke();
+      c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(cx2 * 2 - (bx + tx) / 2, cy2 * 2 - (by + ty) / 2, tx, ty); c.stroke();
+      // The bract, clasping the stem part way up.
+      if (grown > st.bract) {
+        const [kx, ky] = at(st.bract);
+        const side = st.tilt >= 0 ? 1 : -1;
+        c.fillStyle = rgba(STEM, 0.3 * a);
+        c.beginPath(); c.moveTo(kx, ky + 6); c.quadraticCurveTo(kx + side * 5, ky - 4, kx + side * 3, ky - 14); c.quadraticCurveTo(kx + side * 1, ky - 3, kx, ky + 6); c.fill(); c.stroke();
+      }
       if (grown < 0.98) return;
       // The spathe: a small sheath where the flower leaves the stem.
-      c.fillStyle = "rgba(" + STEM + "," + (0.4 * a) + ")";
+      c.fillStyle = rgba(STEM, 0.4 * a);
       c.beginPath(); c.moveTo(tx - 2, ty + 9); c.lineTo(tx + 1.5, ty - 2); c.lineTo(tx + 3.5, ty + 7); c.closePath(); c.fill(); c.stroke();
       const r = st.size;
       if (st.bud || open < 0.35) {
-        // SHUT: a furled bud, pointing up.
+        // SHUT: a furled bud, pointing up, a little twisted.
         const h = r * (0.9 + (st.bud ? 0 : open * 0.6));
-        c.fillStyle = "rgba(" + IRIS + "," + (0.34 * a) + ")";
-        c.strokeStyle = "rgba(" + IRIS + "," + (0.7 * a) + ")";
+        c.fillStyle = rgba(IRIS, 0.34 * a);
+        c.strokeStyle = rgba(IRIS, 0.7 * a);
         c.lineWidth = 0.9;
         c.beginPath();
         c.moveTo(tx, ty);
-        c.quadraticCurveTo(tx - r * 0.34, ty - h * 0.5, tx + st.turn * 4, ty - h);
-        c.quadraticCurveTo(tx + r * 0.34, ty - h * 0.5, tx, ty);
+        c.quadraticCurveTo(tx - r * 0.34, ty - h * 0.5, tx + st.turn * 6, ty - h);
+        c.quadraticCurveTo(tx + r * 0.3, ty - h * 0.45, tx, ty);
         c.fill(); c.stroke();
+        c.strokeStyle = rgba(IRIS, 0.4 * a);
+        c.beginPath(); c.moveTo(tx + 0.5, ty - 2); c.quadraticCurveTo(tx + r * 0.12, ty - h * 0.5, tx + st.turn * 6, ty - h); c.stroke();
         return;
       }
-      // OPEN: three falls hanging down and out, the gold beard on each,
-      // and three standards cupped upright over them.
+      // OPEN: three falls hanging down and out, veined, the gold beard
+      // on each and a pale style arm over it; three standards cupped
+      // upright. Each its own length and angle.
       const o = (open - 0.35) / 0.65;
       const fx = tx, fy = ty - r * 0.35;
       c.lineWidth = 0.9;
-      c.fillStyle = "rgba(" + IRIS + "," + (0.3 * a) + ")";
-      c.strokeStyle = "rgba(" + IRIS + "," + (0.72 * a) + ")";
-      [-1, 0, 1].forEach((k) => petal(c, fx, fy, Math.PI / 2 + k * (0.55 + 0.45 * o) + st.turn, r * (k ? 1.35 : 1.05) * (0.5 + 0.5 * o), 0.5, k * 0.6));
-      c.fillStyle = "rgba(" + BEARD + "," + (0.6 * a * o) + ")";
-      [-1, 0, 1].forEach((k) => {
-        const ang = Math.PI / 2 + k * (0.55 + 0.45 * o) + st.turn;
-        for (let d = 0.2; d < 0.55; d += 0.12) c.fillRect(fx + Math.cos(ang) * r * d - 0.6, fy + Math.sin(ang) * r * d - 0.6, 1.2, 1.2);
+      st.falls.forEach((f) => {
+        const ang = Math.PI / 2 + f.k * (0.55 + 0.45 * o) + st.turn + f.ang;
+        const long = r * (f.k ? 1.35 : 1.05) * f.long * (0.5 + 0.5 * o);
+        c.fillStyle = rgba(IRIS, 0.3 * a);
+        c.strokeStyle = rgba(IRIS, 0.72 * a);
+        petal(c, fx, fy, ang, long, f.fat, f.wave);
+        // Veins, and the beard.
+        c.strokeStyle = rgba(IRIS, 0.42 * a * o);
+        c.lineWidth = 0.5;
+        [-0.16, 0, 0.16].forEach((v) => {
+          c.beginPath(); c.moveTo(fx + Math.cos(ang) * long * 0.2, fy + Math.sin(ang) * long * 0.2);
+          c.lineTo(fx + Math.cos(ang + v) * long * 0.62, fy + Math.sin(ang + v) * long * 0.62); c.stroke();
+        });
+        c.lineWidth = 0.9;
+        c.fillStyle = rgba(BEARD, 0.6 * a * o);
+        for (let d = 0.16; d < 0.5; d += 0.07) {
+          const j = Math.sin(d * 97 + f.ang * 40) * 0.8;
+          c.fillRect(fx + Math.cos(ang) * long * d - 0.6 + j, fy + Math.sin(ang) * long * d - 0.6 - j, 1.2, 1.2);
+        }
+        c.fillStyle = rgba("214, 206, 230", 0.4 * a * o);
+        c.strokeStyle = rgba(IRIS, 0.4 * a * o);
+        petal(c, fx, fy, ang, long * 0.5, 0.22, 0);
       });
-      c.fillStyle = "rgba(" + IRIS + "," + (0.2 * a) + ")";
-      c.strokeStyle = "rgba(" + IRIS + "," + (0.66 * a) + ")";
-      [-1, 0, 1].forEach((k) => petal(c, fx, fy, -Math.PI / 2 + k * 0.32 * o + st.turn, r * (k ? 1.05 : 1.25) * (0.6 + 0.4 * o), 0.3, -k * 0.4));
+      st.stds.forEach((f) => {
+        const ang = -Math.PI / 2 + f.k * 0.32 * o + st.turn + f.ang;
+        c.fillStyle = rgba(IRIS, 0.2 * a);
+        c.strokeStyle = rgba(IRIS, 0.66 * a);
+        petal(c, fx, fy, ang, r * (f.k ? 1.05 : 1.25) * f.long * (0.6 + 0.4 * o), f.fat, -0.5);
+      });
     }
 
     return {
@@ -809,9 +936,11 @@
           c.fillRect(x - 1, y - 1, 2, 2);
         });
 
-        // THE IRISES: leaves, then stems, then the flowers opening.
+        // THE IRISES: the ground, the leaves, then the stems, then the
+        // flowers opening.
         const since = age - IRIS_FROM;
         if (since > 0) clumps.forEach((cl) => {
+          ground(c, cl, ease(since / 700), a);
           cl.leaves.forEach((lf) => leaf(c, lf, ease((since - lf.delay) / 1500), age, a));
           cl.stems.forEach((st) => stem(c, st,
             ease((since - IRIS_STEMS_AFTER - st.delay) / 1500),
@@ -841,15 +970,34 @@
 
   function drip() {
     const x = (abstraitSide < 0 ? W * 0.86 : W * 0.14) + rand(-12, 12);
+    // THE BEAKER, at the foot of the window, where the puddle was: the
+    // owner's "I want it to fall into a beaker, once the beaker starts
+    // overflowing, let it drip from that too" — the same beaker the
+    // house's own page has at the foot of its drip.
+    const bw = Math.max(44, Math.min(72, W * 0.05)), bh = bw * 1.3, brx = bw / 2, bry = Math.max(2, bw * 0.1);
     const floor = H - Math.max(22, H * 0.045);
-    const drops = [];
-    let landed = 0, next = 500;
-    const ripples = [];
-    const splashes = [];
-    const g = (2 * (floor - 12)) / (DRIP_FALL * DRIP_FALL);
+    const top = floor - bh, inner = bh - 7, sx = x + brx + 6;
+    const spillMost = Math.max(12, Math.min(BEAKER_SPILL_MOST, (W - 12 - sx) / 1.3));
+    const g = (2 * (top - 12)) / (DRIP_FALL * DRIP_FALL);
+    const drops = [], ripples = [], splashes = [], spouts = [], rings = [], floorSplashes = [];
+    let landed = 0, spilled = 0, level = 0, spill = 0, next = 500;
+    const shape = (() => {
+      const waves = [[3, rand(0, 6.3), 0.16], [5, rand(0, 6.3), 0.1], [7, rand(0, 6.3), 0.06], [2, rand(0, 6.3), 0.12]];
+      return Array.from({ length: 48 }, (_, i) => {
+        const t = (i / 48) * Math.PI * 2;
+        return 1 + waves.reduce((sum, [k, ph, amp]) => sum + Math.sin(t * k + ph) * amp, 0);
+      });
+    })();
+    let last = 0;
     return {
       draw(c, age, a) {
-        const ink = (k) => "rgba(" + DRIP_INK + "," + (k * a) + ")";
+        const dt = Math.min(0.1, (age - last) / 1000);
+        last = age;
+        const wet = (k) => "rgba(" + DRIP_INK + "," + (k * a) + ")";
+        const glass = (k) => "rgba(" + BEAKER_GLASS + "," + (k * a) + ")";
+        const white = (k) => "rgba(255, 255, 255," + (k * a) + ")";
+        level += (Math.min(1, landed / BEAKER_FILL) - level) * Math.min(1, dt * 4);
+        const ly = floor - 3 - inner * level;
         // A drop is born at the top every so often: it gathers, then
         // lets go.
         if (age >= next) {
@@ -857,61 +1005,166 @@
           next = age + rand(DRIP_EVERY[0], DRIP_EVERY[1]);
         }
         // What clings along the top edge, always.
-        c.fillStyle = ink(0.4);
+        c.fillStyle = wet(0.4);
         c.beginPath(); c.ellipse(x, 0, 6, 3, 0, 0, Math.PI * 2); c.fill();
         c.fillRect(x - 0.6, 0, 1.2, 9);
         for (let i = drops.length - 1; i >= 0; i--) {
           const d = drops[i], t = age - d.born;
           if (t < d.hang) {
-            // Swelling where it hangs.
             const r = 1 + 2.6 * ease(t / d.hang);
-            c.fillStyle = ink(0.5);
+            c.fillStyle = wet(0.5);
             c.beginPath(); c.ellipse(x, 9 + r, r * 0.85, r * 1.1, 0, 0, Math.PI * 2); c.fill();
             continue;
           }
           const f = t - d.hang;
           const y = 12 + 0.5 * g * f * f;
-          if (y >= floor) {
+          if (y >= ly) {
             drops.splice(i, 1);
             landed++;
             ripples.push({ born: age });
-            for (let k = 0; k < 5; k++) splashes.push({ born: age, vx: rand(-0.06, 0.06), vy: -rand(0.05, 0.11), s: rand(0.8, 1.4) });
+            for (let k = 0; k < 4; k++) splashes.push({ born: age, vx: rand(-0.03, 0.03), vy: -rand(0.04, 0.09), s: rand(0.8, 1.3) });
+            if (landed > BEAKER_FILL) spouts.push({ born: age + rand(150, 350), hang: rand(350, 550) });
             continue;
           }
-          // Falling: a bead drawn out a little by its own speed, with a
-          // few specks trailing.
           const v = g * f;
-          c.fillStyle = ink(0.55);
+          c.fillStyle = wet(0.55);
           c.beginPath(); c.ellipse(x, y, 2.4, 3 + Math.min(4, v * 3), 0, 0, Math.PI * 2); c.fill();
-          c.fillStyle = ink(0.25);
+          c.fillStyle = wet(0.25);
           for (let k = 1; k < 5; k++) c.fillRect(x - 0.5, y - k * (4 + v * 6), 1, 1);
         }
-        // THE PUDDLE: nothing until the first drop, then larger with each,
-        // up to PUDDLE_MOST, eased as it spreads.
-        const want = PUDDLE_MOST * (1 - Math.exp(-landed / PUDDLE_GROW));
-        this.puddle = (this.puddle || 0) + (want - (this.puddle || 0)) * 0.06;
-        const rx = this.puddle, ry = Math.max(0.5, rx * 0.16);
-        if (rx > 0.5) {
-          c.fillStyle = ink(0.16);
-          c.beginPath(); c.ellipse(x, floor, rx, ry, 0, 0, Math.PI * 2); c.fill();
-          c.strokeStyle = ink(0.38);
+
+        // THE BENCH, one ruled line with a tick at each end.
+        const benchL = x - brx - 18, benchR = Math.min(W - 6, sx + spillMost * 1.4);
+        c.fillStyle = glass(0.3);
+        c.fillRect(benchL, floor + 0.5, benchR - benchL, 1);
+        c.fillRect(benchL, floor - 3, 1, 7);
+        c.fillRect(benchR - 1, floor - 3, 1, 7);
+        // THE SPILL by the spout: an uneven wet shape, larger with every
+        // drop that has come over.
+        spill += (spillMost * (1 - Math.exp(-spilled / BEAKER_SPILL_GROW)) - spill) * Math.min(1, dt * 3);
+        if (spill > 0.6) {
+          const cx = sx + spill * 0.12, cy = floor + 1;
+          c.beginPath();
+          shape.forEach((k, i) => {
+            const t = (i / shape.length) * Math.PI * 2;
+            const px = cx + Math.cos(t) * spill * k, py = cy + Math.sin(t) * spill * k * 0.22;
+            if (i) c.lineTo(px, py); else c.moveTo(px, py);
+          });
+          c.closePath();
+          c.fillStyle = wet(0.15); c.fill();
+          c.strokeStyle = wet(0.34); c.lineWidth = 1; c.stroke();
+          c.strokeStyle = white(0.55);
+          c.beginPath(); c.ellipse(cx - spill * 0.2, cy - spill * 0.05, spill * 0.35, spill * 0.06, 0, Math.PI * 1.1, Math.PI * 1.8); c.stroke();
+          for (let i = rings.length - 1; i >= 0; i--) {
+            const k = (age - rings[i].born) / 800;
+            if (k >= 1) { rings.splice(i, 1); continue; }
+            const r = 3 + k * Math.max(10, spill * 0.6);
+            c.strokeStyle = wet(0.36 * (1 - k));
+            c.beginPath(); c.ellipse(sx, cy, r, r * 0.22, 0, 0, Math.PI * 2); c.stroke();
+          }
+        }
+        // THE LIQUID, inside the glass.
+        if (level > 0.004) {
+          c.save();
+          c.beginPath();
+          c.moveTo(x - brx + 1, top);
+          c.lineTo(x - brx + 1, floor - 5);
+          c.quadraticCurveTo(x - brx + 1, floor - 1, x - brx + 6, floor - 1);
+          c.lineTo(x + brx - 6, floor - 1);
+          c.quadraticCurveTo(x + brx - 1, floor - 1, x + brx - 1, floor - 5);
+          c.lineTo(x + brx - 1, top);
+          c.closePath();
+          c.clip();
+          c.fillStyle = wet(0.2);
+          c.fillRect(x - brx, ly, bw, floor - ly + 2);
+          c.restore();
+          c.fillStyle = wet(0.24);
+          c.strokeStyle = wet(0.46);
           c.lineWidth = 1;
-          c.beginPath(); c.ellipse(x, floor, rx, ry, 0, 0, Math.PI * 2); c.stroke();
-          c.strokeStyle = ink(0.2);
-          c.beginPath(); c.ellipse(x - rx * 0.12, floor - ry * 0.2, rx * 0.55, ry * 0.45, 0, Math.PI * 1.1, Math.PI * 1.7); c.stroke();
+          c.beginPath(); c.ellipse(x, ly, brx - 1.5, bry * 0.85, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+          c.strokeStyle = white(0.6);
+          c.beginPath(); c.ellipse(x, ly, brx - 4, bry * 0.55, 0, Math.PI * 1.15, Math.PI * 1.7); c.stroke();
+          for (let i = ripples.length - 1; i >= 0; i--) {
+            const k = (age - ripples[i].born) / 700;
+            if (k >= 1) { ripples.splice(i, 1); continue; }
+            const r = 2 + k * (brx - 4);
+            c.strokeStyle = wet(0.4 * (1 - k));
+            c.beginPath(); c.ellipse(x, ly, r, r * (bry / brx) * 0.85, 0, 0, Math.PI * 2); c.stroke();
+          }
+          for (let i = splashes.length - 1; i >= 0; i--) {
+            const p = splashes[i], t = age - p.born;
+            if (t > 400) { splashes.splice(i, 1); continue; }
+            c.fillStyle = wet(0.45 * (1 - t / 400));
+            c.fillRect(x + p.vx * t, ly + p.vy * t + 0.00052 * t * t, p.s, p.s);
+          }
         }
-        for (let i = ripples.length - 1; i >= 0; i--) {
-          const q = (age - ripples[i].born) / 900;
-          if (q >= 1) { ripples.splice(i, 1); continue; }
-          const r = 4 + q * Math.max(18, rx * 0.8);
-          c.strokeStyle = ink(0.4 * (1 - q));
-          c.beginPath(); c.ellipse(x, floor, r, r * 0.16, 0, 0, Math.PI * 2); c.stroke();
+        // THE GLASS: rim, sides, base, lip, spout, graduations.
+        c.lineWidth = 1;
+        c.strokeStyle = glass(0.3);
+        c.beginPath(); c.ellipse(x, top, brx, bry, 0, Math.PI, Math.PI * 2); c.stroke();
+        c.strokeStyle = glass(0.62);
+        c.beginPath();
+        c.moveTo(x - brx, top);
+        c.lineTo(x - brx, floor - 5);
+        c.quadraticCurveTo(x - brx, floor, x - brx + 6, floor);
+        c.lineTo(x + brx - 6, floor);
+        c.quadraticCurveTo(x + brx, floor, x + brx, floor - 5);
+        c.lineTo(x + brx, top);
+        c.stroke();
+        c.beginPath(); c.ellipse(x, top, brx, bry, 0, 0, Math.PI); c.stroke();
+        c.strokeStyle = glass(0.4);
+        c.beginPath(); c.ellipse(x, top, brx + 1.6, bry + 1, 0, 0.1, Math.PI - 0.1); c.stroke();
+        c.strokeStyle = glass(0.62);
+        c.beginPath(); c.moveTo(x + brx - 1, top - 2); c.lineTo(sx, top - 4); c.lineTo(x + brx, top + 4); c.stroke();
+        c.strokeStyle = glass(0.16);
+        c.beginPath(); c.moveTo(x - brx + 3.5, top + 6); c.lineTo(x - brx + 3.5, floor - 8); c.stroke();
+        c.strokeStyle = glass(0.5);
+        c.fillStyle = glass(0.5);
+        c.font = Math.max(6, Math.round(bw * 0.1)) + "px 'IBM Plex Mono', monospace";
+        for (let i = 1; i <= 5; i++) {
+          const gy = floor - 4 - (inner - 6) * (i / 6);
+          const long = i % 2 === 0;
+          c.beginPath(); c.moveTo(x - brx + 5, gy); c.lineTo(x - brx + (long ? 13 : 9), gy); c.stroke();
+          if (long) c.fillText(String(i * 50), x - brx + 15, gy + 2.5);
         }
-        for (let i = splashes.length - 1; i >= 0; i--) {
-          const s = splashes[i], t = age - s.born;
-          if (t > 420) { splashes.splice(i, 1); continue; }
-          c.fillStyle = ink(0.45 * (1 - t / 420));
-          c.fillRect(x + s.vx * t, floor + s.vy * t + 0.0006 * t * t, s.s, s.s);
+        c.fillText("ml", x - brx + 5, top + bry + 9);
+        // OVERFLOWING: a wet run from the spout down the outside, and a bead
+        // gathering at the spout and dropping to the bench.
+        if (landed > BEAKER_FILL) {
+          c.strokeStyle = wet(0.42 * Math.min(1, (landed - BEAKER_FILL) / 2));
+          c.lineWidth = 1.4;
+          c.beginPath();
+          c.moveTo(sx - 1, top - 3);
+          c.quadraticCurveTo(x + brx + 3, top + 8, x + brx + 1.4, top + 18);
+          c.lineTo(x + brx + 1.4, floor - 6);
+          c.stroke();
+          c.lineWidth = 1;
+        }
+        for (let i = spouts.length - 1; i >= 0; i--) {
+          const d = spouts[i], t = age - d.born;
+          if (t < 0) continue;
+          if (t < d.hang) {
+            const r = 0.8 + 2 * ease(t / d.hang);
+            c.fillStyle = wet(0.5);
+            c.beginPath(); c.ellipse(sx, top - 3 + r, r * 0.85, r * 1.1, 0, 0, Math.PI * 2); c.fill();
+            continue;
+          }
+          const f = t - d.hang, y = top - 1 + 0.5 * 0.0022 * f * f;
+          if (y >= floor) {
+            spouts.splice(i, 1);
+            spilled++;
+            rings.push({ born: age });
+            for (let k = 0; k < 3; k++) floorSplashes.push({ born: age, vx: rand(-0.03, 0.03), vy: -rand(0.03, 0.07), s: rand(0.7, 1.2) });
+            continue;
+          }
+          c.fillStyle = wet(0.55);
+          c.beginPath(); c.ellipse(sx, y, 2, 2.8, 0, 0, Math.PI * 2); c.fill();
+        }
+        for (let i = floorSplashes.length - 1; i >= 0; i--) {
+          const p = floorSplashes[i], t = age - p.born;
+          if (t > 400) { floorSplashes.splice(i, 1); continue; }
+          c.fillStyle = wet(0.45 * (1 - t / 400));
+          c.fillRect(sx + p.vx * t, floor + p.vy * t + 0.00052 * t * t, p.s, p.s);
         }
       },
     };

@@ -659,3 +659,58 @@ Tested in `tests/houses.spec.js`:
 **Known issues.** Tombstone's stones are the owner's particulars-to-come. On Les Abstraits
 the puddle lies under the rank's reading in the bottom right corner of a wide window; it
 is kept at the very foot of the window so that the reading stays clear of it.
+
+## 2026-09-25, night — Les Abstraits' drip down the whole page, into a beaker
+
+> the dropping thing in des cendres should go all the way down, and should note the
+> scrolling. additionally, I want the puddle to be more realistic, not just a circle of
+> water. I want it to fall into a beaker, once the beaker starts overflowing, let it drip
+> from that too.
+
+"The dropping thing in des cendres" is read as Les Abstraits' drip — Des Cendres is one of
+the house's four, and the drip is the only thing on its page that drops. `abstraits.js`:
+
+- **The drip lives on the page now, not the window.** The bead gathers at the very top of the
+  **page**; a drop lets go, quickens (`DRIP_PULL`) to the speed a drop falls at
+  (`DRIP_MOST`, 820px a second) and falls **the whole length of the page**, past the writing
+  as it is read. Everything is placed in the page's own length (`pageH`, measured on load, on
+  resize, and whenever the body changes size — a part opening makes the page longer) and drawn
+  where the page has been scrolled to, so scrolling carries the drops with the words. **It
+  notes the scrolling**: a drop is drawn out by how fast it crosses the window — its own fall
+  less the page's scroll (`scrollV`) — so scrolling against it streaks it, and the trail of
+  specks flips to the other side when the page overtakes it. The armoire still lives on the
+  window, as it did.
+- **The puddle is a beaker.** At the page's own foot, in the right margin, a laboratory beaker
+  drawn in glass hairlines (`GLASS`): the back and front of its rim with a lip, straight sides
+  rounding at the base, a **pouring spout** on the side away from the writing, the glass's own
+  thickness a hair inside one wall, and **graduations** — ticks up the front, 100 and 200
+  marked, and *ml*. Every drop that reaches it fills it a little more (`FILL_DROPS`, ten, to
+  its brim), the liquid tinted with the drip's own violet-grey, its surface an ellipse seen a
+  little from above with a highlight for the meniscus, a ring spreading on it and a few
+  splashes where each drop lands.
+- **Full, it overflows.** Every drop after that comes over the spout: a wet run down the outside
+  of the glass, and **a bead gathering at the spout and dropping** to the bench beside it,
+  where **the spill** spreads — not a circle: an outline of several waves laid over one another
+  (`spillShape`, fixed for the page), with a light on it and a ring when each drop lands, larger
+  with every drop to `SPILL_MOST` (or what the window leaves on the spout's side).
+- **The bench.** The beaker and the spill stand on a short ruled line with a tick at each end,
+  `FOOT` (104px) above the page's foot — at the very foot the beaker stood under the rank's
+  "04 / 04" reading in the corner of a wide window. The drip's column moved in a little
+  (`dripX`, 58% of the margin from the window's edge) so the spill has room.
+- **With motion turned off** there are no drops; the bead stands at the top of the page and the
+  beaker at its foot, half full, and it is drawn again whenever the page is scrolled.
+- **Nothing on the Houses view is carried by a page**, so there the drip still falls the height
+  of the window — into the same beaker, which overflows the same way (see the motifs' report).
+  The canvas carries `data-drops` and `data-spilled` for the test to read.
+
+Tested in `tests/houses.spec.js`:
+
+- **`Les Abstraits has its armoire with iris on one side and a drip down the whole page into a
+  beaker on the other`** (it replaces the puddle's test) — the armoire and the iris's violet;
+  the bead at the very top of the page, and gone from the window once the page is scrolled
+  400px; nothing at the foot of the window while the page is at its top; at the page's foot a
+  beaker, the drops landing in it, and within about twenty seconds it has overflowed
+  (`data-spilled`) and filled.
+
+**Known issues.** The spill's width is capped by what the window leaves beside the spout; on a
+narrow desktop window it stays small.
