@@ -757,3 +757,13 @@ The clothes build up from the floor with the rest of it.
 Tested: the page's armoire test also reads the colours its specks are drawn in, and finds the
 coat's, the dress's and the shirt's.
 
+## 2026-09-25, last — Guitarist's dry down
+
+At the owner's word, the last paragraph of Guitarist's dry down (Qimu & Musicians) — *It is
+also very airy on the dry down. This would be a wonderful and unique summer scent.* — is
+replaced, in their words: *It eventually turns quite abrasive as all the notes merge together.
+The fig leaf is there, but it would not have been recognized had you not smelled it in the top
+and/or mid.* Tested in `tests/houses.spec.js`: `Guitarist's dry down ends on the fig leaf
+merging into the rest`. (The same round, Water Me gained a line — see [Tale
+Parfums](2026-09-23-tale-parfums.md).)
+

@@ -1280,6 +1280,20 @@ test("Des Cendres ends on its dry down, and Water Me has a Mid and a Dry Down", 
   await page.goto(TALE);
   const water = page.locator(".human-part", { hasText: "Water Me" }).first();
   expect(await water.locator(".human-stage").allTextContents()).toEqual(["Top", "Mid", "Dry Down"]);
-  await expect(water.locator(".human-text > p").last()).toHaveText(
+  // The dry down, and the line the owner added after it on 2026-09-25.
+  const paras = water.locator(".human-text > p");
+  const n = await paras.count();
+  await expect(paras.nth(n - 2)).toHaveText(
     "As it settles it starts smelling a little like a drowned plant; a flower dying because it was watered too much. It still resembles the middle quite well though.");
+  await expect(paras.nth(n - 1)).toHaveText("Or a chlorinated swimming pool.");
+});
+
+/* GUITARIST'S DRY DOWN ENDS where the owner changed it on 2026-09-25 — the
+   "airy ... summer scent" line replaced with the fig leaf merging away. */
+test("Guitarist's dry down ends on the fig leaf merging into the rest", async ({ page }) => {
+  await page.goto(QIMU);
+  const guitarist = page.locator(".human-part", { hasText: "Guitarist" }).first();
+  await expect(guitarist.locator(".human-text > p").last()).toHaveText(
+    "It eventually turns quite abrasive as all the notes merge together. The fig leaf is there, but it would not have been recognized had you not smelled it in the top and/or mid.");
+  await expect(guitarist).not.toContainText("summer scent");
 });

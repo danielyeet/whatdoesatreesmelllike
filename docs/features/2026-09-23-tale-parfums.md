@@ -196,3 +196,6 @@ like a drowned plant; a flower dying because it was watered too much. It still r
 the middle quite well though.* Rouse and Fleurt keep their combined stages. Tested in
 `tests/houses.spec.js`: `Des Cendres ends on its dry down, and Water Me has a Mid and a Dry
 Down`.
+
+**2026-09-25**: the owner added a line at the end of that dry down, as its own paragraph:
+*Or a chlorinated swimming pool.* The same test now reads the last two paragraphs.
