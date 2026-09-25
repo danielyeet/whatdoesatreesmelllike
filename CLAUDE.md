@@ -26,7 +26,9 @@ uncertain about what the round adds up to or about a stylistic detail, ask with 
 multiple-choice question tool — two to four options each, the recommended one first — and
 batch the questions. Never ask mid-way whether to carry on, to show something first, or to
 wait. At the end, ask **once** — including whether to push it all — and don't push before
-the answer. Keep commands that need approval few.
+the answer. The owner has given **full permission to execute and code whatever is judged
+right**: this is about not asking, never about doing fewer steps — test, screenshot and fix
+as fully as the work needs.
 
 ## Before merging or pushing
 

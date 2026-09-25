@@ -149,7 +149,15 @@ work before it is still verified in full (tests, screenshots) so that the
 answer can be a yes. Commit locally as you go if a hook asks; don't push
 until the owner says so.
 
-**Keep approvals few.** Every command that needs the owner's permission is
-an interruption. Batch shell commands into one call, use the file tools
-rather than the shell to read and edit, and never run a command only to
-wait or to poll — background work reports back when it finishes.
+**Full permission, not fewer steps.** Then, the same day:
+
+> Not with as few steps as possible; just dont ask me about everything. i
+> give you full permission to execute and code whatever you deem fit. only
+> ask me about the final thing, and stylistic ambiguities..
+
+So this rule is about **not asking**, never about doing less. Take every step
+the work needs — run what needs running, test, screenshot, look again, fix —
+without cutting any of it short to save a step, and without asking leave for
+any of it: the owner has given full permission to execute and code whatever
+is judged right. The only questions are the final one (the whole, and the
+push) and a stylistic detail the instruction genuinely leaves open.
