@@ -664,8 +664,8 @@ under it, its folded edge rounded at one end and the fold drawn along it. They a
 rest of the armoire is — hairlines over a flat tone — but **solid**, the paper first, so what is
 behind them is behind them, and they come in from the floor up once the door is drawn
 (`folded`, `garments`, `garment()`, `folded1()`). They stop short of the shelf's stacks
-(`hangLong`). The page's own armoire (`abstraits.js`) is untouched — it keeps its irises in the
-door; see Known issues.
+(`hangLong`). The owner then asked for **the page's own armoire** to have them too, which it does
+in its own specks — see [the newer houses](2026-09-21-the-newer-houses.md).
 
 ### ADAR: black holes
 
@@ -727,9 +727,6 @@ npm test -- tests/contact-sheet.spec.js
 
 ### Known issues / TODO
 
-- **The page's own armoire** (`abstraits.js`, on the Les Abstraits page) has no clothes: the
-  note did not say which armoire, and the owner has been working on the hover's. It is the
-  same few lines to add if they want it.
 - The frame rate under ADAR's wells was measured at 60 in the test browser, with three wells;
   a slower machine is the thing to watch.
 

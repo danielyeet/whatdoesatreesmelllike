@@ -565,11 +565,24 @@ test("Les Abstraits has its armoire with iris on one side and a drip down the wh
   test.setTimeout(150000);
   await page.addInitScript(() => {
     window.__iris = false;
+    window.__clothes = new Set();
     const P = CanvasRenderingContext2D.prototype;
     const d = Object.getOwnPropertyDescriptor(P, "strokeStyle");
     Object.defineProperty(P, "strokeStyle", {
       get() { return d.get.call(this); },
       set(v) { if (/^rgba\(112,\s*94,\s*156/.test(String(v))) window.__iris = true; d.set.call(this, v); },
+    });
+    // THE CLOTHES in it — a coat, a dress and a shirt — read off the
+    // colours its specks are drawn in.
+    const f = Object.getOwnPropertyDescriptor(P, "fillStyle");
+    const CLOTHES = { "118, 104, 92": "coat", "154, 132, 168": "dress", "140, 156, 180": "shirt" };
+    Object.defineProperty(P, "fillStyle", {
+      get() { return f.get.call(this); },
+      set(v) {
+        const m = /^rgba\((\d+, \d+, \d+),/.exec(String(v));
+        if (m && CLOTHES[m[1]]) window.__clothes.add(CLOTHES[m[1]]);
+        f.set.call(this, v);
+      },
     });
   });
   // ON A CLOCK OF THE TEST'S OWN: the drip is slow now ("make the
@@ -598,6 +611,8 @@ test("Les Abstraits has its armoire with iris on one side and a drip down the wh
   const atTop = await read();
   expect(atTop.armoire, "the armoire in the left margin").toBeGreaterThan(1500);
   expect(await page.evaluate(() => window.__iris), "with iris in it").toBe(true);
+  expect(await page.evaluate(() => [...window.__clothes].sort()), "and a coat, a dress and a shirt hung in it")
+    .toEqual(["coat", "dress", "shirt"]);
   expect(atTop.top, "the drop gathering at the very top of the page").toBeGreaterThan(10);
   expect(atTop.foot, "and nothing at the foot of the window while the page is at its top").toBeLessThan(20);
   // CARRIED WITH THE PAGE: scrolled, the top of the page — and the bead

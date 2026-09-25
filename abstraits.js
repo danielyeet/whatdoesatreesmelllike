@@ -25,6 +25,12 @@
 // and ORRIS POWDER, the iris's own butter, drifts out of the gap: a
 // speck at a time, violet-grey, slowing and rising and gone. It drifts
 // out a little faster while the pointer is near.
+// And since the night of 2026-09-25, CLOTHES — "put folded clothes and
+// hangers with something on it in the armoire", which the owner wanted
+// in this armoire as well as the hover's: a rail across the top of the
+// inside with a coat, a dress and a shirt on wire hangers, and a shelf
+// half way down with folded clothes stacked on it, all in specks as the
+// rest of it is. The irises stand under the shelf.
 //
 // THE DRIP is in the right margin — and since the night of 2026-09-25 it
 // runs THE WHOLE LENGTH OF THE PAGE, at the owner's "the dropping thing
@@ -106,7 +112,7 @@
   const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
   let width = 0, height = 0;
-  let wood = [], inside = [], irises = [], frame = null;
+  let wood = [], inside = [], clothes = [], irises = [], frame = null;
   let powder = [], drops = [];
   let nextDrop = 0.6, lastPuff = 0;
   let dripX = 0, pageH = 0, scrollV = 0, lastScroll = 0;
@@ -196,11 +202,13 @@
       const y = between(doorTop + 2, doorBot - 2);
       inside.push({ x: between(mid + 2, hinge), y, up: -y / tall, s: between(0.9, 1.4), tone: between(0.05, 0.14) });
     }
+    // Under the shelf now, the clothes being over it.
     irises = [0.3, 0.55, 0.78].map((k, i) => ({
       x: mid + 2 + (hinge - mid - 2) * k,
-      top: doorBot - (doorBot - doorTop) * [0.52, 0.66, 0.59][i],
+      top: doorBot - (doorBot - doorTop) * [0.28, 0.34, 0.31][i],
       turn: between(-0.2, 0.2),
     }));
+    dressUp(mid, hinge, doorTop, doorBot, tall, wide);
     frame = { left, baseY, lean, wide, tall, hinge, doorTop, doorBot, near: false };
     // THE DRIP, in the other margin, and the beaker under it at the foot
     // of the page — on a window without margins, a small one at the edge.
@@ -212,6 +220,113 @@
       beaker = window.Beaker ? window.Beaker.make({ width: bw, fill: FILL_DROPS, spillMost: SPILL_MOST, wet: DRIP }) : null;
       for (let i = 0; beaker && i < held; i++) beaker.land(0);
     }
+  }
+
+  // ============================================================
+  // THE CLOTHES in the open half: a rail and three hangers, a shelf and
+  // folded clothes on it. Every speck carries its own colour (`c`).
+  // ============================================================
+  const COAT = "118, 104, 92", DRESS = "154, 132, 168", SHIRT = "140, 156, 180";
+  const FOLDS = ["206, 196, 178", "150, 136, 176", "118, 128, 142", "176, 150, 120", "104, 112, 96", "168, 120, 112"];
+  function dressUp(mid, hinge, doorTop, doorBot, tall, wide) {
+    clothes = [];
+    const line = (pts, c, a, gap) => {
+      const out = [];
+      along(pts, gap || 1.7, out, tall);
+      out.forEach((p) => { p.c = c; p.tone = a * (0.8 + random() * 0.4); clothes.push(p); });
+    };
+    /** Specks scattered through a closed outline, thinner than its edge. */
+    const fillIn = (pts, c, a, step) => {
+      let l = Infinity, r = -Infinity, t = Infinity, b = -Infinity;
+      pts.forEach(([x, y]) => { l = Math.min(l, x); r = Math.max(r, x); t = Math.min(t, y); b = Math.max(b, y); });
+      const inPoly = (x, y) => {
+        let odd = false;
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+          const [xi, yi] = pts[i], [xj, yj] = pts[j];
+          if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) odd = !odd;
+        }
+        return odd;
+      };
+      for (let y = t; y < b; y += step) for (let x = l; x < r; x += step) {
+        const px = x + between(-0.8, 0.8), py = y + between(-0.8, 0.8);
+        if (random() < 0.25 || !inPoly(px, py)) continue;
+        clothes.push({ x: px, y: py, up: -py / tall, s: between(0.8, 1.4), tone: a * (0.6 + random() * 0.6), c });
+      }
+    };
+    const qb = (a0, a1, a2, n) => Array.from({ length: n + 1 }, (_, i) => {
+      const t = i / n, u = 1 - t;
+      return [u * u * a0[0] + 2 * u * t * a1[0] + t * t * a2[0], u * u * a0[1] + 2 * u * t * a1[1] + t * t * a2[1]];
+    });
+    const inL = mid + 6, inR = hinge - 4, room = inR - inL, gs = Math.max(0.5, room / 84);
+    const railY = doorTop + 12;
+    const shelfY = doorTop + (doorBot - doorTop) * 0.6;
+    // The rail, on a bracket at either end, and the shelf with its edge.
+    line([[inL - 3, railY], [inR + 3, railY]], WALNUT, 0.7, 1.4);
+    line([[inL - 3, railY - 5], [inL - 3, railY + 3]], WALNUT, 0.6, 1.4);
+    line([[inR + 3, railY - 5], [inR + 3, railY + 3]], WALNUT, 0.6, 1.4);
+    line([[mid + 2, shelfY], [hinge, shelfY]], WALNUT, 0.7, 1.4);
+    line([[mid + 2, shelfY + 4], [hinge, shelfY + 4]], WALNUT, 0.45, 1.8);
+    const hang = shelfY - railY - 11 * gs - 32;
+    const sw = 15 * gs, top = railY + 11 * gs;
+    const garment = (hx, kind, L) => {
+      let body;
+      if (kind === "shirt") {
+        body = [[hx - 4 * gs, railY + 6 * gs], [hx - sw, top], [hx - sw - 3 * gs, top + L * 0.6], [hx - sw + 3 * gs, top + L * 0.62],
+          [hx - sw + 4 * gs, top + L * 0.22], ...qb([hx - sw + 4 * gs, top + L * 0.3], [hx - sw + 3 * gs, top + L * 0.7], [hx - sw + 4 * gs, top + L], 4),
+          ...qb([hx - sw + 4 * gs, top + L], [hx, top + L + 6 * gs], [hx + sw - 4 * gs, top + L], 5),
+          ...qb([hx + sw - 4 * gs, top + L], [hx + sw - 3 * gs, top + L * 0.7], [hx + sw - 4 * gs, top + L * 0.3], 4),
+          [hx + sw - 4 * gs, top + L * 0.22], [hx + sw - 3 * gs, top + L * 0.62], [hx + sw + 3 * gs, top + L * 0.6], [hx + sw, top],
+          [hx + 4 * gs, railY + 6 * gs], [hx, railY + 15 * gs], [hx - 4 * gs, railY + 6 * gs]];
+        fillIn(body, SHIRT, 0.3, 2.6);
+        line(body, SHIRT, 0.75);
+        line([[hx, railY + 15 * gs], [hx, top + L + 4 * gs]], COAT, 0.35, 2.4);
+        for (let d = 0.12; d < 0.95; d += 0.2) clothes.push({ x: hx + 1.6 * gs, y: top + L * d, up: -(top + L * d) / tall, s: 1.5, tone: 0.6, c: COAT });
+      } else if (kind === "dress") {
+        const waist = top + L * 0.34, hemW = sw * 1.45;
+        body = [[hx - 5 * gs, railY + 7 * gs], [hx - sw * 0.7, top], ...qb([hx - sw * 0.7, top], [hx - sw * 0.5, top + L * 0.2], [hx - sw * 0.55, waist], 4),
+          ...qb([hx - sw * 0.55, waist], [hx - hemW * 0.8, top + L * 0.7], [hx - hemW, top + L], 5),
+          ...qb([hx - hemW, top + L], [hx, top + L + 5 * gs], [hx + hemW, top + L], 6),
+          ...qb([hx + hemW, top + L], [hx + hemW * 0.8, top + L * 0.7], [hx + sw * 0.55, waist], 5),
+          ...qb([hx + sw * 0.55, waist], [hx + sw * 0.5, top + L * 0.2], [hx + sw * 0.7, top], 4),
+          [hx + 5 * gs, railY + 7 * gs], ...qb([hx + 5 * gs, railY + 7 * gs], [hx, railY + 18 * gs], [hx - 5 * gs, railY + 7 * gs], 4)];
+        fillIn(body, DRESS, 0.34, 2.6);
+        line(body, DRESS, 0.8);
+        line(qb([hx - sw * 0.55, waist], [hx, waist + 2.5 * gs], [hx + sw * 0.55, waist], 5), DRESS, 0.6);
+        [-0.45, 0, 0.45].forEach((f) => line(qb([hx + f * sw * 0.9, waist + 2 * gs], [hx + f * sw * 1.3, top + L * 0.7], [hx + f * hemW * 1.2, top + L], 5), DRESS, 0.45, 2.4));
+      } else {
+        const lap = top + L * 0.3, belt = top + L * 0.4;
+        body = [[hx - 4 * gs, railY + 6 * gs], [hx - sw - 2 * gs, top], [hx - sw - 4 * gs, top + L * 0.58], [hx - sw + 2 * gs, top + L * 0.6],
+          [hx - sw + 3 * gs, top + L * 0.26], [hx - sw + 2 * gs, top + L], [hx + sw - 2 * gs, top + L], [hx + sw - 3 * gs, top + L * 0.26],
+          [hx + sw - 2 * gs, top + L * 0.6], [hx + sw + 4 * gs, top + L * 0.58], [hx + sw + 2 * gs, top], [hx + 4 * gs, railY + 6 * gs]];
+        fillIn(body, COAT, 0.34, 2.6);
+        line(body.concat([body[0]]), COAT, 0.8);
+        line([[hx - 4 * gs, railY + 6 * gs], [hx - 8 * gs, top + 4 * gs], [hx - gs, lap], [hx + 8 * gs, top + 4 * gs], [hx + 4 * gs, railY + 6 * gs]], COAT, 0.6);
+        line([[hx + gs, lap], [hx + gs, top + L]], COAT, 0.5, 2.2);
+        line([[hx - sw + 2.4 * gs, belt], [hx + sw - 2.4 * gs, belt]], COAT, 0.6, 1.6);
+      }
+      // The hanger over it, and its hook over the rail.
+      const hw = sw * 0.92;
+      line([[hx - hw, railY + 12 * gs], [hx, railY + 4 * gs], [hx + hw, railY + 12 * gs], [hx - hw, railY + 12 * gs]], WALNUT, 0.85, 1.3);
+      line([[hx, railY + 4 * gs], [hx, railY - 2]].concat(arc(hx + 2.4, railY - 2, 2.4, Math.PI, Math.PI * 2.1, 6)), WALNUT, 0.85, 1.1);
+    };
+    garment(inL + room * 0.24, "coat", hang);
+    garment(inL + room * 0.76, "dress", hang * 0.88);
+    garment(inL + room * 0.5, "shirt", hang * 0.56);
+    // Folded clothes on the shelf, in two stacks, each fold its own.
+    const stackW = Math.min(40, room * 0.42);
+    [[inL + 1, 3 + Math.floor(random() * 2)], [inR - stackW * 0.92 - 1, 2 + Math.floor(random() * 2)]].forEach(([x0, n], si) => {
+      let y = shelfY + 2;
+      for (let i = 0; i < n; i++) {
+        const h = between(5, 7.5) * Math.max(0.7, gs), w = stackW * (si ? 0.92 : 1) * between(0.86, 1), off = between(-2, 2);
+        const L = x0 + off, R = L + w, T = y - h, B = y, open = random() < 0.5;
+        const c = FOLDS[Math.floor(random() * FOLDS.length)];
+        const rim = open ? [[R, T], [L + 3, T], ...arc(L + 3, (T + B) / 2, h / 2, -Math.PI / 2, -Math.PI * 1.5, 6), [L + 3, B], [R, B], [R, T]]
+          : [[L, T], [R - 3, T], ...arc(R - 3, (T + B) / 2, h / 2, -Math.PI / 2, Math.PI / 2, 6), [R - 3, B], [L, B], [L, T]];
+        fillIn(rim, c, 0.4, 1.9);
+        line(rim, c, 0.8, 1.4);
+        y = T;
+      }
+    });
   }
 
   const place = (x, y) => [frame.left + x + y * frame.lean, frame.baseY + y];
@@ -272,10 +387,10 @@
 
     // THE ARMOIRE, built up from the floor.
     const built = REDUCE_MOTION ? 1 : ease(clock / BUILD);
-    [wood, inside].forEach((list, which) => list.forEach((p) => {
+    [wood, inside, clothes].forEach((list, which) => list.forEach((p) => {
       if (p.up > built * 1.05) return;
       const [x, y] = place(p.x, p.y);
-      fill(which ? DARK : WALNUT, p.tone, x);
+      fill(which === 2 ? p.c : which ? DARK : WALNUT, p.tone, x);
       ink.fillRect(x, y, p.s, p.s);
     }));
     const bloom = REDUCE_MOTION ? 1 : ease((clock - BUILD * 0.85) / BLOOM);

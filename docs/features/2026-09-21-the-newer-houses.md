@@ -740,3 +740,20 @@ minute and more the slower beaker takes to fill is run through rather than waite
 and a half seconds at the top, then eighty at the foot, after which the drops have landed, the
 beaker has filled and it has spilled.
 
+### Clothes in the page's armoire too
+
+Asked for the hover's armoire (*"put folded clothes and hangers with something on it in the
+armoire"*) and then, asked which, for **both**. On the page the armoire is drawn in specks, so the
+clothes are too (`dressUp()`, a third list `clothes` beside `wood` and `inside`, every speck
+carrying its own colour): **a rail** across the top of the open half on a bracket at either end,
+and on it **a coat** (lapels, its front edge, a belt), **a dress** (a waist seam and pleats) and **a
+shirt** in a soft slate blue (its placket and buttons — white disappeared on the iris paper), each
+on a wire hanger with its hook over the rail, their outlines in specks and their cloth in thinner
+specks inside; **a shelf** six tenths of the way down with **folded clothes** stacked on it in two
+piles, each fold its own width and colour with its folded edge rounded. **The irises stay**, under
+the shelf now (their flowers lower, `top` at 28–34% of the door's height where they were 52–66%).
+The clothes build up from the floor with the rest of it.
+
+Tested: the page's armoire test also reads the colours its specks are drawn in, and finds the
+coat's, the dress's and the shirt's.
+
