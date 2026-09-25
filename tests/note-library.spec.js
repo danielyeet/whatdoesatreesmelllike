@@ -4,7 +4,7 @@
 // Every note named in a fragrance on the site, filed by accord (the
 // page's word; the markup still says shelf), each with a line on what
 // it is. The page's markup is the catalogue; the script stands the
-// records up as folders. What these hold:
+// records up as books, drawn in specks. What these hold:
 //
 //   - every note the site uses HAS a record (the owner asked for "all
 //     the notes that I have used so far"), and none is shelved twice;
@@ -191,27 +191,6 @@ test("a card lists the individual fragrances first, then the houses, each house 
   expect(order[housesAt + 1].startsWith("frag:"), "a house is named before its fragrances").toBe(false);
 });
 
-/* THE BOOKS ARE DIGITAL: each carries a data bar at its head, filled by
-   how much it is used, and a barcode of its own over its call number. */
-test("every book carries a data bar and a barcode of its own", async ({ page }) => {
-  await arrive(page);
-  const out = await page.evaluate(() => {
-    const books = [...document.querySelectorAll(".lib-record")];
-    // The pattern of bars and gaps, without the colour, which differs
-    // from book to book anyway.
-    const codes = new Set(books.map((b) => b.querySelector(".lib-code").style.background
-      .replace(/(hsla?|rgba?)\([^)]*\)/g, "")));
-    const fill = (id) => parseFloat(document.getElementById(id).style.getPropertyValue("--fill"));
-    return {
-      all: books.every((b) => b.querySelector(".lib-bands") && b.querySelector(".lib-code")),
-      codes: codes.size, books: books.length,
-      often: fill("note-bergamot"), once: fill("note-holy-bread"),
-    };
-  });
-  expect(out.all).toBe(true);
-  expect(out.codes, "barcodes are the books' own").toBeGreaterThan(out.books * 0.9);
-  expect(out.often).toBeGreaterThan(out.once);
-});
 
 /* EVERYTHING ON THE CARD IS A DROPDOWN: "I want you to be able to do a
    dropdown list of houses, then of pineward and then only see the
@@ -255,7 +234,7 @@ test("the card's lists are dropdowns: houses, then a house, then its fragrances"
    the word shelves with accords. removes names as written. If you want
    give me other statistics". So the readout counts records, accords
    and fragrances, and names the note the site uses most — which is
-   worked out, so it is checked against the folders themselves — and
+   worked out, so it is checked against the books themselves — and
    the word "shelf" is nowhere a reader sees it: not in the readout, not
    on the index's labels, not on the card. */
 test("the page says accords rather than shelves, and no longer counts names as written", async ({ page }) => {
@@ -282,81 +261,103 @@ test("the page says accords rather than shelves, and no longer counts names as w
   await expect(page.locator(".lib-card-shelf")).toHaveText(/^Accord WOO/);
 });
 
-/* THE FOLDERS ARE DIGITAL FILES: "make the files still more digital" —
-   from an owner who had found the glowing version "too annoyingly
-   neony", so none of this glows or takes a colour. Every folder carries
-   a pixel glyph of its own (read as the set of pixels it lights), its
-   meter is segmented, and its name decodes itself under the hand — drawn
-   OVER the name, so the name a reader or a search reads never changes. */
-test("every folder is a digital file: a pixel glyph of its own, a segmented meter, a name that decodes", async ({ page }) => {
-  await arrive(page);
-  const out = await page.evaluate(() => {
-    const folders = [...document.querySelectorAll(".lib-record")];
-    const glyphs = folders.map((f) => f.querySelector(".lib-glyph"));
-    return {
-      folders: folders.length,
-      all: glyphs.every(Boolean),
-      own: new Set(glyphs.filter(Boolean).map((g) => g.dataset.cells)).size,
-      sized: glyphs.every((g) => g && g.getBoundingClientRect().width === 3),
-      masked: getComputedStyle(document.querySelector(".lib-bands")).maskImage ||
-        getComputedStyle(document.querySelector(".lib-bands")).webkitMaskImage,
-    };
-  });
-  expect(out.all, "every folder has a glyph").toBe(true);
-  expect(out.own, "and they are the folders' own").toBeGreaterThan(out.folders * 0.8);
-  expect(out.masked, "the meter is segmented").toMatch(/repeating-linear-gradient/);
 
-  const folder = page.locator("#note-vetiver");
-  await folder.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(900);
-  const b = await folder.boundingBox();
-  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
-  const mid = await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => {
-    const el = document.getElementById("note-vetiver");
-    const name = el.querySelector(".lib-name");
-    done({ decoding: el.classList.contains("is-decoding"), code: name.dataset.code, text: name.textContent });
-  }))));
-  expect(mid.decoding, "the name is decoding").toBe(true);
-  expect(mid.code, "stray characters over it").not.toBe("VETIVER");
-  expect(mid.text, "and the name itself untouched").toBe("Vetiver");
-  await expect(folder).not.toHaveClass(/is-decoding/, { timeout: 2000 });
-  expect(await folder.locator(".lib-name").textContent()).toBe("Vetiver");
+
+/* THE BOOKS ARE MADE OF SPECKS, IN THEIR ACCORDS' CLOTH. The owner, of
+   the "digital" folders: "the logos on the books I feel are
+   unneccessary ... make it feel less 3-bit ... if you can somehow make
+   them out of particles but actually look like books, with appropriate
+   colours". Read off the page: no glyph, meter, barcode, tab or
+   decoding left anywhere; every book near the window carries a spine
+   drawn on its own canvas; the spine is ink rather than a flat fill
+   (many different colours in it — specks, not a block); and the books
+   of different accords are bound in different colours. */
+test("the books are drawn in specks, in their accords' colours, and carry nothing pixelated", async ({ page }) => {
+  await arrive(page);
+  await page.mouse.move(700, 500);
+  // Down to where two accords stand in the window at once.
+  await page.evaluate(() => window.scrollTo(0, document.querySelectorAll(".lib-shelf")[1].getBoundingClientRect().top + scrollY - 300));
+  await page.waitForTimeout(1200);
+  const out = await page.evaluate(() => {
+    const books = [...document.querySelectorAll(".lib-record")];
+    const gone = [".lib-glyph", ".lib-bands", ".lib-code", ".lib-folder-tab", ".lib-scan", ".is-decoding"]
+      .filter((sel) => document.querySelector(sel));
+    // The books near the top of the page have been drawn.
+    const near = books.filter((b) => { const t = b.getBoundingClientRect().top; return t > -250 && t < innerHeight + 250; });
+    const read = (b) => {
+      const c = b.querySelector("canvas.lib-spine");
+      if (!c || c.width < 4) return null;
+      const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+      let lit = 0, r = 0, g = 0, bl = 0;
+      const shades = new Set();
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 40) continue;
+        lit++; r += d[i]; g += d[i + 1]; bl += d[i + 2];
+        shades.add((d[i] >> 3) + "," + (d[i + 1] >> 3) + "," + (d[i + 2] >> 3));
+      }
+      return { lit: lit / (d.length / 4), shades: shades.size, mean: [r / lit, g / lit, bl / lit].map(Math.round) };
+    };
+    const seen = near.map((b) => ({ shelf: b.closest(".lib-shelf").dataset.shelf, spine: read(b) }));
+    const byShelf = {};
+    seen.forEach((s) => { if (s.spine) (byShelf[s.shelf] = byShelf[s.shelf] || []).push(s.spine.mean); });
+    const colours = Object.fromEntries(Object.entries(byShelf).map(([k, list]) =>
+      [k, [0, 1, 2].map((i) => Math.round(list.reduce((a, m) => a + m[i], 0) / list.length))]));
+    return { gone, near: near.length, drawn: seen.filter((s) => s.spine && s.spine.lit > 0.5).length,
+      speckled: seen.filter((s) => s.spine && s.spine.shades > 40).length, colours };
+  });
+  expect(out.gone, "nothing of the digital folders is left").toEqual([]);
+  expect(out.near, "books near the window").toBeGreaterThan(10);
+  expect(out.drawn, "every one of them has its spine drawn").toBe(out.near);
+  expect(out.speckled, "in specks of many shades, not a flat fill").toBe(out.near);
+  const cols = Object.values(out.colours);
+  expect(cols.length, `accords on the window: ${JSON.stringify(out.colours)}`).toBeGreaterThan(1);
+  const apart = Math.max(...cols.map((a) => Math.max(...cols.map((b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])))));
+  expect(apart, "each accord bound in its own colour").toBeGreaterThan(40);
 });
 
-/* THE FOLDERS ARE QUIET, AND ONLY THEIR TABS ARE COLOURED. The owner:
-   the books were "too bright, and too annoyingly neony ... make them
-   folders ... make it so that the entire folder isnt coloured but a
-   part of it". Read off every record as drawn: the folder itself is a
-   near-grey with no glow on it or on its lettering, and its tab carries
-   its shelf's colour — a different colour on different shelves. */
-test("the records are quiet folders, coloured only on their tabs", async ({ page }) => {
+/* THE CARD AND THE SLIP ARE DRAWN AS THE REST OF THE SITE IS. "The popup
+   windows ... feel too futuristic. fix that, make it like the rest of
+   the site: themed with particles and geometry." Read off the card as
+   drawn: no blur behind it, no glow inside it, no coloured bar along
+   its top — and at its head the mark, a canvas with a ring of specks on
+   it; the slip carries no coloured border either. */
+test("the card is hairlines and specks rather than glass", async ({ page }) => {
+  await arrive(page);
+  await page.locator("#note-cedarwood").click();
+  const card = page.locator(".lib-card");
+  await expect(card).toBeVisible();
+  await page.waitForTimeout(700);
+  const out = await card.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    const mark = el.querySelector("canvas.lib-card-mark");
+    let ink = 0;
+    if (mark && mark.width) {
+      const d = mark.getContext("2d").getImageData(0, 0, mark.width, mark.height).data;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 30) ink++;
+    }
+    return { blur: cs.backdropFilter || cs.webkitBackdropFilter || "none", shadow: cs.boxShadow,
+      top: cs.borderTopWidth, ink, glow: getComputedStyle(el.querySelector(".lib-card-call")).textShadow };
+  });
+  expect(out.blur, "no glass blur behind it").toBe("none");
+  expect(out.shadow, "no glow inside it").not.toMatch(/inset/);
+  expect(parseFloat(out.top), "no lit bar along its top").toBeLessThanOrEqual(1);
+  expect(out.glow, "and its call number does not glow").toBe("none");
+  expect(out.ink, "the mark at its head is drawn").toBeGreaterThan(80);
+});
+
+/* MORE AIR: "the library feels crowded, I want you to stylistically make
+   it more breathable". The rows of a shelf stand well apart and the
+   books a little apart from each other. */
+test("the shelves breathe", async ({ page }) => {
   await arrive(page);
   const out = await page.evaluate(() => {
-    // How coloured a colour is: the spread between its channels.
-    const chroma = (css) => {
-      const all = (css.match(/rgba?\([^)]*\)/g) || []).map((c) => c.match(/[\d.]+/g).slice(0, 3).map(Number));
-      return Math.max(0, ...all.map(([r, g, b]) => Math.max(r, g, b) - Math.min(r, g, b)));
-    };
-    const folders = [...document.querySelectorAll(".lib-record")];
-    const tabs = new Set();
-    let loud = 0, glowing = 0, bare = 0;
-    folders.forEach((el) => {
-      const cs = getComputedStyle(el);
-      if (chroma(cs.backgroundImage + cs.backgroundColor) > 24) loud++;
-      if (/rgba?\([^)]*\)[^,]*\d+px \d+px \d+px/.test(cs.boxShadow) && chroma(cs.boxShadow) > 24) glowing++;
-      if (getComputedStyle(el.querySelector(".lib-name")).textShadow !== "none") glowing++;
-      const tab = el.querySelector(".lib-folder-tab");
-      if (!tab) { bare++; return; }
-      const colour = getComputedStyle(tab).backgroundColor;
-      if (chroma(colour) < 24) bare++;
-      tabs.add(colour);
-    });
-    return { folders: folders.length, loud, glowing, bare, tabs: tabs.size };
+    const cs = getComputedStyle(document.querySelector(".lib-records"));
+    const shelf = getComputedStyle(document.querySelector(".lib-shelf"));
+    return { row: parseFloat(cs.rowGap), col: parseFloat(cs.columnGap), top: parseFloat(shelf.paddingTop) };
   });
-  expect(out.loud, "folders drawn in colour").toBe(0);
-  expect(out.glowing, "folders or names glowing in colour").toBe(0);
-  expect(out.bare, "folders without a coloured tab").toBe(0);
-  expect(out.tabs, "the tabs differ from shelf to shelf").toBeGreaterThan(10);
+  expect(out.row, "between the rows of a shelf").toBeGreaterThanOrEqual(48);
+  expect(out.col, "between one book and the next").toBeGreaterThanOrEqual(5);
+  expect(out.top, "and above every accord").toBeGreaterThanOrEqual(56);
 });
 
 /* THE LAMP RUNS A BEAT BEHIND THE HAND, like the cursor's square: "make

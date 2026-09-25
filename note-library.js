@@ -8,17 +8,20 @@
 // a FOLDER on its shelf and puts a catalogue terminal in front of the
 // stacks:
 //
-//   THE FOLDERS     every folder's thickness is how many fragrances on
+//   THE BOOKS       every book's thickness is how many fragrances on
 //                   the site use that note, and its height is its own
 //                   (seeded, so the stacks stand the same way every
-//                   visit). Its name runs down it and its CALL NUMBER is
-//                   at the foot — the accord's code and its place in it,
-//                   counted alphabetically. They are DIGITAL FILES: a
-//                   pixel glyph of their own at the head, a segmented
-//                   meter of how much they are used, a barcode, a dot
-//                   screen for a face — and a name that decodes itself
-//                   under the hand. All of it in grey; the one colour on
-//                   a folder is its tab.
+//                   visit). Its name runs down its spine and its CALL
+//                   NUMBER is at the foot — the accord's code and its
+//                   place in it, counted alphabetically. The spine is
+//                   DRAWN IN SPECKS on a small canvas of its own, in the
+//                   cloth its accord is bound in (`CLOTH`): rounded by
+//                   its light, with raised bands at head and foot and,
+//                   on some, a gilt rule. They were folders — "digital
+//                   files", with a pixel glyph, a segmented meter and a
+//                   barcode — until the owner found the page crowded and
+//                   "3-bit" and asked for books made of particles "that
+//                   actually look like books, with appropriate colours".
 //   THE TERMINAL    one field over the whole catalogue. Books that
 //                   answer light up and everything else goes dim; a
 //                   shelf with nothing on it folds away. It reads names
@@ -30,10 +33,15 @@
 //                   catalogue card beside the stacks: the call number,
 //                   the explanation, the other spellings, and every
 //                   fragrance on the site that uses it, linked to where
-//                   it stands in its house.
-//   THE ROOM        a lamp that follows the hand over the stacks, dust
-//                   in the air, and now and then a scan passing down
-//                   the window.
+//                   it stands in its house. Drawn as the rest of the
+//                   site is — hairlines, corner marks, and at its head
+//                   THE MARK: a ring of specks, one for every fragrance
+//                   that uses the note, joined up and turning slowly in
+//                   a cloud of its accord's dust. It was a glowing glass
+//                   panel, which the owner found "too futuristic".
+//   THE ROOM        a lamp that follows the hand over the stacks, and
+//                   dust in the air. (The scan that passed down the
+//                   window went with the glass.)
 //
 // WHICH FRAGRANCES USE A NOTE comes from notes-data.js, read here each
 // time the page opens. A fragrance's NAME is read off its own house's
@@ -88,8 +96,21 @@
   const TALL_MIN = 140;    // px
   const TALL_MAX = 204;    // and every row of the shelf is --row (214px) high
   const TALL_PER_LETTER = 7.4; // the name has to fit down the spine
-  const TALL_SPARE = 90;   // the meter and the glyph at the head, the barcode and label at the foot
-  const FULL = 40;         // fragrances using a note for its data bar to be full   // the bands at the head and the label at the foot
+  const TALL_SPARE = 74;   // the band at the head, and the band and call number at the foot
+
+  // THE CLOTH each accord's books are bound in: hue, saturation and
+  // lightness, muted as old cloth and leather are — citrus an ochre,
+  // the herbs a sage, the flowers a faded rose, the woods a walnut,
+  // the airs a slate blue. Each book is a shade off its neighbours.
+  const CLOTH = {
+    CIT: [44, 44, 42], ARO: [112, 17, 37], GRN: [96, 28, 31], FLO: [344, 30, 40], FRU: [6, 40, 37],
+    SPI: [20, 46, 36], GOU: [32, 40, 41], BRW: [24, 32, 30], WOO: [28, 34, 32], CON: [150, 24, 28],
+    RES: [38, 52, 39], ANI: [10, 32, 28], EAR: [70, 22, 34], AIR: [205, 26, 43], SMK: [215, 12, 38],
+    IMP: [268, 22, 41], RET: [0, 0, 38],
+  };
+  const GILT = [42, 56, 62];
+  const SPINE_STEP = 1.8;  // px between one speck of cloth and the next
+  const SPINE_RATIO = Math.min(window.devicePixelRatio || 1, 1.5);
 
   // ============================================================
   // WHAT THE SITE USES — every note in notes-data.js, and which
@@ -217,78 +238,13 @@
     label.lastChild.textContent = r.call.slice(4);
     el.appendChild(label);
 
-    // The tab, the one coloured part of the folder, at one of three
-    // places along its top edge in turn.
-    const tab = document.createElement("span");
-    tab.className = "lib-folder-tab";
-    tab.setAttribute("aria-hidden", "true");
-    el.style.setProperty("--tab-k", String([0, 1, 0.5][bookNo % 3]));
-    el.appendChild(tab);
-
-    // The data bar at the head: how much of the site uses the note, on
-    // a root scale so a note used once still shows and the most-used
-    // fill the bar.
-    const bands = document.createElement("span");
-    bands.className = "lib-bands";
-    bands.setAttribute("aria-hidden", "true");
-    el.style.setProperty("--fill", Math.round(100 * Math.min(1, Math.sqrt(r.keys.size / FULL))) + "%");
-    el.appendChild(bands);
-
-    // THE GLYPH: a five-by-five square of pixels drawn off the name and
-    // mirrored down its middle, as a file's icon is — the folder's own,
-    // the same every visit, and in grey. Each lit pixel is a shadow of a
-    // three-pixel square, so the whole glyph is one element.
-    const glyph = document.createElement("span");
-    glyph.className = "lib-glyph";
-    glyph.setAttribute("aria-hidden", "true");
-    let gseed = Math.floor(hash(r.name + "glyph") * 4294967295) || 7;
-    const gnext = () => {
-      gseed ^= gseed << 13; gseed >>>= 0;
-      gseed ^= gseed >>> 17;
-      gseed ^= gseed << 5; gseed >>>= 0;
-      return gseed / 4294967296;
-    };
-    const cells = [];
-    for (let row = 0; row < 5; row++) {
-      for (let col = 0; col < 3; col++) {
-        if (gnext() < 0.5) continue;
-        cells.push([col, row]);
-        if (col < 2) cells.push([4 - col, row]);
-      }
-    }
-    if (cells.length < 4) cells.push([2, 1], [2, 2], [2, 3], [1, 2], [3, 2]);
-    glyph.dataset.cells = cells.map((c) => c.join(",")).sort().join(" ");
-    glyph.style.boxShadow = cells.map(([col, row]) => (col * 3) + "px " + (row * 3) + "px 0 0 var(--glyph)").join(", ");
-    // A shadow is never drawn under its own square, so the top left
-    // pixel, when it is lit, is the square itself.
-    if (cells.some(([col, row]) => !col && !row)) glyph.style.background = "var(--glyph)";
-    el.appendChild(glyph);
-
-    // The barcode: bars of one or two pixels and gaps of one to three,
-    // read off the name's own hash, so every book's is its own.
-    const code = document.createElement("span");
-    code.className = "lib-code";
-    code.setAttribute("aria-hidden", "true");
-    const stops = [];
-    // A small xorshift generator seeded by the name: the hash alone
-    // gives near-identical patterns for names that differ at their end.
-    let seed = Math.floor(hash(r.name + "code") * 4294967295) || 1;
-    const next = () => {
-      seed ^= seed << 13; seed >>>= 0;
-      seed ^= seed >>> 17;
-      seed ^= seed << 5; seed >>>= 0;
-      return seed / 4294967296;
-    };
-    let x = 0;
-    const ink = "rgb(200, 205, 212)";
-    while (x < 60) {
-      const bar = 1 + Math.floor(next() * 2);
-      const gap = 1 + Math.floor(next() * 3);
-      stops.push(ink + " " + x + "px " + (x + bar) + "px", "transparent " + (x + bar) + "px " + (x + bar + gap) + "px");
-      x += bar + gap;
-    }
-    code.style.background = "linear-gradient(90deg, " + stops.join(", ") + ")";
-    el.appendChild(code);
+    // THE SPINE, in specks, drawn when it first comes near the window.
+    const spine = document.createElement("canvas");
+    spine.className = "lib-spine";
+    spine.setAttribute("aria-hidden", "true");
+    spine.width = 1; spine.height = 1;
+    el.insertBefore(spine, el.firstChild);
+    r.spine = { canvas: spine, w: thick, h: tall };
 
     el.setAttribute("role", "button");
     el.setAttribute("tabindex", "-1");
@@ -298,12 +254,98 @@
     el.style.setProperty("--in", Math.min(900, shelves.indexOf(r.shelf) * 70 + r.alpha * 9) + "ms");
     bookNo++;
   });
+  // ============================================================
+  // DRAWING A SPINE — cloth in specks, rounded by the light from the
+  // left, with a head-cap, raised bands at head and foot, the tail in
+  // shadow, and on some a gilt rule inside each band. Seeded by the
+  // note's name, so every book is its own and the same every visit.
+  // Specks of one shade are drawn together, which is what keeps a
+  // hundred thousand of them cheap.
+  // ============================================================
+  function drawSpine(r) {
+    const { canvas: c, w, h } = r.spine;
+    c.width = Math.round(w * SPINE_RATIO);
+    c.height = Math.round(h * SPINE_RATIO);
+    const g = c.getContext("2d");
+    if (!g) return;
+    g.setTransform(SPINE_RATIO, 0, 0, SPINE_RATIO, 0, 0);
+    let seed = Math.floor(hash(r.name + "spine") * 4294967295) || 3;
+    const rnd = () => {
+      seed ^= seed << 13; seed >>>= 0;
+      seed ^= seed >>> 17;
+      seed ^= seed << 5; seed >>>= 0;
+      return seed / 4294967296;
+    };
+    const [h0, s0, l0] = CLOTH[r.code] || CLOTH.RET;
+    const hue = h0 + (rnd() - 0.5) * 12, sat = Math.max(0, s0 + (rnd() - 0.5) * 10), lig = l0 + (rnd() - 0.5) * 9;
+    const buckets = new Map();
+    const put = (x, y, l, a, size, tone) => {
+      const key = (tone || "c") + Math.round(l / 3) * 3 + "|" + Math.round(a * 5) / 5;
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(x, y, size);
+    };
+    const head = 13, foot = h - 37;
+    const gilt = rnd() < 0.55;
+    for (let y = 1; y < h - 1; y += SPINE_STEP) {
+      for (let x = 0.6; x < w - 0.6; x += SPINE_STEP) {
+        if (rnd() < 0.1) continue;
+        const px = x + (rnd() - 0.5) * 1.2, py = y + (rnd() - 0.5) * 1.2;
+        const k = px / w;
+        // Rounded: the light from the left, the far edge in shadow.
+        let l = lig + 9 * Math.cos(Math.PI * (k - 0.28)) - 4 + (rnd() - 0.5) * 5;
+        if (k < 0.06 || k > 0.94) l -= 9;
+        if (py < 3) l += 8;                        // the head-cap
+        if (py > h - 4) l -= 8;                    // the tail, on the shelf
+        // The raised bands: a ridge lit on top and shadowed under.
+        for (const b of [head, foot]) {
+          if (py >= b && py < b + 2.2) l += 15;
+          else if (py >= b + 2.2 && py < b + 3.6) l -= 10;
+        }
+        put(px, py, Math.max(4, Math.min(88, l)), 0.7 + rnd() * 0.26, 1.1 + rnd() * 0.5);
+      }
+    }
+    // THE LABEL at the foot, as a library book carries one: a small
+    // paper square of cream specks that the call number is printed on.
+    for (let y = h - 29; y < h - 7; y += 1.5) {
+      for (let x = 3; x < w - 3; x += 1.5) {
+        if (rnd() < 0.03) continue;
+        put(x + (rnd() - 0.5) * 0.4, y + (rnd() - 0.5) * 0.4, 84 + (rnd() - 0.5) * 5, 0.85 + rnd() * 0.15, 1.7, "p");
+      }
+    }
+    // The gilt: a dotted rule inside each band.
+    if (gilt) {
+      for (const y of [head + 6, foot - 5]) {
+        for (let x = 3; x < w - 3; x += 1.7) put(x + (rnd() - 0.5) * 0.5, y + (rnd() - 0.5) * 0.5, GILT[2] + (rnd() - 0.5) * 10, 0.8, 0.9, "g");
+      }
+    }
+    g.clearRect(0, 0, w, h);
+    buckets.forEach((list, key) => {
+      const [l, a] = key.slice(1).split("|").map(Number);
+      g.fillStyle = key[0] === "g" ? "hsla(" + GILT[0] + "," + GILT[1] + "%," + l + "%," + a + ")"
+        : key[0] === "p" ? "hsla(42,28%," + l + "%," + a + ")"
+        : "hsla(" + hue.toFixed(0) + "," + sat.toFixed(0) + "%," + l + "%," + a + ")";
+      for (let i = 0; i < list.length; i += 3) g.fillRect(list[i], list[i + 1], list[i + 2], list[i + 2]);
+    });
+    r.spine.drawn = true;
+  }
+  // Drawn as they come near the window rather than all at once: three
+  // hundred and more canvases on arrival would hold the page up.
+  const seeSpine = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const r = recOf.get(e.target);
+      if (r && !r.spine.drawn) drawSpine(r);
+      seeSpine.unobserve(e.target);
+    });
+  }, { rootMargin: "700px 0px" }) : null;
+
   // Every shelf ends on a book leaning against the one before it.
   shelves.forEach((shelf) => {
     const last = [...shelf.querySelectorAll(".lib-record")].pop();
     if (last && shelf.querySelectorAll(".lib-record").length > 3) last.classList.add("lib-leans");
   });
   const recOf = new Map(records.map((r) => [r.el, r]));
+  records.forEach((r) => { if (seeSpine) seeSpine.observe(r.el); else drawSpine(r); });
 
   // ============================================================
   // THE CHROME IN FRONT OF THE STACKS
@@ -361,7 +403,7 @@
         '<button type="button" class="lib-order-by is-on" data-order="alpha">A–Z</button>' +
         '<button type="button" class="lib-order-by" data-order="uses">Most used</button>' +
       '</div>' +
-      '<button type="button" class="lib-random">Pull a random folder</button>' +
+      '<button type="button" class="lib-random">Pull a random book</button>' +
     '</div>' +
     '<p class="lib-nothing" hidden>No record answers that. <a class="lib-elsewhere" href="#">Search the whole site →</a></p>';
 
@@ -415,17 +457,11 @@
   slip.setAttribute("aria-hidden", "true");
   library.appendChild(slip);
 
-  // The lamp and the scan stand over the stacks in the window.
+  // The lamp stands over the stacks in the window.
   const lamp = document.createElement("div");
   lamp.className = "lib-lamp";
   lamp.setAttribute("aria-hidden", "true");
   library.appendChild(lamp);
-  if (!still) {
-    const scan = document.createElement("div");
-    scan.className = "lib-scan";
-    scan.setAttribute("aria-hidden", "true");
-    library.appendChild(scan);
-  }
 
   // THE CARD
   const card = document.createElement("aside");
@@ -435,8 +471,9 @@
   card.innerHTML =
     '<div class="lib-card-top">' +
       '<span class="lib-card-call"></span>' +
-      '<button type="button" class="lib-card-close" aria-label="Put the folder back">×</button>' +
+      '<button type="button" class="lib-card-close" aria-label="Put the book back">×</button>' +
     '</div>' +
+    '<canvas class="lib-card-mark" aria-hidden="true"></canvas>' +
     '<p class="lib-card-shelf"></p>' +
     '<h2 class="lib-card-name" tabindex="-1"></h2>' +
     '<p class="lib-card-say"></p>' +
@@ -649,7 +686,7 @@
   }
   stacks.addEventListener("pointerover", (event) => {
     const el = event.target.closest(".lib-record");
-    if (el && event.pointerType !== "touch") { slipOver(el); decode(el); }
+    if (el && event.pointerType !== "touch") slipOver(el);
   });
   stacks.addEventListener("pointerleave", () => slipOver(null));
   stacks.addEventListener("focusin", (event) => {
@@ -657,41 +694,6 @@
     if (el) slipOver(el);
   });
   stacks.addEventListener("focusout", () => slipOver(null));
-
-  // THE NAME DECODES under the hand, as a file's name does on a screen
-  // that is still reading it: every letter a run of stray characters
-  // settling, left to right, into the name — in the folder's own grey,
-  // and over in under half a second. It is drawn over the name
-  // (`data-code`, shown by the stylesheet) rather than written into it,
-  // so the name itself — which is what the search and a reader read —
-  // never changes. Nothing with animation turned off.
-  const NOISE = "01#%&*+=/<>:ABCDEFXZ";
-  const DECODE_MS = 420;
-  let decoding = null;
-  function decode(el) {
-    if (still || decoding === el) return;
-    const name = el.querySelector(".lib-name");
-    if (!name) return;
-    const text = name.textContent.toUpperCase();
-    if (decoding) decoding.classList.remove("is-decoding");
-    decoding = el;
-    el.classList.add("is-decoding");
-    const t0 = performance.now();
-    const step = (now) => {
-      if (decoding !== el) return;
-      const t = Math.min(1, (now - t0) / DECODE_MS);
-      const settled = Math.floor(text.length * t);
-      let out = text.slice(0, settled);
-      for (let i = settled; i < text.length; i++) {
-        out += text[i] === " " ? " " : NOISE[Math.floor(Math.random() * NOISE.length)];
-      }
-      name.dataset.code = out;
-      if (t < 1) { requestAnimationFrame(step); return; }
-      el.classList.remove("is-decoding");
-      decoding = null;
-    };
-    requestAnimationFrame(step);
-  }
 
   // ============================================================
   // THE CARD
@@ -706,6 +708,82 @@
   const cardFound = card.querySelector(".lib-card-found");
   const steps = [...card.querySelectorAll(".lib-card-step")];
 
+  // THE MARK at the head of the card: a ring of specks, one for every
+  // fragrance on the site that uses the note, joined one to the next by
+  // hairlines, turning slowly in a cloud of dust in its accord's colour,
+  // with a rule run in to it from either side and ticked. Particles and
+  // geometry, as the rest of the site is drawn — the owner found the
+  // glass card "too futuristic".
+  const mark = card.querySelector(".lib-card-mark");
+  const MARK_TALL = 92;
+  let markFrame = 0;
+  let markOf = null;
+  function markFor(r) {
+    const n = Math.max(1, Math.min(48, r.keys.size));
+    let seed = Math.floor(hash(r.name + "mark") * 4294967295) || 5;
+    const rnd = () => {
+      seed ^= seed << 13; seed >>>= 0;
+      seed ^= seed >>> 17;
+      seed ^= seed << 5; seed >>>= 0;
+      return seed / 4294967296;
+    };
+    const ring = [];
+    for (let i = 0; i < n; i++) ring.push({ a: (i / n) * Math.PI * 2 + (rnd() - 0.5) * (Math.PI / n) * 0.6, r: 1 + (rnd() - 0.5) * 0.12 });
+    const dust = [];
+    for (let i = 0; i < 110; i++) {
+      const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * 1.35;
+      dust.push({ a, d, s: 0.7 + rnd() * 0.9, o: 0.12 + rnd() * 0.35, w: (rnd() - 0.5) * 0.4 });
+    }
+    const [h0, s0] = CLOTH[r.code] || CLOTH.RET;
+    return { ring, dust, colour: h0 + "," + Math.min(60, s0 + 14) + "%," + "70%" };
+  }
+  function drawMark(t) {
+    if (!markOf) return;
+    const w = mark.clientWidth;
+    if (!w) return;
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    if (mark.width !== Math.round(w * ratio)) { mark.width = Math.round(w * ratio); mark.height = Math.round(MARK_TALL * ratio); }
+    const g = mark.getContext("2d");
+    if (!g) return;
+    g.setTransform(ratio, 0, 0, ratio, 0, 0);
+    g.clearRect(0, 0, w, MARK_TALL);
+    const cx = w / 2, cy = MARK_TALL / 2, R = 30;
+    const turn = still ? 0 : t * 0.00011;
+    const hsla = (a) => "hsla(" + markOf.colour.split(",")[0] + "," + markOf.colour.split(",")[1] + "," + markOf.colour.split(",")[2] + "," + a + ")";
+    // The rule in from either side, ticked, and stopping short of the ring.
+    g.fillStyle = "rgba(" + getComputedStyle(document.body).getPropertyValue("--ink-rgb") + ",0.2)";
+    g.fillRect(0, cy, cx - R - 14, 0.8);
+    g.fillRect(cx + R + 14, cy, w - cx - R - 14, 0.8);
+    for (let x = 0; x < cx - R - 14; x += 12) g.fillRect(x, cy - (x % 48 ? 2 : 4), 0.8, x % 48 ? 4 : 8);
+    for (let x = w; x > cx + R + 14; x -= 12) g.fillRect(x, cy - ((w - x) % 48 ? 2 : 4), 0.8, (w - x) % 48 ? 4 : 8);
+    // The dust, turning a little slower than the ring.
+    markOf.dust.forEach((d) => {
+      const a = d.a + turn * (0.6 + d.w);
+      g.fillStyle = hsla(d.o);
+      g.fillRect(cx + Math.cos(a) * d.d * R, cy + Math.sin(a) * d.d * R * 0.92, d.s, d.s);
+    });
+    // The ring: joined, then its specks.
+    const pts = markOf.ring.map((p) => [cx + Math.cos(p.a + turn) * R * p.r, cy + Math.sin(p.a + turn) * R * p.r]);
+    if (pts.length > 1) {
+      g.strokeStyle = hsla(0.3);
+      g.lineWidth = 0.7;
+      g.beginPath();
+      pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+      g.closePath();
+      g.stroke();
+    }
+    g.fillStyle = hsla(0.95);
+    pts.forEach(([x, y]) => g.fillRect(x - 1.2, y - 1.2, 2.4, 2.4));
+    // The centre, a registration cross.
+    g.fillStyle = hsla(0.55);
+    g.fillRect(cx - 4, cy - 0.4, 8, 0.8);
+    g.fillRect(cx - 0.4, cy - 4, 0.8, 8);
+  }
+  function markLoop(t) {
+    drawMark(t);
+    markFrame = markOf && !still ? requestAnimationFrame(markLoop) : 0;
+  }
+
   function open(r, focus) {
     if (!r) return;
     if (current) current.el.classList.remove("is-out");
@@ -714,6 +792,8 @@
     card.style.setProperty("--hue", r.el.style.getPropertyValue("--hue"));
 
     cardCall.textContent = r.call;
+    markOf = markFor(r);
+    if (!markFrame) markFrame = requestAnimationFrame(markLoop);
     cardShelf.textContent = "Accord " + r.code + " — " + r.shelfName;
     cardName.textContent = r.name;
     type(cardSay, r.say);
@@ -758,6 +838,7 @@
     const el = current.el;
     current.el.classList.remove("is-out");
     current = null;
+    markOf = null;
     card.hidden = true;
     card.classList.remove("is-in");
     document.body.classList.remove("lib-reading");

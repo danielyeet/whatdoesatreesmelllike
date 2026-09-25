@@ -9260,12 +9260,16 @@ html.js-coming body.library-page .library { visibility: hidden; }
    THE STACKS
    ------------------------------------------------------------------ */
 .lib-stacks { margin: 22px 0 0; }
+/* MORE AIR, at the owner's word: "the library feels crowded, I want you
+   to stylistically make it more breathable". The accords stand further
+   apart, the rows of a shelf further apart, and the books a hair apart
+   from one another as books on a real shelf are. */
 body.lib-built .lib-shelf {
   display: grid;
-  grid-template-columns: 196px minmax(0, 1fr);
-  gap: 32px;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 48px;
   margin: 0;
-  padding: 38px 0 26px;
+  padding: 60px 0 42px;
   border-top: 1px solid var(--line);
 }
 body.lib-built .lib-shelf.is-away { display: none; }
@@ -9295,11 +9299,11 @@ body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.5; }
    under each row, with a soft glow falling off under it. */
 body.lib-built .lib-records {
   --row: 214px;
-  --gap: 34px;
+  --gap: 52px;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  column-gap: 4px;
+  column-gap: 6px;
   row-gap: var(--gap);
   padding: 0 10px 18px;
   background:
@@ -9312,27 +9316,19 @@ body.lib-built .lib-records {
     0 0 / 100% calc(var(--row) + var(--gap)) repeat-y;
 }
 
-/* A RECORD IS A FOLDER, standing on its shelf. The owner, 2026-09-24:
-   the books were "too bright, and too annoyingly neony ... Maybe make
-   them folders instead of books; and make it so that the entire folder
-   isnt coloured but a part of it ... work with whatever is least
-   tacky." So the folder is a quiet graphite with a hairline edge and
-   nothing glowing, and the shelf's colour is spent on ONE part of it:
-   the tab standing up off its top edge, at one of three places along
-   it, as the tabs in a drawer of files are staggered so that each can
-   be seen. The name runs down it in the mono, the data bar and the
-   barcode are kept in grey, and the call number stands at its foot.
-   (It was dark glass lit from inside in the shelf's colour, with a cut
-   corner, scanlines and a glow, for one round.)
+/* A RECORD IS A BOOK, standing on its shelf, and its spine is DRAWN IN
+   SPECKS — a canvas of its own (`.lib-spine`, note-library.js) in the
+   cloth of its accord: rounded by the light, raised bands at head and
+   foot, on some a gilt rule. The owner asked for the books "out of
+   particles but actually look like books, with appropriate colours".
 
-   AND THEY ARE DIGITAL FILES — "make the files still more digital", the
-   round after, from an owner who had found the glowing version "too
-   annoyingly neony". So nothing glows and nothing is coloured but the
-   tab; what is digital is the drawing of it: a fine DOT SCREEN over the
-   face, a PIXEL GLYPH of the folder's own at its head (`.lib-glyph`),
-   the meter under the tab SEGMENTED like a level meter, the tab's
-   corners stepped a pixel at a time, and the name DECODING itself when
-   the folder comes under the hand. */
+   WHAT WENT: for two rounds a record was a FOLDER — a graphite file with
+   one coloured tab, and then a "digital" one with a pixel glyph at its
+   head, a segmented meter, a barcode, a dot screen and a name that
+   decoded itself under the hand. The owner found the page crowded, the
+   glyphs unnecessary and the whole "3-bit", and every one of those is
+   out of the code. (Before that the books were dark glass lit in the
+   shelf's colour, which was "too annoyingly neony".) */
 body.lib-built .lib-record {
   position: relative;
   flex: none;
@@ -9341,121 +9337,58 @@ body.lib-built .lib-record {
   margin-top: calc(var(--row) - var(--h));
   padding: 0;
   border: none;
-  border-radius: 0 0 2px 2px;
-  color: #c4c8ce;
-  --glyph: rgba(214, 218, 224, 0.62);
-  background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.055) 0.55px, transparent 0.9px) 0 0 / 3px 3px,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 32%, rgba(0, 0, 0, 0.14) 100%),
-    hsl(220 7% calc(13% + var(--tone) * 0.4));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 1px 1px 2px 2px;
+  color: hsl(42 34% 86% / 0.92);
+  background: none;
   cursor: pointer;
   outline: none;
-  transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.38s, opacity 0.4s, filter 0.4s;
+  transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.4s, filter 0.4s;
 }
-/* THE TAB: the one coloured part. `--tab-k` (0, ½ or 1, set by the
-   script) is where along the top edge it stands. */
-.lib-folder-tab {
+.lib-spine {
   position: absolute;
-  top: -6px;
-  left: calc(45% * var(--tab-k, 0));
-  width: 55%;
-  min-width: 9px;
-  height: 6px;
-  background: hsl(var(--hue) 30% 46%);
-  /* Its corners stepped a pixel at a time rather than rounded. */
-  clip-path: polygon(0 2px, 1px 2px, 1px 1px, 2px 1px, 2px 0, calc(100% - 2px) 0, calc(100% - 2px) 1px,
-    calc(100% - 1px) 1px, calc(100% - 1px) 2px, 100% 2px, 100% 100%, 0 100%);
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 body.lib-built .lib-record .lib-name {
   position: absolute;
-  top: 34px;
+  top: 24px;
   left: 0;
   right: 0;
-  bottom: 50px;
+  bottom: 46px;
   margin: 0;
   writing-mode: vertical-rl;
   line-height: var(--w);
   font-family: var(--mono);
   font-size: 10px;
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 body.lib-built .lib-record .lib-say { display: none; }
-/* THE NAME DECODING: while the script runs it, the name is drawn over
-   itself from `data-code` — stray characters settling into it — and the
-   name underneath is held out of sight. The name itself never changes. */
-body.lib-built .lib-record.is-decoding .lib-name { color: transparent; }
-body.lib-built .lib-record.is-decoding .lib-name::after {
-  content: attr(data-code);
-  position: absolute;
-  inset: 0;
-  color: #c4c8ce;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-/* THE GLYPH: five pixels by five, three screen pixels to one, drawn by
-   the script as shadows of this one square (which is the top left
-   pixel, lit or not). */
-.lib-glyph {
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  width: 3px;
-  height: 3px;
-  margin-left: -7.5px;
-}
-/* THE DATA BAR: how much of the site uses this note, as a fill in a
-   track across the head of the folder (`--fill`, set by the script). In
-   grey: the tab is the colour. */
-.lib-bands {
-  position: absolute;
-  top: 6px;
-  left: 4px;
-  right: 4px;
-  height: 3px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.46) 0 var(--fill, 20%), transparent var(--fill, 20%)),
-    rgba(255, 255, 255, 0.08);
-  /* Segmented, as a level meter is. */
-  -webkit-mask: repeating-linear-gradient(90deg, #000 0 3px, transparent 3px 4px);
-  mask: repeating-linear-gradient(90deg, #000 0 3px, transparent 3px 4px);
-}
-/* THE BARCODE, over the call number — the folder's own, drawn off its
-   name by the script, so every one is different and the same every
-   visit. */
-.lib-code {
+.lib-call {
   position: absolute;
   left: 3px;
   right: 3px;
-  bottom: 27px;
-  height: 11px;
-  opacity: 0.55;
-}
-.lib-call {
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  bottom: 6px;
+  bottom: 9px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2px 0 1px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  color: #8f949b;
+  color: rgba(28, 24, 18, 0.85);
   font-family: var(--mono);
   font-size: 7.5px;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: 0;
   overflow: hidden;
 }
 .lib-call b, .lib-call i { font-weight: 500; font-style: normal; }
 
-/* A folder leaning against the one before it at the end of a shelf. */
+/* A book leaning against the one before it at the end of a shelf. */
 body.lib-built .lib-record.lib-leans {
   margin-left: calc(var(--h) * 0.13);
   transform-origin: 0 100%;
@@ -9465,13 +9398,13 @@ body.lib-built .lib-record.lib-leans {
 body.lib-built .lib-record:hover,
 body.lib-built .lib-record:focus-visible {
   transform: translateY(-12px);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 12px 18px -12px rgba(0, 0, 0, 0.9);
+  filter: brightness(1.2);
 }
 body.lib-built .lib-record.lib-leans:hover,
 body.lib-built .lib-record.lib-leans:focus-visible { transform: rotate(-7.5deg) translateY(-12px); }
 body.lib-built .lib-record:focus-visible { outline: 1px solid var(--lib-glow); outline-offset: 3px; }
 
-/* A folder that answers the terminal, and one that does not. */
+/* A book that answers the terminal, and one that does not. */
 body.lib-built .lib-record.is-hit {
   box-shadow: inset 0 0 0 1px rgba(var(--lib-glow-rgb), 0.7);
 }
@@ -9487,44 +9420,50 @@ body.lib-built .lib-record.is-hit::before {
 }
 body.lib-built .lib-record.is-dim { opacity: 0.13; filter: saturate(0.2); }
 
-/* THE FOLDER THAT IS OUT: pulled off the shelf while its card is open,
-   with a faint scan passing over it. */
+/* THE BOOK THAT IS OUT: pulled half off the shelf while its card is
+   open, and a little brighter. */
 body.lib-built .lib-record.is-out,
 body.lib-built .lib-record.lib-leans.is-out {
   transform: translateY(-30px);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 22px 30px -12px rgba(0, 0, 0, 0.9);
+  filter: brightness(1.28);
   z-index: 2;
 }
-body.lib-built .lib-record.is-out::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.07) 50%, transparent 100%) 0 0 / 100% 40% no-repeat;
-  animation: lib-read 1.8s linear infinite;
-  pointer-events: none;
-}
-@keyframes lib-read { from { background-position: 0 -60%; } to { background-position: 0 160%; } }
 
 /* THE ARRIVAL: shelf by shelf, book by book. */
 @keyframes lib-shelve { from { opacity: 0; transform: translateY(-34px); } }
 body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--in) backwards; }
 
-/* THE SLIP naming a book in full */
+/* THE SLIP naming a book in full: a hairline box with a tick at each
+   corner, and a leader run down from it to the book it names. */
 .lib-slip {
   position: absolute;
   z-index: 15;
   top: 0;
   left: 0;
   max-width: 260px;
-  padding: 7px 10px 8px;
-  border: 1px solid hsl(var(--hue, 150) 45% 60% / 0.5);
-  background: rgba(8, 11, 13, 0.94);
+  padding: 7px 11px 8px;
+  border: 1px solid rgba(var(--ink-rgb), 0.14);
+  background:
+    linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 0 0 / 6px 1px no-repeat,
+    linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 0 0 / 1px 6px no-repeat,
+    linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 100% 100% / 6px 1px no-repeat,
+    linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 100% 100% / 1px 6px no-repeat,
+    rgba(10, 13, 16, 0.94);
   font-family: var(--mono);
   pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, calc(-100% - 22px));
+  transform: translate(-50%, calc(-100% - 24px));
   transition: opacity 0.2s;
   white-space: nowrap;
+}
+.lib-slip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1px;
+  height: 18px;
+  background: linear-gradient(to bottom, rgba(var(--ink-rgb), 0.4), rgba(var(--ink-rgb), 0));
 }
 .lib-slip.is-on { opacity: 1; }
 .lib-slip b { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink); }
@@ -9550,30 +9489,23 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   transition: opacity 0.6s;
 }
 .lib-lamp.is-on { opacity: 1; }
-.lib-scan {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 90px;
-  z-index: 11;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent, rgba(var(--lib-glow-rgb), 0.018) 80%, rgba(var(--lib-glow-rgb), 0.085) 99%, transparent);
-  mix-blend-mode: screen;
-  animation: lib-scan 13s linear infinite;
-}
-@keyframes lib-scan {
-  0% { transform: translateY(-150px); }
-  38% { transform: translateY(100vh); }
-  100% { transform: translateY(100vh); }
-}
 
 /* ------------------------------------------------------------------
-   THE CARD — a catalogue card, ruled like one, standing beside the
-   stacks. Not a dialog: the stacks stay in reach, and pressing another
-   book turns the card over to it.
+   THE CARD — a catalogue card standing beside the stacks. Not a dialog:
+   the stacks stay in reach, and pressing another book turns the card
+   over to it.
+
+   DRAWN AS THE REST OF THE SITE IS: a hairline edge with a registration
+   tick at each corner (in the card's own background, so they stay put
+   while it scrolls), and at its head THE MARK (`.lib-card-mark`, a
+   canvas: the fragrances using the note as a ring of specks). It was a
+   pane of dark glass — a lit top edge in the shelf's colour, a glow
+   inside, ruled lines and a blur behind — and the owner found it "too
+   futuristic ... make it like the rest of the site: themed with
+   particles and geometry".
    ------------------------------------------------------------------ */
 .lib-card {
+  --tick: hsl(var(--hue, 150) 30% 70% / 0.8);
   position: fixed;
   top: 74px;
   right: 24px;
@@ -9581,33 +9513,42 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   z-index: 20;
   width: min(410px, calc(100vw - 36px));
   overflow-y: auto;
-  padding: 20px 24px 26px;
-  border: 1px solid hsl(var(--hue, 150) 45% 60% / 0.45);
-  border-top: 3px solid hsl(var(--hue, 150) 55% 62%);
+  padding: 20px 26px 28px;
+  border: 1px solid rgba(var(--ink-rgb), 0.13);
   background:
-    repeating-linear-gradient(to bottom, transparent 0 27px, rgba(var(--ink-rgb), 0.035) 27px 28px),
-    rgba(9, 12, 14, 0.985);
-  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.85), inset 0 0 50px -30px hsl(var(--hue, 150) 70% 55% / 0.5);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+    linear-gradient(var(--tick), var(--tick)) 0 0 / 12px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 0 / 1px 12px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 0 / 12px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 0 / 1px 12px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 100% / 12px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 100% / 1px 12px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 100% / 12px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 100% / 1px 12px no-repeat,
+    rgba(11, 14, 17, 0.97);
+  box-shadow: 0 30px 70px -34px rgba(0, 0, 0, 0.9);
+}
+.lib-card-mark {
+  display: block;
+  width: 100%;
+  height: 92px;
+  margin: 12px 0 0;
 }
 .lib-card[hidden] { display: none; }
 .lib-card.is-in { animation: lib-card-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1); }
 @keyframes lib-card-in { from { opacity: 0; transform: translateX(26px); } }
 .lib-card-top { display: flex; justify-content: space-between; align-items: center; }
 .lib-card-call {
-  padding: 4px 8px;
-  border: 1px solid rgba(var(--lib-glow-rgb), 0.55);
+  padding: 0 0 3px;
+  border-bottom: 1px solid rgba(var(--ink-rgb), 0.25);
   font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 0.14em;
-  color: var(--lib-glow);
-  text-shadow: 0 0 10px rgba(var(--lib-glow-rgb), 0.5);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--ink);
 }
 .lib-card-close { font-size: 22px; line-height: 1; padding: 2px 6px; }
 .lib-card-close:hover { color: var(--ink); }
 .lib-card-shelf {
-  margin: 18px 0 4px;
+  margin: 10px 0 4px;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.18em;
@@ -9726,9 +9667,7 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
 
 @media (prefers-reduced-motion: reduce) {
   body.lib-arriving .lib-record,
-  .lib-card.is-in,
-  body.lib-built .lib-record.is-out::after { animation: none; }
-  .lib-scan { display: none; }
+  .lib-card.is-in { animation: none; }
 }
 
 @media (max-width: 700px) {
