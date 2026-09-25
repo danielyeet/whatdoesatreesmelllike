@@ -6740,6 +6740,24 @@ ol.human-list li::before {
   color: var(--muted);
   margin-top: 10px;
 }
+/* WHERE A PICTURE CAME FROM, under its own name — the individual
+   fragrances' pictures come from eight different places, so each is
+   credited under itself rather than in one line at the foot. Smaller
+   than the name and quieter: a credit is looked for, not read. */
+.human-plate-credit,
+.frag-plate-credit {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.human-plate-credit a,
+.frag-plate-credit a { color: inherit; text-underline-offset: 2px; }
+.human-plate-credit a:hover,
+.frag-plate-credit a:hover { color: var(--ink); }
+.frag-plate-credit { margin-top: 10px; }
 /* A STAGE of a fragrance — top, mid, base, a sidenote. The owner
    writes in those on ADAR and this house takes the same label, so the
    two read as one person's notes. */

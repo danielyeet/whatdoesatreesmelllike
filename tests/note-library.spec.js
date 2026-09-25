@@ -375,7 +375,9 @@ test("the shelves breathe", async ({ page }) => {
    under every row, solid across the row's foot, and NOTHING ELSE is drawn
    on it — no upright at either side, no crown, no back; and every board
    carries a label giving the call numbers on it. At another width the rows
-   wrap differently, and the boards are drawn again to match. */
+   wrap differently, and the boards are drawn again to match. (The label
+   is worked out from the books on the row, so a note added to Citrus
+   does not break this.) */
 test("every accord's books stand on bare boards, a labelled board under every row and no frame round them", async ({ page }) => {
   await page.addInitScript(() => {
     window.__labels = [];
@@ -423,7 +425,14 @@ test("every accord's books stand on bare boards, a labelled board under every ro
       for (let x = 0; x < c.width; x += 2) if (d[(y * c.width + x) * 4 + 3] > 20) stray++;
     }
     const book = document.querySelector("#shelf-cit .lib-record");
+    // THE FIRST ROW'S LABEL is worked out from the books standing on it,
+    // not written down: the accord grows as notes are added (Petitgrain
+    // made it fourteen on 2026-09-25).
+    const all = [...holder.querySelectorAll(".lib-record")];
+    const firstTop = Math.round(all[0].offsetTop + all[0].offsetHeight);
+    const onFirst = all.filter((b) => Math.round(b.offsetTop + b.offsetHeight) === firstTop).length;
     return {
+      first: "CIT 001–" + String(onFirst).padStart(3, "0"), whole: all.length,
       drawn: c.dataset.drawn === "1", rows, boards, stray,
       wider: cr.left < hr.left && cr.right > hr.right,
       behind: +getComputedStyle(c).zIndex < +getComputedStyle(book).zIndex,
@@ -438,7 +447,7 @@ test("every accord's books stand on bare boards, a labelled board under every ro
   expect(wide.behind, "behind the books").toBe(true);
   wide.boards.forEach((b, k) => expect(b, `a board under row ${k + 1}`).toBeGreaterThan(0.9));
   expect(wide.stray, "and nothing else: no uprights, no crown, no back").toBe(0);
-  expect(wide.labels, "a label on every board, giving its call numbers").toContain("CIT 001–013");
+  expect(wide.labels, "a label on every board, giving its call numbers").toContain(wide.first);
   // Narrower, the rows wrap again, and the boards are drawn to match.
   await page.setViewportSize({ width: 820, height: 900 });
   await page.waitForTimeout(900);
@@ -446,7 +455,8 @@ test("every accord's books stand on bare boards, a labelled board under every ro
   expect(narrow.rows, "more rows at a narrower width").toBeGreaterThan(wide.rows);
   narrow.boards.forEach((b, k) => expect(b, `a board under row ${k + 1} at 820px`).toBeGreaterThan(0.9));
   expect(narrow.stray, "still nothing but boards").toBe(0);
-  expect(narrow.labels.some((t) => /^CIT 001–0\d\d$/.test(t) && t !== "CIT 001–013"), "and the labels say what is on each").toBe(true);
+  expect(narrow.labels, "and the labels say what is on each").toContain(narrow.first);
+  expect(narrow.first, "which is less, now the rows are shorter").not.toBe(wide.first);
 });
 
 /* THE LAMP RUNS A BEAT BEHIND THE HAND, like the cursor's square: "make

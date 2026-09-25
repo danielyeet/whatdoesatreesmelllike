@@ -165,11 +165,11 @@ test("the Fragrances view is its own page, not an index of the houses",
   await page.click('.sheet-filter[data-view="fragrances"]');
   await page.waitForTimeout(900);
 
-  // SEVEN. It was seven once before, with an empty fifth slot the owner
-  // had removed on 2026-09-22; it went to six, and Velvet Fog made it
-  // seven again on 2026-09-24.
+  // EIGHT. It was seven once before, with an empty fifth slot the owner
+  // had removed on 2026-09-22; it went to six, Velvet Fog made it seven
+  // again on 2026-09-24, and House of Ellixirz eight on 2026-09-25.
   const rows = page.locator('.view[data-view="fragrances"] .index-table tbody tr');
-  await expect(rows).toHaveCount(7);
+  await expect(rows).toHaveCount(8);
 
   const hrefs = await page.$$eval(
     '.view[data-view="fragrances"] .index-table tbody a',
@@ -205,7 +205,7 @@ test("every fragrance gets a View notes button, and it opens a panel",
   await page.goto("/individual-fragrances/individual-fragrances.html");
   await page.waitForTimeout(700);
 
-  await expect(page.locator(".note-open")).toHaveCount(7);
+  await expect(page.locator(".note-open")).toHaveCount(8);
   await expect(page.locator(".note-panel:not([hidden])")).toHaveCount(0);
 
   const first = page.locator(".human-part").first();
@@ -355,8 +355,9 @@ test("a fragrance with no notes yet says they have not been found",
     "there is no source to name").toHaveCount(0);
 });
 
-/* AND THE SEVEN ARE NUMBERED 01 TO 07, WITH NO GAP (six until Velvet Fog
-   joined on 2026-09-24). The owner's list
+/* AND THE EIGHT ARE NUMBERED 01 TO 08, WITH NO GAP (six until Velvet Fog
+   joined on 2026-09-24, seven until House of Ellixirz joined on
+   2026-09-25). The owner's list
    skipped a fifth and an empty slot was kept for it; on 2026-09-22
    they asked for it removed and the ones below moved up.
 
@@ -364,12 +365,12 @@ test("a fragrance with no notes yet says they have not been found",
    table and the keys here — and this is the check that they moved
    together. Getting it wrong is silent: every link still resolves, and
    every fragrance shows somebody else's notes. */
-test("the individual fragrances run 01 to 07 with nothing missing", () => {
+test("the individual fragrances run 01 to 08 with nothing missing", () => {
   const all = notes();
   const page = read("individual-fragrances/individual-fragrances.html");
   const ids = [...page.matchAll(/id="part-(\d+)"/g)].map((m) => m[1]);
   expect(ids, `the parts run: ${ids.join(", ")}`)
-    .toEqual(["01", "02", "03", "04", "05", "06", "07"]);
+    .toEqual(["01", "02", "03", "04", "05", "06", "07", "08"]);
 
   // No Untitled left, and every one of them has notes.
   expect(page).not.toContain("human-untitled");
@@ -378,7 +379,7 @@ test("the individual fragrances run 01 to 07 with nothing missing", () => {
   });
   // And no key points past the end.
   const keys = Object.keys(all).filter((k) => k.startsWith("individual:"));
-  expect(keys.length).toBe(7);
+  expect(keys.length).toBe(8);
 
   // THE TABLE AGREES, name for name and number for number.
   const sheet = read("categories/scent-descriptions.html");
@@ -1049,4 +1050,48 @@ test("the fallback carries a warning and a house source does not",
   // And a screen reader is told it whether or not anything is hovered.
   await expect(fell.locator(".note-cite"))
     .toHaveAttribute("aria-describedby", "notes-pineward-13-warn");
+});
+
+/* HOUSE OF ELLIXIRZ, THE EIGHTH — 2026-09-25: "add the following perfume
+   as 008. it is called house of ellixirz from Matca". Its writing is the
+   owner's, word for word, in their own five stages — and none of the
+   invisible left-to-right marks the paste carried. Its notes are the
+   house's own, which divides them, so they are a pyramid under Matca's
+   name. */
+test("House of Ellixirz is the eighth, in the owner's words, with Matca's own notes", () => {
+  const page = read("individual-fragrances/individual-fragrances.html");
+  const part = page.slice(page.indexOf('id="part-08"'), page.indexOf("</details>", page.indexOf('id="part-08"')));
+  expect(part).toContain('<span class="human-title">House of Ellixirz</span>');
+  expect(part).toContain('<span class="human-house">Matca</span>');
+  const stages = [...part.matchAll(/<p class="human-stage">([^<]+)<\/p>/g)].map((m) => m[1]);
+  expect(stages).toEqual(["Top 1", "Top 2", "Top 3", "Mid", "Base"]);
+  expect(part).toContain("It smells like burnt salmon barbecue.");
+  expect(part).toContain("the same way that Fumidus by Roma Profumum, albeit a little spicier and sweeter.");
+  expect(part).toContain("The sweetness persists here</p>");
+  expect(part).toContain("Idk if there’s tonka. This is really cool.");
+  expect(part).toContain("<p>It becomes quite transparent.</p>");
+  expect(part.includes("‎"), "no invisible marks from the paste").toBe(false);
+
+  const entry = notes()["individual:08"];
+  expect(entry.source.name).toBe("Matca");
+  expect(entry.source.url).toBe("https://www.matcanaturals.com/en-eu/products/house-of-ellixirz");
+  expect(entry.top).toEqual(["Lemon", "Petitgrain"]);
+  expect(entry.base).toContain("Birch Tar");
+});
+
+/* EVERY PICTURE SAYS WHERE IT CAME FROM — 2026-09-25, when the owner
+   gave a source for each individual fragrance's picture. Each is
+   credited under itself, with a link; Haxan's is the one no source was
+   given for. */
+test("every individual fragrance's picture is credited under itself, but Haxan's", () => {
+  const page = read("individual-fragrances/individual-fragrances.html");
+  const parts = page.split(/<details class="human-part" id=/).slice(1).map((p) => 'id=' + p);
+  expect(parts.length).toBe(8);
+  const seen = parts.map((p) => {
+    const no = /id="part-(\d+)"/.exec(p)[1];
+    const credit = /<span class="human-plate-credit">Picture: <a href="(https:\/\/[^"]+)"[^>]*>([^<]+)<\/a><\/span>/.exec(p);
+    return [no, credit ? credit[2] : null];
+  });
+  expect(seen).toEqual([["01", "Fragrantica"], ["02", "Sillyage"], ["03", null], ["04", "Dior"],
+    ["05", "Aromak"], ["06", "Vivantis"], ["07", "Fragrantica"], ["08", "Matca"]]);
 });

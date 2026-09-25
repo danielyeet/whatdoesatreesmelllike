@@ -214,7 +214,7 @@ Playwright drives a real browser against the repo served over HTTP (the config s
 `python3 -m http.server` itself, so nothing needs to be running first). `npm run report`
 opens the HTML report; failures also leave a screenshot and a trace in `test-results/`.
 
-**A clean run is 374 passed, 0 failed, and takes seven to twenty minutes.** If you get a
+**A clean run is 377 passed, 0 failed, and takes seven to twenty minutes.** If you get a
 number wildly different from that, check the shape of the failures before believing
 them: **a hundred-odd tests all failing in about 300ms each means the web server is
 down, not that the site is broken.** The config serves on **port 4321** and reuses a
@@ -565,12 +565,16 @@ internals. (The README says `thread.js` sets `__p23` — it doesn't, `paper.js` 
   and it is one `<p class="house-credit">` at the foot of a house, above the way on to the
   next, naming the source the pictures were actually taken from. All nine houses carry one:
   Pineward and ADAR from the houses' own sites, Les Abstraits from its own (and its drawing
-  of Des Cendres' road, made for the page), Tale, Tombstone, Qimu & Musicians and — since
-  its five bottles arrived on 2026-09-25 — Almost Human from their own — an assumption for
-  all four, see their reports — Ataraxia from
+  of Des Cendres' road, made for the page), Tale, Tombstone and Qimu & Musicians from
+  their own — an assumption for all three, see their reports — Almost Human from its own
+  at the owner's word (2026-09-25), Ataraxia from
   its own with the logo credit the house published, and **Grande Parfums from the MEUS
   website and Profumix Luxury Perfumes rather than from the house** — which is exactly why
-  the line says where it came from instead of assuming. A favourite may also name a
+  the line says where it came from instead of assuming. **The individual fragrances are
+  credited one picture at a time**, under the picture, in its caption
+  (`<span class="human-plate-credit">Picture: <a …>Fragrantica</a></span>`), because each
+  comes from somewhere different — and the fragrance reader carries that credit across with
+  the picture. Haxan's has none: no source was given. A favourite may also name a
   picture with `data-image`, and that wants crediting too.
 - Images live in `images/`, **one folder per house or category** — `images/ADAR/`,
   `images/Pineward/`, `images/Almost-Human/`, `images/Favorites/`,
@@ -705,7 +709,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **index** | The way `categories/researches.html` is laid out: readings across the top, plates on the right, and a sortable, searchable table in the bottom left corner. `index-page.js`. The contact sheet's **Fragrances** view is built from the same markup and script but laid out again for itself — one centred column, the table given the room — under `body.view-fragrances`. The copyright line that used to sit under the board is gone from both. |
 | **the board** | That table and the search above it, taken together (`.index-board`). It scrolls inside its own box so the page around it does not grow. |
 | **the search page** | `search.html`: the one place that looks over the whole site. One field ruled across a dark ground of drifting specks, a row of filters under it, and the answers as rows carrying a number, a name, what kind of thing it is and the **trail**. |
-| **the Note Library** | `categories/note-library.html`: every note named in a fragrance on the site — 330 **records** in 16 **accords** — each with a brief explanation, stood up as **books** by `note-library.js`. In the menu above Photography, and the eighth node on the map. **Almost Human's olfactory landscapes are not in it**: they are impressions, not notes, and were taken out at the owner's word after one round. |
+| **the Note Library** | `categories/note-library.html`: every note named in a fragrance on the site — 332 **records** in 16 **accords** — each with a brief explanation, stood up as **books** by `note-library.js`. In the menu above Photography, and the eighth node on the map. **Almost Human's olfactory landscapes are not in it**: they are impressions, not notes, and were taken out at the owner's word after one round. |
 | **names as written** | **Removed** from the Note Library's readout at the owner's word (2026-09-24, night): the count of every different way a note is written in `notes-data.js` — *Tonka* and *Tonka Beans* are two. It was labelled "Spellings" before that. **Most used** — the note the most fragrances name, and in how many — stands in its place. |
 | **direct words** | How the Note Library's terminal matches, at the owner's word: every word typed must BE a word in a note's name or its other spellings (a plural counts). No near misses, no starts-with, and nothing found by what a note is said to be. The site's own search is still forgiving. |
 | **the data bar** / **the barcode** (library) | **Removed** (2026-09-25) with everything "digital" on the folders: a segmented bar across a folder's head filled by how much the note was used, and a barcode over its call number. Before that they were lit in the shelf's colour with a glass body, which the owner found "too annoyingly neony"; then they found the digital version "3-bit". Nothing of either is in the code. |
@@ -820,7 +824,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the line** / **the pyramid** / **files** (fragrances) | **Removed** (night of 2026-09-25): a horizontal line through the Fragrances view — two hairlines, pulses, ticks — and a double pyramid of thousands of specks on it, turning as you scrolled. It was files travelling one at a time along the line in the morning, and a table standing over the line and the pyramid in the evening; the owner then found "the thing in the back ... downright ugly" and asked for both removed. Nothing of either is in the code (no `.frag-line`, no `data-turn`, no `data-line-y`). If the owner says the line, the pyramid or files, they mean that. |
 | **the glitch on the way out** | What the notes window used to do when you clicked away, and why it is worth knowing: the window is built on the `<body>` (it has to be — a fixed thing inside a transformed box is fixed to that box), which put it in reach of `body > *:not(...)`, the rule that dims the page while the Menu is open. Four `:not()` outrank `.note-panel`, so the window got the menu's `opacity 0.85s` instead of its own `opacity 300ms, transform 300ms` — and the script hid it on a 260ms timer, cutting the window AND the scrim from 0.606 opacity to nothing in one frame. Both selectors now exclude it, and the close waits for `transitionend` rather than a number. **Anything else added as a child of `body` is in the same trap** — and the primer's footnote pop-up (`.primer-tip`) fell into it on 2026-09-23 and is excluded the same way. There is a test for each. |
 | **view notes** | The button at the foot of every fragrance's writing — **the width of the writing, its border in ink at half strength over a ground of its own** since 2026-09-25 ("more visible, and make it wider"; it was as wide as its words, in a faint line) — and the **window** it opens over the page carrying the notes and the source. A real dialog: centred, over a scrim, with the page behind held still, closing on the scrim, on escape and on its own close. **It goes with the fragrance**: collapse the part and the window goes too, and opening the part again leaves it shut. It opened BESIDE the writing for a round, as a column in the part's own row — if the owner remembers it that way, that is what it was until they asked for a window. `notes.js`; `note-*` in `style.css`. It is the one thing on a house page that needs JavaScript. |
-| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 56 of the 108 sources in the file are the house's own, against 52 on the fallback — the houses overtook it on 2026-09-22 and Les Abstraits is the first house where the fallback does not appear at all. Named per entry in `notes-data.js`, with the link the owner can check. |
+| **the source hierarchy** | The order a fragrance's notes are taken in, which the owner gave in as many words: **always the house's own page for that perfume, and Fragrantica only if that fails**. 62 of the 115 sources in the file (second lists and landscapes counted) are the house's own, against 53 on the fallback — the houses overtook it on 2026-09-22 and Les Abstraits is the first house where the fallback does not appear at all. Named per entry in `notes-data.js`, with the link the owner can check. |
 | **the olfactory landscape** | What Almost Human publishes INSTEAD of notes: five impressions rather than a list of materials. Its five fragrances carry a second button and window of their own, standing **before** View notes, with the house's own landscape in it; the notes beside it are the fallback's. It is never called a list of notes, because it is not one. |
 | **the version** (notes) | Which edition a fragrance's notes belong to, printed as a boxed line at the top of its window. Several Pineward fragrances have been reformulated and the note list changes underneath the name, so a list with no year on it is a list you cannot check. Five entries carry one, and four of the five carry the NEWEST version — De Profundis is the 2011 original because the owner asked for that one. |
 | **said nothing** | An entry that was looked up and came back with nothing, which is not the same as no entry at all. `{ missing: "…" }` — ADAR's Root Code and Lithos Diaphanes say *No information as of yet.* and still name the house's page; Grande's "Cookie something (?)" says it could not be found online and names nothing. A fragrance with NO key says instead that the notes "have not been found yet", which means nobody has looked. |
@@ -833,7 +837,7 @@ obvious from the code, ask rather than guessing — then add it to this list.
 | **the caution** (notes) | The small box that comes up on hovering **Fragrantica** in a notes window: *Fragrantica's notes are not to be trusted as 100% fact.* — the owner's own sentence. A `CAUTION` table in `notes.js` keyed by source name, so it is **only** on the fallback; put it on a house's own page and it stops meaning anything, and there is a test saying so. It stands above the source line because the source is the last thing in a window that scrolls. |
 | **the pyramid** | Top / Mid / Base, and it is only written down **when the source actually divides them**. Never assembled from a review's prose — that has already nearly gone wrong once and the near miss is in the notes' report. |
 | **a flat list** | What most houses actually publish: one undivided list of notes. Pineward divides none of its forty-seven, and Almost Human says out loud that it works in "olfactory landscapes" rather than pyramids. An entry is a pyramid or a flat list, never both, and the panel says which. |
-| **individual fragrances** | `individual-fragrances/individual-fragrances.html`: the perfumes that belong to no house on the Houses view, each carrying the house it DID come from. Shaped like a house so it gets the parts, the rank and the notes panel. The **Fragrances** view is the index into it. |
+| **individual fragrances** | `individual-fragrances/individual-fragrances.html`: the perfumes that belong to no house on the Houses view, each carrying the house it DID come from. Shaped like a house so it gets the parts, the rank and the notes panel. The **Fragrances** view is the index into it. **Eight** since 2026-09-25, when House of Ellixirz (Matca) joined as 08 — all written, every picture but Haxan's credited under itself. |
 | **the chain** (specks) / **the tuft** | **Removed.** The specks round a picture on the old contact sheet, kept only within reach of a point where a line tied on. (Not **the chain** of houses, also removed, above.) |
 | **the run** | **Removed.** The line between two pictures drawn as specks rather than as a stroke. Replaced by the trace, which is dashed — a solid stroke is the one thing the line must not be, and there is a test saying so. |
 | **the ring** / **the orbit** | A circle of pictures standing in three dimensions round a big square, which is how Favorites was laid out before it became a menu of chapters. Nothing of it is in the code now — no `RING_*`, no `.gallery-face`, no `<button class="gallery-frame">`. If the owner uses the word, they mean that removed treatment. |
@@ -919,10 +923,9 @@ worth knowing before touching anything shared:
   Tale's twelve and Haxan's other two on 2026-09-23, and Tombstone's ten and Qimu &
   Musicians' four later the same day. The
   mark is not printed on any page at all, and is only ever drawn by the crowd's glitch.
-  Almost Human's five and six of the individual fragrances' seven were uploaded by the
+  Almost Human's five and seven of the individual fragrances' eight were uploaded by the
   owner on 2026-09-25 and the pages point at them under the names they came with. **Nothing
-  is waiting now** but `008 House of Ellixirz.webp`, which came with them and has no eighth
-  individual fragrance to stand on.
+  is waiting now.**
 
 **The placeholders in the new pages are marked as placeholders.** Most of the site's plates
 are waiting for the owner (ADAR's introduction was, until they wrote it on 2026-09-25) (the standfirsts that waited too

@@ -121,6 +121,23 @@ window.FRAGRANCE_NOTES = {
     source: { name: "Fragrantica", url: "https://www.fragrantica.com/perfume/CASA-GOA/Velvet-Fog-103840.html" },
   },
 
+  // HOUSE OF ELLIXIRZ, the eighth, added 2026-09-25 at the owner's word:
+  // "add the following perfume as 008. it is called house of ellixirz
+  // from Matca". THE HOUSE'S OWN PAGE FIRST, as ever — and Matca divides
+  // them, so this is a pyramid. The page itself could not be opened from
+  // here (the address is blocked), so the notes were read through a
+  // search held to matcanaturals.com alone; the link is the product page
+  // the owner gave, without the search engine's tracking tag on the end.
+  // Fragrantica's reading names the same materials with small
+  // differences ("Rose Oil", "Birch", "Cypriol Oil or Nagarmotha") and
+  // is not used, because the house publishes its own.
+  "individual:08": {
+    top: ["Lemon", "Petitgrain"],
+    mid: ["Cassia", "Rose Absolute"],
+    base: ["Nagarmotha", "Tobacco", "Leather", "Birch Tar", "Vanilla", "Caramel"],
+    source: { name: "Matca", url: "https://www.matcanaturals.com/en-eu/products/house-of-ellixirz" },
+  },
+
   // ============================================================
   // ALMOST HUMAN — houses/almost-human.html
   //

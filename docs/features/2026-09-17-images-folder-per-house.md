@@ -259,17 +259,14 @@ That completes the photographs: **every fragrance on every page now has one**, a
 Fragrances view's cards, which read their pictures off the individual fragrances' page,
 all carry theirs.
 
-**`008 House of Ellixirz.webp` came with them and nothing points at it**: there are seven
-individual fragrances and no eighth to hang it on. It waits for the owner to say what it
-is — a new fragrance needs its name and writing from them, and neither is guessed.
+**`008 House of Ellixirz.webp` came with them** — and the same day the owner sent the
+fragrance it belongs to, which is part 08 now (see the next section).
 
 **The credit.** Almost Human now shows photographs, so it carries a `house-credit` line
 like the other eight — and `repository.spec.js` requires one of any house whose pictures
-are on disk. Where the five came from was not said; they are the house's own product shots,
-so the line names **almosthuman.store** — an assumption, as Tale's, Tombstone's and Qimu's
-are, noted in the page's comment for the owner to correct. The individual fragrances page
-has no credit line: its pictures come from six different houses and nobody has said from
-where, and the test covers only `houses/`.
+are on disk. It names **almosthuman.store**, at the owner's word (*"Credit is the Almost
+Human Website"*). The individual fragrances are credited one picture at a time — see the
+next section.
 
 **Three tests had been written against the pictures being missing**, and each was changed
 to take a picture away itself rather than rely on one being absent:
@@ -284,3 +281,37 @@ to take a picture away itself rather than rely on one being absent:
   first of the picture and its hatched square, which was the picture when the picture had
   been taken off; now there is one, the square comes first, hidden, at width 0. It measures
   whichever is showing.
+
+## 2026-09-25, last — every individual fragrance's picture credited, under itself
+
+> Also add the missing pictures for individual perfumes. De profundis source is: … The source
+> for CV99 is fragrantica … Matca house of Ellixirz: …
+
+The owner gave a source for seven of the eight individual fragrances' pictures. They come
+from **seven different places**, so rather than one long line at the foot of the page each
+is credited **under its own picture**, in its caption — `<span class="human-plate-credit">`,
+*Picture: Fragrantica* and a link, in the mono at 10px, under the name. A credit under the
+picture also **travels with it into the fragrance reader**, which copies the pictures out of
+this page but not its foot: `fragrance-reader.js` copies the credit into the reader's own
+plate as a `figcaption.frag-plate-credit` under the picture.
+
+| fragrance | picture from |
+|---|---|
+| 01 CV99 | Fragrantica (fragrantica.hu) |
+| 02 De Profundis | Sillyage (sillyage.wordpress.com) |
+| 03 Haxan | **not given** — no credit yet |
+| 04 Tobacolor | Dior (dior.com) |
+| 05 Flamenco EDP | Aromak (aromak.no) |
+| 06 French Riviera | Vivantis (vivantis.hu) |
+| 07 Velvet Fog | Fragrantica |
+| 08 House of Ellixirz | Matca (matcanaturals.com) |
+
+Matca's link is the product page the owner gave **without** the tracking tag a search
+engine had put on the end of it (`?srsltid=…`), which identifies a search rather than the
+page.
+
+Tested in `tests/notes.spec.js`: **`every individual fragrance's picture is credited under
+itself, but Haxan's`** — the eight parts' credits, in order, each with a link. And in
+`tests/fragrance-reader.spec.js`: **`the reader carries the picture's credit under it`** —
+House of Ellixirz opened from the list shows *Picture: Matca* under its picture, linked, and
+Haxan opened next shows none (the first's does not stay behind).

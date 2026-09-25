@@ -461,6 +461,6 @@ The owner uploaded the five fragrance pictures to `images/Almost-Human/perfumes/
 (`Burning_Bridges_Clean.webp` and the rest) and the page now asks for each by that name, in
 the small square and the full picture both — it had asked for `burning-bridges.jpg` and so
 on, which never arrived, so nothing showed. With pictures on the page, it carries a credit
-line like every other house, naming **almosthuman.store** as where they came from: an
-assumption, since the owner did not say, noted in the page's comment. See [the images
+line like every other house, naming **almosthuman.store** as where they came from — the
+owner's word: *"Credit is the Almost Human Website."* See [the images
 report](2026-09-17-images-folder-per-house.md).

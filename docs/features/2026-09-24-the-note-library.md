@@ -487,3 +487,19 @@ In `tests/note-library.spec.js`:
   is drawn, wider than the rows and behind the books; a board solid across the foot of every
   row; **no ink anywhere on the canvas but the boards** (no upright, crown or back); the label
   `CIT 001–013`; and at 820px, more rows, a board under each and still nothing else.
+
+## 2026-09-25, last — Petitgrain and Cassia
+
+House of Ellixirz brought two notes no record carried, and they would have stood on the
+**returns cart** until given one (and a test fails while anything does):
+
+- **Petitgrain**, filed in **Citrus** between Orange and Tangerine — distilled from the leaves
+  and green twigs of the bitter orange tree rather than its fruit. Citrus is fourteen books
+  now, so its first board reads `CIT 001–014` on a wide window.
+- **Cassia**, filed in **Spice** between Cardamom and Chilli — the bark of Chinese cinnamon.
+  Its explanation says it is not cassie, the acacia flower, because the two are confused and
+  a perfume's list means the bark.
+
+332 records now. The board test worked the first row's label out from `CIT 001–013` written
+into it; it now works it out from the books actually standing on that row, so a note added to
+Citrus does not break it.

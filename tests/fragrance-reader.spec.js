@@ -474,3 +474,27 @@ test("without the reader the rows are still links to the other page",
   const where = await page.locator('.index-what a[href*="part-03"]').getAttribute("href");
   expect(where).toContain("individual-fragrances.html#part-03");
 });
+
+/* THE CREDIT COMES WITH THE PICTURE. A picture is credited wherever it is
+   used, and the reader uses the individual fragrances' pictures — so
+   the credit under each on its own page is carried into the reader,
+   under the picture. House of Ellixirz, the eighth, opened from the
+   list: its picture, and "Picture: Matca" with the link under it. */
+test("the reader carries the picture's credit under it", async ({ page }) => {
+  await toTheList(page);
+  await page.locator('.index-what a[href*="part-08"]').click();
+  await expect(page.locator(".frag-reader.is-here")).toHaveCount(1, { timeout: 5000 });
+  await expect(page.locator(".frag-reader h2").first()).toHaveText("House of Ellixirz");
+  const credit = page.locator(".frag-plate .frag-plate-credit");
+  await expect(credit).toHaveText("Picture: Matca", { timeout: 5000 });
+  await expect(credit.locator("a")).toHaveAttribute("href", "https://www.matcanaturals.com/en-eu/products/house-of-ellixirz");
+  await expect.poll(() => page.locator(".frag-plate img").first().evaluate((img) => img.naturalWidth), { timeout: 5000 })
+    .toBeGreaterThan(0);
+  // Back, and on to another: the first one's credit does not stay behind.
+  await page.locator(".frag-back").click();
+  await page.waitForTimeout(2600);
+  await page.locator('.index-what a[href*="part-03"]').click();
+  await expect(page.locator(".frag-reader.is-here")).toHaveCount(1, { timeout: 5000 });
+  await page.waitForTimeout(800);
+  await expect(page.locator(".frag-plate .frag-plate-credit"), "Haxan's has none").toHaveCount(0);
+});

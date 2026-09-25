@@ -63,7 +63,7 @@ async function withMany(page, n) {
     const res = await route.fetch();
     let html = await res.text();
     let extra = "";
-    for (let i = 8; i < 8 + n; i++) {
+    for (let i = 9; i < 9 + n; i++) {
       const no = String(i).padStart(3, "0");
       extra += `<tr data-no="${i}" data-name="Test ${no}" data-house="House ${i % 9}" data-date="2026-09-24">` +
         `<td class="index-no">${no}</td><td class="index-what"><a href="../individual-fragrances/individual-fragrances.html#part-01">Test ${no}</a></td>` +
@@ -78,9 +78,10 @@ async function withMany(page, n) {
 /* A TABLE, WITH WHAT THE OLD ONE HAD. "the content of the table should
    be the same as before: 3 digit number, then name, then house, then
    date of writing (all of the fragrances at the moment should be
-   yesterdays)". Seven rows, in number order, every one dated 24.09.2026;
+   yesterdays)". Eight rows, in number order, the first seven dated
+   24.09.2026 and House of Ellixirz, written the day after, 25.09.2026;
    the old table itself not on the window. */
-test("the Fragrances view is a table: number, name, house and date, all seven dated yesterday", async ({ page }) => {
+test("the Fragrances view is a table: number, name, house and date, each dated the day it was written", async ({ page }) => {
   const errors = collectPageErrors(page, ["Failed to load resource"]);
   await toTheTable(page);
   await expect(page.locator(".frag-sort")).toHaveText(["No.", "Fragrance", "House", "Date"]);
@@ -92,8 +93,9 @@ test("the Fragrances view is a table: number, name, house and date, all seven da
     ["005", "Flamenco EDP", "Ramon Monegal", "24.09.2026"],
     ["006", "French Riviera", "Mancera", "24.09.2026"],
     ["007", "Velvet Fog", "Casa Goa", "24.09.2026"],
+    ["008", "House of Ellixirz", "Matca", "25.09.2026"],
   ]);
-  await expect(page.locator(".frag-list-count")).toHaveText("007");
+  await expect(page.locator(".frag-list-count")).toHaveText("008");
   await expect(page.locator(".view[data-view='fragrances'] .index-page")).toBeHidden();
   expect(errors).toEqual([]);
 });
@@ -144,8 +146,8 @@ test("the table is nearly the page, with the aside on its left and the options o
   expect(out.aside.right, "the aside to its left").toBeLessThanOrEqual(out.table.left);
   expect(out.options.left, "the options to its right").toBeGreaterThanOrEqual(out.table.right);
   expect(out.options.right).toBeLessThanOrEqual(out.W);
-  expect([out.big, out.houses, out.last]).toEqual(["007", "007", "24.09.2026"]);
-  expect(out.ticks, "a tick for every fragrance").toBe(7);
+  expect([out.big, out.houses, out.last]).toEqual(["008", "008", "25.09.2026"]);
+  expect(out.ticks, "a tick for every fragrance").toBe(8);
   expect(out.mark, "the mark").toBeGreaterThan(100);
   await expect(page.locator(".frag-mode")).toHaveText(["List", "Boxes", "Cards"]);
   await expect(page.locator(".frag-mode[data-mode='list']")).toHaveAttribute("aria-pressed", "true");
@@ -188,7 +190,7 @@ test("a screen holds a good many rows, and the table scrolls in its own box", as
     return { rows: items.length, row: items[0].offsetHeight, seen,
       scrolls: box.scrollHeight > box.clientHeight, page: document.documentElement.scrollHeight - innerHeight };
   });
-  expect(out.rows).toBe(67);
+  expect(out.rows).toBe(68);
   expect(out.row, "a compact row").toBeLessThanOrEqual(38);
   expect(out.seen, "rows on the screen at once, at 1280 by 720").toBeGreaterThanOrEqual(14);
   expect(out.scrolls, "the table scrolls in its own box").toBe(true);
@@ -275,7 +277,7 @@ test("the headings sort the table and the field searches it, in any of the three
   await toTheTable(page);
   await page.locator(".frag-sort[data-key='name']").click();
   expect((await rowsOf(page)).map((r) => r[1])).toEqual(
-    ["CV99", "De Profundis", "Flamenco EDP", "French Riviera", "Haxan", "Tobacolor", "Velvet Fog"]);
+    ["CV99", "De Profundis", "Flamenco EDP", "French Riviera", "Haxan", "House of Ellixirz", "Tobacolor", "Velvet Fog"]);
   await page.locator(".frag-sort[data-key='name']").click();
   expect((await rowsOf(page))[0][1], "pressed again, turned round").toBe("Velvet Fog");
   await expect(page.locator(".frag-read-sort")).toHaveText("Fragrance ↑");
@@ -324,9 +326,14 @@ test("the old Fragrances view is kept, in the archive and in the page", async ({
   const live = fs.readFileSync(path.join(root, "categories", "scent-descriptions.html"), "utf8");
   const section = (html) => html.slice(html.indexOf('<section class="view" data-view="fragrances"'),
     html.indexOf("</section>", html.indexOf('<section class="view" data-view="fragrances"')) + 10);
-  // The one thing that has changed in the page since is what the owner
-  // asked for in the same breath: the dates on 001 to 007.
-  const undated = (html) => html.replace(/data-date="[^"]*"/g, 'data-date=""').replace(/<td class="index-date">[^<]*<\/td>/g, '<td class="index-date"></td>');
+  // What has changed in the page since is what the owner asked for:
+  // the dates on 001 to 007, in the same breath, and a fragrance added
+  // after them — 008, House of Ellixirz, on 2026-09-25 — with the count
+  // over the table that goes with it. A row the archive never had is
+  // taken out before comparing; every row it did have must be the same.
+  const undated = (html) => html.replace(/data-date="[^"]*"/g, 'data-date=""').replace(/<td class="index-date">[^<]*<\/td>/g, '<td class="index-date"></td>')
+    .replace(/\s*<tr data-no="(?:[89]|\d{2,})"[\s\S]*?<\/tr>/g, "")
+    .replace(/(<span class="index-count" aria-hidden="true">)\d+(<\/span>)/, "$1$2");
   expect(section(kept).length).toBeGreaterThan(1000);
   expect(undated(section(live)), "the page still carries the old view, unchanged but for its dates").toBe(undated(section(kept)));
 

@@ -321,7 +321,7 @@
     // The picture and the writing, out of the page they live in.
     const text = reader.querySelector(".frag-text");
     text.innerHTML = '<p class="frag-waiting">Fetching the writing…</p>';
-    plate.querySelectorAll("img, .frag-plate-more").forEach((el) => el.remove());
+    plate.querySelectorAll("img, .frag-plate-more, .frag-plate-credit").forEach((el) => el.remove());
 
     theSheet().then((doc) => {
       const part = doc.getElementById("part-" + no);
@@ -364,6 +364,15 @@
         }
         more.appendChild(img);
       });
+      // AND WHERE IT CAME FROM, under it, as on the page it came from:
+      // a picture is credited wherever it is used.
+      const credit = part.querySelector(".human-plate-credit");
+      if (credit) {
+        const cap = document.createElement("figcaption");
+        cap.className = "frag-plate-credit";
+        cap.innerHTML = credit.innerHTML;
+        plate.appendChild(cap);
+      }
     }).catch(() => {
       text.innerHTML = '<p class="frag-waiting">The writing could not be fetched. ' +
         'It is on <a href="' + WHERE + '#part-' + no + '">its own page</a>.</p>';

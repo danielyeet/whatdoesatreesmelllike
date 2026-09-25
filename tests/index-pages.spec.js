@@ -171,7 +171,7 @@ test("the headings stay where they are while the rows scroll under them",
   async ({ page }) => {
   // THE TABLE IS MADE LONG HERE RATHER THAN FOUND LONG. Until the
   // Fragrances view became its own review page it carried sixty-three
-  // rows and overflowed its box on its own; it carries seven now, and
+  // rows and overflowed its box on its own; it carries eight now, and
   // neither index on the site is long enough to scroll. What is being
   // checked is the LAYOUT — that a heading stays put while rows go
   // under it — and that has to hold whatever the table happens to
@@ -210,7 +210,7 @@ test("the whole index comes out on one screen, whatever is in the table",
 
   // As above: the rows are cloned until there are far more than would
   // ever fit, because "whatever is in the table" is the whole claim and
-  // the real table is seven rows long today.
+  // the real table is eight rows long today.
   const fits = await page.evaluate(() => {
     const body = document.querySelector(".index-table tbody");
     const seed = [...body.querySelectorAll("tr")];
