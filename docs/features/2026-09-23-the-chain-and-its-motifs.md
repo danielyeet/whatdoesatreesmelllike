@@ -717,8 +717,10 @@ npm test -- tests/contact-sheet.spec.js
   and the shelf, and 500 and more on the shelf and the floor of it.
 - `ADAR's wells bend the page towards them, and let it go again` — while ADAR is rested on,
   `bend()` gives a field; somewhere a point is drawn more than 20px in towards a hole, and points
-  more than 200px from it are still moved; a house not rested on is turned and the rested one
-  is not; three seconds after leaving there is no field and no house is turned.
+  more than 200px from it are still moved; watched for up to twelve seconds until a well has come
+  near a house, which is then turned, while the rested one never is (a well lands where it will,
+  and the first full run caught one far from every house, which rightly turned none); three
+  seconds after leaving there is no field and no house is turned.
 - `Qimu & Musicians' motifs are short five-line staves with notes on them` reads again for a few
   seconds until a stave has been written, rather than once at a fixed moment: it failed once in
   a full run on a loaded machine, and passes every time on its own.

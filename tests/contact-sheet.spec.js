@@ -999,11 +999,11 @@ test("Les Abstraits' armoire has clothes on hangers and folded on its shelf", as
    is rested on, the motifs hand the Houses view a field it draws itself
    through: somewhere on the window a point is drawn well in towards a
    hole, and the field reaches much further than the soundings' 150px
-   rings did. The houses not rested on are turned in it; the one under
+   rings did. A house a well comes near is turned in it; the one under
    the pointer is left exactly where it is. And leaving ADAR puts the
    page back as it was. */
 test("ADAR's wells bend the page towards them, and let it go again", async ({ page }) => {
-  test.setTimeout(60000);
+  test.setTimeout(90000);
   const errors = collectPageErrors(page);
   await page.goto(SHEET);
   await waitForSheet(page);
@@ -1021,15 +1021,32 @@ test("ADAR's wells bend the page towards them, and let it go again", async ({ pa
       if (m > most) { most = m; mx = x; my = y; }
     }
     const reach = Math.max(0, ...moved.map(([x, y]) => Math.hypot(x - mx, y - my)));
-    const hot = document.querySelector(".sheet-frame.hot");
-    const turned = [...document.querySelectorAll(".sheet-frame:not(.hot)")].filter((f) => /rotate/.test(f.style.transform)).length;
-    return { most, reach, hotTurned: /rotate/.test(hot.style.transform), turned };
+    return { most, reach };
   });
   expect(out, "a field while ADAR is rested on").not.toBeNull();
   expect(out.most, "something drawn well in towards a hole").toBeGreaterThan(20);
   expect(out.reach, "and reaching far past where the soundings rang").toBeGreaterThan(200);
-  expect(out.turned, "the houses round it turned in it").toBeGreaterThan(0);
-  expect(out.hotTurned, "and not the one under the pointer").toBe(false);
+  // THE HOUSES. A well lands where it will, and one far from every house
+  // touches none — so this watches for a while, until one has come near
+  // a house: every house the field reaches is turned in it, and the one
+  // under the pointer never is.
+  let turned = 0, hotTurned = false;
+  for (let i = 0; i < 30 && !turned; i++) {
+    const r = await page.evaluate(() => {
+      const bend = window.HouseMotifs.bend();
+      const hot = document.querySelector(".sheet-frame.hot");
+      let n = 0;
+      [...document.querySelectorAll(".sheet-frame:not(.hot)")].forEach((f) => {
+        if (/rotate/.test(f.style.transform)) n++;
+      });
+      return { n, hot: /rotate/.test(hot.style.transform), any: !!bend };
+    });
+    turned = r.n;
+    hotTurned = hotTurned || r.hot;
+    if (!turned) await page.waitForTimeout(400);
+  }
+  expect(turned, "the houses round a well turned in it").toBeGreaterThan(0);
+  expect(hotTurned, "and never the one under the pointer").toBe(false);
   await page.mouse.move(5, 300, { steps: 3 });
   await page.waitForTimeout(3000);
   const after = await page.evaluate(() => ({ bend: !!window.HouseMotifs.bend(),
