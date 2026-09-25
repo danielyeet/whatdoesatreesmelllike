@@ -39,44 +39,33 @@
 // is the whole of how the owner's "all elements apart from the top left"
 // is done — by what is in the box, not by a list of exceptions.
 //
-// AND NOW A THIRD, WHICH REPLACES BOTH WHILE THE FRAGRANCES ARE DRAWN BY
-// fragrance-line.js.
-// The owner, 2026-09-25: "the line from houses will have a pixel stretch
-// effect to the right side of the page, while everything else fades
-// (except the particles). and then the page will scroll (so that the
-// left side of the fragrances page has the same pixel stretch effect
-// until the middle of the screen), which will then unstretch in the
-// middle to form the new center line ... and then the rest of the page
-// should load in to completion. It should be minimal and geometric."
+// AND A THIRD, WHICH REPLACES BOTH WHILE THE FRAGRANCES ARE DRAWN BY
+// fragrance-line.js (it puts `.frag-stage` in the view): THE CROSSING.
+// The owner, the night of 2026-09-25: "change the transition too please,
+// so that the pixel stretch is not used. I want something simple, so that
+// you can freely change between the houses and fragrances page. Make the
+// two pages connected somehow too."
 //
-//   THE STRETCH (`stretch`), every time, both ways, once the Fragrances
-//   view is fragrance-line.js's (it puts `.frag-stage` in it):
-//   1  STRETCH  everything on the Houses view but its particles fades,
-//               and its axis is smeared out to the right as a pixel
-//               column is when it is stretched — a streak for every row
-//               of it, each its own length and weight, reaching across
-//               the window and on past its edge;
-//   2  TRAVEL   the page travels a whole window to the left, the
-//               houses going off one edge and the (still empty)
-//               fragrances coming in from the other, so the streaks now
-//               run from the left edge to the middle of the window;
-//   3  GATHER   there, they unstretch: the streaks come in, in order,
-//               to the RULES of the table — the rule under its sort bar
-//               and the line under every row in the window (a box's top
-//               and foot, in the boxes and the cards), which the view
-//               publishes as `data-rules` on its stage — and pull in to
-//               the table's own width, so the stretched column of pixels
-//               becomes the table's ruling. (Until the night of
-//               2026-09-25 they became ONE LINE across the window, which
-//               the Fragrances view then stood on; the owner had the line
-//               taken out.)
-//   4  ARRIVE   and what is written in the table comes in on its ruling
-//               (`data-arrive="ruled"`).
-//   Back to the Houses is the same run the other way: the ruling spreads
-//   into its streaks, the page travels right, and the streaks draw back
-//   into the axis before the houses come in on it.
-//   The fade and the swipe above are what the page still does whenever
-//   the Fragrances view is the old table (fragrance-line.js blocked).
+//   SIMPLE      the view being left fades a little way off to one side as
+//               the other fades in from the other, both at once, in
+//               `CROSS_MS` — no beats, nothing held back.
+//   FREE        a press while it is running is taken AT ONCE, not
+//               remembered for later: the crossing simply turns round
+//               from wherever it has got to, both views still pinned, so
+//               you can go back and forth as fast as you like.
+//   CONNECTED   by THE THREAD: one line, the height of the window, that
+//               stands where the houses' axis stands and travels, as the
+//               views cross, to where the Fragrances view's divider stands
+//               between its aside and its table (and back). The axis
+//               becomes the divider; the two pages are one line apart.
+//               And each view carries a way to the other in itself — any
+//               element with `data-view-go="houses"` or `"fragrances"` is
+//               a button to that view.
+//
+// THE STRETCH that came before it (the axis smeared into pixel streaks,
+// the page travelling a window, the streaks gathering into the table's
+// rules) was taken out whole at the owner's word; nothing of it is left
+// here or in the stylesheet.
 //
 // NEITHER VIEW KNOWS ABOUT THE OTHER. contact-sheet.js draws one and
 // index-page.js runs the other; this file only shows and hides them,
@@ -100,11 +89,9 @@
   // And as long as the swipe written there. With animation turned off
   // there is no travel at all — the views simply change over.
   const SWIPE_MS = REDUCE_MOTION ? 0 : 520;
-  // THE STRETCH's four beats.
-  const STRETCH_OUT_MS = 640;
-  const STRETCH_TRAVEL_MS = 780;
-  const STRETCH_GATHER_MS = 640;
-  const STRETCH_HAND_MS = 280;
+  // THE CROSSING: how long, and how far each view travels as it fades.
+  const CROSS_MS = 380;
+  const CROSS_SHIFT = 26;
 
   // The order the views stand in, which is the order of the buttons: it
   // is what decides which way the page travels. Going to a view further
@@ -216,216 +203,101 @@
     });
   }
 
-  /** THE STRETCH — see the note at the head of this file. `way` is 1
-      going on to the Fragrances and -1 coming back to the Houses. The
-      streaks are drawn on a canvas of their own over both views; the
-      views themselves are pinned to the window for the length of it, as
-      the swipe pins them, and travel by transform. */
-  function stretch(going, coming, name, way) {
-    const W = window.innerWidth, H = window.innerHeight;
-    const y = window.scrollY || window.pageYOffset || 0;
-    const at = box.getBoundingClientRect();
-    const boxTop = Math.round(at.top + y);
+  /** THE CROSSING — see the note at the head of this file. `way` is 1
+      going on to the Fragrances and -1 coming back to the Houses. */
+  let crossing = null;
+  const thread = document.createElement("div");
+  thread.className = "views-thread";
+  thread.setAttribute("aria-hidden", "true");
+  // IN THE BOX, NOT ON THE BODY: a child of the body falls under the
+  // Menu's dimming rule (`body > *:not(...)`), whose 0.85s opacity
+  // outranks the thread's own transitions — the trap the notes window
+  // fell into. The box itself never moves, so the thread is still fixed
+  // to the window.
+  (box || document.body).appendChild(thread);
+  /** Where the thread stands on each view: the houses' axis, and the
+      divider the Fragrances view publishes on its stage. */
+  function anchorOf(name) {
+    if (name === "fragrances") {
+      const stage = document.querySelector(".frag-stage");
+      return stage && stage.dataset.divider ? +stage.dataset.divider : null;
+    }
     const sheet = document.getElementById("sheet");
-    const table = document.querySelector(".frag-stage");
-    const sheetBox = sheet ? sheet.getBoundingClientRect() : null;
-    const axisX = sheetBox && sheetBox.width ? sheetBox.left + sheetBox.width / 2 : W / 2;
-    // WHERE THE TABLE'S RULES STAND, read the first time the streaks
-    // gather — going on, the view is only just on the page by then, and
-    // it measures itself as it arrives.
-    let ruling = null;
-    const rules = () => {
-      if (ruling) return ruling;
-      const ys = table && table.dataset.rules
-        ? table.dataset.rules.split(",").map(Number).filter((n) => isFinite(n) && n >= 0 && n <= H)
-        : [];
-      const l = table && table.dataset.ruleL ? +table.dataset.ruleL : 0;
-      const r = table && table.dataset.ruleR ? +table.dataset.ruleR : W;
-      ruling = { ys: ys.length ? ys : [Math.round(H * 0.53)], l: Math.max(0, l), r: Math.min(W, r > l ? r : W) };
-      return ruling;
-    };
-    const INK = getComputedStyle(document.body).getPropertyValue("--ink-rgb").trim() || "23, 23, 15";
-    const houses = way > 0 ? going : coming;
-    const fragrances = way > 0 ? coming : going;
+    const r = sheet ? sheet.getBoundingClientRect() : null;
+    return r && r.width ? r.left + r.width / 2 : window.innerWidth / 2;
+  }
+  function placeThread(x, shown, moving) {
+    thread.classList.toggle("moving", !!moving);
+    if (x != null) thread.style.transform = "translateX(" + Math.round(x) + "px)";
+    thread.style.opacity = shown ? "1" : "0";
+  }
 
-    // THE STREAKS, one for every few pixels down the axis: each with its
-    // own weight (mostly the axis's faint light, now and then one of its
-    // darker specks) and its own reach, a few falling well short, which
-    // is what makes it read as a stretched column of pixels rather than
-    // as a ruled field.
-    let seed = 9091;
-    const random = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
-    const rows = [];
-    for (let ry = 0; ry < H; ry += 3) {
-      const dark = random() < 0.16;
-      rows.push({
-        y: ry + random() * 2, th: random() < 0.5 ? 2 : 3,
-        a: dark ? 0.45 + random() * 0.35 : 0.07 + random() * 0.2,
-        f: random() < 0.12 ? 0.35 + random() * 0.45 : 0.86 + random() * 0.14,
-      });
+  function cross(going, coming, name, way) {
+    if (!crossing) {
+      // PINNED, as the swipe pins them: the one being left exactly where
+      // it stands; the one arriving at its own top, where the page will be
+      // scrolled to when this is over. A view holding the table is pinned
+      // to the window's own top, its stage being fixed to the window.
+      const y = window.scrollY || window.pageYOffset || 0;
+      const at = box.getBoundingClientRect();
+      const boxTop = Math.round(at.top + y);
+      box.style.height = Math.round(at.height) + "px";
+      box.classList.add("swiping");
+      document.documentElement.classList.add("view-swiping");
+      const pin = (view, top) => {
+        view.classList.add("sliding");
+        view.style.top = (view.classList.contains("table-on") ? 0 : top) + "px";
+        if (view.classList.contains("table-on")) view.style.height = window.innerHeight + "px";
+      };
+      pin(going, boxTop - y);
+      pin(coming, boxTop);
+      coming.style.opacity = "0";
+      coming.style.transform = "translateX(" + way * CROSS_SHIFT + "px)";
+      // The thread starts where the view being left has it.
+      placeThread(anchorOf(nameOf(going)), true, false);
+      crossing = { from: going };
+    } else {
+      window.clearTimeout(crossing.timer);
     }
-    const canvas = document.createElement("canvas");
-    canvas.className = "view-stretch";
-    canvas.setAttribute("aria-hidden", "true");
-    const ratio = Math.min(window.devicePixelRatio || 1, W < 700 ? 1.5 : 2);
-    document.body.appendChild(canvas);
-    // SIZED BY ITS OWN BOX, not by the window: the page keeps a gutter for
-    // its scrollbar (`scrollbar-gutter: stable`), so a canvas fixed to the
-    // window is that much narrower than `innerWidth`, and drawn at the
-    // window's width it was squeezed by a hair — which did not show while
-    // the streaks became a line across the whole window, and did once they
-    // had to land on the table's own rules.
-    const wide = Math.round(canvas.getBoundingClientRect().width) || W;
-    canvas.width = Math.round(wide * ratio);
-    canvas.height = Math.round(H * ratio);
-    const g = canvas.getContext("2d");
-    const smooth = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
-
-    /** A streak from x1 to x2 at height ry, fading along its length the
-        way a smear does. */
-    function streak(x1, x2, ry, th, a) {
-      if (x2 < x1) [x1, x2] = [x2, x1];
-      const from = Math.max(-2, x1), to = Math.min(W + 2, x2);
-      if (to <= from || a < 0.004) return;
-      const grad = g.createLinearGradient(x1, 0, x2, 0);
-      grad.addColorStop(0, "rgba(" + INK + "," + a.toFixed(3) + ")");
-      grad.addColorStop(1, "rgba(" + INK + "," + (a * 0.35).toFixed(3) + ")");
-      g.fillStyle = grad;
-      g.fillRect(from, ry - th / 2, to - from, th);
-    }
-    /** The table's ruling, coming up as the streaks become it: a
-        hairline at every rule, the table's own width. */
-    function newRules(a) {
-      if (a <= 0) return;
-      const R = rules();
-      g.fillStyle = "rgba(" + INK + "," + (0.42 * a).toFixed(3) + ")";
-      R.ys.forEach((ry) => g.fillRect(R.l, ry - 0.5, R.r - R.l, 1));
-    }
-
-    // Where each streak stands, in the Houses view's own coordinates,
-    // at a point `p` of the whole run (0 the axis, 1 the ruling):
-    //   stretched  from the axis out to its reach, a window along
-    //   gathered   at the height of its rule, across the table's width —
-    //              the streaks taken in order, so the top of the column
-    //              becomes the top rule and its foot the last
-    function frameAt(stage, k, shift) {
-      g.setTransform(ratio, 0, 0, ratio, 0, 0);
-      g.clearRect(0, 0, W, H);
-      const R = stage === "gather" ? rules() : null;
-      rows.forEach((r, i) => {
-        const reach = axisX + r.f * W;          // how far the stretched streak runs
-        let x1 = axisX, x2 = axisX, ry = r.y, th = r.th, a = r.a;
-        if (stage === "out") { x2 = axisX + (reach - axisX) * k; }
-        else if (stage === "travel") { x2 = reach; }
-        else if (stage === "gather") {
-          const to = R.ys[Math.min(R.ys.length - 1, Math.floor(i * R.ys.length / rows.length))];
-          x1 = axisX + (R.l - shift - axisX) * k;
-          x2 = reach + (R.r - shift - reach) * k;
-          ry = r.y + (to - r.y) * k;
-          th = r.th + (1 - r.th) * k;
-          a = r.a * (1 - k * 0.85);
-        }
-        streak(x1 + shift, x2 + shift, ry, th, a);
-      });
-      if (stage === "gather") newRules(k);
-    }
-
-    // PINNED, as the swipe pins them. A view holding the table is pinned
-    // to the window's own top, since its stage is fixed to the window and
-    // a transform makes the view that stage's frame for the length of it.
-    box.style.height = Math.round(at.height) + "px";
-    box.classList.add("stretching");
-    document.documentElement.classList.add("view-swiping");
-    const pin = (view, x) => {
-      view.classList.add("sliding");
-      view.style.top = (view.classList.contains("table-on") ? 0 : boxTop - y) + "px";
-      if (view.classList.contains("table-on")) view.style.height = H + "px";
-      view.style.transform = "translateX(" + x + "px)";
-    };
-    pin(going, 0);
-    going.classList.add("stretch-hide");
-    if (way < 0) { coming.classList.add("stretch-hide"); }
-    else { coming.dataset.arrive = "wait"; }
-
-    const t0 = performance.now();
-    const A = STRETCH_OUT_MS, B = STRETCH_TRAVEL_MS, C = STRETCH_GATHER_MS, D = STRETCH_HAND_MS;
-    let shownComing = false;
-    const step = (now) => {
-      const t = now - t0;
-      if (way > 0) {
-        // ON TO THE FRAGRANCES.
-        if (t < A) frameAt("out", smooth(t / A), 0);
-        else if (t < A + B) {
-          if (!shownComing) {
-            shownComing = true;
-            document.body.classList.toggle("view-fragrances", name === "fragrances");
-            coming.hidden = false;
-            pin(coming, W);
-          }
-          const u = smooth((t - A) / B);
-          going.style.transform = "translateX(" + (-W * u).toFixed(1) + "px)";
-          coming.style.transform = "translateX(" + (W * (1 - u)).toFixed(1) + "px)";
-          frameAt("travel", 1, -W * u);
-        } else if (t < A + B + C) {
-          coming.style.transform = "translateX(0px)";
-          going.style.transform = "translateX(" + (-W) + "px)";
-          frameAt("gather", smooth((t - A - B) / C), -W);
-        } else if (t < A + B + C + D) {
-          if (coming.dataset.arrive === "wait") coming.dataset.arrive = "ruled";
-          frameAt("gather", 1, -W);
-          canvas.style.opacity = String(1 - (t - A - B - C) / D);
-        } else { finish(); return; }
-      } else {
-        // BACK TO THE HOUSES: the same run backwards, the page travelling
-        // the other way, and the streaks drawing back into the axis.
-        const back = A + B + C;
-        if (t < C) {
-          frameAt("gather", 1 - smooth(t / C), -W);
-        } else if (t < C + B) {
-          if (!shownComing) {
-            shownComing = true;
-            document.body.classList.toggle("view-fragrances", name === "fragrances");
-            coming.hidden = false;
-            pin(coming, -W);
-          }
-          const u = smooth((t - C) / B);
-          going.style.transform = "translateX(" + (W * u).toFixed(1) + "px)";
-          coming.style.transform = "translateX(" + (-W * (1 - u)).toFixed(1) + "px)";
-          frameAt("travel", 1, -W * (1 - u));
-        } else if (t < back) {
-          coming.style.transform = "translateX(0px)";
-          going.style.transform = "translateX(" + W + "px)";
-          frameAt("out", 1 - smooth((t - C - B) / A), 0);
-        } else if (t < back + D) {
-          if (houses.classList.contains("stretch-hide")) {
-            houses.classList.remove("stretch-hide");
-            houses.classList.add("stretch-in");
-          }
-          g.clearRect(0, 0, W, H);
-        } else { finish(); return; }
-      }
-      requestAnimationFrame(step);
-    };
-    function finish() {
+    document.body.classList.toggle("view-fragrances", name === "fragrances");
+    // The table is there at once, whole — the crossing is its arrival.
+    if (coming.classList.contains("table-on")) coming.dataset.arrive = "now";
+    coming.hidden = false;
+    void coming.offsetWidth;
+    [going, coming].forEach((view) => view.classList.add("crossing"));
+    coming.style.opacity = "1";
+    coming.style.transform = "translateX(0)";
+    going.style.opacity = "0";
+    going.style.transform = "translateX(" + -way * CROSS_SHIFT + "px)";
+    // THE THREAD travels to where the arriving view has it; where it has
+    // none (a phone, whose table has no divider), it goes as it travels.
+    requestAnimationFrame(() => {
+      const to = anchorOf(name);
+      placeThread(to == null ? (way > 0 ? 0 : window.innerWidth / 2) : to, to != null, true);
+    });
+    crossing.going = going;
+    crossing.coming = coming;
+    crossing.timer = window.setTimeout(() => {
+      const done = crossing;
+      crossing = null;
       window.scrollTo(0, 0);
-      [going, coming].forEach((view) => {
-        view.classList.remove("sliding", "stretch-hide");
+      [done.going, done.coming].forEach((view) => {
+        view.classList.remove("sliding", "crossing");
         view.style.transform = "";
+        view.style.opacity = "";
         view.style.top = "";
         view.style.height = "";
       });
-      going.hidden = true;
-      if (fragrances.dataset.arrive === "wait") fragrances.dataset.arrive = "ruled";
-      box.classList.remove("stretching");
+      done.going.hidden = true;
+      box.classList.remove("swiping");
       box.style.height = "";
       document.documentElement.classList.remove("view-swiping");
-      canvas.remove();
-      window.setTimeout(() => houses.classList.remove("stretch-in"), 760);
-      moving = false;
-      drain();
-    }
-    requestAnimationFrame(step);
+      // On the Fragrances the thread stays, as the divider's own line
+      // until the stage's is there; on the Houses the axis has it.
+      placeThread(null, false, false);
+    }, CROSS_MS + 30);
   }
+  const nameOf = (view) => view.dataset.view;
 
   function show(name) {
     // A PRESS THAT LANDS MID-TRAVEL IS REMEMBERED, NOT DROPPED — the
@@ -434,6 +306,19 @@
     // was running swallowed it. Only the latest is kept: pressing three
     // buttons during one swipe goes to the last one asked for, not
     // through all of them.
+    // MID-CROSSING, A PRESS IS TAKEN AT ONCE: the crossing turns round
+    // from wherever it has got to.
+    if (crossing) {
+      if (name === showing) return;
+      const back = viewOf(name), from = viewOf(showing);
+      const way = order.indexOf(name) > order.indexOf(showing) ? 1 : -1;
+      showing = name;
+      buttons.forEach((b) => b.classList.toggle("is-on", b.dataset.view === name));
+      buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === name)));
+      opened.add(name);
+      cross(from, back, name, way);
+      return;
+    }
     if (moving) {
       wanted = name === showing ? null : name;
       return;
@@ -443,25 +328,26 @@
     const coming = viewOf(name);
     if (!going || !coming) return;
     moving = true;
-    const was = showing;
+    const before = showing;
     showing = name;
 
     buttons.forEach((b) => b.classList.toggle("is-on", b.dataset.view === name));
     buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === name)));
 
-    // BOTH OPENED AT LEAST ONCE, AND ONLY THEN. `was` is on the page, so
+    // BOTH OPENED AT LEAST ONCE, AND ONLY THEN. `before` is on the page, so
     // it has been opened by definition; the question is only whether the
     // one being gone to ever has been.
     const swiping = opened.has(name) && box && SWIPE_MS > 0;
-    opened.add(was);
+    opened.add(before);
     opened.add(name);
-    // THE STRETCH, whenever the Fragrances are fragrance-line.js's.
+    // THE CROSSING, whenever the Fragrances are fragrance-line.js's.
     if (box && !REDUCE_MOTION && document.querySelector(".view.table-on .frag-stage")) {
-      stretch(going, coming, name, order.indexOf(name) > order.indexOf(was) ? 1 : -1);
+      moving = false;
+      cross(going, coming, name, order.indexOf(name) > order.indexOf(before) ? 1 : -1);
       return;
     }
     if (swiping) {
-      const way = order.indexOf(name) > order.indexOf(was) ? 1 : -1;
+      const way = order.indexOf(name) > order.indexOf(before) ? 1 : -1;
       swipe(going, coming, name, way);
       return;
     }
@@ -491,5 +377,13 @@
   buttons.forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.view === showing));
     button.addEventListener("click", () => show(button.dataset.view));
+  });
+  // A WAY TO THE OTHER VIEW from inside either one: anything carrying
+  // `data-view-go` goes to the view it names.
+  document.addEventListener("click", (event) => {
+    const go = event.target.closest && event.target.closest("[data-view-go]");
+    if (!go || !viewOf(go.dataset.viewGo)) return;
+    event.preventDefault();
+    show(go.dataset.viewGo);
   });
 })();

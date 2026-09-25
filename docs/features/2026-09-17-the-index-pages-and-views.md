@@ -146,6 +146,16 @@ is gone, from this view and from Researches both: the owner asked for it off the
 
 ## The swipe between the two views
 
+> **Since the night of 2026-09-25 neither of these is what the page does** while the Fragrances
+> view is `fragrance-line.js`'s table: it is **the crossing**, the owner's *"something simple, so
+> that you can freely change between the houses and fragrances page"* — the two views fading
+> through each other a little way to either side, turning round at once when pressed again, and
+> joined by a line that travels from the houses' axis to the table's divider. See [the fragrance
+> line](2026-09-25-the-fragrance-line.md). The swap and the swipe below still run when that script
+> is not there (two spec files block it on purpose to test the old table). The rule below that two
+> things must never fade through each other *in the same place* still holds: the crossing's two
+> drift apart as they pass.
+
 The owner asked for the change from one view to the other to be a swipe — *"all elements
 apart from the top left menu — scent descriptions will move to the left, and be replaced
 by the fragrances tab"* — and for it to happen **only after both views have been opened**.

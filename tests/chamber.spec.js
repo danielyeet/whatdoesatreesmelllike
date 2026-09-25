@@ -1882,13 +1882,19 @@ test("the morph lands on the very frame that comes up, and leaves the old drawin
       away.push(sheet());
       const before = read(ground);
       document.querySelector(".chapter-step-on").click();
-      // Straight after the press: the flight's first frame, and the new
-      // drawing as the flight is aimed at it.
-      const first = read(morph);
+      // The flight is set up on the frame after the press (the press is
+      // answered at once, and the setting up waits a frame), so it is
+      // read then: the flight's first frame, and the new drawing as the
+      // flight is aimed at it.
+      let first = null;
       const aimedShot = document.createElement("canvas");
       aimedShot.width = ground.width;
       aimedShot.height = ground.height;
-      aimedShot.getContext("2d").drawImage(ground, 0, 0);
+      requestAnimationFrame(() => {
+        first = read(morph);
+        aimedShot.getContext("2d").drawImage(ground, 0, 0);
+        requestAnimationFrame(wait);
+      });
       const ground0 = ground;
       const wait = () => {
         if (!morph.hidden) { requestAnimationFrame(wait); return; }
@@ -1904,7 +1910,6 @@ test("the morph lands on the very frame that comes up, and leaves the old drawin
           });
         }, 2300);
       };
-      requestAnimationFrame(wait);
     }));
     await expect(page.locator(".chapter-name")).toHaveText(to);
     expect(seen.moves, `${to}'s drawing turns once it is let go`).toBeGreaterThan(0.05);
@@ -1914,4 +1919,101 @@ test("the morph lands on the very frame that comes up, and leaves the old drawin
     await page.waitForTimeout(600);
   }
   expect(errors).toEqual([]);
+});
+
+/* SMOOTHER: "whenever you transitoon from chapter 1 to chapter 2 or
+   back, its quite laggy, so make it smoother." Two things made it lag,
+   and both are held here. THE PRESS IS ANSWERED AT ONCE — the writing
+   starts to go in the same moment (`turning`), and the second or so of
+   setting the flight up waits for the next frame rather than holding the
+   press up. And THE NEW DRAWING IS NOT REDRAWN UNSEEN: held still under
+   its veil for most of the flight, it used to draw the same frame over
+   and over, as heavy as the flight itself; now nothing is drawn on it
+   between its first held frame and the veil lifting. */
+test("stepping chapters answers the press at once, and nothing is drawn unseen under the veil",
+  async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => {
+    window.__groundRects = 0;
+    const fillRect = CanvasRenderingContext2D.prototype.fillRect;
+    CanvasRenderingContext2D.prototype.fillRect = function () {
+      if (this.canvas.classList.contains("chapter-ground")) window.__groundRects++;
+      return fillRect.apply(this, arguments);
+    };
+  });
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+  await page.waitForTimeout(1200);
+  const seen = await page.evaluate(() => new Promise((done) => {
+    const pageEl = document.querySelector(".chapter-page");
+    const ground = document.querySelector(".chapter-ground");
+    const t0 = performance.now();
+    document.querySelector(".chapter-step-on").click();
+    const out = { answered: pageEl.classList.contains("turning"), took: performance.now() - t0, veiledRects: 0, veiledFrames: 0 };
+    let from = -1;
+    const look = () => {
+      const t = performance.now() - t0;
+      const veiled = ground.style.opacity !== "" && parseFloat(ground.style.opacity) === 0;
+      // From a few frames in (the new drawing's first held frame is
+      // drawn once) until the veil starts to lift.
+      if (veiled && t > 200) {
+        if (from < 0) from = window.__groundRects;
+        out.veiledFrames++;
+        out.veiledRects = window.__groundRects - from;
+      }
+      if (t < 1600) { requestAnimationFrame(look); return; }
+      done(out);
+    };
+    requestAnimationFrame(look);
+  }));
+  expect(seen.answered, "the writing starts to go on the press itself").toBe(true);
+  expect(seen.took, "and the press is not held up").toBeLessThan(30);
+  expect(seen.veiledFrames, "the new drawing was under its veil for a while").toBeGreaterThan(5);
+  expect(seen.veiledRects, "and nothing was drawn on it there").toBe(0);
+});
+
+/* THE SPIN PICKS UP: "i want the spinning to start gradually after the
+   transiton. to pick up speed and accelerate into the speed that it is
+   currently spinning at. make that SLIGHTLY gradual." Read off each
+   drawing's own clock (`at`): held, it stands; let go, it moves on
+   slowly at first, and a second and a half later it is going at its
+   full rate. */
+test("let go after the morph, the sun and the moon pick up speed rather than setting off at full", async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  const out = await page.evaluate(async () => {
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const res = {};
+    for (const name of ["sun", "moon"]) {
+      const c = document.createElement("canvas");
+      c.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;opacity:0.01";
+      document.body.appendChild(c);
+      const g = window.CHAPTER_GROUNDS[name](c, { column: () => null });
+      g.hold(true);
+      await wait(200);
+      const a0 = g.at();
+      await wait(250);
+      const still = g.at() - a0;
+      g.hold(false);
+      const b0 = g.at();
+      await wait(300);
+      const first = g.at() - b0;
+      await wait(1500);
+      const c0 = g.at();
+      await wait(300);
+      const later = g.at() - c0;
+      g.stop();
+      c.remove();
+      res[name] = { still, first, later };
+    }
+    return res;
+  });
+  for (const name of ["sun", "moon"]) {
+    const r = out[name];
+    expect(r.still, `${name}: held, it stands`).toBe(0);
+    expect(r.first, `${name}: let go, it sets off slowly`).toBeLessThan(r.later * 0.4);
+    expect(r.later, `${name}: and is soon at its full rate`).toBeGreaterThan(0.2);
+  }
 });

@@ -394,3 +394,45 @@ Tested in `tests/note-library.spec.js`, three tests replacing the three about th
 
 Nineteen tests in the file. The screenshots were sent to the owner to decide on the books,
 as they asked.
+
+## 2026-09-25, night — the shelves made a bookcase
+
+> Also, the library, please redesign the shelves. I like everything about the library
+> except the shelves.
+
+The shelves were a **rail**: one lit line under each row of books, with a glow falling off it,
+drawn by a repeating gradient on `.lib-records`, and the books stood on nothing else. That
+gradient is gone. Every accord's books now stand in **a case**, drawn in specks as the books
+are, by `note-library.js` on a canvas of its own behind them (`canvas.lib-case`, `drawCase`):
+
+- **Walnut, dark as the room is** (`WOOD`), in specks of one shade drawn together, as the
+  spines are, and seeded by the accord's code so every case is its own and the same every visit.
+- **Two uprights** either side of the rows, a **crown** over the first row with its moulding
+  lit, and a **plinth** under the last board. The case stands out past the rows by `CASE_OUT`
+  (18px) either side; on a phone by only 4px, with narrower uprights and a lower crown, so the
+  page does not scroll sideways.
+- **A back** of dark boards between the uprights, with the seams between the boards, and
+  darker where the light does not reach — just under each board, and at the foot of each row.
+- **A board under every row**: its top seen from a little above and lit (lighter towards the
+  front), **a lit arris**, and its front edge with the grain running along it; a shadow on the
+  back under it.
+- **A brass label holder** on each board's front, near the left, holding **a card with the call
+  numbers standing on that row** — `CIT 001–013` — in the card's dark ink, as a library's shelves
+  are labelled. It counts what is really on the row, so ordering by use changes it.
+
+**Drawn** when a case first comes within 700px of the window (the same `IntersectionObserver`
+margin as the spines), **again** when the width changes (the rows wrap differently), after the
+books are reordered, and once the monospace the labels are printed in has arrived; a case
+folded away by the terminal is drawn again when it comes back. The rows are read off where the
+books themselves stand (`--row` and `--gap` in the stylesheet), so the boards are always under
+the books. Below 700px the rows get 8px of room at either side (it was 4px) and the plate 28px
+above the case (it was 18), so the crown does not run into *20 records*.
+
+Tested in `tests/note-library.spec.js`: **`every accord's books stand in a bookcase, a labelled
+board under every row`** — the case drawn, the rail gone from the stylesheet (`background-image:
+none`), the case wider than the rows and behind the books; across the foot of every row, the
+board, all the way along (more than 90% of it); a label reading `CIT 001–013`; and at 820px
+wide, more rows, a board under each of them, and a label for the first of them that stops short
+of 013. `the books stand on their shelves without running into each other` still holds at all
+three widths, including no sideways scroll at 390px.
+

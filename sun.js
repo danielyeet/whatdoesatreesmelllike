@@ -80,6 +80,12 @@
 
   const TILT = 0.34;               // the axis, leant over, in radians
   const SPIN = 0.058;              // radians a second — a turn takes about two minutes
+  // LET GO after the morph (chamber.js), it does not set off at full
+  // speed: it picks up and eases into it over this long — the owner's
+  // "i want the spinning to start gradually after the transiton. to pick
+  // up speed and accelerate into the speed that it is currently spinning
+  // at. make that SLIGHTLY gradual" (2026-09-25, night).
+  const SPIN_UP_MS = 1400;
 
   // HOW MANY SPECKS THE SURFACE IS. It is a big number and it has to
   // be: a sphere this size projects into a disc of well over a million
@@ -594,14 +600,30 @@
     // ============================================================
     // RUNNING
     // ============================================================
-    let held = false;
+    let held = false, heldDrawn = false, freed = -1;
     function tick(now) {
       if (!running) return;
       frame = requestAnimationFrame(tick);
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now;
-      // Held, it goes on drawing the same moment — see `hold` below.
-      if (!held) clock += dt;
+      // HELD, it stands at one moment — see `hold` below — so it is drawn
+      // once, and again only while it can be seen: under the chamber's
+      // veil for most of the morph, drawing the same frame over and over
+      // was half of what made the morph lag.
+      if (held) {
+        if (heldDrawn && canvas.style.opacity !== "" && parseFloat(canvas.style.opacity) === 0) return;
+        heldDrawn = true;
+        draw(clock);
+        return;
+      }
+      // LET GO, it picks up speed rather than setting off at full.
+      let rate = 1;
+      if (freed >= 0) {
+        const up = Math.min(1, (now - freed) / SPIN_UP_MS);
+        rate = up * up * (3 - 2 * up);
+        if (up >= 1) freed = -1;
+      }
+      clock += dt * rate;
       draw(clock);
     }
 
@@ -627,7 +649,15 @@
           frame the specks land on is the frame that is shown when it
           comes up — it used to go on turning unseen for the whole
           flight, and what came up no longer matched where they landed. */
-      hold: function (on) { held = !!on; },
+      hold: function (on) {
+        // Let go after being held, it picks up speed from standing.
+        if (held && !on) freed = performance.now();
+        held = !!on;
+        heldDrawn = false;
+      },
+      /** How far into its own time it has got — for anything that needs
+          to know (the tests), since the drawing itself cannot be asked. */
+      at: function () { return clock; },
       capture: function () {
         caught = [];
         draw(clock);

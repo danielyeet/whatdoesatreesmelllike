@@ -360,6 +360,75 @@ test("the shelves breathe", async ({ page }) => {
   expect(out.top, "and above every accord").toBeGreaterThanOrEqual(56);
 });
 
+/* THE SHELVES ARE A BOOKCASE. "the library, please redesign the shelves.
+   I like everything about the library except the shelves" — they were a
+   lit rail under each row, standing on nothing. Every accord's books now
+   stand in a case drawn behind them: the rail is gone from the
+   stylesheet; the case's canvas is there, behind the books and a little
+   wider than the rows; it has a board under every row, solid across the
+   row's foot; and every board carries a label giving the call numbers on
+   it. At another width the rows wrap differently, and the case is drawn
+   again to match. */
+test("every accord's books stand in a bookcase, a labelled board under every row", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__labels = [];
+    const fillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (t) {
+      if (this.canvas.classList.contains("lib-case")) window.__labels.push(String(t));
+      return fillText.apply(this, arguments);
+    };
+  });
+  await arrive(page);
+  await page.locator("#shelf-cit").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1200);
+  const read = () => page.evaluate(() => {
+    const holder = document.querySelector("#shelf-cit .lib-records");
+    const c = holder.querySelector(".lib-case");
+    const cr = c.getBoundingClientRect(), hr = holder.getBoundingClientRect();
+    const g = c.getContext("2d"), ratio = c.width / cr.width;
+    const d = g.getImageData(0, 0, c.width, c.height).data;
+    const rowH = parseFloat(getComputedStyle(holder).getPropertyValue("--row"));
+    const gap = parseFloat(getComputedStyle(holder).getPropertyValue("--gap"));
+    const rows = +holder.dataset.rows;
+    // Across the foot of each row, just under where the books stand: the
+    // board — its top and its front, in specks — all the way along.
+    const boards = [];
+    for (let k = 0; k < rows; k++) {
+      const y0 = Math.round((hr.top - cr.top + k * (rowH + gap) + rowH + 2) * ratio);
+      const y1 = Math.round((hr.top - cr.top + k * (rowH + gap) + rowH + 18) * ratio);
+      let solid = 0, n = 0;
+      for (let x = Math.round(30 * ratio); x < c.width - Math.round(30 * ratio); x += 3, n++) {
+        let sum = 0;
+        for (let y = y0; y < y1; y++) sum += d[(y * c.width + x) * 4 + 3];
+        if (sum / (y1 - y0) > 80) solid++;
+      }
+      boards.push(solid / n);
+    }
+    const book = document.querySelector("#shelf-cit .lib-record");
+    return {
+      drawn: c.dataset.drawn === "1", rows, boards,
+      wider: cr.left < hr.left && cr.right > hr.right,
+      behind: +getComputedStyle(c).zIndex < +getComputedStyle(book).zIndex,
+      rail: getComputedStyle(holder).backgroundImage,
+      labels: window.__labels.filter((t) => t.startsWith("CIT")),
+    };
+  });
+  const wide = await read();
+  expect(wide.drawn, "the case is drawn").toBe(true);
+  expect(wide.rail, "and the rail is gone").toBe("none");
+  expect(wide.wider, "standing out past the rows").toBe(true);
+  expect(wide.behind, "behind the books").toBe(true);
+  wide.boards.forEach((b, k) => expect(b, `a board under row ${k + 1}`).toBeGreaterThan(0.9));
+  expect(wide.labels, "a label on every board, giving its call numbers").toContain("CIT 001–013");
+  // Narrower, the rows wrap again, and the case is drawn to match.
+  await page.setViewportSize({ width: 820, height: 900 });
+  await page.waitForTimeout(900);
+  const narrow = await read();
+  expect(narrow.rows, "more rows at a narrower width").toBeGreaterThan(wide.rows);
+  narrow.boards.forEach((b, k) => expect(b, `a board under row ${k + 1} at 820px`).toBeGreaterThan(0.9));
+  expect(narrow.labels.some((t) => /^CIT 001–0\d\d$/.test(t) && t !== "CIT 001–013"), "and the labels say what is on each").toBe(true);
+});
+
 /* THE LAMP RUNS A BEAT BEHIND THE HAND, like the cursor's square: "make
    the light that follows the cursor have a slight delay ... so that it
    is smoother and not so mechanical." Moved in one jump, the lamp is

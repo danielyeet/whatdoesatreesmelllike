@@ -1720,6 +1720,9 @@
   const MORPH_MOST = 20000;     // specks flown, at most — every one of them, in practice
   const MORPH_HAZE = 0.12;      // the haze behind the flight, warm into cold
   const MORPH_GLOW_FROM = 0.62; // a speck this bright carries a bloom in the air
+  const MORPH_GLOW_MOST = 500;  // and only the brightest this many of them do
+  const MORPH_HUES = 10;        // steps a speck's colour goes through, warm into cold
+  const MORPH_LEVELS = 12;      // and its brightness, drawn in this many
   const MORPH_LEAVE = 0.2;      // the old drawing, glow and all, fades into its specks over this much of it
   /** How long a card takes to open, and to shut. */
   const CARD_MS = 420;
@@ -2069,45 +2072,53 @@
     if (REDUCE_MOTION) { writeChapter(to); chapterPage.scrollTop = 0; return; }
 
     const into = grounds[chapters[to].name] || "";
-    const from = ground && ground.capture && into && into !== ground.name ? ground.capture() : null;
-    let hold = TURN_MS;
-    if (from) {
-      // The old drawing as it looks, glow and all, to fade out of — its
-      // specks alone are not all of it, and dropping the rest in one
-      // frame read as a blink at the start.
-      const was = document.createElement("canvas");
-      was.width = chapterGround.width;
-      was.height = chapterGround.height;
-      const wg = was.getContext("2d");
-      if (wg) wg.drawImage(chapterGround, 0, 0);
-      // The new drawing is started now, under a veil and HELD STILL, so
-      // its first frame is where the flight lands and is still the frame
-      // standing there when it comes up.
-      chapterGround.style.transition = "none";
-      chapterGround.style.opacity = "0";
-      setGround(into);
-      if (ground && ground.hold) ground.hold(true);
-      const onto = ground && ground.capture ? ground.capture() : null;
-      if (onto) {
-        morph(from, onto, wg ? was : null);
-        hold = Math.max(TURN_MS, MORPH_MS * MORPH_WRITING);
-      } else {
-        if (ground && ground.hold) ground.hold(false);
-        chapterGround.style.transition = "";
-        chapterGround.style.opacity = "";
-      }
-    }
+    // THE PRESS IS ANSWERED AT ONCE: the writing starts to go this frame,
+    // and the flight — the two snapshots and pairing every speck of the
+    // one with the other, a tenth of a second's work — is set up on the
+    // next, rather than holding the press up while it is done.
     chapterPage.classList.add("turning");
-    turning = window.setTimeout(() => {
-      turning = 0;
-      writeChapter(to);
-      chapterPage.scrollTop = 0;
-      chapterPage.classList.remove("here");
-      void chapterPage.offsetWidth;          // so the entrance plays again
-      chapterPage.classList.add("here");
-      chapterPage.classList.remove("turning");
-      takeWanted();
-    }, hold);
+    turning = -1;
+    requestAnimationFrame(() => {
+      if (!burst || burst.chapter !== to || chapterPage.hidden) { turning = 0; return; }
+      const from = ground && ground.capture && into && into !== ground.name ? ground.capture() : null;
+      let hold = TURN_MS;
+      if (from) {
+        // The old drawing as it looks, glow and all, to fade out of — its
+        // specks alone are not all of it, and dropping the rest in one
+        // frame read as a blink at the start.
+        const was = document.createElement("canvas");
+        was.width = chapterGround.width;
+        was.height = chapterGround.height;
+        const wg = was.getContext("2d");
+        if (wg) wg.drawImage(chapterGround, 0, 0);
+        // The new drawing is started now, under a veil and HELD STILL, so
+        // its first frame is where the flight lands and is still the frame
+        // standing there when it comes up.
+        chapterGround.style.transition = "none";
+        chapterGround.style.opacity = "0";
+        setGround(into);
+        if (ground && ground.hold) ground.hold(true);
+        const onto = ground && ground.capture ? ground.capture() : null;
+        if (onto) {
+          morph(from, onto, wg ? was : null);
+          hold = Math.max(TURN_MS, MORPH_MS * MORPH_WRITING);
+        } else {
+          if (ground && ground.hold) ground.hold(false);
+          chapterGround.style.transition = "";
+          chapterGround.style.opacity = "";
+        }
+      }
+      turning = window.setTimeout(() => {
+        turning = 0;
+        writeChapter(to);
+        chapterPage.scrollTop = 0;
+        chapterPage.classList.remove("here");
+        void chapterPage.offsetWidth;          // so the entrance plays again
+        chapterPage.classList.add("here");
+        chapterPage.classList.remove("turning");
+        takeWanted();
+      }, hold);
+    });
   }
 
   // ============================================================
@@ -2235,12 +2246,49 @@
     const pairs = [];
     if (P.length >= Q.length) { const m = grid(Q); P.forEach((p) => pairs.push([p, nearest(m, Q, p)])); }
     else { const m = grid(P); Q.forEach((q) => pairs.push([nearest(m, P, q), q])); }
-    const flights = pairs.map(([p, q]) => {
+    // THE FLIGHTS, as numbers in rows rather than as objects — and drawn
+    // BATCHED: every speck of one colour and one brightness in a single
+    // fill, rather than fourteen thousand changes of colour a frame,
+    // which (with a bloom stamped under every bright one, and the new
+    // drawing redrawn unseen under its veil) was what made it lag.
+    const F = pairs.length;
+    const PR = new Float32Array(F), QR = new Float32Array(F), PA = new Float32Array(F), DA = new Float32Array(F);
+    const PS = new Float32Array(F), DS = new Float32Array(F), PO = new Float32Array(F), DO = new Float32Array(F);
+    const WAIT = new Float32Array(F), PAIR = new Int32Array(F);
+    const X = new Float32Array(F), Y = new Float32Array(F), SZ = new Float32Array(F), KEY = new Int32Array(F);
+    const pairIndex = new Map(), pairTones = [];
+    pairs.forEach(([p, q], k) => {
       let da = q.a - p.a;
       while (da > Math.PI) da -= Math.PI * 2;
       while (da < -Math.PI) da += Math.PI * 2;
-      return { p: p, q: q, da: da, wait: random() * MORPH_STAGGER, ca: toneA[p.t] || [255, 255, 255], cb: toneB[q.t] || [255, 255, 255] };
+      PR[k] = p.r; QR[k] = q.r; PA[k] = p.a; DA[k] = da;
+      PS[k] = p.s; DS[k] = q.s - p.s; PO[k] = p.on; DO[k] = q.on - p.on;
+      WAIT[k] = random() * MORPH_STAGGER;
+      const tk = p.t + "|" + q.t;
+      if (!pairIndex.has(tk)) { pairIndex.set(tk, pairTones.length); pairTones.push([toneA[p.t] || [255, 255, 255], toneB[q.t] || [255, 255, 255]]); }
+      PAIR[k] = pairIndex.get(tk);
     });
+    // Every colour a speck can be, made once: a pair of tones, a step
+    // of the way from the one to the other.
+    const colours = [];
+    pairTones.forEach(([c, d]) => {
+      for (let i = 0; i < MORPH_HUES; i++) {
+        const u = i / (MORPH_HUES - 1);
+        colours.push("rgb(" + Math.round(c[0] + (d[0] - c[0]) * u) + "," + Math.round(c[1] + (d[1] - c[1]) * u) + "," + Math.round(c[2] + (d[2] - c[2]) * u) + ")");
+      }
+    });
+    const KEYS = colours.length * MORPH_LEVELS;
+    const count = new Int32Array(KEYS + 1), order = new Int32Array(F);
+    // The ones that may carry a bloom: the brightest, and no more than
+    // MORPH_GLOW_MOST of them.
+    const glowing = [];
+    for (let k = 0; k < F; k++) {
+      const most = Math.max(PO[k], PO[k] + DO[k]) * (1 + MORPH_FLARE);
+      if (most > MORPH_GLOW_FROM) glowing.push(k);
+    }
+    glowing.sort((i, j) => Math.max(PO[j], PO[j] + DO[j]) - Math.max(PO[i], PO[i] + DO[i]));
+    glowing.length = Math.min(glowing.length, MORPH_GLOW_MOST);
+    const GL = Int32Array.from(glowing);
 
     const reachA = ra * 1.2, reachB = rb * 1.2;
     const hazeA = toneA[Math.floor(toneA.length * 0.7)] || [255, 220, 170];
@@ -2290,29 +2338,52 @@
       g.globalAlpha = 1;
       g.fillStyle = haze;
       g.fillRect(hx - hr, hy - hr, hr * 2, hr * 2);
-      for (let k = 0; k < flights.length; k++) {
-        const f = flights[k];
-        const u = ease(Math.max(0, Math.min(1, (t - f.wait) / (1 - MORPH_STAGGER))));
+      // Where every speck is this frame, and which batch it is drawn in.
+      const fade = (1 - hand) * lift;
+      count.fill(0);
+      for (let k = 0; k < F; k++) {
+        const u = ease(Math.max(0, Math.min(1, (t - WAIT[k]) / (1 - MORPH_STAGGER))));
+        const air = Math.sin(Math.PI * u);
+        const on = (PO[k] + DO[k] * u) * (1 + MORPH_FLARE * air) * fade;
+        if (on <= 0.01) { KEY[k] = -1; continue; }
         const mx = mx0 + (mx1 - mx0) * u, my = my0 + (my1 - my0) * u;
-        const r = (f.p.r + (f.q.r - f.p.r) * u) * (1 + MORPH_SWELL * Math.sin(Math.PI * u));
+        const r = (PR[k] + (QR[k] - PR[k]) * u) * (1 + MORPH_SWELL * air);
         // The swing turns the whole a part-turn out and back, so every
         // speck lands exactly where its twin stands.
-        const a = f.p.a + f.da * u + MORPH_SWING * Math.sin(Math.PI * u);
-        const x = mx + Math.cos(a) * r, y = my + Math.sin(a) * r;
-        const air = Math.sin(Math.PI * u);
-        const on = (f.p.on + (f.q.on - f.p.on) * u) * (1 + MORPH_FLARE * air) * (1 - hand) * lift;
-        if (on <= 0.01) continue;
-        const c = f.ca, d = f.cb;
-        g.fillStyle = "rgb(" + Math.round(c[0] + (d[0] - c[0]) * u) + "," +
-          Math.round(c[1] + (d[1] - c[1]) * u) + "," + Math.round(c[2] + (d[2] - c[2]) * u) + ")";
-        g.globalAlpha = on > 1 ? 1 : on;
-        const s = f.p.s + (f.q.s - f.p.s) * u;
-        g.fillRect(x - s / 2, y - s / 2, s, s);
-        if (on > MORPH_GLOW_FROM) {
-          const rad = s * 5;
-          g.globalAlpha = Math.min(0.35, (on - MORPH_GLOW_FROM) * 0.6);
-          g.drawImage(bloom, x - rad, y - rad, rad * 2, rad * 2);
+        const a = PA[k] + DA[k] * u + MORPH_SWING * air;
+        X[k] = mx + Math.cos(a) * r;
+        Y[k] = my + Math.sin(a) * r;
+        SZ[k] = PS[k] + DS[k] * u;
+        const lvl = Math.min(MORPH_LEVELS - 1, Math.round((on > 1 ? 1 : on) * (MORPH_LEVELS - 1)));
+        const key = (PAIR[k] * MORPH_HUES + Math.round(u * (MORPH_HUES - 1))) * MORPH_LEVELS + lvl;
+        KEY[k] = key;
+        count[key + 1]++;
+      }
+      for (let i = 1; i <= KEYS; i++) count[i] += count[i - 1];
+      const at = count.slice(0, KEYS);
+      for (let k = 0; k < F; k++) if (KEY[k] >= 0) order[at[KEY[k]]++] = k;
+      for (let key = 0; key < KEYS; key++) {
+        const from = count[key], to = count[key + 1];
+        if (to === from) continue;
+        g.fillStyle = colours[(key / MORPH_LEVELS) | 0];
+        g.globalAlpha = Math.max(1, key % MORPH_LEVELS) / (MORPH_LEVELS - 1);
+        g.beginPath();
+        for (let i = from; i < to; i++) {
+          const k = order[i], sz = SZ[k];
+          g.rect(X[k] - sz / 2, Y[k] - sz / 2, sz, sz);
         }
+        g.fill();
+      }
+      // The blooms, under the brightest only.
+      for (let i = 0; i < GL.length; i++) {
+        const k = GL[i];
+        if (KEY[k] < 0) continue;
+        const u = ease(Math.max(0, Math.min(1, (t - WAIT[k]) / (1 - MORPH_STAGGER))));
+        const on = (PO[k] + DO[k] * u) * (1 + MORPH_FLARE * Math.sin(Math.PI * u)) * fade;
+        if (on <= MORPH_GLOW_FROM) continue;
+        const rad = SZ[k] * 5;
+        g.globalAlpha = Math.min(0.35, (on - MORPH_GLOW_FROM) * 0.6);
+        g.drawImage(bloom, X[k] - rad, Y[k] - rad, rad * 2, rad * 2);
       }
       g.globalAlpha = 1;
       g.globalCompositeOperation = "source-over";

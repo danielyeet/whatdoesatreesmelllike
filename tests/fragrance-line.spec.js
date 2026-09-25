@@ -1,5 +1,5 @@
 // ============================================================
-// THE FRAGRANCES, A WHOLE-PAGE TABLE — fragrance-line.js, and the stretch
+// THE FRAGRANCES, A WHOLE-PAGE TABLE — fragrance-line.js, and the crossing
 // between the two views in views.js (categories/scent-descriptions.html)
 //
 // The Fragrances view has been three things in one day: files travelling
@@ -14,16 +14,20 @@
 // the whole page, with an aside on the left and the three ways of showing
 // it on the right. The content is what it was: "3 digit number, then name,
 // then house, then date of writing". The old view is kept, exactly as it
-// was. And the stretch from the Houses now gathers into the table's own
-// rules rather than into a line.
+// was. And the pixel stretch between the two views is gone — "I want
+// something simple, so that you can freely change between the houses and
+// fragrances page. Make the two pages connected somehow too" — for THE
+// CROSSING: the two fading through each other a little way to either
+// side, turning round at once when pressed again, and the houses' axis
+// travelling across to become the table's divider.
 //
 // These check what can be WRONG: the rows and their columns, nothing left
 // drawn behind them, the page's three columns, a screen holding a good
 // many rows, the wheel scrolling them from anywhere, the three ways of
 // showing them and the choice being kept, sorting and searching, an item
-// opening its fragrance in the page, the old view kept, and the stretch
-// running in the order it was asked for — and not at all with motion
-// turned off.
+// opening its fragrance in the page, the old view kept, and the crossing:
+// quick, free to turn round, joined by the line, and each view carrying
+// the way to the other — and none of it with motion turned off.
 // ============================================================
 const { test, expect } = require("@playwright/test");
 const fs = require("fs");
@@ -39,8 +43,8 @@ async function toTheTable(page) {
     document.getElementById("sheet").classList.contains("drawn"), null, { timeout: 20000 });
   await page.waitForTimeout(1200);
   await page.locator('.sheet-filter[data-view="fragrances"]').click();
-  // The stretch, and the table coming in after it.
-  await page.waitForTimeout(4200);
+  // The crossing, and a moment for the table to settle.
+  await page.waitForTimeout(1500);
 }
 
 const rowsOf = (page) => page.$$eval(".frag-item:not([hidden])", (all) => all.map((li) =>
@@ -312,80 +316,104 @@ test("the old Fragrances view is kept, in the archive and in the page", async ({
   await expect(page.locator(".frag-stage")).toHaveCount(0);
 });
 
-/* THE STRETCH, in the order it was asked for: "the line from houses will
-   have a pixel stretch effect to the right side of the page, while
-   everything else fades (except the particles). and then the page will
-   scroll (so that the left side of the fragrances page has the same
-   pixel stretch effect until the middle of the screen), which will then
-   unstretch in the middle ... and then the rest of the page should load
-   in". With the line gone, what the streaks unstretch INTO is the table's
-   own ruling. Read off the stretch's own canvas every frame: first ink on
-   the right of the axis and none on the left; then ink on the left of the
-   middle and none on the right; then the ink gathered onto the table's
-   rules, across the table's own width; and the table only once it has
-   gathered. The houses fade, and their particles do not. */
-test("going to the Fragrances stretches the axis right, travels, and gathers into the table's rules", async ({ page }) => {
+/* THE CROSSING — "change the transition too please, so that the pixel
+   stretch is not used. I want something simple, so that you can freely
+   change between the houses and fragrances page. Make the two pages
+   connected somehow too."
+   SIMPLE: both views are on the window at once for a moment, one fading
+   as the other comes, and it is over in well under a second; nothing of
+   the stretch's canvas is ever made. CONNECTED: one line runs from where
+   the houses' axis stands to where the table's divider stands, and the
+   divider is there when it lands. */
+test("going to the Fragrances is a quick crossing, and the axis travels across to be the table's divider", async ({ page }) => {
   test.setTimeout(60000);
   await serveDependenciesLocally(page);
   await page.goto(SHEET);
   await page.waitForFunction(() => document.getElementById("sheet").classList.contains("drawn"), null, { timeout: 20000 });
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(1500);
   const seen = await page.evaluate(() => new Promise((done) => {
-    const out = { right: 0, left: 0, gathered: 0, tableEarly: false, housesFaded: false, fieldKept: true, rules: "" };
+    const houses = document.querySelector('.view[data-view="houses"]');
+    const frags = document.querySelector('.view[data-view="fragrances"]');
+    const thread = document.querySelector(".views-thread");
+    const sheet = document.getElementById("sheet").getBoundingClientRect();
+    const out = { both: 0, stretch: false, xs: [], axis: sheet.left + sheet.width / 2, overAt: null };
     const t0 = performance.now();
     const look = () => {
       const t = performance.now() - t0;
-      const c = document.querySelector(".view-stretch");
-      const stage = document.querySelector(".frag-stage");
-      if (c) {
-        const r = c.width / c.getBoundingClientRect().width, d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
-        const ys = stage && stage.dataset.rules ? stage.dataset.rules.split(",").map(Number) : [];
-        const l = stage ? +stage.dataset.ruleL : 0, rr = stage ? +stage.dataset.ruleR : innerWidth;
-        let L = 0, R = 0, on = 0, all = 0;
-        for (let y = 0; y < c.height; y += 3) for (let x = 0; x < c.width; x += 6) {
-          if (d[(y * c.width + x) * 4 + 3] < 12) continue;
-          const cx = x / r, cy = y / r;
-          if (cx < innerWidth / 2 - 20) L++; else if (cx > innerWidth / 2 + 20) R++;
-          all++;
-          if (ys.some((ry) => Math.abs(ry - cy) <= 3) && cx >= l - 6 && cx <= rr + 6) on++;
-        }
-        if (R > 200 && L < 20) out.right++;
-        if (L > 200 && R < 20) out.left++;
-        if (all > 40 && on / all > 0.9) out.gathered++;
-      }
-      // The table may not come in before the streaks have gathered.
-      if (c && stage && !stage.classList.contains("waiting") && !out.gathered && t > 100) out.tableEarly = true;
-      const frame = document.querySelector(".sheet-frame.front");
-      if (t > 500 && t < 700 && frame && parseFloat(getComputedStyle(frame).opacity) < 0.1) out.housesFaded = true;
-      const field = document.querySelector(".sheet-field");
-      if (t > 500 && t < 700 && field && parseFloat(getComputedStyle(field).opacity) < 0.9) out.fieldKept = false;
-      if (t < 4000) { requestAnimationFrame(look); return; }
-      out.overlayLeft = !!document.querySelector(".view-stretch");
-      out.rules = stage ? stage.dataset.rules : "";
+      if (document.querySelector(".view-stretch")) out.stretch = true;
+      const a = parseFloat(getComputedStyle(houses).opacity), b = parseFloat(getComputedStyle(frags).opacity);
+      if (!houses.hidden && !frags.hidden && a > 0.1 && a < 0.9 && b > 0.1 && b < 0.9) out.both++;
+      const cs = getComputedStyle(thread);
+      if (parseFloat(cs.opacity) > 0.3) out.xs.push(new DOMMatrix(cs.transform).m41);
+      if (out.overAt === null && houses.hidden && !frags.hidden) out.overAt = t;
+      if (t < 1200) { requestAnimationFrame(look); return; }
+      out.divider = +document.querySelector(".frag-stage").dataset.divider;
+      const d = document.querySelector(".frag-divider").getBoundingClientRect();
+      out.dividerAt = d.left;
       done(out);
     };
     document.querySelector('.sheet-filter[data-view="fragrances"]').click();
     requestAnimationFrame(look);
   }));
-  expect(seen.right, "first the axis stretched out to the right").toBeGreaterThan(5);
-  expect(seen.left, "then the stretch on the left, up to the middle").toBeGreaterThan(5);
-  expect(seen.gathered, "then gathered onto the table's rules").toBeGreaterThan(3);
-  expect(seen.housesFaded, "the houses fade").toBe(true);
-  expect(seen.fieldKept, "and their particles do not").toBe(true);
-  expect(seen.tableEarly, "the table waits for the ruling").toBe(false);
-  expect(seen.overlayLeft, "and nothing is left over the page").toBe(false);
-  expect(seen.rules.split(",").length, "the rule under the sort bar and one under each of the seven rows").toBe(8);
-  await expect(page.locator(".frag-aside")).toHaveCSS("opacity", "1", { timeout: 3000 });
-  await expect(page.locator(".frag-item").last().locator(".frag-t-name")).toHaveCSS("opacity", "1", { timeout: 3000 });
+  expect(seen.stretch, "no pixel stretch").toBe(false);
+  expect(seen.both, "the two fade through each other").toBeGreaterThan(2);
+  expect(seen.overAt, "and it is over quickly").not.toBeNull();
+  expect(seen.overAt).toBeLessThan(700);
+  expect(seen.xs.length, "the line was seen travelling").toBeGreaterThan(3);
+  expect(Math.abs(seen.xs[0] - seen.axis), "it leaves from the axis").toBeLessThan(80);
+  expect(Math.abs(seen.xs[seen.xs.length - 1] - seen.divider), "and lands on the divider").toBeLessThan(3);
+  expect(Math.abs(seen.dividerAt - seen.divider), "which stands there").toBeLessThan(2);
+  expect(seen.divider, "between the aside and the table").toBeLessThan((await page.locator(".frag-main").boundingBox()).x);
+  await expect(page.locator(".frag-aside")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".frag-item").last().locator(".frag-t-name")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".views")).not.toHaveClass(/swiping/);
+});
 
-  // AND BACK: the ruling spreads, the page travels the other way, and the
-  // houses come in on their axis.
-  await page.locator('.sheet-filter[data-view="houses"]').click();
-  await page.waitForTimeout(3200);
+/* FREE: a press while the crossing is running is taken AT ONCE — it
+   turns round from where it has got to rather than finishing first — so
+   the two can be gone between as fast as the buttons are pressed, and
+   nothing is left half done. And each view carries the way to the other
+   in itself: "The fragrances →" under the way round, "← The houses" at
+   the foot of the aside. */
+test("the views can be gone between freely, and each carries the way to the other", async ({ page }) => {
+  test.setTimeout(60000);
+  const errors = collectPageErrors(page);
+  await serveDependenciesLocally(page);
+  await page.goto(SHEET);
+  await page.waitForFunction(() => document.getElementById("sheet").classList.contains("drawn"), null, { timeout: 20000 });
+  await page.waitForTimeout(1500);
+  // Back and forth, faster than any one crossing takes.
+  const at = await page.evaluate(() => new Promise((done) => {
+    const press = (v) => document.querySelector('.sheet-filter[data-view="' + v + '"]').click();
+    press("fragrances");
+    setTimeout(() => press("houses"), 120);
+    setTimeout(() => press("fragrances"), 220);
+    setTimeout(() => press("houses"), 300);
+    // Turned round at once: the last press is where it lands, and soon.
+    const t0 = performance.now();
+    const look = () => {
+      const h = document.querySelector('.view[data-view="houses"]'), f = document.querySelector('.view[data-view="fragrances"]');
+      if (performance.now() - t0 > 300 && !h.hidden && f.hidden) { done(performance.now() - t0); return; }
+      if (performance.now() - t0 > 3000) { done(-1); return; }
+      requestAnimationFrame(look);
+    };
+    requestAnimationFrame(look);
+  }));
+  expect(at, "it lands on the last one pressed").toBeGreaterThan(0);
+  expect(at, "without finishing the ones before first").toBeLessThan(900);
+  await expect(page.locator('.sheet-filter[data-view="houses"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".views")).not.toHaveClass(/swiping/);
+  await expect(page.locator('.view[data-view="houses"]')).toHaveAttribute("style", /^$|^\s*$/);
+
+  // THE WAY OVER, from inside each view.
+  await page.locator(".sheet-to-fragrances").click();
+  await expect(page.locator('.view[data-view="fragrances"]')).toBeVisible();
+  await expect(page.locator('.view[data-view="houses"]')).toBeHidden({ timeout: 2000 });
+  await expect(page.locator('.sheet-filter[data-view="fragrances"]')).toHaveAttribute("aria-pressed", "true");
+  await page.locator(".frag-to-houses").click();
   await expect(page.locator('.view[data-view="houses"]')).toBeVisible();
-  await expect(page.locator('.view[data-view="fragrances"]')).toBeHidden();
-  await expect(page.locator(".view-stretch")).toHaveCount(0);
-  await expect(page.locator(".sheet-frame.front")).toHaveCSS("opacity", "1", { timeout: 3000 });
+  await expect(page.locator('.view[data-view="fragrances"]')).toBeHidden({ timeout: 2000 });
+  expect(errors).toEqual([]);
 });
 
 /* WITH MOTION TURNED OFF there is no stretch: the views simply change

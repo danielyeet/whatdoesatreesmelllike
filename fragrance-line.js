@@ -54,14 +54,16 @@
 // it and hides it while it does (`.view.table-on`). Block this script and
 // the page is the old view.
 //
-// COMING IN FROM THE HOUSES, views.js stretches the houses' axis into the
-// RULES of this view — the rule under the sort bar and the line under
-// every row in the window (every box's edges, in the other two) — which
-// this script publishes as `data-rules` on its stage. While it does,
-// `data-arrive="wait"` holds everything here back, and `data-arrive=
-// "ruled"` then says the ruling is already drawn: the rows' rules stand at
-// once and only what is written in them comes in. Opened any other way,
-// the view comes in by itself.
+// COMING IN FROM THE HOUSES, views.js crosses the two views over and
+// runs THE THREAD — the houses' axis — across to THE DIVIDER, the line
+// this view stands between its aside and its table, the height of the
+// window; where the divider stands is published as `data-divider` on the
+// stage. `data-arrive="now"` says the crossing is the arrival: the view is
+// there at once, whole. Opened any other way, it comes in by itself. The
+// aside also carries a way back to the Houses (`data-view-go`). (Until the
+// night of 2026-09-25 views.js stretched the axis into this view's rules,
+// which this published as `data-rules`; the owner had the stretch taken
+// out.)
 // ============================================================
 (function () {
   const view = document.querySelector('.view[data-view="fragrances"]');
@@ -133,7 +135,9 @@
         '<span class="frag-scale-end frag-scale-last"></span>' +
       '</div>' +
       '<canvas class="frag-mark" aria-hidden="true"></canvas>' +
+      '<button class="frag-to-houses" type="button" data-view-go="houses"><span aria-hidden="true">←</span> The houses</button>' +
     '</aside>' +
+    '<span class="frag-divider" aria-hidden="true"></span>' +
     '<div class="frag-main">' +
       '<div class="frag-list-head">' +
         '<label class="frag-list-search"><span class="frag-list-mark" aria-hidden="true"></span>' +
@@ -267,7 +271,7 @@
   search.addEventListener("input", filter);
 
   /** After anything that changes which items stand where: the order
-      they come in, the scale's ticks, and the rules. */
+      they come in, the scale's ticks, and the divider. */
   function settle() {
     shown = [...list.children].map((li) => fragrances.find((f) => f.item === li)).filter((f) => f && !f.item.hidden);
     shown.forEach((f, i) => f.item.style.setProperty("--i", String(Math.min(i, 16))));
@@ -304,7 +308,7 @@
     if (!MODES.includes(next) || next === mode) return;
     mode = next;
     try { window.localStorage.setItem(KEEP, mode); } catch (e) { /* kept for this visit only */ }
-    if (REDUCE_MOTION || waiting) { paint(); settle(); return; }
+    if (REDUCE_MOTION) { paint(); settle(); return; }
     // The items go, the layout changes under them, and they come back in
     // one after another — rather than jumping from one shape to the next.
     const id = ++switching;
@@ -312,7 +316,7 @@
     window.setTimeout(() => {
       if (id !== switching) return;
       paint();
-      stage.classList.remove("rows-in", "ruled");
+      stage.classList.remove("rows-in");
       settle();
       void stage.offsetWidth;
       stage.classList.remove("switching");
@@ -358,29 +362,27 @@
   // WHERE EVERYTHING STANDS
   // ============================================================
   let W = 0, H = 0;
-  /** THE RULES, for views.js to gather the stretched axis into: the rule
-      under the sort bar and every row's own in the window (a box's or a
-      card's top and foot in the other two), measured against the stage
-      itself — so the view travelling sideways does not move them. */
+  /** THE DIVIDER, where the thread from the houses' axis lands: halfway
+      across the gap between the aside and the table, measured against the
+      stage itself so the view travelling does not move it. None where the
+      aside stands over the table rather than beside it (a phone). */
+  const divider = stage.querySelector(".frag-divider");
   function measure() {
     if (view.hidden) return;
     W = window.innerWidth;
     H = window.innerHeight;
     const s = stage.getBoundingClientRect();
-    const box = scroller.getBoundingClientRect();
-    if (!box.width) return;
-    const ys = new Set();
-    ys.add(Math.round(sortbar.getBoundingClientRect().bottom - s.top));
-    for (const f of shown) {
-      const r = f.item.getBoundingClientRect();
-      if (r.bottom < box.top) continue;
-      if (r.top > Math.min(box.bottom, s.top + H)) break;
-      if (mode !== "list") ys.add(Math.round(r.top - s.top));
-      ys.add(Math.round(r.bottom - s.top));
+    const side = aside.getBoundingClientRect(), main = stage.querySelector(".frag-main").getBoundingClientRect();
+    if (!main.width) return;
+    if (side.width && side.right <= main.left + 1) {
+      const x = Math.round((side.right + main.left) / 2 - s.left);
+      stage.dataset.divider = String(x);
+      divider.style.left = x + "px";
+      divider.hidden = false;
+    } else {
+      delete stage.dataset.divider;
+      divider.hidden = true;
     }
-    stage.dataset.rules = [...ys].sort((a, b) => a - b).join(",");
-    stage.dataset.ruleL = String(Math.round(box.left - s.left));
-    stage.dataset.ruleR = String(Math.round(box.right - s.left));
   }
 
   /** THE SCALE: filled as far as the box has been seen through, and the
@@ -505,52 +507,32 @@
   // ============================================================
   // THE ARRIVAL: the aside and the sort bar's rule, then the items.
   // ============================================================
-  let waiting = false;
   let arrival = 0;
-  function arrive(ruled) {
-    waiting = false;
-    stage.classList.remove("waiting");
+  function arrive(now) {
     sizeMark();
     measure();
     reading();
     const id = ++arrival;
-    if (REDUCE_MOTION) {
-      stage.classList.remove("ruled");
-      stage.classList.add("here", "rows-in");
+    if (REDUCE_MOTION || now) {
+      // THERE AT ONCE: the crossing is the arrival (or motion is off).
+      stage.classList.add("instant", "here", "rows-in");
+      requestAnimationFrame(() => requestAnimationFrame(() => { if (id === arrival) stage.classList.remove("instant"); }));
       wake();
       return;
     }
-    stage.classList.remove("rows-in");
-    if (ruled) {
-      // The ruling is already on the window, drawn by the stretch: it
-      // stands at once, and only what is written in it comes in.
-      stage.classList.add("ruled", "here");
-      requestAnimationFrame(() => { if (id === arrival) stage.classList.add("rows-in"); });
-    } else {
-      stage.classList.remove("ruled", "here");
-      void stage.offsetWidth;
-      stage.classList.add("here");
-      window.setTimeout(() => { if (id === arrival) stage.classList.add("rows-in"); }, ASIDE_FIRST_MS);
-    }
+    stage.classList.remove("rows-in", "here");
+    void stage.offsetWidth;
+    stage.classList.add("here");
+    window.setTimeout(() => { if (id === arrival) stage.classList.add("rows-in"); }, ASIDE_FIRST_MS);
     wake();
-  }
-  function hold() {
-    arrival++;
-    waiting = true;
-    stage.classList.add("waiting");
-    stage.classList.remove("rows-in", "ruled", "here");
   }
 
   // What views.js asks for, on the view itself.
   let wasHidden = view.hidden;
   new MutationObserver(() => {
-    const ask = view.dataset.arrive;
-    if (ask === "wait") { if (!waiting) hold(); }
-    else if (ask === "ruled") { delete view.dataset.arrive; arrive(true); }
+    if (view.dataset.arrive === "now") { delete view.dataset.arrive; if (!view.hidden) { arrive(true); wasHidden = false; } }
     else if (wasHidden && !view.hidden) arrive(false);
-    // Shown at all, it measures itself: the stretch reads the rules as
-    // it gathers, and the view is only just on the page by then.
-    if (wasHidden && !view.hidden) { sizeMark(); measure(); }
+    if (!view.hidden) { sizeMark(); measure(); }
     wasHidden = view.hidden;
     if (onPage()) wake();
   }).observe(view, { attributes: true, attributeFilter: ["hidden", "data-arrive"] });
@@ -561,7 +543,7 @@
   // THE WHEEL SCROLLS THE ITEMS, from anywhere on the view
   // ============================================================
   stage.addEventListener("wheel", (e) => {
-    if (waiting || scroller.contains(e.target)) return;
+    if (scroller.contains(e.target)) return;
     const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
     const unit = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? scroller.clientHeight : 1;
     scroller.scrollTop += d * unit;

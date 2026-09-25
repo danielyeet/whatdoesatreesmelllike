@@ -714,3 +714,29 @@ Tested in `tests/houses.spec.js`:
 
 **Known issues.** The spill's width is capped by what the window leaves beside the spout; on a
 narrow desktop window it stays small.
+
+### Later that night — slower, filling less, and a diagram of a beaker
+
+> make the dripping slower, less filling, and then fix it so the beaker looks more put
+> together. I want it to look more like a diargram than a sketch.
+
+- **Slower**: a drop every 2.2–3.4 seconds (`DRIP_EVERY`, it was about half that), gathering
+  for longer at the top (`DRIP_HANG`), and falling no faster than 520px a second (`DRIP_MOST`,
+  it was 820). **Less filling**: sixteen drops to the brim (`FILL_DROPS`, it was ten), so the
+  beaker takes the best part of a minute to overflow, and the spill grows more slowly and less
+  far (`SPILL_MOST`).
+- **The beaker is drawn by `beaker.js`**, new, which the house's page and the Houses view's hover
+  both load — so they are one beaker. It is **a diagram** where it was a sketch: straight glass
+  walls in even hairlines with a rounded foot, a flared lip and a spout; the glass's thickness a
+  faint second line inside the wall; graduations every 25 ml, the longer every 50 and numbered,
+  to 250 (`CAPACITY`), and *ml*; the liquid a flat tint with a meniscus and **a pointer** at its
+  surface giving its reading; a hatched **bench** with a tick at each end; and **the spill** a
+  flat lens with rings in it, where `spillShape` was a blot of several waves (it is gone). The
+  falling drop is a clean teardrop (`Beaker.drop`). `abstraits.js` keeps only the drip and hands
+  the beaker to `Beaker.make()`; `les-abstraits.html` loads `beaker.js` before it.
+
+Tested: the page's drip test now runs **on a clock of the test's own** (`page.clock`): the
+minute and more the slower beaker takes to fill is run through rather than waited out — two
+and a half seconds at the top, then eighty at the foot, after which the drops have landed, the
+beaker has filled and it has spilled.
+

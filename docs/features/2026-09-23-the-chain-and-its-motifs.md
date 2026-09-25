@@ -622,3 +622,112 @@ the logo never appears` (renamed from the puddle; its foot measure now takes the
 height, since the glass itself was already most of the old 60px band), and `...drawn in lines
 rather than specks, with irises growing at its feet` still holds with the tufts — the specks a
 frame stay far under 400 and the violet is all low.
+
+## 2026-09-25, later that night — a slower drip, a diagram of a beaker, clothes, and ADAR's black holes
+
+Files touched: `motifs.js`, `beaker.js` (new — the beaker shared with the house's own page),
+`contact-sheet.js` (the Houses view drawn through ADAR's field), `categories/scent-descriptions.html`
+(loads `beaker.js` before `motifs.js`), `tests/contact-sheet.spec.js`.
+
+### The drip, slower and filling less; the beaker a diagram
+
+> make the dripping slower, less filling, and then fix it so the beaker looks more put
+> together. I want it to look more like a diargram than a sketch.
+
+- **Slower**: a drop every 1.5–2.4 seconds (`DRIP_EVERY`), gathering for longer before it lets
+  go (`DRIP_HANG`), and falling for over a second (`DRIP_FALL`). **Less filling**: twelve drops
+  to the brim (`BEAKER_FILL`, it was seven), so it takes the best part of half a minute before it
+  overflows.
+- **The beaker is `beaker.js` now**, one drawing used by both this motif and Les Abstraits' own
+  page, so the two are the same beaker. It is drawn **as a lab diagram draws one**: straight
+  glass walls in even hairlines with a rounded foot, a flared lip and a spout turned out to a
+  point; a faint second line inside the wall for the glass's thickness; **graduations** every
+  25 ml, the long ones every 50 and numbered, and *ml*; the liquid a flat tint with a meniscus,
+  a **pointer** at its surface with its reading; a hatched bench with end ticks; and the spill a
+  flat lens with rings, where it was a wobbling blot. A landing drop throws a small crown; over
+  the brim, a run goes down the outside and a bead falls from the spout. `Beaker.make()` gives
+  one beaker (`land`, `settle`, `draw`, `surface`), and `Beaker.drop()` draws a falling drop as a
+  clean teardrop.
+
+### Clothes in the armoire
+
+> also put folded clothes and hangers with something on it in the armoire.
+
+The inside of the open half had two shelves; it has **a hanging rail** half way back now (on a
+small bracket at either wall) and **one shelf** below it. On the rail, **three wire hangers**, a
+hook over the rail each, swaying a hair about it: **a long coat** at the back (lapels, its front
+edge, a belt with a buckle, pockets), **a dress** (a waist seam and pleats falling from it) and
+**a shirt** in front (a collar, the placket and its buttons, a pocket). On the shelf and on the
+floor of the inside, **folded clothes in stacks**: every fold its own width, colour
+(`CLOTH` — linen, orris, slate, camel, cream, olive, a faded rose) and a little off the one
+under it, its folded edge rounded at one end and the fold drawn along it. They are drawn as the
+rest of the armoire is — hairlines over a flat tone — but **solid**, the paper first, so what is
+behind them is behind them, and they come in from the floor up once the door is drawn
+(`folded`, `garments`, `garment()`, `folded1()`). They stop short of the shelf's stacks
+(`hangLong`). The page's own armoire (`abstraits.js`) is untouched — it keeps its irises in the
+door; see Known issues.
+
+### ADAR: black holes
+
+> make the waves of the dots that form from the hover of adar larger, and distortive of the
+> page. Where they appear, let them have a black hole effect on anything they touch.
+
+Each **sounding** is **a well** now (`sounding()` keeps its name). It forms over a second and a
+half (`WELL_FORM`): **a hole** of ink, a thin ring hugging it and a dotted one further out, and
+**a disk** of specks tipped towards you, turning round it faster the nearer they are and
+spiralling in, its back half drawn before the hole and its front half across it. Out of it,
+**waves of dots** ring out (`RING_COUNT` of them, at `RING_SPEED`) — to `WELL_REACH` of the
+window's shorter side (up to 380px), where the soundings stopped at 150 — and every dot of them
+is itself drawn through the field, so they wobble as they cross each other and the page.
+
+**The field.** Every well puts itself on `wells`, and `bendPoint(x, y)` says where any point on
+the window is drawn once every well has had it: **pulled in** towards the hole (`WELL_PULL` of
+the way, falling off with distance), **turned** round it (`WELL_SWIRL`), **pushed out ahead of
+each wave and drawn in behind it** (`RING_PUSH` over `RING_BAND`), **shrunk** as it nears the hole
+and **gone** at its edge. Nothing of it reaches past a well's reach, so the page is whole again
+the moment the last well has gone. `HouseMotifs.bend()` hands that function to anyone who asks,
+or null while there are no wells.
+
+**What it bends.** `contact-sheet.js` reads `bend()` once a frame and draws the Houses view
+through it: **every speck** (the dust round the axis, the helix, the tethers, the corners, the
+specks falling down the axis), **the axis itself** — the line and its pulses as paths through
+the field, and its ticks — **the houses**, which lean in towards a hole, turn and shrink (70% of
+the pull, never below half size, so a house is still a house), and **the numbers on the axis**.
+**Never the house being rested on**: it is under the pointer, and moving it out from under the
+hand would leave it and stop ADAR's motifs in a loop. **And the page's own squares**
+(`spacetime()`): inside a well's reach the grid is covered in the page's colour and drawn again
+through the field, exactly as faint as the page's own where it is barely moved and darker the
+further it is pulled — so the squares themselves are seen to bend into the hole, as the diagram
+of a gravity well is drawn, rather than a second grid appearing over the first. The dust ADAR
+lets fall is drawn in by the wells too.
+
+**Fewer and larger**: at most three wells at once, one there as the house is rested on
+(`rate: 0.45, most: 3, first: 1`), where there were up to eight soundings. They are placed clear
+of every house on the page where they can be, so a hole is not hidden behind one, and not under
+the way round at the right of a wide window.
+
+### How to test it
+
+```bash
+npm test -- tests/contact-sheet.spec.js
+```
+
+- `Les Abstraits' armoire has clothes on hangers and folded on its shelf` — inside the open
+  half of the armoire, which was a faint tone, 1,200px² and more drawn solid between the rail
+  and the shelf, and 500 and more on the shelf and the floor of it.
+- `ADAR's wells bend the page towards them, and let it go again` — while ADAR is rested on,
+  `bend()` gives a field; somewhere a point is drawn more than 20px in towards a hole, and points
+  more than 200px from it are still moved; a house not rested on is turned and the rested one
+  is not; three seconds after leaving there is no field and no house is turned.
+- `Qimu & Musicians' motifs are short five-line staves with notes on them` reads again for a few
+  seconds until a stave has been written, rather than once at a fixed moment: it failed once in
+  a full run on a loaded machine, and passes every time on its own.
+
+### Known issues / TODO
+
+- **The page's own armoire** (`abstraits.js`, on the Les Abstraits page) has no clothes: the
+  note did not say which armoire, and the owner has been working on the hover's. It is the
+  same few lines to add if they want it.
+- The frame rate under ADAR's wells was measured at 60 in the test browser, with three wells;
+  a slower machine is the thing to watch.
+

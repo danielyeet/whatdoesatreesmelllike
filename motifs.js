@@ -8,7 +8,7 @@
 // fade gradually, they dont disappear."
 //
 // So each house has a small set of things of its own, taken from its
-// own page — Pineward's trees and needles, ADAR's soundings and dust,
+// own page — Pineward's trees and needles, ADAR's black holes and dust,
 // Almost Human's clouded figures glitching into being and its rain,
 // Ataraxia's bands of particles running as waves and shaking the air
 // round them, Grande's particles rising and bursting, Les Abstraits'
@@ -166,30 +166,217 @@
     };
   }
 
-  // ---------- ADAR: soundings ringing out, dust falling ----------
+  // ---------- ADAR: black holes, their waves, and dust ----------
+  // The void off its own page, rung round with soundings, and dust
+  // falling — and then, the night of 2026-09-25: "make the waves of the
+  // dots that form from the hover of adar larger, and distortive of the
+  // page. Where they appear, let them have a black hole effect on
+  // anything they touch."
+  //
+  // So each void is A WELL now. It forms over a second and a half: a
+  // hole of ink, a thin ring hugging it and a dotted one further out,
+  // drawn as a diagram draws them, and a disk of specks tipped towards
+  // you, turning round it — faster the nearer they are — and spiralling
+  // in, the back half behind the hole and the front half across it.
+  // Out of it, WAVES OF DOTS ring out much further than the soundings
+  // did (`WELL_REACH` of the window), and as each passes it bends what
+  // it crosses — a ripple that pushes out ahead of it and draws in
+  // behind it.
+  //
+  // AND IT PULLS. Every well puts itself on `wells`, and
+  // `HouseMotifs.bend()` hands contact-sheet.js the field they make
+  // together, which the Houses view draws itself through: the axis
+  // bends, the helix, the dust and the tethers are drawn in towards the
+  // hole, turned round it, shrunk as they near it and gone at its edge,
+  // and the houses lean in, turn and shrink after them — all but the one
+  // being rested on, which is under the pointer and has to stay there.
+  // The page's own squares bend in with them (`spacetime`), darker the
+  // more they are pulled — a well drawn as the diagram of one is drawn.
+  // Nothing of it reaches past its own reach, so the page is whole again
+  // the moment it has gone.
+  const WELL_REACH = 0.44;           // of the window's shorter side, how far a well reaches
+  const WELL_REACH_MOST = 380;       // px
+  const WELL_FORM = 1500;            // ms to form
+  const WELL_PULL = 0.82;            // how far in (of the way to the hole) a point near it is drawn
+  const WELL_SWIRL = 1.15;           // radians a point near it is turned
+  const RING_SPEED = 0.085;          // px a ms, how fast the waves ring out
+  const RING_COUNT = 4;
+  const RING_PUSH = 13;              // px, how far a wave pushes what it crosses
+  const RING_BAND = 17;              // px, and over how wide a band
+  const DISK_SPECKS = 120;
+  const wells = [];
+  const smooth = (a, b, x) => ease((x - a) / (b - a));
+  const bent = { x: 0, y: 0, s: 1, a: 1, turn: 0, cover: 0 };
+  /** Where a point on the window is drawn once every well has had it:
+      moved, scaled, faded and turned. The one object, reused. */
+  function bendPoint(x, y) {
+    let sc = 1, al = 1, turn = 0, cover = 0;
+    for (let i = 0; i < wells.length; i++) {
+      const w = wells[i];
+      let dx = x - w.x, dy = y - w.y;
+      const d = Math.hypot(dx, dy);
+      if (d > w.R || d < 0.001 || w.s < 0.002) continue;
+      const win = 1 - smooth(w.R * 0.55, w.R, d);
+      cover = Math.max(cover, win * Math.min(1, w.s * 2));
+      const k = w.s * Math.exp(-d / (w.R * 0.34)) * win;
+      let r = d - k * WELL_PULL * Math.max(0, d - w.h * 0.45);
+      // The waves: out ahead of each, in behind it.
+      let mag = 1;
+      for (let j = 0; j < w.rings.length; j++) {
+        const g = w.rings[j], u = (d - g.r) / RING_BAND;
+        if (u > 3 || u < -3) continue;
+        const e = Math.exp(-u * u);
+        r += RING_PUSH * w.s * g.f * u * e * 2.33 * win;
+        mag += 0.4 * w.s * g.f * e * win;
+      }
+      const spin = WELL_SWIRL * w.s * Math.exp(-d / (w.R * 0.26)) * win;
+      const c = Math.cos(spin), sn = Math.sin(spin);
+      const ux = dx / d, uy = dy / d;
+      const rx = ux * c - uy * sn, ry = ux * sn + uy * c;
+      x = w.x + rx * r;
+      y = w.y + ry * r;
+      sc *= Math.pow(Math.max(0.05, r / d), 0.85) * mag;
+      al *= smooth(w.h * 0.8, w.h * 2, r);
+      turn += spin;
+    }
+    bent.x = x; bent.y = y; bent.s = sc; bent.a = al; bent.turn = turn; bent.cover = cover;
+    return bent;
+  }
+  /** THE PAGE'S SQUARES, bent. Inside a well's reach the page's own grid
+      is covered over in the page's colour and drawn again through the
+      field — exactly as faint as the page's where it is barely moved,
+      darker the further it is pulled — so the squares themselves are
+      seen to bend, rather than a second grid over the first. Drawn once
+      for all of them, so two wells side by side bend one grid. */
+  const CELL = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--grid-cell")) || 46;
+  const PAPER = (() => {
+    const hex = getComputedStyle(document.body).getPropertyValue("--bg").trim();
+    const m = /^#([0-9a-f]{6})$/i.exec(hex);
+    return m ? [0, 2, 4].map((k) => parseInt(m[1].slice(k, k + 2), 16)).join(", ") : "255, 255, 255";
+  })();
+  const GRID_INK = 0.035;                // the page's own grid, as style.css draws it
+  const GRID_DARK = 0.2;                 // and at its darkest, pulled furthest
+  function spacetime(c) {
+    if (!wells.length) return;
+    let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+    wells.forEach((w) => {
+      l = Math.min(l, w.x - w.R); r = Math.max(r, w.x + w.R); t = Math.min(t, w.y - w.R); b = Math.max(b, w.y + w.R);
+      // The cover, fading out as the field does.
+      const k = Math.min(1, w.s * 2);
+      if (k < 0.01) return;
+      const g = c.createRadialGradient(w.x, w.y, 0, w.x, w.y, w.R);
+      [[0, 1], [0.55, 1], [0.6625, 0.844], [0.775, 0.5], [0.8875, 0.156], [1, 0]].forEach(([at, v]) =>
+        g.addColorStop(at, "rgba(" + PAPER + "," + v * k + ")"));
+      c.fillStyle = g;
+      c.fillRect(w.x - w.R, w.y - w.R, w.R * 2, w.R * 2);
+    });
+    l = Math.max(0, l); t = Math.max(0, t); r = Math.min(W, r); b = Math.min(H, b);
+    const LEVELS = 12, paths = Array.from({ length: LEVELS }, () => []);
+    const run = (x0, y0, x1, y1) => {
+      const n = Math.max(2, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 7));
+      let px = 0, py = 0;
+      for (let i = 0; i <= n; i++) {
+        const q = i / n, ox = x0 + (x1 - x0) * q, oy = y0 + (y1 - y0) * q;
+        const p = bendPoint(ox, oy);
+        const moved = Math.min(1, Math.hypot(p.x - ox, p.y - oy) / 26);
+        const k = (GRID_INK * p.cover + (GRID_DARK - GRID_INK) * moved * moved) * p.a;
+        const lvl = Math.round((k / GRID_DARK) * (LEVELS - 1));
+        if (i && lvl > 0) paths[Math.min(LEVELS - 1, lvl)].push(px, py, p.x, p.y);
+        px = p.x; py = p.y;
+      }
+    };
+    for (let x = Math.ceil(l / CELL) * CELL + 0.5; x < r; x += CELL) run(x, t, x, b);
+    for (let y = Math.ceil(t / CELL) * CELL + 0.5; y < b; y += CELL) run(l, y, r, y);
+    c.lineWidth = 1;
+    paths.forEach((segs, lvl) => {
+      if (!segs.length) return;
+      c.strokeStyle = "rgba(" + INK + "," + (GRID_DARK * lvl) / (LEVELS - 1) + ")";
+      c.beginPath();
+      for (let i = 0; i < segs.length; i += 4) { c.moveTo(segs[i], segs[i + 1]); c.lineTo(segs[i + 2], segs[i + 3]); }
+      c.stroke();
+    });
+  }
+  /** A place for a well: clear of every house on the page if it can be,
+      so its hole is not hidden behind one. */
+  function wellSpot(R) {
+    for (let i = 0; i < 16; i++) {
+      // Not under the way round, at the right of a wide window.
+      const x = rand(R * 0.3, W - (W > 700 ? Math.max(R * 0.3, 200) : R * 0.3)), y = rand(CHROME + 40, H - 40);
+      if (readAround.every((b) => x < b.left - 60 || x > b.right + 60 || y < b.top - 60 || y > b.bottom + 60)) return { x, y };
+    }
+    return spot(40);
+  }
   function sounding() {
-    const at = spot(40);
+    const R = Math.min(WELL_REACH_MOST, Math.min(W, H) * WELL_REACH);
+    const at = wellSpot(R);
     if (!at) return null;
-    const hole = rand(5, 12);
+    const hole = rand(13, 19) * Math.max(0.7, R / WELL_REACH_MOST);
+    const tilt = rand(-0.45, 0.45), flat = rand(0.24, 0.36);
+    const disk = Array.from({ length: DISK_SPECKS }, () => ({ q: Math.random(), a: rand(0, Math.PI * 2), size: rand(0.8, 2), lit: rand(0.4, 1) }));
+    const well = { x: at.x, y: at.y, R, h: 0, s: 0, rings: [], seen: 0 };
+    let lastAge = 0;
     return {
-      life: rand(4200, 6000),
+      life: rand(6500, 8500),
+      well,
       draw(c, age, a) {
-        // The void: a hole, with a rim of specks round it.
-        c.fillStyle = "rgba(" + INK + "," + (0.85 * a) + ")";
-        c.beginPath();
-        c.arc(at.x, at.y, hole, 0, Math.PI * 2);
-        c.fill();
-        for (let ring = 0; ring < 3; ring++) {
-          const r = hole + ((age / 16 + ring * 46) % 150);
-          const fade = 1 - (r - hole) / 150;
-          c.strokeStyle = "rgba(" + INK + "," + (0.7 * a * fade) + ")";
-          c.lineWidth = 1;
-          c.setLineDash([2, 5]);
-          c.beginPath();
-          c.arc(at.x, at.y, r, 0, Math.PI * 2);
-          c.stroke();
-        }
+        const dt = Math.min(64, age - lastAge);
+        lastAge = age;
+        const s = a * ease(age / WELL_FORM);
+        const h = hole * Math.sqrt(s);
+        well.s = s; well.h = h; well.seen = performance.now();
+        well.rings = Array.from({ length: RING_COUNT }, (_, k) => {
+          const r = h + ((age * RING_SPEED + (k * R) / RING_COUNT) % R);
+          return { r, f: (1 - r / R) * smooth(h, h * 5, r) };
+        });
+        if (!wells.includes(well)) wells.push(well);
+
+        // THE WAVES, in dots, each bent by the field it makes.
+        c.fillStyle = "rgb(" + INK + ")";
+        well.rings.forEach((g) => {
+          if (g.f < 0.01) return;
+          const n = Math.max(12, Math.round((Math.PI * 2 * g.r) / 8));
+          for (let i = 0; i < n; i++) {
+            const t = (i / n) * Math.PI * 2 + age / 4000;
+            const p = bendPoint(well.x + Math.cos(t) * g.r, well.y + Math.sin(t) * g.r);
+            const k = 0.7 * a * g.f * p.a;
+            if (k < 0.01) continue;
+            const z = 1.3 + 1.1 * g.f;
+            c.globalAlpha = Math.min(1, k);
+            c.fillRect(p.x - z / 2, p.y - z / 2, z, z);
+          }
+        });
+        c.globalAlpha = 1;
+
+        // THE DISK: specks turning round the hole, tipped towards you,
+        // spiralling in. The half behind the hole is drawn before it.
+        const inner = h * 1.25, outer = h * 5.2;
+        const speck = (p, front) => {
+          const rho = inner + (outer - inner) * p.q;
+          const ex = Math.cos(p.a) * rho, ey = Math.sin(p.a) * rho * flat;
+          if ((ey > 0) !== front) return;
+          const x = well.x + ex * Math.cos(tilt) - ey * Math.sin(tilt);
+          const y = well.y + ex * Math.sin(tilt) + ey * Math.cos(tilt);
+          const k = s * p.lit * (0.35 + 0.65 * (1 - p.q)) * smooth(0, 0.08, p.q);
+          c.fillStyle = "rgba(" + INK + "," + k + ")";
+          c.fillRect(x - p.size / 2, y - p.size / 2, p.size, p.size);
+        };
+        disk.forEach((p) => {
+          p.a += (dt / 1000) * 3.2 / Math.pow(0.25 + p.q, 1.5);
+          p.q -= (dt / 1000) * 0.06;
+          if (p.q < 0) { p.q = 1; p.a = rand(0, Math.PI * 2); }
+          speck(p, false);
+        });
+        // The hole, the thin ring hugging it, and a dotted one further out.
+        c.fillStyle = "rgba(" + INK + "," + (0.92 * s) + ")";
+        c.beginPath(); c.arc(well.x, well.y, h, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = "rgba(" + INK + "," + (0.55 * s) + ")";
+        c.lineWidth = 0.8;
+        c.beginPath(); c.arc(well.x, well.y, h * 1.45, 0, Math.PI * 2); c.stroke();
+        c.setLineDash([1.5, 4]);
+        c.strokeStyle = "rgba(" + INK + "," + (0.4 * s) + ")";
+        c.beginPath(); c.arc(well.x, well.y, h * 3, 0, Math.PI * 2); c.stroke();
         c.setLineDash([]);
+        disk.forEach((p) => speck(p, true));
       },
     };
   }
@@ -200,8 +387,11 @@
     return {
       life: rand(4000, 7000),
       draw(c, age, a) {
-        c.fillStyle = "rgba(" + INK + "," + (0.7 * a) + ")";
-        c.fillRect(at.x + Math.sin(age / 900 + at.y) * 3, at.y + fall * age, size, size);
+        // Falling, and drawn in by any well it comes near.
+        const p = bendPoint(at.x + Math.sin(age / 900 + at.y) * 3, at.y + fall * age);
+        const z = size * p.s;
+        c.fillStyle = "rgba(" + INK + "," + (0.7 * a * p.a) + ")";
+        c.fillRect(p.x - z / 2, p.y - z / 2, z, z);
       },
     };
   }
@@ -502,10 +692,9 @@
   // foot of the window, where the puddle was: "I want the puddle to be
   // more realistic, not just a circle of water. I want it to fall into a
   // beaker, once the beaker starts overflowing, let it drip from that
-  // too." It fills with every drop (`BEAKER_FILL` to its brim) and then
-  // overflows: a wet run down its outside from the spout, and a bead
-  // dropping off the spout to the bench, where THE SPILL spreads — an
-  // uneven wet shape, not a circle — up to `BEAKER_SPILL_MOST`.
+  // too." It is drawn by beaker.js, as a diagram — the same beaker as the
+  // house's own page — filling with every drop (`BEAKER_FILL` to its
+  // brim) and then overflowing from its spout onto the bench.
   const WALNUT = "88, 62, 44";
   const IRIS = "112, 94, 156";
   const ORRIS = "150, 136, 176";
@@ -521,12 +710,14 @@
   const IRIS_OPEN_AFTER = 1900;          // ms after the leaves, the flowers open
   const IRIS_SWAY = 2.4;                 // px at the top of a stem, either way
   const POWDER_EVERY = 100;              // ms between specks of orris powder
-  const DRIP_EVERY = [900, 1300];        // ms from one drop to the next
-  const DRIP_FALL = 760;                 // ms, the whole height of the window
-  const BEAKER_GLASS = "70, 66, 84";
-  const BEAKER_FILL = 7;                 // drops to fill the beaker to its brim
-  const BEAKER_SPILL_MOST = 58;          // px, half the spill's width at most
-  const BEAKER_SPILL_GROW = 5;           // spilled drops to about two thirds of it
+  // Slower, and filling less, at the owner's word (2026-09-25, night):
+  // a drop every one and a half to two and a half seconds, gathering
+  // longer, falling for over a second, and twelve to the brim.
+  const DRIP_EVERY = [1500, 2400];       // ms from one drop to the next
+  const DRIP_HANG = [650, 950];          // ms a drop gathers before it lets go
+  const DRIP_FALL = 1150;                // ms, the whole height of the window
+  const BEAKER_FILL = 12;                // drops to fill the beaker to its brim
+  const BEAKER_SPILL_MOST = 44;          // px, half the spill's length at most
   let abstraitSide = -1;                 // where the armoire stands: -1 left, 1 right
 
   const arcPts = (cx, cy, r, from, to, n) => Array.from({ length: n + 1 }, (_, i) => {
@@ -606,17 +797,23 @@
     put([[hinge, doorTop], [hinge + openW, doorTop - skew]]);
     put([[hinge + openW * 0.3, doorBot + skew * 0.3 - 10], [hinge + openW * 0.3, doorTop - skew * 0.3 + 10]], 0.6);
     // Through the gap, the inside in perspective: its back set in, the
-    // corners run back to it, and two shelves.
+    // corners run back to it, a hanging rail across the top and one shelf
+    // below it — "put folded clothes and hangers with something on it in
+    // the armoire" (2026-09-25, night).
     const inL = mid + 2, inR = hinge, bL = inL + 10, bR = inR - 5, bT = doorTop + 10, bB = doorBot - 7;
     box(bL, bT, bR, bB, 0.45);
     put([[inL, doorBot], [bL, bB]], 0.45); put([[inR, doorBot], [bR, bB]], 0.45);
     put([[inL, doorTop], [bL, bT]], 0.45); put([[inR, doorTop], [bR, bT]], 0.45);
-    [0.36, 0.68].forEach((k) => {
-      const y = bT + (bB - bT) * k;
-      put([[inL, y + 6], [bL, y]], 0.45);
-      put([[bL, y], [bR, y]], 0.45);
-      put([[bR, y], [inR, y + 6]], 0.45);
-    });
+    const shelfY = bT + (bB - bT) * 0.7;
+    put([[inL, shelfY + 6], [bL, shelfY]], 0.45);
+    put([[bL, shelfY], [bR, shelfY]], 0.45);
+    put([[bR, shelfY], [inR, shelfY + 6]], 0.45);
+    // THE RAIL, half way back, on a small bracket at either wall.
+    const railY = (doorTop + bT) / 2 + 12, railL = (inL + bL) / 2, railR = (inR + bR) / 2;
+    put([[railL, railY], [railR, railY]], 0.9);
+    put([[railL, railY - 5], [railL, railY + 3]], 0.7); put([[railR, railY - 5], [railR, railY + 3]], 0.7);
+    put(arcPts(railL + 2, railY, 1.6, 0, Math.PI * 2, 8), 0.7, true);
+    put(arcPts(railR - 2, railY, 1.6, 0, Math.PI * 2, 8), 0.7, true);
     // The crown: a cornice in two steps, and a broken pediment — two
     // straight rakes stopping short of the middle — with a diamond finial.
     const c1 = top - crown * 0.45, c2 = top - crown;
@@ -704,6 +901,174 @@
       }));
       return { x: cl.x, leaves, grass, soil, litter, stems };
     });
+
+    // THE CLOTHES. Three hangers on the rail — a long coat at the back, a
+    // dress, and a shirt in front — each on a wire hanger with its hook
+    // over the rail, swaying a hair about it; and folded clothes in stacks
+    // on the shelf and on the floor of the inside, every fold its own
+    // width, its own colour, set a little off the one under it. Drawn as
+    // the rest of it is — hairlines, a flat tone — in front of the inside,
+    // and they come in from the floor up once the door is drawn.
+    const room = railR - railL, gs = room / 84;
+    // As long as they can hang and still clear the folded stacks on the shelf.
+    const hangLong = shelfY - railY - 11 * gs - 34;
+    const CLOTH = ["206, 196, 178", "150, 136, 176", "118, 128, 142", "176, 150, 120", "224, 220, 212", "104, 112, 96", "168, 120, 112"];
+    const garments = [
+      { kind: "coat", x: railL + room * 0.24, tone: "112, 100, 90", long: hangLong * rand(0.94, 1), at: 1650 },
+      { kind: "dress", x: railL + room * 0.76, tone: "150, 136, 176", long: hangLong * rand(0.84, 0.92), at: 1800 },
+      { kind: "shirt", x: railL + room * 0.5, tone: "214, 220, 228", long: hangLong * rand(0.52, 0.6), at: 1950 },
+    ].map((g) => ({ ...g, phase: rand(0, 6.3), sway: rand(0.008, 0.014) }));
+    const fold = (x, base, width, n, at) => {
+      const out = [];
+      let y = base;
+      for (let i = 0; i < n; i++) {
+        const h = rand(5, 7.5) * Math.max(0.7, gs), w = width * rand(0.86, 1), off = rand(-2.2, 2.2);
+        out.push({ x: x + off + (width - w) / 2, y, w, h, tone: CLOTH[Math.floor(Math.random() * CLOTH.length)], at: at + i * 90, open: Math.random() < 0.5 ? -1 : 1 });
+        y -= h;
+      }
+      return out;
+    };
+    const stackW = Math.min(40, room * 0.42);
+    const folded = [
+      ...fold(bL + 3, shelfY + 3, stackW, 3 + Math.floor(Math.random() * 2), 1350),
+      ...fold(bR - 3 - stackW * 0.92, shelfY + 3, stackW * 0.92, 2 + Math.floor(Math.random() * 2), 1420),
+      ...fold(bL + 6, doorBot - 3, stackW * 1.1, 4 + Math.floor(Math.random() * 2), 1200),
+    ];
+
+    /** A quadratic curve, as points. */
+    const qb = (a0, a1, a2, n) => Array.from({ length: n + 1 }, (_, i) => {
+      const t = i / n, u = 1 - t;
+      return [u * u * a0[0] + 2 * u * t * a1[0] + t * t * a2[0], u * u * a0[1] + 2 * u * t * a1[1] + t * t * a2[1]];
+    });
+
+    /** One garment on its hanger: the outline, filled — the paper first,
+        so what is behind it is behind it — and its seams. */
+    function garment(c, g, k, age, a) {
+      const drop = (1 - k) * -6;
+      const ang = Math.sin(age / 2600 + g.phase) * g.sway;
+      const cs = Math.cos(ang), sn = Math.sin(ang), hx = g.x, hy = railY;
+      const at = (p) => {
+        const dx = p[0] - hx, dy = p[1] - hy;
+        return [hx + dx * cs - dy * sn, hy + drop + dx * sn + dy * cs];
+      };
+      const tw = (p) => toWindow(...at(p));
+      const path = (pts, close) => {
+        c.beginPath();
+        pts.forEach((p, i) => { const [x, y] = tw(p); if (i) c.lineTo(x, y); else c.moveTo(x, y); });
+        if (close) c.closePath();
+      };
+      const sw = 15 * gs, top = hy + 11 * gs, L = g.long;
+      let body = [], seams = [], dots = [];
+      if (g.kind === "shirt") {
+        body = [
+          [hx - 4 * gs, hy + 6 * gs], [hx - sw, top],
+          ...qb([hx - sw, top], [hx - sw - 4 * gs, top + L * 0.4], [hx - sw - 2 * gs, top + L * 0.62], 6).slice(1),
+          [hx - sw + 4 * gs, top + L * 0.64], [hx - sw + 5 * gs, top + L * 0.22],
+          ...qb([hx - sw + 5 * gs, top + L * 0.3], [hx - sw + 3 * gs, top + L * 0.7], [hx - sw + 4 * gs, top + L], 5).slice(1),
+          ...qb([hx - sw + 4 * gs, top + L], [hx, top + L + 6 * gs], [hx + sw - 4 * gs, top + L], 6).slice(1),
+          ...qb([hx + sw - 4 * gs, top + L], [hx + sw - 3 * gs, top + L * 0.7], [hx + sw - 5 * gs, top + L * 0.3], 5).slice(1),
+          [hx + sw - 5 * gs, top + L * 0.22], [hx + sw - 4 * gs, top + L * 0.64],
+          ...qb([hx + sw + 2 * gs, top + L * 0.62], [hx + sw + 4 * gs, top + L * 0.4], [hx + sw, top], 6),
+          [hx + 4 * gs, hy + 6 * gs], [hx, hy + 15 * gs],
+        ];
+        // The collar's two points, the placket and its buttons, a pocket.
+        seams = [
+          [[hx - 4 * gs, hy + 6 * gs], [hx - 3 * gs, hy + 17 * gs], [hx, hy + 15 * gs]],
+          [[hx + 4 * gs, hy + 6 * gs], [hx + 3 * gs, hy + 17 * gs], [hx, hy + 15 * gs]],
+          [[hx, hy + 15 * gs], [hx, top + L + 5 * gs]],
+          [[hx - sw + 7 * gs, top + L * 0.16], [hx - 4 * gs, top + L * 0.16], [hx - 4 * gs, top + L * 0.3], [hx - sw + 7 * gs, top + L * 0.3], [hx - sw + 7 * gs, top + L * 0.16]],
+        ];
+        for (let d = 0.12; d < 0.95; d += 0.2) dots.push([hx + 1.6 * gs, top + L * d]);
+      } else if (g.kind === "dress") {
+        const waist = top + L * 0.34, hemW = sw * 1.45;
+        body = [
+          [hx - 5 * gs, hy + 7 * gs], [hx - sw * 0.7, top],
+          ...qb([hx - sw * 0.7, top], [hx - sw * 0.5, top + L * 0.2], [hx - sw * 0.55, waist], 5).slice(1),
+          ...qb([hx - sw * 0.55, waist], [hx - hemW * 0.8, top + L * 0.7], [hx - hemW, top + L], 6).slice(1),
+          ...qb([hx - hemW, top + L], [hx, top + L + 5 * gs], [hx + hemW, top + L], 8).slice(1),
+          ...qb([hx + hemW, top + L], [hx + hemW * 0.8, top + L * 0.7], [hx + sw * 0.55, waist], 6).slice(1),
+          ...qb([hx + sw * 0.55, waist], [hx + sw * 0.5, top + L * 0.2], [hx + sw * 0.7, top], 5).slice(1),
+          [hx + 5 * gs, hy + 7 * gs],
+          ...qb([hx + 5 * gs, hy + 7 * gs], [hx, hy + 18 * gs], [hx - 5 * gs, hy + 7 * gs], 5).slice(1),
+        ];
+        // The waist seam, and the pleats falling from it.
+        seams = [
+          qb([hx - sw * 0.55, waist], [hx, waist + 2.5 * gs], [hx + sw * 0.55, waist], 5),
+          ...[-0.5, -0.15, 0.2, 0.55].map((f) => qb([hx + f * sw * 0.9, waist + 2 * gs], [hx + f * sw * 1.3, top + L * 0.7], [hx + f * hemW * 1.2, top + L + 3 * gs], 5)),
+        ];
+      } else {
+        const lap = top + L * 0.3, belt = top + L * 0.4;
+        body = [
+          [hx - 4 * gs, hy + 6 * gs], [hx - sw - 2 * gs, top],
+          ...qb([hx - sw - 2 * gs, top], [hx - sw - 5 * gs, top + L * 0.35], [hx - sw - 3 * gs, top + L * 0.58], 5).slice(1),
+          [hx - sw + 2 * gs, top + L * 0.6], [hx - sw + 3 * gs, top + L * 0.26],
+          [hx - sw + 2 * gs, top + L], [hx + sw - 2 * gs, top + L],
+          [hx + sw - 3 * gs, top + L * 0.26], [hx + sw - 2 * gs, top + L * 0.6],
+          ...qb([hx + sw + 3 * gs, top + L * 0.58], [hx + sw + 5 * gs, top + L * 0.35], [hx + sw + 2 * gs, top], 5),
+          [hx + 4 * gs, hy + 6 * gs],
+        ];
+        // The lapels, the front edge, the belt with its buckle, pockets.
+        seams = [
+          [[hx - 4 * gs, hy + 6 * gs], [hx - 8 * gs, top + 4 * gs], [hx - 1 * gs, lap]],
+          [[hx + 4 * gs, hy + 6 * gs], [hx + 8 * gs, top + 4 * gs], [hx + 1 * gs, lap]],
+          [[hx + 1 * gs, lap], [hx + 1 * gs, top + L]],
+          [[hx - sw + 2.4 * gs, belt], [hx + sw - 2.4 * gs, belt]],
+          [[hx - sw + 2.4 * gs, belt + 3 * gs], [hx + sw - 2.4 * gs, belt + 3 * gs]],
+          [[hx - 3 * gs, belt - 1 * gs], [hx + 3 * gs, belt - 1 * gs], [hx + 3 * gs, belt + 4 * gs], [hx - 3 * gs, belt + 4 * gs], [hx - 3 * gs, belt - 1 * gs]],
+          [[hx - sw + 5 * gs, top + L * 0.62], [hx - 4 * gs, top + L * 0.6]],
+          [[hx + 4 * gs, top + L * 0.6], [hx + sw - 5 * gs, top + L * 0.62]],
+        ];
+      }
+      c.lineJoin = "round";
+      path(body, true);
+      c.fillStyle = "rgba(250, 248, 244," + 0.94 * k * a + ")";
+      c.fill();
+      c.fillStyle = "rgba(" + g.tone + "," + 0.42 * k * a + ")";
+      c.fill();
+      c.strokeStyle = "rgba(" + WALNUT + "," + 0.6 * k * a + ")";
+      c.lineWidth = 0.8;
+      c.stroke();
+      c.strokeStyle = "rgba(" + WALNUT + "," + 0.34 * k * a + ")";
+      c.lineWidth = 0.6;
+      seams.forEach((s) => { path(s); c.stroke(); });
+      c.fillStyle = "rgba(" + WALNUT + "," + 0.6 * k * a + ")";
+      dots.forEach((d) => { const [x, y] = tw(d); c.fillRect(x - 0.8, y - 0.8, 1.6, 1.6); });
+      // THE HANGER, over all of it: its hook over the rail, its two
+      // shoulders and the bar between them.
+      c.strokeStyle = "rgba(" + WALNUT + "," + 0.78 * k * a + ")";
+      c.lineWidth = 0.9;
+      const hw = sw * 0.92;
+      path([[hx - hw, hy + 12 * gs], [hx, hy + 4 * gs], [hx + hw, hy + 12 * gs], [hx - hw, hy + 12 * gs]]);
+      c.stroke();
+      const [kx, ky] = tw([hx, hy + 4 * gs]), [ox, oy] = tw([hx, hy - 3]);
+      c.beginPath(); c.moveTo(kx, ky); c.lineTo(ox, oy + 1.5); c.arc(ox + 2.4, oy + 1.5, 2.4, Math.PI, Math.PI * 2.1); c.stroke();
+    }
+
+    /** One folded thing: a flat block with its folded edge rounded at one
+        end, and the fold across it. */
+    function folded1(c, f, k, a) {
+      const drop = (1 - k) * -5;
+      const [x1, y1] = toWindow(f.x, f.y - f.h + drop), [x2, y2] = toWindow(f.x + f.w, f.y + drop);
+      const L = Math.min(x1, x2), R = Math.max(x1, x2), r = Math.min(3, f.h / 2);
+      c.beginPath();
+      if (f.open < 0) { c.moveTo(L + r, y1); c.lineTo(R, y1); c.lineTo(R, y2); c.lineTo(L + r, y2); c.arc(L + r, (y1 + y2) / 2, (y2 - y1) / 2, Math.PI / 2, Math.PI * 1.5); }
+      else { c.moveTo(R - r, y1); c.lineTo(L, y1); c.lineTo(L, y2); c.lineTo(R - r, y2); c.arc(R - r, (y1 + y2) / 2, (y2 - y1) / 2, Math.PI / 2, -Math.PI / 2, true); }
+      c.closePath();
+      c.fillStyle = "rgba(250, 248, 244," + 0.94 * k * a + ")";
+      c.fill();
+      c.fillStyle = "rgba(" + f.tone + "," + 0.5 * k * a + ")";
+      c.fill();
+      c.strokeStyle = "rgba(" + WALNUT + "," + 0.56 * k * a + ")";
+      c.lineWidth = 0.7;
+      c.stroke();
+      // The fold: a line along the middle from the folded edge.
+      c.strokeStyle = "rgba(" + WALNUT + "," + 0.26 * k * a + ")";
+      c.beginPath();
+      const my = (y1 + y2) / 2 + 0.5;
+      if (f.open < 0) { c.moveTo(L + r + 2, my); c.lineTo(L + (R - L) * 0.62, my); }
+      else { c.moveTo(R - r - 2, my); c.lineTo(R - (R - L) * 0.62, my); }
+      c.stroke();
+    }
 
     const powder = [];
     let lastPuff = 0;
@@ -927,6 +1292,10 @@
           const [x1, y1] = toWindow(inL, doorTop), [x2, y2] = toWindow(inR, doorBot);
           c.fillStyle = "rgba(20, 16, 14," + (0.05 * door * a) + ")";
           c.fillRect(x1, y1, x2 - x1, y2 - y1);
+          // THE CLOTHES, the folded ones from the floor up, then the three
+          // hangers, back to front.
+          folded.forEach((f) => { const k = ease((age - f.at) / 450); if (k > 0) folded1(c, f, k, a * door); });
+          garments.forEach((g) => { const k = ease((age - g.at) / 550); if (k > 0) garment(c, g, k, age, a * door); });
         }
         // A speck at every joint the lines have reached.
         c.fillStyle = "rgba(" + WALNUT + "," + (0.85 * a) + ")";
@@ -970,44 +1339,29 @@
 
   function drip() {
     const x = (abstraitSide < 0 ? W * 0.86 : W * 0.14) + rand(-12, 12);
-    // THE BEAKER, at the foot of the window, where the puddle was: the
-    // owner's "I want it to fall into a beaker, once the beaker starts
-    // overflowing, let it drip from that too" — the same beaker the
-    // house's own page has at the foot of its drip.
-    const bw = Math.max(44, Math.min(72, W * 0.05)), bh = bw * 1.3, brx = bw / 2, bry = Math.max(2, bw * 0.1);
-    const floor = H - Math.max(22, H * 0.045);
-    const top = floor - bh, inner = bh - 7, sx = x + brx + 6;
-    const spillMost = Math.max(12, Math.min(BEAKER_SPILL_MOST, (W - 12 - sx) / 1.3));
+    // THE BEAKER at the foot of the window — the same one, drawn by the
+    // same script (beaker.js), as the house's own page has at the foot of
+    // its drip.
+    const floor = H - Math.max(26, H * 0.05);
+    const beaker = window.Beaker ? window.Beaker.make({ width: Math.max(44, Math.min(66, W * 0.045)), fill: BEAKER_FILL, spillMost: BEAKER_SPILL_MOST, wet: DRIP_INK }) : null;
+    const top = beaker ? floor - beaker.height : floor;
     const g = (2 * (top - 12)) / (DRIP_FALL * DRIP_FALL);
-    const drops = [], ripples = [], splashes = [], spouts = [], rings = [], floorSplashes = [];
-    let landed = 0, spilled = 0, level = 0, spill = 0, next = 500;
-    const shape = (() => {
-      const waves = [[3, rand(0, 6.3), 0.16], [5, rand(0, 6.3), 0.1], [7, rand(0, 6.3), 0.06], [2, rand(0, 6.3), 0.12]];
-      return Array.from({ length: 48 }, (_, i) => {
-        const t = (i / 48) * Math.PI * 2;
-        return 1 + waves.reduce((sum, [k, ph, amp]) => sum + Math.sin(t * k + ph) * amp, 0);
-      });
-    })();
-    let last = 0;
+    const drops = [];
+    let next = 500;
     return {
       draw(c, age, a) {
-        const dt = Math.min(0.1, (age - last) / 1000);
-        last = age;
         const wet = (k) => "rgba(" + DRIP_INK + "," + (k * a) + ")";
-        const glass = (k) => "rgba(" + BEAKER_GLASS + "," + (k * a) + ")";
-        const white = (k) => "rgba(255, 255, 255," + (k * a) + ")";
-        level += (Math.min(1, landed / BEAKER_FILL) - level) * Math.min(1, dt * 4);
-        const ly = floor - 3 - inner * level;
         // A drop is born at the top every so often: it gathers, then
         // lets go.
         if (age >= next) {
-          drops.push({ born: age, hang: rand(420, 620) });
+          drops.push({ born: age, hang: rand(DRIP_HANG[0], DRIP_HANG[1]) });
           next = age + rand(DRIP_EVERY[0], DRIP_EVERY[1]);
         }
         // What clings along the top edge, always.
         c.fillStyle = wet(0.4);
         c.beginPath(); c.ellipse(x, 0, 6, 3, 0, 0, Math.PI * 2); c.fill();
         c.fillRect(x - 0.6, 0, 1.2, 9);
+        const surface = beaker ? beaker.surface(floor) : floor;
         for (let i = drops.length - 1; i >= 0; i--) {
           const d = drops[i], t = age - d.born;
           if (t < d.hang) {
@@ -1018,154 +1372,14 @@
           }
           const f = t - d.hang;
           const y = 12 + 0.5 * g * f * f;
-          if (y >= ly) {
+          if (y >= surface) {
             drops.splice(i, 1);
-            landed++;
-            ripples.push({ born: age });
-            for (let k = 0; k < 4; k++) splashes.push({ born: age, vx: rand(-0.03, 0.03), vy: -rand(0.04, 0.09), s: rand(0.8, 1.3) });
-            if (landed > BEAKER_FILL) spouts.push({ born: age + rand(150, 350), hang: rand(350, 550) });
+            if (beaker) beaker.land(age);
             continue;
           }
-          const v = g * f;
-          c.fillStyle = wet(0.55);
-          c.beginPath(); c.ellipse(x, y, 2.4, 3 + Math.min(4, v * 3), 0, 0, Math.PI * 2); c.fill();
-          c.fillStyle = wet(0.25);
-          for (let k = 1; k < 5; k++) c.fillRect(x - 0.5, y - k * (4 + v * 6), 1, 1);
+          if (window.Beaker) window.Beaker.drop(c, x, y, a, g * f * 6, 1, DRIP_INK);
         }
-
-        // THE BENCH, one ruled line with a tick at each end.
-        const benchL = x - brx - 18, benchR = Math.min(W - 6, sx + spillMost * 1.4);
-        c.fillStyle = glass(0.3);
-        c.fillRect(benchL, floor + 0.5, benchR - benchL, 1);
-        c.fillRect(benchL, floor - 3, 1, 7);
-        c.fillRect(benchR - 1, floor - 3, 1, 7);
-        // THE SPILL by the spout: an uneven wet shape, larger with every
-        // drop that has come over.
-        spill += (spillMost * (1 - Math.exp(-spilled / BEAKER_SPILL_GROW)) - spill) * Math.min(1, dt * 3);
-        if (spill > 0.6) {
-          const cx = sx + spill * 0.12, cy = floor + 1;
-          c.beginPath();
-          shape.forEach((k, i) => {
-            const t = (i / shape.length) * Math.PI * 2;
-            const px = cx + Math.cos(t) * spill * k, py = cy + Math.sin(t) * spill * k * 0.22;
-            if (i) c.lineTo(px, py); else c.moveTo(px, py);
-          });
-          c.closePath();
-          c.fillStyle = wet(0.15); c.fill();
-          c.strokeStyle = wet(0.34); c.lineWidth = 1; c.stroke();
-          c.strokeStyle = white(0.55);
-          c.beginPath(); c.ellipse(cx - spill * 0.2, cy - spill * 0.05, spill * 0.35, spill * 0.06, 0, Math.PI * 1.1, Math.PI * 1.8); c.stroke();
-          for (let i = rings.length - 1; i >= 0; i--) {
-            const k = (age - rings[i].born) / 800;
-            if (k >= 1) { rings.splice(i, 1); continue; }
-            const r = 3 + k * Math.max(10, spill * 0.6);
-            c.strokeStyle = wet(0.36 * (1 - k));
-            c.beginPath(); c.ellipse(sx, cy, r, r * 0.22, 0, 0, Math.PI * 2); c.stroke();
-          }
-        }
-        // THE LIQUID, inside the glass.
-        if (level > 0.004) {
-          c.save();
-          c.beginPath();
-          c.moveTo(x - brx + 1, top);
-          c.lineTo(x - brx + 1, floor - 5);
-          c.quadraticCurveTo(x - brx + 1, floor - 1, x - brx + 6, floor - 1);
-          c.lineTo(x + brx - 6, floor - 1);
-          c.quadraticCurveTo(x + brx - 1, floor - 1, x + brx - 1, floor - 5);
-          c.lineTo(x + brx - 1, top);
-          c.closePath();
-          c.clip();
-          c.fillStyle = wet(0.2);
-          c.fillRect(x - brx, ly, bw, floor - ly + 2);
-          c.restore();
-          c.fillStyle = wet(0.24);
-          c.strokeStyle = wet(0.46);
-          c.lineWidth = 1;
-          c.beginPath(); c.ellipse(x, ly, brx - 1.5, bry * 0.85, 0, 0, Math.PI * 2); c.fill(); c.stroke();
-          c.strokeStyle = white(0.6);
-          c.beginPath(); c.ellipse(x, ly, brx - 4, bry * 0.55, 0, Math.PI * 1.15, Math.PI * 1.7); c.stroke();
-          for (let i = ripples.length - 1; i >= 0; i--) {
-            const k = (age - ripples[i].born) / 700;
-            if (k >= 1) { ripples.splice(i, 1); continue; }
-            const r = 2 + k * (brx - 4);
-            c.strokeStyle = wet(0.4 * (1 - k));
-            c.beginPath(); c.ellipse(x, ly, r, r * (bry / brx) * 0.85, 0, 0, Math.PI * 2); c.stroke();
-          }
-          for (let i = splashes.length - 1; i >= 0; i--) {
-            const p = splashes[i], t = age - p.born;
-            if (t > 400) { splashes.splice(i, 1); continue; }
-            c.fillStyle = wet(0.45 * (1 - t / 400));
-            c.fillRect(x + p.vx * t, ly + p.vy * t + 0.00052 * t * t, p.s, p.s);
-          }
-        }
-        // THE GLASS: rim, sides, base, lip, spout, graduations.
-        c.lineWidth = 1;
-        c.strokeStyle = glass(0.3);
-        c.beginPath(); c.ellipse(x, top, brx, bry, 0, Math.PI, Math.PI * 2); c.stroke();
-        c.strokeStyle = glass(0.62);
-        c.beginPath();
-        c.moveTo(x - brx, top);
-        c.lineTo(x - brx, floor - 5);
-        c.quadraticCurveTo(x - brx, floor, x - brx + 6, floor);
-        c.lineTo(x + brx - 6, floor);
-        c.quadraticCurveTo(x + brx, floor, x + brx, floor - 5);
-        c.lineTo(x + brx, top);
-        c.stroke();
-        c.beginPath(); c.ellipse(x, top, brx, bry, 0, 0, Math.PI); c.stroke();
-        c.strokeStyle = glass(0.4);
-        c.beginPath(); c.ellipse(x, top, brx + 1.6, bry + 1, 0, 0.1, Math.PI - 0.1); c.stroke();
-        c.strokeStyle = glass(0.62);
-        c.beginPath(); c.moveTo(x + brx - 1, top - 2); c.lineTo(sx, top - 4); c.lineTo(x + brx, top + 4); c.stroke();
-        c.strokeStyle = glass(0.16);
-        c.beginPath(); c.moveTo(x - brx + 3.5, top + 6); c.lineTo(x - brx + 3.5, floor - 8); c.stroke();
-        c.strokeStyle = glass(0.5);
-        c.fillStyle = glass(0.5);
-        c.font = Math.max(6, Math.round(bw * 0.1)) + "px 'IBM Plex Mono', monospace";
-        for (let i = 1; i <= 5; i++) {
-          const gy = floor - 4 - (inner - 6) * (i / 6);
-          const long = i % 2 === 0;
-          c.beginPath(); c.moveTo(x - brx + 5, gy); c.lineTo(x - brx + (long ? 13 : 9), gy); c.stroke();
-          if (long) c.fillText(String(i * 50), x - brx + 15, gy + 2.5);
-        }
-        c.fillText("ml", x - brx + 5, top + bry + 9);
-        // OVERFLOWING: a wet run from the spout down the outside, and a bead
-        // gathering at the spout and dropping to the bench.
-        if (landed > BEAKER_FILL) {
-          c.strokeStyle = wet(0.42 * Math.min(1, (landed - BEAKER_FILL) / 2));
-          c.lineWidth = 1.4;
-          c.beginPath();
-          c.moveTo(sx - 1, top - 3);
-          c.quadraticCurveTo(x + brx + 3, top + 8, x + brx + 1.4, top + 18);
-          c.lineTo(x + brx + 1.4, floor - 6);
-          c.stroke();
-          c.lineWidth = 1;
-        }
-        for (let i = spouts.length - 1; i >= 0; i--) {
-          const d = spouts[i], t = age - d.born;
-          if (t < 0) continue;
-          if (t < d.hang) {
-            const r = 0.8 + 2 * ease(t / d.hang);
-            c.fillStyle = wet(0.5);
-            c.beginPath(); c.ellipse(sx, top - 3 + r, r * 0.85, r * 1.1, 0, 0, Math.PI * 2); c.fill();
-            continue;
-          }
-          const f = t - d.hang, y = top - 1 + 0.5 * 0.0022 * f * f;
-          if (y >= floor) {
-            spouts.splice(i, 1);
-            spilled++;
-            rings.push({ born: age });
-            for (let k = 0; k < 3; k++) floorSplashes.push({ born: age, vx: rand(-0.03, 0.03), vy: -rand(0.03, 0.07), s: rand(0.7, 1.2) });
-            continue;
-          }
-          c.fillStyle = wet(0.55);
-          c.beginPath(); c.ellipse(sx, y, 2, 2.8, 0, 0, Math.PI * 2); c.fill();
-        }
-        for (let i = floorSplashes.length - 1; i >= 0; i--) {
-          const p = floorSplashes[i], t = age - p.born;
-          if (t > 400) { floorSplashes.splice(i, 1); continue; }
-          c.fillStyle = wet(0.45 * (1 - t / 400));
-          c.fillRect(sx + p.vx * t, floor + p.vy * t + 0.00052 * t * t, p.s, p.s);
-        }
+        if (beaker) beaker.draw(c, x, floor, age, a, 1);
       },
     };
   }
@@ -1852,7 +2066,8 @@
   // How often each is born (per second), and how many may stand at once.
   const HOUSES = {
     pineward: [{ make: tree, rate: 2, most: 16 }, { make: needle, rate: 5, most: 50 }],
-    adar: [{ make: sounding, rate: 1.3, most: 8 }, { make: dust, rate: 22, most: 160 }],
+    // Fewer wells than there were soundings, and much larger.
+    adar: [{ make: sounding, rate: 0.45, most: 3, first: 1 }, { make: dust, rate: 22, most: 160 }],
     "almost-human": [{ make: figure, rate: 1.2, most: 6 }, { make: rain, rate: 26, most: 80 }],
     ataraxia: [{ make: band, rate: 0.75, most: 6, first: 2 }],
     grande: [{ make: rise, rate: 90, most: 640 }],
@@ -1893,6 +2108,9 @@
     }
 
     ctx.clearRect(0, 0, W, H);
+    // A well not drawn for a moment has gone.
+    for (let i = wells.length - 1; i >= 0; i--) if (now - wells[i].seen > 150) wells.splice(i, 1);
+    spacetime(ctx);
     things = things.filter((t) => {
       const age = now - t.born;
       // A thing that has lived its life fades on its own clock; one
@@ -1904,7 +2122,10 @@
       let alpha = t.sharp ? 1 : ease(age / FADE_IN_MS);
       if (t.ending) alpha = t.ending.from * (1 - ease((now - t.ending.at) / t.ending.over));
       else t.shown = alpha;
-      if (t.ending && now - t.ending.at >= t.ending.over) return false;
+      if (t.ending && now - t.ending.at >= t.ending.over) {
+        if (t.well && wells.includes(t.well)) wells.splice(wells.indexOf(t.well), 1);
+        return false;
+      }
       if (alpha > 0.002) t.draw(ctx, age, alpha);
       return true;
     });
@@ -1950,6 +2171,13 @@
       const out = {};
       things.forEach((t) => { if (!t.ending && t.kind) out[t.kind.make.name] = (out[t.kind.make.name] || 0) + 1; });
       return out;
+    },
+    // THE FIELD the wells make together, for contact-sheet.js to draw the
+    // Houses view through: a function from a point on the window to where
+    // it is drawn (`x`, `y`), how big (`s`), how strongly (`a`) and how
+    // far turned (`turn`, radians) — or null while there is no well.
+    bend() {
+      return wells.length ? bendPoint : null;
     },
     stop(now) {
       house = null;

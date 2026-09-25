@@ -9100,6 +9100,49 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
 /* THE MARK: a small ring of specks, one larger for every fragrance. */
 .frag-mark { display: block; flex: none; width: 176px; height: 176px; margin: 12px 0 -14px -10px; }
 @media (max-height: 720px) { .frag-mark { display: none; } }
+/* THE WAY BACK to the houses, at the foot of the aside — the Houses view
+   carries its twin, "The fragrances →", under the way round. */
+.frag-to-houses,
+.sheet-to-fragrances {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 7px;
+  border: 0;
+  border-bottom: 1px solid rgba(var(--ink-rgb), 0.35);
+  background: none;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.25s, gap 0.3s var(--menu-ease);
+}
+.frag-to-houses { align-self: flex-start; margin-top: auto; }
+.frag-to-houses:hover,
+.sheet-to-fragrances:hover { border-bottom-color: var(--ink); gap: 16px; }
+/* THE DIVIDER between the aside and the table: the line the houses' axis
+   becomes when the views cross (views.js's thread lands on it). Placed by
+   the script, the height of the window. */
+.frag-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: rgba(var(--ink-rgb), 0.3);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s var(--menu-ease);
+}
+.frag-divider[hidden] { display: none; }
+.frag-stage.here .frag-divider { opacity: 1; }
+.sheet-to-fragrances { margin-top: 18px; }
+@media (max-width: 700px) {
+  /* The two words across the top are the way over on a phone. */
+  .frag-to-houses, .sheet-to-fragrances { display: none; }
+}
 
 /* THE ITEMS */
 .frag-main {
@@ -9174,8 +9217,7 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   transition: opacity 0.5s var(--menu-ease);
 }
 .frag-stage.here .frag-sortbar { opacity: 1; }
-/* Its rule draws itself across as the view comes in — unless the
-   stretch has already drawn it. */
+/* Its rule draws itself across as the view comes in. */
 .frag-sortbar::after {
   content: "";
   position: absolute;
@@ -9189,7 +9231,6 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   transition: transform 0.55s var(--menu-ease) 0.1s;
 }
 .frag-stage.here .frag-sortbar::after { transform: none; }
-.frag-stage.ruled .frag-sortbar::after { transition: none; }
 .frag-sort-say { display: none; color: var(--muted); }
 .frag-sort {
   padding: 9px 12px 8px 0;
@@ -9212,11 +9253,7 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   transition-delay: calc(40ms + var(--i, 0) * 32ms), 0s, 0s;
 }
 .frag-item[hidden] { display: none; }
-.frag-stage.rows-in .frag-item,
-.frag-stage.ruled .frag-item { opacity: 1; }
-/* THE RULING STANDS AT ONCE after the stretch; only what is written in it
-   comes in, one after another. */
-.frag-stage.ruled:not(.rows-in) .frag-item { transition: none; }
+.frag-stage.rows-in .frag-item { opacity: 1; }
 .frag-item > span {
   opacity: 0;
   transform: translateY(4px);
@@ -9411,8 +9448,12 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
 .frag-mode-cards i:nth-child(1) { left: 24%; }
 .frag-mode-cards i:nth-child(2) { left: 54%; }
 
-/* HELD BACK while views.js stretches the houses' axis into the ruling. */
-.frag-stage.waiting > * { opacity: 0 !important; visibility: hidden; }
+/* THERE AT ONCE, WHOLE: what the stage is while views.js crosses the
+   houses over into it — the crossing is its arrival, so nothing in it
+   arrives a second time. */
+.frag-stage.instant,
+.frag-stage.instant *,
+.frag-stage.instant *::after { transition: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .frag-aside, .frag-list-head, .frag-sortbar, .frag-sortbar::after, .frag-options,
   .frag-item, .frag-item > span, .frag-scale-fill { transition: none !important; }
@@ -9454,26 +9495,33 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   .frag-stage.is-cards .frag-t-house { font-size: 12px; }
 }
 
-/* THE STRETCH between the two views (views.js): everything but the
-   particles fades from the view being left, and the view arriving is
-   held empty until its ruling is formed. */
-.view.stretch-hide .frag-stage > * { opacity: 0 !important; transition: opacity 0.45s var(--menu-ease) !important; }
-.view.stretch-hide .sheet > :not(.sheet-field),
-.view.stretch-hide .sheet-motifs { opacity: 0 !important; transition: opacity 0.45s var(--menu-ease) !important; }
-.view.stretch-in .sheet > :not(.sheet-field) { transition: opacity 0.7s var(--menu-ease) !important; }
-.views.stretching .view.sliding {
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 1;
+/* THE CROSSING between the two views (views.js), whenever the Fragrances
+   are the whole-page table: both views pinned to the window, the one
+   being left fading a little way off to one side as the other fades in —
+   a press mid-way turns it round from wherever it is — and THE THREAD,
+   one line the height of the window, travelling from the houses' axis to
+   the table's divider and back. It replaced the pixel stretch, which the
+   owner had taken out. */
+.views.swiping .view.crossing {
+  transition: opacity 0.38s var(--menu-ease), transform 0.38s var(--menu-ease);
 }
-.view-stretch {
+.views-thread {
   position: fixed;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
   z-index: 2;
-  width: 100%;
-  height: 100%;
+  background: rgba(var(--ink-rgb), 0.3);
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s linear;
+}
+.views-thread.moving {
+  transition: transform 0.38s var(--menu-ease), opacity 0.38s var(--menu-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .views.swiping .view.crossing, .views-thread, .views-thread.moving { transition: none; }
 }
 
 /* ==================================================================
@@ -9808,28 +9856,34 @@ body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.5; }
 }
 
 /* THE SHELF: every row of books stands exactly `--row` high — each
-   book is pushed down by what it is short of that — so the shelves can
-   be ruled under the rows by a background alone, however many rows the
-   width makes. A shelf is a RAIL now rather than a board: one lit line
-   under each row, with a soft glow falling off under it. */
+   book is pushed down by what it is short of that — so every row's foot
+   is at a known height and the case can be drawn under them, however
+   many rows the width makes.
+
+   THE CASE is drawn by note-library.js on a canvas of its own behind the
+   books (`.lib-case`): a bookcase of dark walnut in specks — uprights, a
+   crown, a back of boards, a lit board under every row with a brass
+   label holder on its front. (It was a RAIL for two rounds — one lit
+   line under each row and a glow falling off it — which the owner asked
+   to have redesigned, "I like everything about the library except the
+   shelves".) */
 body.lib-built .lib-records {
   --row: 214px;
   --gap: 52px;
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   column-gap: 6px;
   row-gap: var(--gap);
   padding: 0 10px 18px;
-  background:
-    linear-gradient(to bottom,
-      transparent calc(var(--row) + 3px),
-      rgba(255, 255, 255, 0.16) calc(var(--row) + 3px),
-      rgba(255, 255, 255, 0.16) calc(var(--row) + 4px),
-      rgba(255, 255, 255, 0.035) calc(var(--row) + 4px),
-      transparent calc(var(--row) + 20px))
-    0 0 / 100% calc(var(--row) + var(--gap)) repeat-y;
 }
+.lib-case {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+body.lib-built .lib-records > .lib-record { z-index: 1; }
 
 /* A RECORD IS A BOOK, standing on its shelf, and its spine is DRAWN IN
    SPECKS — a canvas of its own (`.lib-spine`, note-library.js) in the
@@ -10193,9 +10247,9 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   .lib-readout dd { font-size: 26px; }
   .lib-terminal { flex-wrap: wrap; padding: 12px 14px; }
   .lib-count { width: 100%; }
-  body.lib-built .lib-shelf { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  body.lib-built .lib-shelf { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   body.lib-built .lib-plate { position: static; }
-  body.lib-built .lib-records { padding: 0 4px 18px; }
+  body.lib-built .lib-records { padding: 0 8px 18px; }
   .lib-card {
     top: auto;
     left: 12px;

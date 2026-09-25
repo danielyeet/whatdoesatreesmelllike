@@ -83,13 +83,17 @@
   const BLOOM = 1.6;               // and its irises opening after
   const PUFF_EVERY = 0.075;        // seconds between one speck of powder and the next
   const PUFF_NEAR = 0.03;          // and while the pointer is near
-  const GLASS = "70, 66, 84";
-  const DRIP_EVERY = [1.1, 1.8];   // seconds from one drop to the next
-  const DRIP_PULL = 2200;          // px a second a second, as it lets go
-  const DRIP_MOST = 820;           // px a second, as fast as a drop falls
-  const FILL_DROPS = 10;           // drops to fill the beaker to its brim
-  const SPILL_MOST = 58;           // px, half the spill's width at its largest
-  const SPILL_GROW = 6;            // spilled drops to about two thirds of it
+  // SLOWER AND LESS, at the owner's "make the dripping slower, less
+  // filling": a drop every two to three and a half seconds (it was one a
+  // second and a half), hanging longer before it lets go, falling at a
+  // little over half the speed, and sixteen of them to fill the beaker
+  // (it was ten).
+  const DRIP_EVERY = [2.2, 3.4];   // seconds from one drop to the next
+  const DRIP_HANG = [0.8, 1.2];    // seconds a drop gathers before it lets go
+  const DRIP_PULL = 1400;          // px a second a second, as it lets go
+  const DRIP_MOST = 520;           // px a second, as fast as a drop falls
+  const FILL_DROPS = 16;           // drops to fill the beaker to its brim
+  const SPILL_MOST = 48;           // px, half the spill's length at its largest
   const FOOT = 104;                // px, the bench the beaker stands on, above the
                                    // page's foot — clear of the reading in the corner
 
@@ -103,11 +107,10 @@
 
   let width = 0, height = 0;
   let wood = [], inside = [], irises = [], frame = null;
-  let powder = [], drops = [], ripples = [], splashes = [];
-  let spouts = [], spillRings = [], floorSplashes = [];
-  let landed = 0, spilled = 0, level = 0, spill = 0, nextDrop = 0.6, lastPuff = 0;
-  let dripX = 0, beakerW = 60, pageH = 0, scrollV = 0, lastScroll = 0;
-  let spillShape = [];
+  let powder = [], drops = [];
+  let nextDrop = 0.6, lastPuff = 0;
+  let dripX = 0, pageH = 0, scrollV = 0, lastScroll = 0;
+  let beaker = null;
 
   const margin = () => Math.max(0, (width - COLUMN) / 2);
 
@@ -201,15 +204,14 @@
     frame = { left, baseY, lean, wide, tall, hinge, doorTop, doorBot, near: false };
     // THE DRIP, in the other margin, and the beaker under it at the foot
     // of the page — on a window without margins, a small one at the edge.
-    dripX = room > 120 ? width - room * 0.58 : width - 22;
-    beakerW = room > 120 ? Math.max(46, Math.min(78, room * 0.3)) : 30;
-    // The spill's uneven edge, fixed for the page: its reach at every
-    // angle round, as a few waves laid over one another.
-    const waves = [[3, between(0, 6.3), 0.16], [5, between(0, 6.3), 0.1], [7, between(0, 6.3), 0.06], [2, between(0, 6.3), 0.12]];
-    spillShape = Array.from({ length: 48 }, (_, i) => {
-      const a = (i / 48) * Math.PI * 2;
-      return 1 + waves.reduce((sum, [k, ph, amp]) => sum + Math.sin(a * k + ph) * amp, 0);
-    });
+    dripX = room > 120 ? width - room * 0.62 : width - 24;
+    // The beaker, made again at the margin's size, keeping what it held.
+    const bw = room > 120 ? Math.max(46, Math.min(72, room * 0.28)) : 30;
+    if (!beaker || beaker.width !== bw) {
+      const held = beaker ? beaker.drops : 0;
+      beaker = window.Beaker ? window.Beaker.make({ width: bw, fill: FILL_DROPS, spillMost: SPILL_MOST, wet: DRIP }) : null;
+      for (let i = 0; beaker && i < held; i++) beaker.land(0);
+    }
   }
 
   const place = (x, y) => [frame.left + x + y * frame.lean, frame.baseY + y];
@@ -311,15 +313,10 @@
     lastScroll = sy;
     const q = quiet(dripX);
     const wet = (a) => "rgba(" + DRIP + "," + Math.min(1, a * q).toFixed(3) + ")";
-    const glass = (a) => "rgba(" + GLASS + "," + Math.min(1, a * q).toFixed(3) + ")";
-    const bw = beakerW, bh = bw * 1.3, brx = bw / 2, bry = Math.max(2, bw * 0.1);
-    const floorY = pageH - FOOT;                     // the beaker's floor, on the page
-    const beakerTop = floorY - bh;
-    const inner = bh - 7;
-    // How full, eased as it rises; brim-full once it has overflowed.
-    const wantLevel = REDUCE_MOTION ? 0.55 : Math.min(1, landed / FILL_DROPS);
-    level = REDUCE_MOTION ? wantLevel : level + (wantLevel - level) * Math.min(1, dt * 4);
-    const surfaceY = floorY - 3 - inner * level;     // the liquid's top, on the page
+    const floorY = pageH - FOOT;                     // the bench, on the page
+    const ms = clock * 1000;
+    if (beaker && REDUCE_MOTION) while (beaker.drops < FILL_DROPS * 0.55) beaker.land(0);
+    const surfaceY = beaker ? beaker.surface(floorY) : floorY;
     const onScreen = (y1, y2) => y2 >= sy - 40 && y1 <= sy + height + 40;
 
     // The bead at the very top of the page, always gathering.
@@ -333,7 +330,7 @@
       }
     }
     if (!REDUCE_MOTION && clock >= nextDrop) {
-      drops.push({ born: clock, hang: between(0.5, 0.8) });
+      drops.push({ born: clock, hang: between(DRIP_HANG[0], DRIP_HANG[1]) });
       nextDrop = clock + between(DRIP_EVERY[0], DRIP_EVERY[1]);
     }
     const reach = DRIP_MOST / DRIP_PULL;             // seconds to reach its speed
@@ -351,188 +348,23 @@
       const v = f < reach ? DRIP_PULL * f : DRIP_MOST;
       if (y >= surfaceY) {
         drops.splice(i, 1);
-        landed++;
-        ripples.push({ born: clock });
-        for (let k = 0; k < 4; k++) splashes.push({ born: clock, vx: between(-28, 28), vy: -between(40, 90), s: between(0.8, 1.3) });
-        // Brim-full, every drop more is a drop over the spout.
-        if (landed > FILL_DROPS) spouts.push({ born: clock + between(0.15, 0.35), hang: between(0.35, 0.55) });
-        canvas.dataset.drops = String(landed);
+        if (beaker) {
+          beaker.land(ms);
+          canvas.dataset.drops = String(beaker.drops);
+        }
         continue;
       }
       if (!onScreen(y - 30, y + 30)) continue;
-      // A bead, drawn out by how fast it goes ACROSS THE WINDOW — its own
-      // fall less the page's scroll — so scrolling against it streaks it.
-      const rel = v - scrollV, run = Math.min(14, Math.abs(rel) * 0.008), way = rel >= 0 ? 1 : -1;
-      ink.fillStyle = wet(0.55);
-      ink.beginPath(); ink.ellipse(dripX, y - sy, 2.3, 3 + run * 0.5, 0, 0, Math.PI * 2); ink.fill();
-      ink.fillStyle = wet(0.22);
-      for (let k = 1; k < 5; k++) ink.fillRect(dripX - 0.5, y - sy - way * k * (4 + run), 1, 1);
+      // Drawn out by how fast it crosses the window — its own fall less
+      // the page's scroll — so scrolling against it streaks it.
+      const rel = v - scrollV;
+      window.Beaker.drop(ink, dripX, y - sy, q, Math.abs(rel) * 0.01, rel >= 0 ? 1 : -1, DRIP);
     }
 
-    if (onScreen(beakerTop - 60, floorY + 20)) {
-      const by = floorY - sy, ty = beakerTop - sy, sx = dripX + brx + 6;
-      const over = landed > FILL_DROPS;
-
-      // THE BENCH it all stands on: one ruled line with a tick at each end.
-      // As wide as the window leaves it on the spout's side.
-      const spillMost = Math.max(12, Math.min(SPILL_MOST, (width - 12 - sx) / 1.3));
-      const benchL = dripX - brx - 18, benchR = Math.min(width - 6, sx + spillMost * 1.4);
-      ink.fillStyle = glass(0.3);
-      ink.fillRect(benchL, by + 0.5, benchR - benchL, 1);
-      ink.fillRect(benchL, by - 3, 1, 7);
-      ink.fillRect(benchR - 1, by - 3, 1, 7);
-
-      // THE SPILL, on the bench by the spout: an uneven wet shape, larger
-      // with every drop that has come over, up to its most.
-      const wantSpill = spillMost * (1 - Math.exp(-spilled / SPILL_GROW));
-      spill += (wantSpill - spill) * Math.min(1, dt * 3);
-      if (spill > 0.6) {
-        const cx = sx + spill * 0.12, cy = by + 1;
-        ink.beginPath();
-        spillShape.forEach((k, i) => {
-          const a = (i / spillShape.length) * Math.PI * 2;
-          const x = cx + Math.cos(a) * spill * k, y = cy + Math.sin(a) * spill * k * 0.22;
-          if (i) ink.lineTo(x, y); else ink.moveTo(x, y);
-        });
-        ink.closePath();
-        ink.fillStyle = wet(0.15);
-        ink.fill();
-        ink.strokeStyle = wet(0.34);
-        ink.lineWidth = 1;
-        ink.stroke();
-        // The light on it, and a darker edge where it is deepest.
-        ink.strokeStyle = "rgba(255, 255, 255," + (0.55 * q).toFixed(3) + ")";
-        ink.beginPath(); ink.ellipse(cx - spill * 0.2, cy - spill * 0.05, spill * 0.35, spill * 0.06, 0, Math.PI * 1.1, Math.PI * 1.8); ink.stroke();
-        for (let i = spillRings.length - 1; i >= 0; i--) {
-          const k = (clock - spillRings[i].born) / 0.8;
-          if (k >= 1) { spillRings.splice(i, 1); continue; }
-          const r = 3 + k * Math.max(10, spill * 0.6);
-          ink.strokeStyle = wet(0.36 * (1 - k));
-          ink.beginPath(); ink.ellipse(sx, cy, r, r * 0.22, 0, 0, Math.PI * 2); ink.stroke();
-        }
-      }
-
-      // THE LIQUID, inside the glass.
-      if (level > 0.004) {
-        const ly = surfaceY - sy;
-        ink.save();
-        ink.beginPath();
-        ink.moveTo(dripX - brx + 1, ty);
-        ink.lineTo(dripX - brx + 1, by - 5);
-        ink.quadraticCurveTo(dripX - brx + 1, by - 1, dripX - brx + 6, by - 1);
-        ink.lineTo(dripX + brx - 6, by - 1);
-        ink.quadraticCurveTo(dripX + brx - 1, by - 1, dripX + brx - 1, by - 5);
-        ink.lineTo(dripX + brx - 1, ty);
-        ink.closePath();
-        ink.clip();
-        ink.fillStyle = wet(0.2);
-        ink.fillRect(dripX - brx, ly, bw, by - ly + 2);
-        ink.restore();
-        // Its surface, seen a little from above, and the meniscus.
-        ink.fillStyle = wet(0.24);
-        ink.strokeStyle = wet(0.46);
-        ink.lineWidth = 1;
-        ink.beginPath(); ink.ellipse(dripX, ly, brx - 1.5, bry * 0.85, 0, 0, Math.PI * 2); ink.fill(); ink.stroke();
-        ink.strokeStyle = "rgba(255, 255, 255," + (0.6 * q).toFixed(3) + ")";
-        ink.beginPath(); ink.ellipse(dripX, ly, brx - 4, bry * 0.55, 0, Math.PI * 1.15, Math.PI * 1.7); ink.stroke();
-        for (let i = ripples.length - 1; i >= 0; i--) {
-          const k = (clock - ripples[i].born) / 0.7;
-          if (k >= 1) { ripples.splice(i, 1); continue; }
-          const r = 2 + k * (brx - 4);
-          ink.strokeStyle = wet(0.4 * (1 - k));
-          ink.beginPath(); ink.ellipse(dripX, ly, r, r * (bry / brx) * 0.85, 0, 0, Math.PI * 2); ink.stroke();
-        }
-        for (let i = splashes.length - 1; i >= 0; i--) {
-          const p = splashes[i], t = clock - p.born;
-          if (t > 0.4) { splashes.splice(i, 1); continue; }
-          ink.fillStyle = wet(0.45 * (1 - t / 0.4));
-          ink.fillRect(dripX + p.vx * t, ly + p.vy * t + 520 * t * t, p.s, p.s);
-        }
-      }
-
-      // THE GLASS: the back of the rim, the sides, the base, the front of
-      // the rim with its lip, the spout, the graduations.
-      ink.lineWidth = 1;
-      ink.strokeStyle = glass(0.3);
-      ink.beginPath(); ink.ellipse(dripX, ty, brx, bry, 0, Math.PI, Math.PI * 2); ink.stroke();
-      ink.strokeStyle = glass(0.62);
-      ink.beginPath();
-      ink.moveTo(dripX - brx, ty);
-      ink.lineTo(dripX - brx, by - 5);
-      ink.quadraticCurveTo(dripX - brx, by, dripX - brx + 6, by);
-      ink.lineTo(dripX + brx - 6, by);
-      ink.quadraticCurveTo(dripX + brx, by, dripX + brx, by - 5);
-      ink.lineTo(dripX + brx, ty);
-      ink.stroke();
-      ink.beginPath(); ink.ellipse(dripX, ty, brx, bry, 0, 0, Math.PI); ink.stroke();
-      ink.strokeStyle = glass(0.4);
-      ink.beginPath(); ink.ellipse(dripX, ty, brx + 1.6, bry + 1, 0, 0.1, Math.PI - 0.1); ink.stroke();
-      // The spout, on the side away from the writing.
-      ink.strokeStyle = glass(0.62);
-      ink.beginPath(); ink.moveTo(dripX + brx - 1, ty - 2); ink.lineTo(sx, ty - 4); ink.lineTo(dripX + brx, ty + 4); ink.stroke();
-      // The glass's own thickness, a hair inside the left wall.
-      ink.strokeStyle = glass(0.16);
-      ink.beginPath(); ink.moveTo(dripX - brx + 3.5, ty + 6); ink.lineTo(dripX - brx + 3.5, by - 8); ink.stroke();
-      // Graduations up the front, and what they count.
-      ink.strokeStyle = glass(0.5);
-      ink.fillStyle = glass(0.5);
-      ink.font = Math.max(6, Math.round(bw * 0.1)) + "px 'IBM Plex Mono', monospace";
-      for (let i = 1; i <= 5; i++) {
-        const gy = by - 4 - (inner - 6) * (i / 6);
-        const long = i % 2 === 0;
-        ink.beginPath(); ink.moveTo(dripX - brx + 5, gy); ink.lineTo(dripX - brx + (long ? 13 : 9), gy); ink.stroke();
-        if (long && bw > 40) ink.fillText(String(i * 50), dripX - brx + 15, gy + 2.5);
-      }
-      if (bw > 40) ink.fillText("ml", dripX - brx + 5, ty + bry + 9);
-
-      // OVERFLOWING: a wet run from the spout down the outside of the
-      // glass, and a bead gathering at the spout and dropping to the floor.
-      if (over) {
-        const wetRun = Math.min(1, (landed - FILL_DROPS) / 2);
-        ink.strokeStyle = wet(0.42 * wetRun);
-        ink.lineWidth = 1.4;
-        ink.beginPath();
-        ink.moveTo(sx - 1, ty - 3);
-        ink.quadraticCurveTo(dripX + brx + 3, ty + 8, dripX + brx + 1.4, ty + 18);
-        ink.lineTo(dripX + brx + 1.4, by - 6);
-        ink.stroke();
-        ink.lineWidth = 1;
-      }
-      for (let i = spouts.length - 1; i >= 0; i--) {
-        const d = spouts[i], t = clock - d.born;
-        if (t < 0) continue;
-        if (t < d.hang) {
-          const r = 0.8 + 2 * ease(t / d.hang);
-          ink.fillStyle = wet(0.5);
-          ink.beginPath(); ink.ellipse(sx, ty - 3 + r, r * 0.85, r * 1.1, 0, 0, Math.PI * 2); ink.fill();
-          continue;
-        }
-        const f = t - d.hang, y = ty - 1 + 0.5 * DRIP_PULL * f * f;
-        if (y >= by) {
-          spouts.splice(i, 1);
-          spilled++;
-          spillRings.push({ born: clock });
-          for (let k = 0; k < 3; k++) floorSplashes.push({ born: clock, vx: between(-30, 30), vy: -between(30, 70), s: between(0.7, 1.2) });
-          canvas.dataset.spilled = String(spilled);
-          continue;
-        }
-        ink.fillStyle = wet(0.55);
-        ink.beginPath(); ink.ellipse(sx, y, 2, 2.8, 0, 0, Math.PI * 2); ink.fill();
-      }
-      for (let i = floorSplashes.length - 1; i >= 0; i--) {
-        const p = floorSplashes[i], t = clock - p.born;
-        if (t > 0.4) { floorSplashes.splice(i, 1); continue; }
-        ink.fillStyle = wet(0.45 * (1 - t / 0.4));
-        ink.fillRect(sx + p.vx * t, by + p.vy * t + 520 * t * t, p.s, p.s);
-      }
-    } else {
-      // Off the window, the spill still grows by what came over.
-      spill += (SPILL_MOST * (1 - Math.exp(-spilled / SPILL_GROW)) - spill) * Math.min(1, dt * 3);
-      // Drops over the spout still land while nobody is looking.
-      for (let i = spouts.length - 1; i >= 0; i--) {
-        if (clock - spouts[i].born > spouts[i].hang + 0.3) { spouts.splice(i, 1); spilled++; canvas.dataset.spilled = String(spilled); }
-      }
-      ripples.length = 0; splashes.length = 0; spillRings.length = 0; floorSplashes.length = 0;
+    if (beaker) {
+      if (onScreen(floorY - beaker.height - 40, floorY + 20)) beaker.draw(ink, dripX, floorY - sy, ms, 1, q);
+      else beaker.settle(ms);
+      if (canvas.dataset.spilled !== String(beaker.spilled)) canvas.dataset.spilled = String(beaker.spilled);
     }
   }
 

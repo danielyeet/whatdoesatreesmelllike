@@ -193,7 +193,11 @@
       '<span aria-hidden="true">&#8593;</span></button>' +
     '<p class="sheet-nav-at" aria-live="polite"><b></b><span></span></p>' +
     '<button type="button" class="sheet-nav-step" data-step="1" aria-label="The next house">' +
-      '<span aria-hidden="true">&#8595;</span></button>';
+      '<span aria-hidden="true">&#8595;</span></button>' +
+    // AND THE WAY OVER to the fragrances — views.js takes anything carrying
+    // `data-view-go`; the Fragrances view carries its twin back.
+    '<button type="button" class="sheet-to-fragrances" data-view-go="fragrances">' +
+      'The fragrances <span aria-hidden="true">&#8594;</span></button>';
   sheet.appendChild(nav);
   const navAt = nav.querySelector(".sheet-nav-at b");
   const navName = nav.querySelector(".sheet-nav-at span");
@@ -268,6 +272,9 @@
   // Where along the helix you are (`pos`) and where you are going
   // (`target`), in houses: 0 is the first house at the front.
   let pos = 0, target = 0;
+  // THE FIELD ADAR'S WELLS MAKE (motifs.js), read once a frame in draw():
+  // null while there are none, and otherwise where each point is drawn.
+  let bend = null;
   const shown = frames.map(() => (REDUCE_MOTION ? 1 : 0));   // each house's arrival, 0 to 1
   let axisShown = REDUCE_MOTION ? 1 : 0;
   let helixShown = REDUCE_MOTION ? 1 : 0;
@@ -292,9 +299,20 @@
       // was. Only once it is wholly off the window is it let go of.
       const half = frontH * s / 2 + 30;   // and its label under it
       const gone = p.y + half < 0 || p.y - half > H;
-      const seen = gone ? 0 : come * (0.3 + 0.7 * (p.z + 1) / 2);
-      frame.style.transform = "translate(" + (x - frontW / 2).toFixed(1) + "px," +
-        (p.y - frontH / 2).toFixed(1) + "px) scale(" + s.toFixed(4) + ")";
+      let seen = gone ? 0 : come * (0.3 + 0.7 * (p.z + 1) / 2);
+      // DRAWN IN BY ADAR'S WELLS (motifs.js): leaning towards the hole,
+      // turned round it and shrunk — gently, a house being a house, and
+      // never the one being rested on, which is under the pointer.
+      let fx = x, fy = p.y, fs = s, fr = 0;
+      if (bend && !frame.classList.contains("hot")) {
+        const w = bend(x, p.y);
+        fx = x + (w.x - x) * 0.7; fy = p.y + (w.y - p.y) * 0.7;
+        fs = s * Math.max(0.5, 1 - (1 - w.s) * 0.7);
+        fr = w.turn * 0.5;
+        seen *= 0.35 + 0.65 * w.a;
+      }
+      frame.style.transform = "translate(" + (fx - frontW / 2).toFixed(1) + "px," +
+        (fy - frontH / 2).toFixed(1) + "px) scale(" + fs.toFixed(4) + ")" + (fr ? " rotate(" + (fr * 57.3).toFixed(2) + "deg)" : "");
       frame.style.setProperty("--shown", seen.toFixed(3));
       // In front of the particles or behind them, and the front house
       // above the others in front.
@@ -307,8 +325,14 @@
 
       const mark = marks[i];
       const my = p.y;
-      const markSeen = Math.max(0, 1 - Math.abs(my - cy) / (room * 0.55)) * axisShown;
-      mark.style.transform = "translate(" + (cx + 12).toFixed(1) + "px," + (my - 9).toFixed(1) + "px)";
+      let markSeen = Math.max(0, 1 - Math.abs(my - cy) / (room * 0.55)) * axisShown;
+      let mx = cx + 12, mY = my - 9;
+      if (bend) {
+        const w = bend(cx + 20, my);
+        mx += w.x - (cx + 20); mY += w.y - my;
+        markSeen *= w.a;
+      }
+      mark.style.transform = "translate(" + mx.toFixed(1) + "px," + mY.toFixed(1) + "px)";
       mark.style.opacity = markSeen.toFixed(3);
       mark.classList.toggle("is-on", atFront);
       mark.tabIndex = markSeen < 0.05 ? -1 : 0;
@@ -353,6 +377,10 @@
 
   const INK = getComputedStyle(document.body).getPropertyValue("--ink-rgb").trim() || "23, 23, 15";
   function speck(x, y, size, a) {
+    if (bend) {
+      const w = bend(x, y);
+      x = w.x; y = w.y; size *= w.s; a *= w.a;
+    }
     if (a <= 0.01 || x < -10 || x > W + 10 || y < -10 || y > H + 10) return;
     // Specks near the pointer are drawn plainer — and so, for a moment,
     // are the ones it has just passed over.
@@ -375,6 +403,16 @@
     ink.setTransform(ratio, 0, 0, ratio, 0, 0);
     ink.clearRect(0, 0, W, H);
     ink.fillStyle = "rgb(" + INK + ")";
+    bend = window.HouseMotifs && window.HouseMotifs.bend ? window.HouseMotifs.bend() : null;
+    /** The axis from one height to another, as a line through the field. */
+    const bentAxis = (from, to) => {
+      ink.beginPath();
+      for (let y = from, first = true; ; y = Math.min(to, y + 6), first = false) {
+        const w = bend(cx, y);
+        if (first) ink.moveTo(w.x, w.y); else ink.lineTo(w.x, w.y);
+        if (y >= to) break;
+      }
+    };
 
     // Which of the places the pointer has passed are still glowing.
     const clock = now / 1000;
@@ -402,12 +440,18 @@
         tail.addColorStop(1, "rgba(" + INK + ", 0.75)");
         ink.fillStyle = tail;
         const from = Math.max(top, y - PULSE_LEN), to = Math.min(foot, y);
-        if (to > from) ink.fillRect(cx - 1.75, from, 3.5, to - from);
+        if (to > from && bend) {
+          ink.strokeStyle = tail; ink.lineWidth = 3.5;
+          bentAxis(from, to); ink.stroke();
+        } else if (to > from) ink.fillRect(cx - 1.75, from, 3.5, to - from);
       }
     }
     ink.fillStyle = "rgb(" + INK + ")";
     ink.globalAlpha = 0.8 * axisShown;
-    ink.fillRect(cx - 0.9, top, 1.8, foot - top);
+    if (bend) {
+      ink.strokeStyle = "rgb(" + INK + ")"; ink.lineWidth = 1.8;
+      bentAxis(top, foot); ink.stroke();
+    } else ink.fillRect(cx - 0.9, top, 1.8, foot - top);
     // Its ticks travel with you: one every quarter house, a long one at
     // each house.
     const quarter = span / 4;
@@ -416,7 +460,11 @@
       const y = cy + k * quarter - shift;
       const long = ((k % 4) + 4) % 4 === 0;
       ink.globalAlpha = (long ? 0.7 : 0.34) * axisShown;
-      ink.fillRect(cx - (long ? 9 : 4.5), y, long ? 18 : 9, 1);
+      if (bend) {
+        const w = bend(cx, y), half = (long ? 9 : 4.5) * w.s;
+        ink.globalAlpha *= w.a;
+        ink.fillRect(w.x - half, w.y, half * 2, 1);
+      } else ink.fillRect(cx - (long ? 9 : 4.5), y, long ? 18 : 9, 1);
     }
     // Specks falling down it, always.
     for (const a of axisSpecks) {

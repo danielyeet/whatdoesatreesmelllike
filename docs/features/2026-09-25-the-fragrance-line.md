@@ -1,8 +1,10 @@
-# The Fragrances, a whole-page table — and the stretch from the Houses
+# The Fragrances, a whole-page table — and the crossing from the Houses
 
 Date: 2026-09-25
 Files touched: `fragrance-line.js` (new; rewritten twice the same day), `views.js`,
-`style.css` (the `frag-*`, `stretch-*` and `.view-stretch` rules),
+`style.css` (the `frag-*` rules, and `views-thread` and `.view.crossing` — the `stretch-*`
+and `.view-stretch` rules are gone), `contact-sheet.js` (*The fragrances →* under the way
+round),
 `categories/scent-descriptions.html` (the script tag; rows 001–007 dated),
 `archive/fragrances-view-2026-09-24.html` (new), `tests/fragrance-line.spec.js` (new),
 `tests/index-pages.spec.js` and `tests/fragrance-reader.spec.js` (now run against the old
@@ -12,8 +14,11 @@ What changed: the Fragrances view of Scent descriptions is **a table that is nea
 page** — number, name, house, date — with an **aside** on its left (the count, a few
 readings, a scale and a small ring of specks) and, on its right, **three ways of showing it**:
 a list, small boxes, or cards with each fragrance's picture. Nothing is drawn behind it.
-Going there from the Houses, the houses' **axis is stretched** and gathers into the table's
-own **rules**. The old view is kept, exactly, in the page and in `archive/`. **It was three
+Going there from the Houses is **the crossing**: the two views fade through each other a
+little way to either side, a press while it runs turns it round at once, and the houses'
+**axis travels across to become the table's divider**; each view carries a way to the other.
+(For most of a day the axis was **stretched** into pixel streaks that gathered into the table's
+rules; the owner asked for that gone.) The old view is kept, exactly, in the page and in `archive/`. **It was three
 things in one day**: files travelling along a line through a double pyramid of specks (the
 sections below), then a table standing over that line and pyramid (*evening*), then this
 (*night*, the last section, which is what the page is now).
@@ -364,3 +369,67 @@ npm test -- tests/fragrance-line.spec.js
   `individual-fragrances.html` and not in `images/Individual Fragrances/` yet. They will show
   the moment the files are there.
 - The mark is hidden on windows under 720px tall rather than squeezed.
+
+## 2026-09-25, later that night — the crossing
+
+The owner: *"change the transition too please, so that the pixel stretch is not used. I want
+something simple, so that you can freely change between the houses and fragrances page. Make
+the two pages connected somehow too."* Three words in that, and each is one thing in the code.
+
+**Simple.** `stretch()` is gone from `views.js`, with its canvas (`.view-stretch`), its streaks,
+the page travelling a window, and every rule it hung off in the stylesheet — and from
+`fragrance-line.js`, the table's side of it: `data-rules`, `data-rule-l`/`-r`, the `waiting`
+and `ruled` states. What is there instead is `cross()`: the view being left fades out while
+drifting `CROSS_SHIFT` (26px) the way it is going, and the one coming fades in from the other
+side, **both at once**, in `CROSS_MS` (380ms). Nothing is held back, nothing waits a beat. The
+table is there whole the moment it is shown (`data-arrive="now"` → `arrive(true)`, which puts
+`.instant` on the stage for two frames so none of its own arrivals run a second time) — the
+crossing *is* its arrival.
+
+**Free.** A press while the crossing is running is **taken at once**: the crossing turns round
+from wherever it has got to (both views are still pinned, and their transitions simply reverse),
+where the old fade and swipe remembered the press and took it afterwards. Press as fast as you
+like and it lands where the last press was, with nothing left half done. The first time you go
+to a view is the same as every other time — the rule that the swipe waited until both had been
+opened belonged to the swipe, and the swipe is only used now when `fragrance-line.js` is not
+there (the old table, which two spec files run against on purpose).
+
+**Connected**, in two ways:
+
+- **The line.** `views.js` puts one hairline on the page (`.views-thread`, the height of the
+  window) where the houses' axis stands, and as the views cross it **travels to where the
+  table's divider stands** — a hairline between the aside and the table (`.frag-divider`, placed
+  by `measure()`, its x published as `data-divider` on the stage) — and back. The axis becomes
+  the divider: the two pages are one line apart. On a phone, where the aside is a head over the
+  table and there is no divider, the line goes as it travels.
+- **A way to the other from inside each.** `← The houses` at the foot of the aside, and
+  `The fragrances →` under the way round on the Houses view. Anything carrying
+  `data-view-go="houses"` or `"fragrances"` is taken by `views.js` as a press of that button;
+  both are hidden below 700px, where the two words across the top are right there.
+
+**One trap it walked into**: the line was first put on the `<body>`, which put it under the
+Menu's dimming rule (`body > *:not(...)` — the one the notes window fell into), whose `opacity
+0.85s` outranked its own transitions; it never showed at all. It lives in the views' box instead
+(`.views`), which never moves itself, so it is still fixed to the window.
+
+### How to test it
+
+```bash
+npm test -- tests/fragrance-line.spec.js
+```
+
+- `going to the Fragrances is a quick crossing, and the axis travels across to be the table's
+  divider` — no stretch canvas is ever made; the two views are both partly there for several
+  frames; the Houses view is gone inside 700ms; the line is seen leaving from within 80px of the
+  axis and landing within 3px of the published divider, which stands between the aside and the
+  table.
+- `the views can be gone between freely, and each carries the way to the other` — four presses
+  in 300ms land on the last one, inside 900ms, with nothing left pinned; then *The fragrances →*
+  and *← The houses* each go over.
+- The stretch's own test is gone with it.
+
+### Known issues / TODO
+
+- The line is ink at 30% on the Houses view's white; if the Houses view ever turns dark, it
+  wants its token.
+

@@ -348,6 +348,209 @@
   records.forEach((r) => { if (seeSpine) seeSpine.observe(r.el); else drawSpine(r); });
 
   // ============================================================
+  // THE SHELVES — a bookcase for every accord, drawn in specks as the
+  // books are. The owner, the night of 2026-09-25: "the library, please
+  // redesign the shelves. I like everything about the library except
+  // the shelves." They were one lit rail under each row and a glow
+  // falling off it, standing on nothing.
+  //
+  // So each accord's books stand in A CASE of dark walnut: two uprights,
+  // a crown over the first row, a back of boards seen between them with
+  // the seams between the boards, the dark gathering at the foot of every
+  // row and under every board where the light does not reach — and a
+  // BOARD under each row, its top seen from a little above and lit, its
+  // front edge in shadow with a lit arris, the grain running along it.
+  // On every board's front, a small brass LABEL HOLDER with a card in it
+  // giving the call numbers standing on that row — CIT 001–013 — as a
+  // library's shelves are labelled.
+  //
+  // Drawn behind the books on a canvas of its own (`.lib-case`), when it
+  // first comes near the window, and again whenever the rows change —
+  // the width, or the order the books stand in.
+  // ============================================================
+  const CASE_OUT = 18;      // px the case stands out past the rows either side
+  const CASE_SIDE = 11;     // px, each upright
+  const CASE_CROWN = 30;    // px over the first row
+  const BOARD_TOP = 7;      // px of a board's top, seen from above
+  const BOARD_FACE = 13;    // px of its front edge
+  const WOOD = [24, 32, 22];            // hsl: a walnut, dark as the room is
+  const BRASS = [40, 46, 52];
+  const CASE_STEP = 1.9;    // px between specks of wood
+  function drawCase(holder) {
+    const c = holder.querySelector(".lib-case");
+    if (!c || !holder.offsetParent) return;
+    const cs = getComputedStyle(holder);
+    const rowH = parseFloat(cs.getPropertyValue("--row")) || 214;
+    const gap = parseFloat(cs.getPropertyValue("--gap")) || 52;
+    const books = [...holder.querySelectorAll(".lib-record")];
+    // Which row each book stands on, read off where it stands.
+    const rows = [];
+    books.forEach((b) => {
+      const k = Math.max(0, Math.round((b.offsetTop + b.offsetHeight - rowH) / (rowH + gap)));
+      (rows[k] = rows[k] || []).push(recOf.get(b));
+    });
+    const n = Math.max(1, rows.length);
+    // Narrower on a phone, where there is no room to stand out past the
+    // rows without the page scrolling sideways.
+    const narrow = window.innerWidth < 700;
+    const out = narrow ? 4 : CASE_OUT, side = narrow ? 7 : CASE_SIDE, crown = narrow ? 16 : CASE_CROWN;
+    const w = holder.clientWidth + out * 2;
+    const h = crown + (n - 1) * (rowH + gap) + rowH + BOARD_TOP + BOARD_FACE + 18;
+    c.style.left = -out + "px";
+    c.style.top = -crown + "px";
+    c.style.width = w + "px";
+    c.style.height = h + "px";
+    c.width = Math.round(w * SPINE_RATIO);
+    c.height = Math.round(h * SPINE_RATIO);
+    const g = c.getContext("2d");
+    if (!g) return;
+    g.setTransform(SPINE_RATIO, 0, 0, SPINE_RATIO, 0, 0);
+    g.clearRect(0, 0, w, h);
+    const code = holder.closest(".lib-shelf").dataset.shelf;
+    let seed = Math.floor(hash(code + "case") * 4294967295) || 7;
+    const rnd = () => {
+      seed ^= seed << 13; seed >>>= 0;
+      seed ^= seed >>> 17;
+      seed ^= seed << 5; seed >>>= 0;
+      return seed / 4294967296;
+    };
+    const buckets = new Map();
+    const put = (x, y, l, a, size, tone) => {
+      const key = (tone || "w") + Math.round(l) + "|" + Math.round(a * 10) / 10;
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(x, y, size);
+    };
+    const boardAt = (k) => crown + k * (rowH + gap) + rowH;
+    const inL = side, inR = w - side;
+    // THE BACK: boards seen between the uprights, dark, with the seams
+    // between them, and darker where the books and the board above
+    // shut the light out.
+    const seam = 58 + Math.floor(rnd() * 14);
+    for (let y = 0; y < h - BOARD_FACE; y += CASE_STEP * 1.35) {
+      for (let x = inL; x < inR; x += CASE_STEP * 1.35) {
+        if (rnd() < 0.35) continue;
+        const px = x + (rnd() - 0.5) * 1.4, py = y + (rnd() - 0.5) * 1.4;
+        // Where it stands in its row: 0 just under a board, 1 at the foot.
+        const inRow = ((py - crown + gap) % (rowH + gap) + (rowH + gap)) % (rowH + gap) / (rowH + gap);
+        let l = WOOD[2] - 11 + (rnd() - 0.5) * 2.4 + Math.sin(px * 0.21 + Math.sin(py * 0.013) * 3) * 0.8;
+        l -= 3.5 * Math.max(0, 1 - inRow / 0.2);         // under the board above
+        l -= 3 * Math.max(0, (inRow - 0.82) / 0.18);     // at the foot of the books
+        if (((px - inL) % seam) < 1.2) l -= 3;            // a seam between two boards
+        put(px, py, Math.max(2, l), 0.55 + rnd() * 0.25, 1.1);
+      }
+    }
+    // THE UPRIGHTS and THE CROWN.
+    const plank = (x0, y0, x1, y1, lit, along) => {
+      for (let y = y0; y < y1; y += CASE_STEP) {
+        for (let x = x0; x < x1; x += CASE_STEP) {
+          if (rnd() < 0.06) continue;
+          const px = x + (rnd() - 0.5) * 0.9, py = y + (rnd() - 0.5) * 0.9;
+          const grain = along === "x" ? Math.sin(py * 1.7 + Math.sin(px * 0.02) * 4) : Math.sin(px * 1.7 + Math.sin(py * 0.02) * 4);
+          put(px, py, Math.max(3, WOOD[2] + lit + grain * 1.6 + (rnd() - 0.5) * 3), 0.9, 1.2);
+        }
+      }
+    };
+    plank(0, 0, side, h, 1.5, "y");
+    plank(w - side, 0, w, h, -2.5, "y");
+    for (let y = 0; y < h; y += 1.4) { put(side - 0.6, y, WOOD[2] + 9, 0.7, 1); put(w - side, y, WOOD[2] - 7, 0.7, 1); }
+    plank(0, 0, w, 10, 3, "x");
+    plank(side, 10, w - side, 15, -6, "x");
+    for (let x = 0; x < w; x += 1.4) put(x, 9.6, WOOD[2] + 12, 0.8, 1);
+    // The plinth it stands on.
+    plank(0, h - 9, w, h, -2, "x");
+    for (let x = 0; x < w; x += 1.4) put(x, h - 9, WOOD[2] + 10, 0.8, 1);
+    // THE BOARDS, one under every row.
+    for (let k = 0; k < n; k++) {
+      const top = boardAt(k);
+      // Its top, seen from a little above: lit, lighter towards the front.
+      for (let y = top; y < top + BOARD_TOP; y += 1.5) {
+        for (let x = side - 3; x < w - side + 3; x += 1.6) {
+          if (rnd() < 0.05) continue;
+          const q = (y - top) / BOARD_TOP;
+          const px = x + (rnd() - 0.5) * 0.8;
+          put(px, y + (rnd() - 0.5) * 0.6, WOOD[2] + 8 + q * 8 + Math.sin(px * 0.05 + y) * 1.2 + (rnd() - 0.5) * 2.5, 0.92, 1.1);
+        }
+      }
+      // The arris, and the front edge under it, the grain along it.
+      for (let x = side - 4; x < w - side + 4; x += 1.3) put(x, top + BOARD_TOP, WOOD[2] + 19 + (rnd() - 0.5) * 4, 0.85, 1);
+      plank(side - 4, top + BOARD_TOP + 1, w - side + 4, top + BOARD_TOP + BOARD_FACE, 2, "x");
+      for (let x = side - 4; x < w - side + 4; x += 1.5) put(x, top + BOARD_TOP + BOARD_FACE - 0.6, WOOD[2] - 8, 0.8, 1);
+      // Its shadow on the back under it, and the books' on its top.
+      for (let y = top + BOARD_TOP + BOARD_FACE; y < top + BOARD_TOP + BOARD_FACE + 14; y += 1.6) {
+        const q = 1 - (y - top - BOARD_TOP - BOARD_FACE) / 14;
+        for (let x = inL; x < inR; x += 1.6) if (rnd() < q * 0.8) put(x + (rnd() - 0.5), y, 3, 0.5 * q, 1.5, "s");
+      }
+    }
+    // THE LABEL HOLDERS: a brass frame on the board's front, holding a
+    // card with the call numbers standing on that row.
+    const labels = [];
+    rows.forEach((row, k) => {
+      if (!row || !row.length) return;
+      const nums = row.map((r) => parseInt(r.call.slice(4), 10)).sort((p, q) => p - q);
+      const text = code + " " + String(nums[0]).padStart(3, "0") + (nums.length > 1 ? "–" + String(nums[nums.length - 1]).padStart(3, "0") : "");
+      const lw = 96, lh = 11;
+      const lx = out + 14, ly = boardAt(k) + BOARD_TOP + (BOARD_FACE - lh) / 2 + 0.5;
+      for (let x = lx; x <= lx + lw; x += 1.1) { put(x, ly, BRASS[2] + (rnd() - 0.5) * 8, 0.95, 1, "b"); put(x, ly + lh, BRASS[2] - 14, 0.9, 1, "b"); }
+      for (let y = ly; y <= ly + lh; y += 1.1) { put(lx, y, BRASS[2] + 4, 0.95, 1.2, "b"); put(lx + lw, y, BRASS[2] - 10, 0.95, 1.2, "b"); }
+      for (let y = ly + 1.4; y < ly + lh - 0.6; y += 1.2) for (let x = lx + 1.6; x < lx + lw - 0.8; x += 1.2) put(x, y, 82 + (rnd() - 0.5) * 5, 0.9, 1.3, "p");
+      labels.push({ text, x: lx + lw / 2, y: ly + lh / 2 + 0.6 });
+    });
+    buckets.forEach((list, key) => {
+      const [l, a] = key.slice(1).split("|").map(Number);
+      g.fillStyle = key[0] === "b" ? "hsla(" + BRASS[0] + "," + BRASS[1] + "%," + l + "%," + a + ")"
+        : key[0] === "p" ? "hsla(42,28%," + l + "%," + a + ")"
+        : key[0] === "s" ? "rgba(0,0,0," + a + ")"
+        : "hsla(" + WOOD[0] + "," + WOOD[1] + "%," + l + "%," + a + ")";
+      for (let i = 0; i < list.length; i += 3) g.fillRect(list[i], list[i + 1], list[i + 2], list[i + 2]);
+    });
+    g.fillStyle = "rgba(28, 24, 18, 0.9)";
+    g.font = "500 7.5px " + (getComputedStyle(document.body).getPropertyValue("--mono").trim() || "monospace");
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    labels.forEach((t) => g.fillText(t.text, t.x, t.y));
+    holder.dataset.rows = String(n);
+    c.dataset.drawn = "1";
+  }
+  const holders = shelves.map((s) => s.querySelector(".lib-records")).filter(Boolean);
+  holders.forEach((holder) => {
+    const c = document.createElement("canvas");
+    c.className = "lib-case";
+    c.setAttribute("aria-hidden", "true");
+    c.width = 1; c.height = 1;
+    holder.insertBefore(c, holder.firstChild);
+  });
+  /** Redraw the cases that have been drawn (and any near the window). */
+  function drawCases() {
+    holders.forEach((holder) => {
+      const c = holder.querySelector(".lib-case");
+      // One folded away by the terminal is drawn again when it comes back.
+      if (!holder.offsetParent) c.dataset.stale = "1";
+      else if (c.dataset.drawn || !seeCase) drawCase(holder);
+    });
+  }
+  const seeCase = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      const c = e.target.querySelector(".lib-case");
+      if (!e.isIntersecting || (c.dataset.drawn && !c.dataset.stale)) return;
+      delete c.dataset.stale;
+      drawCase(e.target);
+    });
+  }, { rootMargin: "700px 0px" }) : null;
+  if (seeCase) holders.forEach((holder) => seeCase.observe(holder));
+  else drawCases();
+  // AGAIN WHEN THE ROWS CHANGE: the width (and so where they wrap).
+  let caseWidth = window.innerWidth, caseTimer = 0;
+  window.addEventListener("resize", () => {
+    if (window.innerWidth === caseWidth) return;
+    caseWidth = window.innerWidth;
+    clearTimeout(caseTimer);
+    caseTimer = setTimeout(drawCases, 160);
+  });
+  // The monospace the labels are printed in may arrive after the first
+  // drawing.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawCases);
+
+  // ============================================================
   // THE CHROME IN FRONT OF THE STACKS
   // ============================================================
   const head = library.querySelector(".lib-head");
@@ -613,6 +816,8 @@
       mine.forEach((r) => { r.el.classList.remove("lib-leans"); holder.appendChild(r.el); });
       if (mine.length > 3) mine[mine.length - 1].el.classList.add("lib-leans");
     });
+    // The rows hold other books now, and the labels say so.
+    drawCases();
     rove();
   }));
 

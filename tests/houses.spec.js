@@ -562,7 +562,7 @@ test("Tombstone's stones stand in the margins with their reflections under them"
    drops and then overflows, dropping from its spout. */
 test("Les Abstraits has its armoire with iris on one side and a drip down the whole page into a beaker on the other",
   async ({ page }) => {
-  test.setTimeout(90000);
+  test.setTimeout(150000);
   await page.addInitScript(() => {
     window.__iris = false;
     const P = CanvasRenderingContext2D.prototype;
@@ -572,6 +572,11 @@ test("Les Abstraits has its armoire with iris on one side and a drip down the wh
       set(v) { if (/^rgba\(112,\s*94,\s*156/.test(String(v))) window.__iris = true; d.set.call(this, v); },
     });
   });
+  // ON A CLOCK OF THE TEST'S OWN: the drip is slow now ("make the
+  // dripping slower, less filling") — a drop every two or three seconds
+  // and sixteen to the brim — so the minute and more it takes to fill is
+  // run through rather than waited out.
+  await page.clock.install();
   await page.goto(ABSTRAITS);
   const read = () => page.evaluate(() => {
     const el = document.querySelector(".human-field");
@@ -589,7 +594,7 @@ test("Les Abstraits has its armoire with iris on one side and a drip down the wh
       foot: count(innerWidth - margin, innerWidth, innerHeight - 160, innerHeight),
       drops: +(el.dataset.drops || 0), spilled: +(el.dataset.spilled || 0) };
   });
-  await page.waitForTimeout(2600);
+  await page.clock.runFor(2600);
   const atTop = await read();
   expect(atTop.armoire, "the armoire in the left margin").toBeGreaterThan(1500);
   expect(await page.evaluate(() => window.__iris), "with iris in it").toBe(true);
@@ -598,15 +603,15 @@ test("Les Abstraits has its armoire with iris on one side and a drip down the wh
   // CARRIED WITH THE PAGE: scrolled, the top of the page — and the bead
   // hanging from it — has gone up off the window.
   await page.evaluate(() => window.scrollTo(0, 400));
-  await page.waitForTimeout(300);
+  await page.clock.runFor(300);
   expect((await read()).top, "the bead goes up with the page").toBeLessThan(3);
   // THE BEAKER, at the page's own foot: there, filling, and in time
   // overflowing and dropping from its spout.
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  await page.waitForTimeout(600);
+  await page.clock.runFor(600);
   const early = await read();
   expect(early.foot, "a beaker at the foot of the page").toBeGreaterThan(200);
-  await page.waitForTimeout(21000);
+  await page.clock.runFor(80000);
   const late = await read();
   expect(late.drops, "the drops land in it").toBeGreaterThan(early.drops + 5);
   expect(late.spilled, "and once it is full, it drips over").toBeGreaterThan(0);

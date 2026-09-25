@@ -1521,3 +1521,52 @@ take off.
 **Later the same day** the owner asked for the two placeholders to go — "Second favourite"
 and "Third favourite", which pointed at the two templates — and they are out of the page.
 Chapter 1 is ten favourites: Des Cendres and the nine above.
+
+## 2026-09-25, night — the morph made smoother, and the spin picking up
+
+> whenever you transitoon from chapter 1 to chapter 2 or back, its quite laggy, so make it
+> smoother. and i want the spinning to start gradually after the transiton. to pick up speed
+> and accelerate into the speed that it is currently spinning at. make that SLIGHTLY gradual.
+
+**Where the lag was**, measured rather than guessed (a CPU profile of one step, and every
+frame's length): the flight ran at about twenty frames a second where the sun alone runs at
+thirty in the same test browser, and the press held everything up for a tenth of a second.
+Three causes, each taken out:
+
+- **The new drawing was drawn unseen.** It is held still under its veil for most of the flight
+  — and was drawing the same frame over and over, fourteen thousand specks and their glow, as
+  heavy as the flight itself. **Held, a drawing now draws once**, and again only while the veil
+  is off it (`sun.js` and `moon.js`, `tick`: `heldDrawn`, and a look at the canvas's own
+  opacity).
+- **Every speck set its own colour.** The flight set a new colour string for each of its
+  fourteen thousand specks every frame. It is **batched** now: the flights are rows of numbers
+  (typed arrays) rather than objects; every colour a speck can be is made once
+  (`MORPH_HUES` steps between each pair of tones); and each frame the specks are sorted by
+  colour and brightness (`MORPH_LEVELS`) and every batch is **one fill**. **The bloom** under the
+  brightest is stamped under at most `MORPH_GLOW_MOST` (500) of them, chosen once.
+- **The press waited for the setting up.** The two snapshots and the pairing of every speck
+  with its twin take about a tenth of a second; they are done **on the frame after the press**
+  now, and the press itself only starts the writing going (`turning`), so it answers at once.
+
+After all three the flight runs at the page's own rate, as fast as the sun or the moon standing
+still. It looks the same: the specks, colours, blooms and timing are as they were.
+
+**The spin picks up.** Let go after the morph, the drawing no longer sets off at full speed: its
+clock runs at a rate that rises from nothing to its full rate over `SPIN_UP_MS` (1.4 seconds),
+smoothly at both ends — slightly gradual, as asked — and everything on it (the turn, the
+prominences, the wind, the moon's phases and its sky) eases in together with it. Both drawings
+carry `at()`, their own clock, for the test.
+
+Tested in `tests/chamber.spec.js`:
+
+- **`stepping chapters answers the press at once, and nothing is drawn unseen under the veil`** —
+  the writing is going on the press itself, the press takes under 30ms, and while the new
+  drawing is under its veil not one speck is drawn on it.
+- **`let go after the morph, the sun and the moon pick up speed rather than setting off at
+  full`** — each drawing made on a canvas of its own: held, its clock stands; in the first 300ms
+  after it is let go it moves on less than 40% as far as it does in 300ms a second and a half
+  later.
+- `the morph lands on the very frame that comes up, and leaves the old drawing without a blink`
+  reads the flight's first frame one frame after the press now, which is when the flight is set
+  up.
+

@@ -957,6 +957,88 @@ test("Les Abstraits' armoire is drawn in lines rather than specks, with irises g
   expect(out.high, "and none up where the door is").toBe(0);
 });
 
+/* THE ARMOIRE HAS CLOTHES IN IT: "also put folded clothes and hangers
+   with something on it in the armoire" (2026-09-25, night). Read off the
+   motifs' canvas inside the open half of the armoire, which was a faint
+   tone and a few hairlines: the clothes are drawn solid over it — hung
+   from the rail in the upper part, and folded on the shelf and the floor
+   of it below. */
+test("Les Abstraits' armoire has clothes on hangers and folded on its shelf", async ({ page }) => {
+  test.setTimeout(60000);
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 5);
+  await page.waitForTimeout(4500);
+  const out = await page.evaluate(() => {
+    const c = document.querySelector(".sheet-motifs");
+    const ratio = c.width / c.getBoundingClientRect().width;
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    const W = innerWidth, H = innerHeight;
+    // Where armoire() stands it, in the same numbers.
+    const tall = Math.max(220, Math.min(H * 0.56, 420)), wide = tall * 0.5;
+    const baseY = H - Math.max(18, H * 0.04), left = Math.max(14, W * 0.1 - wide / 2);
+    const legH = tall * 0.13, body = tall * 0.72, drawerH = body * 0.13;
+    const doorTop = -(legH + body) + 8, doorBot = -legH - drawerH - 5;
+    const bT = doorTop + 10, bB = doorBot - 7, shelfY = bT + (bB - bT) * 0.7;
+    const x1 = left + wide / 2 + 14, x2 = left + wide - 14;
+    const solid = (ya, yb) => {
+      let n = 0;
+      for (let y = Math.round((baseY + ya) * ratio); y < Math.round((baseY + yb) * ratio); y++)
+        for (let x = Math.round(x1 * ratio); x < Math.round(x2 * ratio); x++) if (d[(y * c.width + x) * 4 + 3] > 200) n++;
+      return n / (ratio * ratio);
+    };
+    return { hung: solid(doorTop + 30, shelfY - 40), folded: solid(shelfY - 26, doorBot) };
+  });
+  expect(out.hung, "clothes hung from the rail").toBeGreaterThan(1200);
+  expect(out.folded, "and folded on the shelf and the floor of it").toBeGreaterThan(500);
+});
+
+/* ADAR'S BLACK HOLES: "make the waves of the dots that form from the
+   hover of adar larger, and distortive of the page. Where they appear,
+   let them have a black hole effect on anything they touch." While ADAR
+   is rested on, the motifs hand the Houses view a field it draws itself
+   through: somewhere on the window a point is drawn well in towards a
+   hole, and the field reaches much further than the soundings' 150px
+   rings did. The houses not rested on are turned in it; the one under
+   the pointer is left exactly where it is. And leaving ADAR puts the
+   page back as it was. */
+test("ADAR's wells bend the page towards them, and let it go again", async ({ page }) => {
+  test.setTimeout(60000);
+  const errors = collectPageErrors(page);
+  await page.goto(SHEET);
+  await waitForSheet(page);
+  await pointAt(page, 1);
+  await page.waitForTimeout(3200);
+  const out = await page.evaluate(() => {
+    const bend = window.HouseMotifs.bend();
+    if (!bend) return null;
+    let most = 0, mx = 0, my = 0;
+    const moved = [];
+    for (let y = 80; y < innerHeight; y += 16) for (let x = 0; x < innerWidth; x += 16) {
+      const p = bend(x, y);
+      const m = Math.hypot(p.x - x, p.y - y);
+      if (m > 1.5) moved.push([x, y]);
+      if (m > most) { most = m; mx = x; my = y; }
+    }
+    const reach = Math.max(0, ...moved.map(([x, y]) => Math.hypot(x - mx, y - my)));
+    const hot = document.querySelector(".sheet-frame.hot");
+    const turned = [...document.querySelectorAll(".sheet-frame:not(.hot)")].filter((f) => /rotate/.test(f.style.transform)).length;
+    return { most, reach, hotTurned: /rotate/.test(hot.style.transform), turned };
+  });
+  expect(out, "a field while ADAR is rested on").not.toBeNull();
+  expect(out.most, "something drawn well in towards a hole").toBeGreaterThan(20);
+  expect(out.reach, "and reaching far past where the soundings rang").toBeGreaterThan(200);
+  expect(out.turned, "the houses round it turned in it").toBeGreaterThan(0);
+  expect(out.hotTurned, "and not the one under the pointer").toBe(false);
+  await page.mouse.move(5, 300, { steps: 3 });
+  await page.waitForTimeout(3000);
+  const after = await page.evaluate(() => ({ bend: !!window.HouseMotifs.bend(),
+    turned: [...document.querySelectorAll(".sheet-frame")].filter((f) => /rotate/.test(f.style.transform)).length }));
+  expect(after.bend, "no field once ADAR has been left").toBe(false);
+  expect(after.turned, "and every house as it was").toBe(0);
+  expect(errors).toEqual([]);
+});
+
 /* QIMU & MUSICIANS KEPT QUIET: "more subtle and way less movement".
    Read off what the motifs' canvas is asked to draw: nothing in a colour
    stronger than half its strength, and every note head drawn where it
@@ -1237,7 +1319,9 @@ test("Qimu & Musicians' motifs are short five-line staves with notes on them", a
   await waitForSheet(page);
   await pointAt(page, 8);
   await page.waitForTimeout(3200);
-  const read = await page.evaluate(() => {
+  // Read until a stave has been written out — under a loaded machine the
+  // first ones can still be on their way at any one moment.
+  const look = () => page.evaluate(() => {
     const c = document.querySelector(".sheet-motifs");
     const ratio = c.width / innerWidth;
     const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
@@ -1263,6 +1347,8 @@ test("Qimu & Musicians' motifs are short five-line staves with notes on them", a
     for (let i = 3; i < d.length; i += 4) if (d[i] > 12) ink++;
     return { staves, ink, lineInk: long.length * 140 * ratio, longest: longest / ratio, width: innerWidth };
   });
+  let read = await look();
+  for (let i = 0; i < 12 && !read.staves; i++) { await page.waitForTimeout(400); read = await look(); }
   expect(read.staves, "at least one stave of five even lines").toBeGreaterThan(0);
   expect(read.ink, "and notes on it besides the lines").toBeGreaterThan(read.lineInk);
   expect(read.longest, "no line across half the window").toBeLessThan(read.width * 0.5);
