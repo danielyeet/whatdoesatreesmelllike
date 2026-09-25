@@ -39,6 +39,39 @@
 // is the whole of how the owner's "all elements apart from the top left"
 // is done — by what is in the box, not by a list of exceptions.
 //
+// AND NOW A THIRD, WHICH REPLACES BOTH WHILE THE FRAGRANCES ARE A LINE.
+// The owner, 2026-09-25: "the line from houses will have a pixel stretch
+// effect to the right side of the page, while everything else fades
+// (except the particles). and then the page will scroll (so that the
+// left side of the fragrances page has the same pixel stretch effect
+// until the middle of the screen), which will then unstretch in the
+// middle to form the new center line ... and then the rest of the page
+// should load in to completion. It should be minimal and geometric."
+//
+//   THE STRETCH (`stretch`), every time, both ways, once the Fragrances
+//   view is the line (fragrance-line.js puts `.frag-line` in it):
+//   1  STRETCH  everything on the Houses view but its particles fades,
+//               and its axis is smeared out to the right as a pixel
+//               column is when it is stretched — a streak for every row
+//               of it, each its own length and weight, reaching across
+//               the window and on past its edge;
+//   2  TRAVEL   the page travels a whole window to the left, the
+//               houses going off one edge and the (still empty)
+//               fragrances coming in from the other, so the streaks now
+//               run from the left edge to the middle of the window;
+//   3  GATHER   there, they unstretch: every streak comes in to the
+//               line's height and runs on to the right edge, and the
+//               many become the one — the new line, in the line's own
+//               style (two hairlines and a narrower light, where the
+//               axis is one firm line and a wider one);
+//   4  ARRIVE   and the rest of the Fragrances view comes in on it: the
+//               pyramid, then the files (`data-arrive="line"`).
+//   Back to the Houses is the same run the other way: the line spreads
+//   into its streaks, the page travels right, and the streaks draw back
+//   into the axis before the houses come in on it.
+//   The fade and the swipe above are what the page still does whenever
+//   the Fragrances view is the old table (fragrance-line.js blocked).
+//
 // NEITHER VIEW KNOWS ABOUT THE OTHER. contact-sheet.js draws one and
 // index-page.js runs the other; this file only shows and hides them,
 // and never touches anything inside either.
@@ -61,6 +94,11 @@
   // And as long as the swipe written there. With animation turned off
   // there is no travel at all — the views simply change over.
   const SWIPE_MS = REDUCE_MOTION ? 0 : 520;
+  // THE STRETCH's four beats.
+  const STRETCH_OUT_MS = 640;
+  const STRETCH_TRAVEL_MS = 780;
+  const STRETCH_GATHER_MS = 640;
+  const STRETCH_HAND_MS = 280;
 
   // The order the views stand in, which is the order of the buttons: it
   // is what decides which way the page travels. Going to a view further
@@ -172,6 +210,199 @@
     });
   }
 
+  /** THE STRETCH — see the note at the head of this file. `way` is 1
+      going on to the Fragrances and -1 coming back to the Houses. The
+      streaks are drawn on a canvas of their own over both views; the
+      views themselves are pinned to the window for the length of it, as
+      the swipe pins them, and travel by transform. */
+  function stretch(going, coming, name, way) {
+    const W = window.innerWidth, H = window.innerHeight;
+    const y = window.scrollY || window.pageYOffset || 0;
+    const at = box.getBoundingClientRect();
+    const boxTop = Math.round(at.top + y);
+    const sheet = document.getElementById("sheet");
+    const line = document.querySelector(".frag-line");
+    const sheetBox = sheet ? sheet.getBoundingClientRect() : null;
+    const axisX = sheetBox && sheetBox.width ? sheetBox.left + sheetBox.width / 2 : W / 2;
+    const lineY = line && line.dataset.lineY ? +line.dataset.lineY : Math.round(H * 0.53);
+    const INK = getComputedStyle(document.body).getPropertyValue("--ink-rgb").trim() || "23, 23, 15";
+    const houses = way > 0 ? going : coming;
+    const fragrances = way > 0 ? coming : going;
+
+    // THE STREAKS, one for every few pixels down the axis: each with its
+    // own weight (mostly the axis's faint light, now and then one of its
+    // darker specks) and its own reach, a few falling well short, which
+    // is what makes it read as a stretched column of pixels rather than
+    // as a ruled field.
+    let seed = 9091;
+    const random = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+    const rows = [];
+    for (let ry = 0; ry < H; ry += 3) {
+      const dark = random() < 0.16;
+      rows.push({
+        y: ry + random() * 2, th: random() < 0.5 ? 2 : 3,
+        a: dark ? 0.45 + random() * 0.35 : 0.07 + random() * 0.2,
+        f: random() < 0.12 ? 0.35 + random() * 0.45 : 0.86 + random() * 0.14,
+      });
+    }
+    const canvas = document.createElement("canvas");
+    canvas.className = "view-stretch";
+    canvas.setAttribute("aria-hidden", "true");
+    const ratio = Math.min(window.devicePixelRatio || 1, W < 700 ? 1.5 : 2);
+    canvas.width = Math.round(W * ratio);
+    canvas.height = Math.round(H * ratio);
+    document.body.appendChild(canvas);
+    const g = canvas.getContext("2d");
+    const smooth = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+
+    /** A streak from x1 to x2 at height ry, fading along its length the
+        way a smear does. */
+    function streak(x1, x2, ry, th, a) {
+      if (x2 < x1) [x1, x2] = [x2, x1];
+      const from = Math.max(-2, x1), to = Math.min(W + 2, x2);
+      if (to <= from || a < 0.004) return;
+      const grad = g.createLinearGradient(x1, 0, x2, 0);
+      grad.addColorStop(0, "rgba(" + INK + "," + a.toFixed(3) + ")");
+      grad.addColorStop(1, "rgba(" + INK + "," + (a * 0.35).toFixed(3) + ")");
+      g.fillStyle = grad;
+      g.fillRect(from, ry - th / 2, to - from, th);
+    }
+    /** The line in its own style, coming up as the streaks become it. */
+    function newLine(a) {
+      if (a <= 0) return;
+      const glow = g.createLinearGradient(0, lineY - 16, 0, lineY + 16);
+      glow.addColorStop(0, "rgba(" + INK + ",0)");
+      glow.addColorStop(0.5, "rgba(" + INK + "," + (0.09 * a).toFixed(3) + ")");
+      glow.addColorStop(1, "rgba(" + INK + ",0)");
+      g.fillStyle = glow;
+      g.fillRect(0, lineY - 16, W, 32);
+      g.fillStyle = "rgba(" + INK + "," + (0.72 * a).toFixed(3) + ")";
+      g.fillRect(0, lineY - 1.6, W, 0.9);
+      g.fillRect(0, lineY + 0.7, W, 0.9);
+    }
+
+    // Where each streak stands, in the Houses view's own coordinates,
+    // at a point `p` of the whole run (0 the axis, 1 the line):
+    //   stretched  from the axis out to its reach, a window along
+    //   gathered   at the line's height, from off the left to the edge
+    function frameAt(stage, k, shift) {
+      g.setTransform(ratio, 0, 0, ratio, 0, 0);
+      g.clearRect(0, 0, W, H);
+      rows.forEach((r) => {
+        const reach = axisX + r.f * W;          // how far the stretched streak runs
+        let x1 = axisX, x2 = axisX, ry = r.y, th = r.th, a = r.a;
+        if (stage === "out") { x2 = axisX + (reach - axisX) * k; }
+        else if (stage === "travel") { x2 = reach; }
+        else if (stage === "gather") {
+          x2 = reach + (2 * W + 20 - reach) * k;
+          ry = r.y + (lineY - r.y) * k;
+          th = r.th + (1 - r.th) * k;
+          a = r.a * (1 - k * 0.85);
+        }
+        streak(x1 + shift, x2 + shift, ry, th, a);
+      });
+      if (stage === "gather") newLine(k);
+    }
+
+    // PINNED, as the swipe pins them. A view holding the line is pinned
+    // to the window's own top, since its stage is fixed to the window and
+    // a transform makes the view that stage's frame for the length of it.
+    box.style.height = Math.round(at.height) + "px";
+    box.classList.add("stretching");
+    document.documentElement.classList.add("view-swiping");
+    const pin = (view, x) => {
+      view.classList.add("sliding");
+      view.style.top = (view.classList.contains("line-on") ? 0 : boxTop - y) + "px";
+      if (view.classList.contains("line-on")) view.style.height = H + "px";
+      view.style.transform = "translateX(" + x + "px)";
+    };
+    pin(going, 0);
+    going.classList.add("stretch-hide");
+    if (way < 0) { coming.classList.add("stretch-hide"); }
+    else { coming.dataset.arrive = "wait"; }
+
+    const t0 = performance.now();
+    const A = STRETCH_OUT_MS, B = STRETCH_TRAVEL_MS, C = STRETCH_GATHER_MS, D = STRETCH_HAND_MS;
+    let shownComing = false;
+    const step = (now) => {
+      const t = now - t0;
+      if (way > 0) {
+        // ON TO THE FRAGRANCES.
+        if (t < A) frameAt("out", smooth(t / A), 0);
+        else if (t < A + B) {
+          if (!shownComing) {
+            shownComing = true;
+            document.body.classList.toggle("view-fragrances", name === "fragrances");
+            coming.hidden = false;
+            pin(coming, W);
+          }
+          const u = smooth((t - A) / B);
+          going.style.transform = "translateX(" + (-W * u).toFixed(1) + "px)";
+          coming.style.transform = "translateX(" + (W * (1 - u)).toFixed(1) + "px)";
+          frameAt("travel", 1, -W * u);
+        } else if (t < A + B + C) {
+          coming.style.transform = "translateX(0px)";
+          going.style.transform = "translateX(" + (-W) + "px)";
+          frameAt("gather", smooth((t - A - B) / C), -W);
+        } else if (t < A + B + C + D) {
+          if (coming.dataset.arrive === "wait") coming.dataset.arrive = "line";
+          frameAt("gather", 1, -W);
+          canvas.style.opacity = String(1 - (t - A - B - C) / D);
+        } else { finish(); return; }
+      } else {
+        // BACK TO THE HOUSES: the same run backwards, the page travelling
+        // the other way, and the streaks drawing back into the axis.
+        const back = A + B + C;
+        // The line's particles — the pyramid and the line itself — stay
+        // and travel off with their view, as the houses' do going on.
+        if (t < C) {
+          frameAt("gather", 1 - smooth(t / C), -W);
+        } else if (t < C + B) {
+          if (!shownComing) {
+            shownComing = true;
+            document.body.classList.toggle("view-fragrances", name === "fragrances");
+            coming.hidden = false;
+            pin(coming, -W);
+          }
+          const u = smooth((t - C) / B);
+          going.style.transform = "translateX(" + (W * u).toFixed(1) + "px)";
+          coming.style.transform = "translateX(" + (-W * (1 - u)).toFixed(1) + "px)";
+          frameAt("travel", 1, -W * (1 - u));
+        } else if (t < back) {
+          coming.style.transform = "translateX(0px)";
+          going.style.transform = "translateX(" + W + "px)";
+          frameAt("out", 1 - smooth((t - C - B) / A), 0);
+        } else if (t < back + D) {
+          if (houses.classList.contains("stretch-hide")) {
+            houses.classList.remove("stretch-hide");
+            houses.classList.add("stretch-in");
+          }
+          g.clearRect(0, 0, W, H);
+        } else { finish(); return; }
+      }
+      requestAnimationFrame(step);
+    };
+    function finish() {
+      window.scrollTo(0, 0);
+      [going, coming].forEach((view) => {
+        view.classList.remove("sliding", "stretch-hide");
+        view.style.transform = "";
+        view.style.top = "";
+        view.style.height = "";
+      });
+      going.hidden = true;
+      if (fragrances.dataset.arrive === "wait") fragrances.dataset.arrive = "line";
+      box.classList.remove("stretching");
+      box.style.height = "";
+      document.documentElement.classList.remove("view-swiping");
+      canvas.remove();
+      window.setTimeout(() => houses.classList.remove("stretch-in"), 760);
+      moving = false;
+      drain();
+    }
+    requestAnimationFrame(step);
+  }
+
   function show(name) {
     // A PRESS THAT LANDS MID-TRAVEL IS REMEMBERED, NOT DROPPED — the
     // same rule the two houses follow for opening a part. This used to
@@ -200,6 +431,11 @@
     const swiping = opened.has(name) && box && SWIPE_MS > 0;
     opened.add(was);
     opened.add(name);
+    // THE STRETCH, whenever the Fragrances are the line.
+    if (box && !REDUCE_MOTION && document.querySelector(".view.line-on .frag-line")) {
+      stretch(going, coming, name, order.indexOf(name) > order.indexOf(was) ? 1 : -1);
+      return;
+    }
     if (swiping) {
       const way = order.indexOf(name) > order.indexOf(was) ? 1 : -1;
       swipe(going, coming, name, way);

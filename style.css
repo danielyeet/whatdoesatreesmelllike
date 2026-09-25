@@ -8962,6 +8962,161 @@ body.human-page:not(.tale-page) > .human-head {
 }
 
 /* ==================================================================
+   THE FRAGRANCES, ALONG A LINE — fragrance-line.js (2026-09-25)
+
+   The Fragrances view of Scent descriptions as the Houses view turned
+   on its side: a horizontal line through the window, a double pyramid
+   of specks standing on it, and the fragrances as FILES along it. The
+   old table is still in the page and still what a file presses; it is
+   only hidden while the line is up (`.view.line-on`), and a copy of it
+   stands in archive/. Without the script the page is the old view.
+   ================================================================== */
+.view.line-on .index-page,
+.view.line-on .index-page[hidden] { display: none !important; }
+.frag-line {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  transition: opacity 0.45s var(--menu-ease);
+}
+body.frag-open .frag-line { opacity: 0; pointer-events: none; }
+.frag-line-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.frag-line-files { margin: 0; padding: 0; list-style: none; }
+/* A FILE: its number large, its name under it, and the house it came
+   from only while it is pointed at. A sheet with one corner turned
+   down, standing across the line. */
+.frag-file {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 152px;
+  min-height: 98px;
+  padding: 12px 15px 13px;
+  border: 1px solid rgba(var(--ink-rgb), 0.5);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);
+  transition: border-color 0.3s var(--menu-ease);
+  will-change: transform, opacity;
+}
+.frag-file::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(to bottom left, transparent calc(50% - 0.6px), rgba(var(--ink-rgb), 0.5) calc(50% - 0.6px),
+    rgba(var(--ink-rgb), 0.5) calc(50% + 0.6px), transparent calc(50% + 0.6px));
+}
+.frag-file-no {
+  font-family: var(--mono);
+  font-size: 27px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.frag-file-name {
+  margin-top: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.frag-file-house {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.3s var(--menu-ease), transform 0.3s var(--menu-ease);
+}
+.frag-file:hover .frag-file-house,
+.frag-file:focus-visible .frag-file-house { opacity: 1; transform: none; }
+.frag-file:hover, .frag-file.is-front { border-color: var(--ink); }
+.frag-file.is-front::after { background: linear-gradient(to bottom left, transparent calc(50% - 0.6px), var(--ink) calc(50% - 0.6px),
+    var(--ink) calc(50% + 0.6px), transparent calc(50% + 0.6px)); }
+.frag-file:focus-visible { outline: 1px solid var(--ink); outline-offset: 4px; }
+/* A placeholder — one of the twenty the owner asked the test to assume
+   — is drawn dashed, and has nothing to open. */
+.frag-file.is-placeholder { border-style: dashed; color: var(--muted); cursor: default; }
+.frag-file.is-placeholder .frag-file-name { font-weight: 400; font-style: italic; }
+/* THE WAY ALONG, at the foot. */
+.frag-line-nav {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transform: translateX(-50%);
+  transition: opacity 0.45s var(--menu-ease);
+}
+.frag-line-step {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(var(--ink-rgb), 0.4);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.frag-line-step:hover { border-color: var(--ink); }
+.frag-line-at { margin: 0; min-width: 150px; text-align: center; font-family: var(--mono); }
+.frag-line-at b { display: block; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; }
+.frag-line-at span { display: block; margin-top: 3px; font-size: 10.5px; letter-spacing: 0.08em; color: var(--muted); }
+.frag-line-files { transition: opacity 0.45s var(--menu-ease); }
+/* HELD BACK while views.js stretches the houses' axis into the line. */
+.frag-line.waiting .frag-line-files,
+.frag-line.waiting .frag-line-nav { opacity: 0; visibility: hidden; }
+
+/* THE STRETCH between the two views (views.js): everything but the
+   particles fades from the view being left, and the view arriving is
+   held empty until the line is formed. */
+.view.stretch-hide .frag-line-files,
+.view.stretch-hide .frag-line-nav { opacity: 0 !important; }
+.view.stretch-hide .sheet > :not(.sheet-field),
+.view.stretch-hide .sheet-motifs { opacity: 0 !important; transition: opacity 0.45s var(--menu-ease) !important; }
+.view.stretch-in .sheet > :not(.sheet-field) { transition: opacity 0.7s var(--menu-ease) !important; }
+.views.stretching .view.sliding {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+.view-stretch {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@media (max-width: 700px) {
+  .frag-file { width: 128px; min-height: 86px; padding: 10px 12px 11px; }
+  .frag-file-no { font-size: 23px; }
+  .frag-file-name { font-size: 13px; }
+  .frag-line-nav { bottom: 20px; padding: 6px 8px; background: var(--chrome-ground); }
+}
+
+/* ==================================================================
    FOUR HOUSES' PAPER — Grande Parfums, Les Abstraits, Tombstone, Qimu
    & Musicians (2026-09-25)
 

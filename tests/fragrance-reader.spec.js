@@ -15,8 +15,12 @@ const { serveDependenciesLocally, collectPageErrors } = require("./helpers");
 
 const SHEET = "/categories/scent-descriptions.html";
 
-/** Get to the Fragrances view, which is not what the page opens as. */
+/** Get to the Fragrances view, which is not what the page opens as —
+    AS THE OLD TABLE, which is kept under the line at the owner's word
+    and is still what a file on the line presses (tests/fragrance-line
+    .spec.js opens the reader from the line itself). */
 async function toTheList(page) {
+  await page.route("**/fragrance-line.js", (route) => route.abort());
   await serveDependenciesLocally(page);
   await page.goto(SHEET);
   await page.waitForTimeout(1600);

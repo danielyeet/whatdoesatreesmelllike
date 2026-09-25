@@ -44,7 +44,14 @@ async function toFragrances(page) {
   await page.waitForTimeout(600);
 }
 
+/* THE OLD FRAGRANCES VIEW. Since 2026-09-25 the Fragrances view is a
+   line of files (fragrance-line.js, tests/fragrance-line.spec.js), and
+   the table these check is kept in the page underneath it, unchanged, at
+   the owner's word. Blocking the line's script is how the page is the
+   old view again — the table, its sorting and search, and the fade and
+   the swipe between the views — so that is what these run against. */
 test.beforeEach(async ({ page }) => {
+  await page.route("**/fragrance-line.js", (route) => route.abort());
   await serveDependenciesLocally(page);
 });
 
