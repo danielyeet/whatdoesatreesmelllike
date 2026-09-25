@@ -227,9 +227,15 @@
     return r && r.width ? r.left + r.width / 2 : window.innerWidth / 2;
   }
   function placeThread(x, shown, moving) {
+    // SET DOWN, it is there at once, on the axis it stands over — it
+    // used to fade up as it set off, so on a slow frame it was first seen
+    // part way across rather than leaving from the axis.
+    const at = shown && !moving;
+    if (at) thread.style.transition = "none";
     thread.classList.toggle("moving", !!moving);
     if (x != null) thread.style.transform = "translateX(" + Math.round(x) + "px)";
     thread.style.opacity = shown ? "1" : "0";
+    if (at) { void thread.offsetWidth; thread.style.transition = ""; }
   }
 
   function cross(going, coming, name, way) {

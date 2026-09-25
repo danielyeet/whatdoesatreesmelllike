@@ -401,7 +401,9 @@ there (the old table, which two spec files run against on purpose).
   table's divider stands** — a hairline between the aside and the table (`.frag-divider`, placed
   by `measure()`, its x published as `data-divider` on the stage) — and back. The axis becomes
   the divider: the two pages are one line apart. On a phone, where the aside is a head over the
-  table and there is no divider, the line goes as it travels.
+  table and there is no divider, the line goes as it travels. It is **set down on the axis at once**
+  (it stands over the axis, so nothing shows) and only then travels: it used to fade up as it
+  set off, and the first full run caught it being first seen 89px across on a loaded machine.
 - **A way to the other from inside each.** `← The houses` at the foot of the aside, and
   `The fragrances →` under the way round on the Houses view. Anything carrying
   `data-view-go="houses"` or `"fragrances"` is taken by `views.js` as a press of that button;
