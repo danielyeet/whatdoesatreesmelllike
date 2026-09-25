@@ -1714,8 +1714,8 @@
   const MORPH_WRITING = 0.5;    // the writing comes back in half way through it
   const MORPH_HAND = 0.8;       // the drawing itself comes up over the last fifth
   const MORPH_STAGGER = 0.22;   // how late the latest speck may leave
-  const MORPH_SWING = 0.9;      // radians of extra turn on the way
-  const MORPH_SWELL = 0.14;     // how far out the spiral bulges half way
+  const MORPH_SWING = 0.28;     // radians the whole turns out and back on the way
+  const MORPH_SWELL = 0.05;     // how far out it breathes half way
   const MORPH_FLARE = 0.8;      // how much brighter a speck burns in the air
   const MORPH_MOST = 20000;     // specks flown, at most — every one of them, in practice
   const MORPH_HAZE = 0.12;      // the haze behind the flight, warm into cold
@@ -2114,15 +2114,23 @@
   // THE MORPH — one chapter's drawing flown into the next
   //
   // Both snapshots are flat lists of specks (x, y, size, brightness,
-  // tone). They are brought to the same count by taking specks from the
-  // smaller list more than once, and PAIRED BY HOW FAR EACH STANDS FROM
-  // ITS OWN DRAWING'S MIDDLE — the core of the sun goes to the core of
-  // the moon, its limb to the limb, the solar wind to the starfield —
-  // so the flight is a shape turning into a shape rather than a spray.
-  // Each speck flies on a spiral about the middle, swinging an extra
-  // part-turn as it goes and swelling a little outward half way, on a
-  // clock of its own so they do not all leave at once, and burns a
-  // little brighter while it is in the air.
+  // tone). The sun and the moon stand on ONE sphere — the same centre,
+  // the same size — so every speck of the larger list is PAIRED WITH THE
+  // NEAREST SPECK OF THE OTHER, measured on that sphere, and the flight
+  // is short: the one drawing turns into the other where it stands. On
+  // the way the whole turns a part-turn out and back about the centre
+  // and breathes a little outward, each speck on a clock of its own so
+  // they do not all leave at once, warm into cold, a little brighter
+  // while it is in the air — and lands exactly on its twin, which is
+  // the frame the new drawing comes up on.
+  //
+  // It used to pair specks by how far each stood from its own drawing's
+  // brightest middle, and to add a whole extra turn that never came
+  // back: the cloud swept across the window from the sun's lit limb to
+  // the moon's crescent and landed nearly a radian off, and then the
+  // moon came up where it really was — "they change into the other and
+  // then morph afterwards ... choppy because they are in different
+  // places on the page" (2026-09-25).
   // ============================================================
   let morphing = 0;
   let morphFrame = 0;
@@ -2161,40 +2169,80 @@
     if (!na || !nb) { stopMorph(); return; }
     const n = Math.min(MORPH_MOST, Math.max(na, nb));
 
-    // Each drawing's middle: the brightness-weighted centre of its specks.
+    // THE ONE PLACE. The sun and the moon stand on the same sphere now —
+    // the same centre and the same size (sun.js, moon.js) — and each says
+    // where that is. The brightness-weighted middle of its specks is only
+    // the fallback for a drawing that does not.
     const middle = (L, count) => {
       let x = 0, y = 0, wt = 0;
       for (let i = 0; i < count; i++) { const on = L[i * 5 + 3]; x += L[i * 5] * on; y += L[i * 5 + 1] * on; wt += on; }
       return wt ? [x / wt, y / wt] : [w / 2, h / 2];
     };
-    const [ax, ay] = middle(A, na);
-    const [bx, by] = middle(B, nb);
-    // n specks from each, spread evenly over the list, ordered by reach.
-    const pick = (L, count, mx, my) => {
+    const [ax, ay] = from.centre || middle(A, na);
+    const [bx, by] = onto.centre || middle(B, nb);
+    const ra = from.radius || Math.min(w, h) * 0.3, rb = onto.radius || ra;
+    // PAIRED BY PLACE. Every speck goes to the nearest speck of the other
+    // drawing, measured on the sphere as a share of its radius — so the
+    // sun's limb becomes the moon's limb where it stands, its face the
+    // moon's face and its wind the moon's sky, and nothing crosses the
+    // window. They were paired by how far each stood from its own
+    // drawing's brightest middle, which is the sun's limb on one side
+    // and the moon's crescent on the other: the whole cloud swept
+    // across the window and the moon came up somewhere else, which the
+    // owner saw as "choppy because they are in different places".
+    const list = (L, count, mx, my, rr) => {
       const out = [];
-      for (let k = 0; k < n; k++) {
-        const i = Math.floor((k * count) / n) * 5;
-        const dx = L[i] - mx, dy = L[i + 1] - my;
-        out.push({ x: L[i], y: L[i + 1], s: L[i + 2], on: L[i + 3], t: L[i + 4],
-          r: Math.hypot(dx, dy), a: Math.atan2(dy, dx) });
+      const every = Math.max(1, Math.ceil(count / MORPH_MOST));
+      for (let i = 0; i < count; i += every) {
+        const k = i * 5;
+        out.push({ x: L[k], y: L[k + 1], s: L[k + 2], on: L[k + 3], t: L[k + 4],
+          nx: (L[k] - mx) / rr, ny: (L[k + 1] - my) / rr, r: Math.hypot(L[k] - mx, L[k + 1] - my), a: Math.atan2(L[k + 1] - my, L[k] - mx) });
       }
-      return out.sort((p, q) => p.r - q.r);
+      return out;
     };
-    const P = pick(A, na, ax, ay), Q = pick(B, nb, bx, by);
+    const P = list(A, na, ax, ay, ra), Q = list(B, nb, bx, by, rb);
+    const CELL = 0.03;
+    const cellOf = (gx, gy) => (gx + 4000) * 8000 + (gy + 4000);
+    const grid = (L) => {
+      const m = new Map();
+      L.forEach((p) => {
+        const key = cellOf(Math.round(p.nx / CELL), Math.round(p.ny / CELL));
+        if (!m.has(key)) m.set(key, { at: 0, all: [] });
+        m.get(key).all.push(p);
+      });
+      return m;
+    };
     let seed = 7;
     const random = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
-    const flights = P.map((p, k) => {
-      const q = Q[k];
+    /** The nearest of a gridded list to a place, taken in turn from its
+        cell so that where one list is denser than the other the specks
+        are shared out rather than all sent to one. */
+    const nearest = (m, L, p) => {
+      const gx = Math.round(p.nx / CELL), gy = Math.round(p.ny / CELL);
+      for (let ring = 0; ring < 14; ring++) {
+        for (let dx = -ring; dx <= ring; dx++) {
+          for (let dy = -ring; dy <= ring; dy++) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== ring) continue;
+            const c = m.get(cellOf(gx + dx, gy + dy));
+            if (c) return c.all[c.at++ % c.all.length];
+          }
+        }
+      }
+      return L[Math.floor(random() * L.length)];
+    };
+    // Every speck of the larger drawing flies, each paired with the
+    // nearest of the smaller.
+    const pairs = [];
+    if (P.length >= Q.length) { const m = grid(Q); P.forEach((p) => pairs.push([p, nearest(m, Q, p)])); }
+    else { const m = grid(P); Q.forEach((q) => pairs.push([nearest(m, P, q), q])); }
+    const flights = pairs.map(([p, q]) => {
       let da = q.a - p.a;
       while (da > Math.PI) da -= Math.PI * 2;
       while (da < -Math.PI) da += Math.PI * 2;
-      return { p: p, q: q, da: da + MORPH_SWING, wait: random() * MORPH_STAGGER, ca: toneA[p.t] || [255, 255, 255], cb: toneB[q.t] || [255, 255, 255] };
+      return { p: p, q: q, da: da, wait: random() * MORPH_STAGGER, ca: toneA[p.t] || [255, 255, 255], cb: toneB[q.t] || [255, 255, 255] };
     });
 
-    // How far out each drawing reaches — nine specks in ten are closer —
-    // which is how big the haze behind the flight is drawn.
-    const reach = (L) => L[Math.floor(L.length * 0.9)].r;
-    const reachA = reach(P), reachB = reach(Q);
+    const reachA = ra * 1.2, reachB = rb * 1.2;
     const hazeA = toneA[Math.floor(toneA.length * 0.7)] || [255, 220, 170];
     const hazeB = toneB[Math.floor(toneB.length * 0.7)] || [190, 205, 235];
     // A soft disc, drawn once and laid under the brightest specks as
@@ -2247,7 +2295,9 @@
         const u = ease(Math.max(0, Math.min(1, (t - f.wait) / (1 - MORPH_STAGGER))));
         const mx = mx0 + (mx1 - mx0) * u, my = my0 + (my1 - my0) * u;
         const r = (f.p.r + (f.q.r - f.p.r) * u) * (1 + MORPH_SWELL * Math.sin(Math.PI * u));
-        const a = f.p.a + f.da * u;
+        // The swing turns the whole a part-turn out and back, so every
+        // speck lands exactly where its twin stands.
+        const a = f.p.a + f.da * u + MORPH_SWING * Math.sin(Math.PI * u);
         const x = mx + Math.cos(a) * r, y = my + Math.sin(a) * r;
         const air = Math.sin(Math.PI * u);
         const on = (f.p.on + (f.q.on - f.p.on) * u) * (1 + MORPH_FLARE * air) * (1 - hand) * lift;

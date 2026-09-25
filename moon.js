@@ -55,10 +55,13 @@
   // ============================================================
   const SEED = 51023;
 
-  // Where it stands: where the sun stands, so the two chapters are one
-  // sky. A little smaller than the sun, as a moon should be.
-  const AT_X = 0.8, AT_Y = 0.38;
-  const BIG = 0.29;
+  // Where it stands: EXACTLY where the sun stands, and exactly as big.
+  // It stood a little lower and a little smaller, as a moon might — and
+  // stepping between the chapters, the owner found the change "choppy
+  // because they are in different places on the page". In one place, the
+  // morph turns the one sphere into the other where it stands.
+  const AT_X = 0.8, AT_Y = 0.36;
+  const BIG = 0.34;
 
   // THE SUN'S OWN NUMBERS — the owner asked for it to spin the same way.
   const TILT = 0.34;
@@ -569,7 +572,8 @@
       capture: function () {
         caught = [];
         draw(clock);
-        const out = { specks: caught, tones: tone.slice() };
+        const out = { specks: caught, tones: tone.slice(),
+          centre: [width * AT_X, height * AT_Y], radius: Math.max(width, height) * BIG };
         caught = null;
         return out;
       },

@@ -631,7 +631,8 @@
       capture: function () {
         caught = [];
         draw(clock);
-        const out = { specks: caught, tones: tone.slice() };
+        const out = { specks: caught, tones: tone.slice(),
+          centre: [width * AT_X, height * AT_Y], radius: Math.max(width, height) * BIG };
         caught = null;
         return out;
       },

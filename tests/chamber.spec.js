@@ -1046,7 +1046,7 @@ test("the sun stands behind Chapter 1 and the moon behind Chapter 2, and both ke
     // the moon stands half behind the sheet, and the sky round it is
     // nearly empty, so the whole window would compare a moon with a sky.
     const W = innerWidth, H = innerHeight;
-    const mx = W * 0.8, my = H * 0.38, mr = Math.max(W, H) * 0.29 * 0.9;
+    const mx = W * 0.8, my = H * 0.36, mr = Math.max(W, H) * 0.34 * 0.9;
     let lit = 0, inSum = 0, inN = 0, outSum = 0, outN = 0;
     for (let y = 0; y < c.height; y += 2) {
       for (let x = 0; x < c.width; x += 2) {
@@ -1789,6 +1789,43 @@ test("stepping between chapters morphs the sun into the moon and back, as the wr
     expect(seen.morphEnd, "and the flight's canvas is put away").toBe(true);
   }
   expect(errors).toEqual([]);
+});
+
+/* THE MORPH HAPPENS IN ONE PLACE. "the moon and sun transition is
+   pretty weak, as they change into the other and then morph afterwards.
+   this is choppy because they are in different places on the page".
+   The moon stood lower and smaller than the sun, and the flight paired
+   specks by their distance from each drawing's brightest middle, so the
+   cloud swept across the window. Now both drawings say where their
+   sphere stands when they are captured for the morph, and it is the
+   same sphere — which is what lets every speck fly only to its nearest
+   twin. Asked of the two drawings themselves, each made on a canvas of
+   its own. */
+test("the sun and the moon stand on the same sphere, so one turns into the other where it stands",
+  async ({ page }) => {
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  const spheres = await page.evaluate(() => {
+    const out = {};
+    for (const name of ["sun", "moon"]) {
+      const c = document.createElement("canvas");
+      c.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;opacity:0";
+      document.body.appendChild(c);
+      const made = window.CHAPTER_GROUNDS[name](c, { column: () => null });
+      const shot = made.capture();
+      out[name] = { centre: shot.centre || null, radius: shot.radius || null, specks: shot.specks.length / 5 };
+      made.stop();
+      c.remove();
+    }
+    return out;
+  });
+  expect(spheres.sun.centre, "the sun says where it stands").not.toBeNull();
+  expect(spheres.moon.centre, "and so does the moon").not.toBeNull();
+  expect(spheres.moon.centre[0]).toBeCloseTo(spheres.sun.centre[0], 0);
+  expect(spheres.moon.centre[1]).toBeCloseTo(spheres.sun.centre[1], 0);
+  expect(spheres.moon.radius).toBeCloseTo(spheres.sun.radius, 0);
+  expect(spheres.sun.specks, "and both are drawn in specks").toBeGreaterThan(1000);
+  expect(spheres.moon.specks).toBeGreaterThan(1000);
 });
 
 /* AND THE MORPH LANDS ON WHAT COMES UP — no cut at either end. "It kinda
