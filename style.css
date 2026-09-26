@@ -10158,7 +10158,38 @@ html.js-coming body.library-page .library { visibility: hidden; }
   caret-color: var(--lib-hi);
 }
 .lib-query::placeholder { color: rgba(var(--ink-rgb), 0.3); }
-.lib-query::-webkit-search-cancel-button { filter: invert(1) opacity(0.5); }
+/* The browser's own clear is hidden: the × after the count is the one. */
+.lib-query::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
+/* THE ×, at the right of the bar: the owner's "a little X to reset the
+   search on the right side of the bar". A hairline square with a cross
+   in it, faint and inert while there is nothing to clear. */
+.lib-clear {
+  flex: none;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid rgba(var(--ink-rgb), 0.4);
+  background: none;
+  color: rgba(var(--ink-rgb), 0.85);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, opacity 0.2s;
+}
+.lib-clear span::before,
+.lib-clear span::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 11px;
+  height: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.lib-clear span::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.lib-clear:hover:not(:disabled),
+.lib-clear:focus-visible { border-color: var(--lib-hi); color: var(--lib-hi); outline: none; }
+.lib-clear:disabled { opacity: 0.22; cursor: default; }
 .lib-count {
   flex: none;
   font-size: 11px;
@@ -10232,229 +10263,251 @@ html.js-coming body.library-page .library { visibility: hidden; }
 }
 
 /* ------------------------------------------------------------------
-   THE STACKS
+   THE ARCHIVE — files in boxes. The owner, 2026-09-26: "redisgn the
+   whole page of the note library, and I want it to be like files in
+   boxes rather than a library libvrary. im thinking of movies and spy
+   stuff. I want oyu to keep it on theme and geometric."
+
+   AN ACCORD IS A BOX (`.lib-shelf`): a hairline box, its LID (`.lib-plate`)
+   a band across its head standing a little proud of it on either side,
+   carrying the box's number, the accord's code in its colour with a
+   strip of that colour down the lid's left end, its name, its line and
+   how many files it holds; a hand-hole cut in its front at the foot.
+
+   A NOTE IS A FILE (`.lib-record`): a folder standing in the box, its TAB
+   (`.lib-call`) in one of three places across its top in turn, as a
+   drawer's folders' tabs are staggered, carrying its file number with
+   its accord's colour along its top edge; its name typed on its face;
+   and at its foot a small square for every fragrance using the note
+   (`.lib-marks`), so a note used often is a thicker file.
+
+   They were BOOKS for four rounds — cloth, specks, flat shapes, then
+   skeletons on hairline boards — and folders before that, "digital"
+   ones the owner found "3-bit". None of the book is left: no spine
+   canvas, no boards canvas, no lean, no slip.
    ------------------------------------------------------------------ */
-.lib-stacks { margin: 22px 0 0; }
-/* MORE AIR, at the owner's word: "the library feels crowded, I want you
-   to stylistically make it more breathable". The accords stand further
-   apart, the rows of a shelf further apart, and the books a hair apart
-   from one another as books on a real shelf are. */
+.lib-stacks { margin: 30px 0 0; }
+body.lib-built .lib-shelf,
+body.lib-built .lib-record { --mark: hsl(var(--hue, 0) 45% 58%); }
+body.lib-built .lib-grey,
+body.lib-built .lib-grey .lib-record { --mark: hsl(0 0% 62%); }
+
 body.lib-built .lib-shelf {
-  display: grid;
-  grid-template-columns: 210px minmax(0, 1fr);
-  gap: 48px;
-  margin: 0;
-  padding: 60px 0 42px;
-  border-top: 1px solid var(--line);
+  position: relative;
+  margin: 0 0 58px;
+  padding: 0;
+  border: 1px solid rgba(var(--ink-rgb), 0.24);
+  border-top: none;
+  background: rgba(var(--ink-rgb), 0.012);
 }
 body.lib-built .lib-shelf.is-away { display: none; }
-body.lib-built .lib-plate { align-self: start; position: sticky; top: 84px; }
-body.lib-built .lib-shelf-code {
-  display: block;
-  margin: 0 0 8px;
-  font-size: 30px;
-  letter-spacing: 0.06em;
-  color: hsl(var(--hue) 45% 62%);
+
+/* THE LID. */
+body.lib-built .lib-plate {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 26px;
+  margin: 0 -7px;
+  padding: 15px 24px 15px 30px;
+  border: 1px solid rgba(var(--ink-rgb), 0.42);
+  background: #111112;
+  box-shadow: inset 4px 0 0 var(--mark);
 }
-body.lib-built .lib-shelf-name { font-size: 17px; }
-body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.5; }
+/* A rivet at either end of the lid. */
+body.lib-built .lib-plate::before,
+body.lib-built .lib-plate::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border: 1px solid rgba(var(--ink-rgb), 0.5);
+}
+body.lib-built .lib-plate::before { left: 12px; }
+body.lib-built .lib-plate::after { right: 10px; }
+.lib-box-no {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(var(--ink-rgb), 0.55);
+}
+body.lib-built .lib-shelf-name {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 16px;
+  white-space: nowrap;
+}
+body.lib-built .lib-shelf-code {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 0.08em;
+  color: var(--mark);
+}
+body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.45; }
 .lib-shelf-count {
-  margin: 12px 0 0;
+  margin: 0;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(var(--ink-rgb), 0.4);
+  color: rgba(var(--ink-rgb), 0.55);
+  white-space: nowrap;
 }
 
-/* THE SHELF: every row of books stands exactly `--row` high — each
-   book is pushed down by what it is short of that — so every row's foot
-   is at a known height and a board can be drawn under each, however
-   many rows the width makes.
-
-   THE BOARDS are drawn by note-library.js on a canvas of its own behind
-   the books (`.lib-boards`): a plank under every row DRAWN IN HAIRLINES
-   — its back edge, its arris, the foot of its front, a ruler of ticks —
-   with a small label in a hairline box giving the call numbers on that
-   row, and no frame round any of it. (It was a RAIL for two rounds, then
-   for one a whole BOOKCASE in specks with uprights, a crown, a back and
-   a plinth, whose "bezel" the owner asked to have taken off, and then a
-   flat walnut board until the page went black and white.) */
+/* INSIDE THE BOX: the files, and the hand-hole cut in its front. */
 body.lib-built .lib-records {
-  --row: 214px;
-  --gap: 52px;
   position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  column-gap: 6px;
-  row-gap: var(--gap);
-  padding: 0 10px 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 30px 14px;
+  padding: 36px 26px 66px;
 }
-.lib-boards {
+body.lib-built .lib-records::after {
+  content: "";
   position: absolute;
-  z-index: 0;
+  left: 50%;
+  bottom: 20px;
+  width: 96px;
+  height: 20px;
+  margin-left: -48px;
+  border: 1px solid rgba(var(--ink-rgb), 0.3);
+  border-radius: 10px;
   pointer-events: none;
 }
-body.lib-built .lib-records > .lib-record { z-index: 1; }
 
-/* A RECORD IS A BOOK, standing on its shelf, and its spine is DRAWN AS
-   A SKELETON — a canvas of its own (`.lib-spine`, note-library.js) in
-   hairlines: its outline, two bands, on some a title panel, a label at
-   its foot — with its accord's colour only in the band across its head.
-   The owner, 2026-09-26: "a minimalist approach with the colour coding
-   of the books ... more skeletal/geometric; matching the rest of the
-   website". It was cloth: drawn in specks for a round, at the owner's
-   "out of particles but actually look like books, with appropriate
-   colours", and then in flat shapes — "not granular ... more of a
-   geometric character" (2026-09-25, night).
-
-   WHAT WENT: for two rounds a record was a FOLDER — a graphite file with
-   one coloured tab, and then a "digital" one with a pixel glyph at its
-   head, a segmented meter, a barcode, a dot screen and a name that
-   decoded itself under the hand. The owner found the page crowded, the
-   glyphs unnecessary and the whole "3-bit", and every one of those is
-   out of the code. (Before that the books were dark glass lit in the
-   shelf's colour, which was "too annoyingly neony".) */
+/* A FILE. */
 body.lib-built .lib-record {
   position: relative;
-  flex: none;
-  width: var(--w);
-  height: var(--h);
-  margin-top: calc(var(--row) - var(--h));
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  color: rgba(var(--ink-rgb), 0.82);
-  background: none;
-  cursor: pointer;
-  outline: none;
-  transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.4s, filter 0.4s;
-}
-.lib-spine {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-body.lib-built .lib-record .lib-name {
-  position: absolute;
-  top: 24px;
-  left: 0;
-  right: 0;
-  bottom: 46px;
-  margin: 0;
-  writing-mode: vertical-rl;
-  line-height: var(--w);
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-body.lib-built .lib-record .lib-say { display: none; }
-.lib-call {
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  bottom: 9px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  height: 96px;
+  padding: 14px 12px 11px;
+  border: 1px solid rgba(var(--ink-rgb), 0.34);
+  background: #0f0f10;
+  color: rgba(var(--ink-rgb), 0.88);
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.25s, opacity 0.4s;
+}
+/* ITS TAB, standing on its top, in one of three places; the accord's
+   colour along its top edge. It covers the folder's own top edge where
+   it stands, so the tab and the folder read as one piece. */
+.lib-call {
+  position: absolute;
+  top: -14px;
+  left: calc(var(--tab, 0) * 30% - 1px);
+  width: 40%;
+  min-width: 58px;
+  height: 15px;
+  display: flex;
   align-items: center;
-  color: rgba(var(--ink-rgb), 0.6);
+  justify-content: center;
+  gap: 0;
+  border: 1px solid rgba(var(--ink-rgb), 0.34);
+  border-top: 2px solid var(--mark);
+  border-bottom: none;
+  background: #0f0f10;
   font-family: var(--mono);
-  font-size: 7.5px;
-  line-height: 1.25;
-  letter-spacing: 0;
-  overflow: hidden;
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  color: rgba(var(--ink-rgb), 0.72);
+  transition: border-color 0.25s;
 }
 .lib-call b, .lib-call i { font-weight: 500; font-style: normal; }
-
-/* A book leaning against the one before it at the end of a shelf. */
-body.lib-built .lib-record.lib-leans {
-  margin-left: calc(var(--h) * 0.13);
-  transform-origin: 0 100%;
-  transform: rotate(-7.5deg);
+.lib-call i::before { content: "-"; }
+body.lib-built .lib-record .lib-name {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+body.lib-built .lib-record .lib-say { display: none; }
+/* A small square for every fragrance that uses the note. */
+.lib-marks {
+  position: relative;
+  display: block;
+  flex: none;
+  width: calc(var(--n, 1) * 7px - 2px);
+  height: 5px;
+  background: repeating-linear-gradient(to right, rgba(var(--ink-rgb), 0.62) 0 5px, transparent 5px 7px);
+}
+.lib-marks::after {
+  content: attr(data-more);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  margin-left: 5px;
+  transform: translateY(-50%);
+  font-family: var(--mono);
+  font-size: 8px;
+  color: rgba(var(--ink-rgb), 0.6);
 }
 
 body.lib-built .lib-record:hover,
 body.lib-built .lib-record:focus-visible {
-  transform: translateY(-12px);
-  filter: brightness(1.2);
+  transform: translateY(-6px);
+  border-color: rgba(var(--ink-rgb), 0.72);
 }
-body.lib-built .lib-record.lib-leans:hover,
-body.lib-built .lib-record.lib-leans:focus-visible { transform: rotate(-7.5deg) translateY(-12px); }
+body.lib-built .lib-record:hover .lib-call,
+body.lib-built .lib-record:focus-visible .lib-call { border-left-color: rgba(var(--ink-rgb), 0.72); border-right-color: rgba(var(--ink-rgb), 0.72); }
 body.lib-built .lib-record:focus-visible { outline: 1px solid var(--lib-hi); outline-offset: 3px; }
 
-/* A book that answers the terminal, and one that does not. */
+/* A file that answers the terminal, and one that does not. */
 body.lib-built .lib-record.is-hit {
+  border-color: var(--lib-hi);
   box-shadow: inset 0 0 0 1px rgba(var(--lib-hi-rgb), 0.8);
 }
 body.lib-built .lib-record.is-hit::before {
   content: "";
   position: absolute;
-  top: -17px;
-  left: 50%;
+  top: -9px;
+  right: 6px;
   width: 4px;
   height: 4px;
-  margin-left: -2px;
   background: var(--lib-hi);
 }
-body.lib-built .lib-record.is-dim { opacity: 0.13; filter: saturate(0.2); }
+body.lib-built .lib-record.is-dim { opacity: 0.13; }
 
-/* THE BOOK THAT IS OUT: pulled half off the shelf while its card is
-   open, and a little brighter. */
-body.lib-built .lib-record.is-out,
-body.lib-built .lib-record.lib-leans.is-out {
-  transform: translateY(-30px);
-  filter: brightness(1.28);
+/* THE FILE THAT IS OUT: pulled up out of its box while its case file is
+   open, a sheet showing over its top. */
+body.lib-built .lib-record.is-out {
+  transform: translateY(-16px);
+  border-color: var(--lib-hi);
   z-index: 2;
 }
-
-/* THE ARRIVAL: shelf by shelf, book by book. */
-@keyframes lib-shelve { from { opacity: 0; transform: translateY(-34px); } }
-body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--in) backwards; }
-
-/* THE SLIP naming a book in full: a hairline box with a tick at each
-   corner, and a leader run down from it to the book it names. */
-.lib-slip {
-  position: absolute;
-  z-index: 15;
-  top: 0;
-  left: 0;
-  max-width: 260px;
-  padding: 7px 11px 8px;
-  border: 1px solid rgba(var(--ink-rgb), 0.14);
-  background:
-    linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 0 0 / 6px 1px no-repeat,
-    linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 0 0 / 1px 6px no-repeat,
-    linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 100% 100% / 6px 1px no-repeat,
-    linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 100% 100% / 1px 6px no-repeat,
-    rgba(11, 11, 12, 0.94);
-  font-family: var(--mono);
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, calc(-100% - 24px));
-  transition: opacity 0.2s;
-  white-space: nowrap;
-}
-.lib-slip::after {
+body.lib-built .lib-record.is-out::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 100%;
-  width: 1px;
-  height: 18px;
-  background: linear-gradient(to bottom, rgba(var(--ink-rgb), 0.4), rgba(var(--ink-rgb), 0));
+  z-index: -1;
+  left: 46%;
+  right: 8%;
+  top: -24px;
+  height: 30px;
+  border: 1px solid rgba(var(--ink-rgb), 0.55);
+  background: #151516;
 }
-.lib-slip.is-on { opacity: 1; }
-.lib-slip b { display: block; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink); }
-.lib-slip small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: 0.08em; color: var(--muted); }
+
+/* THE ARRIVAL: box by box, file by file, dropped into place. */
+@keyframes lib-shelve { from { opacity: 0; transform: translateY(-18px); } }
+body.lib-arriving .lib-record { animation: lib-shelve 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) var(--in) backwards; }
 
 /* ------------------------------------------------------------------
    THE ROOM
@@ -10478,18 +10531,16 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
 .lib-lamp.is-on { opacity: 1; }
 
 /* ------------------------------------------------------------------
-   THE CARD — a catalogue card standing beside the stacks. Not a dialog:
-   the stacks stay in reach, and pressing another book turns the card
-   over to it.
+   THE CARD — A CASE FILE standing beside the archive. Not a dialog: the
+   boxes stay in reach, and pressing another file turns it over to that
+   one. Since 2026-09-26 ("movies and spy stuff") it is a dossier: CASE
+   FILE and the file number typed across its head over a dashed rule, a
+   STAMP across it, the mark clipped in as EXHIBIT A, and every heading —
+   SUBJECT, SUMMARY, ALIASES, KNOWN APPEARANCES — typed in capitals.
 
-   DRAWN AS THE REST OF THE SITE IS: a hairline edge with a registration
-   tick at each corner (in the card's own background, so they stay put
-   while it scrolls), and at its head THE MARK (`.lib-card-mark`, a
-   canvas: the fragrances using the note as a ring of specks). It was a
-   pane of dark glass — a lit top edge in the shelf's colour, a glow
-   inside, ruled lines and a blur behind — and the owner found it "too
-   futuristic ... make it like the rest of the site: themed with
-   particles and geometry".
+   STILL DRAWN AS THE REST OF THE SITE IS: a hairline edge with a
+   registration tick at each corner, no glass, no glow, no blur — the
+   owner found the glass version "too futuristic".
    ------------------------------------------------------------------ */
 .lib-card {
   --tick: rgba(var(--ink-rgb), 0.7);
@@ -10498,10 +10549,10 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   right: 24px;
   bottom: 24px;
   z-index: 20;
-  width: min(410px, calc(100vw - 36px));
+  width: min(420px, calc(100vw - 36px));
   overflow-y: auto;
-  padding: 20px 26px 28px;
-  border: 1px solid rgba(var(--ink-rgb), 0.13);
+  padding: 18px 26px 28px;
+  border: 1px solid rgba(var(--ink-rgb), 0.2);
   background:
     linear-gradient(var(--tick), var(--tick)) 0 0 / 12px 1px no-repeat,
     linear-gradient(var(--tick), var(--tick)) 0 0 / 1px 12px no-repeat,
@@ -10511,31 +10562,105 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
     linear-gradient(var(--tick), var(--tick)) 0 100% / 1px 12px no-repeat,
     linear-gradient(var(--tick), var(--tick)) 100% 100% / 12px 1px no-repeat,
     linear-gradient(var(--tick), var(--tick)) 100% 100% / 1px 12px no-repeat,
-    rgba(11, 11, 12, 0.97);
+    rgba(13, 13, 14, 0.98);
   box-shadow: 0 30px 70px -34px rgba(0, 0, 0, 0.9);
-}
-.lib-card-mark {
-  display: block;
-  width: 100%;
-  height: 92px;
-  margin: 12px 0 0;
 }
 .lib-card[hidden] { display: none; }
 .lib-card.is-in { animation: lib-card-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1); }
 @keyframes lib-card-in { from { opacity: 0; transform: translateX(26px); } }
-.lib-card-top { display: flex; justify-content: space-between; align-items: center; }
-.lib-card-call {
-  padding: 0 0 3px;
-  border-bottom: 1px solid rgba(var(--ink-rgb), 0.25);
+.lib-card-top {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 0 0 12px;
+  border-bottom: 1px dashed rgba(var(--ink-rgb), 0.32);
+}
+.lib-card-kind {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lib-card-call {
+  margin-right: auto;
+  font-family: var(--mono);
+  font-size: 14px;
   letter-spacing: 0.16em;
   color: var(--ink);
 }
 .lib-card-close { font-size: 22px; line-height: 1; padding: 2px 6px; }
 .lib-card-close:hover { color: var(--ink); }
+/* THE STAMP, set across the file at a slant: a double hairline box. */
+.lib-card-stamp {
+  position: absolute;
+  top: 66px;
+  right: 24px;
+  margin: 0;
+  padding: 5px 11px 4px;
+  border: 2px solid rgba(var(--ink-rgb), 0.5);
+  outline: 1px solid rgba(var(--ink-rgb), 0.3);
+  outline-offset: 2px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(var(--ink-rgb), 0.6);
+  transform: rotate(-9deg);
+  pointer-events: none;
+}
+/* THE EXHIBIT: the mark in a frame, clipped on. */
+.lib-card-exhibit {
+  position: relative;
+  width: 70%;
+  margin: 26px 0 0;
+  padding: 10px 10px 8px;
+  border: 1px solid rgba(var(--ink-rgb), 0.3);
+  background: rgba(var(--ink-rgb), 0.02);
+}
+.lib-card-clip {
+  position: absolute;
+  top: -13px;
+  left: 20px;
+  width: 11px;
+  height: 32px;
+  border: 1.5px solid rgba(var(--ink-rgb), 0.7);
+  border-radius: 6px;
+}
+.lib-card-clip::after {
+  content: "";
+  position: absolute;
+  left: 1.5px;
+  right: 1.5px;
+  top: 5px;
+  bottom: 8px;
+  border: 1.5px solid rgba(var(--ink-rgb), 0.7);
+  border-radius: 4px;
+}
+.lib-card-mark {
+  display: block;
+  width: 100%;
+  height: 92px;
+}
+.lib-card-caption {
+  margin: 6px 0 0;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lib-card-label {
+  margin: 20px 0 4px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 .lib-card-shelf {
-  margin: 10px 0 4px;
+  margin: 6px 0 0;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.18em;
@@ -10544,13 +10669,13 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
 }
 .lib-card-name {
   margin: 0;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.1;
   outline: none;
 }
-.lib-card-say { min-height: 3em; margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink); }
+.lib-card-say { min-height: 3em; margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); }
 .lib-card h3 {
   margin: 22px 0 8px;
   font-family: var(--mono);
@@ -10664,10 +10789,19 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   .lib-readout > div:nth-child(n + 3) { border-top: 1px solid var(--line); }
   .lib-readout dd { font-size: 26px; }
   .lib-terminal { flex-wrap: wrap; padding: 12px 14px; }
-  .lib-count { width: 100%; }
-  body.lib-built .lib-shelf { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-  body.lib-built .lib-plate { position: static; }
-  body.lib-built .lib-records { padding: 0 8px 18px; }
+  .lib-count { order: 3; width: 100%; }
+  body.lib-built .lib-plate {
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin: 0 -4px;
+    padding: 13px 16px 13px 22px;
+  }
+  body.lib-built .lib-shelf-name { grid-column: 1 / -1; order: -1; }
+  /* The lid runs to three lines here: its rivets stand level with the
+     first, where the code is, rather than half way down. */
+  body.lib-built .lib-plate::before,
+  body.lib-built .lib-plate::after { top: 32px; }
+  body.lib-built .lib-shelf-say { grid-column: 1 / -1; }
+  body.lib-built .lib-records { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 10px; padding: 30px 12px 58px; }
   .lib-card {
     top: auto;
     left: 12px;
@@ -10676,5 +10810,5 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
     width: auto;
     max-height: 70vh;
   }
-  .lib-slip { display: none; }
+  .lib-card-stamp { top: 60px; right: 16px; font-size: 10px; }
 }

@@ -556,3 +556,102 @@ In `tests/note-library.spec.js`:
   now a LINE the whole way (a pixel stronger than 100 in every column of the band) rather than a
   solid, and **no colour** in it.
 
+
+## 2026-09-26, later — an archive: files in boxes, and a case file
+
+> additionally, i want you to redisgn the whole page of the note library, and I want it to be
+> like files in boxes rather than a library libvrary. im thinking of movies and spy stuff. I
+> want oyu to keep it on theme and geometric. let the search bar stay the same (just make
+> there a little X to reset the search on the right side of the bar). i also like the colour
+> coding and the categories below the search bar so if you can keep that
+
+**The books are gone, and the page is an archive.** Nothing of them is left in the code: no
+spine canvas (`drawSpine`), no boards canvas (`drawBoards`, `BOARD_*`), no lean, no **slip**
+(the note's line that came up beside a book under the hand), and nothing on the page is called a
+book or a shelf where a reader sees it. The page's name stays **Note Library** — renaming a
+category is five places and was not asked — but its kicker says *Archive of notes*, its first
+figure says **Files** (it said Records), the random button says *Pull a random file*, and an
+empty search says *No file answers that*.
+
+**An accord is a box** (`.lib-shelf`): a hairline on three sides, standing open at the top, its
+**lid** (`.lib-plate`) across its head a few pixels proud of it either side, with a rivet at each
+end. The lid is its label: **BOX 04** — numbered in the order the accords stand on the page — the
+accord's code large in its colour, its name, its line, and **39 FILES** at the right. The
+accord's colour runs down the lid's left end as a strip (an inset shadow, so the lid's own ground
+is grey). A **hand-hole** is cut in the box's front at its foot, a rounded slot, as an archive
+box has (`.lib-records::after`).
+
+**A note is a file** (`.lib-record`): a folder standing in its box, the page's greys throughout,
+its name typed on its face in capitals. Its **tab** (`.lib-call`) stands on its top in one of
+**three places** in turn — left, middle, right, by its place in the accord (`--tab`, `alpha % 3`)
+— as the tabs of a drawer's folders are staggered, carrying its **file number** (`CIT-004`: the
+call number, with the dash drawn by the stylesheet) and the accord's colour **along its top edge
+and nowhere else on the file**. At its foot a small square for every fragrance using the note
+(`.lib-marks`), so a note used often is a thicker file — up to eighteen squares (`MARKS_MOST`) and
+past that `+10` beside them. The files stand in a grid (`minmax(150px, 1fr)`, two across on a
+phone), well apart so a tab never touches the file above it. Under the hand a file lifts a little
+and its edge comes up; a file answering the terminal is outlined in white with a white mark over
+its corner; the rest go dim. Pressing one **pulls it** — it rises out of its box with a sheet
+showing over its top (`is-out`) — and opens its case file. The files arrive box by box, each
+**dropped into place**, quick about it (`--in`, under a second in all).
+
+**The card is a case file.** *CASE FILE* and the file number typed across its head over a dashed
+rule; a **stamp** across it at a slant, *DECLASSIFIED*, in a double box; the mark **clipped in**
+as an exhibit — a paperclip over its corner and a caption, *Exhibit A · 28 appearances*; then
+**SUBJECT** (the note's name, and its accord), **SUMMARY** (what it is), **ALIASES** (the other
+spellings, the dropdown that was *Also catalogued as*) and **KNOWN APPEARANCES · 28** (the fragrances — it said *Found in* —
+the same dropdowns as before). Its close is labelled *Put the file back*. It is still drawn as the
+rest of the site is — a hairline edge, corner ticks, no glass, no glow.
+
+**The search bar is the same**, with one thing added: a small **×** at its right end
+(`.lib-clear`), after the count, a hairline square with a cross drawn in it. It is faint and not
+pressable while the bar is empty; pressing it empties the bar, lights nothing, dims nothing,
+brings every box back and leaves the typing in the bar. The browser's own clearing mark on a
+search field is taken off this one, so there are never two. **The order, the accord tabs under
+the bar and their colours are unchanged.**
+
+### Why
+
+- **Spy things, drawn geometrically.** Everything that says *archive* is a flat shape the rest of
+  the site could have drawn — a hairline box, a band, a rounded slot, a staggered tab, a row of
+  squares, a stamp in a double box — and the colour stays where the owner liked it: on the tabs
+  under the search, on each box's code and lid, and along each file's tab. The case file's words
+  (SUBJECT, ALIASES, KNOWN APPEARANCES, DECLASSIFIED) are the film dossier; nothing is redacted,
+  because every word on the card is one a reader came for.
+- **The call number became the file number** and stayed worked out rather than written: the
+  accord's code and the note's place in it, alphabetically, unchanged when the files are ordered
+  by use.
+
+### How to test it
+
+In `tests/note-library.spec.js`:
+
+- **`the notes are files in boxes, the accord's colour only along a file's tab and down its box's
+  lid`** (replaces *the books are skeletons…*) — nothing of the books (no spine or boards canvas,
+  no lean, no slip, no case); every file tabbed with its own file number under its own accord's
+  code; the tabs in exactly three places; the colour on every tab's top edge and on no file's
+  face, edge, name, tab side or tab lettering; one colour to an accord and each its own; every lid
+  carrying its colour down its end and otherwise grey.
+- **`pressing a file pulls it and opens its case file`** (new) — the file pulled; CASE FILE, the
+  file number, the stamp (at a slant), the exhibit's mark and caption, SUBJECT and SUMMARY,
+  Aliases, and KNOWN APPEARANCES with the count; the close puts it back.
+- **`the boxes breathe`** (replaces *the shelves breathe*) — rows of files at least 24px apart,
+  files at least 10px, boxes at least 40px.
+- **`every accord is a box with a lid saying what is in it, and a hand-hole in its front`**
+  (replaces *…bare boards…*) — BOX nn in page order, the code, the count of files; sides on the
+  box; the lid proud of it; the hand-hole there and under no file.
+- **`the files stand in their boxes without running into each other`** (replaces *the books
+  stand…*) — at 1440, 900 and 390px: every file and its tab inside its box, the tab sitting on
+  its file, no file on another and no tab on another file, a row's files level, no sideways scroll.
+- **`a note used often is a thicker file than a note used once`** — one square for Holy Bread, a
+  square each for Bergamot, and the note used most stopping at eighteen with the rest as `+n`.
+- **`the × at the right of the search bar clears it`** (new) — disabled when empty; at the bar's
+  right end, after the count and inside the bar; the browser's own mark taken off in the
+  stylesheet; pressing it empties and refocuses the bar, clears every light and dim and brings the
+  boxes back.
+- The readout's first figure is now **Files** in *the page says accords rather than shelves…*.
+
+### Known issues / TODO
+
+- The page is still called *Note Library* in the menu, on the map and in its heading; if the owner
+  wants it renamed to go with the archive, it is the five places in CLAUDE.md.

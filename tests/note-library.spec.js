@@ -3,13 +3,15 @@
 //
 // Every note named in a fragrance on the site, filed by accord (the
 // page's word; the markup still says shelf), each with a line on what
-// it is. The page's markup is the catalogue; the script stands the
-// records up as books — flat and geometric, on bare boards. What these hold:
+// it is. The page's markup is the catalogue; the script files every
+// record as a FILE in its accord's BOX — an archive, since 2026-09-26.
+// What these hold:
 //
 //   - every note the site uses HAS a record (the owner asked for "all
 //     the notes that I have used so far"), and none is shelved twice;
-//   - the books stand on their shelves without running into each other;
-//   - the terminal, the shelf tabs, the order and the card all work,
+//   - the files stand in their boxes without running into each other;
+//   - the terminal and its ×, the accord tabs, the order and the case
+//     file all work,
 //     and the card's fragrances link to where they stand;
 //   - the site's own search finds a note, by any of its spellings;
 //   - and without the script the catalogue is still there to read.
@@ -252,7 +254,7 @@ test("the page says accords rather than shelves, and no longer counts names as w
         ...[...document.querySelectorAll(".lib-tab")].map((t) => t.title)].join(" | "),
     };
   });
-  expect(out.terms).toEqual(["Records", "Accords", "Fragrances", "Most used"]);
+  expect(out.terms).toEqual(["Files", "Accords", "Fragrances", "Most used"]);
   expect(out.most, "the note used most").toBe(out.expected);
   expect(out.mostUses).toBe("in " + out.expectedUses + " fragrances");
   expect(out.said, "no shelves where a reader sees them").not.toMatch(/shel/i);
@@ -263,69 +265,69 @@ test("the page says accords rather than shelves, and no longer counts names as w
 
 
 
-/* THE BOOKS ARE SKELETONS, AND THEIR ACCORD'S COLOUR IS ONE MARK. The
-   owner, of the "digital" folders: "the logos on the books I feel are
-   unneccessary ... make it feel less 3-bit"; of the books drawn in specks
-   that answered it: "make it so that th ebooks dont look granular"; and
-   then, of the flat cloth ones (2026-09-26): "take a minimalist approach
-   with the colour coding of the books and make it so that they themselves
-   are more skeletal/geometric ... (the accords still should be colour
-   coded, that part can stay)". Read off the page: no glyph, meter,
-   barcode, tab or decoding left anywhere; every book near the window
-   carries a spine drawn on its own canvas; the spine is MOSTLY EMPTY — a
-   wireframe, not cloth — and in the page's white but for a few coloured
-   pixels, ALL AT ITS HEAD; and the books of different accords still carry
-   different colours there. */
-test("the books are skeletons in the page's white, their accord's colour only in the band across the head", async ({ page }) => {
+/* THE NOTES ARE FILES IN BOXES. The owner (2026-09-26): "redisgn the
+   whole page of the note library, and I want it to be like files in boxes
+   rather than a library libvrary. im thinking of movies and spy stuff. I
+   want oyu to keep it on theme and geometric ... i also like the colour
+   coding". Read off the page: nothing of the books is left (no spine or
+   boards canvas, no lean, no slip, no glyph or anything digital before
+   them); every file carries a TAB with its file number, which is its
+   accord's code and its place in it; the tabs stand in three places in
+   turn, as a drawer's do; the accord's colour is along the tab's top edge
+   and down the lid's end and NOWHERE ELSE on a file — its face, its edge
+   and its name are the page's greys; and every accord's colour is its own. */
+test("the notes are files in boxes, the accord's colour only along a file's tab and down its box's lid", async ({ page }) => {
   await arrive(page);
-  await page.mouse.move(700, 500);
-  // Down to where two accords stand in the window at once.
-  await page.evaluate(() => window.scrollTo(0, document.querySelectorAll(".lib-shelf")[1].getBoundingClientRect().top + scrollY - 300));
-  await page.waitForTimeout(1200);
   const out = await page.evaluate(() => {
-    const books = [...document.querySelectorAll(".lib-record")];
-    const gone = [".lib-glyph", ".lib-bands", ".lib-code", ".lib-folder-tab", ".lib-scan", ".is-decoding"]
+    const chroma = (v) => Math.max(0, ...(String(v).match(/rgba?\([^)]*\)/g) || []).map((c) => {
+      const n = c.match(/[\d.]+/g).slice(0, 3).map(Number);
+      return Math.max(...n) - Math.min(...n);
+    }));
+    const gone = ["canvas.lib-spine", "canvas.lib-boards", ".lib-leans", ".lib-slip", ".lib-case",
+      ".lib-glyph", ".lib-bands", ".lib-code", ".lib-folder-tab", ".lib-scan", ".is-decoding"]
       .filter((sel) => document.querySelector(sel));
-    const near = books.filter((b) => { const t = b.getBoundingClientRect().top; return t > -250 && t < innerHeight + 250; });
-    const read = (b) => {
-      const c = b.querySelector("canvas.lib-spine");
-      if (!c || c.width < 4) return null;
-      const ratio = c.width / b.getBoundingClientRect().width;
-      const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
-      let ink = 0, colour = 0, low = 0, r = 0, g = 0, bl = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        if (d[i + 3] < 40) continue;
-        ink++;
-        const hi = Math.max(d[i], d[i + 1], d[i + 2]), lo = Math.min(d[i], d[i + 1], d[i + 2]);
-        if (hi - lo > 40) {
-          colour++; r += d[i]; g += d[i + 1]; bl += d[i + 2];
-          const y = Math.floor(i / 4 / c.width) / ratio;
-          if (y > 5) low++;
-        }
-      }
-      const all = d.length / 4;
-      return { ink: ink / all, colour: colour / all, low, mean: colour ? [r / colour, g / colour, bl / colour].map(Math.round) : null };
-    };
-    const seen = near.map((b) => ({ shelf: b.closest(".lib-shelf").dataset.shelf, spine: read(b) }));
+    const files = [...document.querySelectorAll(".lib-shelf:not([data-shelf='RET']) .lib-record")];
+    const faults = [];
+    const places = new Set();
     const byShelf = {};
-    seen.forEach((s) => { if (s.spine && s.spine.mean) (byShelf[s.shelf] = byShelf[s.shelf] || []).push(s.spine.mean); });
-    const colours = Object.fromEntries(Object.entries(byShelf).map(([k, list]) =>
-      [k, [0, 1, 2].map((i) => Math.round(list.reduce((a, m) => a + m[i], 0) / list.length))]));
-    const heavy = seen.filter((s) => s.spine && s.spine.ink > 0.45).map((s) => Math.round(s.spine.ink * 100) + "% inked");
-    const loud = seen.filter((s) => s.spine && (s.spine.colour > 0.12 || s.spine.colour === 0)).map((s) => Math.round(s.spine.colour * 100) + "% coloured");
-    const strayColour = seen.filter((s) => s.spine && s.spine.low > 0).length;
-    return { gone, near: near.length, drawn: seen.filter((s) => s.spine && s.spine.ink > 0.05).length, heavy, loud, strayColour, colours };
+    files.forEach((f) => {
+      const tab = f.querySelector(".lib-call");
+      const code = f.closest(".lib-shelf").dataset.shelf;
+      if (!tab) return faults.push(f.id + " has no tab");
+      // The dash between code and number is the stylesheet's (so the
+      // tab's own text is the call number without its space).
+      const says = tab.querySelector("b").textContent + getComputedStyle(tab.querySelector("i"), "::before").content.replace(/"/g, "") +
+        tab.querySelector("i").textContent;
+      if (says !== f.dataset.call.replace(" ", "-")) faults.push(f.id + " tab says " + says + ", not " + f.dataset.call);
+      if (!says.startsWith(code + "-")) faults.push(f.id + " is filed under " + says);
+      places.add(Math.round(tab.getBoundingClientRect().left - f.getBoundingClientRect().left));
+      const cs = getComputedStyle(f);
+      const edge = getComputedStyle(tab).borderTopColor;
+      if (chroma(edge) < 40) faults.push(f.id + " tab edge not coloured: " + edge);
+      [["face", cs.backgroundColor], ["edge", cs.borderLeftColor], ["name", getComputedStyle(f.querySelector(".lib-name")).color],
+        ["tab's side", getComputedStyle(tab).borderLeftColor], ["tab's lettering", getComputedStyle(tab).color]]
+        .forEach(([what, v]) => { if (chroma(v) > 6) faults.push(f.id + " " + what + " coloured: " + v); });
+      (byShelf[code] = byShelf[code] || new Set()).add(edge);
+    });
+    const lids = [...document.querySelectorAll(".lib-shelf:not([data-shelf='RET']) .lib-plate")]
+      .map((l) => ({ shadow: getComputedStyle(l).boxShadow, bg: getComputedStyle(l).backgroundColor }));
+    const colours = Object.values(byShelf).map((set) => [...set]);
+    return {
+      gone, faults, files: files.length, places: places.size,
+      oneEach: colours.every((c) => c.length === 1),
+      distinct: new Set(colours.map((c) => c[0])).size, accords: colours.length,
+      lidsColoured: lids.filter((l) => chroma(l.shadow) > 40).length, lids: lids.length,
+      lidsGrey: lids.filter((l) => chroma(l.bg) <= 6).length,
+    };
   });
-  expect(out.gone, "nothing of the digital folders is left").toEqual([]);
-  expect(out.near, "books near the window").toBeGreaterThan(10);
-  expect(out.drawn, "every one of them has its spine drawn").toBe(out.near);
-  expect(out.heavy, "a skeleton, not cloth: most of the spine is left empty").toEqual([]);
-  expect(out.loud, "the accord's colour a small mark on every book, not the book").toEqual([]);
-  expect(out.strayColour, "and all of that colour at its head").toBe(0);
-  const cols = Object.values(out.colours);
-  expect(cols.length, `accords on the window: ${JSON.stringify(out.colours)}`).toBeGreaterThan(1);
-  const apart = Math.max(...cols.map((a) => Math.max(...cols.map((b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])))));
-  expect(apart, "each accord marked in its own colour").toBeGreaterThan(40);
+  expect(out.gone, "nothing of the books is left").toEqual([]);
+  expect(out.files).toBeGreaterThan(300);
+  expect(out.faults, "every file tabbed with its number, coloured only there").toEqual([]);
+  expect(out.places, "the tabs staggered in three places").toBe(3);
+  expect(out.oneEach, "one colour to an accord").toBe(true);
+  expect(out.distinct, "and each accord its own").toBe(out.accords);
+  expect(out.lidsColoured, "every lid carries its accord's colour down its end").toBe(out.lids);
+  expect(out.lidsGrey, "and is otherwise grey").toBe(out.lids);
 });
 
 /* THE PAGE IS BLACK AND WHITE. "change the theme of the bage from that
@@ -381,7 +383,7 @@ test("the page is black and white, with colour left only on the accords", async 
    the site: themed with particles and geometry." Read off the card as
    drawn: no blur behind it, no glow inside it, no coloured bar along
    its top — and at its head the mark, a canvas with a ring of specks on
-   it; the slip carries no coloured border either. */
+   it. (The slip went with the books: a file carries its name on its face.) */
 test("the card is hairlines and specks rather than glass", async ({ page }) => {
   await arrive(page);
   await page.locator("#note-cedarwood").click();
@@ -406,122 +408,90 @@ test("the card is hairlines and specks rather than glass", async ({ page }) => {
   expect(out.ink, "the mark at its head is drawn").toBeGreaterThan(80);
 });
 
+/* THE CARD IS A CASE FILE: "movies and spy stuff". Pressing a file pulls
+   it up out of its box and opens its case file: CASE FILE and the file
+   number across its head, a stamp, the mark clipped in as Exhibit A with
+   how many appearances it has, the note under SUBJECT, what it is under
+   SUMMARY, its other spellings as ALIASES, and the fragrances using it as
+   its KNOWN APPEARANCES. Its close puts the file back. */
+test("pressing a file pulls it and opens its case file", async ({ page }) => {
+  await arrive(page);
+  await page.locator("#note-cedarwood").click();
+  const card = page.locator(".lib-card");
+  await expect(card).toBeVisible();
+  await expect(page.locator("#note-cedarwood")).toHaveClass(/is-out/);
+  const uses = +(await page.locator("#note-cedarwood").getAttribute("data-uses"));
+  const call = await page.locator("#note-cedarwood").getAttribute("data-call");
+  await expect(card.locator(".lib-card-kind")).toHaveText("Case file");
+  await expect(card.locator(".lib-card-call")).toHaveText(call);
+  await expect(card.locator(".lib-card-stamp")).toBeVisible();
+  await expect(card.locator(".lib-card-exhibit canvas.lib-card-mark")).toBeVisible();
+  await expect(card.locator(".lib-card-caption")).toHaveText("Exhibit A · " + uses + " appearances");
+  await expect(card.locator(".lib-card-label")).toHaveText(["Subject", "Summary"]);
+  await expect(card.locator(".lib-card-name")).toHaveText("Cedarwood");
+  await expect(card.locator(".lib-card-aka .lib-drop-name")).toHaveText("Aliases");
+  await expect(card.locator(".lib-card-found h3")).toHaveText("Known appearances · " + String(uses).padStart(2, "0"));
+  // The stamp is set across the head at a slant, as a stamp is.
+  const turned = await card.locator(".lib-card-stamp").evaluate((el) => getComputedStyle(el).transform);
+  expect(turned, "the stamp is set at a slant").not.toBe("none");
+  await card.locator(".lib-card-close").click();
+  await expect(card).toBeHidden();
+  await expect(page.locator("#note-cedarwood")).not.toHaveClass(/is-out/);
+});
+
 /* MORE AIR: "the library feels crowded, I want you to stylistically make
-   it more breathable". The rows of a shelf stand well apart and the
-   books a little apart from each other. */
-test("the shelves breathe", async ({ page }) => {
+   it more breathable". Kept in the archive: the rows of files stand well
+   apart (a tab needs the room above its file), the files a little apart
+   from each other, and the boxes well apart down the page. */
+test("the boxes breathe", async ({ page }) => {
   await arrive(page);
   const out = await page.evaluate(() => {
     const cs = getComputedStyle(document.querySelector(".lib-records"));
-    const shelf = getComputedStyle(document.querySelector(".lib-shelf"));
-    return { row: parseFloat(cs.rowGap), col: parseFloat(cs.columnGap), top: parseFloat(shelf.paddingTop) };
+    const [a, b] = document.querySelectorAll(".lib-shelf");
+    return { row: parseFloat(cs.rowGap), col: parseFloat(cs.columnGap),
+      between: b.getBoundingClientRect().top - a.getBoundingClientRect().bottom };
   });
-  expect(out.row, "between the rows of a shelf").toBeGreaterThanOrEqual(48);
-  expect(out.col, "between one book and the next").toBeGreaterThanOrEqual(5);
-  expect(out.top, "and above every accord").toBeGreaterThanOrEqual(56);
+  expect(out.row, "between the rows of a box").toBeGreaterThanOrEqual(24);
+  expect(out.col, "between one file and the next").toBeGreaterThanOrEqual(10);
+  expect(out.between, "and between one box and the next").toBeGreaterThanOrEqual(40);
 });
 
-/* THE SHELVES ARE BOARDS, AND NOTHING ROUND THEM. "the library, please
-   redesign the shelves" — they were a lit rail under each row, and then a
-   bookcase of specks, uprights and crown and plinth and a back of boards.
-   Then: "redisgn the shelves, remove the bezel of the bookshelves"
-   (2026-09-25). So every accord's books stand on plain boards drawn behind
-   them: the rail is gone from the stylesheet; the boards' canvas is there,
-   behind the books and a little wider than the rows; there is a board
-   under every row, solid across the row's foot, and NOTHING ELSE is drawn
-   on it — no upright at either side, no crown, no back; and every board
-   carries a label giving the call numbers on it. At another width the rows
-   wrap differently, and the boards are drawn again to match. (The label
-   is worked out from the books on the row, so a note added to Citrus
-   does not break this.) Since the page went black and white (2026-09-26)
-   a board is a plank DRAWN IN HAIRLINES rather than a solid walnut one,
-   so what is read along its foot is a LINE the whole way, and no colour. */
-test("every accord's books stand on bare boards, a labelled board under every row and no frame round them", async ({ page }) => {
-  await page.addInitScript(() => {
-    window.__labels = [];
-    const fillText = CanvasRenderingContext2D.prototype.fillText;
-    CanvasRenderingContext2D.prototype.fillText = function (t) {
-      if (this.canvas.classList.contains("lib-boards")) window.__labels.push(String(t));
-      return fillText.apply(this, arguments);
-    };
-  });
+/* EVERY ACCORD IS A BOX. Its LID across its head, standing a little proud
+   of the box either side, says what is in it: the box's number (in the
+   order the accords stand on the page), the accord's code and name, and
+   how many files it holds — and the box is drawn round its files, a
+   hairline on three sides, with a hand-hole cut in its front at the foot.
+   It was bookcases, then boards, before (2026-09-26). */
+test("every accord is a box with a lid saying what is in it, and a hand-hole in its front", async ({ page }) => {
   await arrive(page);
-  await expect(page.locator(".lib-case")).toHaveCount(0);
-  await page.locator("#shelf-cit").scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1200);
-  const read = () => page.evaluate(() => {
-    const holder = document.querySelector("#shelf-cit .lib-records");
-    const c = holder.querySelector(".lib-boards");
-    const cr = c.getBoundingClientRect(), hr = holder.getBoundingClientRect();
-    const g = c.getContext("2d"), ratio = c.width / cr.width;
-    const d = g.getImageData(0, 0, c.width, c.height).data;
-    const rowH = parseFloat(getComputedStyle(holder).getPropertyValue("--row"));
-    const gap = parseFloat(getComputedStyle(holder).getPropertyValue("--gap"));
-    const rows = +holder.dataset.rows;
-    const off = hr.top - cr.top;
-    // Across the foot of each row, just under where the books stand: the
-    // board — its top and its front — all the way along.
-    const boards = [];
-    const bands = [];
-    let coloured = 0;
-    for (let k = 0; k < rows; k++) {
-      const foot = off + k * (rowH + gap) + rowH;
-      bands.push([foot - 1, foot + 36]);
-      const y0 = Math.round((foot + 2) * ratio), y1 = Math.round((foot + 18) * ratio);
-      let lined = 0, n = 0;
-      for (let x = Math.round(30 * ratio); x < c.width - Math.round(30 * ratio); x += 3, n++) {
-        let most = 0;
-        for (let y = y0; y < y1; y++) {
-          const i = (y * c.width + x) * 4;
-          if (d[i + 3] > most) most = d[i + 3];
-          const hi = Math.max(d[i], d[i + 1], d[i + 2]), lo = Math.min(d[i], d[i + 1], d[i + 2]);
-          if (d[i + 3] > 40 && hi - lo > 12) coloured++;
-        }
-        if (most > 100) lined++;
-      }
-      boards.push(lined / n);
-    }
-    // Everywhere else on the canvas: no ink at all.
-    let stray = 0;
-    for (let y = 0; y < c.height; y += 2) {
-      const at = y / ratio;
-      if (bands.some(([a, b]) => at >= a && at <= b)) continue;
-      for (let x = 0; x < c.width; x += 2) if (d[(y * c.width + x) * 4 + 3] > 20) stray++;
-    }
-    const book = document.querySelector("#shelf-cit .lib-record");
-    // THE FIRST ROW'S LABEL is worked out from the books standing on it,
-    // not written down: the accord grows as notes are added (Petitgrain
-    // made it fourteen on 2026-09-25).
-    const all = [...holder.querySelectorAll(".lib-record")];
-    const firstTop = Math.round(all[0].offsetTop + all[0].offsetHeight);
-    const onFirst = all.filter((b) => Math.round(b.offsetTop + b.offsetHeight) === firstTop).length;
-    return {
-      first: "CIT 001–" + String(onFirst).padStart(3, "0"), whole: all.length,
-      drawn: c.dataset.drawn === "1", rows, boards, stray, coloured,
-      wider: cr.left < hr.left && cr.right > hr.right,
-      behind: +getComputedStyle(c).zIndex < +getComputedStyle(book).zIndex,
-      rail: getComputedStyle(holder).backgroundImage,
-      labels: window.__labels.filter((t) => t.startsWith("CIT")),
-    };
+  const out = await page.evaluate(() => {
+    const faults = [];
+    const shelves = [...document.querySelectorAll(".lib-shelf")];
+    shelves.forEach((box, i) => {
+      const code = box.dataset.shelf;
+      const lid = box.querySelector(".lib-plate");
+      const n = box.querySelectorAll(".lib-record").length;
+      const no = lid.querySelector(".lib-box-no");
+      const want = "Box " + String(i + 1).padStart(2, "0");
+      if (!no || no.textContent !== want) faults.push(code + " lid says " + (no && no.textContent) + ", not " + want);
+      if (lid.querySelector(".lib-shelf-code").textContent !== code) faults.push(code + " lid code");
+      const count = lid.querySelector(".lib-shelf-count").textContent;
+      if (count !== (n === 1 ? "1 file" : n + " files")) faults.push(code + " lid count " + count + " for " + n);
+      const bs = getComputedStyle(box), lr = lid.getBoundingClientRect(), br = box.getBoundingClientRect();
+      if (parseFloat(bs.borderLeftWidth) < 1 || parseFloat(bs.borderRightWidth) < 1 || parseFloat(bs.borderBottomWidth) < 1)
+        faults.push(code + " box has no sides");
+      if (!(lr.left < br.left && lr.right > br.right)) faults.push(code + " lid not proud of the box");
+      const hole = getComputedStyle(box.querySelector(".lib-records"), "::after");
+      const holder = box.querySelector(".lib-records").getBoundingClientRect();
+      if (hole.content === "none" || parseFloat(hole.width) < 40 || parseFloat(hole.borderTopLeftRadius) < 4)
+        faults.push(code + " has no hand-hole");
+      const last = [...box.querySelectorAll(".lib-record")].reduce((m, f) => Math.max(m, f.getBoundingClientRect().bottom), 0);
+      if (holder.bottom - last < parseFloat(hole.height) + parseFloat(hole.bottom)) faults.push(code + " hand-hole under a file");
+    });
+    return { faults, boxes: shelves.length };
   });
-  const wide = await read();
-  expect(wide.drawn, "the boards are drawn").toBe(true);
-  expect(wide.rail, "and the rail is gone").toBe("none");
-  expect(wide.wider, "standing out past the rows").toBe(true);
-  expect(wide.behind, "behind the books").toBe(true);
-  wide.boards.forEach((b, k) => expect(b, `a board under row ${k + 1}`).toBeGreaterThan(0.9));
-  expect(wide.coloured, "drawn in the page's white, not in walnut").toBe(0);
-  expect(wide.stray, "and nothing else: no uprights, no crown, no back").toBe(0);
-  expect(wide.labels, "a label on every board, giving its call numbers").toContain(wide.first);
-  // Narrower, the rows wrap again, and the boards are drawn to match.
-  await page.setViewportSize({ width: 820, height: 900 });
-  await page.waitForTimeout(900);
-  const narrow = await read();
-  expect(narrow.rows, "more rows at a narrower width").toBeGreaterThan(wide.rows);
-  narrow.boards.forEach((b, k) => expect(b, `a board under row ${k + 1} at 820px`).toBeGreaterThan(0.9));
-  expect(narrow.stray, "still nothing but boards").toBe(0);
-  expect(narrow.labels, "and the labels say what is on each").toContain(narrow.first);
-  expect(narrow.first, "which is less, now the rows are shorter").not.toBe(wide.first);
+  expect(out.boxes).toBeGreaterThan(10);
+  expect(out.faults).toEqual([]);
 });
 
 /* THE LAMP RUNS A BEAT BEHIND THE HAND, like the cursor's square: "make
@@ -553,61 +523,124 @@ test("the lamp follows the pointer a beat behind it", async ({ page }) => {
   }, { timeout: 3000 }).toBeLessThan(1);
 });
 
-/* THE BOOKS STAND ON THEIR SHELVES: each within its shelf, none on top
-   of another, and each carrying its shelf's call number. */
-test("the books stand on their shelves without running into each other", async ({ page }) => {
+/* THE FILES STAND IN THEIR BOXES: each within its box, tab and all, none
+   on top of another — a tab never on the file above it — and each carrying
+   its box's code; at a phone's width too, and never a sideways scroll. */
+test("the files stand in their boxes without running into each other", async ({ page }) => {
   for (const size of [{ width: 1440, height: 900 }, { width: 900, height: 900 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(size);
     await arrive(page);
-    await page.waitForTimeout(2600);
+    await page.waitForTimeout(2000);
     const out = await page.evaluate(() => {
       const faults = [];
       document.querySelectorAll(".lib-shelf").forEach((shelf) => {
         const code = shelf.dataset.shelf;
         const holder = shelf.querySelector(".lib-records").getBoundingClientRect();
-        const books = [...shelf.querySelectorAll(".lib-record")];
-        const boxes = books.map((b) => ({ el: b, r: b.getBoundingClientRect() }));
-        boxes.forEach(({ el, r }, i) => {
-          if (!el.querySelector(".lib-call").textContent.startsWith(code)) faults.push(el.id + " wrong call number");
-          if (r.left < holder.left - 1 || r.right > holder.right + 1) faults.push(el.id + " off its shelf");
-          if (el.classList.contains("lib-leans")) return;
-          for (let j = i + 1; j < boxes.length; j++) {
+        const boxes = [...shelf.querySelectorAll(".lib-record")].map((el) => {
+          const r = el.getBoundingClientRect(), t = el.querySelector(".lib-call").getBoundingClientRect();
+          return { el, r, t };
+        });
+        boxes.forEach(({ el, r, t }, i) => {
+          if (!el.querySelector(".lib-call").textContent.startsWith(code)) faults.push(el.id + " wrong file number");
+          if (r.left < holder.left - 1 || r.right > holder.right + 1) faults.push(el.id + " out of its box");
+          if (t.left < r.left - 1 || t.right > r.right + 1 || t.top < holder.top - 1) faults.push(el.id + " tab out of its box");
+          if (Math.abs(t.bottom - r.top) > 2) faults.push(el.id + " tab not on its file");
+          for (let j = 0; j < boxes.length; j++) {
+            if (j === i) continue;
             const o = boxes[j];
-            if (o.el.classList.contains("lib-leans")) continue;
-            const x = Math.min(r.right, o.r.right) - Math.max(r.left, o.r.left);
-            const y = Math.min(r.bottom, o.r.bottom) - Math.max(r.top, o.r.top);
-            if (x > 1 && y > 1) faults.push(el.id + " on " + o.el.id);
+            const hits = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+            if (j > i && hits(r, o.r)) faults.push(el.id + " on " + o.el.id);
+            if (hits(t, o.r)) faults.push(el.id + "'s tab on " + o.el.id);
           }
         });
-        // Every book in a row stands on the same board.
-        const bottoms = new Set(boxes.filter((b) => !b.el.classList.contains("lib-leans")).map((b) => Math.round(b.r.bottom)));
-        const rows = new Set(boxes.map((b) => Math.round(b.r.top / 50)));
-        if (bottoms.size > rows.size + 1) faults.push(code + " books do not stand on one board");
+        // Every file in a row stands at the same height.
+        const tops = new Set(boxes.map((b) => Math.round(b.r.top)));
+        const rows = new Set(boxes.map((b) => Math.round(b.r.top / 40)));
+        if (tops.size > rows.size) faults.push(code + " files of a row at different heights");
       });
-      return { faults: faults, wide: document.documentElement.scrollWidth - window.innerWidth };
+      return { faults, wide: document.documentElement.scrollWidth - window.innerWidth };
     });
     expect(out.faults, `at ${size.width}px`).toEqual([]);
     expect(out.wide, `the page scrolls sideways at ${size.width}px`).toBeLessThanOrEqual(1);
   }
 });
 
-/* A BOOK'S THICKNESS IS HOW MANY FRAGRANCES USE IT. */
-test("a note used often is a thicker book than a note used once", async ({ page }) => {
+/* A FILE'S THICKNESS IS HOW MANY FRAGRANCES USE IT: a small square at its
+   foot for each, and past eighteen a figure for the rest. */
+test("a note used often is a thicker file than a note used once", async ({ page }) => {
   await arrive(page);
-  const w = await page.evaluate(() => {
-    const by = (id) => ({ w: document.getElementById(id).getBoundingClientRect().width, n: +document.getElementById(id).dataset.uses });
-    return { often: by("note-bergamot"), once: by("note-holy-bread") };
+  const out = await page.evaluate(() => {
+    const by = (id) => {
+      const el = document.getElementById(id), m = el.querySelector(".lib-marks");
+      return { n: +el.dataset.uses, w: m.getBoundingClientRect().width, more: m.dataset.more };
+    };
+    const most = [...document.querySelectorAll(".lib-record")].reduce((a, b) => (+b.dataset.uses > +a.dataset.uses ? b : a));
+    return { often: by("note-bergamot"), once: by("note-holy-bread"), most: by(most.id) };
   });
-  expect(w.often.n).toBeGreaterThanOrEqual(10);
-  expect(w.once.n).toBe(1);
-  expect(w.often.w).toBeGreaterThan(w.once.w + 12);
+  expect(out.often.n).toBeGreaterThanOrEqual(10);
+  expect(out.once.n).toBe(1);
+  expect(out.once.w, "one square").toBeCloseTo(5, 0);
+  expect(out.often.w, "a square for each").toBeCloseTo(out.often.n * 7 - 2, 0);
+  expect(out.often.more).toBe("");
+  expect(out.most.n, "the note used most is used more than eighteen times").toBeGreaterThan(18);
+  expect(out.most.w, "and stops at eighteen squares").toBeCloseTo(18 * 7 - 2, 0);
+  expect(out.most.more, "with the rest as a figure").toBe("+" + (out.most.n - 18));
 });
 
-/* THE TERMINAL: books that answer light up, the rest go dim, and a shelf
-   with nothing on it folds away. It reads other spellings — and DIRECT
+/* THE × AT THE RIGHT OF THE BAR: "let the search bar stay the same (just
+   make there a little X to reset the search on the right side of the
+   bar)". Faint and not pressable while the bar is empty; with something
+   typed, it stands at the bar's right end, and pressing it empties the
+   bar, lights nothing, dims nothing, brings every box back and leaves the
+   typing in the bar. The browser's own clearing mark is not shown too. */
+test("the × at the right of the search bar clears it", async ({ page }) => {
+  await arrive(page);
+  const query = page.locator(".lib-query");
+  const clear = page.locator(".lib-clear");
+  await expect(clear).toBeVisible();
+  await expect(clear).toBeDisabled();
+  await query.fill("cedar");
+  await expect(clear).toBeEnabled();
+  await expect(page.locator("#shelf-cit")).toBeHidden();
+  const at = await page.evaluate(() => {
+    const bar = document.querySelector(".lib-terminal").getBoundingClientRect();
+    const x = document.querySelector(".lib-clear").getBoundingClientRect();
+    const count = document.querySelector(".lib-count").getBoundingClientRect();
+    return { right: bar.right - x.right, afterCount: x.left >= count.right, inBar: x.top >= bar.top && x.bottom <= bar.bottom,
+      // The browser's own mark cannot be read off the element, so it is
+      // read off the stylesheet: a rule taking it off this field.
+      native: [...document.styleSheets].some((sheet) => {
+        try {
+          return [...sheet.cssRules].some((rule) => rule.selectorText && rule.selectorText.includes(".lib-query::-webkit-search-cancel-button") &&
+            rule.style.display === "none");
+        } catch (e) { return false; }
+      }) ? "none" : "shown" };
+  });
+  expect(at.right, "at the right end of the bar").toBeLessThan(30);
+  expect(at.right).toBeGreaterThanOrEqual(0);
+  expect(at.afterCount, "after the count").toBe(true);
+  expect(at.inBar, "inside the bar").toBe(true);
+  expect(at.native, "and the browser's own mark is not shown as well").toBe("none");
+  await clear.click();
+  await expect(query).toHaveValue("");
+  await expect(query).toBeFocused();
+  await expect(clear).toBeDisabled();
+  await expect(page.locator(".lib-record.is-hit")).toHaveCount(0);
+  await expect(page.locator(".lib-record.is-dim")).toHaveCount(0);
+  await expect(page.locator("#shelf-cit")).toBeVisible();
+  // Typed from the keyboard, and cleared the same way.
+  await query.pressSequentially("tonka");
+  await expect(page.locator(".lib-record.is-hit").first()).toBeVisible();
+  await clear.click();
+  await expect(query).toHaveValue("");
+  await expect(page.locator(".lib-shelf.is-away")).toHaveCount(0);
+});
+
+/* THE TERMINAL: files that answer light up, the rest go dim, and a box
+   with nothing in it folds away. It reads other spellings — and DIRECT
    WORDS ONLY, at the owner's word: nothing is found by what a note is
    said to be, and no near miss counts. */
-test("the terminal lights the books that answer and folds away the rest", async ({ page }) => {
+test("the terminal lights the files that answer and folds away the rest", async ({ page }) => {
   await arrive(page);
   const query = page.locator(".lib-query");
 
@@ -658,8 +691,8 @@ test("the terminal lights the books that answer and folds away the rest", async 
   await expect(page.locator(".lib-record.is-dim")).toHaveCount(0);
 });
 
-/* THE INDEX: one tab per shelf. */
-test("a shelf tab stands you in front of that shelf alone", async ({ page }) => {
+/* THE INDEX: one tab per accord. */
+test("an accord tab stands you in front of that box alone", async ({ page }) => {
   await arrive(page);
   await expect(page.locator(".lib-tab")).toHaveCount(await page.locator(".lib-shelf").count() + 1);
   await page.locator(".lib-tab[data-shelf='WOO']").click();
@@ -670,9 +703,9 @@ test("a shelf tab stands you in front of that shelf alone", async ({ page }) => 
   await expect(page.locator("#shelf-cit")).toBeVisible();
 });
 
-/* MOST USED reorders a shelf by use, and the call numbers — where a book
+/* MOST USED reorders a box by use, and the file numbers — where a file
    belongs — stay where they were. */
-test("ordering by use moves the books and keeps their call numbers", async ({ page }) => {
+test("ordering by use moves the files and keeps their numbers", async ({ page }) => {
   await arrive(page);
   const callBefore = await page.locator("#note-cedarwood").getAttribute("data-call");
   await page.locator(".lib-order-by[data-order='uses']").click();
@@ -684,9 +717,9 @@ test("ordering by use moves the books and keeps their call numbers", async ({ pa
   expect(names).toEqual([...names].sort());
 });
 
-/* THE KEYBOARD: one book takes the tab, the arrows walk the shelves, and
-   Enter opens the card. */
-test("the shelves can be walked and opened with the keyboard", async ({ page }) => {
+/* THE KEYBOARD: one file takes the tab, the arrows walk the boxes, and
+   Enter pulls the file and opens its case file. */
+test("the files can be walked and opened with the keyboard", async ({ page }) => {
   await arrive(page);
   await expect(page.locator(".lib-record[tabindex='0']")).toHaveCount(1);
   await page.locator(".lib-record[tabindex='0']").focus();
@@ -711,7 +744,7 @@ test("the site's search finds a note, by any of its spellings", async ({ page })
   await expect(page.locator(".find-filter[data-kind='Note']")).toBeVisible();
 });
 
-/* WITH ANIMATION TURNED OFF the stacks are simply there, and the
+/* WITH ANIMATION TURNED OFF the boxes are simply there, and the
    readout is already at its figures. */
 test.describe("with reduced motion", () => {
   test("the library is there at once", async ({ page }) => {

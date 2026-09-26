@@ -4,34 +4,39 @@
 // The page's markup is the catalogue: one <article class="lib-record">
 // per note, standing in the <section class="lib-shelf"> of its family —
 // its ACCORD, as the page calls it (the owner's word for what was
-// "shelves"; the code still says shelf). This stands every record up as
-// a FOLDER on its shelf and puts a catalogue terminal in front of the
-// stacks:
+// "shelves"; the code still says shelf). This files every record as a
+// FILE in its accord's BOX, and puts a catalogue terminal in front of
+// the archive — the owner, 2026-09-26: "redisgn the whole page of the
+// note library, and I want it to be like files in boxes rather than a
+// library libvrary. im thinking of movies and spy stuff. I want oyu to
+// keep it on theme and geometric":
 //
-//   THE BOOKS       every book's thickness is how many fragrances on
-//                   the site use that note, and its height is its own
-//                   (seeded, so the stacks stand the same way every
-//                   visit). Its name runs down its spine and its CALL
-//                   NUMBER is at the foot — the accord's code and its
-//                   place in it, counted alphabetically. The spine is
-//                   DRAWN IN HAIRLINES on a small canvas of its own — its
-//                   outline, its bands, a panel on some and its label —
-//                   and its accord's colour is ONE small mark, the band
-//                   across its head (`HUE`, the same colour as the
-//                   accord's tab). It was cloth, drawn in specks and then
-//                   in flat shapes, until the owner asked for the books
-//                   "more skeletal/geometric" with "a minimalist approach
-//                   with the colour coding" (2026-09-26); and before that
-//                   folders — "digital files" — which were "3-bit".
-//   THE TERMINAL    one field over the whole catalogue. Books that
-//                   answer light up and everything else goes dim; a
-//                   shelf with nothing on it folds away. It reads names
+//   THE BOXES       an accord is an archive box: its LID is its label —
+//                   the box's number, the accord's code in its colour,
+//                   its name and line, how many files it holds — and a
+//                   hand-hole is cut in its front. (The CSS draws it.)
+//   THE FILES       a note is a file folder standing in its box, its TAB
+//                   staggered as a drawer's are and carrying its FILE
+//                   NUMBER — the accord's code and its place in it,
+//                   counted alphabetically — along an edge in the
+//                   accord's colour; its name on its face; and at its
+//                   foot a small square for every fragrance on the site
+//                   that uses it, so a note used often is a thicker file.
+//                   They were books on shelves for four rounds (cloth,
+//                   specks, flat shapes, skeletons) and before that
+//                   folders again, "digital" ones, which were "3-bit".
+//   THE TERMINAL    one field over the whole catalogue, with a × at its
+//                   right to clear it. Files that answer light up and
+//                   everything else goes dim; a box with nothing in it
+//                   folds away. It reads names
 //                   and every other spelling folded into a record, by
 //                   DIRECT WORDS only: whole words, no near misses, and
 //                   nothing found by what a note is said to be.
 //   THE INDEX       a tab per accord, to stand in front of that one.
-//   THE CARD        pressing a book pulls it off the shelf and opens its
-//                   catalogue card beside the stacks: the call number,
+//   THE CARD        pressing a file pulls it up out of its box and opens
+//                   its CASE FILE beside the archive — a stamp, SUBJECT,
+//                   SUMMARY, ALIASES and KNOWN APPEARANCES in typed
+//                   capitals, and the mark clipped in as an EXHIBIT: the call number,
 //                   the explanation, the other spellings, and every
 //                   fragrance on the site that uses it, linked to where
 //                   it stands in its house. Drawn as the rest of the
@@ -84,28 +89,20 @@
     individual: { name: "Individual fragrances", href: "individual-fragrances/individual-fragrances.html" },
   };
 
-  // Each shelf's colour, as a hue. The books are dark and only tinted:
-  // the room is a library at night, and sixteen loud colours would be a
-  // sweet shop.
+  // Each accord's colour, as a hue: the only colour on the page, on its
+  // tab, its box's lid and its files' tabs.
   const HUE = {
     CIT: 50, ARO: 150, GRN: 100, FLO: 335, FRU: 8, SPI: 22, GOU: 36, BRW: 26,
     WOO: 30, CON: 135, RES: 40, ANI: 14, EAR: 75, AIR: 200, SMK: 220, IMP: 268, RET: 0,
   };
 
-  // THE BOOKS
-  const THICK_MIN = 20;    // px, a note used once
-  const THICK_PER = 7;     // px per square root of the fragrances using it
-  const THICK_MAX = 58;
-  const THICK_JITTER = 9;  // px, so books used equally are not all one thickness
-  const TALL_MIN = 140;    // px
-  const TALL_MAX = 204;    // and every row of the shelf is --row (214px) high
-  const TALL_PER_LETTER = 7.4; // the name has to fit down the spine
-  const TALL_SPARE = 74;   // the band at the head, and the band and call number at the foot
+  // THE FILES: one square at a file's foot for every fragrance using it,
+  // up to this many, and a plus after that.
+  const MARKS_MOST = 18;
 
-  // THE BOOKS ARE DRAWN IN THE PAGE'S WHITE, at these strengths, and
-  // their accord's colour is one mark: the band across the head, in the
-  // same colour as the accord's tab (`HUE`, at `MARK_SAT` and
-  // `MARK_LIGHT`). The returns cart's books have no colour at all.
+  // THE PAGE'S WHITE, and each accord's colour (`HUE`, at `MARK_SAT` and
+  // `MARK_LIGHT`) as the card's mark spends it. The returns cart has no
+  // colour at all.
   const LINE = "236, 236, 236";
   const MARK_SAT = 45, MARK_LIGHT = 58;
   const markColour = (code) => code === "RET" || HUE[code] == null
@@ -211,25 +208,19 @@
   }
 
   // ============================================================
-  // STANDING THE BOOKS UP
+  // FILING THE RECORDS: every record a file folder in its accord's box.
+  // Its TAB stands in one of three places across its top, in turn, as
+  // the tabs of a drawer's folders do; the tab carries its file number,
+  // and its edge the accord's colour. At its foot, a small square for
+  // every fragrance using the note.
   // ============================================================
-  let bookNo = 0;
   records.forEach((r) => {
     const el = r.el;
-    const n = Math.max(1, r.keys.size);
-    const thick = Math.min(THICK_MAX,
-      Math.round(THICK_MIN + THICK_PER * Math.sqrt(n) + hash(r.name + "w") * THICK_JITTER));
-    const want = r.name.length * TALL_PER_LETTER + TALL_SPARE;
-    const tall = Math.round(Math.min(TALL_MAX,
-      Math.max(TALL_MIN + hash(r.name) * (TALL_MAX - TALL_MIN) * 0.8, want)));
-    const hue = (HUE[r.code] || 0) + (hash(r.name + "h") - 0.5) * 16;
-    el.style.setProperty("--w", thick + "px");
-    el.style.setProperty("--h", tall + "px");
-    el.style.setProperty("--hue", hue.toFixed(1));
-    el.style.setProperty("--tone", (hash(r.name + "t") * 7 - 3.5).toFixed(2) + "%");
-    el.style.setProperty("--band", String(Math.floor(hash(r.name + "b") * 3)));
+    el.style.setProperty("--hue", String(HUE[r.code] != null ? HUE[r.code] : 0));
+    el.style.setProperty("--tab", String(r.alpha % 3));
     el.dataset.uses = String(r.keys.size);
     el.dataset.call = r.call;
+    if (r.code === "RET") el.classList.add("lib-grey");
 
     const label = document.createElement("span");
     label.className = "lib-call";
@@ -237,243 +228,24 @@
     label.innerHTML = "<b></b><i></i>";
     label.firstChild.textContent = r.code;
     label.lastChild.textContent = r.call.slice(4);
-    el.appendChild(label);
+    el.insertBefore(label, el.firstChild);
 
-    // THE SPINE, in specks, drawn when it first comes near the window.
-    const spine = document.createElement("canvas");
-    spine.className = "lib-spine";
-    spine.setAttribute("aria-hidden", "true");
-    spine.width = 1; spine.height = 1;
-    el.insertBefore(spine, el.firstChild);
-    r.spine = { canvas: spine, w: thick, h: tall };
+    const marks = document.createElement("span");
+    marks.className = "lib-marks";
+    marks.setAttribute("aria-hidden", "true");
+    const n = r.keys.size;
+    marks.style.setProperty("--n", String(Math.min(MARKS_MOST, n)));
+    marks.dataset.more = n > MARKS_MOST ? "+" + (n - MARKS_MOST) : "";
+    el.appendChild(marks);
 
     el.setAttribute("role", "button");
     el.setAttribute("tabindex", "-1");
-    el.setAttribute("aria-label", r.name + ", " + r.call + ". " +
+    el.setAttribute("aria-label", r.name + ", file " + r.call + ". " +
       (r.keys.size === 1 ? "In one fragrance." : "In " + r.keys.size + " fragrances."));
-    // The arrival: shelf by shelf, book by book, and quick about it.
+    // The arrival: box by box, file by file, and quick about it.
     el.style.setProperty("--in", Math.min(900, shelves.indexOf(r.shelf) * 70 + r.alpha * 9) + "ms");
-    bookNo++;
-  });
-  // ============================================================
-  // DRAWING A SPINE — A SKELETON. The owner, 2026-09-26: "take a
-  // minimalist approach with the colour coding of the books and make it
-  // so that they themselves are more skeletal/geometric; matching the
-  // rest of the website (the accords still should be colour coded, that
-  // part can stay)". So a spine is drawn the way the rest of the site
-  // draws things — in hairlines, on the dark: its OUTLINE, the two
-  // BANDS across it near its head and its foot (on some doubled), on
-  // about a third a TITLE PANEL where the name runs and on a few a
-  // RULE down one side instead, and at its foot the LABEL, a hairline
-  // box its call number is printed in. The only colour on it is the
-  // accord's, and only once: THE BAND ACROSS ITS HEAD. Seeded by the
-  // note's name, so every book is its own and the same every visit.
-  //
-  // It was cloth — drawn in thousands of specks for a round, then in
-  // flat shapes ("not granular ... more of a geometric character") — in
-  // a shade of its accord's colour from head to foot, with gilt.
-  // ============================================================
-  function drawSpine(r) {
-    const { canvas: c, w, h } = r.spine;
-    const ratio = drawRatio();
-    c.width = Math.round(w * ratio);
-    c.height = Math.round(h * ratio);
-    const g = c.getContext("2d");
-    if (!g) return;
-    g.setTransform(ratio, 0, 0, ratio, 0, 0);
-    let seed = Math.floor(hash(r.name + "spine") * 4294967295) || 3;
-    const rnd = () => {
-      seed ^= seed << 13; seed >>>= 0;
-      seed ^= seed >>> 17;
-      seed ^= seed << 5; seed >>>= 0;
-      return seed / 4294967296;
-    };
-    const line = (a) => "rgba(" + LINE + "," + a + ")";
-    // A hairline on the pixel grid, so it stays one pixel and sharp.
-    const across = (y, x0, x1, a) => { g.fillStyle = line(a); g.fillRect(x0, y, x1 - x0, 1 / ratio); };
-    const down = (x, y0, y1, a) => { g.fillStyle = line(a); g.fillRect(x, y0, 1 / ratio, y1 - y0); };
-    const frame = (x, y, bw, bh, a) => {
-      across(y, x, x + bw, a); across(y + bh - 1 / ratio, x, x + bw, a);
-      down(x, y, y + bh, a); down(x + bw - 1 / ratio, y, y + bh, a);
-    };
-    const head = 13, foot = h - 37;
-    g.clearRect(0, 0, w, h);
-    // THE BODY: the faintest ground, so the book is a volume and not a
-    // wire, and its OUTLINE.
-    g.fillStyle = line(0.028);
-    g.fillRect(0, 0, w, h);
-    frame(0, 0, w, h, 0.5);
-    // THE ACCORD'S MARK, the only colour: a band across its head.
-    g.fillStyle = markColour(r.code);
-    g.fillRect(0, 0, w, 3);
-    // THE BANDS, near the head and the foot; on some, doubled.
-    const doubled = rnd() < 0.45;
-    [head, foot].forEach((y) => {
-      across(y, 0, w, 0.34);
-      if (doubled) across(y + 3, 0, w, 0.2);
-    });
-    // A TITLE PANEL for some, where the name runs; a RULE down one side
-    // for a few instead.
-    const kind = rnd();
-    if (kind < 0.34) {
-      const px = Math.max(3, Math.round(w * 0.16)), top = head + (doubled ? 9 : 7), bottom = foot - 6;
-      frame(px, top, w - px * 2, bottom - top, 0.2);
-    } else if (kind < 0.46) {
-      down(Math.round(w * 0.76), head + 5, foot - 4, 0.22);
-    }
-    // THE LABEL at the foot: a hairline box its call number is printed in.
-    frame(3, h - 29, w - 6, 22, 0.36);
-    r.spine.drawn = true;
-  }
-  // Drawn as they come near the window rather than all at once: three
-  // hundred and more canvases on arrival would hold the page up.
-  const seeSpine = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (!e.isIntersecting) return;
-      const r = recOf.get(e.target);
-      if (r && !r.spine.drawn) drawSpine(r);
-      seeSpine.unobserve(e.target);
-    });
-  }, { rootMargin: "700px 0px" }) : null;
-
-  // Every shelf ends on a book leaning against the one before it.
-  shelves.forEach((shelf) => {
-    const last = [...shelf.querySelectorAll(".lib-record")].pop();
-    if (last && shelf.querySelectorAll(".lib-record").length > 3) last.classList.add("lib-leans");
   });
   const recOf = new Map(records.map((r) => [r.el, r]));
-  records.forEach((r) => { if (seeSpine) seeSpine.observe(r.el); else drawSpine(r); });
-
-  // ============================================================
-  // THE SHELVES — a board under every row, and nothing else, drawn as
-  // the books are: IN HAIRLINES.
-  //
-  // For one round each accord stood in a bookcase drawn in specks —
-  // uprights, a crown, a back of boards, a plinth — which the owner then
-  // asked to have redesigned without its frame: "remove the bezel of the
-  // bookshelves" (2026-09-25, night). The boards that were left were
-  // flat walnut, lit and shadowed; with the page turned black and white
-  // and the books made skeletons (2026-09-26), a board is a plank DRAWN
-  // AS A DIAGRAM: its back edge, the arris where its top meets its front,
-  // the foot of its front, closed at both ends — a ruler of ticks along
-  // its foot — and on its front, near the left, a LABEL in a hairline box
-  // giving the call numbers standing on that row (CIT 001–013), as a
-  // library's shelves carry. It runs a little past the row either side
-  // and stops.
-  //
-  // Drawn behind the books on a canvas of its own (`.lib-boards`), when
-  // it first comes near the window, and again whenever the rows change —
-  // the width, or the order the books stand in.
-  // ============================================================
-  const BOARD_OUT = 10;     // px the board runs past the row either side
-  const BOARD_TOP = 7;      // px of its top, seen from above
-  const BOARD_FACE = 11;    // px of its front edge
-  const BOARD_TICKS = 24;   // px between the ticks along its foot
-  function drawBoards(holder) {
-    const c = holder.querySelector(".lib-boards");
-    if (!c || !holder.offsetParent) return;
-    const cs = getComputedStyle(holder);
-    const rowH = parseFloat(cs.getPropertyValue("--row")) || 214;
-    const gap = parseFloat(cs.getPropertyValue("--gap")) || 52;
-    const books = [...holder.querySelectorAll(".lib-record")];
-    // Which row each book stands on, read off where it stands.
-    const rows = [];
-    books.forEach((b) => {
-      const k = Math.max(0, Math.round((b.offsetTop + b.offsetHeight - rowH) / (rowH + gap)));
-      (rows[k] = rows[k] || []).push(recOf.get(b));
-    });
-    const n = Math.max(1, rows.length);
-    const out = window.innerWidth < 700 ? 4 : BOARD_OUT;
-    const w = holder.clientWidth + out * 2;
-    const h = (n - 1) * (rowH + gap) + rowH + BOARD_TOP + BOARD_FACE + 6;
-    c.style.left = -out + "px";
-    c.style.top = "0px";
-    c.style.width = w + "px";
-    c.style.height = h + "px";
-    const ratio = drawRatio();
-    c.width = Math.round(w * ratio);
-    c.height = Math.round(h * ratio);
-    const g = c.getContext("2d");
-    if (!g) return;
-    g.setTransform(ratio, 0, 0, ratio, 0, 0);
-    g.clearRect(0, 0, w, h);
-    const code = holder.closest(".lib-shelf").dataset.shelf;
-    const line = (a) => "rgba(" + LINE + "," + a + ")";
-    const hair = 1 / ratio;
-    const mono = getComputedStyle(document.body).getPropertyValue("--mono").trim() || "monospace";
-    for (let k = 0; k < n; k++) {
-      const top = k * (rowH + gap) + rowH;
-      const arris = top + BOARD_TOP, base = arris + BOARD_FACE;
-      // The faintest ground to its front, then its edges.
-      g.fillStyle = line(0.03);
-      g.fillRect(0, arris, w, BOARD_FACE);
-      g.fillStyle = line(0.3); g.fillRect(0, top, w, hair);
-      g.fillStyle = line(0.62); g.fillRect(0, arris, w, hair);
-      g.fillStyle = line(0.4); g.fillRect(0, base - hair, w, hair);
-      g.fillStyle = line(0.4);
-      g.fillRect(0, top, hair, BOARD_TOP + BOARD_FACE);
-      g.fillRect(w - hair, top, hair, BOARD_TOP + BOARD_FACE);
-      // A ruler of ticks along its foot.
-      g.fillStyle = line(0.22);
-      for (let x = BOARD_TICKS; x < w - 4; x += BOARD_TICKS) g.fillRect(x, base, hair, 4);
-      // The label, if the row holds anything.
-      const row = rows[k];
-      if (!row || !row.length) continue;
-      const nums = row.map((r) => parseInt(r.call.slice(4), 10)).sort((p, q) => p - q);
-      const text = code + " " + String(nums[0]).padStart(3, "0") + (nums.length > 1 ? "–" + String(nums[nums.length - 1]).padStart(3, "0") : "");
-      const lw = 88, lh = 9, lx = out + 14, ly = arris + (BOARD_FACE - lh) / 2;
-      g.fillStyle = "rgb(11, 11, 12)";
-      g.fillRect(lx, ly, lw, lh);
-      g.strokeStyle = line(0.45);
-      g.lineWidth = hair;
-      g.strokeRect(lx + hair / 2, ly + hair / 2, lw - hair, lh - hair);
-      g.fillStyle = line(0.8);
-      g.font = "500 7px " + mono;
-      g.textAlign = "center";
-      g.textBaseline = "middle";
-      g.fillText(text, lx + lw / 2, ly + lh / 2 + 0.5);
-    }
-    holder.dataset.rows = String(n);
-    c.dataset.drawn = "1";
-  }
-  const holders = shelves.map((s) => s.querySelector(".lib-records")).filter(Boolean);
-  holders.forEach((holder) => {
-    const c = document.createElement("canvas");
-    c.className = "lib-boards";
-    c.setAttribute("aria-hidden", "true");
-    c.width = 1; c.height = 1;
-    holder.insertBefore(c, holder.firstChild);
-  });
-  /** Redraw the cases that have been drawn (and any near the window). */
-  function drawAllBoards() {
-    holders.forEach((holder) => {
-      const c = holder.querySelector(".lib-boards");
-      // One folded away by the terminal is drawn again when it comes back.
-      if (!holder.offsetParent) c.dataset.stale = "1";
-      else if (c.dataset.drawn || !seeBoards) drawBoards(holder);
-    });
-  }
-  const seeBoards = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      const c = e.target.querySelector(".lib-boards");
-      if (!e.isIntersecting || (c.dataset.drawn && !c.dataset.stale)) return;
-      delete c.dataset.stale;
-      drawBoards(e.target);
-    });
-  }, { rootMargin: "700px 0px" }) : null;
-  if (seeBoards) holders.forEach((holder) => seeBoards.observe(holder));
-  else drawAllBoards();
-  // AGAIN WHEN THE ROWS CHANGE: the width (and so where they wrap).
-  let boardsWidth = window.innerWidth, boardsTimer = 0;
-  window.addEventListener("resize", () => {
-    if (window.innerWidth === boardsWidth) return;
-    boardsWidth = window.innerWidth;
-    clearTimeout(boardsTimer);
-    boardsTimer = setTimeout(drawAllBoards, 160);
-  });
-  // The monospace the labels are printed in may arrive after the first
-  // drawing.
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawAllBoards);
 
   // ============================================================
   // THE CHROME IN FRONT OF THE STACKS
@@ -489,7 +261,7 @@
   const shelved = records.filter((r) => r.code !== "RET");
   const most = shelved.reduce((a, b) => (b.keys.size > a.keys.size ? b : a), shelved[0]);
   const figures = [
-    ["Records", shelved.length],
+    ["Files", shelved.length],
     ["Accords", shelves.filter((s) => s.dataset.shelf !== "RET").length],
     ["Fragrances", fragrances.size],
     ["Most used", most ? most.name : "—", most ? "in " + most.keys.size + " fragrances" : ""],
@@ -525,15 +297,19 @@
       '<input class="lib-query" id="lib-query" type="search" autocomplete="off" spellcheck="false"' +
       ' placeholder="type a note, like cedar or tonka" aria-label="Search the Note Library">' +
       '<output class="lib-count" aria-live="polite"></output>' +
+      // THE ×, to clear the search at once — the owner's "a little X to
+      // reset the search on the right side of the bar".
+      '<button type="button" class="lib-clear" aria-label="Clear the search" disabled>' +
+        '<span aria-hidden="true"></span></button>' +
     '</form>' +
     '<div class="lib-tools">' +
       '<div class="lib-order" role="group" aria-label="Order the accords">' +
         '<button type="button" class="lib-order-by is-on" data-order="alpha">A–Z</button>' +
         '<button type="button" class="lib-order-by" data-order="uses">Most used</button>' +
       '</div>' +
-      '<button type="button" class="lib-random">Pull a random book</button>' +
+      '<button type="button" class="lib-random">Pull a random file</button>' +
     '</div>' +
-    '<p class="lib-nothing" hidden>No record answers that. <a class="lib-elsewhere" href="#">Search the whole site →</a></p>';
+    '<p class="lib-nothing" hidden>No file answers that. <a class="lib-elsewhere" href="#">Search the whole site →</a></p>';
 
   const index = document.createElement("nav");
   index.className = "lib-index";
@@ -567,23 +343,22 @@
   const stacks = document.createElement("div");
   stacks.className = "lib-stacks";
   index.after(stacks);
-  shelves.forEach((s) => {
+  // THE BOX'S LID carries its number and how many files are in it.
+  shelves.forEach((s, k) => {
     const n = s.querySelectorAll(".lib-record").length;
     const plate = s.querySelector(".lib-plate");
+    const box = document.createElement("p");
+    box.className = "lib-box-no";
+    box.textContent = "Box " + String(k + 1).padStart(2, "0");
     const count = document.createElement("p");
     count.className = "lib-shelf-count";
-    count.textContent = n === 1 ? "1 record" : n + " records";
-    s.style.setProperty("--hue", String(HUE[s.dataset.shelf] || 0));
+    count.textContent = n === 1 ? "1 file" : n + " files";
+    s.style.setProperty("--hue", String(HUE[s.dataset.shelf] != null ? HUE[s.dataset.shelf] : 0));
+    if (s.dataset.shelf === "RET") s.classList.add("lib-grey");
+    plate.prepend(box);
     plate.appendChild(count);
     stacks.appendChild(s);
   });
-
-  // The slip that names a book in full while it is pointed at: a name
-  // down a thin spine is cut short, and this is where it is read.
-  const slip = document.createElement("div");
-  slip.className = "lib-slip";
-  slip.setAttribute("aria-hidden", "true");
-  library.appendChild(slip);
 
   // The lamp stands over the stacks in the window.
   const lamp = document.createElement("div");
@@ -595,17 +370,27 @@
   const card = document.createElement("aside");
   card.className = "lib-card";
   card.hidden = true;
-  card.setAttribute("aria-label", "Catalogue card");
+  card.setAttribute("aria-label", "Case file");
+  // A CASE FILE: typed headings, a stamp across its head, and the mark
+  // clipped in as the exhibit.
   card.innerHTML =
     '<div class="lib-card-top">' +
+      '<span class="lib-card-kind">Case file</span>' +
       '<span class="lib-card-call"></span>' +
-      '<button type="button" class="lib-card-close" aria-label="Put the book back">×</button>' +
+      '<button type="button" class="lib-card-close" aria-label="Put the file back">×</button>' +
     '</div>' +
-    '<canvas class="lib-card-mark" aria-hidden="true"></canvas>' +
-    '<p class="lib-card-shelf"></p>' +
+    '<p class="lib-card-stamp" aria-hidden="true">Declassified</p>' +
+    '<figure class="lib-card-exhibit">' +
+      '<span class="lib-card-clip" aria-hidden="true"></span>' +
+      '<canvas class="lib-card-mark" aria-hidden="true"></canvas>' +
+      '<figcaption class="lib-card-caption"></figcaption>' +
+    '</figure>' +
+    '<p class="lib-card-label">Subject</p>' +
     '<h2 class="lib-card-name" tabindex="-1"></h2>' +
+    '<p class="lib-card-shelf"></p>' +
+    '<p class="lib-card-label">Summary</p>' +
     '<p class="lib-card-say"></p>' +
-    '<details class="lib-card-aka lib-drop" data-drop="aka"><summary><span class="lib-drop-name">Also catalogued as</span>' +
+    '<details class="lib-card-aka lib-drop" data-drop="aka"><summary><span class="lib-drop-name">Aliases</span>' +
       '<span class="lib-found-count"></span></summary><ul></ul></details>' +
     '<div class="lib-card-found"><h3></h3><div class="lib-card-list"></div></div>' +
     '<div class="lib-card-steps">' +
@@ -645,12 +430,13 @@
   // ============================================================
   const query = desk.querySelector(".lib-query");
   const count = desk.querySelector(".lib-count");
+  const clear = desk.querySelector(".lib-clear");
   const nothing = desk.querySelector(".lib-nothing");
   const elsewhere = desk.querySelector(".lib-elsewhere");
   let onShelf = "";
   let hits = [];
 
-  // DIRECT WORDS ONLY — the owner's rule. A book answers when every
+  // DIRECT WORDS ONLY — the owner's rule. A file answers when every
   // word typed IS a word in its name or in one of the other spellings
   // folded into it (a plural counts as the word): "cedar" finds Cedar
   // Leaf and Cedarwood, which is also spelled Cedar; "tonka" finds Tonka.
@@ -701,12 +487,18 @@
     });
     const total = pool.length;
     count.textContent = q ? hits.length + " / " + total : total + " records";
+    clear.disabled = !query.value;
     nothing.hidden = !q || hits.length > 0;
     elsewhere.href = S ? S.siteSearchHref(root, q) : root + "search.html";
     rove();
   }
 
   query.addEventListener("input", show);
+  clear.addEventListener("click", () => {
+    query.value = "";
+    show();
+    query.focus();
+  });
   desk.querySelector(".lib-terminal").addEventListener("submit", (event) => {
     event.preventDefault();
     if (hits[0]) open(hits[0], true);
@@ -729,8 +521,8 @@
     }
   }));
 
-  // THE ORDER a shelf's books stand in. The call numbers do not change:
-  // they are where a book belongs, not where it happens to be standing.
+  // THE ORDER a box's files stand in. The file numbers do not change:
+  // they are where a file belongs, not where it happens to be standing.
   desk.querySelectorAll(".lib-order-by").forEach((b) => b.addEventListener("click", () => {
     desk.querySelectorAll(".lib-order-by").forEach((x) => x.classList.toggle("is-on", x === b));
     const byUse = b.dataset.order === "uses";
@@ -738,11 +530,8 @@
       const holder = s.querySelector(".lib-records");
       const mine = records.filter((r) => r.shelf === s);
       mine.sort((a, c) => byUse ? (c.keys.size - a.keys.size || a.alpha - c.alpha) : a.alpha - c.alpha);
-      mine.forEach((r) => { r.el.classList.remove("lib-leans"); holder.appendChild(r.el); });
-      if (mine.length > 3) mine[mine.length - 1].el.classList.add("lib-leans");
+      mine.forEach((r) => holder.appendChild(r.el));
     });
-    // The rows hold other books now, and the labels say so.
-    drawAllBoards();
     rove();
   }));
 
@@ -755,7 +544,7 @@
   });
 
   // ============================================================
-  // FINDING YOUR WAY ALONG THE SHELVES BY KEYBOARD — one book in the
+  // FINDING YOUR WAY THROUGH THE BOXES BY KEYBOARD — one file in the
   // whole stacks takes the tab, and the arrows walk along them.
   // ============================================================
   function visible() {
@@ -796,41 +585,13 @@
     open(recOf.get(el), false);
   });
 
-  // THE SLIP, over whatever book is pointed at or focused
-  function slipOver(el) {
-    if (!el) { slip.classList.remove("is-on"); return; }
-    const r = recOf.get(el);
-    const box = el.getBoundingClientRect();
-    const lib = library.getBoundingClientRect();
-    slip.textContent = "";
-    const b = document.createElement("b");
-    b.textContent = r.name;
-    const small = document.createElement("small");
-    small.textContent = r.call + " · " + (r.keys.size === 1 ? "1 fragrance" : r.keys.size + " fragrances");
-    slip.append(b, small);
-    slip.style.setProperty("--hue", el.style.getPropertyValue("--hue"));
-    const left = box.left + box.width / 2 - lib.left;
-    slip.style.left = Math.max(80, Math.min(lib.width - 80, left)) + "px";
-    slip.style.top = (box.top - lib.top) + "px";
-    slip.classList.add("is-on");
-  }
-  stacks.addEventListener("pointerover", (event) => {
-    const el = event.target.closest(".lib-record");
-    if (el && event.pointerType !== "touch") slipOver(el);
-  });
-  stacks.addEventListener("pointerleave", () => slipOver(null));
-  stacks.addEventListener("focusin", (event) => {
-    const el = event.target.closest(".lib-record");
-    if (el) slipOver(el);
-  });
-  stacks.addEventListener("focusout", () => slipOver(null));
-
   // ============================================================
   // THE CARD
   // ============================================================
   let current = null;
   let typing = 0;
   const cardCall = card.querySelector(".lib-card-call");
+  const cardCaption = card.querySelector(".lib-card-caption");
   const cardShelf = card.querySelector(".lib-card-shelf");
   const cardName = card.querySelector(".lib-card-name");
   const cardSay = card.querySelector(".lib-card-say");
@@ -865,8 +626,8 @@
       dust.push({ a, d, s: 0.7 + rnd() * 0.9, o: 0.12 + rnd() * 0.35, w: (rnd() - 0.5) * 0.4 });
     }
     // In the page's white, with the accord's colour on the ring's specks
-    // alone — one for every fragrance — as a book carries it only on its
-    // head (2026-09-26, black and white).
+    // alone — one for every fragrance — as a file carries it only on its
+    // tab (2026-09-26, black and white).
     return { ring, dust, colour: markColour(r.code) };
   }
   function drawMark(t) {
@@ -924,6 +685,7 @@
     card.style.setProperty("--hue", r.el.style.getPropertyValue("--hue"));
 
     cardCall.textContent = r.call;
+    cardCaption.textContent = "Exhibit A · " + (r.keys.size === 1 ? "1 appearance" : r.keys.size + " appearances");
     markOf = markFor(r);
     if (!markFrame) markFrame = requestAnimationFrame(markLoop);
     cardShelf.textContent = "Accord " + r.code + " — " + r.shelfName;
@@ -1048,7 +810,7 @@
     });
     byHouse.forEach((nos) => nos.sort());
     const h3 = cardFound.querySelector("h3");
-    h3.textContent = r.keys.size === 1 ? "Found in 1 fragrance" : "Found in " + r.keys.size + " fragrances";
+    h3.textContent = "Known appearances · " + String(r.keys.size).padStart(2, "0");
     const list = cardFound.querySelector(".lib-card-list");
     list.textContent = "";
     cardFound.hidden = !r.keys.size;
