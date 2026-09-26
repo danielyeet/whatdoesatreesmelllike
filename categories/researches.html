@@ -21,14 +21,19 @@
   top left, and the list itself under them — the left three fifths of
   the window — scrolling inside its own box with its headings stuck to
   the top. The right two fifths are THE FIELD, a drawing in specks that
-  the table conducts (explorations.js): with nothing pointed at, the
-  specks turn in a slow ring; point at a row and they are thrown out and
-  gather into that work's own FIGURE. The owner, 2026-09-26: "Delete the
-  right side of the page, and move the table upwards ... On the right
+  the table conducts (explorations.js): a cloud of specks turning in
+  three dimensions, a ring while nothing is pointed at; point at a row
+  and they are thrown out and gather into that row's FORM — an abstract
+  one, a sphere, a knot, a helix and so on, given by the row's number —
+  and an Untitled row is the plain cloud. The owner, 2026-09-26: "Delete
+  the right side of the page, and move the table upwards ... On the right
   side, I want you to make something extravagant with the particles that
-  reacts ot the thing being hovered on the left". (The right side was a
-  line of text and two plates, the first a drawn ring; the heading over
-  the paragraph said "Information". All three went.)
+  reacts ot the thing being hovered on the left", and then "a general
+  abstract geometric particulate thing". (The right side was a line of
+  text and two plates, the first a drawn ring; the heading over the
+  paragraph said "Information". All three went. For one round each work
+  had a figure of its own — a pyramid, a bottle, two smokes — which went
+  too.)
 
   TO ADD A WORK: copy one whole <tr> below. What a row carries is
   written ON the row (data-no, data-name, data-kind, data-date) and not
@@ -37,11 +42,8 @@
   data-kind is either "Research" (gone and found out, written up) or
   "Exploration" (gone and had a look), and it is what the third column
   reads.
-  data-figure names the figure the field gathers into when the row is
-  pointed at: pyramid, resin, bottle, smoke, forest, rain or cloud. A row
-  without one gets one by its kind — a Research a MOLECULE and an
-  Exploration a TERRAIN, each worked out from the row's own name, so no
-  two are alike — and a row that is neither yet is the cloud.
+  Nothing on a row says what the field draws for it: its form comes from
+  its number, so a new row needs nothing for it.
   A row with data-open="no" is one that hasn't been written yet: it is
   drawn quieter and is not a link.
 
@@ -98,13 +100,13 @@
           <!-- 000, at the owner's word: "make it 000. It should be the
                first result." A number of nought sorts before every other,
                so it stands first however the table is sorted by number. -->
-          <tr data-no="0" data-figure="pyramid" data-name="My Personal Introduction to Perfume" data-kind="Exploration" data-date="2026-09-23">
+          <tr data-no="0" data-name="My Personal Introduction to Perfume" data-kind="Exploration" data-date="2026-09-23">
             <td class="index-no">000</td>
             <td class="index-what"><a href="../works/my-personal-introduction-to-perfume.html">My Personal Introduction to Perfume</a></td>
             <td class="index-kind">Exploration</td>
             <td class="index-date">23.09.2026</td>
           </tr>
-          <tr data-no="1" data-figure="resin" data-name="Resins in Perfumery" data-kind="Research" data-date="2026-02-14">
+          <tr data-no="1" data-name="Resins in Perfumery" data-kind="Research" data-date="2026-02-14">
             <td class="index-no">001</td>
             <td class="index-what"><a href="../works/resins-in-perfumery.html">Resins in Perfumery</a></td>
             <td class="index-kind">Research</td>
@@ -115,25 +117,25 @@
                Exploration' Make it be 002." The three after it moved
                down one, and the first of the empty rows went to make
                room, so the table still runs 000 to 009. -->
-          <tr data-no="2" data-figure="bottle" data-name="Buying A Perfume - A Philosophical Exploration" data-kind="Exploration" data-date="2026-09-26">
+          <tr data-no="2" data-name="Buying A Perfume - A Philosophical Exploration" data-kind="Exploration" data-date="2026-09-26">
             <td class="index-no">002</td>
             <td class="index-what"><a href="../works/buying-a-perfume.html">Buying A Perfume - A Philosophical Exploration</a></td>
             <td class="index-kind">Exploration</td>
             <td class="index-date">26.09.2026</td>
           </tr>
-          <tr data-no="3" data-figure="smoke" data-name="Cold vs Warm Incense" data-kind="Exploration" data-date="2026-09-21">
+          <tr data-no="3" data-name="Cold vs Warm Incense" data-kind="Exploration" data-date="2026-09-21">
             <td class="index-no">003</td>
             <td class="index-what"><a href="../works/cold-vs-warm-incense.html">Cold vs Warm Incense</a></td>
             <td class="index-kind">Exploration</td>
             <td class="index-date">21.09.2026</td>
           </tr>
-          <tr data-no="4" data-figure="forest" data-name="Exploring the smell of a forest part 1" data-kind="Exploration" data-date="" data-open="no">
+          <tr data-no="4" data-name="Exploring the smell of a forest part 1" data-kind="Exploration" data-date="" data-open="no">
             <td class="index-no">004</td>
             <td class="index-what">Exploring the smell of a forest part 1</td>
             <td class="index-kind">Exploration</td>
             <td class="index-date">—</td>
           </tr>
-          <tr data-no="5" data-figure="rain" data-name="Exploring the smell of rain part 1" data-kind="Exploration" data-date="" data-open="no">
+          <tr data-no="5" data-name="Exploring the smell of rain part 1" data-kind="Exploration" data-date="" data-open="no">
             <td class="index-no">005</td>
             <td class="index-what">Exploring the smell of rain part 1</td>
             <td class="index-kind">Exploration</td>

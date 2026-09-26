@@ -5,37 +5,41 @@
 // the table upwards, so that it takes up abour 3/5ths of the page on the
 // left ... On the right side, I want you to make something extravagant
 // with the particles that reacts ot the thing being hovered on the left
-// (in the table). Make it reactive and on theme."
+// (in the table)." And then, of the first answer — a figure for each
+// work, a pyramid, a bottle, two smokes — "REmove the research specific
+// stuff; and make it more so a general abstract geometric particulate
+// thing. The closest thing to waht i like is the cloud when you hover the
+// untitled researches/Explorations (and when you hover nothing).
+// re-interpret it and do that please."
 //
-// So the right two fifths of the page are one drawing in specks, and the
-// table on the left conducts it. With nothing pointed at, the specks turn
-// in THE RING — the slow orbit this page's first plate carried, printed
-// small, until the plates went. Point at a row and the specks are thrown
-// out from the middle and gather into THAT WORK'S FIGURE, each on a clock
-// of its own, so the change sweeps through the field rather than snapping:
+// So everything the field draws is A CLOUD: a soft haze of specks,
+// gathered round a GEOMETRIC FORM, standing in three dimensions and
+// turning slowly about a tilted axis — the nearer specks larger and
+// darker, the further ones fainter — with a faint WEB of hairlines strung
+// between a few of them where they come near each other. With nothing
+// pointed at it is THE RING, a band of specks turning round the middle;
+// point at a row and the specks are thrown out and gather into that row's
+// form, each on a clock of its own, so the change sweeps through the field
+// rather than snapping. The forms are abstract and belong to no work in
+// particular:
 //
-//   pyramid   the primer's own pyramid — a triangle cut into top, heart
-//             and base — its top lifting off as a top note does
-//   resin     a tear of resin, full, with bubbles caught in it
-//   bottle    a bottle, the liquid in it moving, a mist from its cap
-//   smoke     two sticks of incense: a cold plume that stands straight
-//             and thin, and a warm one that billows
-//   forest    firs
-//   rain      rain, ringing where it lands
-//   cloud     specks with nowhere to be yet
+//   sphere     a shell               torus      a ring of a tube, tipped
+//   knot       a trefoil             helix      two strands wound together
+//   disc       a spiral of arms      lattice    the edges of a cube
+//   gyre       three rings crossed   saddle     a surface curving two ways
+//   shells     three, nested         hourglass  two cones, point to point
 //
-// A ROW NAMES ITS FIGURE in `data-figure`. A row that names none is given
-// one by its KIND: a Research is a MOLECULE — rings of atoms joined by
-// bonds, a material at a time — and an Exploration a TERRAIN, contour
-// lines with a route across them; both are worked out from the row's own
-// name, so no two are alike. A row that is neither yet is the cloud. A row
-// with nothing behind it (data-open="no") is drawn quieter. Under the
-// drawing, its CAPTION: the number, the name, the kind.
+// A row is given a form by its NUMBER, in that order and round again, so
+// every row keeps its own and the ones next to each other differ; a row
+// with no name and no kind yet (Untitled) is THE CLOUD, the one form with
+// no shape in it. A row with nothing behind it (data-open="no") is drawn
+// at half strength. Under the drawing, its CAPTION: the number, the name,
+// the kind.
 //
-// The pointer answers over the field too: the specks near it part and
-// darken. On a screen with no hovering the figures take turns on their
-// own, and a tap on a row shows that one. With reduced motion there is no
-// flight: each figure is simply there, drawn once.
+// The pointer answers over the field as well: the specks near it part
+// and darken. On a screen with no hovering the written works take turns,
+// and a tap on a row shows that one. With reduced motion nothing moves:
+// each form is simply there, drawn once, turned to the same angle.
 // ============================================================
 (function () {
   const field = document.querySelector(".re-field");
@@ -54,21 +58,20 @@
   const DAMP = 0.84;                   // and how much of its way it keeps
   const SPREAD = 520;                  // ms over which a change reaches every speck
   const KICK = 5.5;                    // px a frame, thrown out from the middle on a change
-  const LINES_IN = 700;                // ms for a figure's hairlines to come up once it gathers
   const IDLE_AFTER = 650;              // ms off the table before the ring comes back
-  const TURNS = 5200;                  // ms each figure stands, taking turns without a pointer
+  const TURNS = 5200;                  // ms each form stands, taking turns without a pointer
   const PART = 74;                     // px the pointer parts the specks within
+  const SPIN = 0.00012;                // radians a millisecond the whole field turns
+  const TILT = 0.38;                   // radians its axis leans towards you
+  const FOCAL = 3.2;                   // the perspective: larger is flatter
+  const HAZE = 0.12;                   // share of every form's specks left loose round it
+  const WEB = 90;                      // specks the web is strung between
+  const WEB_REACH = 58;                // px within which two of them are joined
 
   // ============================================================
-  // SEEDED NUMBERS. Every speck has four of its own, fixed, so a figure
-  // is the same figure every time it is gathered; a figure worked out
-  // from a name is seeded by that name.
+  // SEEDED NUMBERS. Every speck has four of its own, fixed, so a form is
+  // the same form every time it is gathered.
   // ============================================================
-  const hash = (text) => {
-    let h = 2166136261;
-    for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return h >>> 0;
-  };
   const stream = (seed) => {
     let s = seed || 1;
     return () => {
@@ -77,11 +80,11 @@
     };
   };
 
-  let N = 0, X, Y, VX, VY, R1, R2, R3, R4, GO;
-  // What each speck was last told — how strongly to be drawn, how big,
-  // and whether as a stroke — kept from moving it to drawing it, so its
-  // figure is asked once a frame and not twice.
-  let A, Z, K;
+  let N = 0, X, Y, VX, VY, R1, R2, R3, R4, GO, A, Z;
+  // The specks the web is strung between: picked at random from the whole
+  // cloud, since a form places its specks in order and the first few of a
+  // sphere, say, all stand at one pole.
+  let STRUNG = [];
   function make(n) {
     N = n;
     X = new Float32Array(n); Y = new Float32Array(n);
@@ -89,412 +92,146 @@
     R1 = new Float32Array(n); R2 = new Float32Array(n);
     R3 = new Float32Array(n); R4 = new Float32Array(n);
     GO = new Float64Array(n);
-    A = new Float32Array(n); Z = new Float32Array(n); K = new Uint8Array(n);
+    // How strongly each speck was last drawn, and how big — its depth.
+    A = new Float32Array(n); Z = new Float32Array(n);
     const rnd = stream(907);
     for (let i = 0; i < n; i++) {
       R1[i] = rnd(); R2[i] = rnd(); R3[i] = rnd(); R4[i] = rnd();
       // They arrive from everywhere on the field.
       X[i] = rnd() * W; Y[i] = rnd() * H;
     }
+    const picked = new Set();
+    while (picked.size < Math.min(WEB, n)) picked.add(Math.floor(rnd() * n));
+    STRUNG = [...picked];
   }
 
   // ============================================================
-  // THE FIGURES. Each places speck `i` at time `t` in the figure's own
-  // square, x and y from -1 to 1 (y down): o[0], o[1], how strongly it
-  // is drawn (o[2], 0–1) and how big (o[3]). `lines` draws its hairlines,
-  // and `streak` draws its specks as short falling strokes.
+  // THE FORMS. Each gives speck `i` a place in three dimensions, in a box
+  // from -1 to 1 each way, worked out once and kept. A share of every form
+  // (`HAZE`) is left loose round it as a faint cloud, and every place is
+  // blurred a little (`fuzz`), so each form is a cloud with a shape in it
+  // rather than a hard figure.
   // ============================================================
-  const at = (o, x, y, a, s) => { o[0] = x; o[1] = y; o[2] = a; o[3] = s == null ? 1 : s; };
-
-  function ring() {
-    const tilt = -0.2, c = Math.cos(tilt), s = Math.sin(tilt);
-    return {
-      at(i, t, o) {
-        if (R2[i] < 0.84) {
-          const a = R1[i] * TAU + t * 0.00009;
-          const r = 0.8 + (R3[i] - 0.5) * 0.14;
-          const x = Math.cos(a) * r, y = Math.sin(a) * r * 0.42 + (R4[i] - 0.5) * 0.04;
-          at(o, x * c - y * s, x * s + y * c, 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(a)));
-        } else {
-          const d = Math.sqrt(R3[i]) * 0.5, b = R4[i] * TAU + t * 0.00004;
-          at(o, Math.cos(b) * d, Math.sin(b) * d * 0.7, 0.3, 0.8);
-        }
-      },
-      lines(k, line) {
-        const pts = [];
-        for (let j = 0; j <= 96; j++) {
-          const a = (j / 96) * TAU, x = Math.cos(a) * 0.8, y = Math.sin(a) * 0.336;
-          pts.push([x * c - y * s, x * s + y * c]);
-        }
-        line(pts, 0.14 * k);
-      },
-    };
-  }
-
-  function pyramid() {
-    const top = -0.86, bottom = 0.74, half = 0.86;
-    const cut1 = -0.3, cut2 = 0.22;
-    const width = (y) => ((y - top) / (bottom - top)) * half;
-    // A point in a slice of the triangle, as dense at its wide end as
-    // its narrow one.
-    const inSlice = (y0, y1, u, v) => {
-      const w0 = width(y0), w1 = width(y1);
-      const q = w1 === w0 ? u : (Math.sqrt(w0 * w0 + u * (w1 * w1 - w0 * w0)) - w0) / (w1 - w0);
-      const y = y0 + (y1 - y0) * q;
-      return [(v * 2 - 1) * width(y), y];
-    };
-    return {
-      at(i, t, o) {
-        const tier = R2[i];
-        if (tier < 0.16) {
-          // THE TOP, lifting off and thinning as a top note does.
-          const [x, y] = inSlice(top + 0.02, cut1, R3[i], R4[i]);
-          const lift = (t * 0.00007 + R1[i]) % 1;
-          at(o, x * (1 + lift * 0.9), y - lift * 0.42, 0.95 * (1 - lift), 0.9);
-        } else if (tier < 0.46) {
-          const [x, y] = inSlice(cut1, cut2, R3[i], R4[i]);
-          at(o, x + Math.sin(t * 0.0011 + R1[i] * 6) * 0.012, y, 0.7);
-        } else {
-          const [x, y] = inSlice(cut2, bottom, R3[i], R4[i]);
-          at(o, x, y, 0.85, 1.1);
-        }
-      },
-      lines(k, line, label) {
-        line([[0, top], [-half, bottom], [half, bottom], [0, top]], 0.5 * k);
-        line([[-width(cut1), cut1], [width(cut1), cut1]], 0.35 * k);
-        line([[-width(cut2), cut2], [width(cut2), cut2]], 0.35 * k);
-        label("TOP", width((top + cut1) / 2) + 0.14, (top + cut1) / 2, k);
-        label("HEART", width((cut1 + cut2) / 2) + 0.14, (cut1 + cut2) / 2, k);
-        label("BASE", width((cut2 + bottom) / 2) + 0.14, (cut2 + bottom) / 2, k);
-      },
-    };
-  }
-
-  function resin() {
-    const b = 0.88, cx = 0, cy = 0.3;
-    const edge = (th) => [0.66 * Math.sin(th) * Math.sin(th / 2), -b * Math.cos(th)];
-    const bubbles = [[-0.14, 0.18, 0.08], [0.18, 0.46, 0.06], [0.02, 0.62, 0.045], [0.12, -0.06, 0.035]];
-    return {
-      at(i, t, o) {
-        if (R2[i] < 0.3) {
-          const [x, y] = edge(R1[i] * TAU);
-          at(o, x, y, 0.85);
-          return;
-        }
-        // The fill, turning very slowly inside the tear.
-        const th = R1[i] * TAU + Math.sin(t * 0.00025 + R4[i] * 6) * 0.08;
-        const [ex, ey] = edge(th);
-        const q = Math.sqrt(R3[i]) * 0.94;
-        let x = cx + (ex - cx) * q, y = cy + (ey - cy) * q;
-        // Caught against a bubble, a speck stands on its rim.
-        for (const [bx, by, br] of bubbles) {
-          const dx = x - bx, dy = y - by, d = Math.hypot(dx, dy);
-          if (d < br) {
-            const f = d > 0.0001 ? br / d : 1;
-            x = bx + dx * f; y = by + (d > 0.0001 ? dy * f : br);
-            at(o, x, y, 0.9, 0.9);
-            return;
-          }
-        }
-        at(o, x, y, 0.35 + 0.5 * q, 0.85);
-      },
-      lines(k, line) {
-        const pts = [];
-        for (let j = 0; j <= 80; j++) pts.push(edge((j / 80) * TAU));
-        line(pts, 0.4 * k);
-        bubbles.forEach(([bx, by, br]) => {
-          const ring = [];
-          for (let j = 0; j <= 24; j++) ring.push([bx + Math.cos((j / 24) * TAU) * br, by + Math.sin((j / 24) * TAU) * br]);
-          line(ring, 0.28 * k);
-        });
-      },
-    };
-  }
-
-  function bottle() {
-    // Its outline, clockwise from the top of the cap.
-    const outline = [
-      [-0.2, -0.62], [0.2, -0.62], [0.2, -0.32], [0.12, -0.32], [0.12, -0.18],
-      [0.46, -0.1], [0.5, -0.02], [0.5, 0.84], [-0.5, 0.84], [-0.5, -0.02], [-0.46, -0.1],
-      [-0.12, -0.18], [-0.12, -0.32], [-0.2, -0.32], [-0.2, -0.62],
-    ];
-    const lengths = [0];
-    for (let j = 1; j < outline.length; j++) {
-      lengths.push(lengths[j - 1] + Math.hypot(outline[j][0] - outline[j - 1][0], outline[j][1] - outline[j - 1][1]));
-    }
-    const total = lengths[lengths.length - 1];
-    const along = (u) => {
-      const d = u * total;
-      let j = 1;
-      while (j < lengths.length - 1 && lengths[j] < d) j++;
-      const q = (d - lengths[j - 1]) / (lengths[j] - lengths[j - 1] || 1);
-      return [outline[j - 1][0] + (outline[j][0] - outline[j - 1][0]) * q, outline[j - 1][1] + (outline[j][1] - outline[j - 1][1]) * q];
-    };
-    const level = (x, t) => 0.3 + Math.sin(x * 3.2 + t * 0.0014) * 0.03;
-    return {
-      at(i, t, o) {
-        const part = R2[i];
-        if (part < 0.46) {
-          const [x, y] = along(R1[i]);
-          at(o, x, y, 0.9);
-        } else if (part < 0.8) {
-          // THE LIQUID, its surface moving.
-          const x = -0.46 + R1[i] * 0.92;
-          const top = level(x, t);
-          at(o, x, top + R3[i] * (0.82 - top), 0.45 + 0.35 * R4[i], 0.9);
-        } else {
-          // THE MIST from its cap, rising and opening out.
-          const s = (t * 0.00011 + R1[i]) % 1;
-          const x = (R3[i] - 0.5) * 0.1 + (R4[i] - 0.5) * s * 0.9 + Math.sin(s * 5 + R4[i] * 6) * 0.05;
-          at(o, x, -0.66 - s * 0.5, 0.8 * (1 - s), 0.8);
-        }
-      },
-      lines(k, line) {
-        line(outline, 0.5 * k);
-        line([[-0.3, 0.12], [0.3, 0.12], [0.3, 0.46], [-0.3, 0.46], [-0.3, 0.12]], 0.3 * k);
-      },
-    };
-  }
-
-  function smoke() {
-    const L = -0.36, R = 0.36, tip = 0.3, foot = 0.86;
-    return {
-      at(i, t, o) {
-        const part = R2[i];
-        if (part < 0.06) {
-          const x = part < 0.03 ? L : R;
-          at(o, x + (R3[i] - 0.5) * 0.008, tip + R1[i] * (foot - tip), 0.9, 0.9);
-        } else if (part < 0.44) {
-          // THE COLD PLUME: straight and thin, barely moving, opening a
-          // little only at its very top.
-          const s = (t * 0.00014 + R1[i]) % 1;
-          const x = L + Math.sin(s * 7 + t * 0.0005) * 0.035 * s + (R3[i] - 0.5) * (0.018 + 0.1 * s * s * s);
-          at(o, x, tip - 0.02 - s * 1.12, 0.9 * Math.pow(1 - s, 1.1), 0.8);
-        } else {
-          // THE WARM ONE: billowing, curling, opening out as it rises.
-          const s = (t * 0.00011 + R1[i]) % 1;
-          const curl = Math.sin(s * 4.2 + t * 0.001 + R4[i] * 0.9) * 0.24 * s;
-          const x = R + curl + (R3[i] - 0.5) * 0.3 * s * (1 + s) + (R2[i] - 0.72) * 0.05;
-          at(o, x, tip - 0.02 - s * 1.1 + Math.sin(s * 9 + t * 0.0008 + R3[i] * 2) * 0.03, 0.9 * Math.pow(1 - s, 0.8), 1.15);
-        }
-      },
-      lines(k, line, label) {
-        line([[L, tip], [L, foot]], 0.55 * k);
-        line([[R, tip], [R, foot]], 0.55 * k);
-        line([[L - 0.1, foot], [L + 0.1, foot]], 0.4 * k);
-        line([[R - 0.1, foot], [R + 0.1, foot]], 0.4 * k);
-        label("COLD", L - 0.06, foot + 0.1, k);
-        label("WARM", R - 0.06, foot + 0.1, k);
-      },
-    };
-  }
-
-  function forest() {
-    const firs = [[-0.52, 0.8, 1.15], [0.04, 0.8, 1.5], [0.56, 0.8, 1.05]];
-    const tiers = (f) => {
-      const [x, base, tall] = f, out = [];
-      for (let k = 0; k < 3; k++) {
-        const y0 = base - tall * (0.18 + k * 0.26), top = y0 - tall * 0.42, w = tall * (0.3 - k * 0.06);
-        out.push([[x - w, y0], [x, top], [x + w, y0]]);
+  const gauss = (u, v) => Math.sqrt(-2 * Math.log(Math.max(1e-6, u))) * Math.cos(TAU * v);
+  const fib = (k, n) => {
+    const y = 1 - (2 * (k + 0.5)) / n, r = Math.sqrt(Math.max(0, 1 - y * y)), th = Math.PI * (3 - Math.sqrt(5)) * k;
+    return [Math.cos(th) * r, y, Math.sin(th) * r];
+  };
+  const SHAPES = {
+    ring: { fuzz: 0.035, place(i) {
+      if (R2[i] < 0.16) {
+        const d = Math.sqrt(R3[i]) * 0.48, a = R1[i] * TAU;
+        return [Math.cos(a) * d, (R4[i] - 0.5) * 0.12, Math.sin(a) * d];
       }
-      return out;
-    };
-    const all = firs.map(tiers);
-    return {
-      at(i, t, o) {
-        const f = Math.floor(R1[i] * 3), tri = all[f][Math.floor(R2[i] * 3)];
-        const sway = Math.sin(t * 0.0007 + f) * 0.012;
-        if (R3[i] < 0.12) {
-          const [x, base, tall] = firs[f];
-          at(o, x + (R4[i] - 0.5) * 0.02, base - R4[i] * tall * 0.2, 0.8);
-          return;
-        }
-        if (R3[i] < 0.5) {
-          // Its edges, where the needles stand off it a little.
-          const side = R4[i] < 0.5 ? 0 : 1;
-          const [p, q] = side ? [tri[1], tri[2]] : [tri[0], tri[1]];
-          const u = (R3[i] - 0.12) / 0.38;
-          at(o, p[0] + (q[0] - p[0]) * u + sway * (1 - u), p[1] + (q[1] - p[1]) * u + (R2[i] * 3 % 1 - 0.5) * 0.03, 0.8);
-          return;
-        }
-        // And filled, thinner towards the middle of each tier.
-        let u = R4[i], v = (R3[i] - 0.5) * 2;
-        if (u + v > 1) { u = 1 - u; v = 1 - v; }
-        const [a, b, c] = tri;
-        const x = a[0] + (b[0] - a[0]) * u + (c[0] - a[0]) * v;
-        const y = a[1] + (b[1] - a[1]) * u + (c[1] - a[1]) * v;
-        at(o, x + sway * 0.5, y, 0.4, 0.85);
-      },
-      lines(k, line) { all.forEach((fir) => fir.forEach((tri) => line(tri, 0.3 * k))); },
-    };
-  }
-
-  function rain() {
-    const floor = 0.8;
-    const puddles = [[-0.5, 0], [-0.1, 0.33], [0.3, 0.66], [0.6, 0.15], [-0.7, 0.5]];
-    return {
-      streak: true,
-      at(i, t, o) {
-        if (R2[i] < 0.66) {
-          const s = (t * 0.00045 * (0.8 + R3[i] * 0.4) + R4[i]) % 1;
-          at(o, (R1[i] * 2 - 1) * 0.9, -0.95 + s * (floor + 0.95), 0.7, 1);
-        } else {
-          const [px, ph] = puddles[Math.floor(R1[i] * puddles.length)];
-          const s = (t * 0.00035 + ph) % 1;
-          const a = R3[i] * TAU, r = 0.04 + s * 0.24;
-          at(o, px + Math.cos(a) * r, floor + Math.sin(a) * r * 0.24, 0.8 * (1 - s), 0.8);
-          o[4] = 1;
-        }
-      },
-      lines(k, line) { line([[-0.95, floor], [0.95, floor]], 0.3 * k); },
-    };
-  }
-
-  function cloud() {
-    return {
-      at(i, t, o) {
-        // Round and soft: a direction and a distance, most of them near
-        // the middle, each drifting on its own.
-        const a = R1[i] * TAU + t * 0.00003 * (R3[i] - 0.5);
-        const d = (R2[i] * R2[i] * 0.55 + R3[i] * 0.35) * 0.9;
-        const x = Math.cos(a) * d + Math.sin(t * 0.0003 + R4[i] * 6) * 0.04;
-        const y = Math.sin(a) * d * 0.72 + Math.cos(t * 0.00025 + R1[i] * 6) * 0.03;
-        at(o, x, y, 0.45 - d * 0.25, 0.9);
-      },
-      lines: null,
-    };
-  }
-
-  // A MOLECULE for a research, worked out from its name: two to four
-  // six-sided rings fused in a chain, a side chain or two, its atoms
-  // gathered specks and its bonds hairlines.
-  function molecule(name) {
-    const rnd = stream(hash(name) || 3);
-    const rings = 2 + Math.floor(rnd() * 3), side = 0.2;
-    const atoms = [], bonds = [];
-    const key = (p) => p[0].toFixed(3) + "," + p[1].toFixed(3);
-    const index = new Map();
-    const atom = (p) => {
-      const k = key(p);
-      if (!index.has(k)) { index.set(k, atoms.length); atoms.push(p); }
-      return index.get(k);
-    };
-    let cx = 0, cy = 0, turn = 0;
-    for (let r = 0; r < rings; r++) {
-      const ids = [];
-      for (let j = 0; j < 6; j++) {
-        const a = turn + (j / 6) * TAU;
-        ids.push(atom([cx + Math.cos(a) * side, cy + Math.sin(a) * side]));
+      const a = R1[i] * TAU, r = 0.8 + (R3[i] - 0.5) * 0.12;
+      return [Math.cos(a) * r, (R4[i] - 0.5) * 0.05, Math.sin(a) * r];
+    } },
+    cloud: { fuzz: 0, place(i) {
+      const s = 0.36;
+      return [gauss(R1[i], R2[i]) * s, gauss(R2[i], R3[i]) * s * 0.8, gauss(R3[i], R4[i]) * s];
+    } },
+    sphere: { fuzz: 0.03, place(i) {
+      const [x, y, z] = fib(i, N);
+      const r = R2[i] < 0.1 ? 0.3 * Math.cbrt(R3[i]) : 0.78;
+      return [x * r, y * r, z * r];
+    } },
+    // Tipped over at an angle, so it is neither the ring lying down nor,
+    // turned edge on, a band standing up like the helix.
+    torus: { fuzz: 0.03, place(i) {
+      const u = R1[i] * TAU, v = R2[i] * TAU, R = 0.56, r = 0.24, tip = 0.95;
+      const x = (R + r * Math.cos(v)) * Math.cos(u), y = r * Math.sin(v), z = (R + r * Math.cos(v)) * Math.sin(u);
+      return [x, y * Math.cos(tip) - z * Math.sin(tip), y * Math.sin(tip) + z * Math.cos(tip)];
+    } },
+    knot: { fuzz: 0.05, place(i) {
+      const t = R1[i] * TAU, k = 0.25;
+      return [(Math.sin(t) + 2 * Math.sin(2 * t)) * k, (Math.cos(t) - 2 * Math.cos(2 * t)) * k, -Math.sin(3 * t) * k * 1.4];
+    } },
+    helix: { fuzz: 0.03, place(i) {
+      const s = R1[i], strand = i % 2;
+      if (R2[i] < 0.12) {
+        // A rung across, now and then.
+        const s2 = Math.round(s * 18) / 18, a = s2 * TAU * 2.5, u = R3[i];
+        const x0 = Math.cos(a) * 0.42, z0 = Math.sin(a) * 0.42;
+        return [x0 * (1 - 2 * u), (s2 - 0.5) * 1.6, z0 * (1 - 2 * u)];
       }
-      for (let j = 0; j < 6; j++) bonds.push([ids[j], ids[(j + 1) % 6], rnd() < 0.3]);
-      const step = rnd() < 0.5 ? 0 : 1;
-      const a = turn + (step ? TAU / 12 : -TAU / 12);
-      cx += Math.cos(a) * side * Math.sqrt(3);
-      cy += Math.sin(a) * side * Math.sqrt(3);
-    }
-    const chains = 1 + Math.floor(rnd() * 2);
-    for (let c = 0; c < chains; c++) {
-      let from = Math.floor(rnd() * atoms.length);
-      let p = atoms[from], a = rnd() * TAU;
-      for (let s = 0; s < 2; s++) {
-        const q = [p[0] + Math.cos(a) * side, p[1] + Math.sin(a) * side];
-        const to = atom(q);
-        bonds.push([from, to, false]);
-        from = to; p = q; a += (rnd() - 0.5) * 1.6;
+      const a = s * TAU * 2.5 + strand * Math.PI;
+      return [Math.cos(a) * 0.42, (s - 0.5) * 1.6, Math.sin(a) * 0.42];
+    } },
+    disc: { fuzz: 0.02, place(i) {
+      if (R2[i] < 0.14) {
+        const d = Math.cbrt(R3[i]) * 0.18, [x, y, z] = fib(i, N);
+        return [x * d, y * d * 0.6, z * d];
       }
-    }
-    // Centred and scaled to the square.
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    atoms.forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); });
-    const k = 1.5 / Math.max(x1 - x0, y1 - y0, 0.5), mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
-    atoms.forEach((p) => { p[0] = (p[0] - mx) * k; p[1] = (p[1] - my) * k; });
-    return {
-      at(i, t, o) {
-        const jig = Math.sin(t * 0.004 + R4[i] * 30) * 0.006;
-        if (R2[i] < 0.62) {
-          const p = atoms[i % atoms.length];
-          const a = R3[i] * TAU, d = Math.sqrt(R1[i]) * 0.05;
-          at(o, p[0] + Math.cos(a) * d + jig, p[1] + Math.sin(a) * d, 0.95, 1.05);
-        } else {
-          const [a, b] = bonds[i % bonds.length];
-          const u = R1[i];
-          at(o, atoms[a][0] + (atoms[b][0] - atoms[a][0]) * u, atoms[a][1] + (atoms[b][1] - atoms[a][1]) * u + jig, 0.55, 0.8);
-        }
-      },
-      lines(k, line) {
-        bonds.forEach(([a, b, double]) => {
-          line([atoms[a], atoms[b]], 0.45 * k);
-          if (double) {
-            const dx = atoms[b][0] - atoms[a][0], dy = atoms[b][1] - atoms[a][1], d = Math.hypot(dx, dy) || 1;
-            const nx = -dy / d * 0.03, ny = dx / d * 0.03;
-            line([[atoms[a][0] + nx, atoms[a][1] + ny], [atoms[b][0] + nx, atoms[b][1] + ny]], 0.3 * k);
-          }
-        });
-      },
-    };
-  }
+      const arm = i % 3, r = 0.1 + Math.pow(R1[i], 0.7) * 0.8;
+      const a = (arm / 3) * TAU + r * 4.2 + gauss(R3[i], R4[i]) * 0.22 / (r + 0.3);
+      return [Math.cos(a) * r, gauss(R4[i], R3[i]) * 0.03 * (1 - r), Math.sin(a) * r];
+    } },
+    lattice: { fuzz: 0.018, place(i) {
+      const h = 0.52, e = i % 12, u = R1[i] * 2 - 1;
+      const ax = Math.floor(e / 4), c1 = e % 2 ? h : -h, c2 = (e >> 1) % 2 ? h : -h;
+      const p = [0, 0, 0];
+      p[ax] = u * h; p[(ax + 1) % 3] = c1; p[(ax + 2) % 3] = c2;
+      return p;
+    } },
+    gyre: { fuzz: 0.025, place(i) {
+      const a = R1[i] * TAU, r = 0.74, k = i % 3;
+      const c = Math.cos(a) * r, s = Math.sin(a) * r;
+      return k === 0 ? [c, s, 0] : k === 1 ? [c, 0, s] : [0, c, s];
+    } },
+    saddle: { fuzz: 0.02, place(i) {
+      const a = R1[i] * TAU, d = Math.sqrt(R2[i]) * 0.78;
+      const x = Math.cos(a) * d, z = Math.sin(a) * d;
+      return [x, (x * x - z * z) * 1.1, z];
+    } },
+    shells: { fuzz: 0.025, place(i) {
+      const k = i % 3, [x, y, z] = fib(Math.floor(i / 3), Math.ceil(N / 3));
+      const r = [0.3, 0.56, 0.82][k];
+      return [x * r, y * r, z * r];
+    } },
+    hourglass: { fuzz: 0.025, place(i) {
+      const h = R1[i] * 2 - 1, r = Math.abs(h) * 0.58, a = R2[i] * TAU;
+      return [Math.cos(a) * r, h * 0.78, Math.sin(a) * r];
+    } },
+  };
+  // The forms the rows take, by number, in turn.
+  const ORDER = ["sphere", "knot", "torus", "helix", "disc", "lattice", "gyre", "saddle", "shells", "hourglass"];
 
-  // A TERRAIN for an exploration, worked out from its name: two or three
-  // rises, each drawn as rings of contour, and a route across them.
-  function terrain(name) {
-    const rnd = stream(hash(name + "terrain") || 7);
-    const peaks = [];
-    const n = 2 + Math.floor(rnd() * 2);
-    for (let p = 0; p < n; p++) {
-      peaks.push({ x: (rnd() - 0.5) * 1.1, y: (rnd() - 0.5) * 0.9, r: 0.32 + rnd() * 0.28, f: rnd() * TAU, g: rnd() * TAU });
-    }
-    const route = [];
-    const start = [-0.9, (rnd() - 0.5) * 1.2], end = [0.9, (rnd() - 0.5) * 1.2];
-    const bend = [(rnd() - 0.5) * 0.6, (rnd() - 0.5) * 1.4];
-    for (let j = 0; j <= 40; j++) {
-      const u = j / 40, v = 1 - u;
-      route.push([v * v * start[0] + 2 * u * v * bend[0] + u * u * end[0], v * v * start[1] + 2 * u * v * bend[1] + u * u * end[1]]);
-    }
-    const contour = (p, lv, th) => {
-      const r = p.r * lv * (1 + 0.16 * Math.sin(3 * th + p.f) + 0.07 * Math.sin(5 * th + p.g));
-      return [p.x + Math.cos(th) * r, p.y + Math.sin(th) * r * 0.8];
-    };
-    return {
-      at(i, t, o) {
-        if (R2[i] < 0.12) {
-          const p = route[Math.floor(R1[i] * route.length)];
-          at(o, p[0], p[1], 0.9, 1.1);
-          return;
-        }
-        const p = peaks[i % peaks.length], lv = (Math.floor(R3[i] * 5) + 1) / 5;
-        const [x, y] = contour(p, lv, R1[i] * TAU + t * 0.00002 * (lv - 0.5));
-        at(o, x, y, 0.3 + 0.5 * (1 - lv), 0.85);
-      },
-      lines(k, line) {
-        const dashes = [];
-        for (let j = 0; j < route.length - 1; j += 2) dashes.push([route[j], route[j + 1]]);
-        dashes.forEach((d) => line(d, 0.55 * k));
-        line([[start[0] - 0.03, start[1] - 0.03], [start[0] + 0.03, start[1] + 0.03]], 0.6 * k);
-        line([[end[0] - 0.03, end[1] + 0.03], [end[0] + 0.03, end[1] - 0.03]], 0.6 * k);
-        line([[end[0] - 0.03, end[1] - 0.03], [end[0] + 0.03, end[1] + 0.03]], 0.6 * k);
-      },
-    };
-  }
-
-  const NAMED = { pyramid, resin, bottle, smoke, forest, rain, cloud };
   const made = new Map();
-  /** The figure a row asks for, made once and kept. */
-  function figureOf(row) {
-    if (!row) return idle;
-    if (made.has(row)) return made.get(row);
-    const asked = (row.dataset.figure || "").trim();
-    const kind = (row.dataset.kind || "").trim();
-    const name = (row.dataset.name || "").trim();
-    let fig;
-    if (NAMED[asked]) fig = NAMED[asked]();
-    else if (kind === "Research") fig = molecule(name);
-    else if (kind === "Exploration") fig = terrain(name);
-    else fig = cloud();
-    fig.quiet = row.dataset.open === "no";
-    made.set(row, fig);
-    return fig;
+  /** A form's places, worked out once and kept: three numbers a speck. */
+  function formOf(name) {
+    if (made.has(name)) return made.get(name);
+    const shape = SHAPES[name];
+    const P = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      let p;
+      if (name !== "cloud" && name !== "ring" && R4[i] < HAZE) {
+        // The haze round every form: the cloud, wider and fainter.
+        const s = 0.5;
+        p = [gauss(R1[i], R3[i]) * s, gauss(R3[i], R2[i]) * s * 0.8, gauss(R2[i], R1[i]) * s];
+      } else {
+        p = shape.place(i);
+        if (shape.fuzz) {
+          p[0] += gauss(R3[i], R4[i]) * shape.fuzz;
+          p[1] += gauss(R4[i], R1[i]) * shape.fuzz;
+          p[2] += gauss(R1[i], R4[i]) * shape.fuzz;
+        }
+      }
+      P[i * 3] = p[0]; P[i * 3 + 1] = p[1]; P[i * 3 + 2] = p[2];
+    }
+    const form = { name, P, drift: name === "cloud" || name === "ring" };
+    made.set(name, form);
+    return form;
   }
-  const idle = ring();
+
+  /** The form a row takes. */
+  const nameOf = (row) => {
+    if (!row) return "ring";
+    const kind = (row.dataset.kind || "").trim();
+    const named = (row.dataset.name || "").trim();
+    if (!kind && (!named || named === "Untitled")) return "cloud";
+    const no = parseInt(row.dataset.no, 10);
+    return ORDER[((isNaN(no) ? 0 : no) % ORDER.length + ORDER.length) % ORDER.length];
+  };
 
   // ============================================================
   // THE CAPTION under the drawing.
@@ -522,22 +259,25 @@
   // ============================================================
   // WHAT IT IS SHOWING, and the change from one to the next.
   // ============================================================
-  let current = idle, previous = idle, changed = -1e9, shownRow = null;
+  let current = null, previous = null, currentQuiet = 1, previousQuiet = 1;
+  let shownRow = null;
   let W = 0, H = 0, ratio = 1, S = 1, CX = 0, CY = 0;
 
   function show(row) {
-    if (row === shownRow && (row || current === idle)) return;
+    const name = nameOf(row);
+    if (row === shownRow && current && current.name === name) return;
     shownRow = row;
     rows().forEach((r) => r.classList.toggle("is-shown", r === row));
     field.dataset.showing = row ? (row.dataset.no || "") : "";
-    field.dataset.figure = row ? (row.dataset.figure || (row.dataset.kind === "Research" ? "molecule" : row.dataset.kind === "Exploration" ? "terrain" : "cloud")) : "ring";
+    field.dataset.figure = name;
     previous = current;
-    current = figureOf(row);
+    previousQuiet = currentQuiet;
+    current = formOf(name);
+    currentQuiet = row && row.dataset.open === "no" ? 0.5 : 1;
     caption(row);
-    const now = performance.now();
-    changed = now;
-    if (still) { settle(); draw(0); return; }
+    if (still) { settle(); draw(); return; }
     // Thrown out from the middle, each on a clock of its own.
+    const now = performance.now();
     for (let i = 0; i < N; i++) {
       GO[i] = now + R4[i] * SPREAD;
       const dx = X[i] - CX, dy = Y[i] - CY, d = Math.hypot(dx, dy) || 1;
@@ -548,25 +288,47 @@
     wake();
   }
 
-  const o = new Float32Array(5);
-  const quiet = (f) => (f.quiet ? 0.5 : 1);
-  function keep(i, fig) {
-    A[i] = o[2] * quiet(fig);
-    Z[i] = o[3];
-    K[i] = fig.streak && !o[4] ? 1 : 0;
+  // ============================================================
+  // TURNING AND SEEING: a place in the form, turned about the tilted
+  // axis by the clock, and seen in perspective. Out: where on the field,
+  // and how near (0 far, 1 near).
+  // ============================================================
+  const out = new Float32Array(3);
+  let cosA = 1, sinA = 0;
+  const cosT = Math.cos(TILT), sinT = Math.sin(TILT);
+  function turnTo(t) {
+    const a = still ? 0.6 : t * SPIN;
+    cosA = Math.cos(a); sinA = Math.sin(a);
   }
-  /** Every speck straight to its place: the still drawing — always at
-      the same moment of its figure, so a still drawing never changes
-      unless what it shows does. */
-  function settle() {
-    const t = 0;
-    for (let i = 0; i < N; i++) {
-      o[4] = 0;
-      current.at(i, t, o);
-      X[i] = CX + o[0] * S; Y[i] = CY + o[1] * S;
-      VX[i] = 0; VY[i] = 0;
-      keep(i, current);
+  function see(form, i, t) {
+    let x = form.P[i * 3], y = form.P[i * 3 + 1], z = form.P[i * 3 + 2];
+    if (form.drift && !still) {
+      // The ring and the cloud drift a little about their places.
+      x += Math.sin(t * 0.0003 + R4[i] * 6) * 0.03;
+      y += Math.cos(t * 0.00025 + R1[i] * 6) * 0.025;
     }
+    // About the upright axis, then leaning towards you.
+    const x1 = x * cosA + z * sinA, z1 = -x * sinA + z * cosA;
+    const y2 = y * cosT - z1 * sinT, z2 = y * sinT + z1 * cosT;
+    const k = FOCAL / (FOCAL + z2);
+    out[0] = CX + x1 * S * k;
+    out[1] = CY + y2 * S * k;
+    out[2] = Math.max(0, Math.min(1, 0.5 - z2 * 0.55));
+  }
+
+  /** Every speck straight to its place: the still drawing. */
+  function settle() {
+    turnTo(0);
+    for (let i = 0; i < N; i++) {
+      see(current, i, 0);
+      X[i] = out[0]; Y[i] = out[1];
+      VX[i] = 0; VY[i] = 0;
+      keep(i, out[2], currentQuiet);
+    }
+  }
+  function keep(i, near, quiet) {
+    A[i] = (0.28 + 0.72 * near) * quiet;
+    Z[i] = 0.75 + near * 0.9;
   }
 
   // ============================================================
@@ -592,50 +354,39 @@
     ratio = Math.min(window.devicePixelRatio || 1, window.innerWidth < 700 ? 1.5 : 2);
     canvas.width = Math.round(W * ratio);
     canvas.height = Math.round(H * ratio);
-    S = Math.min(W * 0.42, H * 0.36);
+    S = Math.min(W * 0.42, H * 0.34);
     CX = W / 2; CY = H * 0.47;
-    if (first) make(COUNT());
-    else if (was[0] && was[1]) {
+    if (first) {
+      make(COUNT());
+      current = formOf("ring");
+    } else if (was[0] && was[1]) {
       for (let i = 0; i < N; i++) { X[i] *= W / was[0]; Y[i] *= H / was[1]; }
     }
     if (still) settle();
-    draw(still ? 0 : performance.now());
+    draw();
   }
 
-  function line(pts, a) {
-    if (a <= 0.004 || pts.length < 2) return;
-    g.strokeStyle = "rgba(" + INK + "," + a.toFixed(3) + ")";
-    g.lineWidth = 1 / ratio;
-    g.beginPath();
-    pts.forEach(([x, y], j) => {
-      const sx = CX + x * S, sy = CY + y * S;
-      if (j) g.lineTo(sx, sy); else g.moveTo(sx, sy);
-    });
-    g.stroke();
-  }
-  let mono = "";
-  function label(text, x, y, a) {
-    if (a <= 0.02) return;
-    if (!mono) mono = getComputedStyle(document.body).getPropertyValue("--mono").trim() || "monospace";
-    g.fillStyle = "rgba(" + INK + "," + (0.7 * a).toFixed(3) + ")";
-    g.font = "500 10px " + mono;
-    g.textBaseline = "middle";
-    const sx = CX + x * S, sy = CY + y * S;
-    g.fillRect(sx - 12, sy, 8, 1 / ratio);
-    g.fillText(text, sx, sy);
-  }
-
-  function draw(t) {
+  function draw() {
     g.setTransform(ratio, 0, 0, ratio, 0, 0);
     g.clearRect(0, 0, W, H);
-    // The figure's hairlines, coming up once its specks have gathered;
-    // the last one's going as they leave.
-    const since = t - changed;
-    const up = still ? 1 : Math.max(0, Math.min(1, (since - SPREAD * 0.6) / LINES_IN));
-    const down = still ? 0 : Math.max(0, 1 - since / 260);
-    if (previous !== current && previous.lines && down > 0) previous.lines(down * quiet(previous), line, label);
-    if (current.lines) current.lines(up * quiet(current), line, label);
-    // The specks, as they were last told.
+    // THE WEB: hairlines between a few specks wherever two of them come
+    // near each other, fainter the further apart and the
+    // further back.
+    g.lineWidth = 1 / ratio;
+    const reach2 = WEB_REACH * WEB_REACH;
+    for (let j = 0; j < STRUNG.length; j++) {
+      const a = STRUNG[j];
+      for (let m = j + 1; m < STRUNG.length; m++) {
+        const b = STRUNG[m];
+        const dx = X[a] - X[b], dy = Y[a] - Y[b], d2 = dx * dx + dy * dy;
+        if (d2 > reach2) continue;
+        const k = (1 - Math.sqrt(d2) / WEB_REACH) * Math.min(A[a], A[b]) * 0.3;
+        if (k < 0.01) continue;
+        g.strokeStyle = "rgba(" + INK + "," + k.toFixed(3) + ")";
+        g.beginPath(); g.moveTo(X[a], Y[a]); g.lineTo(X[b], Y[b]); g.stroke();
+      }
+    }
+    // THE SPECKS, as they were last told.
     g.fillStyle = "rgb(" + INK + ")";
     for (let i = 0; i < N; i++) {
       let a = A[i];
@@ -643,24 +394,22 @@
       const dx = x - px, dy = y - py, d2 = dx * dx + dy * dy;
       if (d2 < PART * PART) a = Math.min(1, a + (1 - Math.sqrt(d2) / PART) * 0.5);
       if (a <= 0.01) continue;
-      g.globalAlpha = Math.min(1, a * 0.78);
-      const s = 1.25 * Z[i];
-      if (K[i]) g.fillRect(x - s / 2, y - s * 3.5, s * 0.8, s * 4);
-      else g.fillRect(x - s / 2, y - s / 2, s, s);
+      g.globalAlpha = Math.min(1, a * 0.8);
+      const s = 1.2 * Z[i];
+      g.fillRect(x - s / 2, y - s / 2, s, s);
     }
     g.globalAlpha = 1;
   }
 
   function step(t) {
+    turnTo(t);
     for (let i = 0; i < N; i++) {
-      const fig = t >= GO[i] ? current : previous;
-      o[4] = 0;
-      fig.at(i, t, o);
-      keep(i, fig);
-      const tx = CX + o[0] * S, ty = CY + o[1] * S;
+      const next = t >= GO[i] || !previous;
+      see(next ? current : previous, i, t);
+      keep(i, out[2], next ? currentQuiet : previousQuiet);
       const k = SPRING * (0.7 + 0.6 * R3[i]);
-      VX[i] = (VX[i] + (tx - X[i]) * k) * DAMP;
-      VY[i] = (VY[i] + (ty - Y[i]) * k) * DAMP;
+      VX[i] = (VX[i] + (out[0] - X[i]) * k) * DAMP;
+      VY[i] = (VY[i] + (out[1] - Y[i]) * k) * DAMP;
       // The pointer parts them.
       const dx = X[i] - px, dy = Y[i] - py, d2 = dx * dx + dy * dy;
       if (d2 < PART * PART && d2 > 0.01) {
@@ -676,7 +425,7 @@
     frame = 0;
     if (!seen) return;
     step(t);
-    draw(t);
+    draw();
     frame = requestAnimationFrame(loop);
   }
   function wake() {
@@ -695,8 +444,8 @@
 
   // ============================================================
   // THE TABLE CONDUCTS IT. Pointing at a row, focusing its link, or
-  // tapping it shows its figure; leaving the table brings the ring back
-  // a moment later, so passing from one row to the next never does.
+  // tapping it shows its form; leaving the table brings the ring back a
+  // moment later, so passing from one row to the next never does.
   // ============================================================
   let leaving = 0;
   const rowOf = (target) => (target && target.closest ? target.closest("tbody tr") : null);
@@ -746,7 +495,7 @@
   caption(null);
   field.dataset.figure = "ring";
   field.classList.add("is-drawn");
-  if (still) { settle(); draw(0); }
+  if (still) { settle(); draw(); }
   else wake();
   startTurns();
 })();

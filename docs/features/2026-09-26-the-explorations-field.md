@@ -1,5 +1,8 @@
 # Explorations & Researches, laid out again, and the field
 
+(The figures below — one for each work — were **replaced the same day** by abstract forms; see
+*2026-09-26, later — abstract forms, not figures* at the foot. The layout stands as written.)
+
 Date: 2026-09-26
 
 Files touched: `categories/researches.html`, `explorations.js` (new), the `EXPLORATIONS &
@@ -111,3 +114,65 @@ In `tests/index-pages.spec.js`:
   needs changing, but the owner may want other figures for them.
 - On a phone the field takes turns only among the written works; the unwritten ones show only
   when tapped.
+
+## 2026-09-26, later — abstract forms, not figures
+
+> REmove the research specific stuff; and make it more so a general abstract geometric
+> particulate thing. The closest thing to waht i like is the cloud when you hover the untitled
+> researches/Explorations (and when you hover nothing). re-interpret it and do that please.
+
+**The figures are gone** — the pyramid, the tear of resin, the bottle, the smokes, the firs, the
+rain, the molecule and the terrain — and with them their hairline outlines, the words drawn into
+the field (TOP, HEART, BASE, COLD, WARM) and every `data-figure` on the rows. Nothing on a row
+says what the field draws for it any more.
+
+**Everything the field draws is a cloud now**, the thing the owner liked, re-interpreted: a soft
+haze of specks gathered round a **geometric form**, standing in **three dimensions** and turning
+slowly about an axis leaning towards you (`SPIN`, `TILT`) — seen in perspective (`FOCAL`), the
+nearer specks larger and darker, the further ones fainter. Every place in a form is blurred a
+little (`fuzz`) and an eighth of every form's specks (`HAZE`) are left loose round it as a wider
+cloud, so no form is ever a hard figure. A faint **web** of hairlines is strung between ninety
+specks picked at random from the whole cloud (`WEB`, `WEB_REACH`) wherever two of them come near
+each other — picked at random because a form places its specks in order, and the first ninety of
+a sphere all stood at one pole, which drew a dark knot there.
+
+- **Nothing pointed at: the ring**, a band of specks round the middle with dust inside it, as
+  before but in depth, drifting a little about their places.
+- **An Untitled row: the cloud**, the one form with no shape in it, drifting.
+- **Every other row: a form by its number**, round a list of ten, so every row keeps its own and
+  the rows next to each other differ: `sphere`, `knot` (a trefoil), `torus` (tipped at an angle,
+  so it is neither the ring lying down nor, turned edge on, a band like the helix), `helix` (two
+  strands, with rungs now and then), `disc` (a spiral of three arms round a core), `lattice` (the
+  edges of a cube), `gyre` (three rings crossed), `saddle`, `shells` (three, nested) and
+  `hourglass` (two cones, point to point). So 000 is the sphere, 001 the knot, 002 the torus, 003
+  the helix, 004 the disc and 005 the lattice; a row added as 010 comes round to the sphere again.
+
+A form's places are worked out once, the first time it is asked for, and kept (`formOf`). The
+change between two is as it was: thrown out from the middle and gathered, each speck on a clock
+of its own. The caption, the pointer parting the specks, the keyboard, the turns on a phone and
+the layout are unchanged. With reduced motion every form is drawn once, turned to the same angle.
+
+### What was tried and was wrong
+
+- **A figure for each work** — see above. The owner found the literal figures wrong and liked
+  only the cloud and the ring; the forms are those two, re-interpreted.
+- **The torus standing upright**, like a wheel: turned edge on it was a tall band of specks, and
+  the test found it hard to tell from the helix — as a person would. Tipped, it never is.
+- **The web between the first ninety specks**: on the sphere those all stand at one pole.
+
+### How to test it
+
+In `tests/index-pages.spec.js`, **`pointing at a row gathers the field into an abstract form,
+and leaving the table brings the ring back`** (replaces *…into that work's figure…*): no row
+carries `data-figure`; the ring and its caption; rows 000–005 give the sphere, the knot, the
+torus, the helix, the disc and the lattice, each captioned, and the first four each a different
+drawing from every one before it; an Untitled row gives the cloud; off the table the ring comes
+back, not at once; a row's link focused shows its form; a row renumbered 010 comes round to the
+sphere; and **nothing is written into the drawing** (no `fillText` on the field's canvas).
+
+*A different drawing* is now read as how differently the two spread their ink over a 24-by-24
+grid, 0 to 100: measured, one form against itself a moment later, turned, is 14–25, and one form
+against another 37 and up; the test asks for more than 30. (It was a count of cells with any ink
+in them, which two tall forms of the same size could not be told apart by.) The other three tests
+of the field are unchanged.
+

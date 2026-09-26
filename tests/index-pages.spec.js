@@ -387,8 +387,8 @@ test("the fragrances view keeps its own layout all the way through a swipe",
    on the left (in the table). Make it reactive and on theme."
    ============================================================ */
 
-/** What the field's canvas has drawn, as a coarse grid of where its ink
- *  is — enough to tell one figure from another. */
+/** What the field's canvas has drawn, as how its ink is spread over a
+ *  grid — enough to tell one form from another. */
 const fieldInk = (page) => page.evaluate(() => {
   const c = document.querySelector(".re-canvas");
   const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
@@ -400,9 +400,11 @@ const fieldInk = (page) => page.evaluate(() => {
       cells[Math.floor((y / c.height) * G) * G + Math.floor((x / c.width) * G)]++;
     }
   }
-  return { ink, cells: cells.map((n) => (n > 3 ? 1 : 0)) };
+  return { ink, cells: cells.map((n) => n / Math.max(1, ink)) };
 });
-const apart = (a, b) => a.cells.reduce((n, v, i) => n + (v !== b.cells[i] ? 1 : 0), 0);
+/** How differently two drawings spread their ink, 0 (the same) to 100
+ *  (nothing in common). */
+const apart = (a, b) => Math.round(a.cells.reduce((n, v, i) => n + Math.abs(v - b.cells[i]), 0) * 50);
 
 test("Explorations & Researches: the paragraph under the name, the table on the left three fifths, the field on the right",
   async ({ page }) => {
@@ -451,11 +453,29 @@ test("Explorations & Researches: the paragraph under the name, the table on the 
   expect(errors).toEqual([]);
 });
 
-test("pointing at a row gathers the field into that work's figure, and leaving the table brings the ring back",
+/* THE FIELD IS ABSTRACT. It first drew a figure for each work — a
+   pyramid, a tear of resin, a bottle, two smokes — and the owner: "REmove
+   the research specific stuff; and make it more so a general abstract
+   geometric particulate thing. The closest thing to waht i like is the
+   cloud when you hover the untitled researches/Explorations (and when you
+   hover nothing). re-interpret it and do that please." So every row is a
+   cloud gathered round an abstract form, given by its number; an Untitled
+   row is the plain cloud; nothing pointed at is the ring. Nothing on a row
+   names a figure any more, and nothing is written into the drawing. */
+test("pointing at a row gathers the field into an abstract form, and leaving the table brings the ring back",
   async ({ page }) => {
   const errors = collectPageErrors(page);
+  await page.addInitScript(() => {
+    window.__words = [];
+    const fillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (t) {
+      if (this.canvas.classList.contains("re-canvas")) window.__words.push(String(t));
+      return fillText.apply(this, arguments);
+    };
+  });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(RESEARCHES);
+  expect(await page.locator(".index-table tbody tr[data-figure]").count(), "no row names a figure").toBe(0);
   const field = page.locator(".re-field");
   await expect(field).toHaveAttribute("data-figure", "ring");
   await page.waitForTimeout(2200);
@@ -463,39 +483,49 @@ test("pointing at a row gathers the field into that work's figure, and leaving t
   expect(ring.ink, "the ring is drawn").toBeGreaterThan(400);
   await expect(page.locator(".re-caption-name")).toHaveText("Explorations & Researches");
 
-  // Each work its own figure, and its caption.
-  const figures = { 0: "pyramid", 1: "resin", 2: "bottle", 3: "smoke" };
+  // Each row its own form, by its number, and its caption.
+  const forms = { 0: "sphere", 1: "knot", 2: "torus", 3: "helix", 4: "disc", 5: "lattice" };
   const seen = [ring];
-  for (const [no, name] of Object.entries(figures)) {
+  const seenNames = ["ring"];
+  for (const [no, name] of Object.entries(forms)) {
     const row = page.locator(`.index-table tbody tr[data-no="${no}"]`);
     await row.hover();
     await expect(field).toHaveAttribute("data-figure", name);
     await expect(page.locator(".re-caption-name")).toHaveText(await row.getAttribute("data-name"));
+    if (no > 3) continue;
     await page.waitForTimeout(2000);
     const now = await fieldInk(page);
     expect(now.ink, `${name} is drawn`).toBeGreaterThan(300);
-    seen.forEach((before, k) => expect(apart(now, before), `${name} is a different drawing from the ${k ? "figure" : "ring"} before`).toBeGreaterThan(40));
+    // Measured: a form against itself a moment later, turned, 14–25; one
+    // form against another, 37 and up (the helix and the tipped torus,
+    // both tall, at their closest).
+    seen.forEach((before, k) => expect(apart(now, before), `${name} is a different drawing from the ${seenNames[k]}`).toBeGreaterThan(30));
     seen.push(now);
+    seenNames.push(name);
   }
+  // An Untitled row is the plain cloud.
+  await page.locator('.index-table tbody tr[data-no="7"]').hover();
+  await expect(field, "an Untitled row is the cloud").toHaveAttribute("data-figure", "cloud");
 
   // Off the table, the ring comes back — a moment later.
   await page.mouse.move(200, 100);
   await page.waitForTimeout(250);
-  await expect(field, "not at once").toHaveAttribute("data-figure", "smoke");
+  await expect(field, "not at once").toHaveAttribute("data-figure", "cloud");
   await expect(field).toHaveAttribute("data-figure", "ring", { timeout: 3000 });
 
   // From the keyboard too: a row's link focused is pointed at.
   await page.locator('.index-table tbody tr[data-no="1"] a').focus();
-  await expect(field).toHaveAttribute("data-figure", "resin");
+  await expect(field).toHaveAttribute("data-figure", "knot");
   await expect(page.locator('.index-table tbody tr[data-no="1"]')).toHaveClass(/is-shown/);
 
-  // A row that names no figure is given one by its kind.
+  // A row added later takes the next form round, with nothing written on it.
   await page.evaluate(() => {
-    document.querySelector('tr[data-no="3"]').removeAttribute("data-figure");
-    document.querySelector('tr[data-no="3"]').dataset.kind = "Research";
+    const row = document.querySelector('tr[data-no="9"]');
+    row.dataset.name = "Something new"; row.dataset.kind = "Research"; row.dataset.no = "10";
   });
-  await page.locator('.index-table tbody tr[data-no="3"]').hover();
-  await expect(field, "a research is a molecule").toHaveAttribute("data-figure", "molecule");
+  await page.locator('.index-table tbody tr[data-no="10"]').hover();
+  await expect(field, "the forms go round again").toHaveAttribute("data-figure", "sphere");
+  expect(await page.evaluate(() => window.__words), "nothing is written into the drawing").toEqual([]);
   expect(errors).toEqual([]);
 });
 
