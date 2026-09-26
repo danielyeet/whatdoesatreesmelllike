@@ -365,9 +365,8 @@ npm test -- tests/fragrance-line.spec.js
 
 ### Known issues / TODO
 
-- Six of the seven cards show the hatching: their pictures are named in
-  `individual-fragrances.html` and not in `images/Individual Fragrances/` yet. They will show
-  the moment the files are there.
+- ~~Six of the seven cards show the hatching~~ — every fragrance has its picture since the
+  owner's upload of 2026-09-25, and the boxes carry them too since 2026-09-26 (below).
 - The mark is hidden on windows under 720px tall rather than squeezed.
 
 ## 2026-09-25, later that night — the crossing
@@ -469,3 +468,49 @@ it to the copy in `archive/`.
 - **`the aside is headed Individual, smaller, over Fragrances, and says nothing else under
   them`** — *Individual* above *Fragrances* and under 0.6 of its size; no `.frag-aside-say`, and
   the aside nowhere saying *The ones with no house here*.
+
+
+## 2026-09-26 — the whole bottle, over a blur of itself, in the boxes and the cards
+
+> add a blurred version of the pictures in the boxes view of teh SD houses ... ALSO FOR THE SD
+> FRAGRANCES PAGE, MAKE IT SO THAT THE PICTURES IN THE CARDS AND IN THE BOXES MENU ARE ZOOMED
+> OUT AND YOU CAN SEE THE ENTIRE FRAGRANCE! i want the aeshtetic to be good, not just
+> something thats random.
+
+"The boxes view of the SD houses" is read as the **Boxes** layout of this view — the Houses view
+has no boxes — and both notes as one: the boxes and the cards each show their fragrance's
+picture **whole**, over a **blurred copy of the same picture** filling the rest of the frame.
+
+**The boxes carry pictures now.** `pictures()` runs the first time Boxes *or* Cards is chosen
+(it was Cards only), and each picture is two images of the one file: `.frag-t-haze` —
+`object-fit: cover`, scaled 1.4, blurred 18px and a touch more saturated — and over it
+`.frag-t-shot`, **`object-fit: contain`**, so the bottle is never cropped. In a box the picture
+fills the whole square behind the lettering (`inset: 0`), the bottle standing between the
+number at the top and the name at the foot (the shot's inset is `31px 14px 66px`), with a white
+veil at the head and the foot (`::after`) so the lettering is read on paper; the large number
+the hatching carries is hidden in the boxes, where the box's own number already stands. In a
+card the bottle stands in 84% × 86% of the picture's frame, on white.
+
+**Two kinds of picture, so it does not look random.** Most of these are studio shots — a bottle
+on white — and a sharp white rectangle floating on its own blur is exactly the random look to
+avoid. So each picture is read once it has loaded (`seat` in `fragrance-line.js`): drawn to a
+24 × 24 canvas and its corners and edge midpoints read, and six of the eight near white and
+colourless makes it **a studio shot** (`.is-studio`): its blur is hidden and the picture is
+**multiplied** onto the frame's own white, so the white ground disappears and the bottle stands
+on the paper by itself. **A scene** (`.is-scene`) — Haxan on bark, a bottle on flowers — keeps
+its blur, and the picture is sized to its own shape (`--shape`, width over height, used through
+container units, `container-type: size` on the frame) and **feathered** into the blur at its
+edges with a mask, so no hard edge is left either. The favourites' circles on the Favourites
+page are read the same way ([the chamber](2026-09-15-the-chamber.md)).
+
+**On a phone** the boxes come two to a row (`minmax(150px, 1fr)`), so the bottle in each is
+still a bottle and not a speck.
+
+### How to test it
+
+- **`boxes and cards show each fragrance whole, over a blurred copy of its picture`** — in the
+  boxes and then the cards: five or more pictures arrive and are read as studio or scene; each
+  one's blur is the same file and blurred; the picture is `contain` and stands inside its own
+  box; a scene has its blur showing round it; Haxan is a scene.
+- `the options show the table as a list, as small boxes or as cards` looks for Haxan's picture
+  as `.frag-t-shot` now that each frame holds two images.

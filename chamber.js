@@ -512,6 +512,10 @@
       // And a picture of the perfume, if it has one, which stands
       // beside the writing when the card is opened.
       image: (entry.dataset.image || "").trim(),
+      // And where that picture came from, as its own page credits it,
+      // printed under it: "Picture: Tombstone".
+      credit: (entry.dataset.credit || "").trim(),
+      creditHref: (entry.dataset.creditHref || "").trim(),
       href: entry.getAttribute("href"),
     });
   });
@@ -1778,7 +1782,29 @@
       down and the square in which Des Cendres is will expand revealing
       the window of the fragrance" — and what it opens into carries the
       link on from it, so the card itself cannot be one: a link inside a
-      link is not a thing the browser will build. It is a button. */
+      link is not a thing the browser will build. It is a button.
+
+      WHAT IT OPENS INTO was reworked on 2026-09-26 — "less techy, more
+      minimalist and geometric. Make it somehow react with the sun too".
+      It had been a column of mono readouts, dashed boxes saying what had
+      not been written, and two boxed buttons in capitals. It is now two
+      things side by side and nothing else:
+
+        THE WRITING, in the page's own face — the favourite's own words
+          if the owner has written any below (`.gallery-writing`), and
+          otherwise the OPENING OF ITS OWN ENTRY, taken off the page its
+          href points at, so an opened favourite says something the owner
+          wrote about it rather than that nothing has been written — then
+          two quiet ways on, "Read the whole entry" and "Notes".
+        THE PICTURE, in a CIRCLE on the side of the card facing the sun:
+          the whole bottle, never cropped, over a blurred copy of itself
+          that fills the rest of the circle, and its credit under it.
+
+      AND THE SUN ANSWERS IT: once the card is open the sun is told where
+      the circle stands (`attend`), and draws a ring of its own warm
+      specks round it, starting on the side that faces it and closing
+      round, with its surface burning a little brighter behind the
+      picture. See sun.js. */
   function makeCard(item, n) {
     const shell = document.createElement("div");
     shell.className = "chapter-card-shell";
@@ -1788,11 +1814,19 @@
     card.type = "button";
     card.className = "chapter-card";
     card.setAttribute("aria-expanded", "false");
+    // THE SIGN, bottom right: a small circle with a cross of hairlines in
+    // it, whose upright turns flat as the card opens — a plus becoming a
+    // minus. It replaced "OPEN ↓" and "CLOSE ↑" in capitals.
     card.innerHTML =
       '<span class="chapter-card-no"></span>' +
       '<span class="chapter-card-name"></span>' +
       '<span class="chapter-card-house"></span>' +
-      '<span class="chapter-card-go" aria-hidden="true">OPEN \u2193</span>';
+      '<span class="chapter-card-go" aria-hidden="true"><span class="chapter-card-sign"></span></span>';
+    // Once it has come in, its entrance is retired — see `.is-in` in
+    // style.css for the half-painted head this stops.
+    card.addEventListener("animationend", (e) => {
+      if (e.target === card && e.animationName === "chapter-card-in") card.classList.add("is-in");
+    });
     card.querySelector(".chapter-card-no").textContent = numbered(n);
     card.querySelector(".chapter-card-name").textContent = item.name;
     // THE HOUSE THE PERFUME COMES FROM, where the date used to stand.
@@ -1804,34 +1838,187 @@
     const body = document.createElement("div");
     body.className = "chapter-card-body";
     body.hidden = true;
-    // THE PICTURE STANDS INSIDE THE WRITING, not above it, so the words
-    // wrap round it rather than being pushed down the page — an opened
-    // card is a window, and a picture with a column of text beside it
-    // is the shape the rest of this site reads in.
-    const shot = item.image
-      ? '<figure class="fav-shot"><img src="' + item.image + '" alt="' +
-        item.name.replace(/"/g, "&quot;") + '" loading="lazy" decoding="async"></figure>'
+    const safe = (text) => String(text).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    const own = writings[item.name] || "";
+    // THE OWNER'S OWN WORDS FOR THIS FAVOURITE, if there are any that are
+    // not still a note saying they are waiting.
+    const written = own && /<p(?![^>]*gallery-waiting)[^>]*>/.test(own);
+    const disc = item.image
+      ? '<figure class="fav-disc">' +
+          '<span class="fav-disc-face">' +
+            '<img class="fav-disc-haze" src="' + safe(item.image) + '" alt="" decoding="async">' +
+            '<img class="fav-disc-shot" src="' + safe(item.image) + '" alt="' + safe(item.name) + '" decoding="async">' +
+          "</span>" +
+          (item.credit
+            ? '<figcaption class="fav-credit">Picture: ' +
+                (item.creditHref
+                  ? '<a href="' + safe(item.creditHref) + '" rel="noopener noreferrer" target="_blank">' + safe(item.credit) + "</a>"
+                  : safe(item.credit)) +
+              "</figcaption>"
+            : "") +
+        "</figure>"
       : "";
     body.innerHTML =
-      '<div class="fav-writing">' + shot +
-        (writings[item.name] ||
-          '<p class="gallery-waiting">Nothing has been written about this one yet.</p>') +
-      "</div>" +
-      '<p class="fav-links">' +
-        '<a class="fav-link fav-link-go" href="' + (item.href || "#") + '">' +
-          '<span class="fav-link-say">Go to fragrance</span>' +
-          '<span class="fav-link-mark" aria-hidden="true">→</span></a>' +
-        '<button type="button" class="fav-link fav-link-notes" ' +
-          'aria-haspopup="dialog" aria-controls="fav-note">' +
-          '<span class="fav-link-say">Notes</span>' +
-          '<span class="fav-link-mark" aria-hidden="true">↗</span></button>' +
-      "</p>";
+      '<div class="fav-open' + (item.image ? "" : " fav-open-bare") + '">' +
+        '<div class="fav-read">' +
+          '<div class="fav-writing' + (written ? "" : " is-from") + '">' +
+            (written ? own : '<p class="fav-from-wait">&nbsp;</p>') +
+          "</div>" +
+          '<p class="fav-links">' +
+            '<a class="fav-link fav-link-go" href="' + safe(item.href || "#") + '">' +
+              '<span class="fav-link-say">Read the whole entry</span>' +
+              '<span class="fav-link-mark" aria-hidden="true"></span></a>' +
+            '<button type="button" class="fav-link fav-link-notes" ' +
+              'aria-haspopup="dialog" aria-controls="fav-note">' +
+              '<span class="fav-link-ring" aria-hidden="true"></span>' +
+              '<span class="fav-link-say">Notes</span></button>' +
+          "</p>" +
+        "</div>" +
+        disc +
+      "</div>";
     shell.appendChild(body);
+    if (!written) fillFrom(item, body.querySelector(".fav-writing"));
+    const face = body.querySelector(".fav-disc-face");
+    if (face) seat(face, face.querySelector(".fav-disc-shot"));
 
     card.addEventListener("click", () => turnCard(shell));
     body.querySelector(".fav-link-notes")
       .addEventListener("click", (e) => showNote(item, e.currentTarget));
     return shell;
+  }
+
+  /** THE PICTURE, SEATED IN ITS CIRCLE once it has loaded — two kinds.
+
+      A STUDIO SHOT (a bottle on white, which most of these are) is read
+      off its four corners: near-white and colourless. Its circle turns
+      the pale of paper and the picture is MULTIPLIED onto it, so the
+      white ground disappears into the circle and the bottle stands on
+      its own — a white rectangle in a circle is the thing this avoids.
+
+      ANYTHING ELSE (a bottle on bark, on flowers) keeps its blurred copy
+      filling the circle, and the picture itself is sized to its own
+      shape and FEATHERED at its edges into that blur, so it has no hard
+      rectangle either. The whole of it shows, in both — never cropped. */
+  function seat(face, shot) {
+    if (!shot) return;
+    const done = () => {
+      const w = shot.naturalWidth, h = shot.naturalHeight;
+      if (!w || !h) return;
+      let studio = false;
+      try {
+        const c = document.createElement("canvas");
+        c.width = 24; c.height = 24;
+        const g = c.getContext("2d", { willReadFrequently: true });
+        g.drawImage(shot, 0, 0, 24, 24);
+        const d = g.getImageData(0, 0, 24, 24).data;
+        let light = 0, seen = 0;
+        [[0, 0], [23, 0], [0, 23], [23, 23], [12, 0], [12, 23], [0, 12], [23, 12]].forEach(([x, y]) => {
+          const i = (y * 24 + x) * 4;
+          const r = d[i], gg = d[i + 1], b = d[i + 2];
+          seen++;
+          if (Math.min(r, gg, b) > 222 && Math.max(r, gg, b) - Math.min(r, gg, b) < 26) light++;
+        });
+        studio = light >= 6;
+      } catch (e) { studio = false; }
+      face.classList.add(studio ? "is-studio" : "is-scene");
+      if (!studio) {
+        // Its own shape inside the circle's square, so the feathering
+        // falls on the picture's edges and not on empty box.
+        const most = 66;
+        const cw = w >= h ? most : most * (w / h);
+        const ch = w >= h ? most * (h / w) : most;
+        shot.style.width = cw + "%";
+        shot.style.height = ch + "%";
+        shot.style.left = (100 - cw) / 2 + "%";
+        shot.style.top = (100 - ch) / 2 + "%";
+      }
+    };
+    if (shot.complete && shot.naturalWidth) done();
+    else shot.addEventListener("load", done, { once: true });
+  }
+
+  // ============================================================
+  // THE OPENING OF A FAVOURITE'S OWN ENTRY
+  //
+  // Where the owner has written nothing for a favourite on this page —
+  // which is most of them — the opened card carries the first of what
+  // they wrote about it where it lives: the page its href points at,
+  // fetched once and kept, the part found by its anchor. Whole
+  // paragraphs until there are enough to read as an opening, and one
+  // that would run past the room left is stopped at a sentence's end
+  // (at a word only if there is no sentence's end to stop at), with an
+  // ellipsis saying so. Their words, never edited: nothing here is written by
+  // this script. Labels (Top, Mid…), waiting boxes, notes to the reader,
+  // spoilers and pictures are passed over.
+  // ============================================================
+  const fetched = {};
+  const FROM_ENOUGH = 240;   // characters: one short paragraph is not an opening
+  const FROM_MOST = 560;     // and one this long is stopped at a sentence
+  function pageOf(href) {
+    const url = new URL(href, location.href);
+    const at = url.hash.slice(1);
+    url.hash = "";
+    if (!fetched[url.href]) {
+      fetched[url.href] = window.fetch
+        ? fetch(url.href).then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
+          .then((html) => new DOMParser().parseFromString(html, "text/html"))
+        : Promise.reject(new Error("no fetch"));
+      fetched[url.href].catch(() => {});
+    }
+    return { page: fetched[url.href], at: at };
+  }
+  function openingOf(doc, at) {
+    const part = at && doc.getElementById(at);
+    if (!part) return [];
+    const text = part.querySelector(".human-text, .pine-text, .adar-text");
+    if (!text) return [];
+    const out = [];
+    let length = 0;
+    for (const p of text.querySelectorAll(":scope > p")) {
+      if (p.matches(".human-stage, .adar-stage, .pine-stage, .human-waiting, .human-note, .gallery-waiting")) continue;
+      let said = p.textContent.replace(/\s+/g, " ").trim();
+      if (!said) continue;
+      // WHAT IS LEFT OF THE ROOM. A paragraph that would run past it is
+      // stopped at the last sentence that fits, and says so.
+      const room = FROM_MOST - length;
+      if (said.length > room) {
+        const cut = said.slice(0, room);
+        const stop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "),
+          cut.endsWith(".") ? cut.length - 1 : -1);
+        if (stop > 90) out.push(cut.slice(0, stop + 1) + " …");
+        else if (!out.length) out.push(cut.replace(/\s+\S*$/, "") + " …");
+        break;
+      }
+      out.push(said);
+      length += said.length;
+      if (length >= FROM_ENOUGH || out.length >= 2) break;
+    }
+    return out;
+  }
+  function fillFrom(item, into) {
+    if (!item.href) return;
+    const { page, at } = pageOf(item.href);
+    page.then((doc) => {
+      const lines = openingOf(doc, at);
+      // `data-from` says which of the three it came to: its page's own
+      // words, a page with nothing written yet, or no page to read.
+      if (!lines.length) {
+        into.innerHTML = '<p class="fav-quiet">Nothing has been written about this one yet.</p>';
+        into.dataset.from = "nothing";
+        return;
+      }
+      into.innerHTML = "";
+      lines.forEach((line) => {
+        const p = document.createElement("p");
+        p.textContent = line;
+        into.appendChild(p);
+      });
+      into.dataset.from = "page";
+    }).catch(() => {
+      into.innerHTML = '<p class="fav-quiet">Its writing is on <a href="' +
+        String(item.href).replace(/"/g, "&quot;") + '">its own page</a>.</p>';
+      into.dataset.from = "away";
+    });
   }
 
   /** Open it if it is shut, shut it if it is open. */
@@ -1852,9 +2039,8 @@
     openCard = shell;
     shell.classList.add("is-open");
     card.setAttribute("aria-expanded", "true");
-    card.querySelector(".chapter-card-go").textContent = "CLOSE \u2191";
     body.hidden = false;
-    if (REDUCE_MOTION) { body.style.height = "auto"; return; }
+    if (REDUCE_MOTION) { body.style.height = "auto"; attendTo(shell); return; }
     travel(others, was);
     // Opened on a measured height, the way a part of a house opens:
     // `auto` is not a height the browser will ease to.
@@ -1862,15 +2048,34 @@
     body.style.height = "0px";
     body.getBoundingClientRect();
     body.style.height = tall + "px";
-    after(body, () => { body.style.height = "auto"; });
+    // THE SUN IS TOLD ONCE THE CARD HAS OPENED, not while it is still
+    // growing: the circle is only all there to be ringed then.
+    after(body, () => { body.style.height = "auto"; if (openCard === shell) attendTo(shell); });
+  }
+
+  /** THE SUN, TOLD WHERE THE OPENED PICTURE STANDS — or that nothing is
+      open any more. It asks for the circle every frame, so the ring
+      follows the page as it is scrolled; the answer is null once the
+      card is shut, off the page, or not the open one. A drawing that
+      does not answer to this (the moon) is simply not told. */
+  function attendTo(shell) {
+    if (!ground || !ground.attend) return;
+    if (!shell) { ground.attend(null); return; }
+    const face = shell.querySelector(".fav-disc-face");
+    if (!face) { ground.attend(null); return; }
+    ground.attend(() => {
+      if (openCard !== shell || !face.isConnected) return null;
+      const r = face.getBoundingClientRect();
+      if (!r.width) return null;
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, r: r.width / 2 };
+    });
   }
 
   function shutCard(shell) {
     const card = shell.querySelector(".chapter-card");
     const body = shell.querySelector(".chapter-card-body");
     card.setAttribute("aria-expanded", "false");
-    card.querySelector(".chapter-card-go").textContent = "OPEN \u2193";
-    if (openCard === shell) openCard = null;
+    if (openCard === shell) { openCard = null; attendTo(null); }
     if (REDUCE_MOTION) {
       shell.classList.remove("is-open");
       body.hidden = true;
@@ -2028,7 +2233,7 @@
         return sheet ? sheet.getBoundingClientRect() : null;
       },
     });
-    if (made && made.stop) ground = { name: name, stop: made.stop, capture: made.capture, hold: made.hold };
+    if (made && made.stop) ground = { name: name, stop: made.stop, capture: made.capture, hold: made.hold, attend: made.attend };
     else chapterGround.hidden = true;
   }
 

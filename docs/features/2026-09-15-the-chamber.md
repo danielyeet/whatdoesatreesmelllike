@@ -1126,9 +1126,11 @@ the same things.
 
 What a favourite says is in the page's own markup, in a `.gallery-writing[data-favourite]`
 block matched **by name** — so a favourite renamed in one place is renamed in both. Des
-Cendres' two paragraphs are marked as placeholders and say so in the dashed box the rest of
-the site uses: the writing is the owner's, and an unwritten favourite should read as
-unwritten.
+Cendres' two paragraphs are marked as placeholders (`gallery-waiting`). **Since 2026-09-26 a
+favourite with no block, or only placeholders, opens with the start of its own entry
+instead**, read off the page it links to — see *2026-09-26 — an opened favourite, reworked,
+and the sun answering it* at the foot of this report. What it opens into — the layout, the
+links, the picture — is described there too; the paragraphs above are still how it opens.
 
 #### Its notes are the site's own notes, in this page's colours
 
@@ -1570,3 +1572,121 @@ Tested in `tests/chamber.spec.js`:
   reads the flight's first frame one frame after the press now, which is when the flight is set
   up.
 
+
+## 2026-09-26 — an opened favourite, reworked, and the sun answering it
+
+> i also ask that you reword the way that the favorite perfumes open when you click them.
+> also add images if you have them based on the name from the repository. I want you to make
+> it less techy, more minimalist and geometric. Make it somehow react with the sun too.
+
+**Less technical.** The card said `OPEN ↓` and `CLOSE ↑` in capitals in the mono; it carries a
+drawn **sign** now (`.chapter-card-sign`) — a small circle with a cross of hairlines in it,
+whose upright turns flat as the card opens, a plus becoming a minus. The house under the name
+is set in the plain face rather than the mono, and the open card loses its corner ticks: its
+head is one line, number, name, house and the sign. Opened, it is **two columns**
+(`.fav-open`): on the left the reading — a short rule, the writing, a hairline, and two plain
+links, **Read the whole entry ⟶** (the favourite's own `href`, which was GO TO FRAGRANCE) and
+**○ Notes** (the same notes window as before), in the site's own face with a line drawn under
+them on hover — and on the right **the picture, in a circle**, credited under it. Nothing in it
+is set in capitals or the mono any more. On a phone it is one column, the circle first.
+
+**What it says.** Where the owner has written a block for the favourite on this page — not
+placeholders — that block, as before. Otherwise **the start of its own entry**: the page its
+`href` points at is fetched (once, and kept: `fetched`, `pageOf`), the part found by its anchor,
+and its first paragraphs taken from `.human-text`, `.pine-text` or `.adar-text`, passing over
+stage labels, waiting boxes, notes to the reader and spoilers (`openingOf`). Whole paragraphs
+until there are about 240 characters or two of them (`FROM_ENOUGH`); a paragraph that would
+run past 560 (`FROM_MOST`) is stopped at a sentence's end with an ellipsis. **Their words,
+never edited** — the script writes none of them, and copies none into this page: there is
+still one copy of each. `data-from` on the writing says which it came to: `page`, `nothing`
+(the page has nothing written yet, and the card says so) or `away` (the page could not be
+read, and the card points at it).
+
+**A picture for every favourite, found in the repository by name.** `data-image` on each
+favourite, with **`data-credit`** and **`data-credit-href`** saying where the picture came from
+— the same sources its own page credits:
+
+| favourite | picture | credit |
+|---|---|---|
+| Des Cendres | `images/Les-Abstraits/Perfumes/Des cendres 1.jpg` | Les Abstraits |
+| Haxan | `images/Individual Fragrances/Haxan/web/1.webp` | my own |
+| De Profundis | `images/Individual Fragrances/002 De Profundis.jpg` | Sillyage |
+| Evergrow | `images/Tombstone/Fragrances/Evergrow.webp` | Tombstone |
+| Sing at My Funeral | `images/Tombstone/Fragrances/Sing at my funeral.webp` | Tombstone |
+| Tobacolor | `images/Individual Fragrances/004 Tobacolour.webp` | Dior |
+| Bad Lily | `images/Tale/Perfumes/Bad Lily 1.webp` | TALE Parfum |
+| French Riviera | `images/Individual Fragrances/006 French Riviera.webp` | Vivantis |
+| Amaretto Jazz in the Melting Room | `images/Ataraxia/Perfumes/Amaretto Jazz.webp` | Ataraxia |
+| Belle Âme | `images/Les-Abstraits/Perfumes/Belle Ame.webp` | Les Abstraits |
+
+**The circle** (`.fav-disc-face`) shows the picture **whole** — `object-fit: contain`, in the
+middle two thirds of it — over a blurred copy of the same file filling the circle
+(`.fav-disc-haze`). Pictures are two kinds, told apart once each has loaded (`seat`): drawn to
+a 24 × 24 canvas and its four corners and four edge midpoints read. **A studio shot** — six of
+the eight near white and colourless — turns the circle the pale of paper (`#ece9e3`), hides
+the blur and **multiplies** the picture onto it, so its white ground disappears and the bottle
+stands on its own rather than in a white rectangle. **A scene** — a bottle on bark, on flowers,
+on black — keeps its blur round it, and the picture is sized to its own shape and **feathered**
+at its edges into that blur (a mask, 9%), so it has no hard edge either.
+
+**The sun answers it.** Once the card has finished opening, the chamber tells the chapter's
+drawing where the circle stands (`attendTo` → the drawing's `attend(get)`, asked again every
+frame so the answer follows the page as it scrolls) and, when the card is shut, that nothing
+is open (`attend(null)`). The sun turns towards it over `ANSWER_IN` (1.1s) and away over
+`ANSWER_OUT` (0.55s) — `facing`, eased — and answers in three ways (`sun.js`, "THE ANSWER"):
+
+- **a ring** of its own specks round the circle (`RING_SPECKS`, 220): one round at
+  `RING_OUT` (16px) outside it and every second speck again at `RING_IN` (6px), turning slowly
+  (`RING_TURN`), **lit most on the side that faces the sun's own centre** (`RING_LIT`) and
+  drawn past the quiet the writing is otherwise kept in (the `loud` in `speck`) — it is the
+  only thing the sun draws over the sheet at full strength. As it comes in it is drawn round
+  from the sun's side both ways, and it goes the same way back;
+- **ticks** off it (`RING_TICKS`, 36), short radial strokes of two or three specks, a
+  registration mark in the sun's own specks;
+- and **the surface near the circle brightened** (`HALO` → `HALO_LIT`), with the **corona**
+  swelling a little (`CORONA_SWELL`). The moon has no `attend` and is simply not told —
+  Chapter 2 has no favourites.
+
+With reduced motion the answer is there at once (and drawn again as the page scrolls, since
+nothing else redraws a still sun).
+
+**A stale paint, found on the way.** Haxan opened with the left of its head blank — name,
+number and all — while its box was exactly where it should be. The card's entrance
+(`chapter-card-in`, filled `both`) had finished but kept the card on a layer of its own, and a
+card opened out of the middle of a row onto a row of its own was left half painted on it. The
+entrance is **retired once it has run** (`animationend` → `.is-in`: `animation: none;
+opacity: 1`). The FLIP of the others still goes on the shell, as above.
+
+### What was tried and was wrong
+
+- **`mix-blend-mode: darken`** on the picture, so a white ground would drop out against the
+  dark: it washed every bottle out to grey. The studio and scene reading replaced it.
+- **A dark shadow round the circle** hid the sun's ring where it was meant to be seen; taken
+  off, and the ring lit harder.
+- **The halo at full strength** lit the sun behind the credit so brightly the credit could not
+  be read; `HALO` is 0.5 and the credit stands 42px under the circle.
+- **The first excerpt** stopped only the first paragraph and let the rest run on, so Des
+  Cendres opened into half its entry; the room is counted across paragraphs now.
+
+### How to test it
+
+- **`an opened favourite reads the start of its own entry, beside its picture in a circle,
+  credited`** — every favourite names a picture under `images/` and a credit; every card
+  carries the circle with that picture and its blur, and *Picture: …* under it, and no
+  lettering where OPEN ↓ was; Des Cendres opened reads from its page (`data-from="page"`), one
+  or two paragraphs each exactly the owner's or the start of one stopped with an ellipsis, under
+  700 characters; the circle round, the picture `contain` and inside it, read as one kind or the
+  other; the two links *Read the whole entry* and *Notes*, neither in the mono.
+- **`the sun rings an opened favourite's picture, and lets go when it is shut`** — the sun the
+  page makes is kept hold of: nothing open, `facing()` is 0; opened, it rises past 0.95, and
+  the band just outside the circle on the sun's own canvas is at least half as bright again as
+  the same band once the card is shut and `facing()` is back to 0.
+- `a favourite opens where it stands, and the ones after it go down` waits for the writing to
+  have come and asks for something to read, rather than for two paragraphs.
+
+### Known issues / TODO
+
+- The excerpts are fetched when the chapter's cards are made — the five pages Chapter 1's
+  favourites live on, each once; they are small, but on a slow connection a card opened at
+  once shows a blank line for a moment until its page lands.
+- Only the sun answers. If Chapter 2 is given favourites, the moon wants an `attend` of its own.

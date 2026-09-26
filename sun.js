@@ -35,6 +35,20 @@
 //                 page to the left edge, each strand a gently bent line
 //                 that the specks run along, so the empty side of the
 //                 page is the side the wind is blowing towards.
+//   THE ANSWER    added 2026-09-26 — the owner asked for an opened
+//                 favourite to "somehow react with the sun". When one is
+//                 open the chamber hands over where its picture's circle
+//                 stands (`attend`), and the sun rings it: a ring of its
+//                 own warm specks drawn round the circle, starting at the
+//                 point that faces the sun and closing round the far
+//                 side, ticked like its own registration ring and lit
+//                 brightest on the side the light comes from; a finer
+//                 ring inside that; and the surface behind the picture
+//                 burning brighter, as if the light were gathered there.
+//                 The corona swells a little while it looks. None of it
+//                 is quietened like the rest — it stands round a picture,
+//                 not over the writing — and it all goes again, outward
+//                 in, when the card is shut.
 //
 // LEGIBILITY, WHICH THE OWNER ASKED FOR BY NAME: "I want it to make
 // the text legible, so that particles exist in behind the text the
@@ -159,6 +173,22 @@
   const WIND_BEND = [0.04, 0.16];   // as a share of the window's height
   const WIND_LIT = 0.62;
 
+  // THE ANSWER TO AN OPENED FAVOURITE — see the header. The ring stands
+  // RING_OUT pixels outside the picture's circle; the finer ring inside
+  // it, RING_IN. It draws itself round over ANSWER_IN seconds from the
+  // point facing the sun, and goes over ANSWER_OUT.
+  const RING_SPECKS = 220;
+  const RING_TICKS = 36;           // one every ten degrees, as its own ring
+  const RING_OUT = 16;
+  const RING_IN = 6;
+  const RING_LIT = 1.25;
+  const RING_TURN = 0.05;          // radians a second the ticks drift round
+  const ANSWER_IN = 1.1;
+  const ANSWER_OUT = 0.55;
+  const HALO = 0.5;                // how far past the circle the surface burns brighter, as a share of its radius
+  const HALO_LIT = 1.4;            // and how much brighter, at the circle's edge
+  const CORONA_SWELL = 0.35;       // the corona, this much stronger while the sun is looking
+
   // THE TWO NUMBERS THE READING RESTS ON, and they are Ataraxia's own.
   const QUIET = 0.3;
   const SOFT = 74;
@@ -216,6 +246,13 @@
     let frame = 0;
     let last = 0;
     let clock = 0;
+    // THE ANSWER: what the chamber has handed over (a function giving the
+    // picture's circle, or null), and how far the answer has got, 0 to 1.
+    let wants = null;
+    let facing = 0;
+    // Where the circle last stood, so that once it is let go the ring
+    // closes up THERE rather than vanishing in one frame.
+    let lastAim = null;
 
     // ============================================================
     // BUILDING IT, ONCE
@@ -433,10 +470,14 @@
     // ============================================================
     /** One speck, at a place on the window, with its depth already
         worked out. `lit` is how brightly, before the quiet. */
-    function speck(x, y, lit, wide, warm) {
+    function speck(x, y, lit, wide, warm, loud) {
       if (lit <= 0.006) return;
       if (x < -40 || y < -40 || x > width + 40 || y > height + 40) return;
-      const quiet = hush(x, y);
+      // `loud` is how much of the quiet a speck is let off — the ring and
+      // the burn round an opened picture stand round a picture, not over
+      // the writing.
+      const q0 = hush(x, y);
+      const quiet = loud ? q0 + (1 - q0) * loud : q0;
       const on = lit * quiet;
       if (on <= 0.006) return;
       // THE BLOOM GOES BEFORE THE SPECK DOES. Scaled by the cube of the
@@ -469,6 +510,11 @@
       readColumn();
       bloom();
       inked = -1;
+      // WHERE THE OPENED PICTURE STANDS, if one does, read once a frame.
+      let aim = facing > 0.004 && wants ? wants() : null;
+      if (aim) lastAim = aim;
+      else if (facing > 0.004) aim = lastAim;
+      const ease = facing * facing * (3 - 2 * facing);
       ink.setTransform(ratio, 0, 0, ratio, 0, 0);
       ink.clearRect(0, 0, width, height);
       ink.globalCompositeOperation = "lighter";
@@ -479,8 +525,9 @@
       // would cost the reading something it cannot get back.
       const far = R * CORONA;
       const air = ink.createRadialGradient(cx, cy, R * 0.55, cx, cy, far);
-      air.addColorStop(0, "rgba(255, 228, 182, " + CORONA_LIT.toFixed(3) + ")");
-      air.addColorStop(0.35, "rgba(255, 206, 146, " + (CORONA_LIT * 0.42).toFixed(3) + ")");
+      const corona = CORONA_LIT * (1 + CORONA_SWELL * ease);
+      air.addColorStop(0, "rgba(255, 228, 182, " + corona.toFixed(3) + ")");
+      air.addColorStop(0.35, "rgba(255, 206, 146, " + (corona * 0.42).toFixed(3) + ")");
       air.addColorStop(1, "rgba(255, 196, 132, 0)");
       ink.globalAlpha = 1;
       ink.fillStyle = air;
@@ -525,9 +572,25 @@
         // lifting them there is what gives the ball an edge without a
         // line being drawn anywhere.
         const round = Math.sqrt(Math.max(0, 1 - at[2] * at[2]));
-        const lit = s.base * (1 + CHURN * cell) *
+        let lit = s.base * (1 + CHURN * cell) *
           (front ? 1 : BEHIND) * (1 + LIMB * round * round);
-        speck(at[0], at[1], lit, s.size * (front ? 1 : 0.8), 0.35 + 0.45 * round);
+        // THE BURN BEHIND AN OPENED PICTURE: brightest at the circle's
+        // edge and gone by HALO of its radius further out, and let off
+        // the quiet by as much as it burns.
+        let loud = 0;
+        if (aim && front) {
+          const dx = at[0] - aim.x, dy = at[1] - aim.y;
+          const reach = aim.r * (1 + HALO);
+          if (dx > -reach && dx < reach && dy > -reach && dy < reach) {
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d > aim.r && d < reach) {
+              const k = 1 - (d - aim.r) / (reach - aim.r);
+              loud = ease * k * k;
+              lit *= 1 + HALO_LIT * loud;
+            }
+          }
+        }
+        speck(at[0], at[1], lit, s.size * (front ? 1 : 0.8), 0.35 + 0.45 * round, loud);
       }
 
       // THE WIND, blowing to the left edge. A speck's place along its
@@ -593,6 +656,45 @@
         }
       }
 
+      // THE RING ROUND AN OPENED PICTURE, drawn round from the point
+      // that faces the sun: at `ease` it has closed. Lit brightest where
+      // the light comes from and faint on the far side, ticked every ten
+      // degrees, the ticks drifting slowly round.
+      if (aim) {
+        let a0 = Math.atan2(cy - aim.y, cx - aim.x);
+        // Standing on the sun's very middle, it faces up and to the right.
+        if (Math.hypot(cx - aim.x, cy - aim.y) < aim.r * 0.3) a0 = -Math.PI / 4;
+        const open = Math.PI * ease;
+        const outer = aim.r + RING_OUT;
+        const inner = aim.r + RING_IN;
+        const drift = REDUCE_MOTION ? 0 : t * RING_TURN;
+        for (let n = 0; n < RING_SPECKS; n++) {
+          const th = (n / RING_SPECKS) * Math.PI * 2;
+          let off = th - a0;
+          off = Math.atan2(Math.sin(off), Math.cos(off));
+          if (Math.abs(off) > open) continue;
+          const face = 0.5 + 0.5 * Math.cos(off);
+          const lit = RING_LIT * (0.22 + 0.78 * face * face) * (0.88 + 0.12 * Math.sin(t * 1.7 + n * 0.9));
+          speck(aim.x + Math.cos(th) * outer, aim.y + Math.sin(th) * outer, lit, 1.5, 0.3 + 0.5 * (1 - face), 1);
+          if (n % 2 === 0) {
+            speck(aim.x + Math.cos(th) * inner, aim.y + Math.sin(th) * inner, lit * 0.42, 0.8, 0.5, 1);
+          }
+        }
+        for (let n = 0; n < RING_TICKS; n++) {
+          const th = (n / RING_TICKS) * Math.PI * 2 + drift;
+          let off = th - a0;
+          off = Math.atan2(Math.sin(off), Math.cos(off));
+          if (Math.abs(off) > open) continue;
+          const face = 0.5 + 0.5 * Math.cos(off);
+          const lit = RING_LIT * 1.3 * (0.25 + 0.75 * face * face);
+          const long = n % 9 === 0 ? 3 : 2;
+          for (let k = 1; k <= long; k++) {
+            const rr = outer + 3 + k * 3;
+            speck(aim.x + Math.cos(th) * rr, aim.y + Math.sin(th) * rr, lit * (1 - k * 0.16), 1.3, 0.2, 1);
+          }
+        }
+      }
+
       ink.globalAlpha = 1;
       ink.globalCompositeOperation = "source-over";
     }
@@ -606,6 +708,10 @@
       frame = requestAnimationFrame(tick);
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now;
+      // THE ANSWER comes and goes on its own clock, whatever the sun's is.
+      const want = wants && wants() ? 1 : 0;
+      if (facing < want) facing = Math.min(1, facing + dt / ANSWER_IN);
+      else if (facing > want) facing = Math.max(0, facing - dt / ANSWER_OUT);
       // HELD, it stands at one moment — see `hold` below — so it is drawn
       // once, and again only while it can be seen: under the chamber's
       // veil for most of the morph, drawing the same frame over and over
@@ -629,6 +735,15 @@
 
     const again = () => { size(); if (REDUCE_MOTION) draw(0); };
     window.addEventListener("resize", again);
+    // A STILL SUN IS DRAWN AGAIN ONLY WHEN IT MUST: while it is ringing a
+    // picture, on the next frame after a scroll, so the ring keeps to it.
+    let stillFrame = 0;
+    const stillAgain = () => {
+      if (!REDUCE_MOTION || stillFrame || !running) return;
+      stillFrame = requestAnimationFrame(() => { stillFrame = 0; draw(0); });
+    };
+    const onScroll = () => { if (wants) stillAgain(); };
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
 
     size();
     if (REDUCE_MOTION) {
@@ -658,6 +773,20 @@
       /** How far into its own time it has got — for anything that needs
           to know (the tests), since the drawing itself cannot be asked. */
       at: function () { return clock; },
+      /** An opened favourite: `get` gives the circle its picture stands
+          in — { x, y, r } on the window — or null, and the sun rings it
+          for as long as it answers. Null lets it go. See the header. */
+      attend: function (get) {
+        wants = typeof get === "function" ? get : null;
+        if (REDUCE_MOTION) {
+          // A STILL SUN answers at once, and is drawn again as the page
+          // is scrolled, since the ring has to stay round the picture.
+          facing = wants ? 1 : 0;
+          stillAgain();
+        }
+      },
+      /** How far the answer has got, 0 to 1 — for the tests. */
+      facing: function () { return facing; },
       capture: function () {
         caught = [];
         draw(clock);
@@ -671,6 +800,8 @@
         if (frame) cancelAnimationFrame(frame);
         frame = 0;
         window.removeEventListener("resize", again);
+        window.removeEventListener("scroll", onScroll, { capture: true });
+        if (stillFrame) cancelAnimationFrame(stillFrame);
         ink.setTransform(1, 0, 0, 1, 0, 0);
         ink.clearRect(0, 0, canvas.width, canvas.height);
       },

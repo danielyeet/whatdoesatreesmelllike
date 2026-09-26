@@ -49,10 +49,18 @@
                    notes-data.js, e.g. "abstraits:02". Giving it one
                    puts a NOTES button in the card when it is opened.
     data-image     optional — a picture of that perfume, which stands
-                   beside the writing when the card is opened. Credit
-                   it wherever it came from, the way the houses do.
-    href           where that fragrance lives, which is what "GO TO
-                   FRAGRANCE" follows.
+                   in a circle beside the writing when the card is
+                   opened, the whole bottle over a blurred copy of
+                   itself. Every favourite has one since 2026-09-26: the
+                   same picture its own page shows.
+    data-credit    where that picture came from, as its own page credits
+                   it ("Tombstone", "Sillyage", "my own"), and
+    data-credit-href  the link to go with it, if there is one. It is
+                   printed under the circle: "Picture: Tombstone".
+    href           where that fragrance lives, which is what "Read the
+                   whole entry" follows — and where the opened card takes
+                   the opening of its writing from, when the favourite
+                   has none written for it below.
 
   WITHOUT JAVASCRIPT this page is that same plain list of favourites,
   which is the right fallback: every one of them is there and every one
@@ -69,6 +77,7 @@
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Les Abstraits"
        data-notes="abstraits:02"
        data-image="../images/Les-Abstraits/Perfumes/Des cendres 1.jpg"
+       data-credit="Les Abstraits" data-credit-href="https://lesabstraits.com/"
        href="../houses/les-abstraits.html#part-02">Des Cendres</a>
 
     <!-- Added 2026-09-25 at the owner's word, in the order they gave:
@@ -79,37 +88,54 @@
          carries no data-notes: Tale's notes have not been found yet. -->
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Prissana"
        data-notes="individual:03"
+       data-image="../images/Individual Fragrances/Haxan/web/1.webp" data-credit="my own"
        href="../individual-fragrances/individual-fragrances.html#part-03">Haxan</a>
 
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Serge Lutens"
        data-notes="individual:02"
+       data-image="../images/Individual Fragrances/002 De Profundis.jpg"
+       data-credit="Sillyage" data-credit-href="https://sillyage.wordpress.com/2015/04/14/serge-lutens-de-profundis-2011/"
        href="../individual-fragrances/individual-fragrances.html#part-02">De Profundis</a>
 
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Tombstone"
        data-notes="tombstone:02"
+       data-image="../images/Tombstone/Fragrances/Evergrow.webp"
+       data-credit="Tombstone" data-credit-href="https://tombstonefragrances.shop/"
        href="../houses/tombstone.html#part-02">Evergrow</a>
 
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Tombstone"
        data-notes="tombstone:04"
+       data-image="../images/Tombstone/Fragrances/Sing at my funeral.webp"
+       data-credit="Tombstone" data-credit-href="https://tombstonefragrances.shop/"
        href="../houses/tombstone.html#part-04">Sing at My Funeral</a>
 
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Dior"
        data-notes="individual:04"
+       data-image="../images/Individual Fragrances/004 Tobacolour.webp"
+       data-credit="Dior" data-credit-href="https://www.dior.com/en_dk/beauty/products/tobacolor-Y0996186.html"
        href="../individual-fragrances/individual-fragrances.html#part-04">Tobacolor</a>
 
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Tale Parfums"
+       data-image="../images/Tale/Perfumes/Bad Lily 1.webp"
+       data-credit="TALE Parfum" data-credit-href="https://www.taleparfum.com/"
        href="../houses/tale-parfums.html#part-01">Bad Lily</a>
 
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Mancera"
        data-notes="individual:06"
+       data-image="../images/Individual Fragrances/006 French Riviera.webp"
+       data-credit="Vivantis" data-credit-href="https://www.vivantis.hu/parfumok/mancera-french-riviera-edp.html"
        href="../individual-fragrances/individual-fragrances.html#part-06">French Riviera</a>
 
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Ataraxia"
        data-notes="ataraxia:01"
+       data-image="../images/Ataraxia/Perfumes/Amaretto Jazz.webp"
+       data-credit="Ataraxia" data-credit-href="https://ataraxiaperfumery.com/"
        href="../houses/ataraxia.html#part-01">Amaretto Jazz in the Melting Room</a>
 
     <a class="gallery-entry" data-chapter="Chapter 1" data-house="Les Abstraits"
        data-notes="abstraits:01"
+       data-image="../images/Les-Abstraits/Perfumes/Belle Ame.webp"
+       data-credit="Les Abstraits" data-credit-href="https://lesabstraits.com/"
        href="../houses/les-abstraits.html#part-01">Belle Âme</a>
 
   </div>
@@ -160,8 +186,12 @@
     `gallery-word`. Any other markup in a block is carried through as
     it stands.
 
-    A favourite with no block opens with its links and nothing else,
-    which is honest: nobody has written it yet.
+    A favourite with no block — or whose block is only placeholders
+    marked `gallery-waiting` — opens with the first lines of its own
+    writing instead, read off the page its `href` points at, and a
+    link to the rest. Nothing is copied here: the words are fetched,
+    so there is still one copy of them. A favourite whose page says
+    nothing yet says that.
   -->
   <div class="gallery-writings">
 

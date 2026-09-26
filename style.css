@@ -4793,6 +4793,13 @@ body.find-reading .find-reading-note { opacity: 1; }
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: none; }
 }
+/* ARRIVED, the animation is retired and its end state written down.
+   A finished animation that holds its fill keeps the card on a layer of
+   its own, and a card opened out of the middle of a row onto a row of
+   its own was left half painted on it — Haxan opened with the left of
+   its head blank, name and all. `chamber.js` adds this on the
+   animation's own end. */
+.chapter-page.here .chapter-card.is-in { animation: none; opacity: 1; }
 /* The corner marks: two hairlines at the top left and the bottom right,
    drawn in and not on — they run out to meet the card's own rule as the
    hand comes on to it. */
@@ -4829,7 +4836,9 @@ body.find-reading .find-reading-note { opacity: 1; }
   border-bottom-color: transparent;
   background: linear-gradient(160deg, rgba(200, 204, 212, 0.1), rgba(200, 204, 212, 0) 60%);
 }
-.chapter-card-shell.is-open .chapter-card::after { display: none; }
+.chapter-card-shell.is-open .chapter-card::after,
+.chapter-card-shell.is-open .chapter-card::before { display: none; }
+.chapter-card-shell.is-open .chapter-card-name { font-size: 24px; }
 
 .chapter-card-no {
   grid-area: no;
@@ -4850,24 +4859,46 @@ body.find-reading .find-reading-note { opacity: 1; }
 .chapter-card-house {
   grid-area: house;
   align-self: end;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 13px;
+  letter-spacing: 0.01em;
   color: var(--silver-dim);
 }
+/* THE SIGN, where "OPEN ↓" and "CLOSE ↑" stood in capitals until
+   2026-09-26: a small circle with a cross of hairlines in it, whose
+   upright turns down flat as the card opens — a plus becoming a minus. */
 .chapter-card-go {
   grid-area: go;
   align-self: end;
   justify-self: end;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
   color: var(--silver-dim);
   transition: color 0.35s var(--menu-ease);
 }
+.chapter-card-sign {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+.chapter-card-sign::before,
+.chapter-card-sign::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  transition: transform 0.42s var(--menu-ease);
+}
+.chapter-card-sign::after { transform: translate(-50%, -50%) rotate(90deg); }
+.chapter-card-shell.is-open .chapter-card-sign::after { transform: translate(-50%, -50%) rotate(0deg); }
 .chapter-card:hover .chapter-card-go { color: var(--silver); }
-.chapter-card-shell.is-open .chapter-card-house,
-.chapter-card-shell.is-open .chapter-card-go { align-self: baseline; }
+.chapter-card-shell.is-open .chapter-card-house { align-self: baseline; }
+.chapter-card-shell.is-open .chapter-card-go { align-self: center; }
 
 /* WHAT THE CARD OPENS INTO. Opened on a measured height rather than on
    `auto`, which is not a height a browser will ease to — the same way a
@@ -4882,58 +4913,180 @@ body.find-reading .find-reading-note { opacity: 1; }
 }
 .chapter-card-body[hidden] { display: none; }
 
-.fav-writing { padding: 26px 22px 6px; max-width: 64ch; }
-.fav-writing p { margin: 0 0 15px; font-size: 16.5px; line-height: 1.62; color: #aeb3bc; }
+/* WHAT AN OPENED FAVOURITE IS, since 2026-09-26 — "less techy, more
+   minimalist and geometric. Make it somehow react with the sun too."
+   Two things side by side and nothing else: the writing, in the page's
+   own face, and the picture in a CIRCLE on the side facing the sun,
+   which the sun itself rings (sun.js, "the answer"). No capitals, no
+   mono, no boxes; one hairline over the two ways on. */
+.fav-open {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(40px, 6vw, 88px);
+  padding: clamp(30px, 4vw, 48px) clamp(24px, 3.4vw, 44px) clamp(34px, 4vw, 50px);
+}
+.fav-open-bare { grid-template-columns: minmax(0, 1fr); }
+.fav-read { max-width: 60ch; min-width: 0; }
+
+/* THE WRITING: the favourite's own if there is any, and otherwise the
+   opening of its entry, whole paragraphs of the owner's own words. A
+   short rule stands above it, the one ornament. */
+.fav-writing::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 1px;
+  margin-bottom: 24px;
+  background: rgba(200, 204, 212, 0.4);
+}
+.fav-writing p { margin: 0 0 16px; font-size: 17px; line-height: 1.72; color: #c4c8cf; }
+.fav-writing p:last-child { margin-bottom: 0; }
+.fav-writing .fav-quiet { font-size: 15px; font-style: italic; color: var(--silver-dim); }
+.fav-writing .fav-quiet a { color: inherit; text-underline-offset: 3px; }
 /* THE COMMENTARY, under the description — the owner asked for "another
    paragraph for commentary", which is a different kind of writing from
    the one above it and is set apart rather than run on. */
 .fav-writing .gallery-word {
   border-left: 1px solid var(--silver-line);
   padding-left: 16px;
-  color: #8f949d;
+  color: #9ba0a9;
 }
-/* NOT WRITTEN YET, and saying so: the dashed box the rest of the site
-   uses for an unwritten paragraph, in this page's silver. */
-.fav-writing .gallery-waiting {
-  font-family: var(--mono);
-  font-size: 12.5px;
-  letter-spacing: 0.05em;
-  line-height: 1.85;
-  color: #767e8d;
-  border: 1px dashed rgba(200, 204, 212, 0.24);
-  padding: 14px 16px;
-}
-.fav-writing .gallery-waiting.gallery-word { border-left: 1px dashed rgba(200, 204, 212, 0.24); }
+/* A favourite's own block still saying it waits is not shown at all —
+   the opening of its entry stands in its place — so this is only for a
+   block that mixes written and waiting paragraphs. */
+.fav-writing .gallery-waiting { font-size: 15px; font-style: italic; color: var(--silver-dim); }
 
-/* THE TWO WAYS ON FROM A FAVOURITE. "Go to fragrance" follows the
-   entry's own href — wherever that perfume lives on this site — and
-   "Notes" opens the same window every other page opens, in this page's
-   colours. They are a link and a button and must read as one thing. */
+/* THE TWO WAYS ON: "Read the whole entry" follows the favourite's own
+   href, and "Notes" opens the same window every other page opens, in
+   this page's colours. Words, a hairline arrow and a small circle —
+   not buttons in capitals. */
 .fav-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin: 0;
-  padding: 10px 22px 26px;
+  align-items: center;
+  gap: 14px 34px;
+  margin: 30px 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--silver-line);
 }
 .fav-link {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 11px 15px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--silver-dim);
+  gap: 12px;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 14.5px;
+  letter-spacing: 0.01em;
+  color: var(--silver);
   text-decoration: none;
   background: none;
-  border: 1px solid var(--silver-line);
+  border: 0;
   cursor: pointer;
-  transition: color 0.3s var(--menu-ease), border-color 0.3s var(--menu-ease);
 }
-.fav-link:hover { color: var(--silver); border-color: rgba(200, 204, 212, 0.5); }
-.fav-link-mark { font-size: 12px; }
+.fav-link-say {
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s var(--menu-ease);
+}
+.fav-link:hover .fav-link-say,
+.fav-link:focus-visible .fav-link-say { border-bottom-color: currentColor; }
+/* The arrow: a hairline with a chevron at its end, which runs out a
+   little further as the hand comes on to it. */
+.fav-link-mark {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.35s var(--menu-ease);
+}
+.fav-link-mark::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: translateY(-50%) rotate(45deg);
+}
+.fav-link:hover .fav-link-mark { width: 38px; }
+/* The notes' circle, filled as the hand comes on to it. */
+.fav-link-ring {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  transition: background-color 0.3s var(--menu-ease);
+}
+.fav-link:hover .fav-link-ring { background: currentColor; }
+
+/* THE PICTURE, IN A CIRCLE — the sun's own shape, on the side of the
+   card that faces it, where the sun can ring it. The whole bottle stands
+   in the middle, never cropped, over a blurred copy of the same picture
+   filling the rest of the circle; the credit sits under it. */
+.fav-disc {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 42px;
+}
+.fav-disc-face {
+  position: relative;
+  display: block;
+  width: clamp(210px, 22vw, 290px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #111317;
+  box-shadow: 0 0 0 1px rgba(200, 204, 212, 0.18);
+  isolation: isolate;
+  transition: background-color 0.5s var(--menu-ease);
+}
+.fav-disc-face img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.fav-disc-haze {
+  object-fit: cover;
+  transform: scale(1.4);
+  filter: blur(24px) saturate(1.1) brightness(0.94);
+}
+.fav-disc-face .fav-disc-shot {
+  inset: auto;
+  left: 17%;
+  top: 17%;
+  width: 66%;
+  height: 66%;
+  object-fit: contain;
+}
+/* A STUDIO SHOT (chamber.js reads its corners): the circle turns the
+   pale of paper and the picture is multiplied onto it, so its white
+   ground goes into the circle and only the bottle is left. */
+.fav-disc-face.is-studio { background: #ece9e3; }
+.fav-disc-face.is-studio .fav-disc-haze { display: none; }
+.fav-disc-face.is-studio .fav-disc-shot { mix-blend-mode: multiply; }
+/* ANYTHING ELSE keeps its blur, and the picture — sized to its own
+   shape — is feathered at its edges into it. */
+.fav-disc-face.is-scene .fav-disc-shot {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent),
+    linear-gradient(0deg, transparent, #000 9%, #000 91%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent),
+    linear-gradient(0deg, transparent, #000 9%, #000 91%, transparent);
+  mask-composite: intersect;
+}
+.fav-credit {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--silver-dim);
+}
+.fav-credit a { color: inherit; text-underline-offset: 3px; }
+.fav-credit a:hover { color: var(--silver); }
 
 /* THE NOTES WINDOW, IN THIS PAGE'S COLOURS.
 
@@ -5025,8 +5178,11 @@ body.find-reading .find-reading-note { opacity: 1; }
   .chapter-title { flex-wrap: wrap; gap: 14px; }
   .chapter-title .chapter-name { flex: 1 0 100%; order: -1; }
   .chapter-step { width: 44px; height: 44px; }
-  .fav-writing { padding: 22px 16px 4px; }
-  .fav-links { padding: 8px 16px 22px; }
+  /* The circle goes above the writing on a phone, centred: beside is
+     not a thing a phone has room for. */
+  .fav-open { grid-template-columns: 1fr; gap: 30px; padding: 30px 18px 32px; }
+  .fav-disc { order: -1; }
+  .fav-disc-face { width: min(240px, 68vw); }
   /* Open, the head of the window goes back to two lines — four things
      across a phone is four things you cannot read. */
   .chapter-card-shell.is-open .chapter-card {
@@ -8438,33 +8594,10 @@ a.note-cite:hover { color: var(--ink); }
 .house-credit a { color: var(--ink); text-underline-offset: 3px; }
 .house-credit a:hover { color: var(--muted); }
 
-/* THE PICTURE ON AN OPENED FAVOURITE. A favourite may name a picture of
-   its own (`data-image`), and it stands beside the writing when the card
-   is opened. Under 720px it goes above it instead — beside is not a
-   thing a phone has room for. */
-.fav-shot {
-  margin: 0 0 18px;
-  float: right;
-  width: min(280px, 38%);
-  margin-left: 24px;
-}
-.fav-shot img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--silver-line);
-}
-.fav-writing::after { content: ""; display: block; clear: both; }
-/* AND EVERY BLOCK BESIDE THE PICTURE GETS ITS OWN FORMATTING CONTEXT.
-   A float narrows the LINES of a block, not the block itself, so a
-   paragraph in a box — and the two beside this picture are dashed
-   boxes — kept its full width and ran its border underneath the
-   picture while its words wrapped politely round it. A block that
-   establishes a formatting context may not overlap a float at all, so
-   the box narrows with the text. */
-.fav-writing > :not(.fav-shot) { display: flow-root; }
+/* (The picture on an opened favourite was a floated rectangle here,
+   `.fav-shot`, until 2026-09-26; it is the circle now, `.fav-disc`, with
+   the rest of the opened favourite's rules.) */
 @media (max-width: 720px) {
-  .fav-shot { float: none; width: 100%; margin-left: 0; }
   /* The same 24px the three house feet drop to at this width. */
   .house-credit { padding-left: 24px; padding-right: 24px; }
   /* A long source name in the mono has nowhere to break on a narrow
@@ -9348,15 +9481,47 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   padding-top: 14px;
 }
 .frag-stage.is-boxes .frag-item {
+  position: relative;
   aspect-ratio: 1;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: auto 1fr auto auto;
   grid-template-areas: "no house" ". ." "name name" "date date";
   padding: 11px 12px 12px;
+  overflow: hidden;
   border: 1px solid rgba(var(--ink-rgb), 0.16);
   background: rgba(255, 255, 255, 0.78);
 }
+/* THE BOX'S PICTURE (2026-09-26): the whole box is the picture's own
+   colours, blurred, and the bottle stands whole in the middle of it
+   between the number and the name — see "a picture laid down twice"
+   below. The writing stands over it on a veil of the paper at the top
+   and the foot, so it reads as well as it did on plain paper. */
+.frag-stage.is-boxes .frag-t-pic {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  overflow: hidden;
+}
+.frag-stage.is-boxes .frag-t-pic-no { display: none; }
+.frag-stage.is-boxes .frag-t-pic .frag-t-shot {
+  inset: 31px 14px 66px;
+  width: calc(100% - 28px);
+  height: calc(100% - 97px);
+}
+.frag-stage.is-boxes .frag-t-pic::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0) 30px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.62) 44px, rgba(255, 255, 255, 0) 66px);
+  pointer-events: none;
+}
+.frag-stage.is-boxes .frag-t-pic .frag-t-shot { z-index: 2; }
+.frag-stage.is-boxes .frag-item > :not(.frag-t-pic) { position: relative; z-index: 3; }
 .frag-stage.is-boxes .frag-item:hover,
 .frag-stage.is-cards .frag-item:hover { border-color: var(--ink); }
 .frag-stage.is-boxes .frag-t-no { grid-area: no; font-size: 12px; }
@@ -9393,6 +9558,11 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   border: 1px solid rgba(var(--ink-rgb), 0.16);
   background: #fff;
 }
+.frag-stage.is-cards .frag-t-pic .frag-t-shot {
+  inset: 7% 8%;
+  width: 84%;
+  height: 86%;
+}
 .frag-stage.is-cards .frag-t-pic {
   grid-area: pic;
   position: relative;
@@ -9404,12 +9574,55 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   background-color: var(--bg-2);
   background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb), 0.09) 0px, rgba(var(--ink-rgb), 0.09) 1px, transparent 1px, transparent 12px);
 }
+/* A PICTURE LAID DOWN TWICE, in the cards and the boxes (2026-09-26):
+   "make it so that the pictures in the cards and in the boxes menu are
+   zoomed out and you can see the entire fragrance". So the picture
+   itself is CONTAINED — the whole of it, never cropped — and behind it
+   the same picture is laid again, BLURRED, scaled up past the frame's
+   edges and a little lighter, so what the whole picture leaves empty is
+   filled with its own colours rather than with paper. A white studio
+   shot fills with white; a bottle photographed on flowers fills with the
+   flowers' colour. */
 .frag-t-pic img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+}
+.frag-t-pic .frag-t-haze {
   object-fit: cover;
+  transform: scale(1.4);
+  filter: blur(18px) saturate(1.2) brightness(1.04);
+  opacity: 0.86;
+}
+.frag-t-pic .frag-t-shot { object-fit: contain; }
+.frag-t-pic { isolation: isolate; }
+/* A STUDIO SHOT (fragrance-line.js reads its corners): no blur behind
+   it, and the picture multiplied onto the frame's white, so its white
+   ground goes and only the bottle is left. */
+.frag-stage .frag-t-pic.is-studio .frag-t-haze { display: none; }
+.frag-stage .frag-t-pic.is-studio .frag-t-shot { mix-blend-mode: multiply; }
+.frag-stage.is-boxes .frag-t-pic.is-studio { background: rgba(255, 255, 255, 0.9); }
+/* A SCENE keeps its blur, and is feathered at its edges into it. Its
+   box is set to its own shape (--shape, width over height), centred in
+   the room it had, so the feathering falls on the picture's edges. */
+.frag-stage .frag-t-pic.is-scene .frag-t-shot {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(0deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(0deg, transparent, #000 8%, #000 92%, transparent);
+  mask-composite: intersect;
+  margin: auto;
+}
+.frag-stage .frag-t-pic { container-type: size; }
+.frag-stage.is-cards .frag-t-pic.is-scene .frag-t-shot {
+  width: min(84cqw, calc(86cqh * var(--shape, 1)));
+  height: min(86cqh, calc(84cqw / var(--shape, 1)));
+}
+.frag-stage.is-boxes .frag-t-pic.is-scene .frag-t-shot {
+  width: min(calc(100cqw - 28px), calc((100cqh - 97px) * var(--shape, 1)));
+  height: min(calc(100cqh - 97px), calc((100cqw - 28px) / var(--shape, 1)));
 }
 .frag-t-pic-no {
   position: absolute;
@@ -9421,6 +9634,7 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   color: rgba(var(--ink-rgb), 0.5);
 }
 .frag-t-pic.has-picture .frag-t-pic-no { display: none; }
+.frag-stage .frag-t-pic.has-picture { background-image: none; background-color: #fff; }
 .frag-stage.is-cards .frag-t-no { grid-area: no; padding-left: 14px; font-size: 12px; }
 .frag-stage.is-cards .frag-t-date { grid-area: date; padding-right: 14px; text-align: right; font-size: 11px; }
 .frag-stage.is-cards .frag-t-name { grid-area: name; padding: 7px 14px 0; font-size: 17px; line-height: 1.2; }
@@ -9517,7 +9731,14 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   .frag-items { font-size: 13px; }
   .frag-t-no, .frag-t-date { font-size: 11px; }
   .frag-sort { letter-spacing: 0.08em; padding-right: 6px; }
-  .frag-stage.is-boxes .frag-items { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  /* Two to a row, since each carries its picture (2026-09-26): three
+     left the bottle a speck between the number and the name. */
+  .frag-stage.is-boxes .frag-items { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .frag-stage.is-boxes .frag-t-pic .frag-t-shot { inset: 28px 12px 62px; width: calc(100% - 24px); height: calc(100% - 90px); }
+  .frag-stage.is-boxes .frag-t-pic.is-scene .frag-t-shot {
+    width: min(calc(100cqw - 24px), calc((100cqh - 90px) * var(--shape, 1)));
+    height: min(calc(100cqh - 90px), calc((100cqw - 24px) / var(--shape, 1)));
+  }
   .frag-stage.is-boxes .frag-item { padding: 8px 9px 9px; }
   .frag-stage.is-boxes .frag-t-name { font-size: 13.5px; }
   .frag-stage.is-cards .frag-items { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }

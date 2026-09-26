@@ -1,9 +1,11 @@
 FAVOURITES' photographs — whatever categories/favorites.html comes to
 show.
 
-Nothing on that page asks for a file by name yet. When it does, the
-name it wants will be written into the page next to the picture, the
-same way ADAR's and Pineward's are.
+Every favourite already has its picture, and it is the same file its
+own page shows: each one points (data-image) into the folder of the
+house it comes from, or into Individual Fragrances. So this folder is
+empty on purpose. It is for a picture of a favourite that no other page
+on the site has.
 
 This note is only here so the folder itself survives; delete it once
 there are real pictures in here.

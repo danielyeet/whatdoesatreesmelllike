@@ -835,7 +835,13 @@ test("a favourite opens where it stands, and the ones after it go down",
   expect(after[1].top, "the ones after it go down")
     .toBeGreaterThan(before[1].top + 40);
 
-  // What is inside it.
+  // What is inside it. Its writing, when the owner has written none
+  // for it here, is the start of its own entry, fetched — so wait for
+  // that to have come.
+  await page.waitForFunction(() => {
+    const w = document.querySelector(".chapter-card-shell.is-open .fav-writing");
+    return w && (!w.classList.contains("is-from") || w.dataset.from);
+  }, null, { timeout: 5000 });
   const inside = await page.evaluate(() => {
     const shell = document.querySelector(".chapter-card-shell.is-open");
     const body = shell.querySelector(".chapter-card-body");
@@ -848,8 +854,7 @@ test("a favourite opens where it stands, and the ones after it go down",
     };
   });
   expect(inside.tall, "opened on a measured height").toBeGreaterThan(80);
-  expect(inside.said, "a description and a paragraph of commentary")
-    .toBeGreaterThanOrEqual(2);
+  expect(inside.said, "something to read").toBeGreaterThanOrEqual(1);
   expect(inside.go, "and a way on to wherever that fragrance lives")
     .toMatch(/^\.\.\/[\w-]+\/[\w-]+\.html(#[\w-]+)?$/);
   expect(inside.notes).toBe(true);
@@ -861,6 +866,183 @@ test("a favourite opens where it stands, and the ones after it go down",
   expect(await page.locator(".chapter-card-shell.is-open").count()).toBe(1);
   expect(await page.locator(".chapter-card-shell").nth(1)
     .evaluate((s) => s.classList.contains("is-open"))).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+/* WHAT AN OPENED FAVOURITE SAYS, REWORKED. The owner: "reword the way
+   that the favorite perfumes open when you click them. also add images
+   if you have them based on the name from the repository. I want you to
+   make it less techy, more minimalist and geometric." So an opened
+   favourite carries the start of its own entry — the owner's words, off
+   the page it links to, never edited — two plain links, and its picture
+   whole in a circle, credited under it. */
+test("an opened favourite reads the start of its own entry, beside its picture in a circle, credited",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+
+  const entries = await page.$$eval(".gallery-entry", (all) => all.map((e) => ({
+    name: e.textContent.trim(),
+    chapter: e.dataset.chapter,
+    image: e.dataset.image || "",
+    credit: e.dataset.credit || "",
+    href: e.getAttribute("href"),
+  })));
+  const here = entries.filter((e) => e.chapter === entries[0].chapter);
+  // EVERY FAVOURITE HAS A PICTURE NOW, and says where it came from.
+  here.forEach((e) => {
+    expect(e.image, `${e.name} should name its picture`).toMatch(/^\.\.\/images\//);
+    expect(e.credit, `${e.name}'s picture should be credited`).not.toBe("");
+  });
+
+  // Every card carries its circle and its credit, shut or open.
+  const discs = await page.$$eval(".chapter-card-shell", (all) => all.map((shell) => ({
+    name: shell.querySelector(".chapter-card-name").textContent.trim(),
+    src: (shell.querySelector(".fav-disc-shot") || {}).getAttribute
+      ? shell.querySelector(".fav-disc-shot").getAttribute("src") : null,
+    haze: (shell.querySelector(".fav-disc-haze") || {}).getAttribute
+      ? shell.querySelector(".fav-disc-haze").getAttribute("src") : null,
+    credit: (shell.querySelector(".fav-credit") || { textContent: "" }).textContent.trim(),
+    sign: shell.querySelector(".chapter-card-go").textContent.trim(),
+  })));
+  discs.forEach((d, n) => {
+    expect(d.src, `${d.name} carries its picture`).toBe(here[n].image);
+    expect(d.haze, `${d.name}'s blur is its own picture`).toBe(here[n].image);
+    expect(d.credit, `${d.name} says whose picture it is`).toBe("Picture: " + here[n].credit);
+    // Less technical: the card is opened by a drawn sign, not OPEN ↓.
+    expect(d.sign, `${d.name}'s card says nothing in capitals`).toBe("");
+  });
+
+  // And every one of those pictures is really there: named by a file
+  // in the repository, not a hope. (repository.spec.js lets a missing
+  // picture under images/ through on purpose, so this is the check.)
+  await expect.poll(() => page.$$eval(".fav-disc-shot", (all) => all
+    .filter((img) => !(img.complete && img.naturalWidth > 0))
+    .map((img) => img.getAttribute("src"))), { timeout: 8000 }).toEqual([]);
+
+  // THE FIRST, OPENED: its writing is the start of its own entry.
+  await page.locator(".chapter-card").first().click();
+  await page.waitForFunction(() => {
+    const w = document.querySelector(".chapter-card-shell.is-open .fav-writing");
+    return w && w.dataset.from;
+  }, null, { timeout: 5000 });
+  const read = await page.evaluate(async (href) => {
+    const shell = document.querySelector(".chapter-card-shell.is-open");
+    const said = [...shell.querySelectorAll(".fav-writing p")].map((p) => p.textContent);
+    const url = new URL(href, location.href);
+    const doc = new DOMParser().parseFromString(await (await fetch(url.href)).text(), "text/html");
+    const part = doc.getElementById(url.hash.slice(1));
+    const own = [...part.querySelectorAll(".human-text > p, .pine-text > p, .adar-text > p")]
+      .filter((p) => !p.matches(".human-stage, .adar-stage, .pine-stage, .human-waiting, .human-note"))
+      .map((p) => p.textContent.replace(/\s+/g, " ").trim()).filter(Boolean);
+    const shot = shell.querySelector(".fav-disc-shot");
+    const face = shell.querySelector(".fav-disc-face");
+    const f = face.getBoundingClientRect(), r = shot.getBoundingClientRect();
+    const links = [...shell.querySelectorAll(".fav-link")].map((a) => ({
+      say: a.textContent.trim(), font: getComputedStyle(a).fontFamily }));
+    return {
+      from: shell.querySelector(".fav-writing").dataset.from,
+      said, own,
+      round: (() => {
+        const rad = getComputedStyle(face).borderRadius;
+        return rad === "50%" || parseFloat(rad) >= f.width / 2 - 1;
+      })(),
+      square: Math.abs(f.width - f.height),
+      fit: getComputedStyle(shot).objectFit,
+      inside: r.left >= f.left - 1 && r.right <= f.right + 1 && r.top >= f.top - 1 && r.bottom <= f.bottom + 1,
+      kind: face.classList.contains("is-studio") ? "studio" : face.classList.contains("is-scene") ? "scene" : "",
+      links,
+    };
+  }, here[0].href);
+  expect(read.from, "read off its own page").toBe("page");
+  expect(read.said.length, "an opening, not the whole entry").toBeGreaterThanOrEqual(1);
+  expect(read.said.length).toBeLessThanOrEqual(2);
+  // THE OWNER'S WORDS, EXACTLY. Each paragraph is one of theirs, or the
+  // start of one stopped with an ellipsis — never reworded.
+  read.said.forEach((line, n) => {
+    const cut = line.replace(/ \u2026$/, "");
+    expect(read.own[n].startsWith(cut), `paragraph ${n + 1} is the owner's own`).toBe(true);
+    if (cut === line) expect(line).toBe(read.own[n]);
+  });
+  expect(read.said.join(" ").length, "and not so long it is the whole card").toBeLessThan(700);
+
+  expect(read.round, "the picture stands in a circle").toBe(true);
+  expect(read.square).toBeLessThanOrEqual(1);
+  expect(read.fit, "the whole bottle, never cropped").toBe("contain");
+  expect(read.inside, "inside its circle").toBe(true);
+  expect(read.kind, "read as a studio shot or a scene").not.toBe("");
+
+  expect(read.links.map((l) => l.say)).toEqual(["Read the whole entry", "Notes"]);
+  read.links.forEach((l) => expect(l.font, `${l.say} is not set in the mono`).not.toMatch(/mono/i));
+  expect(errors).toEqual([]);
+});
+
+/* AND THE SUN ANSWERS IT. The owner: "Make it somehow react with the
+   sun too." An opened favourite tells the sun where its circle stands,
+   and the sun rings it: a ring of its own specks run round the circle,
+   lit from the sun's side, ticks off it, and the surface near it
+   brightened. Shut it, and the sun lets go. */
+test("the sun rings an opened favourite's picture, and lets go when it is shut",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  // Keep hold of the sun the page makes, to ask it how far it has turned
+  // to the picture.
+  await page.evaluate(() => {
+    const make = window.CHAPTER_GROUNDS.sun;
+    window.CHAPTER_GROUNDS.sun = function (canvas, opts) {
+      const made = make(canvas, opts);
+      window.__sun = made;
+      window.__sunCanvas = canvas;
+      return made;
+    };
+  });
+  await openMenu(page);
+  await openChapterFully(page, 0);
+  expect(await page.evaluate(() => window.__sun && window.__sun.facing()), "nothing open, nothing ringed").toBe(0);
+
+  // Ink in a band just outside the circle, on the sun's own canvas —
+  // read at one place on the window, so the same band can be read again
+  // with the card shut.
+  const circle = () => page.evaluate(() => {
+    const f = document.querySelector(".chapter-card-shell.is-open .fav-disc-face").getBoundingClientRect();
+    return { x: f.left + f.width / 2, y: f.top + f.height / 2, r: f.width / 2 };
+  });
+  const band = (at) => page.evaluate((at) => {
+    const c = window.__sunCanvas;
+    const k = c.width / c.clientWidth;
+    const g = c.getContext("2d");
+    let sum = 0, n = 0;
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 90) {
+      for (let d = 4; d <= 22; d += 3) {
+        const x = Math.round((at.x + Math.cos(a) * (at.r + d)) * k);
+        const y = Math.round((at.y + Math.sin(a) * (at.r + d)) * k);
+        if (x < 0 || y < 0 || x >= c.width || y >= c.height) continue;
+        const px = g.getImageData(x, y, 1, 1).data;
+        sum += (px[0] + px[1] + px[2]) / 3 * (px[3] / 255);
+        n++;
+      }
+    }
+    return n ? sum / n : 0;
+  }, at);
+
+  await page.locator(".chapter-card").first().click();
+  await expect.poll(() => page.evaluate(() => window.__sun.facing()), { timeout: 5000 })
+    .toBeGreaterThan(0.95);
+  const at = await circle();
+  const lit = await band(at);
+
+  await page.locator(".chapter-card-shell.is-open .chapter-card").click();
+  await expect.poll(() => page.evaluate(() => window.__sun.facing()), { timeout: 5000 })
+    .toBe(0);
+  // The same place with the card shut again — the ring was the sun's
+  // answer, not the sun already standing bright there.
+  const before = await band(at);
+  expect(lit, "the ring is drawn round the picture").toBeGreaterThan(before * 1.5 + 4);
   expect(errors).toEqual([]);
 });
 

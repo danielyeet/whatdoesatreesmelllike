@@ -244,7 +244,7 @@ test("the options show the table as a list, as small boxes or as cards", async (
   await expect(page.locator(".frag-stage")).toHaveClass(/is-cards/);
   const cards = await acrossOf(page);
   expect(cards, "fewer cards to a row than boxes").toBeLessThan(boxes);
-  const haxan = page.locator(".frag-item", { hasText: "Haxan" }).locator(".frag-t-pic img");
+  const haxan = page.locator(".frag-item", { hasText: "Haxan" }).locator(".frag-t-pic .frag-t-shot");
   await expect(haxan).toHaveCount(1, { timeout: 5000 });
   await expect.poll(() => haxan.evaluate((img) => img.naturalWidth), { timeout: 5000 }).toBeGreaterThan(0);
   await expect(page.locator(".frag-item", { hasText: "Haxan" }).locator(".frag-t-pic")).toHaveClass(/has-picture/);
@@ -258,6 +258,60 @@ test("the options show the table as a list, as small boxes or as cards", async (
   await page.waitForTimeout(900);
   await expect(page.locator(".frag-stage")).toHaveClass(/is-list/);
   expect((await page.locator(".frag-item").first().boundingBox()).height).toBeLessThanOrEqual(38);
+});
+
+/* THE WHOLE BOTTLE, OVER A BLUR OF ITSELF. The owner: "add a blurred
+   version of the pictures in the boxes view ... MAKE IT SO THAT THE
+   PICTURES IN THE CARDS AND IN THE BOXES MENU ARE ZOOMED OUT AND YOU CAN
+   SEE THE ENTIRE FRAGRANCE!" Every picture that arrives stands whole —
+   `contain`, never cropped — inside its box, over a blurred copy of the
+   same file filling the rest; and a studio shot on white is set on
+   white, so it has no rectangle round it. Boxes carry pictures now as
+   well as cards. */
+test("boxes and cards show each fragrance whole, over a blurred copy of its picture", async ({ page }) => {
+  await toTheTable(page);
+  for (const mode of ["boxes", "cards"]) {
+    await page.locator(`.frag-mode[data-mode='${mode}']`).click();
+    await page.waitForTimeout(900);
+    await expect(page.locator(".frag-item", { hasText: "Haxan" }).locator(".frag-t-pic"))
+      .toHaveClass(/has-picture/, { timeout: 5000 });
+    await expect.poll(() => page.$$eval(".frag-t-pic.has-picture", (all) =>
+      all.filter((p) => /is-(studio|scene)/.test(p.className)).length), { timeout: 5000 })
+      .toBeGreaterThanOrEqual(5);
+    const seen = await page.$$eval(".frag-item:not([hidden])", (all) => all.map((li) => {
+      const pic = li.querySelector(".frag-t-pic");
+      if (!pic.classList.contains("has-picture")) return null;
+      const haze = pic.querySelector(".frag-t-haze");
+      const shot = pic.querySelector(".frag-t-shot");
+      const box = li.getBoundingClientRect();
+      const s = shot.getBoundingClientRect();
+      const hs = getComputedStyle(haze);
+      return {
+        name: li.querySelector(".frag-t-name").textContent.trim(),
+        same: haze.getAttribute("src") === shot.getAttribute("src"),
+        blurred: /blur\(/.test(hs.filter),
+        hazeShown: hs.display !== "none" && Number(hs.opacity) > 0.3,
+        fit: getComputedStyle(shot).objectFit,
+        inside: s.left >= box.left - 1 && s.right <= box.right + 1 && s.top >= box.top - 1 && s.bottom <= box.bottom + 1,
+        drawn: shot.naturalWidth > 0 && s.width > 20 && s.height > 20,
+        studio: pic.classList.contains("is-studio"),
+        scene: pic.classList.contains("is-scene"),
+      };
+    }).filter(Boolean));
+    expect(seen.length, `${mode}: pictures arrive`).toBeGreaterThanOrEqual(5);
+    for (const one of seen) {
+      expect(one.same, `${mode}: ${one.name}'s blur is its own picture`).toBe(true);
+      expect(one.blurred, `${mode}: ${one.name}'s copy is blurred`).toBe(true);
+      expect(one.fit, `${mode}: ${one.name} is shown whole, never cropped`).toBe("contain");
+      expect(one.inside, `${mode}: ${one.name} stands inside its own box`).toBe(true);
+      expect(one.drawn, `${mode}: ${one.name} is drawn`).toBe(true);
+      expect(one.studio || one.scene, `${mode}: ${one.name} is read as one kind or the other`).toBe(true);
+      // A scene keeps its blur round it; a studio shot stands on white.
+      if (one.scene) expect(one.hazeShown, `${mode}: ${one.name}'s blur fills round it`).toBe(true);
+    }
+    const haxan = seen.find((one) => one.name === "Haxan");
+    expect(haxan && haxan.scene, "Haxan, on bark, is a scene with its blur round it").toBe(true);
+  }
 });
 
 /* THE CHOICE IS KEPT for the next visit, in this browser. */

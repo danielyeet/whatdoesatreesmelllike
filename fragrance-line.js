@@ -304,7 +304,7 @@
       b.setAttribute("aria-pressed", String(on));
     });
     stage.querySelector(".frag-read-mode").textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
-    if (mode === "cards") pictures();
+    if (mode === "cards" || mode === "boxes") pictures();
   }
   function setMode(next) {
     if (!MODES.includes(next) || next === mode) return;
@@ -327,10 +327,44 @@
   }
   modeButtons.forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
 
-  // THE PICTURES, for the cards: taken off the page the fragrances live
-  // on, the first time the cards are asked for, so the list never pays
-  // for them. A picture that is not there yet leaves the hatching and the
-  // number showing, which is what every house page does.
+  // THE PICTURES, for the cards and the boxes: taken off the page the
+  // fragrances live on, the first time either is asked for, so the list
+  // never pays for them. A picture that is not there yet leaves the
+  // hatching and the number showing, which is what every house page does.
+  //
+  // EACH IS LAID DOWN TWICE (2026-09-26): once WHOLE — "zoomed out and
+  // you can see the entire fragrance", never cropped to fill the frame —
+  // and once behind it, BLURRED and scaled up to fill every corner the
+  // whole picture leaves, so the frame is the bottle's own colours rather
+  // than empty paper — the owner's "a blurred version of the pictures in
+  // the boxes".
+  /** A STUDIO SHOT OR A SCENE, read off the picture's corners once it
+      has loaded. A bottle on white loses its blur and is multiplied onto
+      the frame's own white, so its ground goes and only the bottle is
+      left; anything else keeps its blur, and is sized to its own shape
+      so its edges can be feathered into it (style.css). Whole, in both. */
+  function seat(pic, shot) {
+    const w = shot.naturalWidth, h = shot.naturalHeight;
+    if (!w || !h) return;
+    let studio = false;
+    try {
+      const c = document.createElement("canvas");
+      c.width = 24; c.height = 24;
+      const g = c.getContext("2d", { willReadFrequently: true });
+      g.drawImage(shot, 0, 0, 24, 24);
+      const d = g.getImageData(0, 0, 24, 24).data;
+      let light = 0;
+      [[0, 0], [23, 0], [0, 23], [23, 23], [12, 0], [12, 23], [0, 12], [23, 12]].forEach(([x, y]) => {
+        const i = (y * 24 + x) * 4;
+        const lo = Math.min(d[i], d[i + 1], d[i + 2]), hi = Math.max(d[i], d[i + 1], d[i + 2]);
+        if (lo > 222 && hi - lo < 26) light++;
+      });
+      studio = light >= 6;
+    } catch (e) { studio = false; }
+    pic.classList.add(studio ? "is-studio" : "is-scene");
+    pic.style.setProperty("--shape", String(w / h));
+  }
+
   let pictured = false;
   function pictures() {
     if (pictured) return;
@@ -349,12 +383,20 @@
         const shot = part.querySelector(".human-plate img") || part.querySelector("summary img");
         const src = shot && shot.getAttribute("src");
         if (!src) return;
+        const url = new URL(src, where).href;
+        const haze = document.createElement("img");
+        haze.className = "frag-t-haze";
+        haze.alt = "";
+        haze.decoding = "async";
         const img = document.createElement("img");
+        img.className = "frag-t-shot";
         img.alt = "";
         img.decoding = "async";
-        img.addEventListener("load", () => f.pic.classList.add("has-picture"));
-        img.addEventListener("error", () => img.remove());
-        img.src = new URL(src, where).href;
+        img.addEventListener("load", () => { f.pic.classList.add("has-picture"); seat(f.pic, img); });
+        img.addEventListener("error", () => { img.remove(); haze.remove(); });
+        haze.src = url;
+        img.src = url;
+        f.pic.appendChild(haze);
         f.pic.appendChild(img);
       });
     }).catch(() => { /* the hatching stays */ });

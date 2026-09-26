@@ -182,6 +182,10 @@ borders underneath the picture while their words wrapped politely around it. A b
 establishes a formatting context may not overlap a float at all, so the box narrows with
 its text.
 
+**That float is gone** (2026-09-26): every favourite carries a picture now, standing whole in
+a circle in a column of its own beside the writing, credited under it — see the section of
+that date at the foot of this report.
+
 ### How this was checked
 
 Every page of the site was walked in a browser at 1440×900 and again at 390×844 with touch,
@@ -318,3 +322,22 @@ itself`** — the eight parts' credits, in order, each with a link but Haxan's. 
 `tests/fragrance-reader.spec.js`: **`the reader carries the picture's credit under it`** —
 House of Ellixirz opened from the list shows *Picture: Matca* under its picture, linked, and
 Haxan opened next shows *Pictures: my own* and no link (the first's does not stay behind).
+
+
+## 2026-09-26 — a picture for every favourite, credited where it stands
+
+> also add images if you have them based on the name from the repository.
+
+Every favourite in Chapter 1 now names a picture with `data-image`, **found in the repository
+by its name** — each is the same file its own page shows, so nothing new was added to
+`images/` and `images/Favorites/` stays empty (its README says why). And because a picture is
+credited where it is used, each favourite also carries **`data-credit`** — whose picture it is,
+as its own page credits it — and **`data-credit-href`**, the link, where there is one; the card
+prints *Picture: …* under the circle. The ten, and their sources, are in a table in [the
+chamber's report](2026-09-15-the-chamber.md) under *2026-09-26*; Haxan's reads *my own*, as it
+does on its own page.
+
+Checked by `an opened favourite reads the start of its own entry, beside its picture in a
+circle, credited` (`tests/chamber.spec.js`), which also waits for every one of the ten pictures
+to have loaded — `repository.spec.js` lets a picture missing from `images/` through on purpose,
+so a favourite naming a file that is not there is caught here instead.
