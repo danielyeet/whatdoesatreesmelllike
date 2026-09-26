@@ -358,3 +358,13 @@ blocks the line's script so that it goes on testing this view.
 
 Rows 001 to 007 are dated **24.09.2026** at the owner's word, so the note above that the
 dates are rolled from a seed no longer holds for them.
+
+## 2026-09-26 — Explorations & Researches laid out for itself
+
+The Explorations & Researches page is no longer laid out as this report describes it: its name
+and paragraph at the top left, the table under them across the left three fifths, and on the
+right **the field**, a drawing in specks the table conducts. The Information heading, the line
+and the plates are gone from that page. See [its own report](2026-09-26-the-explorations-field.md).
+Everything here still holds for the old Fragrances index kept on Scent descriptions, which keeps
+its plates and its drawn mark; the new rules are all under `.researches-page`.
+

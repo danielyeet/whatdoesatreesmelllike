@@ -263,17 +263,20 @@ test("the page says accords rather than shelves, and no longer counts names as w
 
 
 
-/* THE BOOKS ARE GEOMETRIC, IN THEIR ACCORDS' CLOTH. The owner, of the
-   "digital" folders: "the logos on the books I feel are unneccessary ...
-   make it feel less 3-bit" — and then, of the books drawn in specks that
-   answered it: "make it so that th ebooks dont look granular. I want them
-   to have more of a geometric character" (2026-09-25). Read off the page:
-   no glyph, meter, barcode, tab or decoding left anywhere; every book near
-   the window carries a spine drawn on its own canvas; the spine is a few
-   FLAT shades — the speckled ones ran to a hundred and more, and eight
-   shades covered barely half of one — and the books of different accords
-   are still bound in different colours. */
-test("the books are drawn flat and geometric, in their accords' colours, and carry nothing pixelated", async ({ page }) => {
+/* THE BOOKS ARE SKELETONS, AND THEIR ACCORD'S COLOUR IS ONE MARK. The
+   owner, of the "digital" folders: "the logos on the books I feel are
+   unneccessary ... make it feel less 3-bit"; of the books drawn in specks
+   that answered it: "make it so that th ebooks dont look granular"; and
+   then, of the flat cloth ones (2026-09-26): "take a minimalist approach
+   with the colour coding of the books and make it so that they themselves
+   are more skeletal/geometric ... (the accords still should be colour
+   coded, that part can stay)". Read off the page: no glyph, meter,
+   barcode, tab or decoding left anywhere; every book near the window
+   carries a spine drawn on its own canvas; the spine is MOSTLY EMPTY — a
+   wireframe, not cloth — and in the page's white but for a few coloured
+   pixels, ALL AT ITS HEAD; and the books of different accords still carry
+   different colours there. */
+test("the books are skeletons in the page's white, their accord's colour only in the band across the head", async ({ page }) => {
   await arrive(page);
   await page.mouse.move(700, 500);
   // Down to where two accords stand in the window at once.
@@ -283,41 +286,94 @@ test("the books are drawn flat and geometric, in their accords' colours, and car
     const books = [...document.querySelectorAll(".lib-record")];
     const gone = [".lib-glyph", ".lib-bands", ".lib-code", ".lib-folder-tab", ".lib-scan", ".is-decoding"]
       .filter((sel) => document.querySelector(sel));
-    // The books near the top of the page have been drawn.
     const near = books.filter((b) => { const t = b.getBoundingClientRect().top; return t > -250 && t < innerHeight + 250; });
     const read = (b) => {
       const c = b.querySelector("canvas.lib-spine");
       if (!c || c.width < 4) return null;
+      const ratio = c.width / b.getBoundingClientRect().width;
       const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
-      let lit = 0, r = 0, g = 0, bl = 0;
-      const shades = new Map();
+      let ink = 0, colour = 0, low = 0, r = 0, g = 0, bl = 0;
       for (let i = 0; i < d.length; i += 4) {
         if (d[i + 3] < 40) continue;
-        lit++; r += d[i]; g += d[i + 1]; bl += d[i + 2];
-        const k = (d[i] >> 3) + "," + (d[i + 1] >> 3) + "," + (d[i + 2] >> 3);
-        shades.set(k, (shades.get(k) || 0) + 1);
+        ink++;
+        const hi = Math.max(d[i], d[i + 1], d[i + 2]), lo = Math.min(d[i], d[i + 1], d[i + 2]);
+        if (hi - lo > 40) {
+          colour++; r += d[i]; g += d[i + 1]; bl += d[i + 2];
+          const y = Math.floor(i / 4 / c.width) / ratio;
+          if (y > 5) low++;
+        }
       }
-      const eight = [...shades.values()].sort((a, b) => b - a).slice(0, 8).reduce((a, v) => a + v, 0);
-      return { lit: lit / (d.length / 4), shades: shades.size, eight: eight / lit,
-        mean: [r / lit, g / lit, bl / lit].map(Math.round) };
+      const all = d.length / 4;
+      return { ink: ink / all, colour: colour / all, low, mean: colour ? [r / colour, g / colour, bl / colour].map(Math.round) : null };
     };
     const seen = near.map((b) => ({ shelf: b.closest(".lib-shelf").dataset.shelf, spine: read(b) }));
     const byShelf = {};
-    seen.forEach((s) => { if (s.spine) (byShelf[s.shelf] = byShelf[s.shelf] || []).push(s.spine.mean); });
+    seen.forEach((s) => { if (s.spine && s.spine.mean) (byShelf[s.shelf] = byShelf[s.shelf] || []).push(s.spine.mean); });
     const colours = Object.fromEntries(Object.entries(byShelf).map(([k, list]) =>
       [k, [0, 1, 2].map((i) => Math.round(list.reduce((a, m) => a + m[i], 0) / list.length))]));
-    const grainy = seen.filter((s) => s.spine && (s.spine.shades > 40 || s.spine.eight < 0.75))
-      .map((s) => s.spine.shades + " shades, " + Math.round(s.spine.eight * 100) + "% in eight");
-    return { gone, near: near.length, drawn: seen.filter((s) => s.spine && s.spine.lit > 0.5).length, grainy, colours };
+    const heavy = seen.filter((s) => s.spine && s.spine.ink > 0.45).map((s) => Math.round(s.spine.ink * 100) + "% inked");
+    const loud = seen.filter((s) => s.spine && (s.spine.colour > 0.12 || s.spine.colour === 0)).map((s) => Math.round(s.spine.colour * 100) + "% coloured");
+    const strayColour = seen.filter((s) => s.spine && s.spine.low > 0).length;
+    return { gone, near: near.length, drawn: seen.filter((s) => s.spine && s.spine.ink > 0.05).length, heavy, loud, strayColour, colours };
   });
   expect(out.gone, "nothing of the digital folders is left").toEqual([]);
   expect(out.near, "books near the window").toBeGreaterThan(10);
   expect(out.drawn, "every one of them has its spine drawn").toBe(out.near);
-  expect(out.grainy, "in a few flat shades, not specks").toEqual([]);
+  expect(out.heavy, "a skeleton, not cloth: most of the spine is left empty").toEqual([]);
+  expect(out.loud, "the accord's colour a small mark on every book, not the book").toEqual([]);
+  expect(out.strayColour, "and all of that colour at its head").toBe(0);
   const cols = Object.values(out.colours);
   expect(cols.length, `accords on the window: ${JSON.stringify(out.colours)}`).toBeGreaterThan(1);
   const apart = Math.max(...cols.map((a) => Math.max(...cols.map((b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])))));
-  expect(apart, "each accord bound in its own colour").toBeGreaterThan(40);
+  expect(apart, "each accord marked in its own colour").toBeGreaterThan(40);
+});
+
+/* THE PAGE IS BLACK AND WHITE. "change the theme of the bage from that
+   turqoise to black/white (to match the rest of the website" (2026-09-26).
+   Every piece of the page that carried the turquoise — the kicker, the
+   terminal, its prompt, the order that is on, the tab that is on, a book
+   answering the terminal, the card's headings — is read back as a grey
+   (no colour in it at all), and so is the ground. The accords keep
+   theirs. */
+test("the page is black and white, with colour left only on the accords", async ({ page }) => {
+  await arrive(page);
+  await page.locator(".lib-query").fill("cedar");
+  await page.waitForTimeout(500);
+  await page.locator("#note-cedarwood").click();
+  await expect(page.locator(".lib-card")).toBeVisible();
+  const out = await page.evaluate(() => {
+    const colours = [];
+    const take = (sel, prop, pseudo) => {
+      const el = document.querySelector(sel);
+      if (!el) return colours.push([sel, "missing"]);
+      colours.push([sel + " " + prop, getComputedStyle(el, pseudo || null)[prop]]);
+    };
+    take("body", "backgroundColor");
+    take(".lib-kicker", "color");
+    take(".lib-terminal", "borderTopColor");
+    take(".lib-prompt", "color");
+    take(".lib-order-by.is-on", "backgroundColor");
+    take(".lib-tab.is-on", "borderTopColor");
+    take(".lib-record.is-hit", "boxShadow");
+    take(".lib-record.is-hit", "backgroundColor", "::before");
+    take(".lib-found-head", "color");
+    take(".lib-card", "backgroundColor");
+    const chroma = (v) => {
+      const all = (String(v).match(/rgba?\([^)]*\)/g) || []);
+      return Math.max(0, ...all.map((c) => {
+        const n = c.match(/[\d.]+/g).slice(0, 3).map(Number);
+        return Math.max(...n) - Math.min(...n);
+      }));
+    };
+    return {
+      coloured: colours.filter(([, v]) => v === "missing" || chroma(v) > 6).map(([k, v]) => k + ": " + v),
+      accord: chroma(getComputedStyle(document.querySelector(".lib-shelf-code")).color),
+      body: getComputedStyle(document.body).backgroundColor,
+    };
+  });
+  expect(out.coloured, "no turquoise, and no other colour, on the page's own parts").toEqual([]);
+  expect(Math.max(...out.body.match(/\d+/g).slice(0, 3).map(Number)), `on a black ground (${out.body})`).toBeLessThan(24);
+  expect(out.accord, "while the accords keep their colours").toBeGreaterThan(40);
 });
 
 /* THE CARD AND THE SLIP ARE DRAWN AS THE REST OF THE SITE IS. "The popup
@@ -377,7 +433,9 @@ test("the shelves breathe", async ({ page }) => {
    carries a label giving the call numbers on it. At another width the rows
    wrap differently, and the boards are drawn again to match. (The label
    is worked out from the books on the row, so a note added to Citrus
-   does not break this.) */
+   does not break this.) Since the page went black and white (2026-09-26)
+   a board is a plank DRAWN IN HAIRLINES rather than a solid walnut one,
+   so what is read along its foot is a LINE the whole way, and no colour. */
 test("every accord's books stand on bare boards, a labelled board under every row and no frame round them", async ({ page }) => {
   await page.addInitScript(() => {
     window.__labels = [];
@@ -405,17 +463,23 @@ test("every accord's books stand on bare boards, a labelled board under every ro
     // board — its top and its front — all the way along.
     const boards = [];
     const bands = [];
+    let coloured = 0;
     for (let k = 0; k < rows; k++) {
       const foot = off + k * (rowH + gap) + rowH;
       bands.push([foot - 1, foot + 36]);
       const y0 = Math.round((foot + 2) * ratio), y1 = Math.round((foot + 18) * ratio);
-      let solid = 0, n = 0;
+      let lined = 0, n = 0;
       for (let x = Math.round(30 * ratio); x < c.width - Math.round(30 * ratio); x += 3, n++) {
-        let sum = 0;
-        for (let y = y0; y < y1; y++) sum += d[(y * c.width + x) * 4 + 3];
-        if (sum / (y1 - y0) > 80) solid++;
+        let most = 0;
+        for (let y = y0; y < y1; y++) {
+          const i = (y * c.width + x) * 4;
+          if (d[i + 3] > most) most = d[i + 3];
+          const hi = Math.max(d[i], d[i + 1], d[i + 2]), lo = Math.min(d[i], d[i + 1], d[i + 2]);
+          if (d[i + 3] > 40 && hi - lo > 12) coloured++;
+        }
+        if (most > 100) lined++;
       }
-      boards.push(solid / n);
+      boards.push(lined / n);
     }
     // Everywhere else on the canvas: no ink at all.
     let stray = 0;
@@ -433,7 +497,7 @@ test("every accord's books stand on bare boards, a labelled board under every ro
     const onFirst = all.filter((b) => Math.round(b.offsetTop + b.offsetHeight) === firstTop).length;
     return {
       first: "CIT 001–" + String(onFirst).padStart(3, "0"), whole: all.length,
-      drawn: c.dataset.drawn === "1", rows, boards, stray,
+      drawn: c.dataset.drawn === "1", rows, boards, stray, coloured,
       wider: cr.left < hr.left && cr.right > hr.right,
       behind: +getComputedStyle(c).zIndex < +getComputedStyle(book).zIndex,
       rail: getComputedStyle(holder).backgroundImage,
@@ -446,6 +510,7 @@ test("every accord's books stand on bare boards, a labelled board under every ro
   expect(wide.wider, "standing out past the rows").toBe(true);
   expect(wide.behind, "behind the books").toBe(true);
   wide.boards.forEach((b, k) => expect(b, `a board under row ${k + 1}`).toBeGreaterThan(0.9));
+  expect(wide.coloured, "drawn in the page's white, not in walnut").toBe(0);
   expect(wide.stray, "and nothing else: no uprights, no crown, no back").toBe(0);
   expect(wide.labels, "a label on every board, giving its call numbers").toContain(wide.first);
   // Narrower, the rows wrap again, and the boards are drawn to match.

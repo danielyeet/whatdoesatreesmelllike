@@ -376,3 +376,173 @@ test("the fragrances view keeps its own layout all the way through a swipe",
     expect(await plates(), "and hidden all the way through the swipe").toBe("none");
   }
 });
+
+/* ============================================================
+   EXPLORATIONS & RESEARCHES, LAID OUT AGAIN (2026-09-26). The owner:
+   "put this paragraph ... under the title RE, not under introduction.
+   the introductiont hing delete it. Delete the right side of the page,
+   and move the table upwards, so that it takes up abour 3/5ths of the
+   page on the left ... On the right side, I want you to make something
+   extravagant with the particles that reacts ot the thing being hovered
+   on the left (in the table). Make it reactive and on theme."
+   ============================================================ */
+
+/** What the field's canvas has drawn, as a coarse grid of where its ink
+ *  is — enough to tell one figure from another. */
+const fieldInk = (page) => page.evaluate(() => {
+  const c = document.querySelector(".re-canvas");
+  const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+  const G = 24, cells = new Array(G * G).fill(0);
+  let ink = 0;
+  for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 2) {
+    if (d[(y * c.width + x) * 4 + 3] > 40) {
+      ink++;
+      cells[Math.floor((y / c.height) * G) * G + Math.floor((x / c.width) * G)]++;
+    }
+  }
+  return { ink, cells: cells.map((n) => (n > 3 ? 1 : 0)) };
+});
+const apart = (a, b) => a.cells.reduce((n, v, i) => n + (v !== b.cells[i] ? 1 : 0), 0);
+
+test("Explorations & Researches: the paragraph under the name, the table on the left three fifths, the field on the right",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(RESEARCHES);
+  await page.waitForTimeout(800);
+  const out = await page.evaluate(() => {
+    const box = (sel) => { const el = document.querySelector(sel); return el ? el.getBoundingClientRect() : null; };
+    return {
+      gone: [".index-col", ".index-right", ".index-plate", ".index-line"].filter((s) => document.querySelector(s)),
+      name: box(".index-name"), say: box(".index-say"), board: box(".index-board"), field: box(".re-field"),
+      lede: document.querySelector(".index-say-lede").textContent.replace(/\s+/g, " ").trim(),
+      width: innerWidth, height: innerHeight,
+      sideways: document.documentElement.scrollWidth > innerWidth,
+    };
+  });
+  expect(out.gone, "the Information heading, the line and the plates are gone").toEqual([]);
+  expect(out.lede).toBe("Here you will find my researches and my explorations. Researches are where I look into stuff " +
+    "from primary or secondary sources. Explorations are pieces of work where I myself am the primary source.");
+  // The paragraph stands under the name, in the same column.
+  expect(out.say.top, "the paragraph under the name").toBeGreaterThanOrEqual(out.name.bottom - 1);
+  expect(Math.abs(out.say.left - out.name.left), "and lined up with it").toBeLessThan(2);
+  // The table, moved up, the left three fifths or so.
+  expect(out.board.top, "the table moved up, under the paragraph").toBeLessThan(out.height * 0.45);
+  expect(out.board.top).toBeGreaterThan(out.say.bottom);
+  const share = out.board.width / out.width;
+  expect(share, `the table takes about three fifths of the page (${share.toFixed(2)})`).toBeGreaterThan(0.5);
+  expect(share).toBeLessThan(0.66);
+  // The field on the right, the height of the page.
+  expect(out.field.left, "the field stands to the right of the table").toBeGreaterThan(out.board.right);
+  expect(out.field.height, "most of the window's height").toBeGreaterThan(out.height * 0.7);
+  expect(out.sideways).toBe(false);
+
+  // On a phone: one column, the field a band above the table.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(600);
+  const phone = await page.evaluate(() => ({
+    field: document.querySelector(".re-field").getBoundingClientRect().toJSON(),
+    board: document.querySelector(".index-board").getBoundingClientRect().toJSON(),
+    sideways: document.documentElement.scrollWidth > innerWidth,
+  }));
+  expect(phone.field.bottom, "the field above the table on a phone").toBeLessThanOrEqual(phone.board.top);
+  expect(phone.field.height).toBeGreaterThan(200);
+  expect(phone.sideways).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test("pointing at a row gathers the field into that work's figure, and leaving the table brings the ring back",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(RESEARCHES);
+  const field = page.locator(".re-field");
+  await expect(field).toHaveAttribute("data-figure", "ring");
+  await page.waitForTimeout(2200);
+  const ring = await fieldInk(page);
+  expect(ring.ink, "the ring is drawn").toBeGreaterThan(400);
+  await expect(page.locator(".re-caption-name")).toHaveText("Explorations & Researches");
+
+  // Each work its own figure, and its caption.
+  const figures = { 0: "pyramid", 1: "resin", 2: "bottle", 3: "smoke" };
+  const seen = [ring];
+  for (const [no, name] of Object.entries(figures)) {
+    const row = page.locator(`.index-table tbody tr[data-no="${no}"]`);
+    await row.hover();
+    await expect(field).toHaveAttribute("data-figure", name);
+    await expect(page.locator(".re-caption-name")).toHaveText(await row.getAttribute("data-name"));
+    await page.waitForTimeout(2000);
+    const now = await fieldInk(page);
+    expect(now.ink, `${name} is drawn`).toBeGreaterThan(300);
+    seen.forEach((before, k) => expect(apart(now, before), `${name} is a different drawing from the ${k ? "figure" : "ring"} before`).toBeGreaterThan(40));
+    seen.push(now);
+  }
+
+  // Off the table, the ring comes back — a moment later.
+  await page.mouse.move(200, 100);
+  await page.waitForTimeout(250);
+  await expect(field, "not at once").toHaveAttribute("data-figure", "smoke");
+  await expect(field).toHaveAttribute("data-figure", "ring", { timeout: 3000 });
+
+  // From the keyboard too: a row's link focused is pointed at.
+  await page.locator('.index-table tbody tr[data-no="1"] a').focus();
+  await expect(field).toHaveAttribute("data-figure", "resin");
+  await expect(page.locator('.index-table tbody tr[data-no="1"]')).toHaveClass(/is-shown/);
+
+  // A row that names no figure is given one by its kind.
+  await page.evaluate(() => {
+    document.querySelector('tr[data-no="3"]').removeAttribute("data-figure");
+    document.querySelector('tr[data-no="3"]').dataset.kind = "Research";
+  });
+  await page.locator('.index-table tbody tr[data-no="3"]').hover();
+  await expect(field, "a research is a molecule").toHaveAttribute("data-figure", "molecule");
+  expect(errors).toEqual([]);
+});
+
+test("the field answers the pointer over it",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(RESEARCHES);
+  await page.waitForTimeout(2200);
+  // THE POINTER PARTS THE SPECKS: the ring's own band, with the pointer
+  // held on it, has less ink right under the pointer than it had.
+  const spot = await page.evaluate(() => {
+    const r = document.querySelector(".re-canvas").getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height * 0.47 + Math.min(r.width * 0.42, r.height * 0.36) * 0.33 };
+  });
+  const under = () => page.evaluate(({ x, y }) => {
+    const c = document.querySelector(".re-canvas"), r = c.getBoundingClientRect(), k = c.width / r.width;
+    const d = c.getContext("2d").getImageData(Math.round((x - r.left - 18) * k), Math.round((y - r.top - 18) * k), Math.round(36 * k), Math.round(36 * k)).data;
+    let n = 0;
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 40) n++;
+    return n;
+  }, spot);
+  const before = await under();
+  await page.mouse.move(spot.x, spot.y);
+  await page.mouse.move(spot.x + 1, spot.y, { steps: 2 });
+  await page.waitForTimeout(900);
+  const parted = await under();
+  expect(before, "the ring's band has ink where the pointer goes").toBeGreaterThan(10);
+  expect(parted, "and the pointer parts it").toBeLessThan(before * 0.6);
+  expect(errors).toEqual([]);
+});
+
+test.describe("the field with animation turned off", () => {
+  test("each figure is simply there, and nothing moves", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const errors = collectPageErrors(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(RESEARCHES);
+    await page.waitForTimeout(500);
+    const a = await fieldInk(page);
+    expect(a.ink, "the ring is drawn at once").toBeGreaterThan(400);
+    await page.waitForTimeout(700);
+    const b = await fieldInk(page);
+    expect(apart(a, b), "and stands still").toBe(0);
+    await page.locator('.index-table tbody tr[data-no="0"]').hover();
+    const c = await fieldInk(page);
+    expect(apart(c, a), "a row pointed at is drawn at once").toBeGreaterThan(40);
+    expect(errors).toEqual([]);
+  });
+});

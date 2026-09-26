@@ -503,3 +503,56 @@ House of Ellixirz brought two notes no record carried, and they would have stood
 332 records now. The board test worked the first row's label out from `CIT 001–013` written
 into it; it now works it out from the books actually standing on that row, so a note added to
 Citrus does not break it.
+
+## 2026-09-26 — black and white, and books drawn as skeletons
+
+> For the note library, I want you to change the theme of the bage from that turqoise to
+> black/white (to match the rest of the website. I will also want you to take a minimalist
+> approach with the colour coding of the books and make it so that they themselves are more
+> skeletal/geometric; matching the rest of the website (the accords still should be colour
+> coded, that part can stay)
+
+**The page is black and white.** Its tokens are a neutral black with no blue in it (`--bg`
+`#0b0b0c`, `--ink` `#ececec`, `--muted` `#8e8e91`), and its one accent — a terminal's phosphor,
+the turquoise `--lib-glow` — is white now, renamed **`--lib-hi`**. The terminal is a hairline box
+like every other field on the site: no scanlines, no inner glow, and its prompt no longer glows.
+The order that is on is white with black lettering; the tab that is on has a white edge and no
+glow; a book answering the terminal is outlined in white with a white mark over it; the card's
+headings are white and its corner ticks white; the lamp over the stacks is a white light rather
+than a warm one, and the dust in the air white rather than green. **The accords keep their
+colours**, and nothing else has one: each accord's colour (`hsl(HUE, 45%, 58%)`, `markColour`)
+is on its tab, its code, the band across the head of each of its books, and the specks of its
+card's mark — which is otherwise white.
+
+**The books are skeletons** (`drawSpine`): drawn in the page's white, in hairlines — the outline,
+the faintest ground inside it so the book is a volume rather than a wire, two bands near the head
+and the foot (on some doubled), on about a third a title panel where the name runs and on a few a
+rule down one side, and at the foot the label, a hairline box the call number is printed in.
+**The accord's colour is one mark: the band across the head**, three pixels deep, so a row of
+books reads as a row of coloured dashes along its top. The name down the spine and the call number
+are white. The cloth (`CLOTH`), the gilt (`GILT`), the facets, the cream label and the per-book
+shades are gone from the code.
+
+**The boards are drawn in hairlines too** (`drawBoards`): a plank drawn as a diagram — its back
+edge, the arris where its top meets its front, the foot of its front, both ends closed — with a
+ruler of ticks along its foot (`BOARD_TICKS`) and its label in a hairline box, white lettering on
+the black. The walnut (`WOOD`), its lit top, its shadow (`BOARD_SHADE`) and the cream card are gone.
+
+### How to test it
+
+In `tests/note-library.spec.js`:
+
+- **`the books are skeletons in the page's white, their accord's colour only in the band across
+  the head`** (replaces *the books are drawn flat and geometric…*) — none of the digital parts;
+  every book near the window drawn; every spine less than 45% inked (the cloth ones were all of
+  it); coloured pixels on every book but no more than 12% of it, and **none of them below its top
+  five pixels**; and the accords on the window still marked in colours well apart.
+- **`the page is black and white, with colour left only on the accords`** (new) — the ground, the
+  kicker, the terminal's edge, its prompt, the order that is on, the tab that is on, a book
+  answering the terminal and its mark, the card's heading and the card's ground all read back as
+  greys (no channel more than 6 from another); the ground darker than 24 in every channel; and the
+  accord's code still in colour.
+- **`every accord's books stand on bare boards…`** — the board across the foot of every row is
+  now a LINE the whole way (a pixel stronger than 100 in every column of the band) rather than a
+  solid, and **no colour** in it.
+

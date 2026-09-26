@@ -346,6 +346,7 @@
   // its bottle is where the photographer put it.
   const FILL = 0.8;         // the bottle's larger side, as a share of the frame's
   const CLOSEST = 2.4;      // and never more than this much past just covering it
+  const SHADOW_LOW = 0.2;   // a column beginning this low in the bottle is its shadow
   const SHAPES = { b: 1, c: 4 / 5 };   // the boxes' pictures are square, the cards' upright
 
   /** WHAT A PICTURE IS, read off a small copy of it: any BORDER printed
@@ -430,9 +431,10 @@
     const faint = clean ? 14 : 34;
     const cols = new Float64Array(cw), rows = new Float64Array(ch);
     const colW = new Float64Array(cw), rowW = new Float64Array(ch);
+    const top = new Float64Array(cw).fill(ch);   // where each column's first speck is
     for (let y = T; y < ch - B; y++) for (let x = L; x < cw - R; x++) {
       const o = off(at(x, y));
-      if (o > faint) { cols[x]++; rows[y]++; }
+      if (o > faint) { cols[x]++; rows[y]++; if (y < top[x]) top[x] = y; }
       if (o > 34) { colW[x] += o * o; rowW[y] += o * o; }
     }
     const span = (arr, weight) => {
@@ -446,7 +448,21 @@
       while (b > a && run + arr[b] <= total * 0.01) run += arr[b--];
       return [a / arr.length, (b + 1) / arr.length, heavy ? mid / heavy / arr.length : (a + b + 1) / 2 / arr.length];
     };
-    const sx = span(cols, colW), sy = span(rows, rowW);
+    // A CAST SHADOW IS NOT THE BOTTLE. On a clean ground even a faint
+    // speck counts, and a shadow thrown along the floor beside a bottle
+    // was counted with it: Bad Lily's, falling to its right, stood the
+    // bottle well left of the middle of its frame. A shadow is LOW — a
+    // column through it begins only near the bottle's foot, where one
+    // through the bottle, even through its faintest glass, begins well up
+    // it. So a column that begins in the bottom fifth of the bottle's
+    // height is left out of its width. (A plinth wider than its bottle
+    // goes the same way, which centres the bottle on it.)
+    const sy = span(rows, rowW);
+    if (sy) {
+      const low = (sy[1] - (sy[1] - sy[0]) * SHADOW_LOW) * ch;
+      for (let x = L; x < cw - R; x++) if (top[x] > low) { cols[x] = 0; colW[x] = 0; }
+    }
+    const sx = span(cols, colW);
     return {
       inner: inner,
       bottle: sx && sy ? { x0: sx[0], x1: sx[1], y0: sy[0], y1: sy[1], cx: sx[2], cy: sy[2] } : null,

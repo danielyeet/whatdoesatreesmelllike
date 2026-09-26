@@ -4106,6 +4106,142 @@ html.pine-viewing, html.pine-viewing body { overflow: hidden; }
 }
 
 /* ==================================================================
+   EXPLORATIONS & RESEARCHES — categories/researches.html, laid out
+   again for itself on 2026-09-26, at the owner's word: the paragraph
+   "under the title RE, not under introduction" (the "Information"
+   heading went), "Delete the right side of the page, and move the
+   table upwards, so that it takes up abour 3/5ths of the page on the
+   left", and on the right "something extravagant with the particles
+   that reacts ot the thing being hovered on the left".
+
+   So the page is TWO COLUMNS, three fifths and two: on the left the name,
+   what the page is, and the table directly under them, filling the
+   window to its foot and scrolling in its own box; on the right THE
+   FIELD (`.re-field`, drawn by explorations.js), the full height of the
+   window, bracketed at its corners and captioned at its foot.
+
+   ALL OF IT UNDER `.researches-page`: `.index-page` is shared with the
+   Fragrances view's old index on Scent descriptions, which keeps its own
+   layout.
+   ================================================================== */
+.researches-page .index-page {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0 clamp(28px, 4.5vw, 72px);
+  height: 100vh;
+  height: 100svh;
+  min-height: 560px;
+  padding: 74px 28px 28px;
+}
+.researches-page .index-head {
+  grid-column: 1;
+  grid-row: 1;
+  display: block;
+}
+.researches-page .index-name {
+  color: var(--ink);
+  font-size: clamp(28px, 2.9vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+.researches-page .index-say {
+  margin-top: 18px;
+  max-width: 60ch;
+}
+.researches-page .index-say .index-say-lede { margin-bottom: 0; }
+.researches-page .index-board {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: clamp(26px, 5vh, 54px);
+}
+.researches-page .index-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+/* The row the field is showing, when it is not being pointed at — a
+   link focused from the keyboard, or its turn on a phone. */
+.researches-page .index-table tr.is-shown td { color: var(--ink); }
+.researches-page .index-table tr[data-open="no"].is-shown td { color: var(--muted); }
+
+/* THE FIELD. Its corners bracketed, as the site brackets a drawing. */
+.re-field {
+  --tick: rgba(var(--ink-rgb), 0.45);
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  position: relative;
+  margin: 0;
+  min-height: 0;
+  background:
+    linear-gradient(var(--tick), var(--tick)) 0 0 / 14px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 0 / 1px 14px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 0 / 14px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 0 / 1px 14px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 100% / 14px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 100% / 1px 14px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 100% / 14px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 100% / 1px 14px no-repeat;
+}
+.re-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.re-caption {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.re-caption-no { color: var(--ink); letter-spacing: 0.06em; }
+.re-caption-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.re-caption-kind { letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; }
+.re-field:not(.is-drawn) .re-caption { visibility: hidden; }
+
+/* BELOW 900px ONE COLUMN: the name and what the page is, the field as a
+   band under them, and the table under that. */
+@media (max-width: 900px) {
+  .researches-page .index-page {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    height: auto;
+    min-height: 100vh;
+    padding: 74px 22px 22px;
+  }
+  .researches-page .index-head { grid-row: 1; }
+  .re-field { grid-column: 1; grid-row: 2; height: clamp(260px, 44vh, 380px); margin-top: 26px; }
+  .researches-page .index-board { grid-row: 3; margin-top: 30px; }
+  .researches-page .index-scroll { flex: none; max-height: 56vh; }
+}
+@media (max-width: 700px) {
+  .re-caption { left: 10px; right: 10px; bottom: 10px; gap: 10px; }
+  .re-caption-kind { display: none; }
+}
+
+/* ==================================================================
    THE SEARCH PAGE — search.html
    The one place that looks over the whole site. Dark ground, one long
    field ruled across it, and the answers as ruled rows — number, name,
@@ -9871,20 +10007,25 @@ body.qimu-page {
    standing on its shelf (everything under body.lib-built).
 
    THE PAGE'S COLOUR IS THE FIVE TOKENS, as on every dark page, and
-   one accent of its own — the terminal's phosphor, `--lib-glow` —
-   spent on the terminal, the tabs, a book that answers a search, and
-   the card. The books take their tint from their shelf (`--hue`, set
-   by the script) and are only tinted: they are dark first.
+   it is BLACK AND WHITE: the owner, 2026-09-26, "change the theme of
+   the bage from that turqoise to black/white (to match the rest of the
+   website". Its one accent was a terminal's phosphor, a turquoise spent
+   on the terminal, the tabs, a book answering a search and the card;
+   that is white now (`--lib-hi`), and the ground a neutral black with
+   no blue in it. THE ACCORDS KEEP THEIR COLOURS ("that part can stay"),
+   and nothing else on the page has one: each accord's colour (`--hue`,
+   set by the script) is on its tab, its code, the band across the head
+   of each of its books, and the specks of its card's mark.
    ================================================================== */
 .library-page {
-  --bg: #0c0f12;
-  --bg-2: #13171b;
-  --line: #262d33;
-  --ink: #e3e8e4;
-  --ink-rgb: 227, 232, 228;
-  --muted: #89938e;
-  --lib-glow: #9cf0cb;
-  --lib-glow-rgb: 156, 240, 203;
+  --bg: #0b0b0c;
+  --bg-2: #141415;
+  --line: #2a2a2c;
+  --ink: #ececec;
+  --ink-rgb: 236, 236, 236;
+  --muted: #8e8e91;
+  --lib-hi: #f2f2f2;
+  --lib-hi-rgb: 242, 242, 242;
   background: var(--bg);
   color: var(--ink);
   min-height: 100vh;
@@ -9904,7 +10045,7 @@ html.js-coming body.library-page .library { visibility: hidden; }
   font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--lib-glow);
+  color: rgba(var(--ink-rgb), 0.72);
 }
 .lib-title {
   margin: 0;
@@ -9931,7 +10072,7 @@ html.js-coming body.library-page .library { visibility: hidden; }
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.12em;
-  color: var(--lib-glow);
+  color: hsl(var(--hue, 0) 45% 58%);
 }
 .lib-shelf-say { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
 .lib-record { padding: 12px 0; border-top: 1px solid var(--line); }
@@ -9993,18 +10134,16 @@ html.js-coming body.library-page .library { visibility: hidden; }
   align-items: center;
   gap: 12px;
   padding: 15px 18px;
-  border: 1px solid rgba(var(--lib-glow-rgb), 0.34);
-  background:
-    repeating-linear-gradient(to bottom, rgba(var(--lib-glow-rgb), 0.025) 0 1px, transparent 1px 3px),
-    rgba(6, 9, 11, 0.82);
-  box-shadow: inset 0 0 38px -16px rgba(var(--lib-glow-rgb), 0.45), 0 0 0 4px rgba(var(--lib-glow-rgb), 0.04);
+  /* A hairline box, as every field on the site is: no phosphor, no
+     scanlines, no glow (they went with the turquoise). */
+  border: 1px solid rgba(var(--ink-rgb), 0.3);
+  background: rgba(var(--ink-rgb), 0.025);
   font-family: var(--mono);
 }
 .lib-prompt {
   flex: none;
   font-size: 14px;
-  color: var(--lib-glow);
-  text-shadow: 0 0 10px rgba(var(--lib-glow-rgb), 0.55);
+  color: var(--lib-hi);
 }
 .lib-query {
   flex: 1;
@@ -10016,7 +10155,7 @@ html.js-coming body.library-page .library { visibility: hidden; }
   color: var(--ink);
   font-family: var(--mono);
   font-size: 15px;
-  caret-color: var(--lib-glow);
+  caret-color: var(--lib-hi);
 }
 .lib-query::placeholder { color: rgba(var(--ink-rgb), 0.3); }
 .lib-query::-webkit-search-cancel-button { filter: invert(1) opacity(0.5); }
@@ -10052,16 +10191,16 @@ html.js-coming body.library-page .library { visibility: hidden; }
 }
 .lib-order-by { padding: 7px 12px; text-transform: uppercase; }
 .lib-order-by + .lib-order-by { border-left: 1px solid var(--line); }
-.lib-order-by.is-on { color: var(--bg); background: var(--lib-glow); }
+.lib-order-by.is-on { color: var(--bg); background: var(--lib-hi); }
 .lib-random {
   padding: 7px 12px;
   border: 1px solid var(--line);
   text-transform: uppercase;
 }
-.lib-random:hover, .lib-order-by:not(.is-on):hover { color: var(--ink); border-color: rgba(var(--lib-glow-rgb), 0.5); }
+.lib-random:hover, .lib-order-by:not(.is-on):hover { color: var(--ink); border-color: rgba(var(--lib-hi-rgb), 0.5); }
 .lib-nothing { margin: 16px 0 0; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .lib-nothing[hidden] { display: none; }
-.lib-nothing a { color: var(--lib-glow); }
+.lib-nothing a { color: var(--lib-hi); }
 
 .lib-index {
   display: flex;
@@ -10084,13 +10223,12 @@ html.js-coming body.library-page .library { visibility: hidden; }
   background: hsl(var(--hue, 150) 45% 58%);
   opacity: 0.8;
 }
-.lib-tab[data-shelf=""]::before { background: var(--lib-glow); }
+.lib-tab[data-shelf=""]::before { background: var(--lib-hi); }
 .lib-tab small { font-size: 9px; color: rgba(var(--ink-rgb), 0.38); }
 .lib-tab:hover { color: var(--ink); border-color: rgba(var(--ink-rgb), 0.3); }
 .lib-tab.is-on {
   color: var(--ink);
-  border-color: rgba(var(--lib-glow-rgb), 0.7);
-  box-shadow: inset 0 0 14px -6px rgba(var(--lib-glow-rgb), 0.6);
+  border-color: rgba(var(--lib-hi-rgb), 0.7);
 }
 
 /* ------------------------------------------------------------------
@@ -10116,7 +10254,7 @@ body.lib-built .lib-shelf-code {
   margin: 0 0 8px;
   font-size: 30px;
   letter-spacing: 0.06em;
-  color: hsl(var(--hue) 28% 68%);
+  color: hsl(var(--hue) 45% 62%);
 }
 body.lib-built .lib-shelf-name { font-size: 17px; }
 body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.5; }
@@ -10135,12 +10273,13 @@ body.lib-built .lib-shelf-say { margin: 0; font-size: 13px; line-height: 1.5; }
    many rows the width makes.
 
    THE BOARDS are drawn by note-library.js on a canvas of its own behind
-   the books (`.lib-boards`): a flat walnut board under every row — its
-   lit top, its front, a shadow under it — with a small label giving the
-   call numbers on that row, and no frame round any of it. (It was a
-   RAIL for two rounds, and then for one a whole BOOKCASE in specks with
-   uprights, a crown, a back and a plinth, whose "bezel" the owner asked
-   to have taken off.) */
+   the books (`.lib-boards`): a plank under every row DRAWN IN HAIRLINES
+   — its back edge, its arris, the foot of its front, a ruler of ticks —
+   with a small label in a hairline box giving the call numbers on that
+   row, and no frame round any of it. (It was a RAIL for two rounds, then
+   for one a whole BOOKCASE in specks with uprights, a crown, a back and
+   a plinth, whose "bezel" the owner asked to have taken off, and then a
+   flat walnut board until the page went black and white.) */
 body.lib-built .lib-records {
   --row: 214px;
   --gap: 52px;
@@ -10159,14 +10298,16 @@ body.lib-built .lib-records {
 }
 body.lib-built .lib-records > .lib-record { z-index: 1; }
 
-/* A RECORD IS A BOOK, standing on its shelf, and its spine is DRAWN IN
-   FLAT SHAPES — a canvas of its own (`.lib-spine`, note-library.js) in
-   the cloth of its accord: facets for its roundness, raised bands at head
-   and foot, on some a gilt rule or a title panel, and a label at its foot.
-   It was drawn in specks for a round, at the owner's "out of particles
-   but actually look like books, with appropriate colours"; they then
-   asked for the books not to "look granular ... more of a geometric
-   character" (2026-09-25, night).
+/* A RECORD IS A BOOK, standing on its shelf, and its spine is DRAWN AS
+   A SKELETON — a canvas of its own (`.lib-spine`, note-library.js) in
+   hairlines: its outline, two bands, on some a title panel, a label at
+   its foot — with its accord's colour only in the band across its head.
+   The owner, 2026-09-26: "a minimalist approach with the colour coding
+   of the books ... more skeletal/geometric; matching the rest of the
+   website". It was cloth: drawn in specks for a round, at the owner's
+   "out of particles but actually look like books, with appropriate
+   colours", and then in flat shapes — "not granular ... more of a
+   geometric character" (2026-09-25, night).
 
    WHAT WENT: for two rounds a record was a FOLDER — a graphite file with
    one coloured tab, and then a "digital" one with a pixel glyph at its
@@ -10183,8 +10324,8 @@ body.lib-built .lib-record {
   margin-top: calc(var(--row) - var(--h));
   padding: 0;
   border: none;
-  border-radius: 1px 1px 2px 2px;
-  color: hsl(42 34% 86% / 0.92);
+  border-radius: 0;
+  color: rgba(var(--ink-rgb), 0.82);
   background: none;
   cursor: pointer;
   outline: none;
@@ -10225,7 +10366,7 @@ body.lib-built .lib-record .lib-say { display: none; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: rgba(28, 24, 18, 0.85);
+  color: rgba(var(--ink-rgb), 0.6);
   font-family: var(--mono);
   font-size: 7.5px;
   line-height: 1.25;
@@ -10248,11 +10389,11 @@ body.lib-built .lib-record:focus-visible {
 }
 body.lib-built .lib-record.lib-leans:hover,
 body.lib-built .lib-record.lib-leans:focus-visible { transform: rotate(-7.5deg) translateY(-12px); }
-body.lib-built .lib-record:focus-visible { outline: 1px solid var(--lib-glow); outline-offset: 3px; }
+body.lib-built .lib-record:focus-visible { outline: 1px solid var(--lib-hi); outline-offset: 3px; }
 
 /* A book that answers the terminal, and one that does not. */
 body.lib-built .lib-record.is-hit {
-  box-shadow: inset 0 0 0 1px rgba(var(--lib-glow-rgb), 0.7);
+  box-shadow: inset 0 0 0 1px rgba(var(--lib-hi-rgb), 0.8);
 }
 body.lib-built .lib-record.is-hit::before {
   content: "";
@@ -10262,7 +10403,7 @@ body.lib-built .lib-record.is-hit::before {
   width: 4px;
   height: 4px;
   margin-left: -2px;
-  background: var(--lib-glow);
+  background: var(--lib-hi);
 }
 body.lib-built .lib-record.is-dim { opacity: 0.13; filter: saturate(0.2); }
 
@@ -10294,7 +10435,7 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
     linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 0 0 / 1px 6px no-repeat,
     linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 100% 100% / 6px 1px no-repeat,
     linear-gradient(rgba(var(--ink-rgb), 0.6), rgba(var(--ink-rgb), 0.6)) 100% 100% / 1px 6px no-repeat,
-    rgba(10, 13, 16, 0.94);
+    rgba(11, 11, 12, 0.94);
   font-family: var(--mono);
   pointer-events: none;
   opacity: 0;
@@ -10329,7 +10470,7 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   inset: 0;
   z-index: 12;
   pointer-events: none;
-  background: radial-gradient(300px circle at var(--lx, -999px) var(--ly, -999px), rgba(255, 234, 196, 0.1), transparent 70%);
+  background: radial-gradient(300px circle at var(--lx, -999px) var(--ly, -999px), rgba(255, 255, 255, 0.07), transparent 70%);
   mix-blend-mode: screen;
   opacity: 0;
   transition: opacity 0.6s;
@@ -10351,7 +10492,7 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
    particles and geometry".
    ------------------------------------------------------------------ */
 .lib-card {
-  --tick: hsl(var(--hue, 150) 30% 70% / 0.8);
+  --tick: rgba(var(--ink-rgb), 0.7);
   position: fixed;
   top: 74px;
   right: 24px;
@@ -10370,7 +10511,7 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
     linear-gradient(var(--tick), var(--tick)) 0 100% / 1px 12px no-repeat,
     linear-gradient(var(--tick), var(--tick)) 100% 100% / 12px 1px no-repeat,
     linear-gradient(var(--tick), var(--tick)) 100% 100% / 1px 12px no-repeat,
-    rgba(11, 14, 17, 0.97);
+    rgba(11, 11, 12, 0.97);
   box-shadow: 0 30px 70px -34px rgba(0, 0, 0, 0.9);
 }
 .lib-card-mark {
@@ -10399,7 +10540,7 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: hsl(var(--hue, 150) 45% 66%);
+  color: hsl(var(--hue, 0) 45% 62%);
 }
 .lib-card-name {
   margin: 0;
@@ -10454,8 +10595,8 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
 }
 .lib-drop[open] > summary::before { transform: rotate(90deg); }
 .lib-drop > summary:hover::before,
-.lib-drop > summary:focus-visible::before { border-left-color: var(--lib-glow); }
-.lib-drop > summary:focus-visible { box-shadow: inset 0 -1px 0 var(--lib-glow); }
+.lib-drop > summary:focus-visible::before { border-left-color: var(--lib-hi); }
+.lib-drop > summary:focus-visible { box-shadow: inset 0 -1px 0 var(--lib-hi); }
 .lib-found-count {
   margin-left: auto;
   font-family: var(--mono);
@@ -10479,7 +10620,7 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--lib-glow);
+  color: var(--ink);
 }
 .lib-found-individual ul,
 .lib-found-house ul { margin: 2px 0 6px; padding: 0 0 0 17px; list-style: none; }
@@ -10493,7 +10634,7 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   text-decoration: none;
   font-size: 14px;
 }
-.lib-found-individual a:hover .lib-found-name { color: var(--lib-glow); }
+.lib-found-individual a:hover .lib-found-name { color: var(--lib-hi); text-decoration: underline; text-underline-offset: 3px; }
 .lib-found-houses .lib-found-house { margin: 0 0 0 17px; }
 .lib-found-houses .lib-found-house > summary { padding: 6px 0; border-bottom-color: rgba(var(--ink-rgb), 0.05); }
 .lib-found-housename {
@@ -10501,9 +10642,9 @@ body.lib-arriving .lib-record { animation: lib-shelve 0.7s cubic-bezier(0.2, 0.7
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: hsl(var(--hue, 150) 40% 66%);
+  color: rgba(var(--ink-rgb), 0.78);
 }
-.lib-found-house a:hover .lib-found-name { color: var(--lib-glow); }
+.lib-found-house a:hover .lib-found-name { color: var(--lib-hi); text-decoration: underline; text-underline-offset: 3px; }
 .lib-found-no { flex: none; width: 22px; font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 2px; }
 .lib-found-name { transition: color 0.2s; }
 .lib-card-steps { display: flex; justify-content: space-between; gap: 10px; margin: 26px 0 0; }

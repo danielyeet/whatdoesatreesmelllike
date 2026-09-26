@@ -1047,6 +1047,61 @@ test("an opened favourite says what the owner wrote about it, beside its picture
   expect(errors).toEqual([]);
 });
 
+/* BAD LILY IN THE MIDDLE OF ITS FRAME. The owner sent a photograph of it
+   opened, the bottle standing well left of the middle: "center this
+   please". It stands on white with a soft shadow thrown to its right, and
+   the shadow was counted as bottle. A shadow is low — a column through it
+   begins only near the bottle's foot — so a column that begins in the
+   bottom fifth of the bottle is left out of its width now. Read off the
+   frame: the bottle found is the bottle and not its shadow, and it stands
+   in the middle. */
+test("Bad Lily's bottle stands in the middle of its frame, its shadow not counted", async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+  const at = await page.$$eval(".chapter-card-name", (all) => all.findIndex((e) => e.textContent.trim() === "Bad Lily"));
+  expect(at, "Bad Lily is a favourite").toBeGreaterThanOrEqual(0);
+  await page.locator(".chapter-card").nth(at).click();
+  await page.waitForFunction(() => {
+    const d = document.querySelector(".fav-drawer");
+    return d && d.querySelector(".fav-print-face.is-placed") && d.querySelector(".fav-name").textContent === "Bad Lily";
+  }, null, { timeout: 5000 });
+  await page.waitForTimeout(700);
+  const read = await page.evaluate(() => {
+    const face = document.querySelector(".fav-drawer .fav-print-face");
+    const shot = face.querySelector(".fav-print-shot");
+    const f = face.getBoundingClientRect(), r = shot.getBoundingClientRect();
+    const [x0, y0, x1, y1] = face.dataset.subject.split(" ").map(Number);
+    return { wide: x1 - x0, mid: r.left + (x0 + x1) / 2 * r.width - (f.left + f.width / 2), fw: f.width,
+      midY: r.top + (y0 + y1) / 2 * r.height - (f.top + f.height / 2), fh: f.height };
+  });
+  // The bottle is about two fifths of the picture across; with its
+  // shadow it read as three fifths.
+  expect(read.wide, "the bottle, not the bottle and its shadow").toBeLessThan(0.45);
+  expect(Math.abs(read.mid), "in the middle of its frame, across").toBeLessThan(read.fw * 0.04);
+  expect(Math.abs(read.midY), "and up and down").toBeLessThan(read.fh * 0.04);
+  expect(errors).toEqual([]);
+});
+
+/* AND THE FRAGRANCES VIEW READS A PICTURE THE SAME WAY. The two pages
+   share no script, so the reading is written twice — in chamber.js and in
+   fragrance-line.js — and a fix to one (the shadow, above) has to be a
+   fix to both. */
+test("the favourites and the Fragrances view read a picture with the same code", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const fn = (file) => {
+    const src = fs.readFileSync(path.join(__dirname, "..", file), "utf8");
+    const i = src.indexOf("  function readPicture(");
+    return src.slice(i, src.indexOf("\n  }\n", i));
+  };
+  const a = fn("chamber.js"), b = fn("fragrance-line.js");
+  expect(a.length, "chamber.js reads its pictures").toBeGreaterThan(500);
+  expect(a, "the same reading in both").toBe(b);
+});
+
 /* THE ONES THAT NEARLY MADE IT. The owner: "at the end of the list, I
    would like you to add: Aetherealism, Amber Zero and Incantu from Adar's
    Aegis collection could have all made it here too ..." It is written in

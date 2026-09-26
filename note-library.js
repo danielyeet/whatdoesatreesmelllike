@@ -14,14 +14,15 @@
 //                   visit). Its name runs down its spine and its CALL
 //                   NUMBER is at the foot — the accord's code and its
 //                   place in it, counted alphabetically. The spine is
-//                   DRAWN IN SPECKS on a small canvas of its own, in the
-//                   cloth its accord is bound in (`CLOTH`): rounded by
-//                   its light, with raised bands at head and foot and,
-//                   on some, a gilt rule. They were folders — "digital
-//                   files", with a pixel glyph, a segmented meter and a
-//                   barcode — until the owner found the page crowded and
-//                   "3-bit" and asked for books made of particles "that
-//                   actually look like books, with appropriate colours".
+//                   DRAWN IN HAIRLINES on a small canvas of its own — its
+//                   outline, its bands, a panel on some and its label —
+//                   and its accord's colour is ONE small mark, the band
+//                   across its head (`HUE`, the same colour as the
+//                   accord's tab). It was cloth, drawn in specks and then
+//                   in flat shapes, until the owner asked for the books
+//                   "more skeletal/geometric" with "a minimalist approach
+//                   with the colour coding" (2026-09-26); and before that
+//                   folders — "digital files" — which were "3-bit".
 //   THE TERMINAL    one field over the whole catalogue. Books that
 //                   answer light up and everything else goes dim; a
 //                   shelf with nothing on it folds away. It reads names
@@ -40,8 +41,11 @@
 //                   a cloud of its accord's dust. It was a glowing glass
 //                   panel, which the owner found "too futuristic".
 //   THE ROOM        a lamp that follows the hand over the stacks, and
-//                   dust in the air. (The scan that passed down the
-//                   window went with the glass.)
+//                   dust in the air — both white, as the whole page is
+//                   black and white since 2026-09-26: its turquoise went at
+//                   the owner's "change the theme ... from that turqoise to
+//                   black/white (to match the rest of the website". The
+//                   accords keep their colours, and nothing else has one.
 //
 // WHICH FRAGRANCES USE A NOTE comes from notes-data.js, read here each
 // time the page opens. A fragrance's NAME is read off its own house's
@@ -98,17 +102,14 @@
   const TALL_PER_LETTER = 7.4; // the name has to fit down the spine
   const TALL_SPARE = 74;   // the band at the head, and the band and call number at the foot
 
-  // THE CLOTH each accord's books are bound in: hue, saturation and
-  // lightness, muted as old cloth and leather are — citrus an ochre,
-  // the herbs a sage, the flowers a faded rose, the woods a walnut,
-  // the airs a slate blue. Each book is a shade off its neighbours.
-  const CLOTH = {
-    CIT: [44, 44, 42], ARO: [112, 17, 37], GRN: [96, 28, 31], FLO: [344, 30, 40], FRU: [6, 40, 37],
-    SPI: [20, 46, 36], GOU: [32, 40, 41], BRW: [24, 32, 30], WOO: [28, 34, 32], CON: [150, 24, 28],
-    RES: [38, 52, 39], ANI: [10, 32, 28], EAR: [70, 22, 34], AIR: [205, 26, 43], SMK: [215, 12, 38],
-    IMP: [268, 22, 41], RET: [0, 0, 38],
-  };
-  const GILT = [42, 56, 62];
+  // THE BOOKS ARE DRAWN IN THE PAGE'S WHITE, at these strengths, and
+  // their accord's colour is one mark: the band across the head, in the
+  // same colour as the accord's tab (`HUE`, at `MARK_SAT` and
+  // `MARK_LIGHT`). The returns cart's books have no colour at all.
+  const LINE = "236, 236, 236";
+  const MARK_SAT = 45, MARK_LIGHT = 58;
+  const markColour = (code) => code === "RET" || HUE[code] == null
+    ? "hsl(0, 0%, 62%)" : "hsl(" + HUE[code] + ", " + MARK_SAT + "%, " + MARK_LIGHT + "%)";
   // A canvas draws at a lower ratio below 700px, as every drawing here does.
   const drawRatio = () => Math.min(window.devicePixelRatio || 1, window.innerWidth < 700 ? 1.5 : 2);
 
@@ -255,17 +256,22 @@
     bookNo++;
   });
   // ============================================================
-  // DRAWING A SPINE — GEOMETRY, NOT GRAIN. The owner, the night of
-  // 2026-09-25: "make it so that th ebooks dont look granular. I want
-  // them to have more of a geometric character." They were cloth drawn in
-  // thousands of specks. Now every spine is flat shapes in its accord's
-  // cloth: FACETS for its roundness (a dark edge, a lit face, the body, a
-  // darker far edge), a lit HEAD-CAP and a darker tail, two RAISED BANDS
-  // each a lit ridge over a shadow, and at the foot the LABEL, a plain
-  // cream plate with a hairline edge. Seeded by the note's name, some
-  // carry a GILT RULE inside each band, some a darker TITLE PANEL with a
-  // gilt edge where the name runs, and a few a thin stripe down one
-  // side — so the shelf is not one book repeated.
+  // DRAWING A SPINE — A SKELETON. The owner, 2026-09-26: "take a
+  // minimalist approach with the colour coding of the books and make it
+  // so that they themselves are more skeletal/geometric; matching the
+  // rest of the website (the accords still should be colour coded, that
+  // part can stay)". So a spine is drawn the way the rest of the site
+  // draws things — in hairlines, on the dark: its OUTLINE, the two
+  // BANDS across it near its head and its foot (on some doubled), on
+  // about a third a TITLE PANEL where the name runs and on a few a
+  // RULE down one side instead, and at its foot the LABEL, a hairline
+  // box its call number is printed in. The only colour on it is the
+  // accord's, and only once: THE BAND ACROSS ITS HEAD. Seeded by the
+  // note's name, so every book is its own and the same every visit.
+  //
+  // It was cloth — drawn in thousands of specks for a round, then in
+  // flat shapes ("not granular ... more of a geometric character") — in
+  // a shade of its accord's colour from head to foot, with gilt.
   // ============================================================
   function drawSpine(r) {
     const { canvas: c, w, h } = r.spine;
@@ -282,48 +288,41 @@
       seed ^= seed << 5; seed >>>= 0;
       return seed / 4294967296;
     };
-    const [h0, s0, l0] = CLOTH[r.code] || CLOTH.RET;
-    const hue = h0 + (rnd() - 0.5) * 12, sat = Math.max(0, s0 + (rnd() - 0.5) * 10), lig = l0 + (rnd() - 0.5) * 9;
-    const cloth = (dl, a) => "hsla(" + hue.toFixed(0) + "," + sat.toFixed(0) + "%," + Math.max(3, Math.min(90, lig + dl)).toFixed(0) + "%," + (a == null ? 1 : a) + ")";
-    const gilt = (a) => "hsla(" + GILT[0] + "," + GILT[1] + "%," + GILT[2] + "%," + (a == null ? 1 : a) + ")";
-    const box = (x, y, bw, bh, fill) => { g.fillStyle = fill; g.fillRect(x, y, bw, bh); };
+    const line = (a) => "rgba(" + LINE + "," + a + ")";
+    // A hairline on the pixel grid, so it stays one pixel and sharp.
+    const across = (y, x0, x1, a) => { g.fillStyle = line(a); g.fillRect(x0, y, x1 - x0, 1 / ratio); };
+    const down = (x, y0, y1, a) => { g.fillStyle = line(a); g.fillRect(x, y0, 1 / ratio, y1 - y0); };
+    const frame = (x, y, bw, bh, a) => {
+      across(y, x, x + bw, a); across(y + bh - 1 / ratio, x, x + bw, a);
+      down(x, y, y + bh, a); down(x + bw - 1 / ratio, y, y + bh, a);
+    };
     const head = 13, foot = h - 37;
     g.clearRect(0, 0, w, h);
-    // THE FACETS, full height.
-    const edge = Math.max(1.5, w * 0.1);
-    box(0, 0, w, h, cloth(0));
-    box(0, 0, edge, h, cloth(-8));
-    box(edge, 0, w * 0.26, h, cloth(6));
-    box(w - edge, 0, edge, h, cloth(-11));
-    // THE HEAD-CAP and the tail.
-    box(0, 0, w, 3, cloth(9));
-    box(0, h - 3, w, 3, cloth(-9));
-    // A TITLE PANEL for some: darker, with a gilt edge, where the name runs.
+    // THE BODY: the faintest ground, so the book is a volume and not a
+    // wire, and its OUTLINE.
+    g.fillStyle = line(0.028);
+    g.fillRect(0, 0, w, h);
+    frame(0, 0, w, h, 0.5);
+    // THE ACCORD'S MARK, the only colour: a band across its head.
+    g.fillStyle = markColour(r.code);
+    g.fillRect(0, 0, w, 3);
+    // THE BANDS, near the head and the foot; on some, doubled.
+    const doubled = rnd() < 0.45;
+    [head, foot].forEach((y) => {
+      across(y, 0, w, 0.34);
+      if (doubled) across(y + 3, 0, w, 0.2);
+    });
+    // A TITLE PANEL for some, where the name runs; a RULE down one side
+    // for a few instead.
     const kind = rnd();
     if (kind < 0.34) {
-      const px = Math.max(2, w * 0.14), top = head + 8, bottom = foot - 6;
-      box(px, top, w - px * 2, bottom - top, cloth(-12));
-      g.strokeStyle = gilt(0.75);
-      g.lineWidth = 0.8;
-      g.strokeRect(px + 0.4, top + 0.4, w - px * 2 - 0.8, bottom - top - 0.8);
+      const px = Math.max(3, Math.round(w * 0.16)), top = head + (doubled ? 9 : 7), bottom = foot - 6;
+      frame(px, top, w - px * 2, bottom - top, 0.2);
     } else if (kind < 0.46) {
-      // A thin stripe down one side.
-      box(w * 0.72, head + 4, Math.max(1.5, w * 0.07), foot - head - 8, cloth(12));
+      down(Math.round(w * 0.76), head + 5, foot - 4, 0.22);
     }
-    // THE RAISED BANDS: a lit ridge over its shadow.
-    [head, foot].forEach((b) => {
-      box(0, b, w, 2, cloth(15));
-      box(0, b + 2, w, 1.5, cloth(-12));
-    });
-    // A GILT RULE inside each band, for about half.
-    if (rnd() < 0.5) {
-      [head + 6, foot - 5].forEach((y) => box(2, y, w - 4, 1, gilt(0.85)));
-    }
-    // THE LABEL at the foot: a cream plate with a hairline edge.
-    box(3, h - 29, w - 6, 22, "hsl(42, 28%, 84%)");
-    g.strokeStyle = "rgba(40, 32, 22, 0.45)";
-    g.lineWidth = 0.7;
-    g.strokeRect(3.35, h - 28.65, w - 6.7, 21.3);
+    // THE LABEL at the foot: a hairline box its call number is printed in.
+    frame(3, h - 29, w - 6, 22, 0.36);
     r.spine.drawn = true;
   }
   // Drawn as they come near the window rather than all at once: three
@@ -346,20 +345,21 @@
   records.forEach((r) => { if (seeSpine) seeSpine.observe(r.el); else drawSpine(r); });
 
   // ============================================================
-  // THE SHELVES — a board under every row, and nothing else.
+  // THE SHELVES — a board under every row, and nothing else, drawn as
+  // the books are: IN HAIRLINES.
   //
   // For one round each accord stood in a bookcase drawn in specks —
   // uprights, a crown, a back of boards, a plinth — which the owner then
   // asked to have redesigned without its frame: "remove the bezel of the
-  // bookshelves" and, of the books, "more of a geometric character"
-  // (2026-09-25, night). Before the case they were one lit rail.
-  //
-  // So under every row there is A BOARD, drawn as the books are now —
-  // flat shapes: its top seen from a little above and lit, a lit arris,
-  // its front edge a shade darker, and a soft shadow falling under it;
-  // on its front, near the left, a small LABEL giving the call numbers
-  // standing on that row (CIT 001–013), as a library's shelves carry.
-  // The board runs a little past the row either side and stops.
+  // bookshelves" (2026-09-25, night). The boards that were left were
+  // flat walnut, lit and shadowed; with the page turned black and white
+  // and the books made skeletons (2026-09-26), a board is a plank DRAWN
+  // AS A DIAGRAM: its back edge, the arris where its top meets its front,
+  // the foot of its front, closed at both ends — a ruler of ticks along
+  // its foot — and on its front, near the left, a LABEL in a hairline box
+  // giving the call numbers standing on that row (CIT 001–013), as a
+  // library's shelves carry. It runs a little past the row either side
+  // and stops.
   //
   // Drawn behind the books on a canvas of its own (`.lib-boards`), when
   // it first comes near the window, and again whenever the rows change —
@@ -368,8 +368,7 @@
   const BOARD_OUT = 10;     // px the board runs past the row either side
   const BOARD_TOP = 7;      // px of its top, seen from above
   const BOARD_FACE = 11;    // px of its front edge
-  const BOARD_SHADE = 16;   // px of shadow under it
-  const WOOD = [24, 30, 26];            // hsl: a walnut, dark as the room is
+  const BOARD_TICKS = 24;   // px between the ticks along its foot
   function drawBoards(holder) {
     const c = holder.querySelector(".lib-boards");
     if (!c || !holder.offsetParent) return;
@@ -386,7 +385,7 @@
     const n = Math.max(1, rows.length);
     const out = window.innerWidth < 700 ? 4 : BOARD_OUT;
     const w = holder.clientWidth + out * 2;
-    const h = (n - 1) * (rowH + gap) + rowH + BOARD_TOP + BOARD_FACE + BOARD_SHADE;
+    const h = (n - 1) * (rowH + gap) + rowH + BOARD_TOP + BOARD_FACE + 6;
     c.style.left = -out + "px";
     c.style.top = "0px";
     c.style.width = w + "px";
@@ -399,30 +398,36 @@
     g.setTransform(ratio, 0, 0, ratio, 0, 0);
     g.clearRect(0, 0, w, h);
     const code = holder.closest(".lib-shelf").dataset.shelf;
-    const wood = (dl, a) => "hsla(" + WOOD[0] + "," + WOOD[1] + "%," + (WOOD[2] + dl) + "%," + (a == null ? 1 : a) + ")";
+    const line = (a) => "rgba(" + LINE + "," + a + ")";
+    const hair = 1 / ratio;
     const mono = getComputedStyle(document.body).getPropertyValue("--mono").trim() || "monospace";
     for (let k = 0; k < n; k++) {
       const top = k * (rowH + gap) + rowH;
-      // The shadow under it, then the top, the arris and the front.
-      const shade = g.createLinearGradient(0, top + BOARD_TOP + BOARD_FACE, 0, top + BOARD_TOP + BOARD_FACE + BOARD_SHADE);
-      shade.addColorStop(0, "rgba(0, 0, 0, 0.45)");
-      shade.addColorStop(1, "rgba(0, 0, 0, 0)");
-      g.fillStyle = shade;
-      g.fillRect(out, top + BOARD_TOP + BOARD_FACE, w - out * 2, BOARD_SHADE);
-      g.fillStyle = wood(8); g.fillRect(0, top, w, BOARD_TOP);
-      g.fillStyle = wood(-4, 0.9); g.fillRect(0, top, w, 1);
-      g.fillStyle = wood(20); g.fillRect(0, top + BOARD_TOP - 1, w, 1);
-      g.fillStyle = wood(-6); g.fillRect(0, top + BOARD_TOP, w, BOARD_FACE);
-      g.fillStyle = wood(-14); g.fillRect(0, top + BOARD_TOP + BOARD_FACE - 1, w, 1);
+      const arris = top + BOARD_TOP, base = arris + BOARD_FACE;
+      // The faintest ground to its front, then its edges.
+      g.fillStyle = line(0.03);
+      g.fillRect(0, arris, w, BOARD_FACE);
+      g.fillStyle = line(0.3); g.fillRect(0, top, w, hair);
+      g.fillStyle = line(0.62); g.fillRect(0, arris, w, hair);
+      g.fillStyle = line(0.4); g.fillRect(0, base - hair, w, hair);
+      g.fillStyle = line(0.4);
+      g.fillRect(0, top, hair, BOARD_TOP + BOARD_FACE);
+      g.fillRect(w - hair, top, hair, BOARD_TOP + BOARD_FACE);
+      // A ruler of ticks along its foot.
+      g.fillStyle = line(0.22);
+      for (let x = BOARD_TICKS; x < w - 4; x += BOARD_TICKS) g.fillRect(x, base, hair, 4);
       // The label, if the row holds anything.
       const row = rows[k];
       if (!row || !row.length) continue;
       const nums = row.map((r) => parseInt(r.call.slice(4), 10)).sort((p, q) => p - q);
       const text = code + " " + String(nums[0]).padStart(3, "0") + (nums.length > 1 ? "–" + String(nums[nums.length - 1]).padStart(3, "0") : "");
-      const lw = 88, lh = 9, lx = out + 14, ly = top + BOARD_TOP + (BOARD_FACE - lh) / 2;
-      g.fillStyle = "hsl(42, 28%, 82%)";
+      const lw = 88, lh = 9, lx = out + 14, ly = arris + (BOARD_FACE - lh) / 2;
+      g.fillStyle = "rgb(11, 11, 12)";
       g.fillRect(lx, ly, lw, lh);
-      g.fillStyle = "rgba(28, 24, 18, 0.9)";
+      g.strokeStyle = line(0.45);
+      g.lineWidth = hair;
+      g.strokeRect(lx + hair / 2, ly + hair / 2, lw - hair, lh - hair);
+      g.fillStyle = line(0.8);
       g.font = "500 7px " + mono;
       g.textAlign = "center";
       g.textBaseline = "middle";
@@ -859,8 +864,10 @@
       const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * 1.35;
       dust.push({ a, d, s: 0.7 + rnd() * 0.9, o: 0.12 + rnd() * 0.35, w: (rnd() - 0.5) * 0.4 });
     }
-    const [h0, s0] = CLOTH[r.code] || CLOTH.RET;
-    return { ring, dust, colour: h0 + "," + Math.min(60, s0 + 14) + "%," + "70%" };
+    // In the page's white, with the accord's colour on the ring's specks
+    // alone — one for every fragrance — as a book carries it only on its
+    // head (2026-09-26, black and white).
+    return { ring, dust, colour: markColour(r.code) };
   }
   function drawMark(t) {
     if (!markOf) return;
@@ -874,7 +881,7 @@
     g.clearRect(0, 0, w, MARK_TALL);
     const cx = w / 2, cy = MARK_TALL / 2, R = 30;
     const turn = still ? 0 : t * 0.00011;
-    const hsla = (a) => "hsla(" + markOf.colour.split(",")[0] + "," + markOf.colour.split(",")[1] + "," + markOf.colour.split(",")[2] + "," + a + ")";
+    const white = (a) => "rgba(" + LINE + "," + a + ")";
     // The rule in from either side, ticked, and stopping short of the ring.
     g.fillStyle = "rgba(" + getComputedStyle(document.body).getPropertyValue("--ink-rgb") + ",0.2)";
     g.fillRect(0, cy, cx - R - 14, 0.8);
@@ -884,23 +891,23 @@
     // The dust, turning a little slower than the ring.
     markOf.dust.forEach((d) => {
       const a = d.a + turn * (0.6 + d.w);
-      g.fillStyle = hsla(d.o);
+      g.fillStyle = white(d.o * 0.85);
       g.fillRect(cx + Math.cos(a) * d.d * R, cy + Math.sin(a) * d.d * R * 0.92, d.s, d.s);
     });
     // The ring: joined, then its specks.
     const pts = markOf.ring.map((p) => [cx + Math.cos(p.a + turn) * R * p.r, cy + Math.sin(p.a + turn) * R * p.r]);
     if (pts.length > 1) {
-      g.strokeStyle = hsla(0.3);
+      g.strokeStyle = white(0.28);
       g.lineWidth = 0.7;
       g.beginPath();
       pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
       g.closePath();
       g.stroke();
     }
-    g.fillStyle = hsla(0.95);
+    g.fillStyle = markOf.colour;
     pts.forEach(([x, y]) => g.fillRect(x - 1.2, y - 1.2, 2.4, 2.4));
     // The centre, a registration cross.
-    g.fillStyle = hsla(0.55);
+    g.fillStyle = white(0.55);
     g.fillRect(cx - 4, cy - 0.4, 8, 0.8);
     g.fillRect(cx - 0.4, cy - 4, 0.8, 8);
   }
@@ -1209,7 +1216,7 @@
       const dx = d.x - px, dy = d.y - py;
       const near = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) / 240);
       const a = 0.08 + 0.18 * d.glow * (0.6 + 0.4 * Math.sin(now * 0.001 + d.sway)) + near * 0.5;
-      ctx.fillStyle = "rgba(226, 240, 232, " + a.toFixed(3) + ")";
+      ctx.fillStyle = "rgba(236, 236, 236, " + a.toFixed(3) + ")";
       ctx.beginPath();
       ctx.arc(d.x, d.y, d.r + near * 0.6, 0, Math.PI * 2);
       ctx.fill();

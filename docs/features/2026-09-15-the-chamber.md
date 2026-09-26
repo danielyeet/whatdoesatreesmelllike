@@ -1853,3 +1853,28 @@ test carried the owner's spelling as an exception; it was taken out with the ans
 - The sun and notes tests read the print and the Notes button in `.fav-drawer`; the sun's waits
   for the page to have been carried up and checks the print is on the window.
 
+## 2026-09-26, last — Bad Lily in the middle of its frame
+
+The owner sent a photograph of Bad Lily opened, the bottle well left of the middle of its print:
+*"center this please in the window of favorites chapter 1 tale bad lily"*. The picture is a
+bottle on white with a soft grey shadow thrown to its right, and on a clean ground even a faint
+speck counts as bottle — so the shadow was read as bottle, the bottle as reaching from a third of
+the way across to 93%, and its middle put in the middle of the frame. **A cast shadow is now left
+out**: it is LOW, so a column through it begins only near the bottle's foot, where one through
+the bottle — even through its faintest glass — begins well up it; a column that begins in the
+bottom fifth of the bottle's height (`SHADOW_LOW`, 0.2) is not counted in its width
+(`readPicture`). Bad Lily now reads from 33% to 71% across and stands in the middle. Measured on
+every picture either page places before it went in: Tobacolor's plinth, wider than its bottle,
+goes the same way (which centres the bottle on it); nothing else moved.
+
+**The same change is in `fragrance-line.js`**, whose reader is the same code, and a test now keeps
+the two identical.
+
+### How to test it
+
+- **`Bad Lily's bottle stands in the middle of its frame, its shadow not counted`** — opened, the
+  bottle found is less than 45% of the picture across (with its shadow it was 60%), and its middle
+  is within 4% of the frame's middle both ways.
+- **`the favourites and the Fragrances view read a picture with the same code`** — `readPicture`
+  in `chamber.js` and in `fragrance-line.js`, character for character.
+

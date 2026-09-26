@@ -591,3 +591,14 @@ the boxes come three to a row again, since a square picture still shows its bott
   is placed on its weight rather than its stand. CV99's frame is its picture's own white.
 - `the options show the table as a list, as small boxes or as cards` asks for a box's picture to
   be square now, rather than the box.
+
+## 2026-09-26, last — a cast shadow is not the bottle
+
+The reader that places the boxes' and cards' pictures (`readPicture`) leaves a cast shadow out of
+a bottle's width now: a column that begins only in the bottom fifth of the bottle's height
+(`SHADOW_LOW`) is its shadow, not its glass. It was found on Bad Lily in the favourites — see [the
+chamber's report](2026-09-15-the-chamber.md), *2026-09-26, last* — and made here too, because the
+two pages read a picture with the same code, and a test in `tests/chamber.spec.js` now keeps them
+the same. Of the individual fragrances only Tobacolor moves: its plinth, wider than its bottle, is
+left out the same way, which centres the bottle.
+

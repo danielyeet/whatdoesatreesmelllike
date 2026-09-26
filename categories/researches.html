@@ -17,15 +17,18 @@
   going out after a smell. The file is still called researches.html
   because renaming it would break every link into it for no gain.
 
-  This category is laid out as an INDEX rather than as a drawing: a few readings across the top, two plates on the right, and
-  the list itself standing in the bottom left corner of the window,
-  scrolling inside its own box with its headings stuck to the top.
-
-  It pays its homage to the drawn pages in its own quiet way: the
-  first plate is DRAWN — a slow ring of specks with lines strung
-  between the near ones, the chamber's orbit printed small — and
-  everything else is the hairlines, the mono readings and the numbers
-  the rest of the site is made of.
+  This category is laid out as an INDEX: its name and what it is at the
+  top left, and the list itself under them — the left three fifths of
+  the window — scrolling inside its own box with its headings stuck to
+  the top. The right two fifths are THE FIELD, a drawing in specks that
+  the table conducts (explorations.js): with nothing pointed at, the
+  specks turn in a slow ring; point at a row and they are thrown out and
+  gather into that work's own FIGURE. The owner, 2026-09-26: "Delete the
+  right side of the page, and move the table upwards ... On the right
+  side, I want you to make something extravagant with the particles that
+  reacts ot the thing being hovered on the left". (The right side was a
+  line of text and two plates, the first a drawn ring; the heading over
+  the paragraph said "Information". All three went.)
 
   TO ADD A WORK: copy one whole <tr> below. What a row carries is
   written ON the row (data-no, data-name, data-kind, data-date) and not
@@ -34,6 +37,11 @@
   data-kind is either "Research" (gone and found out, written up) or
   "Exploration" (gone and had a look), and it is what the third column
   reads.
+  data-figure names the figure the field gathers into when the row is
+  pointed at: pyramid, resin, bottle, smoke, forest, rain or cloud. A row
+  without one gets one by its kind — a Research a MOLECULE and an
+  Exploration a TERRAIN, each worked out from the row's own name, so no
+  two are alike — and a row that is neither yet is the cloud.
   A row with data-open="no" is one that hasn't been written yet: it is
   drawn quieter and is not a link.
 
@@ -46,8 +54,9 @@
 <div class="index-page">
 
   <header class="index-head">
+    <!-- The paragraph stands under the name, at the owner's word
+         (2026-09-26): "under the title RE, not under introduction". -->
     <p class="index-name">Explorations &amp; Researches</p>
-    <p class="index-col">Information</p>
     <div class="index-say">
       <p class="index-say-lede">
         Here you will find my researches and my explorations. Researches
@@ -58,22 +67,15 @@
     </div>
   </header>
 
-  <div class="index-right">
-  <p class="index-line">Currently reading round and writing these up one at a time.</p>
-
-  <div class="index-plates">
-    <figure class="index-plate">
-      <!-- DRAWN, not photographed — see the note at the top of this file. -->
-      <canvas class="index-mark" aria-hidden="true"></canvas>
-      <figcaption>001</figcaption>
-    </figure>
-    <figure class="index-plate">
-      <!-- <img src="../images/researches-02.jpg" alt=""> -->
-      <div aria-hidden="true"></div>
-      <figcaption>002</figcaption>
-    </figure>
-  </div>
-  </div>
+  <!-- THE FIELD: drawn by explorations.js, conducted by the table. -->
+  <figure class="re-field" aria-hidden="true">
+    <canvas class="re-canvas"></canvas>
+    <figcaption class="re-caption">
+      <span class="re-caption-no"></span>
+      <span class="re-caption-name"></span>
+      <span class="re-caption-kind"></span>
+    </figcaption>
+  </figure>
 
   <div class="index-board">
     <div class="index-search">
@@ -96,13 +98,13 @@
           <!-- 000, at the owner's word: "make it 000. It should be the
                first result." A number of nought sorts before every other,
                so it stands first however the table is sorted by number. -->
-          <tr data-no="0" data-name="My Personal Introduction to Perfume" data-kind="Exploration" data-date="2026-09-23">
+          <tr data-no="0" data-figure="pyramid" data-name="My Personal Introduction to Perfume" data-kind="Exploration" data-date="2026-09-23">
             <td class="index-no">000</td>
             <td class="index-what"><a href="../works/my-personal-introduction-to-perfume.html">My Personal Introduction to Perfume</a></td>
             <td class="index-kind">Exploration</td>
             <td class="index-date">23.09.2026</td>
           </tr>
-          <tr data-no="1" data-name="Resins in Perfumery" data-kind="Research" data-date="2026-02-14">
+          <tr data-no="1" data-figure="resin" data-name="Resins in Perfumery" data-kind="Research" data-date="2026-02-14">
             <td class="index-no">001</td>
             <td class="index-what"><a href="../works/resins-in-perfumery.html">Resins in Perfumery</a></td>
             <td class="index-kind">Research</td>
@@ -113,25 +115,25 @@
                Exploration' Make it be 002." The three after it moved
                down one, and the first of the empty rows went to make
                room, so the table still runs 000 to 009. -->
-          <tr data-no="2" data-name="Buying A Perfume - A Philosophical Exploration" data-kind="Exploration" data-date="2026-09-26">
+          <tr data-no="2" data-figure="bottle" data-name="Buying A Perfume - A Philosophical Exploration" data-kind="Exploration" data-date="2026-09-26">
             <td class="index-no">002</td>
             <td class="index-what"><a href="../works/buying-a-perfume.html">Buying A Perfume - A Philosophical Exploration</a></td>
             <td class="index-kind">Exploration</td>
             <td class="index-date">26.09.2026</td>
           </tr>
-          <tr data-no="3" data-name="Cold vs Warm Incense" data-kind="Exploration" data-date="2026-09-21">
+          <tr data-no="3" data-figure="smoke" data-name="Cold vs Warm Incense" data-kind="Exploration" data-date="2026-09-21">
             <td class="index-no">003</td>
             <td class="index-what"><a href="../works/cold-vs-warm-incense.html">Cold vs Warm Incense</a></td>
             <td class="index-kind">Exploration</td>
             <td class="index-date">21.09.2026</td>
           </tr>
-          <tr data-no="4" data-name="Exploring the smell of a forest part 1" data-kind="Exploration" data-date="" data-open="no">
+          <tr data-no="4" data-figure="forest" data-name="Exploring the smell of a forest part 1" data-kind="Exploration" data-date="" data-open="no">
             <td class="index-no">004</td>
             <td class="index-what">Exploring the smell of a forest part 1</td>
             <td class="index-kind">Exploration</td>
             <td class="index-date">—</td>
           </tr>
-          <tr data-no="5" data-name="Exploring the smell of rain part 1" data-kind="Exploration" data-date="" data-open="no">
+          <tr data-no="5" data-figure="rain" data-name="Exploring the smell of rain part 1" data-kind="Exploration" data-date="" data-open="no">
             <td class="index-no">005</td>
             <td class="index-what">Exploring the smell of rain part 1</td>
             <td class="index-kind">Exploration</td>
@@ -172,5 +174,6 @@
 <script src="../nav.js"></script>
 <script src="../search.js"></script>
 <script src="../index-page.js"></script>
+<script src="../explorations.js"></script>
 </body>
 </html>
