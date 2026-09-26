@@ -584,7 +584,11 @@ Tested in `tests/contact-sheet.spec.js`:
   feet`** — while the house is rested on and everything has grown, fewer than 400 specks a
   frame are drawn on the motifs' canvas (it was thousands); the iris's violet is at the foot of
   the window on the armoire's side; and none of it is up in the band where the irises used to
-  stand inside the door.
+  stand inside the door. **The violet is read within ±14 of the iris's own colour** (since
+  2026-09-26; it was ±30), because the petals are drawn in one colour and read back as it: the
+  looser window let in a fading speck of orris powder blended over the armoire's faint inside
+  tone at the door's edge, about (112, 101, 128), and the test failed one run in five on that
+  one pixel with no iris anywhere near. The drawing was right; the reading was not.
 - The test before it (the armoire on one side, the drip and the puddle on the other, the logo
   never asked for, the iris among the colours) is unchanged and still passes.
 

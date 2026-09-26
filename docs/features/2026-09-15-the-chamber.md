@@ -1814,7 +1814,10 @@ Aetherealism, Amber Zero and Incantu ..."*). A `<p class="gallery-after">` insid
 block is taken out of its description and set **under the last card** instead
 (`.chapter-after`, a short rule over it, in the page's dimmer silver). Chapter 1's names the
 three, each linked to where it stands in ADAR. The owner writes *Aetherealism* and ADAR's
-page *Aetherialism*; the line is theirs and keeps its spelling.
+page *Aetherialism*; the line is theirs and keeps its spelling — so `repository.spec.js`'s
+**`every link into a fragrance lands on that fragrance`**, which compares a link's words with
+the part it lands on, carries that one spelling in a table of its own (`SPELT`), and a link
+landing on any other fragrance still fails.
 
 ### What was tried and was wrong
 

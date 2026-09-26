@@ -990,12 +990,20 @@ test("Les Abstraits' armoire is drawn in lines rather than specks, with irises g
     const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
     const W = innerWidth, H = innerHeight;
     const tall = Math.max(220, Math.min(H * 0.56, 420));
+    // THE IRIS'S OWN COLOUR, NEARLY EXACTLY. Its petals are drawn in one
+    // colour, 112, 94, 156, at different strengths, so on the motifs'
+    // own transparent canvas they read back as that colour to within a
+    // few units. The window was once ±30, which let in a MIX: a fading
+    // speck of orris powder (150, 136, 176) swaying back over the
+    // armoire's faint inside tone at the door's edge blends to about
+    // (112, 101, 128) — and failed this test one run in five, on a
+    // single pixel up by the door, with no iris there at all.
     const iris = (y1, y2) => {
       let n = 0;
       for (let y = Math.round(y1 * ratio); y < Math.round(y2 * ratio); y++)
         for (let x = 0; x < Math.round(W * 0.35 * ratio); x++) {
           const i = (y * c.width + x) * 4;
-          if (d[i + 3] > 40 && Math.abs(d[i] - 112) < 30 && Math.abs(d[i + 1] - 94) < 30 && Math.abs(d[i + 2] - 156) < 30 && d[i + 2] > d[i] + 15) n++;
+          if (d[i + 3] > 40 && Math.abs(d[i] - 112) < 14 && Math.abs(d[i + 1] - 94) < 14 && Math.abs(d[i + 2] - 156) < 14 && d[i + 2] > d[i] + 30) n++;
         }
       return n;
     };

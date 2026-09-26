@@ -175,6 +175,12 @@ test("every link into a fragrance lands on that fragrance", async () => {
       `${house} should have parts to point at`).toBeGreaterThan(5);
   }
 
+  // THE OWNER'S OWN SPELLING OF A NAME, kept as they wrote it: a link in
+  // their words may spell a fragrance differently from the house's page,
+  // and is still that fragrance. Each one written out here, so a link
+  // landing on a DIFFERENT fragrance still fails. Favourites' last line
+  // says "Aetherealism"; ADAR's page says "Aetherialism".
+  const SPELT = { "Aetherealism": "Aetherialism" };
   const wrong = [];
   let looked = 0;
   for (const page of htmlFiles()) {
@@ -185,7 +191,7 @@ test("every link into a fragrance lands on that fragrance", async () => {
       const [, house, anchor, words] = found;
       const title = parts[house][anchor];
       const from = path.relative(ROOT, page);
-      const said = plain(words);
+      const said = SPELT[plain(words)] || plain(words);
       if (!title) wrong.push(`${from}: #${anchor} is not a part of ${house}`);
       // EITHER MAY BE THE LONGER, and both happen here:
       //   the link is SHORTER when it carries the first of a
