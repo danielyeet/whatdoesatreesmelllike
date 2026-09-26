@@ -4,7 +4,8 @@ Date: 2026-09-17 (`d7092b2`, the round that added four page kinds at once; migra
 from CLAUDE.md on 2026-09-17)
 
 Files: `essay.js` (~380 lines), `works/theory-01.html`, `works/theory-02.html`,
-`works/theory-03.html`, `works/resins-in-perfumery.html`, the `essay-*` block in
+`works/theory-03.html`, `works/resins-in-perfumery.html`, `works/cold-vs-warm-incense.html`,
+`works/buying-a-perfume.html`, the `essay-*` block in
 `style.css`, `tests/essay.spec.js`
 
 ## What it is
@@ -195,3 +196,23 @@ tells whoever copies it to point the plate at a picture. The `.essay-plate` rule
 not pictures and stay.
 
 Tested: **`no theory carries a picture`** in `tests/essay.spec.js`.
+
+## 2026-09-26 — Explorations 002, waiting for its writing
+
+> Also add another exploration on "Buying A Perfume - A Philosophical Exploration" Make it be
+> 002. make the page too, I will want to just add text later on.
+
+`works/buying-a-perfume.html` is an essay page exactly as Cold vs Warm Incense was when it
+arrived: the swarm, the sights, the rule, the kicker *Explorations · 002*, the title with *A
+Philosophical Exploration* under it, and three sections — *Introduction*, *The exploration*,
+*Conclusion* — which are a plain scaffold to be renamed, each saying *Waiting for the owner.* in
+a dashed box. **Nothing in it was guessed at.** The comment at its head says how to write it in:
+replace each box with paragraphs, rename the headings, copy a section to add one (the rule grows
+a tick on its own; the *Sections* count in the head is the one number to change by hand). It is
+in the search's `PAGES` and in `mobile.spec.js`'s list of pages. The row is in [index and
+views](2026-09-17-the-index-pages-and-views.md).
+
+Tested: **`Explorations 002 is Buying A Perfume, and its page stands ready for the owner's
+writing`** in `tests/essay.spec.js` — the row, its number, kind and link; the numbers still
+000 to 009; the page's head, its rule, and no paragraph that is not a waiting box.
+

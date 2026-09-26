@@ -43,6 +43,7 @@
     { url: "categories/researches.html", trail: ["Explorations & Researches"] },
     { url: "works/my-personal-introduction-to-perfume.html", trail: ["Explorations & Researches", "My Personal Introduction to Perfume"] },
     { url: "works/resins-in-perfumery.html", trail: ["Explorations & Researches", "Resins in Perfumery"] },
+    { url: "works/buying-a-perfume.html", trail: ["Explorations & Researches", "Buying A Perfume"] },
     { url: "works/cold-vs-warm-incense.html", trail: ["Explorations & Researches", "Cold vs Warm Incense"] },
     { url: "categories/note-library.html", trail: ["Note Library"] },
     { url: "categories/other-2.html", trail: ["Photography"] },

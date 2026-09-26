@@ -799,13 +799,16 @@ test("leaving a chapter never shows the chamber without its chrome",
   await expect(page.locator(".chamber-panel")).toBeVisible();
 });
 
-/* A FAVOURITE OPENS WHERE IT STANDS.
-   The owner: "when you click a given fragrance... the other favorite
-   fragrances will go down and the square in which Des Cendres is will
-   expand revealing the window of the fragrance. There will be a
-   description, anothe rparagraph for commentary, and then 2 links: Go
-   to fragrance : Notes". */
-test("a favourite opens where it stands, and the ones after it go down",
+/* A FAVOURITE OPENS A DRAWER UNDER ITS ROW.
+   The owner first: "when you click a given fragrance... the other
+   favorite fragrances will go down and the square in which Des Cendres
+   is will expand revealing the window of the fragrance". Then, of the
+   card taking the whole width of the grid: "it is too techy and leaves
+   an awkward space (especially if its slot in the second or third
+   column of a row). can you change it somehow so it looks good." So a
+   card opens a drawer under the row it stands in: the card stays where
+   it is, nothing in its row moves, and the rows after it go down. */
+test("a favourite opens a drawer under its row: the card stays put, the rows after it go down",
   async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(PAGE);
@@ -813,73 +816,115 @@ test("a favourite opens where it stands, and the ones after it go down",
   await openMenu(page);
   await openChapterFully(page, 0);
 
-  const before = await page.$$eval(".chapter-card-shell", (all) =>
-    all.map((s) => {
+  // Measured against the grid, not the window: pressing a card low on
+  // the window carries the page up to show its drawer, which moves
+  // everything on the window and nothing in the grid.
+  const boxes = () => page.$$eval(".chapter-card-shell", (all) => {
+    const grid = document.querySelector(".chapter-cards").getBoundingClientRect();
+    return all.map((s) => {
       const r = s.getBoundingClientRect();
-      return { top: r.top, width: r.width };
-    }));
-  expect(before.length, "this wants more than one favourite").toBeGreaterThan(1);
-
-  await page.locator(".chapter-card").first().click();
-  await page.waitForTimeout(900);
-
-  const after = await page.$$eval(".chapter-card-shell", (all) =>
-    all.map((s) => {
-      const r = s.getBoundingClientRect();
-      return { top: r.top, width: r.width, open: s.classList.contains("is-open") };
-    }));
-
-  expect(after[0].open, "the one pressed is the one that opened").toBe(true);
-  expect(after[0].width, "and it takes the whole width of the grid")
-    .toBeGreaterThan(before[0].width + 40);
-  expect(after[1].top, "the ones after it go down")
-    .toBeGreaterThan(before[1].top + 40);
-
-  // What is inside it. Its writing, when the owner has written none
-  // for it here, is the start of its own entry, fetched — so wait for
-  // that to have come.
-  await page.waitForFunction(() => {
-    const w = document.querySelector(".chapter-card-shell.is-open .fav-writing");
-    return w && (!w.classList.contains("is-from") || w.dataset.from);
-  }, null, { timeout: 5000 });
-  const inside = await page.evaluate(() => {
-    const shell = document.querySelector(".chapter-card-shell.is-open");
-    const body = shell.querySelector(".chapter-card-body");
-    return {
-      tall: body.getBoundingClientRect().height,
-      said: body.querySelectorAll(".fav-writing p").length,
-      go: (body.querySelector(".fav-link-go") || {}).getAttribute
-        ? body.querySelector(".fav-link-go").getAttribute("href") : null,
-      notes: Boolean(body.querySelector(".fav-link-notes")),
-    };
+      return { top: r.top - grid.top, left: r.left - grid.left, width: r.width, height: r.height,
+        open: s.classList.contains("is-open") };
+    });
   });
-  expect(inside.tall, "opened on a measured height").toBeGreaterThan(80);
-  expect(inside.said, "something to read").toBeGreaterThanOrEqual(1);
-  expect(inside.go, "and a way on to wherever that fragrance lives")
-    .toMatch(/^\.\.\/[\w-]+\/[\w-]+\.html(#[\w-]+)?$/);
-  expect(inside.notes).toBe(true);
+  const before = await boxes();
+  expect(before.length, "this wants more than one row of favourites").toBeGreaterThan(3);
+  const perRow = before.filter((b) => Math.abs(b.top - before[0].top) < 2).length;
+  expect(perRow, "several to a row on a wide window").toBeGreaterThanOrEqual(2);
 
-  // Only one at a time: a second would leave the first standing above
-  // it saying the same things.
+  // THE SECOND IN ITS ROW — the case the owner named.
   await page.locator(".chapter-card").nth(1).click();
   await page.waitForTimeout(900);
-  expect(await page.locator(".chapter-card-shell.is-open").count()).toBe(1);
-  expect(await page.locator(".chapter-card-shell").nth(1)
+  const after = await boxes();
+  expect(after[1].open, "the one pressed is the one that is open").toBe(true);
+  for (let n = 0; n < perRow; n++) {
+    expect(Math.abs(after[n].top - before[n].top), `card ${n + 1} of the row stays where it was`).toBeLessThan(2);
+    expect(Math.abs(after[n].left - before[n].left), `card ${n + 1} does not move across`).toBeLessThan(2);
+    expect(Math.abs(after[n].width - before[n].width), `card ${n + 1} keeps its size`).toBeLessThan(2);
+  }
+  const drawer = await page.evaluate(() => {
+    const d = document.querySelector(".fav-drawer");
+    if (!d) return null;
+    const r = d.getBoundingClientRect();
+    const grid = document.querySelector(".chapter-cards").getBoundingClientRect();
+    const shells = [...document.querySelectorAll(".chapter-card-shell")];
+    return {
+      count: document.querySelectorAll(".fav-drawer").length,
+      top: r.top - grid.top, height: r.height,
+      spans: Math.abs(r.width - grid.width) < 2 && Math.abs(r.left - grid.left) < 2,
+      after: shells.indexOf(d.previousElementSibling),
+      said: d.querySelectorAll(".fav-writing p").length,
+      name: (d.querySelector(".fav-name") || {}).textContent,
+      go: d.querySelector(".fav-link-go") ? d.querySelector(".fav-link-go").getAttribute("href") : null,
+      notes: Boolean(d.querySelector(".fav-link-notes")),
+    };
+  });
+  expect(drawer, "a drawer should have opened").not.toBeNull();
+  expect(drawer.count).toBe(1);
+  expect(drawer.after, "under the whole of the card's row, after its last card").toBe(perRow - 1);
+  expect(drawer.spans, "the full width of the grid").toBe(true);
+  expect(drawer.top, "below the row").toBeGreaterThan(after[0].top + after[0].height);
+  expect(drawer.height, "opened on a measured height").toBeGreaterThan(160);
+  expect(after[perRow].top, "the rows after it go down, by the drawer's height")
+    .toBeGreaterThan(before[perRow].top + drawer.height - 4);
+  expect(drawer.name).toBe(await page.locator(".chapter-card-name").nth(1).textContent());
+  expect(drawer.said, "something to read").toBeGreaterThanOrEqual(1);
+  expect(drawer.go, "and a way on to wherever that fragrance lives")
+    .toMatch(/^\.\.\/[\w-]+\/[\w-]+\.html(#[\w-]+)?$/);
+  expect(drawer.notes).toBe(true);
+
+  // ANOTHER IN THE SAME ROW: the drawer stays and carries the new one.
+  await page.locator(".chapter-card").nth(perRow - 1).click();
+  await page.waitForTimeout(900);
+  expect(await page.locator(".chapter-card-shell.is-open").count(), "one at a time").toBe(1);
+  expect(await page.locator(".chapter-card-shell").nth(perRow - 1)
     .evaluate((s) => s.classList.contains("is-open"))).toBe(true);
+  expect(await page.locator(".fav-drawer").count()).toBe(1);
+  expect(await page.locator(".fav-drawer .fav-name").textContent())
+    .toBe(await page.locator(".chapter-card-name").nth(perRow - 1).textContent());
+
+  // ONE IN THE NEXT ROW: this drawer goes and one opens under that row.
+  await page.locator(".chapter-card").nth(perRow).click();
+  await page.waitForTimeout(1000);
+  expect(await page.locator(".fav-drawer").count(), "the old drawer is gone").toBe(1);
+  const moved = await page.evaluate(() => {
+    const d = document.querySelector(".fav-drawer");
+    return [...document.querySelectorAll(".chapter-card-shell")].indexOf(d.previousElementSibling);
+  });
+  expect(moved, "under the next row now").toBe(Math.min(before.length - 1, perRow * 2 - 1));
+  // AND THE PAGE CARRIED TO IT, NOT PAST IT. The drawer shutting above
+  // lifts the card pressed by the whole of its height while the page is
+  // carried up to show the new one; the two together sent the card off
+  // the top of the window. Settled, both are on it.
+  const seen = await page.evaluate(() => {
+    const card = document.querySelector(".chapter-card-shell.is-open").getBoundingClientRect();
+    const d = document.querySelector(".fav-drawer").getBoundingClientRect();
+    return { card: card.top, drawer: d.top, room: innerHeight };
+  });
+  expect(seen.card, "the card pressed is still on the window").toBeGreaterThanOrEqual(0);
+  expect(seen.drawer, "and its drawer opens on the window").toBeLessThan(seen.room - 60);
+
+  // AND SHUT: pressing the open card again takes the drawer away.
+  await page.locator(".chapter-card-shell.is-open .chapter-card").click();
+  await page.waitForTimeout(900);
+  expect(await page.locator(".fav-drawer").count()).toBe(0);
+  expect(await page.locator(".chapter-card-shell.is-open").count()).toBe(0);
   expect(errors).toEqual([]);
 });
 
-/* WHAT AN OPENED FAVOURITE SAYS, REWORKED. The owner: "reword the way
+/* WHAT AN OPENED FAVOURITE SAYS. The owner, first: "reword the way
    that the favorite perfumes open when you click them. also add images
    if you have them based on the name from the repository. I want you to
-   make it less techy, more minimalist and geometric." So an opened
-   favourite carries the start of its own entry — the owner's words, off
-   the page it links to, never edited — two plain links, and its picture,
-   credited under it. And a round later, of that picture — whole in a
-   circle over a blurred copy of itself — "it looks tacky": so it fills an
-   upright frame edge to edge, with nothing behind it, placed so the
-   bottle stands in the middle. */
-test("an opened favourite reads the start of its own entry, beside its picture in a frame, credited",
+   make it less techy, more minimalist and geometric." And of the picture
+   — whole in a circle over a blurred copy of itself — "it looks tacky":
+   so it fills an upright frame edge to edge, with nothing behind it,
+   placed so the bottle stands in the middle. Then (2026-09-26) they wrote
+   what each favourite is on the list for — "add the following
+   descriptions to the favorites page. Remove the current descriptions" —
+   and asked for Notes and "Read the whole entry" the other way round. So
+   an opened favourite says the owner's own words, EXACTLY, and nothing
+   read off its entry any more. */
+test("an opened favourite says what the owner wrote about it, beside its picture in a frame, credited",
   async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(PAGE);
@@ -900,6 +945,22 @@ test("an opened favourite reads the start of its own entry, beside its picture i
     expect(e.image, `${e.name} should name its picture`).toMatch(/^\.\.\/images\//);
     expect(e.credit, `${e.name}'s picture should be credited`).not.toBe("");
   });
+
+  // THE OWNER'S WORDS, as the page carries them: one block per
+  // favourite, every one of Chapter 1's ten written, matched by name —
+  // and none of the invisible marks a paste leaves behind.
+  const written = await page.$$eval(".gallery-writing", (all) => all.map((w) => ({
+    name: (w.dataset.favourite || "").trim(),
+    paras: [...w.querySelectorAll("p")].map((p) => p.textContent.replace(/\s+/g, " ").trim()),
+    raw: w.textContent,
+  })));
+  expect(written.map((w) => w.name).sort(), "a block for every favourite, and no other")
+    .toEqual(here.map((e) => e.name).sort());
+  written.forEach((w) => {
+    expect(w.paras.length, `${w.name} is written`).toBeGreaterThan(0);
+    expect(/[‎‏​﻿]/.test(w.raw), `${w.name} carries no invisible marks`).toBe(false);
+  });
+  expect(await page.$$eval(".gallery-waiting", (all) => all.length), "no placeholders left").toBe(0);
 
   // Every card carries its picture and its credit, shut or open — one
   // picture, with no blurred copy laid behind it.
@@ -926,33 +987,39 @@ test("an opened favourite reads the start of its own entry, beside its picture i
     .filter((img) => !(img.complete && img.naturalWidth > 0))
     .map((img) => img.getAttribute("src"))), { timeout: 8000 }).toEqual([]);
 
-  // THE FIRST, OPENED: its writing is the start of its own entry.
+  // EACH ONE, OPENED: its writing is the owner's block, word for word.
+  for (let n = 0; n < here.length; n++) {
+    await page.locator(".chapter-card").nth(n).click();
+    await page.waitForFunction((name) => {
+      const d = document.querySelector(".fav-drawer");
+      return d && d.classList.contains("is-shown") &&
+        d.querySelector(".fav-name") && d.querySelector(".fav-name").textContent === name;
+    }, here[n].name, { timeout: 5000 });
+    const said = await page.$$eval(".fav-drawer .fav-writing p",
+      (all) => all.map((p) => p.textContent.replace(/\s+/g, " ").trim()));
+    const own = written.find((w) => w.name === here[n].name).paras;
+    expect(said, `${here[n].name} says what the owner wrote, exactly`).toEqual(own);
+  }
+
+  // THE FIRST, OPENED AGAIN, for its picture and its links.
   await page.locator(".chapter-card").first().click();
-  await page.waitForFunction(() => {
-    const w = document.querySelector(".chapter-card-shell.is-open .fav-writing");
-    return w && w.dataset.from;
-  }, null, { timeout: 5000 });
-  const read = await page.evaluate(async (href) => {
-    const shell = document.querySelector(".chapter-card-shell.is-open");
-    const said = [...shell.querySelectorAll(".fav-writing p")].map((p) => p.textContent);
-    const url = new URL(href, location.href);
-    const doc = new DOMParser().parseFromString(await (await fetch(url.href)).text(), "text/html");
-    const part = doc.getElementById(url.hash.slice(1));
-    const own = [...part.querySelectorAll(".human-text > p, .pine-text > p, .adar-text > p")]
-      .filter((p) => !p.matches(".human-stage, .adar-stage, .pine-stage, .human-waiting, .human-note"))
-      .map((p) => p.textContent.replace(/\s+/g, " ").trim()).filter(Boolean);
-    const shot = shell.querySelector(".fav-print-shot");
-    const face = shell.querySelector(".fav-print-face");
+  await page.waitForFunction((name) => {
+    const d = document.querySelector(".fav-drawer");
+    return d && d.querySelector(".fav-name") && d.querySelector(".fav-name").textContent === name &&
+      d.querySelector(".fav-print-face.is-placed");
+  }, here[0].name, { timeout: 5000 });
+  const read = await page.evaluate(() => {
+    const drawer = document.querySelector(".fav-drawer");
+    const shot = drawer.querySelector(".fav-print-shot");
+    const face = drawer.querySelector(".fav-print-face");
     const f = face.getBoundingClientRect(), r = shot.getBoundingClientRect();
     const st = getComputedStyle(shot);
     const sub = (face.dataset.subject || "").split(" ").map(Number);
     const mid = sub.length === 4
       ? { x: r.left + (sub[0] + sub[2]) / 2 * r.width, y: r.top + (sub[1] + sub[3]) / 2 * r.height } : null;
-    const links = [...shell.querySelectorAll(".fav-link")].map((a) => ({
-      say: a.textContent.trim(), font: getComputedStyle(a).fontFamily }));
+    const links = [...drawer.querySelectorAll(".fav-link")].map((a) => ({
+      say: a.textContent.trim(), font: getComputedStyle(a).fontFamily, href: a.getAttribute("href") }));
     return {
-      from: shell.querySelector(".fav-writing").dataset.from,
-      said, own,
       shape: f.width / f.height,
       round: parseFloat(getComputedStyle(face).borderTopLeftRadius) || 0,
       plain: st.filter === "none" && st.mixBlendMode === "normal" && st.maskImage === "none",
@@ -963,18 +1030,7 @@ test("an opened favourite reads the start of its own entry, beside its picture i
       onBottle: mid ? mid.x > f.left && mid.x < f.right && mid.y > f.top && mid.y < f.bottom : null,
       links,
     };
-  }, here[0].href);
-  expect(read.from, "read off its own page").toBe("page");
-  expect(read.said.length, "an opening, not the whole entry").toBeGreaterThanOrEqual(1);
-  expect(read.said.length).toBeLessThanOrEqual(2);
-  // THE OWNER'S WORDS, EXACTLY. Each paragraph is one of theirs, or the
-  // start of one stopped with an ellipsis — never reworded.
-  read.said.forEach((line, n) => {
-    const cut = line.replace(/ \u2026$/, "");
-    expect(read.own[n].startsWith(cut), `paragraph ${n + 1} is the owner's own`).toBe(true);
-    if (cut === line) expect(line).toBe(read.own[n]);
   });
-  expect(read.said.join(" ").length, "and not so long it is the whole card").toBeLessThan(700);
 
   expect(read.shape, "the picture stands in an upright frame").toBeCloseTo(4 / 5, 1);
   expect(read.round, "square-cornered, not a circle").toBe(0);
@@ -984,8 +1040,72 @@ test("an opened favourite reads the start of its own entry, beside its picture i
     "filling the frame edge to edge, or carrying its own clean ground on to the frame's").toBe(true);
   if (read.onBottle !== null) expect(read.onBottle, "with the bottle in the frame").toBe(true);
 
-  expect(read.links.map((l) => l.say)).toEqual(["Read the whole entry", "Notes"]);
+  // NOTES FIRST, then the way on to the whole entry.
+  expect(read.links.map((l) => l.say)).toEqual(["Notes", "Read the whole entry"]);
+  expect(read.links[1].href, "and that goes to the favourite's own entry").toBe(here[0].href);
   read.links.forEach((l) => expect(l.font, `${l.say} is not set in the mono`).not.toMatch(/mono/i));
+  expect(errors).toEqual([]);
+});
+
+/* THE ONES THAT NEARLY MADE IT. The owner: "at the end of the list, I
+   would like you to add: Aetherealism, Amber Zero and Incantu from Adar's
+   Aegis collection could have all made it here too ..." It is written in
+   Chapter 1's own block (`.gallery-after`), set apart from the description
+   above the cards, and stands UNDER the last card — the end of the list —
+   with each of the three linked to where it stands in ADAR. */
+test("Chapter 1 ends with the three that could have made it, under the last card",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto(PAGE);
+  await waitForChamber(page);
+  await openMenu(page);
+  await openChapterFully(page, 0);
+
+  const end = await page.evaluate(() => {
+    const after = document.querySelector(".chapter-after");
+    const cards = [...document.querySelectorAll(".chapter-card-shell")];
+    const last = cards[cards.length - 1].getBoundingClientRect();
+    const a = after.getBoundingClientRect();
+    return {
+      shown: !after.hidden && a.height > 0,
+      say: after.textContent.replace(/\s+/g, " ").trim(),
+      links: [...after.querySelectorAll("a")].map((l) => ({
+        say: l.textContent.trim(), href: l.getAttribute("href") })),
+      below: a.top >= last.bottom - 1,
+      // Not in the description over the cards as well.
+      twice: document.querySelector(".chapter-sheet").textContent.split("Adar's Aegis collection").length - 1,
+    };
+  });
+  expect(end.shown, "it stands on the page").toBe(true);
+  expect(end.say).toBe("Aetherealism, Amber Zero and Incantu from Adar's Aegis collection could have all " +
+    "made it here too, though I have smelled them only once, and so would feel it unjust to everything " +
+    "else on the list.");
+  expect(end.below, "at the end of the list").toBe(true);
+  expect(end.twice, "and only there").toBe(1);
+  expect(end.links.map((l) => l.say)).toEqual(["Aetherealism", "Amber Zero", "Incantu"]);
+  end.links.forEach((l) => expect(l.href, `${l.say} goes to ADAR`).toMatch(/^\.\.\/houses\/adar\.html#part-\d{2}$/));
+
+  // Each link lands on that fragrance, by name, in ADAR's own page.
+  const names = await page.evaluate(async (links) => {
+    const doc = new DOMParser().parseFromString(
+      await (await fetch("../houses/adar.html")).text(), "text/html");
+    return links.map((l) => {
+      const part = doc.getElementById(l.href.split("#")[1]);
+      return part ? part.querySelector("summary").textContent.replace(/\s+/g, " ") : "";
+    });
+  }, end.links);
+  // The owner spells the first "Aetherealism" and ADAR's page
+  // "Aetherialism". The owner's line is theirs and stays as written, so
+  // the two are matched on their consonants.
+  const bare = (text) => text.toLowerCase().replace(/[^a-z]/g, "").replace(/[aeiouy]/g, "");
+  end.links.forEach((l, n) => expect(bare(names[n]), `${l.say} is where its link says`).toContain(bare(l.say)));
+
+  // Chapter 2 has nothing of the kind, and nothing is left standing for it.
+  await page.locator(".chapter-step-on").click();
+  await expect.poll(() => page.evaluate(() => {
+    const after = document.querySelector(".chapter-after");
+    return document.querySelector(".chapter-name").textContent.trim() + "|" + after.hidden;
+  }), { timeout: 8000 }).toBe("Chapter 2|true");
   expect(errors).toEqual([]);
 });
 
@@ -1019,7 +1139,7 @@ test("the sun answers an opened favourite's picture, and lets go when it is shut
   // at one place on the window, so the same band can be read again with
   // the card shut.
   const frame = () => page.evaluate(() => {
-    const f = document.querySelector(".chapter-card-shell.is-open .fav-print-face").getBoundingClientRect();
+    const f = document.querySelector(".fav-drawer .fav-print-face").getBoundingClientRect();
     return { x: f.left, y: f.top, w: f.width, h: f.height };
   });
   const band = (at) => page.evaluate((at) => {
@@ -1044,7 +1164,11 @@ test("the sun answers an opened favourite's picture, and lets go when it is shut
   await page.locator(".chapter-card").first().click();
   await expect.poll(() => page.evaluate(() => window.__sun.facing()), { timeout: 5000 })
     .toBeGreaterThan(0.95);
+  // The drawer opens under the card's row, and the page is carried up to
+  // show it: read once it has come to rest, with the frame on the window.
+  await page.waitForTimeout(700);
   const at = await frame();
+  expect(at.y + at.h, "the opened picture is on the window").toBeLessThan(page.viewportSize().height);
   const lit = await band(at);
 
   await page.locator(".chapter-card-shell.is-open .chapter-card").click();
@@ -1082,9 +1206,9 @@ test("a favourite's notes are the site's own, in this page's colours",
 
   await page.locator(".chapter-card").nth(keyed.at).click();
   await page.waitForTimeout(800);
-  // The button inside the card that was opened, not the first on the
+  // The button in the drawer that was opened, not the first on the
   // page: every card carries one, shut.
-  await page.locator(".chapter-card-shell.is-open .fav-link-notes").click();
+  await page.locator(".fav-drawer .fav-link-notes").click();
   await page.waitForTimeout(700);
 
   const win = await page.evaluate((key) => {

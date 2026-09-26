@@ -327,6 +327,12 @@ laid out to come out on one screen — there is a test saying so — and a list 
 `<details>` would fight that. The page it opens into is shaped like a house, so it gets
 the parts, the rank and the VIEW NOTES panel without a second set of anything.
 
+**002 is *Buying A Perfume - A Philosophical Exploration*** (2026-09-26, at the owner's word
+— "Make it be 002"), linked to its page, which waits for its writing (see [the essay
+pages](2026-09-17-the-essay-pages.md)). Cold vs Warm Incense and the two unwritten
+explorations moved down one — to 003, 004 and 005 — and the first of the empty *Untitled*
+rows went to make room, so the table still runs 000 to 009.
+
 **The numbering has a hole in it on purpose.** The owner's list ran 1, 2, 3, 4, 6, 7 and
 then called them "the seven", so 05 is an empty slot rather than closed up. Closing it
 would renumber the two after it and quietly lose whatever the fifth was meant to be.

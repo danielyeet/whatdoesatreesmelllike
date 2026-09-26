@@ -22,6 +22,15 @@
   const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  // THE LONG MOVE, between the sentence and the map, eases on a sine
+  // rather than a cube (2026-09-26, the owner's "make the home page
+  // smoother when going from 2 to 3 and vice versa"). Over 2.4 seconds
+  // the cube all but stood still for the first third of a second — a
+  // key pressed and nothing seeming to happen — and then had to make up
+  // for it; the sine sets off at once and gathers and settles evenly,
+  // so the curtain, the grid and the map, all of which are keyed to how
+  // far down the page is, come in as evenly as it moves.
+  function easeLong(t) { return (1 - Math.cos(Math.PI * t)) / 2; }
 
   // True while the menu or a node's preview window is open over the top
   // of the slides. The arrow keys belong to whatever is in front at that
@@ -51,15 +60,39 @@
   const EXIT_MS = 820;     // how long the map takes to fall inwards
   const REFORM_MS = 520;   // and the line to draw itself back out
 
+  // THE PAGE IS MOVED FIRST ON EVERY FRAME. Everything else on this
+  // page draws from where the page is — the paper's curtain and grid,
+  // the map's arrival (through __p23), the thread — each in a frame loop
+  // of its own. This one used to start a fresh request for every step
+  // of a move, which put it LAST in each frame: every drawing read where
+  // the page had been a frame before (the map two, since it reads what
+  // the paper wrote), so at full speed they trailed the page by ten
+  // pixels or so and caught up in lurches whenever a frame ran long.
+  // So this file keeps ONE loop, started now — before node-scene.js,
+  // paper.js, thread.js and extras.js start theirs, since it is loaded
+  // before them — which runs every step of every move at the head of
+  // the frame. With nothing moving it does nothing.
+  const phases = new Set();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    phases.forEach((phase) => phase(now));
+  }
+  requestAnimationFrame(tick);
+
   function runPhase(duration, onProgress, onDone) {
-    const started = performance.now();
-    function step(now) {
+    let started = -1;
+    const phase = (now) => {
+      if (started < 0) started = now;
       const t = Math.min(1, (now - started) / duration);
       onProgress(t);
-      if (t < 1) requestAnimationFrame(step);
-      else onDone();
-    }
-    requestAnimationFrame(step);
+      if (t >= 1) {
+        phases.delete(phase);
+        // The next phase, if this one hands over to one, starts on this
+        // same frame rather than a frame late.
+        onDone();
+      }
+    };
+    phases.add(phase);
   }
 
   /** The plain scroll, used on its own and as the last step of the exit. */
@@ -85,11 +118,13 @@
     // the curtain, the grid, the static and the constellation leaving
     // the centre all happen during it, and rushing them turns a sequence
     // into a flicker. This is the number to change if it drags.
-    const duration = (index === 2 || activeIndex === 2) ? 2400 : 1100;
+    const long = index === 2 || activeIndex === 2;
+    const duration = long ? 2400 : 1100;
+    const curve = long ? easeLong : ease;
 
     runPhase(
       duration,
-      (t) => { container.scrollTop = startY + distance * ease(t); },
+      (t) => { container.scrollTop = startY + distance * curve(t); },
       () => {
         activeIndex = index;
         container.style.scrollSnapType = "y mandatory";

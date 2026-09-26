@@ -366,6 +366,7 @@
   const smoother = (v) => v * v * v * (v * (v * 6 - 15) + 10);
 
   let lastGrid = 0, lastNoise = 0;
+  let lastTop = -1;
   let paintedOnce = false;
   let lastCurtain = -1;
 
@@ -516,6 +517,10 @@
     requestAnimationFrame(frame);
 
     const top = container.scrollTop;
+    // Whether the page moved since the last frame — see the grid's rate
+    // at the foot of this function.
+    const moving = lastTop >= 0 && Math.abs(top - lastTop) > 0.25;
+    lastTop = top;
     const leg = (slides[2].offsetTop - slides[1].offsetTop) || 1;
     const raw = clamp((top - slides[1].offsetTop) / leg);
 
@@ -564,9 +569,12 @@
     // with the map turning behind it.
     // Full rate while it's still molten on arrival, and while it's
     // imploding on the way out — both are fast movements that look
-    // stepped at the slower resting rate.
+    // stepped at the slower resting rate — AND WHILE THE PAGE IS MOVING
+    // (2026-09-26): the grid bends round the map, which travels with the
+    // page, and it had dropped to the resting rate for the last stretch
+    // of the way in, stepping behind the map as it glided into place.
     const gridInterval =
-      (molten > 0.5 || suction > 0.001 || waveAmount > 0.001 || outAmount > 0.001) ? 16 : GRID_MS;
+      (moving || molten > 0.5 || suction > 0.001 || waveAmount > 0.001 || outAmount > 0.001) ? 16 : GRID_MS;
     if (paperIn > 0.004 && now - lastGrid >= gridInterval) {
       lastGrid = now;
       buildField(BEND * paperIn);

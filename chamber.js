@@ -534,20 +534,29 @@
   //
   // `data-ground` is the drawing that stands behind that chapter's
   // page, if it asks for one. Chapter 1 asks for the sun.
+  //
+  // A `.gallery-after` paragraph in a block is not part of what the
+  // chapter IS: it stands at the END of the chapter's page, under its
+  // favourites (`afters`) — the owner's word on the ones that nearly
+  // made the list.
   const notes = {};
+  const afters = {};
   const grounds = {};
   document.querySelectorAll(".gallery-chapter[data-chapter]").forEach((block) => {
     const name = (block.dataset.chapter || "").trim();
     if (!name) return;
-    notes[name] = block.innerHTML.trim();
+    const copy = block.cloneNode(true);
+    const after = [...copy.querySelectorAll(".gallery-after")];
+    afters[name] = after.map((one) => one.outerHTML).join("");
+    after.forEach((one) => one.remove());
+    notes[name] = copy.innerHTML.trim();
     if (block.dataset.ground) grounds[name] = block.dataset.ground.trim();
     chapterOf(name);
   });
 
   // WHAT A FAVOURITE SAYS WHEN ITS CARD IS OPENED — one block per
-  // favourite, matched by name. The owner asked for a description and
-  // a paragraph of commentary; what is actually carried through is
-  // whatever the block holds, so the shape is theirs to change.
+  // favourite, matched by name: the owner's own writing, as many
+  // paragraphs as they gave, carried through as it stands.
   const writings = {};
   document.querySelectorAll(".gallery-writing[data-favourite]").forEach((block) => {
     writings[(block.dataset.favourite || "").trim()] = block.innerHTML.trim();
@@ -686,11 +695,13 @@
       '<p class="chapter-spec"></p>' +
       '<div class="chapter-note"></div>' +
       '<div class="chapter-cards"></div>' +
+      '<div class="chapter-after"></div>' +
     "</div>";
   const chapterName = chapterPage.querySelector(".chapter-name");
   const chapterSpec = chapterPage.querySelector(".chapter-spec");
   const chapterNote = chapterPage.querySelector(".chapter-note");
   const chapterCards = chapterPage.querySelector(".chapter-cards");
+  const chapterAfter = chapterPage.querySelector(".chapter-after");
   const chapterGround = chapterPage.querySelector(".chapter-ground");
   const chapterMorph = chapterPage.querySelector(".chapter-morph");
   chapterPage.querySelector(".chapter-back")
@@ -1599,6 +1610,7 @@
     settleNote();
     noteFrom = null;
     openCard = null;
+    drawer = null;
     stopMorph();
     if (ground) { ground.stop(); ground = null; }
     chapterGround.hidden = true;
@@ -1697,10 +1709,11 @@
   //                under you.
   //   THE GROUND   a drawing behind the page, if that chapter asks for
   //                one. Chapter 1 asks for the sun.
-  //   A CARD OPENS WHERE IT STANDS, taking the whole width of the grid
-  //                so the favourites after it go down a row, and
-  //                carrying what is written about that fragrance and
-  //                the two ways on from it.
+  //   A CARD OPENS A DRAWER under its own row, the full width of the
+  //                grid, and the rows after it go down; the card itself
+  //                stays where it is. The drawer carries what the owner
+  //                wrote about that fragrance, its two ways on and its
+  //                picture.
   // ============================================================
 
   /** The card that is open, or null. One at a time: a second would
@@ -1743,6 +1756,7 @@
     const chapter = chapters[i];
     shutNote(true);
     openCard = null;
+    drawer = null;
     chapterName.textContent = chapter.name;
     chapterSpec.textContent = specOf(chapter.items);
 
@@ -1761,6 +1775,10 @@
     // up and has no favourites yet, and an empty grid would leave a
     // gap under the writing that reads as something failing to load.
     chapterCards.hidden = !chapter.items.length;
+    // What stands at the end of the list, if the chapter says anything
+    // there.
+    chapterAfter.innerHTML = afters[chapter.name] || "";
+    chapterAfter.hidden = !chapterAfter.innerHTML;
 
     setGround(grounds[chapter.name] || "");
 
@@ -1775,7 +1793,7 @@
     });
   }
 
-  /** ONE FAVOURITE, AS A CARD THAT OPENS WHERE IT STANDS.
+  /** ONE FAVOURITE, AS A CARD THAT OPENS A DRAWER UNDER ITS ROW.
 
       It used to be a link straight to the piece. The owner asked for it
       to open in place instead — "the other favorite fragrances will go
@@ -1784,29 +1802,29 @@
       link on from it, so the card itself cannot be one: a link inside a
       link is not a thing the browser will build. It is a button.
 
-      WHAT IT OPENS INTO was reworked on 2026-09-26 — "less techy, more
-      minimalist and geometric. Make it somehow react with the sun too".
-      It had been a column of mono readouts, dashed boxes saying what had
-      not been written, and two boxed buttons in capitals. It is now two
-      things side by side and nothing else:
+      HOW IT OPENS was reworked on 2026-09-26, twice. It took the whole
+      width of the grid for a while, which left the cards before it in
+      its row standing alone with a hole beside them — "it is too techy
+      and leaves an awkward space (especially if its slot in the second
+      or third column of a row)". Now the card stays where it stands and
+      a DRAWER opens under its row (see `openDrawer`).
 
-        THE WRITING, in the page's own face — the favourite's own words
-          if the owner has written any below (`.gallery-writing`), and
-          otherwise the OPENING OF ITS OWN ENTRY, taken off the page its
-          href points at, so an opened favourite says something the owner
-          wrote about it rather than that nothing has been written — then
-          two quiet ways on, "Read the whole entry" and "Notes".
-        THE PICTURE, on the side of the card facing the sun: an upright
-          frame the picture fills edge to edge, placed so the bottle is
-          in the middle of it, and its credit under it. (It stood in a
-          circle for a round, whole, over a blurred copy of itself — the
-          owner found it tacky; see `seat`.)
+      WHAT IT OPENS INTO is `body`, built here once and carried into the
+      drawer while the card is open, and back into the card's own shell
+      when it is shut. Two things side by side and nothing else:
 
-      AND THE SUN ANSWERS IT: once the card is open the sun is told where
-      the frame stands (`attend`), and runs a line of its own specks
-      round it from the side facing it, with a registration mark at each
-      corner and its surface a little brighter round the picture. See
-      sun.js. */
+        THE WRITING — the fragrance's name and house, the owner's own
+          words (`.gallery-writing` below the favourites), and two quiet
+          ways on: "Notes" and then "Read the whole entry", in that order
+          at the owner's word.
+        THE PICTURE, on the side facing the sun: an upright frame the
+          picture fills edge to edge, placed so the bottle is in the
+          middle of it, and its credit under it (`seat`).
+
+      AND THE SUN ANSWERS IT: once the drawer is open the sun is told
+      where the picture's frame stands (`attend`), and runs a line of its
+      own specks round it from the side facing it, with a registration
+      mark at each corner. See sun.js. */
   function makeCard(item, n) {
     const shell = document.createElement("div");
     shell.className = "chapter-card-shell";
@@ -1841,10 +1859,8 @@
     body.className = "chapter-card-body";
     body.hidden = true;
     const safe = (text) => String(text).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    // THE OWNER'S OWN WORDS FOR THIS FAVOURITE, if there are any.
     const own = writings[item.name] || "";
-    // THE OWNER'S OWN WORDS FOR THIS FAVOURITE, if there are any that are
-    // not still a note saying they are waiting.
-    const written = own && /<p(?![^>]*gallery-waiting)[^>]*>/.test(own);
     const plate = item.image
       ? '<figure class="fav-print">' +
           '<span class="fav-print-face">' +
@@ -1862,23 +1878,28 @@
     body.innerHTML =
       '<div class="fav-open' + (item.image ? "" : " fav-open-bare") + '">' +
         '<div class="fav-read">' +
-          '<div class="fav-writing' + (written ? "" : " is-from") + '">' +
-            (written ? own : '<p class="fav-from-wait">&nbsp;</p>') +
-          "</div>" +
+          '<h3 class="fav-name"></h3>' +
+          '<p class="fav-house"></p>' +
+          (own ? '<div class="fav-writing">' + own + "</div>" : "") +
+          // NOTES FIRST, then the way on to the whole entry — the owner
+          // asked for the two the other way round (2026-09-26).
           '<p class="fav-links">' +
-            '<a class="fav-link fav-link-go" href="' + safe(item.href || "#") + '">' +
-              '<span class="fav-link-say">Read the whole entry</span>' +
-              '<span class="fav-link-mark" aria-hidden="true"></span></a>' +
             '<button type="button" class="fav-link fav-link-notes" ' +
               'aria-haspopup="dialog" aria-controls="fav-note">' +
               '<span class="fav-link-ring" aria-hidden="true"></span>' +
               '<span class="fav-link-say">Notes</span></button>' +
+            '<a class="fav-link fav-link-go" href="' + safe(item.href || "#") + '">' +
+              '<span class="fav-link-say">Read the whole entry</span>' +
+              '<span class="fav-link-mark" aria-hidden="true"></span></a>' +
           "</p>" +
         "</div>" +
         plate +
       "</div>";
+    body.querySelector(".fav-name").textContent = item.name;
+    body.querySelector(".fav-house").textContent = item.house || "";
     shell.appendChild(body);
-    if (!written) fillFrom(item, body.querySelector(".fav-writing"));
+    bodies.set(shell, body);
+    cardOf.set(body, shell);
     const face = body.querySelector(".fav-print-face");
     if (face) seat(face, face.querySelector(".fav-print-shot"));
 
@@ -2075,196 +2096,293 @@
   }
 
   // ============================================================
-  // THE OPENING OF A FAVOURITE'S OWN ENTRY
+  // THE DRAWER — what an opened favourite opens into
   //
-  // Where the owner has written nothing for a favourite on this page —
-  // which is most of them — the opened card carries the first of what
-  // they wrote about it where it lives: the page its href points at,
-  // fetched once and kept, the part found by its anchor. Whole
-  // paragraphs until there are enough to read as an opening, and one
-  // that would run past the room left is stopped at a sentence's end
-  // (at a word only if there is no sentence's end to stop at), with an
-  // ellipsis saying so. Their words, never edited: nothing here is written by
-  // this script. Labels (Top, Mid…), waiting boxes, notes to the reader,
-  // spoilers and pictures are passed over.
+  // The card stays where it stands, lit, its sign turned to a minus,
+  // and a drawer the full width of the grid opens UNDER THE ROW it
+  // stands in, the rows after it going down as it opens. A fine line
+  // runs from the card's foot into the drawer's head (drawn by the
+  // card's own shell, in style.css), so which card it belongs to is
+  // never a question. Opening another card in the same
+  // row changes what the drawer carries where it stands; one in
+  // another row shuts this drawer and opens one there, both at once.
+  //
+  // The grid's rows are spaced by each card's own margin rather than
+  // by a gap, and the drawer's space under it grows with its height:
+  // a gap is laid out the moment a row exists, so a drawer of no height
+  // would still have jumped the rows after it down by one.
   // ============================================================
-  const fetched = {};
-  const FROM_ENOUGH = 240;   // characters: one short paragraph is not an opening
-  const FROM_MOST = 560;     // and one this long is stopped at a sentence
-  function pageOf(href) {
-    const url = new URL(href, location.href);
-    const at = url.hash.slice(1);
-    url.hash = "";
-    if (!fetched[url.href]) {
-      fetched[url.href] = window.fetch
-        ? fetch(url.href).then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
-          .then((html) => new DOMParser().parseFromString(html, "text/html"))
-        : Promise.reject(new Error("no fetch"));
-      fetched[url.href].catch(() => {});
-    }
-    return { page: fetched[url.href], at: at };
+  /** The drawer on the page, or null. */
+  let drawer = null;
+  /** Each card's body, and each body's card — the body travels into
+      the drawer and back. */
+  const bodies = new WeakMap();
+  const cardOf = new WeakMap();
+  /** How long the drawer takes to change what it carries. */
+  const SWAP_MS = 170;
+
+  /** How many cards the grid lays in a row, read off the grid itself so
+      it follows the window: three on a wide one, one on a phone. */
+  function perRow() {
+    const cols = getComputedStyle(chapterCards).gridTemplateColumns
+      .split(" ").filter((w) => w && w !== "none").length;
+    return Math.max(1, cols);
   }
-  function openingOf(doc, at) {
-    const part = at && doc.getElementById(at);
-    if (!part) return [];
-    const text = part.querySelector(".human-text, .pine-text, .adar-text");
-    if (!text) return [];
-    const out = [];
-    let length = 0;
-    for (const p of text.querySelectorAll(":scope > p")) {
-      if (p.matches(".human-stage, .adar-stage, .pine-stage, .human-waiting, .human-note, .gallery-waiting")) continue;
-      let said = p.textContent.replace(/\s+/g, " ").trim();
-      if (!said) continue;
-      // WHAT IS LEFT OF THE ROOM. A paragraph that would run past it is
-      // stopped at the last sentence that fits, and says so.
-      const room = FROM_MOST - length;
-      if (said.length > room) {
-        const cut = said.slice(0, room);
-        const stop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "),
-          cut.endsWith(".") ? cut.length - 1 : -1);
-        if (stop > 90) out.push(cut.slice(0, stop + 1) + " …");
-        else if (!out.length) out.push(cut.replace(/\s+\S*$/, "") + " …");
-        break;
-      }
-      out.push(said);
-      length += said.length;
-      if (length >= FROM_ENOUGH || out.length >= 2) break;
-    }
-    return out;
+  /** The last card in the row a card stands in: the drawer goes after it. */
+  function rowEnd(shell) {
+    const all = [...chapterCards.querySelectorAll(".chapter-card-shell")];
+    const i = all.indexOf(shell);
+    const n = perRow();
+    return all[Math.min(all.length - 1, Math.floor(i / n) * n + n - 1)];
   }
-  function fillFrom(item, into) {
-    if (!item.href) return;
-    const { page, at } = pageOf(item.href);
-    page.then((doc) => {
-      const lines = openingOf(doc, at);
-      // `data-from` says which of the three it came to: its page's own
-      // words, a page with nothing written yet, or no page to read.
-      if (!lines.length) {
-        into.innerHTML = '<p class="fav-quiet">Nothing has been written about this one yet.</p>';
-        into.dataset.from = "nothing";
-        return;
-      }
-      into.innerHTML = "";
-      lines.forEach((line) => {
-        const p = document.createElement("p");
-        p.textContent = line;
-        into.appendChild(p);
-      });
-      into.dataset.from = "page";
-    }).catch(() => {
-      into.innerHTML = '<p class="fav-quiet">Its writing is on <a href="' +
-        String(item.href).replace(/"/g, "&quot;") + '">its own page</a>.</p>';
-      into.dataset.from = "away";
+
+  /** Open it if it is shut, shut it if it is open — and if another is
+      open, move over to this one. */
+  function turnCard(shell) {
+    if (openCard === shell) { shutDrawer(); return; }
+    if (drawer && openCard && rowEnd(openCard) === rowEnd(shell)) { swapInto(shell); return; }
+    // Shut without carrying the page: the drawer opening next does that.
+    if (drawer) shutDrawer(false);
+    openDrawer(shell);
+  }
+
+  function mark(shell, open) {
+    shell.classList.toggle("is-open", open);
+    const card = shell.querySelector(".chapter-card");
+    card.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) card.setAttribute("aria-controls", "fav-drawer");
+    else card.removeAttribute("aria-controls");
+  }
+
+  /** Every body standing in a drawer goes back to its own card, shut,
+      but the one it is asked to keep. */
+  function emptyDrawer(inner, keep) {
+    [...inner.children].forEach((body) => {
+      if (body === keep) return;
+      const shell = cardOf.get(body);
+      body.hidden = true;
+      if (shell) shell.appendChild(body);
+      else body.remove();
     });
   }
 
-  /** Open it if it is shut, shut it if it is open. */
-  function turnCard(shell) {
-    if (openCard === shell) { shutCard(shell); return; }
-    if (openCard) shutCard(openCard);
-    const card = shell.querySelector(".chapter-card");
-    const body = shell.querySelector(".chapter-card-body");
-    // WHERE EVERY OTHER CARD STANDS BEFORE THIS ONE TAKES THE ROW.
-    // Widening a card re-lays the whole grid in one frame, so the ones
-    // after it would JUMP down rather than travel — and the owner asked
-    // for them to go down. Their places are read first, given back to
-    // them as a transform once the grid has moved, and then released,
-    // so each one travels from where it was to where it now is.
-    const others = [...chapterCards.children].filter((one) => one !== shell);
-    const was = others.map((one) => one.getBoundingClientRect());
-
-    openCard = shell;
-    shell.classList.add("is-open");
-    card.setAttribute("aria-expanded", "true");
+  function openDrawer(shell) {
+    const body = bodies.get(shell);
+    if (!body) return;
+    const d = document.createElement("div");
+    d.className = "fav-drawer";
+    d.id = "fav-drawer";
+    d.setAttribute("role", "region");
+    d.setAttribute("aria-label", shell.querySelector(".chapter-card-name").textContent);
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "fav-drawer-close";
+    close.setAttribute("aria-label", "Close");
+    close.addEventListener("click", () => {
+      const was = openCard;
+      shutDrawer();
+      if (was) was.querySelector(".chapter-card").focus({ preventScroll: true });
+    });
+    const inner = document.createElement("div");
+    inner.className = "fav-drawer-in";
     body.hidden = false;
-    if (REDUCE_MOTION) { body.style.height = "auto"; attendTo(shell); return; }
-    travel(others, was);
+    inner.appendChild(body);
+    d.appendChild(close);
+    d.appendChild(inner);
+    rowEnd(shell).after(d);
+    drawer = d;
+    openCard = shell;
+    mark(shell, true);
+    if (REDUCE_MOTION) {
+      d.classList.add("is-shown");
+      attendTo(body);
+      reveal(shell, d, d.getBoundingClientRect().height);
+      return;
+    }
     // Opened on a measured height, the way a part of a house opens:
     // `auto` is not a height the browser will ease to.
-    const tall = body.scrollHeight;
-    body.style.height = "0px";
-    body.getBoundingClientRect();
-    body.style.height = tall + "px";
-    // THE SUN IS TOLD ONCE THE CARD HAS OPENED, not while it is still
+    const tall = d.scrollHeight;
+    d.style.height = "0px";
+    d.getBoundingClientRect();
+    d.classList.add("is-shown");
+    d.style.height = tall + "px";
+    reveal(shell, d, tall);
+    // THE SUN IS TOLD ONCE THE DRAWER HAS OPENED, not while it is still
     // growing: the picture is only all there to be answered then.
-    after(body, () => { body.style.height = "auto"; if (openCard === shell) attendTo(shell); });
+    after(d, () => {
+      if (drawer !== d) return;
+      d.style.height = "auto";
+      attendTo(body);
+    });
   }
+
+  /** BROUGHT INTO VIEW. A drawer opening under a row near the foot of
+      the window would open out of sight, and the press would seem to
+      have done nothing; and a drawer shutting above the card pressed
+      next lifts that card by the whole of its height, off the top if the
+      page was low. So whenever a drawer opens, moves, changes what it
+      carries or shuts, the page is carried to where the card and its
+      drawer are both on the window: by as little as shows the whole
+      drawer, never so far that the card goes off the top, and back up to
+      the card if it would. The target is worked out ON THE PAGE AS IT
+      WILL BE — every drawer still shutting above the card taken out of
+      it — and the page travels there on the drawers' own clock and curve
+      (`--menu-ease`), so the two movements are one. A drawer following
+      its card on its own used to add the two together and overshoot.
+      Let go the moment the page is scrolled by hand. */
+  // Room left at the top of the window: on a phone the Menu's own box
+  // stands there, over the page.
+  const revealEdge = () => (window.innerWidth < 700 ? 64 : 24);
+  const REVEAL_EASE = easing(0.32, 0.08, 0.24, 1);   // = --menu-ease in style.css
+  let revealRun = 0;
+  function reveal(shell, d, tall) {
+    const run = ++revealRun;
+    const from = chapterPage.scrollTop;
+    let risen = 0;
+    chapterCards.querySelectorAll(".fav-drawer").forEach((other) => {
+      if (other === d || other.classList.contains("is-shown")) return;
+      if (!(other.compareDocumentPosition(shell) & Node.DOCUMENT_POSITION_FOLLOWING)) return;
+      risen += other.getBoundingClientRect().height + (parseFloat(getComputedStyle(other).marginBottom) || 0);
+    });
+    const top = shell.getBoundingClientRect().top - risen;
+    const bottom = d ? d.getBoundingClientRect().top - risen + tall : top;
+    const edge = revealEdge();
+    const room = window.innerHeight - 24;
+    let by = 0;
+    if (top < edge) by = top - edge;
+    else if (bottom > room) by = Math.min(bottom - room, top - edge);
+    if (Math.abs(by) < 1) return;
+    if (REDUCE_MOTION) { chapterPage.scrollTop = from + by; return; }
+    let start = -1, held = true;
+    const letGo = () => { held = false; };
+    const done = () => {
+      chapterPage.removeEventListener("wheel", letGo);
+      chapterPage.removeEventListener("touchstart", letGo);
+    };
+    chapterPage.addEventListener("wheel", letGo, { passive: true });
+    chapterPage.addEventListener("touchstart", letGo, { passive: true });
+    const step = (now) => {
+      if (!held || run !== revealRun) { done(); return; }
+      if (start < 0) start = now;
+      const t = Math.min(1, (now - start) / CARD_MS);
+      chapterPage.scrollTop = from + by * REVEAL_EASE(t);
+      if (t < 1) requestAnimationFrame(step);
+      else done();
+    };
+    requestAnimationFrame(step);
+  }
+
+  /** Another card in the same row: the drawer stays where it is, the
+      line comes down from the new card instead, and what it carries
+      fades over, the drawer easing to its new height. */
+  function swapInto(shell) {
+    const d = drawer;
+    const was = openCard;
+    const inner = d.querySelector(".fav-drawer-in");
+    const body = bodies.get(shell);
+    if (!body) return;
+    mark(was, false);
+    mark(shell, true);
+    openCard = shell;
+    d.setAttribute("aria-label", shell.querySelector(".chapter-card-name").textContent);
+    attendTo(null);
+    const put = () => {
+      emptyDrawer(inner, body);
+      body.hidden = false;
+      inner.appendChild(body);
+    };
+    if (REDUCE_MOTION) {
+      put();
+      attendTo(body);
+      reveal(shell, d, d.getBoundingClientRect().height);
+      return;
+    }
+    const from = d.getBoundingClientRect().height;
+    d.style.height = from + "px";
+    d.classList.add("is-swapping");
+    window.setTimeout(() => {
+      if (drawer !== d || openCard !== shell) return;
+      put();
+      d.style.height = "auto";
+      const tall = d.getBoundingClientRect().height;
+      d.style.height = from + "px";
+      d.getBoundingClientRect();
+      d.classList.remove("is-swapping");
+      d.style.height = tall + "px";
+      reveal(shell, d, tall);
+      after(d, () => {
+        if (drawer !== d || openCard !== shell) return;
+        d.style.height = "auto";
+        attendTo(body);
+      });
+    }, SWAP_MS);
+  }
+
+  function shutDrawer(settle = true) {
+    const d = drawer;
+    const shell = openCard;
+    if (!d) return;
+    drawer = null;
+    openCard = null;
+    if (shell) mark(shell, false);
+    attendTo(null);
+    d.removeAttribute("id");
+    const inner = d.querySelector(".fav-drawer-in");
+    const done = () => {
+      emptyDrawer(inner, null);
+      d.remove();
+    };
+    if (REDUCE_MOTION) { done(); if (settle && shell) reveal(shell, null, 0); return; }
+    d.style.height = d.getBoundingClientRect().height + "px";
+    d.getBoundingClientRect();
+    d.classList.remove("is-shown");
+    d.style.height = "0px";
+    // Read far down a tall drawer, the card may be above the window by
+    // the time it has shut: the page comes back up to it.
+    if (settle && shell) reveal(shell, null, 0);
+    after(d, done);
+  }
+
+  // A window that changes width can change how many cards stand in a
+  // row: the drawer follows its card to the end of its new row.
+  window.addEventListener("resize", () => {
+    if (!drawer || !openCard) return;
+    const end = rowEnd(openCard);
+    if (end && end.nextElementSibling !== drawer) end.after(drawer);
+  });
 
   /** THE SUN, TOLD WHERE THE OPENED PICTURE STANDS — or that nothing is
       open any more. It asks for the frame every frame, so its answer
       follows the page as it is scrolled; the answer is null once the
-      card is shut, off the page, or not the open one. A drawing that
-      does not answer to this (the moon) is simply not told. */
-  function attendTo(shell) {
+      drawer is shut or carries another. A drawing that does not answer
+      to this (the moon) is simply not told. */
+  function attendTo(body) {
     if (!ground || !ground.attend) return;
-    if (!shell) { ground.attend(null); return; }
-    const face = shell.querySelector(".fav-print-face");
+    if (!body) { ground.attend(null); return; }
+    const face = body.querySelector(".fav-print-face");
     if (!face) { ground.attend(null); return; }
     ground.attend(() => {
-      if (openCard !== shell || !face.isConnected) return null;
+      if (!drawer || !drawer.contains(face) || !face.isConnected) return null;
       const r = face.getBoundingClientRect();
       if (!r.width) return null;
       return { x: r.left, y: r.top, w: r.width, h: r.height };
     });
   }
 
-  function shutCard(shell) {
-    const card = shell.querySelector(".chapter-card");
-    const body = shell.querySelector(".chapter-card-body");
-    card.setAttribute("aria-expanded", "false");
-    if (openCard === shell) { openCard = null; attendTo(null); }
-    if (REDUCE_MOTION) {
-      shell.classList.remove("is-open");
-      body.hidden = true;
-      body.style.height = "";
-      return;
-    }
-    const others = [...chapterCards.children].filter((one) => one !== shell);
-    const was = others.map((one) => one.getBoundingClientRect());
-    body.style.height = body.scrollHeight + "px";
-    body.getBoundingClientRect();
-    shell.classList.remove("is-open");
-    body.style.height = "0px";
-    travel(others, was);
-    after(body, () => { body.hidden = true; body.style.height = ""; });
-  }
-
   /** Wait for a height to finish easing, with a backstop for the case
       where the transition never runs at all — a background tab, or a
-      browser that has been told not to animate. */
-  function after(body, done) {
+      browser that has been told not to animate, or a height that did
+      not change. */
+  function after(node, done) {
     let timer = 0;
     const end = (e) => {
-      if (e && (e.target !== body || e.propertyName !== "height")) return;
-      body.removeEventListener("transitionend", end);
+      if (e && (e.target !== node || e.propertyName !== "height")) return;
+      node.removeEventListener("transitionend", end);
       window.clearTimeout(timer);
       done();
     };
-    body.addEventListener("transitionend", end);
+    node.addEventListener("transitionend", end);
     timer = window.setTimeout(() => end(null), CARD_MS + 120);
-  }
-
-  /** FLIP: put them back where they were and let them go. The transform
-      is written on the SHELL and the entrance animation runs on the
-      card inside it, which is not an accident — a CSS animation with a
-      fill outranks an inline style, so an entrance that finished on
-      `transform: none` would simply ignore this. */
-  function travel(nodes, was) {
-    nodes.forEach((one, n) => {
-      const now = one.getBoundingClientRect();
-      const dx = was[n].left - now.left;
-      const dy = was[n].top - now.top;
-      if (!dx && !dy) return;
-      one.style.transition = "none";
-      one.style.transform = "translate(" + dx + "px, " + dy + "px)";
-      one.getBoundingClientRect();
-      one.style.transition = "transform " + CARD_MS + "ms var(--menu-ease)";
-      one.style.transform = "";
-      window.setTimeout(() => {
-        one.style.transition = "";
-        one.style.transform = "";
-      }, CARD_MS + 60);
-    });
   }
 
   // ============================================================

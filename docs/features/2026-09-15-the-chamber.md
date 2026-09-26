@@ -4,7 +4,7 @@ Date: 2026-09-15 (`10eaaca`, *Open a chamber for the favourites*), through many 
 to `8137578` (*Stop the word blinking, put the specks in front of the menu*) on
 2026-09-17. Migrated from CLAUDE.md on 2026-09-17. **The chapter page was reworked on
 2026-09-22** — the arrows, the empty chapter, the house on a card, a favourite opening
-where it stands, the way out, and the sun; see the sections under "The burst, and a
+where it stands (a drawer under its row since 2026-09-26), the way out, and the sun; see the sections under "The burst, and a
 chapter's own page".
 
 Files: `categories/favorites.html`, `chamber.js` (the largest file in the repository),
@@ -1689,9 +1689,8 @@ later* under this section.)
 
 ### Known issues / TODO
 
-- The excerpts are fetched when the chapter's cards are made — the five pages Chapter 1's
-  favourites live on, each once; they are small, but on a slow connection a card opened at
-  once shows a blank line for a moment until its page lands.
+- ~~The excerpts are fetched when the chapter's cards are made~~ — gone with the excerpts
+  themselves: every favourite has the owner's own block now (see *2026-09-26, last*).
 - Only the sun answers. If Chapter 2 is given favourites, the moon wants an `attend` of its own.
 
 
@@ -1753,3 +1752,101 @@ it and the stronger burn are gone. Shut, the line closes up **where the frame st
 - **`the sun answers an opened favourite's picture, and lets go when it is shut`** — the band
   6–24px outside the frame on the sun's own canvas is brighter by 40% and more with the card open
   than the same band once it is shut and `facing()` is back to 0.
+
+
+## 2026-09-26, last — a drawer under the row, and the owner's own words
+
+> I want you to change how the favorite tab opens up the favorites, it is too techy and leaves
+> an awkward space (especially if its slot in the second or third column of a row). can you
+> change it somehow so it looks good.
+
+**What was wrong.** An opened card took the whole width of the grid **where it stood**: opened
+from the second or third column, it jumped to a row of its own, leaving the cards before it
+alone on a short row with a hole beside them, and everything after it shuffled. That is the
+awkward space.
+
+**A drawer under the row** (`.fav-drawer`), the way a gallery of pictures opens one. Pressing a
+card leaves **every card where it is**. A panel the full width of the grid opens under the row
+the card stands in — after that row's last card (`rowEnd`, counted off the grid's own columns
+by `perRow`, so three to a row on a wide window and one on a phone) — on a measured height, and
+the rows after it go down by exactly its height. The card pressed is marked: its border and
+ground a shade brighter, its corner ticks out, and a short **stem** (the shell's `::after`) let
+down from its middle to the drawer's top rule. What the drawer carries is the card's own
+**body** — the same `.fav-open` as before, the writing and the print — which travels into it
+and back to its card when shut (`bodies`, `cardOf`), so there is still one copy of each.
+
+- **Another card in the same row**: the drawer stays; what it carries fades over (`SWAP_MS`,
+  170ms) and it eases to the new height. **A card in another row**: that drawer shuts as the new
+  one opens under its own row. **The same card again**, or the drawer's own **close** (a small
+  circle with a cross in it, top right, turning a quarter on hover): it shuts. One at a time.
+- **Rows are spaced by each card's own margin, not a gap** (`row-gap: 0`, `margin-bottom:
+  18px` on the shell): a grid gap is laid out the moment a row exists, so even a drawer of no
+  height jumped the rows after it down by a gap.
+- **Brought into view** (`reveal`): a drawer opening under a row near the foot of the window
+  would open out of sight, so whenever a drawer opens, moves, swaps or shuts, the page is
+  carried to where the card and its drawer are both on the window — by as little as shows the
+  whole drawer, never so far that the card goes off the top (24px from it, 64px on a phone,
+  where the Menu's box stands), and back up to the card if a drawer shutting would leave it
+  above the window. The target is worked out **on the page as it will be**, with every drawer
+  still shutting above the card taken out of it, and the page travels there on the drawers'
+  own clock and curve (`CARD_MS`, `REVEAL_EASE` = `--menu-ease`), so the two movements are one.
+  Let go the moment the page is scrolled by hand. `.chapter-page` carries `overflow-anchor:
+  none` so the browser does not nudge the page as well.
+- The drawer names the favourite at its head now (`.fav-name`, the house under it), since it
+  no longer stands in the card.
+- A window that changes width moves the drawer to the end of its card's new row.
+- With reduced motion it simply opens, swaps and shuts.
+- The FLIP that carried the other cards down (`travel`, `shutCard`, `aim`) is gone.
+
+**The owner's own words** (*"add the following descriptions to the favorites page. Remove the
+current descriptions"*). All ten favourites have a `.gallery-writing` block now, in the owner's
+words exactly — typos and all, with the invisible marks their paste carried (U+200E) taken out
+— and the blocks' placeholders are gone. So **the start of the entry, read off the fragrance's
+own page, is gone too**: `openingOf`, `FROM_ENOUGH`, `FROM_MOST`, `fetched`, `pageOf` and
+`data-from` are out of `chamber.js`, and a favourite with no block opens with its picture and
+its two links and nothing else. `.gallery-waiting` and `.fav-quiet` went with them.
+
+**Notes first** (*"switch the locations of the notes and the look at perfume entry
+buttons"*): **Notes**, then **Read the whole entry**.
+
+**The ones that nearly made it** (*"at the end of the list, I would like you to add:
+Aetherealism, Amber Zero and Incantu ..."*). A `<p class="gallery-after">` inside a chapter's
+block is taken out of its description and set **under the last card** instead
+(`.chapter-after`, a short rule over it, in the page's dimmer silver). Chapter 1's names the
+three, each linked to where it stands in ADAR. The owner writes *Aetherealism* and ADAR's
+page *Aetherialism*; the line is theirs and keeps its spelling.
+
+### What was tried and was wrong
+
+- **The drawer's close over the sun's corner mark.** At the first padding the close stood on
+  the registration mark the sun draws at the print's top right; the drawer's head was given
+  more room (`.fav-open`, 72px) and the close moved in.
+- **A card opened low on the window** opened its drawer below the fold and seemed to do
+  nothing; hence `reveal`.
+- **The first `reveal` followed the drawer frame by frame**, carrying the page a share of the
+  way still to go each frame. Pressing a card in the row under an open drawer, the drawer
+  shutting above lifted the card by its whole height *as well*, and the two together sent the
+  card pressed off the top of the window. It is worked out once, on the page as it will be,
+  now; the drawer test checks the card and its drawer are both on the window after exactly
+  that press.
+
+### How to test it
+
+- **`a favourite opens a drawer under its row: the card stays put, the rows after it go
+  down`** — the second card of the first row pressed: every card in that row keeps its place
+  and size (measured against the grid, since the page may be carried up), one drawer, after the
+  row's last card, the grid's full width, below the row and taller than 160px, the next row down
+  by its height; it names the favourite, has something to read, a way on and Notes; another
+  card in the row swaps it, a card in the next row moves it there — with the card pressed and
+  its drawer both on the window once it has settled (the regression) — and pressing the open
+  card again shuts it.
+- **`an opened favourite says what the owner wrote about it, beside its picture in a frame,
+  credited`** — a block for every favourite and no other, none with an invisible mark, no
+  placeholders; each of the ten opened says exactly its block's paragraphs; the print as before;
+  *Notes* then *Read the whole entry*, the second going to the favourite's own `href`.
+- **`Chapter 1 ends with the three that could have made it, under the last card`** — the
+  owner's sentence exactly, below the last card, once on the page; the three linked into ADAR,
+  each link landing on that fragrance; Chapter 2 shows none.
+- The sun and notes tests read the print and the Notes button in `.fav-drawer`; the sun's waits
+  for the page to have been carried up and checks the print is on the window.
+

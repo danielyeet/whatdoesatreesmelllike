@@ -209,3 +209,38 @@ test("no theory carries a picture", async ({ page }) => {
   }
   await expect(page.locator(".zone-figure").first(), "the framework's diagrams stay").toBeVisible();
 });
+
+/* EXPLORATIONS 002. The owner: "add another exploration on 'Buying A
+   Perfume - A Philosophical Exploration' Make it be 002. make the page
+   too, I will want to just add text later on." So 002 is that row,
+   linked, and the page is an essay page with its rule, and nothing
+   written in it that the owner did not write: every section says it is
+   waiting, in a dashed box. */
+test("Explorations 002 is Buying A Perfume, and its page stands ready for the owner's writing",
+  async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto("/categories/researches.html");
+  const row = page.locator('.index-table tbody tr[data-no="2"]');
+  await expect(row).toHaveCount(1);
+  await expect(row.locator(".index-no")).toHaveText("002");
+  await expect(row.locator(".index-kind")).toHaveText("Exploration");
+  await expect(row.locator("a")).toHaveText("Buying A Perfume - A Philosophical Exploration");
+  await expect(row.locator("a")).toHaveAttribute("href", "../works/buying-a-perfume.html");
+  // The numbers still run 000 to 009, each once.
+  const nos = await page.$$eval(".index-table tbody tr", (all) => all.map((r) => r.dataset.no));
+  expect(nos).toEqual(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+
+  await page.goto("/works/buying-a-perfume.html");
+  await expect(page.locator(".essay-head h1")).toContainText("Buying A Perfume");
+  await expect(page.locator(".essay-head h1 em")).toHaveText("A Philosophical Exploration");
+  await expect(page.locator(".essay-kicker")).toHaveText("Explorations · 002");
+  const sections = page.locator(".essay-section");
+  const count = await sections.count();
+  expect(count).toBeGreaterThan(0);
+  await expect(page.locator(".essay-rule")).toBeVisible();
+  // Nothing written in it yet: only the waiting boxes, one a section.
+  expect(await page.locator(".essay-section p:not(.essay-waiting)").count(),
+    "no prose the owner did not write").toBe(0);
+  await expect(page.locator(".essay-waiting")).toHaveCount(count);
+  expect(errors).toEqual([]);
+});

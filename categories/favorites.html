@@ -58,9 +58,8 @@
     data-credit-href  the link to go with it, if there is one. It is
                    printed under the picture: "Picture: Tombstone".
     href           where that fragrance lives, which is what "Read the
-                   whole entry" follows — and where the opened card takes
-                   the opening of its writing from, when the favourite
-                   has none written for it below.
+                   whole entry" follows. What an opened favourite SAYS is
+                   written below, in its own block, by name.
 
   WITHOUT JAVASCRIPT this page is that same plain list of favourites,
   which is the right fallback: every one of them is there and every one
@@ -158,7 +157,9 @@
 
     A <p class="gallery-aside"> inside a block is set apart from the
     writing above it: a note about the chapter rather than part of the
-    description.
+    description. A <p class="gallery-after"> stands at the END of the
+    chapter's page instead, under its favourites — the owner's word on
+    the ones that nearly made the list.
   -->
   <div class="gallery-chapters">
 
@@ -166,6 +167,10 @@
       <p>From the myriad of things I have smelled, the fragrances on this page are the ones worth highlighting the most; as asides from  my subjective exaltation, I am certain my arguments will hold some objective merit too.</p>
       <p>At the time of creating this website, Chapter One of Favorites will be the first iteration in a hopefully ever evolving hall of fame. Enjoy.</p>
       <p class="gallery-aside">The fragrances are not ranked nor ordered in any way. This is not a &quot;top-10 list&quot; and shouldn&#8217;t be treated like one.</p>
+      <!-- At the end of the list, at the owner's word (2026-09-26). The
+           three names are linked to their parts on ADAR's page, where
+           the second is spelled Aetherialism; the sentence is theirs. -->
+      <p class="gallery-after"><a href="../houses/adar.html#part-02">Aetherealism</a>, <a href="../houses/adar.html#part-01">Amber Zero</a> and <a href="../houses/adar.html#part-03">Incantu</a> from Adar's Aegis collection could have all made it here too, though I have smelled them only once, and so would feel it unjust to everything else on the list.</p>
     </section>
 
     <section class="gallery-chapter" data-chapter="Chapter 2" data-ground="moon">
@@ -176,28 +181,73 @@
 
   <!--
     WHAT A FAVOURITE SAYS WHEN IT IS OPENED. Clicking a card on a
-    chapter's page opens it where it stands, and this is what goes
+    chapter's page opens a drawer under its row, and this is what goes
     inside it. One block per favourite, matched by name to the
     `<a class="gallery-entry">` above — the name is the key, so a
     favourite renamed up there is renamed down here in the same turn.
 
-    The shape the owner asked for is two paragraphs: a description,
-    and then a paragraph of commentary, which is the one marked
-    `gallery-word`. Any other markup in a block is carried through as
-    it stands.
+    The writing is the owner's own, every word as they wrote it
+    (2026-09-26, replacing the openings that were read off each
+    fragrance's page before): as many paragraphs as they want, each a
+    plain <p>. Any other markup in a block is carried through as it
+    stands.
 
-    A favourite with no block — or whose block is only placeholders
-    marked `gallery-waiting` — opens with the first lines of its own
-    writing instead, read off the page its `href` points at, and a
-    link to the rest. Nothing is copied here: the words are fetched,
-    so there is still one copy of them. A favourite whose page says
-    nothing yet says that.
+    A favourite with no block opens with its picture and its two links
+    and nothing else, which is honest: nobody has written it yet.
   -->
   <div class="gallery-writings">
 
     <section class="gallery-writing" data-favourite="Des Cendres">
-      <p class="gallery-waiting">The description of Des Cendres is the owner&#8217;s and has not been written yet.</p>
-      <p class="gallery-waiting gallery-word">The commentary — why this one is in Chapter One — is the owner&#8217;s too, and is not written yet.</p>
+      <p>This perfume exists on this list because it combines a dark green galbanum character with a realistic birch and pine tar smell, that I have never seen as well iterated in any other perfume. It truly takes the smell of fresh logs being burnt and adds atmosphere to it. It expertly utilizes mint to emphasize on the birch tar smell and makes it brighter; it conversely uses hyraceum and leather to make it animalic, and it ends up being so well balanced that I cannot help but adore it.</p>
+      <p>I ordered a sample of this from Canada, and I will be genuinely distraught when I run out of that last 0.something milliliters.</p>
+      <p>Amazing Fragrance. Amazing amazing amazing.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="De Profundis">
+      <p>De Profundis is a perfume that is equally sad as it is hopeful: the wet smell of violets, hydrangeas and earth carry the connotation of death and spring alike. And when I think about it a little, I find that there is no better contrast for a fragrance to have: an end and a beginning that change based on interpretation is just poetry. It also helps that this is simple and masterfully made.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="Haxan">
+      <p>One of the main drivers for me becoming so invested in perfumes is my commitment to finding the perfect forest smell; and I dare say this is it.</p>
+      <p>For the whole argument, you may want to go to the exploration of “Finding the best forest fragrance 1”, but the gist of it is that whereas other fragrances such as Pine by Stora Skuggan and Murkwood by Pineward focus too much on an idealized and aesthetic approach, Haxan gives it to you as it is; raw and in all its complexity and with its innumerous facets.</p>
+      <p>It is a holistic forest fragrance. It is a masterpiece.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="Tobacolor">
+      <p>For me, this is a fragrance of long coats, older age, cigars and a life that happens mostly after the sun sets. It is not particularly extraordinary, but it revels in the complexities of simple things: like a detailed record of the events at in the smoking room (Rauchsalon). The tobacco here is nuanced, and it is multi-faceted, with the fragrance building around it with plums, citruses, peach and smoke.</p>
+      <p>It is simple, but it is exactly what I want it to be.</p>
+      <p>A note here, is that a close second is Aedes De Venustas Café Tabac, but I find that this to be its better version.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="Sing at My Funeral">
+      <p>In the description of the perfume, I have noted an unexplainable instinctual association with nature that this fragrance creates; not raw and wild nature, but rather of a life as a beekeeper where the light draft through open windows brings you reminders how far you are from any city.</p>
+      <p>I made the association that this is what Thoreau might have smelled when he was at Walden, and I stand by it now.</p>
+      <p>Additionally, I find this to be the PERFECT smell to be associated with the celebrations of a human life lived well, rather than mourning the end of it.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="Bad Lily">
+      <p>This is a one-of-a-kind lily of the valley that has the nuances of the hostile greenery in which the white flowers grow. It has an almost abrasive galbanum facet that feels imposing, but still leaves room for the gentleness of the lily of the valley, and it is this contrast that I find so stunning.</p>
+      <p>This won the 2025 Art and Olfaction Awards, and I can say that if I was a judge I would have made the same decision.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="French Riviera">
+      <p>There are perfumes that make the audience of it think the wearer smells good without any real intentions to, and I think this is one such fragrance. It is a sunscreen fragrance that also smells of the sweat and salt that comes with being on the beach and making the best of it: beach volleyball and swimming incessantly. It is called French Riviera, and I think that is perfect too.</p>
+      <p>And honestly, this just smells like Summer to me.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="Evergrow">
+      <p>A dark green galbanum with oleoresins so hostile that I cannot help but think of a isolate exclusion zone where the flora has taken over any and all human made structures. The smell of vines, ivy and the sharp turpentine of the evergreen captures this side of nature really well.</p>
+      <p>Additionally, I need to nerd about the galbanum. This fragrance has the most complex and holistic use of it that I have come across to date. It develops WONDERFULLY, and takes on many personalities over the lifetime of a spray. Just a 10/10.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="Amaretto Jazz in the Melting Room">
+      <p>This smells exactly like you would imagine: a sweet amaretto and cherry liquor fragrance within a dusty and warm atmosphere. Such events are always so fun, where you know the stranger sitting next to you not by name nor character, but by the shared recognition of the chords being played by the trio on stage. It is a quiet community, sweet and old. It is romantic.</p>
+    </section>
+
+    <section class="gallery-writing" data-favourite="Belle Âme">
+      <p>This is a fragrance that smells old; but in the way your grandma’s wardrobe would. I feel out of all the vintage smells I have ever smelled, this one is the one that is the most calming, while also being the most true to the sweetness of nostalgia of a romanticized past.</p>
+      <p>This fragrance means beautiful love; and I conditionally agree; where this is not just your average romantic love; rather it is the way your grandma loves you: wholly and with intent to feed you. It is the sweetest type of love.</p>
+      <p>It is also so well made and with such quality ingredients that even if you disagree with me you would be inclined to like it.</p>
     </section>
 
   </div>

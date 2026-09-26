@@ -4358,6 +4358,12 @@ body.find-reading .find-reading-note { opacity: 1; }
   inset: 0;
   z-index: 4;
   overflow-y: auto;
+  /* The browser's own habit of holding what is on screen still while
+     something above it changes height is turned off here: a favourite's
+     drawer carries the page itself (`reveal` in chamber.js), worked out
+     on where everything will be, and the browser nudging it as well sent
+     the card pressed off the top. */
+  overflow-anchor: none;
   background: #000;
   color: var(--silver);
   /* NOTHING CUTS THIS PAGE OPEN ANY MORE. For several rounds the
@@ -4740,19 +4746,62 @@ body.find-reading .find-reading-note { opacity: 1; }
   margin-top: clamp(40px, 8vh, 76px);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
+  /* ROWS ARE SPACED BY EACH CARD'S OWN MARGIN, not by a gap: a gap is
+     laid out the moment a row exists, so a drawer opening from no
+     height would still have jumped the rows after it down by one. */
+  column-gap: 18px;
+  row-gap: 0;
 }
 /* A chapter can have nothing in it — Chapter 2 is named, written up and
    empty — and `hidden` alone would lose to the `display: grid` above. */
 .chapter-cards[hidden] { display: none; }
+/* WHAT STANDS AT THE END OF THE LIST — a `.gallery-after` in the
+   chapter's own block: the owner's word on the ones that nearly made
+   it. Quieter than the writing above the cards, under a short rule. */
+.chapter-after { max-width: 62ch; margin-top: clamp(34px, 6vh, 56px); }
+.chapter-after[hidden] { display: none; }
+.chapter-after::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 1px;
+  margin-bottom: 20px;
+  background: rgba(200, 204, 212, 0.4);
+}
+.chapter-after p { margin: 0; font-size: 15.5px; line-height: 1.7; color: var(--silver-dim); }
+.chapter-after a { color: var(--silver); text-underline-offset: 3px; text-decoration-color: rgba(200, 204, 212, 0.4); }
+.chapter-after a:hover { text-decoration-color: currentColor; }
 
-/* THE SHELL is the grid item, and the FLIP that carries the other cards
-   down when one opens is written on it rather than on the card inside
-   it. That is not an accident: a CSS animation with a fill outranks an
-   inline style, so a transform written on the card — which finishes its
-   entrance on `transform: none` — would simply be ignored. */
-.chapter-card-shell { display: flex; flex-direction: column; min-width: 0; }
-.chapter-card-shell.is-open { grid-column: 1 / -1; }
+/* THE SHELL is the grid item: the card, and — while it is shut — what
+   it says opened, which travels into the drawer under its row when it
+   is pressed and back when it is shut. Its own margin spaces the rows
+   (see `.chapter-cards`), and its `::after` is the short stem let down
+   from an open card to its drawer. */
+.chapter-card-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-bottom: 18px;
+}
+/* THE LINE FROM AN OPEN CARD INTO ITS DRAWER: one hairline from the
+   middle of the card's foot down to the drawer's head, so which card
+   the drawer belongs to is never a question. */
+.chapter-card-shell::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1px;
+  height: 18px;
+  background: var(--silver);
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: opacity 0.3s var(--menu-ease), transform 0.42s var(--menu-ease);
+  pointer-events: none;
+}
+.chapter-card-shell.is-open::after { opacity: 0.55; transform: none; }
 
 .chapter-card {
   position: relative;
@@ -4823,22 +4872,18 @@ body.find-reading .find-reading-note { opacity: 1; }
 .chapter-card:hover::before,
 .chapter-card:hover::after { width: 24px; height: 24px; opacity: 1; }
 
-/* OPEN, the card is the head of the window rather than a square: one
-   line across the top of what it opened, with its rule run into the
-   body below it. */
+/* OPEN, the card stays the card it was, where it was — lit, its corner
+   marks run out and its sign turned to a minus — and what it opens
+   into stands in the drawer under its row. (It turned into a bar across
+   the whole width for a round, which left the cards before it in its
+   row standing alone beside a hole.) */
 .chapter-card-shell.is-open .chapter-card {
-  grid-template-columns: auto 1fr auto auto;
-  grid-template-rows: auto;
-  grid-template-areas: "no name house go";
-  align-items: baseline;
-  min-height: 0;
-  padding: 18px 20px;
-  border-bottom-color: transparent;
-  background: linear-gradient(160deg, rgba(200, 204, 212, 0.1), rgba(200, 204, 212, 0) 60%);
+  border-color: rgba(200, 204, 212, 0.62);
+  background: linear-gradient(160deg, rgba(200, 204, 212, 0.12), rgba(200, 204, 212, 0.02) 70%);
 }
-.chapter-card-shell.is-open .chapter-card::after,
-.chapter-card-shell.is-open .chapter-card::before { display: none; }
-.chapter-card-shell.is-open .chapter-card-name { font-size: 24px; }
+.chapter-card-shell.is-open .chapter-card::before,
+.chapter-card-shell.is-open .chapter-card::after { width: 24px; height: 24px; opacity: 1; }
+.chapter-card-shell.is-open .chapter-card-go { color: var(--silver); }
 
 .chapter-card-no {
   grid-area: no;
@@ -4897,20 +4942,61 @@ body.find-reading .find-reading-note { opacity: 1; }
 .chapter-card-sign::after { transform: translate(-50%, -50%) rotate(90deg); }
 .chapter-card-shell.is-open .chapter-card-sign::after { transform: translate(-50%, -50%) rotate(0deg); }
 .chapter-card:hover .chapter-card-go { color: var(--silver); }
-.chapter-card-shell.is-open .chapter-card-house { align-self: baseline; }
-.chapter-card-shell.is-open .chapter-card-go { align-self: center; }
 
-/* WHAT THE CARD OPENS INTO. Opened on a measured height rather than on
-   `auto`, which is not a height a browser will ease to — the same way a
-   part of a house opens. */
-.chapter-card-body {
+/* THE DRAWER — what a card opens into, under the row it stands in, the
+   whole width of the grid (chamber.js, `openDrawer`). Opened on a
+   measured height rather than on `auto`, which is not a height a
+   browser will ease to, and its space under it growing with it, so the
+   rows after it travel down rather than jump. A hairline across its
+   head, which the line from the open card comes down to, and a ground
+   a shade lighter than the page's; no box round it. */
+.fav-drawer {
+  grid-column: 1 / -1;
+  position: relative;
   overflow: hidden;
-  height: 0;
-  border: 1px solid var(--silver-line);
-  border-top: 0;
-  background: linear-gradient(180deg, rgba(200, 204, 212, 0.05), rgba(200, 204, 212, 0));
-  transition: height 420ms var(--menu-ease);
+  margin-bottom: 0;
+  border-top: 1px solid rgba(200, 204, 212, 0.34);
+  background: linear-gradient(180deg, rgba(200, 204, 212, 0.06), rgba(200, 204, 212, 0.015) 70%);
+  transition: height 420ms var(--menu-ease), margin-bottom 420ms var(--menu-ease);
 }
+.fav-drawer.is-shown { margin-bottom: 28px; }
+/* What it carries comes in a beat after it starts to open, goes first
+   when it shuts, and fades over when another card of the same row is
+   pressed. */
+.fav-drawer-in { opacity: 0; transition: opacity 180ms var(--menu-ease); }
+.fav-drawer.is-shown .fav-drawer-in { opacity: 1; transition: opacity 380ms var(--menu-ease) 120ms; }
+.fav-drawer.is-shown.is-swapping .fav-drawer-in { opacity: 0; transition: opacity 160ms var(--menu-ease); }
+/* Its close: a small circle with a cross in it, the card's own sign
+   turned a quarter. */
+.fav-drawer-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(200, 204, 212, 0.4);
+  border-radius: 50%;
+  background: none;
+  color: var(--silver);
+  cursor: pointer;
+  transition: border-color 0.3s var(--menu-ease), transform 0.42s var(--menu-ease);
+}
+.fav-drawer-close::before,
+.fav-drawer-close::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 11px;
+  height: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.fav-drawer-close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.fav-drawer-close:hover,
+.fav-drawer-close:focus-visible { border-color: var(--silver); transform: rotate(90deg); }
 .chapter-card-body[hidden] { display: none; }
 
 /* WHAT AN OPENED FAVOURITE IS, since 2026-09-26 — "less techy, more
@@ -4924,43 +5010,45 @@ body.find-reading .find-reading-note { opacity: 1; }
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: clamp(40px, 6vw, 88px);
-  padding: clamp(30px, 4vw, 48px) clamp(24px, 3.4vw, 44px) clamp(34px, 4vw, 50px);
+  /* Room enough at the head for the drawer's close to stand clear of
+     the sun's marks round the picture. */
+  padding: 72px clamp(40px, 4.4vw, 64px) clamp(38px, 4vw, 54px) clamp(24px, 3.4vw, 44px);
 }
 .fav-open-bare { grid-template-columns: minmax(0, 1fr); }
 .fav-read { max-width: 60ch; min-width: 0; }
 
-/* THE WRITING: the favourite's own if there is any, and otherwise the
-   opening of its entry, whole paragraphs of the owner's own words. A
-   short rule stands above it, the one ornament. */
-.fav-writing::before {
-  content: "";
-  display: block;
-  width: 36px;
-  height: 1px;
-  margin-bottom: 24px;
-  background: rgba(200, 204, 212, 0.4);
+/* THE NAME AND THE HOUSE head the writing, in the page's own face — the
+   drawer is the width of the grid, so it says whose it is itself. */
+.fav-name {
+  margin: 0;
+  padding-right: 44px;
+  font-size: clamp(26px, 2.6vw, 34px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--silver);
 }
+.fav-house {
+  margin: 8px 0 28px;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  color: var(--silver-dim);
+}
+/* THE WRITING: the owner's own, whole paragraphs as they wrote them. */
 .fav-writing p { margin: 0 0 16px; font-size: 17px; line-height: 1.72; color: #c4c8cf; }
 .fav-writing p:last-child { margin-bottom: 0; }
-.fav-writing .fav-quiet { font-size: 15px; font-style: italic; color: var(--silver-dim); }
-.fav-writing .fav-quiet a { color: inherit; text-underline-offset: 3px; }
-/* THE COMMENTARY, under the description — the owner asked for "another
-   paragraph for commentary", which is a different kind of writing from
-   the one above it and is set apart rather than run on. */
+/* THE COMMENTARY, if a block marks one — set apart rather than run on. */
 .fav-writing .gallery-word {
   border-left: 1px solid var(--silver-line);
   padding-left: 16px;
   color: #9ba0a9;
 }
-/* A favourite's own block still saying it waits is not shown at all —
-   the opening of its entry stands in its place — so this is only for a
-   block that mixes written and waiting paragraphs. */
-.fav-writing .gallery-waiting { font-size: 15px; font-style: italic; color: var(--silver-dim); }
 
-/* THE TWO WAYS ON: "Read the whole entry" follows the favourite's own
-   href, and "Notes" opens the same window every other page opens, in
-   this page's colours. Words, a hairline arrow and a small circle —
-   not buttons in capitals. */
+/* THE TWO WAYS ON: "Notes" opens the same window every other page opens,
+   in this page's colours, and "Read the whole entry" follows the
+   favourite's own href — in that order since 2026-09-26, at the owner's
+   word. Words, a small circle and a hairline arrow — not buttons in
+   capitals. */
 .fav-links {
   display: flex;
   flex-wrap: wrap;
@@ -5143,7 +5231,9 @@ body.find-reading .find-reading-note { opacity: 1; }
      is eased. The heights are written straight on by chamber.js. */
   .chapter-sheet,
   .chapter-card,
-  .chapter-card-body,
+  .fav-drawer,
+  .fav-drawer-in,
+  .chapter-card-shell::after,
   .chapter-step { transition: none; }
 }
 
@@ -5156,24 +5246,12 @@ body.find-reading .find-reading-note { opacity: 1; }
   .chapter-title { flex-wrap: wrap; gap: 14px; }
   .chapter-title .chapter-name { flex: 1 0 100%; order: -1; }
   .chapter-step { width: 44px; height: 44px; }
-  /* The circle goes above the writing on a phone, centred: beside is
+  /* The picture goes above the writing on a phone, centred: beside is
      not a thing a phone has room for. */
-  .fav-open { grid-template-columns: 1fr; gap: 30px; padding: 30px 18px 32px; }
+  .fav-open { grid-template-columns: 1fr; gap: 30px; padding: 64px 18px 32px; }
   .fav-print { order: -1; }
   .fav-print-face { width: min(220px, 60vw); }
-  /* Open, the head of the window goes back to two lines — four things
-     across a phone is four things you cannot read. */
-  .chapter-card-shell.is-open .chapter-card {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "no   go"
-      "name name"
-      "house house";
-    align-items: start;
-    gap: 12px 14px;
-  }
-  .chapter-card-shell.is-open .chapter-card-house,
-  .chapter-card-shell.is-open .chapter-card-go { align-self: start; }
+  .fav-drawer-close { top: 14px; right: 14px; }
 }
 
 /* ==================================================================
