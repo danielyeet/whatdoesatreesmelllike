@@ -1670,6 +1670,9 @@ opacity: 1`). The FLIP of the others still goes on the shell, as above.
 
 ### How to test it
 
+(Both tests below were reworked, and renamed, with the picture itself — see *2026-09-26,
+later* under this section.)
+
 - **`an opened favourite reads the start of its own entry, beside its picture in a circle,
   credited`** — every favourite names a picture under `images/` and a credit; every card
   carries the circle with that picture and its blur, and *Picture: …* under it, and no
@@ -1690,3 +1693,63 @@ opacity: 1`). The FLIP of the others still goes on the shell, as above.
   favourites live on, each once; they are small, but on a slow connection a card opened at
   once shows a blank line for a moment until its page lands.
 - Only the sun answers. If Chapter 2 is given favourites, the moon wants an `attend` of its own.
+
+
+## 2026-09-26, later — the picture fills an upright frame, and the sun answers the frame
+
+> Additionally fix the images in the favorites tab, it looks tacky.
+
+And, in the same message, about the Fragrances view of Scent descriptions: *"i dont want any
+background to be visible, just make the image itself fit into the box. Ideally make the
+fragrance fit ... The point is simply for the fragrance to be visible."* The circle had exactly
+what that note objects to — the picture shrunk into the middle of it over a blurred copy of
+itself, a studio shot multiplied onto a pale disc, a scene feathered into its blur — and then a
+glowing ring round the lot. So the favourites take the same answer as the Fragrances view.
+
+**The picture fills an upright frame — the print** (`.fav-print-face`, 4 : 5,
+`clamp(200px, 19vw, 250px)` wide, one hairline round it), edge to edge, with nothing behind it
+and nothing done to it — no blur, no blending, no mask — and **it is placed on the bottle**
+(`seat`, `readPicture`, `placeIn`) exactly as the Fragrances view places its pictures, which
+[its report](2026-09-25-the-fragrance-line.md) sets out under *2026-09-26, later*. In short:
+- on a plain ground, the bottle is found (what is not the ground) and brought to the middle;
+- where it is small, it is brought closer until it fills 80% of the frame;
+- on a clean white or black ground it may be drawn back until all of it fits, with the frame
+  taking that colour;
+- a printed border is trimmed off;
+- a scene is filled and centred.
+
+The two scripts carry the same reading; the pages share no script. Des Cendres and Bad Lily
+stand whole on their own white, Belle Âme and Tobacolor fill theirs placed on the bottle, the
+Tombstone pair are brought close on their black, and the scenes — Haxan, De Profundis, French
+Riviera, Amaretto Jazz — are filled and centred. The bottle found is left on the frame as
+`data-subject`. The credit stands under it as before; on a phone the print comes first. It is
+called **the print** and not the plate, because *the plate* on this page is already the chamber's
+word and menu.
+
+**The sun answers the frame** (`sun.js`, "THE ANSWER"): a fine line of its own specks
+(`EDGE_*`) run round the frame 11px outside it, a speck every 4px, lit brightest on the side
+facing the sun and drawn round from there both ways as the answer comes in, as the ring was; a
+**registration mark** at each corner (`CORNER_*`), two short arms of brighter specks; and its
+surface a little brighter round the frame (`HALO` 0.3 of the frame's shorter side, `HALO_LIT`
+0.5), the corona swelling less (`CORONA_SWELL` 0.2). The corner nearest the sun flared at a
+first strength and was brought down (`CORNER_LIT` 0.95). The ring, its ticks, the finer ring inside
+it and the stronger burn are gone. Shut, the line closes up **where the frame stood**
+(`lastAim`), rather than vanishing in one frame, which it did for a moment in the round before.
+
+### What was tried and was wrong
+
+- **The circle**, and everything that came with it: the whole picture shrunk into the middle of
+  a round frame over a blur of itself, the pale disc behind a studio shot, the feathering, and a
+  glowing ring round it — "tacky". None of it (`.fav-disc*`, `is-studio`, `is-scene`,
+  `RING_*`) is in the code.
+
+### How to test it
+
+- **`an opened favourite reads the start of its own entry, beside its picture in a frame,
+  credited`** — as before for the writing, the links and the credits, and now: one picture per
+  card with nothing laid behind it; opened, its frame upright (4 : 5) and square-cornered, the
+  picture with no filter, blend or mask, placed, filling the frame edge to edge or carrying its
+  clean ground on to the frame's colour, and the middle of the bottle found in it inside the frame.
+- **`the sun answers an opened favourite's picture, and lets go when it is shut`** — the band
+  6–24px outside the frame on the sun's own canvas is brighter by 40% and more with the card open
+  than the same band once it is shut and `facing()` is back to 0.

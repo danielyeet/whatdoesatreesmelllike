@@ -472,6 +472,9 @@ it to the copy in `archive/`.
 
 ## 2026-09-26 — the whole bottle, over a blur of itself, in the boxes and the cards
 
+(**Replaced the same night** — the owner wanted no blur and no ground at all; see *2026-09-26,
+later* below. This section is kept for the reasoning.)
+
 > add a blurred version of the pictures in the boxes view of teh SD houses ... ALSO FOR THE SD
 > FRAGRANCES PAGE, MAKE IT SO THAT THE PICTURES IN THE CARDS AND IN THE BOXES MENU ARE ZOOMED
 > OUT AND YOU CAN SEE THE ENTIRE FRAGRANCE! i want the aeshtetic to be good, not just
@@ -514,3 +517,77 @@ still a bottle and not a speck.
   box; a scene has its blur showing round it; Haxan is a scene.
 - `the options show the table as a list, as small boxes or as cards` looks for Haxan's picture
   as `.frag-t-shot` now that each frame holds two images.
+
+
+## 2026-09-26, later — the picture itself, filling its frame, placed on the bottle
+
+> So, for the SD PAGE for fragrances, i dont want any background ti be visible, just make the
+> image itself fit into the box. Ideally make the fragrance fit, but with stuff like flamenco or
+> haxan, no need. The point is simply for the fragrance to be visible.
+
+**Nothing behind a picture any more.** The blurred copy (`.frag-t-haze`), the studio shot
+multiplied onto white, the scene feathered into its blur, the container units and `--shape` —
+all of it is out of the code. Each frame holds one picture, `.frag-t-shot`, which **fills the
+frame edge to edge** — or, on a clean white or black ground, runs on into a frame of that same
+colour (below).
+
+**Placed on the bottle** (`seat`, `readPicture`, `placeIn` in `fragrance-line.js`). Each picture
+is read once it has loaded, off a copy 72 pixels on its longer side:
+
+- **Its ground** — the middle colour of its own edge — and whether that ground is **clean**:
+  nearly every speck of the edge within a hair of it, as with a bottle on pure white or pure
+  black.
+- **Any border printed into it** — a strip of pure white or black down an edge, a mat round a
+  photograph whose own ground is another colour. It is trimmed off before anything else, with one
+  speck more, since a small copy blurs its edge (`inner`). Velvet Fog carries one down each side:
+  255 against its own 245, and it showed as a white mat in its box until it was trimmed. A clean
+  ground is never mistaken for a border, because clean is judged first.
+- **Where its bottle is** — only **on a plain ground**, where its edge is nearly all one colour.
+  There the bottle's *extent* is every speck that is not the ground, faint glass included on a
+  clean ground. The *middle of its weight* is weighed by the square of each speck's distance from
+  the ground, so a black cap and amber glass count for far more than Tobacolor's pale marble
+  stand. **A scene** (Haxan in its bark, De Profundis in its flowers, Flamenco among its
+  raspberries, French Riviera on its rocks) has no bottle found in it. Looking for where it is
+  sharpest was tried and followed the bark and the petals, so a scene is simply filled and
+  centred, which is where its photographer put the bottle.
+
+Then **the picture, inside any border, is made just large enough to cover the frame**, **brought
+closer** where the bottle is small in a large ground until its larger side fills `FILL` (80%) of
+the frame (never more than `CLOSEST`, 2.4, times closer), and **moved so the bottle is in the
+middle** as far as the picture's own edges allow. It centres on the middle of the whole bottle
+where all of it fits, and on the middle of its weight where it does not, so the cap and the glass
+stay in rather than the stand.
+
+**On a clean ground it may also be drawn back** until the whole bottle fits, never further than
+the whole picture. **The frame then takes the ground's own colour**, so the picture's white runs
+on into the frame's white with no edge to see. That is how CV99, whose bottle fills its picture
+from top to bottom and could not fit an upright card otherwise, now stands whole, and House of
+Ellixirz with it. A bottle small on black (the favourites' Tombstone pair) is brought closer
+instead. This is the owner's *"Ideally make the fragrance fit, but with stuff like flamenco or
+haxan, no need"*: the ones on a plain ground fit, and the scenes are filled.
+
+The place is written for **both** layouts at once as custom properties (`--b-w/h/x/y` for the
+boxes' square, `--c-*` for the cards' upright frame), so changing layout needs nothing reworked.
+The bottle found stays on the frame as `data-subject`; a clean ground as its inline
+`background-color`.
+
+**The boxes and the cards took new shapes for it.** A **box** is now its picture, square, over a
+small label on the paper — number and house, name, date — where it was a square with the
+picture blurred behind the lettering; a picture behind lettering is a picture half covered. A
+**card**'s picture is **upright** (4 : 5, from 4 : 3), because nearly all of these bottles are
+photographed standing, and an upright frame keeps the most of each one in it. Until a picture
+arrives each frame is the hatching with the number on it, in the boxes too now. **On a phone**
+the boxes come three to a row again, since a square picture still shows its bottle small.
+
+### How to test it
+
+- **`boxes and cards fill each frame with the picture itself, placed on the bottle`** — in the
+  boxes and then the cards, every picture arrives and is placed; each frame holds exactly one
+  picture with no filter, blend or mask; it covers its frame, or its clean ground is the frame's
+  colour; the frame is the layout's shape (square, or 4 : 5); where a bottle was found its middle
+  is in the frame and towards the middle of it. Tobacolor's bottle is found, and all of it, cap to
+  base, is in its frame in both layouts. That is measured against where the bottle stands in the
+  picture as read by eye, not by the script under test, and it fits the square only if the bottle
+  is placed on its weight rather than its stand. CV99's frame is its picture's own white.
+- `the options show the table as a list, as small boxes or as cards` asks for a box's picture to
+  be square now, rather than the box.

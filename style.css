@@ -4916,9 +4916,9 @@ body.find-reading .find-reading-note { opacity: 1; }
 /* WHAT AN OPENED FAVOURITE IS, since 2026-09-26 — "less techy, more
    minimalist and geometric. Make it somehow react with the sun too."
    Two things side by side and nothing else: the writing, in the page's
-   own face, and the picture in a CIRCLE on the side facing the sun,
-   which the sun itself rings (sun.js, "the answer"). No capitals, no
-   mono, no boxes; one hairline over the two ways on. */
+   own face, and the picture in an upright frame on the side facing the
+   sun, which the sun itself answers (sun.js, "the answer"). No
+   capitals, no mono, no boxes; one hairline over the two ways on. */
 .fav-open {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -5023,62 +5023,40 @@ body.find-reading .find-reading-note { opacity: 1; }
 }
 .fav-link:hover .fav-link-ring { background: currentColor; }
 
-/* THE PICTURE, IN A CIRCLE — the sun's own shape, on the side of the
-   card that faces it, where the sun can ring it. The whole bottle stands
-   in the middle, never cropped, over a blurred copy of the same picture
-   filling the rest of the circle; the credit sits under it. */
-.fav-disc {
+/* THE PICTURE, IN AN UPRIGHT FRAME, on the side of the card that faces
+   the sun. The picture fills it edge to edge — nothing behind it, no
+   mat — and chamber.js places it so the bottle stands in the middle
+   (`seat`); until then, or if it cannot be, it covers the frame from its
+   middle. On a clean white or black ground it may be drawn back until
+   the whole bottle fits, and the frame takes that colour (inline, from
+   `seat`), so no edge shows. One hairline round it; the sun draws the
+   rest (sun.js). It was
+   a circle for one round, the whole picture over a blurred copy of itself
+   — "it looks tacky" — and nothing of that is here any more. */
+.fav-print {
   margin: 0;
   display: grid;
   justify-items: center;
-  gap: 42px;
+  gap: 34px;
 }
-.fav-disc-face {
+.fav-print-face {
   position: relative;
   display: block;
-  width: clamp(210px, 22vw, 290px);
-  aspect-ratio: 1;
-  border-radius: 50%;
+  width: clamp(200px, 19vw, 250px);
+  aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: #111317;
-  box-shadow: 0 0 0 1px rgba(200, 204, 212, 0.18);
-  isolation: isolate;
-  transition: background-color 0.5s var(--menu-ease);
+  background: #0d0e11;
+  outline: 1px solid rgba(200, 204, 212, 0.22);
+  outline-offset: 0;
 }
-.fav-disc-face img {
+.fav-print-shot {
   position: absolute;
-  inset: 0;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100%;
-}
-.fav-disc-haze {
+  max-width: none;
   object-fit: cover;
-  transform: scale(1.4);
-  filter: blur(24px) saturate(1.1) brightness(0.94);
-}
-.fav-disc-face .fav-disc-shot {
-  inset: auto;
-  left: 17%;
-  top: 17%;
-  width: 66%;
-  height: 66%;
-  object-fit: contain;
-}
-/* A STUDIO SHOT (chamber.js reads its corners): the circle turns the
-   pale of paper and the picture is multiplied onto it, so its white
-   ground goes into the circle and only the bottle is left. */
-.fav-disc-face.is-studio { background: #ece9e3; }
-.fav-disc-face.is-studio .fav-disc-haze { display: none; }
-.fav-disc-face.is-studio .fav-disc-shot { mix-blend-mode: multiply; }
-/* ANYTHING ELSE keeps its blur, and the picture — sized to its own
-   shape — is feathered at its edges into it. */
-.fav-disc-face.is-scene .fav-disc-shot {
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent),
-    linear-gradient(0deg, transparent, #000 9%, #000 91%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent),
-    linear-gradient(0deg, transparent, #000 9%, #000 91%, transparent);
-  mask-composite: intersect;
 }
 .fav-credit {
   font-size: 12px;
@@ -5181,8 +5159,8 @@ body.find-reading .find-reading-note { opacity: 1; }
   /* The circle goes above the writing on a phone, centred: beside is
      not a thing a phone has room for. */
   .fav-open { grid-template-columns: 1fr; gap: 30px; padding: 30px 18px 32px; }
-  .fav-disc { order: -1; }
-  .fav-disc-face { width: min(240px, 68vw); }
+  .fav-print { order: -1; }
+  .fav-print-face { width: min(220px, 60vw); }
   /* Open, the head of the window goes back to two lines — four things
      across a phone is four things you cannot read. */
   .chapter-card-shell.is-open .chapter-card {
@@ -8595,8 +8573,8 @@ a.note-cite:hover { color: var(--ink); }
 .house-credit a:hover { color: var(--muted); }
 
 /* (The picture on an opened favourite was a floated rectangle here,
-   `.fav-shot`, until 2026-09-26; it is the circle now, `.fav-disc`, with
-   the rest of the opened favourite's rules.) */
+   `.fav-shot`, until 2026-09-26; it is a framed print now, `.fav-print`,
+   with the rest of the opened favourite's rules.) */
 @media (max-width: 720px) {
   /* The same 24px the three house feet drop to at this width. */
   .house-credit { padding-left: 24px; padding-right: 24px; }
@@ -9480,55 +9458,41 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   gap: 10px;
   padding-top: 14px;
 }
+/* A BOX (2026-09-26, later) is its fragrance's picture, square, with
+   the number, the house, the name and the date under it on the paper —
+   the picture was the box's ground for a round, blurred, with the
+   writing over it, and the owner asked for "the image itself" and no
+   ground at all. Until the picture comes the square is the hatching. */
 .frag-stage.is-boxes .frag-item {
   position: relative;
-  aspect-ratio: 1;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto 1fr auto auto;
-  grid-template-areas: "no house" ". ." "name name" "date date";
-  padding: 11px 12px 12px;
+  grid-template-areas: "pic pic" "no house" "name name" "date date";
+  align-content: start;
+  padding: 0 0 11px;
   overflow: hidden;
   border: 1px solid rgba(var(--ink-rgb), 0.16);
-  background: rgba(255, 255, 255, 0.78);
+  background: #fff;
 }
-/* THE BOX'S PICTURE (2026-09-26): the whole box is the picture's own
-   colours, blurred, and the bottle stands whole in the middle of it
-   between the number and the name — see "a picture laid down twice"
-   below. The writing stands over it on a veil of the paper at the top
-   and the foot, so it reads as well as it did on plain paper. */
 .frag-stage.is-boxes .frag-t-pic {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+  grid-area: pic;
+  position: relative;
   display: block;
+  aspect-ratio: 1;
+  margin-bottom: 9px;
   overflow: hidden;
+  border-bottom: 1px solid rgba(var(--ink-rgb), 0.12);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb), 0.09) 0px, rgba(var(--ink-rgb), 0.09) 1px, transparent 1px, transparent 10px);
 }
-.frag-stage.is-boxes .frag-t-pic-no { display: none; }
-.frag-stage.is-boxes .frag-t-pic .frag-t-shot {
-  inset: 31px 14px 66px;
-  width: calc(100% - 28px);
-  height: calc(100% - 97px);
-}
-.frag-stage.is-boxes .frag-t-pic::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0) 30px),
-    linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.62) 44px, rgba(255, 255, 255, 0) 66px);
-  pointer-events: none;
-}
-.frag-stage.is-boxes .frag-t-pic .frag-t-shot { z-index: 2; }
-.frag-stage.is-boxes .frag-item > :not(.frag-t-pic) { position: relative; z-index: 3; }
+.frag-stage.is-boxes .frag-t-pic-no { font-size: 24px; left: 10px; bottom: 6px; }
 .frag-stage.is-boxes .frag-item:hover,
 .frag-stage.is-cards .frag-item:hover { border-color: var(--ink); }
-.frag-stage.is-boxes .frag-t-no { grid-area: no; font-size: 12px; }
+.frag-stage.is-boxes .frag-t-no { grid-area: no; padding-left: 11px; font-size: 11.5px; }
 .frag-stage.is-boxes .frag-t-house {
   grid-area: house;
   min-width: 0;
-  padding-left: 8px;
+  padding: 1px 11px 0 8px;
   text-align: right;
   font-family: var(--mono);
   font-size: 9.5px;
@@ -9538,8 +9502,8 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.frag-stage.is-boxes .frag-t-name { grid-area: name; font-size: 15px; line-height: 1.2; }
-.frag-stage.is-boxes .frag-t-date { grid-area: date; margin-top: 6px; font-size: 10.5px; }
+.frag-stage.is-boxes .frag-t-name { grid-area: name; padding: 6px 11px 0; font-size: 14.5px; line-height: 1.2; }
+.frag-stage.is-boxes .frag-t-date { grid-area: date; padding: 0 11px; margin-top: 5px; font-size: 10.5px; }
 
 /* AS CARDS: larger, each with its picture — or the hatching and its
    number, until the picture is there. */
@@ -9558,71 +9522,54 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   border: 1px solid rgba(var(--ink-rgb), 0.16);
   background: #fff;
 }
-.frag-stage.is-cards .frag-t-pic .frag-t-shot {
-  inset: 7% 8%;
-  width: 84%;
-  height: 86%;
-}
 .frag-stage.is-cards .frag-t-pic {
   grid-area: pic;
   position: relative;
   display: block;
-  aspect-ratio: 4 / 3;
+  /* Upright, as a bottle is: most of these are photographed standing,
+     and an upright frame keeps the most of each bottle in it. */
+  aspect-ratio: 4 / 5;
   margin-bottom: 12px;
   overflow: hidden;
   border-bottom: 1px solid rgba(var(--ink-rgb), 0.12);
   background-color: var(--bg-2);
   background-image: repeating-linear-gradient(-45deg, rgba(var(--ink-rgb), 0.09) 0px, rgba(var(--ink-rgb), 0.09) 1px, transparent 1px, transparent 12px);
 }
-/* A PICTURE LAID DOWN TWICE, in the cards and the boxes (2026-09-26):
-   "make it so that the pictures in the cards and in the boxes menu are
-   zoomed out and you can see the entire fragrance". So the picture
-   itself is CONTAINED — the whole of it, never cropped — and behind it
-   the same picture is laid again, BLURRED, scaled up past the frame's
-   edges and a little lighter, so what the whole picture leaves empty is
-   filled with its own colours rather than with paper. A white studio
-   shot fills with white; a bottle photographed on flowers fills with the
-   flowers' colour. */
+/* THE PICTURE ITSELF, EDGE TO EDGE (2026-09-26, later): "i dont want
+   any background to be visible, just make the image itself fit into the
+   box ... The point is simply for the fragrance to be visible." It
+   covers its frame, and fragrance-line.js places it — larger than the
+   frame, moved so the bottle is in the middle and, where the bottle is
+   small in its picture, brought closer — writing the place for the
+   boxes' square (`--b-*`) and the cards' upright frame (`--c-*`) at
+   once. Before it is placed, and if it never can be, it simply covers
+   the frame from its middle. (A blurred copy of the picture stood behind
+   it for one round, with a studio shot multiplied onto white and a scene
+   feathered into its blur; the owner wanted neither, and none of it is
+   here any more.) */
 .frag-t-pic img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-}
-.frag-t-pic .frag-t-haze {
+  max-width: none;
   object-fit: cover;
-  transform: scale(1.4);
-  filter: blur(18px) saturate(1.2) brightness(1.04);
-  opacity: 0.86;
 }
-.frag-t-pic .frag-t-shot { object-fit: contain; }
-.frag-t-pic { isolation: isolate; }
-/* A STUDIO SHOT (fragrance-line.js reads its corners): no blur behind
-   it, and the picture multiplied onto the frame's white, so its white
-   ground goes and only the bottle is left. */
-.frag-stage .frag-t-pic.is-studio .frag-t-haze { display: none; }
-.frag-stage .frag-t-pic.is-studio .frag-t-shot { mix-blend-mode: multiply; }
-.frag-stage.is-boxes .frag-t-pic.is-studio { background: rgba(255, 255, 255, 0.9); }
-/* A SCENE keeps its blur, and is feathered at its edges into it. Its
-   box is set to its own shape (--shape, width over height), centred in
-   the room it had, so the feathering falls on the picture's edges. */
-.frag-stage .frag-t-pic.is-scene .frag-t-shot {
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent),
-    linear-gradient(0deg, transparent, #000 8%, #000 92%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent),
-    linear-gradient(0deg, transparent, #000 8%, #000 92%, transparent);
-  mask-composite: intersect;
-  margin: auto;
+.frag-stage.is-boxes .frag-t-pic.is-placed img {
+  right: auto;
+  bottom: auto;
+  left: var(--b-x);
+  top: var(--b-y);
+  width: var(--b-w);
+  height: var(--b-h);
 }
-.frag-stage .frag-t-pic { container-type: size; }
-.frag-stage.is-cards .frag-t-pic.is-scene .frag-t-shot {
-  width: min(84cqw, calc(86cqh * var(--shape, 1)));
-  height: min(86cqh, calc(84cqw / var(--shape, 1)));
-}
-.frag-stage.is-boxes .frag-t-pic.is-scene .frag-t-shot {
-  width: min(calc(100cqw - 28px), calc((100cqh - 97px) * var(--shape, 1)));
-  height: min(calc(100cqh - 97px), calc((100cqw - 28px) / var(--shape, 1)));
+.frag-stage.is-cards .frag-t-pic.is-placed img {
+  right: auto;
+  bottom: auto;
+  left: var(--c-x);
+  top: var(--c-y);
+  width: var(--c-w);
+  height: var(--c-h);
 }
 .frag-t-pic-no {
   position: absolute;
@@ -9634,7 +9581,7 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   color: rgba(var(--ink-rgb), 0.5);
 }
 .frag-t-pic.has-picture .frag-t-pic-no { display: none; }
-.frag-stage .frag-t-pic.has-picture { background-image: none; background-color: #fff; }
+.frag-stage .frag-t-pic.has-picture { background-image: none; }
 .frag-stage.is-cards .frag-t-no { grid-area: no; padding-left: 14px; font-size: 12px; }
 .frag-stage.is-cards .frag-t-date { grid-area: date; padding-right: 14px; text-align: right; font-size: 11px; }
 .frag-stage.is-cards .frag-t-name { grid-area: name; padding: 7px 14px 0; font-size: 17px; line-height: 1.2; }
@@ -9731,16 +9678,14 @@ body.frag-open .frag-stage { opacity: 0; pointer-events: none; }
   .frag-items { font-size: 13px; }
   .frag-t-no, .frag-t-date { font-size: 11px; }
   .frag-sort { letter-spacing: 0.08em; padding-right: 6px; }
-  /* Two to a row, since each carries its picture (2026-09-26): three
-     left the bottle a speck between the number and the name. */
-  .frag-stage.is-boxes .frag-items { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-  .frag-stage.is-boxes .frag-t-pic .frag-t-shot { inset: 28px 12px 62px; width: calc(100% - 24px); height: calc(100% - 90px); }
-  .frag-stage.is-boxes .frag-t-pic.is-scene .frag-t-shot {
-    width: min(calc(100cqw - 24px), calc((100cqh - 90px) * var(--shape, 1)));
-    height: min(calc(100cqh - 90px), calc((100cqw - 24px) / var(--shape, 1)));
-  }
-  .frag-stage.is-boxes .frag-item { padding: 8px 9px 9px; }
-  .frag-stage.is-boxes .frag-t-name { font-size: 13.5px; }
+  /* Three to a row: each box's picture fills its square, so a small
+     square still shows the bottle. */
+  .frag-stage.is-boxes .frag-items { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .frag-stage.is-boxes .frag-item { padding-bottom: 9px; }
+  .frag-stage.is-boxes .frag-t-no { padding-left: 8px; font-size: 10.5px; }
+  .frag-stage.is-boxes .frag-t-house { padding-right: 8px; font-size: 8.5px; }
+  .frag-stage.is-boxes .frag-t-name { padding: 5px 8px 0; font-size: 13px; }
+  .frag-stage.is-boxes .frag-t-date { padding: 0 8px; font-size: 10px; }
   .frag-stage.is-cards .frag-items { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .frag-stage.is-cards .frag-t-name { font-size: 15px; }
   .frag-stage.is-cards .frag-t-house { font-size: 12px; }

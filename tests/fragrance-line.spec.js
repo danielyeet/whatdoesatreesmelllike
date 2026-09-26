@@ -234,9 +234,13 @@ test("the options show the table as a list, as small boxes or as cards", async (
   await expect(page.locator(".frag-mode[data-mode='list']")).toHaveAttribute("aria-pressed", "false");
   const boxes = await acrossOf(page);
   expect(boxes, "several boxes to a row").toBeGreaterThanOrEqual(4);
-  const square = await page.locator(".frag-item").first().boundingBox();
-  expect(Math.abs(square.width - square.height), "a box is square").toBeLessThanOrEqual(2);
-  expect(square.width, "and small").toBeLessThan(220);
+  // A box is small, and its picture — or the hatching until it comes —
+  // is square (it was the whole box until the picture stood over the
+  // label rather than behind it, 2026-09-26).
+  const box = await page.locator(".frag-item").first().boundingBox();
+  const square = await page.locator(".frag-item .frag-t-pic").first().boundingBox();
+  expect(Math.abs(square.width - square.height), "a box's picture is square").toBeLessThanOrEqual(2);
+  expect(box.width, "and the box small").toBeLessThan(220);
   await expect(page.locator(".frag-item").last()).toHaveCSS("opacity", "1");
 
   await page.locator(".frag-mode[data-mode='cards']").click();
@@ -260,58 +264,87 @@ test("the options show the table as a list, as small boxes or as cards", async (
   expect((await page.locator(".frag-item").first().boundingBox()).height).toBeLessThanOrEqual(38);
 });
 
-/* THE WHOLE BOTTLE, OVER A BLUR OF ITSELF. The owner: "add a blurred
-   version of the pictures in the boxes view ... MAKE IT SO THAT THE
-   PICTURES IN THE CARDS AND IN THE BOXES MENU ARE ZOOMED OUT AND YOU CAN
-   SEE THE ENTIRE FRAGRANCE!" Every picture that arrives stands whole —
-   `contain`, never cropped — inside its box, over a blurred copy of the
-   same file filling the rest; and a studio shot on white is set on
-   white, so it has no rectangle round it. Boxes carry pictures now as
-   well as cards. */
-test("boxes and cards show each fragrance whole, over a blurred copy of its picture", async ({ page }) => {
+/* THE PICTURE ITSELF, FILLING ITS FRAME, ON THE BOTTLE. The owner, having
+   seen each bottle whole over a blurred copy of its picture: "i dont
+   want any background to be visible, just make the image itself fit into
+   the box. Ideally make the fragrance fit, but with stuff like flamenco
+   or haxan, no need. The point is simply for the fragrance to be
+   visible." So each picture covers its frame edge to edge with nothing
+   behind it, and is placed so the bottle — found in the picture itself —
+   stands in the middle of the frame; where the bottle can fit, all of it
+   does. */
+test("boxes and cards fill each frame with the picture itself, placed on the bottle", async ({ page }) => {
   await toTheTable(page);
-  for (const mode of ["boxes", "cards"]) {
+  for (const [mode, shape] of [["boxes", 1], ["cards", 4 / 5]]) {
     await page.locator(`.frag-mode[data-mode='${mode}']`).click();
     await page.waitForTimeout(900);
-    await expect(page.locator(".frag-item", { hasText: "Haxan" }).locator(".frag-t-pic"))
-      .toHaveClass(/has-picture/, { timeout: 5000 });
-    await expect.poll(() => page.$$eval(".frag-t-pic.has-picture", (all) =>
-      all.filter((p) => /is-(studio|scene)/.test(p.className)).length), { timeout: 5000 })
-      .toBeGreaterThanOrEqual(5);
+    await expect.poll(() => page.$$eval(".frag-t-pic.is-placed", (all) => all.length), { timeout: 5000 })
+      .toBeGreaterThanOrEqual(7);
+    await page.waitForTimeout(400);
     const seen = await page.$$eval(".frag-item:not([hidden])", (all) => all.map((li) => {
       const pic = li.querySelector(".frag-t-pic");
-      if (!pic.classList.contains("has-picture")) return null;
-      const haze = pic.querySelector(".frag-t-haze");
-      const shot = pic.querySelector(".frag-t-shot");
-      const box = li.getBoundingClientRect();
-      const s = shot.getBoundingClientRect();
-      const hs = getComputedStyle(haze);
+      if (!pic.classList.contains("is-placed")) return null;
+      const imgs = pic.querySelectorAll("img");
+      const shot = imgs[0];
+      const f = pic.getBoundingClientRect(), r = shot.getBoundingClientRect();
+      const st = getComputedStyle(shot);
+      const sub = (pic.dataset.subject || "").split(" ").map(Number);
+      const mid = sub.length === 4
+        ? { x: r.left + (sub[0] + sub[2]) / 2 * r.width, y: r.top + (sub[1] + sub[3]) / 2 * r.height } : null;
       return {
         name: li.querySelector(".frag-t-name").textContent.trim(),
-        same: haze.getAttribute("src") === shot.getAttribute("src"),
-        blurred: /blur\(/.test(hs.filter),
-        hazeShown: hs.display !== "none" && Number(hs.opacity) > 0.3,
-        fit: getComputedStyle(shot).objectFit,
-        inside: s.left >= box.left - 1 && s.right <= box.right + 1 && s.top >= box.top - 1 && s.bottom <= box.bottom + 1,
-        drawn: shot.naturalWidth > 0 && s.width > 20 && s.height > 20,
-        studio: pic.classList.contains("is-studio"),
-        scene: pic.classList.contains("is-scene"),
+        count: imgs.length,
+        plain: st.filter === "none" && st.mixBlendMode === "normal" && st.maskImage === "none",
+        covers: r.left <= f.left + 1 && r.right >= f.right - 1 && r.top <= f.top + 1 && r.bottom >= f.bottom - 1,
+        // Drawn back on a clean ground, the frame is that ground's colour.
+        carried: pic.style.backgroundColor !== "" && getComputedStyle(pic).backgroundColor === pic.style.backgroundColor,
+        shape: f.width / f.height,
+        centred: mid ? Math.abs(mid.x - (f.left + f.width / 2)) <= f.width * 0.26 &&
+          Math.abs(mid.y - (f.top + f.height / 2)) <= f.height * 0.26 : null,
+        inView: mid ? mid.x > f.left && mid.x < f.right && mid.y > f.top && mid.y < f.bottom : null,
+        found: sub.length === 4,
       };
     }).filter(Boolean));
-    expect(seen.length, `${mode}: pictures arrive`).toBeGreaterThanOrEqual(5);
+    expect(seen.length, `${mode}: every picture arrives and is placed`).toBeGreaterThanOrEqual(7);
     for (const one of seen) {
-      expect(one.same, `${mode}: ${one.name}'s blur is its own picture`).toBe(true);
-      expect(one.blurred, `${mode}: ${one.name}'s copy is blurred`).toBe(true);
-      expect(one.fit, `${mode}: ${one.name} is shown whole, never cropped`).toBe("contain");
-      expect(one.inside, `${mode}: ${one.name} stands inside its own box`).toBe(true);
-      expect(one.drawn, `${mode}: ${one.name} is drawn`).toBe(true);
-      expect(one.studio || one.scene, `${mode}: ${one.name} is read as one kind or the other`).toBe(true);
-      // A scene keeps its blur round it; a studio shot stands on white.
-      if (one.scene) expect(one.hazeShown, `${mode}: ${one.name}'s blur fills round it`).toBe(true);
+      expect(one.count, `${mode}: ${one.name} is one picture, with nothing laid behind it`).toBe(1);
+      expect(one.plain, `${mode}: ${one.name} is the picture as it is — no blur, no blending, no feathering`).toBe(true);
+      expect(one.covers || one.carried,
+        `${mode}: ${one.name} fills its frame edge to edge, or its clean ground is carried on to the frame's`).toBe(true);
+      expect(one.shape, `${mode}: ${one.name}'s frame is the ${mode}' shape`).toBeCloseTo(shape, 1);
+      if (one.found) {
+        expect(one.inView, `${mode}: ${one.name}'s bottle is in the frame`).toBe(true);
+        expect(one.centred, `${mode}: ${one.name}'s bottle is towards the middle`).toBe(true);
+      }
     }
-    const haxan = seen.find((one) => one.name === "Haxan");
-    expect(haxan && haxan.scene, "Haxan, on bark, is a scene with its blur round it").toBe(true);
+    // On a plain ground the bottle is found, and where it can fit it does.
+    // Tobacolor's bottle — cap to base, measured off the picture by eye,
+    // not by the script under test — fits the square only just, and only
+    // if it is found and placed on it rather than on its marble stand.
+    const tob = seen.find((one) => one.name === "Tobacolor");
+    expect(tob && tob.found, "Tobacolor's bottle is found on its plain ground").toBe(true);
+    const bottle = await page.locator(".frag-item", { hasText: "Tobacolor" }).locator(".frag-t-pic").evaluate((pic) => {
+      const f = pic.getBoundingClientRect(), r = pic.querySelector("img").getBoundingClientRect();
+      const B = [0.33, 0.224, 0.675, 0.867];
+      return {
+        top: (r.top + B[1] * r.height - f.top) / f.height,
+        foot: (r.top + B[3] * r.height - f.top) / f.height,
+        left: (r.left + B[0] * r.width - f.left) / f.width,
+        right: (r.left + B[2] * r.width - f.left) / f.width,
+      };
+    });
+    expect(bottle.top, `${mode}: Tobacolor's cap is in its frame`).toBeGreaterThanOrEqual(-0.01);
+    expect(bottle.foot, `${mode}: and so is its base`).toBeLessThanOrEqual(1.01);
+    expect(bottle.left).toBeGreaterThanOrEqual(0);
+    expect(bottle.right).toBeLessThanOrEqual(1);
   }
+  // A clean white ground is carried on past the picture where its bottle
+  // is drawn back to fit: CV99's bottle fills its picture top to bottom,
+  // and its frame takes the picture's own white rather than showing any
+  // other ground.
+  const cv = await page.locator(".frag-item", { hasText: "CV99" }).locator(".frag-t-pic")
+    .evaluate((pic) => getComputedStyle(pic).backgroundColor);
+  expect(cv, "CV99's frame is its picture's own white").toBe("rgb(255, 255, 255)");
 });
 
 /* THE CHOICE IS KEPT for the next visit, in this browser. */

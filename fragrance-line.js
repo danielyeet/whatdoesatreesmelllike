@@ -332,37 +332,194 @@
   // never pays for them. A picture that is not there yet leaves the
   // hatching and the number showing, which is what every house page does.
   //
-  // EACH IS LAID DOWN TWICE (2026-09-26): once WHOLE — "zoomed out and
-  // you can see the entire fragrance", never cropped to fill the frame —
-  // and once behind it, BLURRED and scaled up to fill every corner the
-  // whole picture leaves, so the frame is the bottle's own colours rather
-  // than empty paper — the owner's "a blurred version of the pictures in
-  // the boxes".
-  /** A STUDIO SHOT OR A SCENE, read off the picture's corners once it
-      has loaded. A bottle on white loses its blur and is multiplied onto
-      the frame's own white, so its ground goes and only the bottle is
-      left; anything else keeps its blur, and is sized to its own shape
-      so its edges can be feathered into it (style.css). Whole, in both. */
-  function seat(pic, shot) {
-    const w = shot.naturalWidth, h = shot.naturalHeight;
-    if (!w || !h) return;
-    let studio = false;
+  // EACH FILLS ITS FRAME, AND IS PLACED ON THE BOTTLE (2026-09-26, later):
+  // "i dont want any background to be visible, just make the image itself
+  // fit into the box. Ideally make the fragrance fit, but with stuff like
+  // flamenco or haxan, no need. The point is simply for the fragrance to
+  // be visible." So nothing stands behind a picture — the blurred copy it
+  // stood on for a round is gone — and the picture covers its frame edge
+  // to edge. Where the bottle is in it is read off the picture itself
+  // (`readPicture`), and the picture is moved so the bottle stands in the
+  // middle of the frame and, where it is small in a large ground, brought
+  // closer until it fills most of the frame (`placeIn`). A scene — a
+  // bottle in bark, on a bank of flowers — is simply filled and centred:
+  // its bottle is where the photographer put it.
+  const FILL = 0.8;         // the bottle's larger side, as a share of the frame's
+  const CLOSEST = 2.4;      // and never more than this much past just covering it
+  const SHAPES = { b: 1, c: 4 / 5 };   // the boxes' pictures are square, the cards' upright
+
+  /** WHAT A PICTURE IS, read off a small copy of it: any BORDER printed
+      into it (`inner`, the share of each side that is a strip of plain
+      white or black), WHERE ITS BOTTLE IS (`bottle`: its extent { x0, y0,
+      x1, y1 } and its weight's middle { cx, cy }, as fractions of the
+      whole picture), and, where its ground is clean enough to be carried
+      on past its edges, THAT COLOUR (`clean`). A bottle is only looked
+      for ON A PLAIN GROUND, where the picture's own edge is nearly all
+      one colour (a bottle on white, on black): there it is what is not
+      that colour. A scene has none, and is centred. */
+  function readPicture(img) {
+    const w = img.naturalWidth, h = img.naturalHeight;
+    if (!w || !h) return null;
+    const S = 72;
+    const cw = w >= h ? S : Math.max(12, Math.round(S * w / h));
+    const ch = w >= h ? Math.max(12, Math.round(S * h / w)) : S;
+    let d;
     try {
       const c = document.createElement("canvas");
-      c.width = 24; c.height = 24;
+      c.width = cw; c.height = ch;
       const g = c.getContext("2d", { willReadFrequently: true });
-      g.drawImage(shot, 0, 0, 24, 24);
-      const d = g.getImageData(0, 0, 24, 24).data;
-      let light = 0;
-      [[0, 0], [23, 0], [0, 23], [23, 23], [12, 0], [12, 23], [0, 12], [23, 12]].forEach(([x, y]) => {
-        const i = (y * 24 + x) * 4;
-        const lo = Math.min(d[i], d[i + 1], d[i + 2]), hi = Math.max(d[i], d[i + 1], d[i + 2]);
-        if (lo > 222 && hi - lo < 26) light++;
-      });
-      studio = light >= 6;
-    } catch (e) { studio = false; }
-    pic.classList.add(studio ? "is-studio" : "is-scene");
-    pic.style.setProperty("--shape", String(w / h));
+      g.drawImage(img, 0, 0, cw, ch);
+      d = g.getImageData(0, 0, cw, ch).data;
+    } catch (e) { return null; }
+    const at = (x, y) => (y * cw + x) * 4;
+    const lum = (i) => d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11;
+
+    // ITS GROUND: the middle colour of its own edge — or, once any
+    // border is off, of what is left's.
+    let L = 0, R = 0, T = 0, B = 0;
+    const edgeOf = () => {
+      const e = [];
+      for (let x = L; x < cw - R; x++) e.push(at(x, T), at(x, ch - 1 - B));
+      for (let y = T + 1; y < ch - 1 - B; y++) e.push(at(L, y), at(cw - 1 - R, y));
+      return e;
+    };
+    const groundOf = (e) => [0, 1, 2].map((k) => {
+      const v = e.map((i) => d[i + k]).sort((a, b) => a - b);
+      return v[v.length >> 1];
+    });
+    let edge = edgeOf();
+    let ground = groundOf(edge);
+    const off = (i) => Math.max(Math.abs(d[i] - ground[0]), Math.abs(d[i + 1] - ground[1]), Math.abs(d[i + 2] - ground[2]));
+    // A CLEAN GROUND — pure white, pure black, nearly every speck of its
+    // edge the same — can be carried on past the picture's own edges
+    // without a seam, so a bottle on one may be drawn back to fit.
+    const clean = edge.filter((i) => off(i) < 9).length / edge.length > 0.92;
+    if (!clean) {
+      // A BORDER — a strip of pure white or black printed down an edge of
+      // the picture itself, a mat round a photograph whose own ground is
+      // another colour — is not the picture, and is trimmed off, with one
+      // speck more since a small copy blurs its edge. (Velvet Fog carries
+      // one down each side: 255 against its own 245.)
+      const plainLine = (count, pick) => {
+        let white = 0, black = 0;
+        for (let n = 0; n < count; n++) {
+          const l = lum(pick(n));
+          if (l > 251) white++; else if (l < 5) black++;
+        }
+        return white >= count * 0.95 || black >= count * 0.95;
+      };
+      const most = (n) => Math.floor(n * 0.15);
+      while (L < most(cw) && plainLine(ch, (n) => at(L, n))) L++;
+      while (R < most(cw) && plainLine(ch, (n) => at(cw - 1 - R, n))) R++;
+      while (T < most(ch) && plainLine(cw, (n) => at(n, T))) T++;
+      while (B < most(ch) && plainLine(cw, (n) => at(n, ch - 1 - B))) B++;
+      if (L) L++; if (R) R++; if (T) T++; if (B) B++;
+      edge = edgeOf();
+      ground = groundOf(edge);
+    }
+    const inner = { l: L / cw, r: R / cw, t: T / ch, b: B / ch };
+    // A SCENE — no one ground — has no bottle found in it: it is left
+    // where the photographer put it, which is near the middle.
+    if (edge.filter((i) => off(i) < 24).length / edge.length <= 0.7) {
+      return { inner: inner, bottle: null, clean: "" };
+    }
+    // Its EXTENT is every speck that is not the ground — faint glass too,
+    // on a clean one. The MIDDLE OF ITS WEIGHT is weighed by the square
+    // of how far each speck is from the ground, so a black cap or amber
+    // glass counts for far more than a pale stand under the bottle.
+    const faint = clean ? 14 : 34;
+    const cols = new Float64Array(cw), rows = new Float64Array(ch);
+    const colW = new Float64Array(cw), rowW = new Float64Array(ch);
+    for (let y = T; y < ch - B; y++) for (let x = L; x < cw - R; x++) {
+      const o = off(at(x, y));
+      if (o > faint) { cols[x]++; rows[y]++; }
+      if (o > 34) { colW[x] += o * o; rowW[y] += o * o; }
+    }
+    const span = (arr, weight) => {
+      const total = arr.reduce((a, b) => a + b, 0);
+      const heavy = weight.reduce((a, b) => a + b, 0);
+      if (!total) return null;
+      let a = 0, b = arr.length - 1, run = 0, mid = 0;
+      weight.forEach((v, i) => { mid += v * (i + 0.5); });
+      while (a < b && run + arr[a] <= total * 0.01) run += arr[a++];
+      run = 0;
+      while (b > a && run + arr[b] <= total * 0.01) run += arr[b--];
+      return [a / arr.length, (b + 1) / arr.length, heavy ? mid / heavy / arr.length : (a + b + 1) / 2 / arr.length];
+    };
+    const sx = span(cols, colW), sy = span(rows, rowW);
+    return {
+      inner: inner,
+      bottle: sx && sy ? { x0: sx[0], x1: sx[1], y0: sy[0], y1: sy[1], cx: sx[2], cy: sy[2] } : null,
+      clean: clean ? "rgb(" + ground.join(", ") + ")" : "",
+    };
+  }
+
+  /** WHERE A PICTURE STANDS IN A FRAME of the given shape (width over
+      height), as percentages of the frame: just covering it, brought
+      closer until its bottle fills `fill` of it where there is room to
+      (never more than `closest` times closer), then moved so the bottle
+      is in the middle. On a CLEAN ground it may also be drawn back until
+      the whole bottle fits — never further than the whole picture — the
+      frame taking the ground's own colour, so no edge shows. */
+  function placeIn(read, ratio, shape, fill, closest) {
+    // The picture inside any border it carries, and its bottle in it.
+    const inr = read ? read.inner : { l: 0, t: 0, r: 0, b: 0 };
+    const iw = 1 - inr.l - inr.r, ih = 1 - inr.t - inr.b;
+    const own = ratio * iw / ih;
+    const b = read && read.bottle;
+    const sub = b ? {
+      x0: (b.x0 - inr.l) / iw, x1: (b.x1 - inr.l) / iw, cx: (b.cx - inr.l) / iw,
+      y0: (b.y0 - inr.t) / ih, y1: (b.y1 - inr.t) / ih, cy: (b.cy - inr.t) / ih,
+    } : null;
+    const cover = Math.max(1, own / shape);    // just covering the frame
+    const whole = Math.min(1, own / shape);    // the whole picture in it
+    let k = cover;                   // its width, in frame widths
+    if (sub) {
+      const sw = Math.max(0.02, sub.x1 - sub.x0), sh = Math.max(0.02, sub.y1 - sub.y0);
+      const fit = Math.min(fill / sw, fill * own / (shape * sh));
+      k = Math.min(Math.max(read.clean ? whole : cover, fit), cover * closest);
+    }
+    const tall = k * shape / own;    // its height, in frame heights
+    // The middle of the whole bottle where all of it fits; where it does
+    // not, the middle of its weight, so the cap and the glass stay in.
+    let cx = 0.5, cy = 0.5;
+    if (sub) {
+      cx = (sub.x1 - sub.x0) * k <= 1 ? (sub.x0 + sub.x1) / 2 : sub.cx;
+      cy = (sub.y1 - sub.y0) * tall <= 1 ? (sub.y0 + sub.y1) / 2 : sub.cy;
+    }
+    // Where the picture covers the frame it may not leave an edge inside
+    // it; where it is drawn back on a clean ground, that ground fills the
+    // rest and the bottle is simply put in the middle.
+    const at = (size, c) => {
+      const want = 0.5 - c * size;
+      return size >= 1 ? Math.min(0, Math.max(1 - size, want)) : want;
+    };
+    const x = at(k, cx), y = at(tall, cy);
+    // Back to the whole picture, its border running off the frame.
+    const W = k / iw, H = tall / ih;
+    const pc = (v) => (v * 100).toFixed(3) + "%";
+    return { w: pc(W), h: pc(H), x: pc(x - inr.l * W), y: pc(y - inr.t * H) };
+  }
+
+  /** The picture, placed for both the boxes and the cards at once, so a
+      change of layout needs nothing done: the stylesheet takes whichever
+      it is showing (`--b-*`, `--c-*`). The bottle found is left on the
+      frame (`data-subject`) for anyone who wants to check it. */
+  function seat(pic, shot) {
+    const ratio = shot.naturalWidth / shot.naturalHeight;
+    if (!ratio) return;
+    const read = readPicture(shot);
+    Object.keys(SHAPES).forEach((key) => {
+      const p = placeIn(read, ratio, SHAPES[key], FILL, CLOSEST);
+      pic.style.setProperty("--" + key + "-w", p.w);
+      pic.style.setProperty("--" + key + "-h", p.h);
+      pic.style.setProperty("--" + key + "-x", p.x);
+      pic.style.setProperty("--" + key + "-y", p.y);
+    });
+    const sub = read && read.bottle;
+    if (sub) pic.dataset.subject = [sub.x0, sub.y0, sub.x1, sub.y1].map((v) => v.toFixed(3)).join(" ");
+    if (read && read.clean) pic.style.backgroundColor = read.clean;
+    pic.classList.add("is-placed");
   }
 
   let pictured = false;
@@ -383,20 +540,13 @@
         const shot = part.querySelector(".human-plate img") || part.querySelector("summary img");
         const src = shot && shot.getAttribute("src");
         if (!src) return;
-        const url = new URL(src, where).href;
-        const haze = document.createElement("img");
-        haze.className = "frag-t-haze";
-        haze.alt = "";
-        haze.decoding = "async";
         const img = document.createElement("img");
         img.className = "frag-t-shot";
         img.alt = "";
         img.decoding = "async";
         img.addEventListener("load", () => { f.pic.classList.add("has-picture"); seat(f.pic, img); });
-        img.addEventListener("error", () => { img.remove(); haze.remove(); });
-        haze.src = url;
-        img.src = url;
-        f.pic.appendChild(haze);
+        img.addEventListener("error", () => { img.remove(); });
+        img.src = new URL(src, where).href;
         f.pic.appendChild(img);
       });
     }).catch(() => { /* the hatching stays */ });

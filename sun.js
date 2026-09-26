@@ -37,18 +37,19 @@
 //                 page is the side the wind is blowing towards.
 //   THE ANSWER    added 2026-09-26 — the owner asked for an opened
 //                 favourite to "somehow react with the sun". When one is
-//                 open the chamber hands over where its picture's circle
-//                 stands (`attend`), and the sun rings it: a ring of its
-//                 own warm specks drawn round the circle, starting at the
-//                 point that faces the sun and closing round the far
-//                 side, ticked like its own registration ring and lit
-//                 brightest on the side the light comes from; a finer
-//                 ring inside that; and the surface behind the picture
-//                 burning brighter, as if the light were gathered there.
-//                 The corona swells a little while it looks. None of it
-//                 is quietened like the rest — it stands round a picture,
-//                 not over the writing — and it all goes again, outward
-//                 in, when the card is shut.
+//                 open the chamber hands over where its picture's frame
+//                 stands (`attend`), and the sun answers it: a fine line
+//                 of its own specks run round the frame a little outside
+//                 it, starting from the side that faces the sun and
+//                 closing round the far side, lit brightest on the side
+//                 the light comes from; a registration mark at each
+//                 corner; and its own surface a little brighter round the
+//                 picture. None of it is quietened like the rest — it
+//                 stands round a picture, not over the writing — and it
+//                 all closes up again when the card is shut. (It was a
+//                 glowing ring round a circle for a round, with ticks and
+//                 a finer ring inside it; the picture is a frame now, and
+//                 the answer is drawn to the frame.)
 //
 // LEGIBILITY, WHICH THE OWNER ASKED FOR BY NAME: "I want it to make
 // the text legible, so that particles exist in behind the text the
@@ -173,21 +174,22 @@
   const WIND_BEND = [0.04, 0.16];   // as a share of the window's height
   const WIND_LIT = 0.62;
 
-  // THE ANSWER TO AN OPENED FAVOURITE — see the header. The ring stands
-  // RING_OUT pixels outside the picture's circle; the finer ring inside
-  // it, RING_IN. It draws itself round over ANSWER_IN seconds from the
-  // point facing the sun, and goes over ANSWER_OUT.
-  const RING_SPECKS = 220;
-  const RING_TICKS = 36;           // one every ten degrees, as its own ring
-  const RING_OUT = 16;
-  const RING_IN = 6;
-  const RING_LIT = 1.25;
-  const RING_TURN = 0.05;          // radians a second the ticks drift round
+  // THE ANSWER TO AN OPENED FAVOURITE — see the header. The line stands
+  // EDGE_OUT pixels outside the picture's frame, a speck every EDGE_STEP;
+  // the corner marks CORNER_OUT outside it, each arm CORNER_ARM long. It
+  // draws itself round over ANSWER_IN seconds from the side facing the
+  // sun, and closes up over ANSWER_OUT.
+  const EDGE_OUT = 11;
+  const EDGE_STEP = 4;
+  const EDGE_LIT = 0.8;
+  const CORNER_OUT = 18;
+  const CORNER_ARM = 16;
+  const CORNER_LIT = 0.95;
   const ANSWER_IN = 1.1;
   const ANSWER_OUT = 0.55;
-  const HALO = 0.5;                // how far past the circle the surface burns brighter, as a share of its radius
-  const HALO_LIT = 1.4;            // and how much brighter, at the circle's edge
-  const CORONA_SWELL = 0.35;       // the corona, this much stronger while the sun is looking
+  const HALO = 0.3;                // how far past the frame the surface is brighter, as a share of its shorter side
+  const HALO_LIT = 0.5;            // and how much brighter, at the frame's edge
+  const CORONA_SWELL = 0.2;        // the corona, this much stronger while the sun is looking
 
   // THE TWO NUMBERS THE READING RESTS ON, and they are Ataraxia's own.
   const QUIET = 0.3;
@@ -250,7 +252,7 @@
     // picture's circle, or null), and how far the answer has got, 0 to 1.
     let wants = null;
     let facing = 0;
-    // Where the circle last stood, so that once it is let go the ring
+    // Where the frame last stood, so that once it is let go the line
     // closes up THERE rather than vanishing in one frame.
     let lastAim = null;
 
@@ -510,7 +512,8 @@
       readColumn();
       bloom();
       inked = -1;
-      // WHERE THE OPENED PICTURE STANDS, if one does, read once a frame.
+      // WHERE THE OPENED PICTURE'S FRAME STANDS, if one does — { x, y,
+      // w, h } on the window — read once a frame.
       let aim = facing > 0.004 && wants ? wants() : null;
       if (aim) lastAim = aim;
       else if (facing > 0.004) aim = lastAim;
@@ -574,17 +577,18 @@
         const round = Math.sqrt(Math.max(0, 1 - at[2] * at[2]));
         let lit = s.base * (1 + CHURN * cell) *
           (front ? 1 : BEHIND) * (1 + LIMB * round * round);
-        // THE BURN BEHIND AN OPENED PICTURE: brightest at the circle's
-        // edge and gone by HALO of its radius further out, and let off
-        // the quiet by as much as it burns.
+        // ROUND AN OPENED PICTURE the surface is a little brighter:
+        // most at the frame's edge and gone HALO of its shorter side
+        // further out, and let off the quiet by as much.
         let loud = 0;
         if (aim && front) {
-          const dx = at[0] - aim.x, dy = at[1] - aim.y;
-          const reach = aim.r * (1 + HALO);
-          if (dx > -reach && dx < reach && dy > -reach && dy < reach) {
+          const dx = Math.max(aim.x - at[0], 0, at[0] - aim.x - aim.w);
+          const dy = Math.max(aim.y - at[1], 0, at[1] - aim.y - aim.h);
+          const reach = HALO * Math.min(aim.w, aim.h);
+          if (dx < reach && dy < reach && (dx > 0 || dy > 0)) {
             const d = Math.sqrt(dx * dx + dy * dy);
-            if (d > aim.r && d < reach) {
-              const k = 1 - (d - aim.r) / (reach - aim.r);
+            if (d < reach) {
+              const k = 1 - d / reach;
               loud = ease * k * k;
               lit *= 1 + HALO_LIT * loud;
             }
@@ -656,41 +660,53 @@
         }
       }
 
-      // THE RING ROUND AN OPENED PICTURE, drawn round from the point
-      // that faces the sun: at `ease` it has closed. Lit brightest where
-      // the light comes from and faint on the far side, ticked every ten
-      // degrees, the ticks drifting slowly round.
+      // THE LINE ROUND AN OPENED PICTURE, drawn round from the side that
+      // faces the sun: at `ease` it has closed. Lit brightest where the
+      // light comes from and faint on the far side, with a registration
+      // mark at each corner — the frame answered in the sun's own specks.
       if (aim) {
-        let a0 = Math.atan2(cy - aim.y, cx - aim.x);
+        const mx = aim.x + aim.w / 2, my = aim.y + aim.h / 2;
+        let a0 = Math.atan2(cy - my, cx - mx);
         // Standing on the sun's very middle, it faces up and to the right.
-        if (Math.hypot(cx - aim.x, cy - aim.y) < aim.r * 0.3) a0 = -Math.PI / 4;
+        if (Math.hypot(cx - mx, cy - my) < Math.min(aim.w, aim.h) * 0.15) a0 = -Math.PI / 4;
         const open = Math.PI * ease;
-        const outer = aim.r + RING_OUT;
-        const inner = aim.r + RING_IN;
-        const drift = REDUCE_MOTION ? 0 : t * RING_TURN;
-        for (let n = 0; n < RING_SPECKS; n++) {
-          const th = (n / RING_SPECKS) * Math.PI * 2;
-          let off = th - a0;
+        // How far round from the sun's side a point on the line is, and
+        // how much it faces the sun: null where the line has not got to.
+        const facingAt = (x, y) => {
+          let off = Math.atan2(y - my, x - mx) - a0;
           off = Math.atan2(Math.sin(off), Math.cos(off));
-          if (Math.abs(off) > open) continue;
+          if (Math.abs(off) > open) return null;
           const face = 0.5 + 0.5 * Math.cos(off);
-          const lit = RING_LIT * (0.22 + 0.78 * face * face) * (0.88 + 0.12 * Math.sin(t * 1.7 + n * 0.9));
-          speck(aim.x + Math.cos(th) * outer, aim.y + Math.sin(th) * outer, lit, 1.5, 0.3 + 0.5 * (1 - face), 1);
-          if (n % 2 === 0) {
-            speck(aim.x + Math.cos(th) * inner, aim.y + Math.sin(th) * inner, lit * 0.42, 0.8, 0.5, 1);
+          return face * face;
+        };
+        const x0 = aim.x - EDGE_OUT, y0 = aim.y - EDGE_OUT;
+        const x1 = aim.x + aim.w + EDGE_OUT, y1 = aim.y + aim.h + EDGE_OUT;
+        const sides = [[x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]];
+        let n = 0;
+        for (const [ax, ay, bx, by] of sides) {
+          const len = Math.hypot(bx - ax, by - ay);
+          const steps = Math.max(1, Math.round(len / EDGE_STEP));
+          for (let k = 0; k < steps; k++, n++) {
+            const x = ax + (bx - ax) * (k / steps), y = ay + (by - ay) * (k / steps);
+            const f = facingAt(x, y);
+            if (f === null) continue;
+            const lit = EDGE_LIT * (0.16 + 0.84 * f) * (0.9 + 0.1 * Math.sin(t * 1.7 + n * 0.9));
+            speck(x, y, lit, 1.1, 0.3 + 0.5 * (1 - f), 1);
           }
         }
-        for (let n = 0; n < RING_TICKS; n++) {
-          const th = (n / RING_TICKS) * Math.PI * 2 + drift;
-          let off = th - a0;
-          off = Math.atan2(Math.sin(off), Math.cos(off));
-          if (Math.abs(off) > open) continue;
-          const face = 0.5 + 0.5 * Math.cos(off);
-          const lit = RING_LIT * 1.3 * (0.25 + 0.75 * face * face);
-          const long = n % 9 === 0 ? 3 : 2;
-          for (let k = 1; k <= long; k++) {
-            const rr = outer + 3 + k * 3;
-            speck(aim.x + Math.cos(th) * rr, aim.y + Math.sin(th) * rr, lit * (1 - k * 0.16), 1.3, 0.2, 1);
+        const corners = [
+          [aim.x - CORNER_OUT, aim.y - CORNER_OUT, 1, 1],
+          [aim.x + aim.w + CORNER_OUT, aim.y - CORNER_OUT, -1, 1],
+          [aim.x + aim.w + CORNER_OUT, aim.y + aim.h + CORNER_OUT, -1, -1],
+          [aim.x - CORNER_OUT, aim.y + aim.h + CORNER_OUT, 1, -1],
+        ];
+        for (const [kx, ky, sx, sy] of corners) {
+          const f = facingAt(kx, ky);
+          if (f === null) continue;
+          const lit = CORNER_LIT * (0.3 + 0.7 * f);
+          for (let d = 0; d <= CORNER_ARM; d += 2) {
+            speck(kx + sx * d, ky, lit * (1 - d / (CORNER_ARM * 2.2)), 1.2, 0.25, 1);
+            if (d) speck(kx, ky + sy * d, lit * (1 - d / (CORNER_ARM * 2.2)), 1.2, 0.25, 1);
           }
         }
       }
@@ -735,8 +751,8 @@
 
     const again = () => { size(); if (REDUCE_MOTION) draw(0); };
     window.addEventListener("resize", again);
-    // A STILL SUN IS DRAWN AGAIN ONLY WHEN IT MUST: while it is ringing a
-    // picture, on the next frame after a scroll, so the ring keeps to it.
+    // A STILL SUN IS DRAWN AGAIN ONLY WHEN IT MUST: while it is answering
+    // a picture, on the next frame after a scroll, so the line keeps to it.
     let stillFrame = 0;
     const stillAgain = () => {
       if (!REDUCE_MOTION || stillFrame || !running) return;
@@ -773,14 +789,14 @@
       /** How far into its own time it has got — for anything that needs
           to know (the tests), since the drawing itself cannot be asked. */
       at: function () { return clock; },
-      /** An opened favourite: `get` gives the circle its picture stands
-          in — { x, y, r } on the window — or null, and the sun rings it
-          for as long as it answers. Null lets it go. See the header. */
+      /** An opened favourite: `get` gives the frame its picture stands
+          in — { x, y, w, h } on the window — or null, and the sun answers
+          it for as long as it does. Null lets it go. See the header. */
       attend: function (get) {
         wants = typeof get === "function" ? get : null;
         if (REDUCE_MOTION) {
           // A STILL SUN answers at once, and is drawn again as the page
-          // is scrolled, since the ring has to stay round the picture.
+          // is scrolled, since the line has to stay round the picture.
           facing = wants ? 1 : 0;
           stillAgain();
         }

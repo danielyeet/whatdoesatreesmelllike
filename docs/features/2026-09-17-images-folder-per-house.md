@@ -182,9 +182,9 @@ borders underneath the picture while their words wrapped politely around it. A b
 establishes a formatting context may not overlap a float at all, so the box narrows with
 its text.
 
-**That float is gone** (2026-09-26): every favourite carries a picture now, standing whole in
-a circle in a column of its own beside the writing, credited under it — see the section of
-that date at the foot of this report.
+**That float is gone** (2026-09-26): every favourite carries a picture now, in a frame in a
+column of its own beside the writing, credited under it — see the section of that date at the
+foot of this report.
 
 ### How this was checked
 
@@ -337,7 +337,10 @@ prints *Picture: …* under the circle. The ten, and their sources, are in a tab
 chamber's report](2026-09-15-the-chamber.md) under *2026-09-26*; Haxan's reads *my own*, as it
 does on its own page.
 
+The picture stood whole in a circle for one round and fills an upright frame now, placed on
+its bottle — see [the chamber's report](2026-09-15-the-chamber.md), *2026-09-26, later*.
+
 Checked by `an opened favourite reads the start of its own entry, beside its picture in a
-circle, credited` (`tests/chamber.spec.js`), which also waits for every one of the ten pictures
+frame, credited` (`tests/chamber.spec.js`), which also waits for every one of the ten pictures
 to have loaded — `repository.spec.js` lets a picture missing from `images/` through on purpose,
 so a favourite naming a file that is not there is caught here instead.

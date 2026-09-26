@@ -874,9 +874,12 @@ test("a favourite opens where it stands, and the ones after it go down",
    if you have them based on the name from the repository. I want you to
    make it less techy, more minimalist and geometric." So an opened
    favourite carries the start of its own entry — the owner's words, off
-   the page it links to, never edited — two plain links, and its picture
-   whole in a circle, credited under it. */
-test("an opened favourite reads the start of its own entry, beside its picture in a circle, credited",
+   the page it links to, never edited — two plain links, and its picture,
+   credited under it. And a round later, of that picture — whole in a
+   circle over a blurred copy of itself — "it looks tacky": so it fills an
+   upright frame edge to edge, with nothing behind it, placed so the
+   bottle stands in the middle. */
+test("an opened favourite reads the start of its own entry, beside its picture in a frame, credited",
   async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(PAGE);
@@ -898,19 +901,19 @@ test("an opened favourite reads the start of its own entry, beside its picture i
     expect(e.credit, `${e.name}'s picture should be credited`).not.toBe("");
   });
 
-  // Every card carries its circle and its credit, shut or open.
-  const discs = await page.$$eval(".chapter-card-shell", (all) => all.map((shell) => ({
+  // Every card carries its picture and its credit, shut or open — one
+  // picture, with no blurred copy laid behind it.
+  const plates = await page.$$eval(".chapter-card-shell", (all) => all.map((shell) => ({
     name: shell.querySelector(".chapter-card-name").textContent.trim(),
-    src: (shell.querySelector(".fav-disc-shot") || {}).getAttribute
-      ? shell.querySelector(".fav-disc-shot").getAttribute("src") : null,
-    haze: (shell.querySelector(".fav-disc-haze") || {}).getAttribute
-      ? shell.querySelector(".fav-disc-haze").getAttribute("src") : null,
+    src: (shell.querySelector(".fav-print-shot") || {}).getAttribute
+      ? shell.querySelector(".fav-print-shot").getAttribute("src") : null,
+    pictures: shell.querySelectorAll(".fav-print img").length,
     credit: (shell.querySelector(".fav-credit") || { textContent: "" }).textContent.trim(),
     sign: shell.querySelector(".chapter-card-go").textContent.trim(),
   })));
-  discs.forEach((d, n) => {
+  plates.forEach((d, n) => {
     expect(d.src, `${d.name} carries its picture`).toBe(here[n].image);
-    expect(d.haze, `${d.name}'s blur is its own picture`).toBe(here[n].image);
+    expect(d.pictures, `${d.name}'s picture is laid down once`).toBe(1);
     expect(d.credit, `${d.name} says whose picture it is`).toBe("Picture: " + here[n].credit);
     // Less technical: the card is opened by a drawn sign, not OPEN ↓.
     expect(d.sign, `${d.name}'s card says nothing in capitals`).toBe("");
@@ -919,7 +922,7 @@ test("an opened favourite reads the start of its own entry, beside its picture i
   // And every one of those pictures is really there: named by a file
   // in the repository, not a hope. (repository.spec.js lets a missing
   // picture under images/ through on purpose, so this is the check.)
-  await expect.poll(() => page.$$eval(".fav-disc-shot", (all) => all
+  await expect.poll(() => page.$$eval(".fav-print-shot", (all) => all
     .filter((img) => !(img.complete && img.naturalWidth > 0))
     .map((img) => img.getAttribute("src"))), { timeout: 8000 }).toEqual([]);
 
@@ -938,22 +941,26 @@ test("an opened favourite reads the start of its own entry, beside its picture i
     const own = [...part.querySelectorAll(".human-text > p, .pine-text > p, .adar-text > p")]
       .filter((p) => !p.matches(".human-stage, .adar-stage, .pine-stage, .human-waiting, .human-note"))
       .map((p) => p.textContent.replace(/\s+/g, " ").trim()).filter(Boolean);
-    const shot = shell.querySelector(".fav-disc-shot");
-    const face = shell.querySelector(".fav-disc-face");
+    const shot = shell.querySelector(".fav-print-shot");
+    const face = shell.querySelector(".fav-print-face");
     const f = face.getBoundingClientRect(), r = shot.getBoundingClientRect();
+    const st = getComputedStyle(shot);
+    const sub = (face.dataset.subject || "").split(" ").map(Number);
+    const mid = sub.length === 4
+      ? { x: r.left + (sub[0] + sub[2]) / 2 * r.width, y: r.top + (sub[1] + sub[3]) / 2 * r.height } : null;
     const links = [...shell.querySelectorAll(".fav-link")].map((a) => ({
       say: a.textContent.trim(), font: getComputedStyle(a).fontFamily }));
     return {
       from: shell.querySelector(".fav-writing").dataset.from,
       said, own,
-      round: (() => {
-        const rad = getComputedStyle(face).borderRadius;
-        return rad === "50%" || parseFloat(rad) >= f.width / 2 - 1;
-      })(),
-      square: Math.abs(f.width - f.height),
-      fit: getComputedStyle(shot).objectFit,
-      inside: r.left >= f.left - 1 && r.right <= f.right + 1 && r.top >= f.top - 1 && r.bottom <= f.bottom + 1,
-      kind: face.classList.contains("is-studio") ? "studio" : face.classList.contains("is-scene") ? "scene" : "",
+      shape: f.width / f.height,
+      round: parseFloat(getComputedStyle(face).borderTopLeftRadius) || 0,
+      plain: st.filter === "none" && st.mixBlendMode === "normal" && st.maskImage === "none",
+      covers: r.left <= f.left + 1 && r.right >= f.right - 1 && r.top <= f.top + 1 && r.bottom >= f.bottom - 1,
+      // Drawn back on a clean ground, the frame is that ground's colour.
+      carried: face.style.backgroundColor !== "" && getComputedStyle(face).backgroundColor === face.style.backgroundColor,
+      placed: face.classList.contains("is-placed"),
+      onBottle: mid ? mid.x > f.left && mid.x < f.right && mid.y > f.top && mid.y < f.bottom : null,
       links,
     };
   }, here[0].href);
@@ -969,11 +976,13 @@ test("an opened favourite reads the start of its own entry, beside its picture i
   });
   expect(read.said.join(" ").length, "and not so long it is the whole card").toBeLessThan(700);
 
-  expect(read.round, "the picture stands in a circle").toBe(true);
-  expect(read.square).toBeLessThanOrEqual(1);
-  expect(read.fit, "the whole bottle, never cropped").toBe("contain");
-  expect(read.inside, "inside its circle").toBe(true);
-  expect(read.kind, "read as a studio shot or a scene").not.toBe("");
+  expect(read.shape, "the picture stands in an upright frame").toBeCloseTo(4 / 5, 1);
+  expect(read.round, "square-cornered, not a circle").toBe(0);
+  expect(read.plain, "the picture as it is: no blur, no blending, no feathering").toBe(true);
+  expect(read.placed, "placed on its bottle").toBe(true);
+  expect(read.covers || read.carried,
+    "filling the frame edge to edge, or carrying its own clean ground on to the frame's").toBe(true);
+  if (read.onBottle !== null) expect(read.onBottle, "with the bottle in the frame").toBe(true);
 
   expect(read.links.map((l) => l.say)).toEqual(["Read the whole entry", "Notes"]);
   read.links.forEach((l) => expect(l.font, `${l.say} is not set in the mono`).not.toMatch(/mono/i));
@@ -981,11 +990,12 @@ test("an opened favourite reads the start of its own entry, beside its picture i
 });
 
 /* AND THE SUN ANSWERS IT. The owner: "Make it somehow react with the
-   sun too." An opened favourite tells the sun where its circle stands,
-   and the sun rings it: a ring of its own specks run round the circle,
-   lit from the sun's side, ticks off it, and the surface near it
-   brightened. Shut it, and the sun lets go. */
-test("the sun rings an opened favourite's picture, and lets go when it is shut",
+   sun too." An opened favourite tells the sun where its picture's frame
+   stands, and the sun answers it: a fine line of its own specks run round
+   the frame, lit from the sun's side, a registration mark at each corner,
+   and the surface near it brightened. Shut it, and the sun lets go. (It
+   was a glowing ring round a circle for one round.) */
+test("the sun answers an opened favourite's picture, and lets go when it is shut",
   async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto(PAGE);
@@ -1003,29 +1013,30 @@ test("the sun rings an opened favourite's picture, and lets go when it is shut",
   });
   await openMenu(page);
   await openChapterFully(page, 0);
-  expect(await page.evaluate(() => window.__sun && window.__sun.facing()), "nothing open, nothing ringed").toBe(0);
+  expect(await page.evaluate(() => window.__sun && window.__sun.facing()), "nothing open, nothing answered").toBe(0);
 
-  // Ink in a band just outside the circle, on the sun's own canvas —
-  // read at one place on the window, so the same band can be read again
-  // with the card shut.
-  const circle = () => page.evaluate(() => {
-    const f = document.querySelector(".chapter-card-shell.is-open .fav-disc-face").getBoundingClientRect();
-    return { x: f.left + f.width / 2, y: f.top + f.height / 2, r: f.width / 2 };
+  // Ink in a band just outside the frame, on the sun's own canvas — read
+  // at one place on the window, so the same band can be read again with
+  // the card shut.
+  const frame = () => page.evaluate(() => {
+    const f = document.querySelector(".chapter-card-shell.is-open .fav-print-face").getBoundingClientRect();
+    return { x: f.left, y: f.top, w: f.width, h: f.height };
   });
   const band = (at) => page.evaluate((at) => {
     const c = window.__sunCanvas;
     const k = c.width / c.clientWidth;
-    const g = c.getContext("2d");
+    const all = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
     let sum = 0, n = 0;
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 90) {
-      for (let d = 4; d <= 22; d += 3) {
-        const x = Math.round((at.x + Math.cos(a) * (at.r + d)) * k);
-        const y = Math.round((at.y + Math.sin(a) * (at.r + d)) * k);
-        if (x < 0 || y < 0 || x >= c.width || y >= c.height) continue;
-        const px = g.getImageData(x, y, 1, 1).data;
-        sum += (px[0] + px[1] + px[2]) / 3 * (px[3] / 255);
-        n++;
-      }
+    const read = (x, y) => {
+      const px = Math.round(x * k), py = Math.round(y * k);
+      if (px < 0 || py < 0 || px >= c.width || py >= c.height) return;
+      const i = (py * c.width + px) * 4;
+      sum += (all[i] + all[i + 1] + all[i + 2]) / 3 * (all[i + 3] / 255);
+      n++;
+    };
+    for (let d = 6; d <= 24; d += 1) {
+      for (let x = at.x - d; x <= at.x + at.w + d; x += 1) { read(x, at.y - d); read(x, at.y + at.h + d); }
+      for (let y = at.y - d; y <= at.y + at.h + d; y += 1) { read(at.x - d, y); read(at.x + at.w + d, y); }
     }
     return n ? sum / n : 0;
   }, at);
@@ -1033,16 +1044,16 @@ test("the sun rings an opened favourite's picture, and lets go when it is shut",
   await page.locator(".chapter-card").first().click();
   await expect.poll(() => page.evaluate(() => window.__sun.facing()), { timeout: 5000 })
     .toBeGreaterThan(0.95);
-  const at = await circle();
+  const at = await frame();
   const lit = await band(at);
 
   await page.locator(".chapter-card-shell.is-open .chapter-card").click();
   await expect.poll(() => page.evaluate(() => window.__sun.facing()), { timeout: 5000 })
     .toBe(0);
-  // The same place with the card shut again — the ring was the sun's
+  // The same place with the card shut again — the line was the sun's
   // answer, not the sun already standing bright there.
   const before = await band(at);
-  expect(lit, "the ring is drawn round the picture").toBeGreaterThan(before * 1.5 + 4);
+  expect(lit, "the sun's line is drawn round the picture").toBeGreaterThan(before * 1.4 + 3);
   expect(errors).toEqual([]);
 });
 
