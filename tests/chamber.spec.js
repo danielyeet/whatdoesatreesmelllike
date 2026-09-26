@@ -1077,12 +1077,14 @@ test("Chapter 1 ends with the three that could have made it, under the last card
     };
   });
   expect(end.shown, "it stands on the page").toBe(true);
-  expect(end.say).toBe("Aetherealism, Amber Zero and Incantu from Adar's Aegis collection could have all " +
+  // ADAR's own spelling of the first name, which the owner chose when
+  // asked (they wrote "Aetherealism"); the rest is theirs as written.
+  expect(end.say).toBe("Aetherialism, Amber Zero and Incantu from Adar's Aegis collection could have all " +
     "made it here too, though I have smelled them only once, and so would feel it unjust to everything " +
     "else on the list.");
   expect(end.below, "at the end of the list").toBe(true);
   expect(end.twice, "and only there").toBe(1);
-  expect(end.links.map((l) => l.say)).toEqual(["Aetherealism", "Amber Zero", "Incantu"]);
+  expect(end.links.map((l) => l.say)).toEqual(["Aetherialism", "Amber Zero", "Incantu"]);
   end.links.forEach((l) => expect(l.href, `${l.say} goes to ADAR`).toMatch(/^\.\.\/houses\/adar\.html#part-\d{2}$/));
 
   // Each link lands on that fragrance, by name, in ADAR's own page.
@@ -1094,11 +1096,7 @@ test("Chapter 1 ends with the three that could have made it, under the last card
       return part ? part.querySelector("summary").textContent.replace(/\s+/g, " ") : "";
     });
   }, end.links);
-  // The owner spells the first "Aetherealism" and ADAR's page
-  // "Aetherialism". The owner's line is theirs and stays as written, so
-  // the two are matched on their consonants.
-  const bare = (text) => text.toLowerCase().replace(/[^a-z]/g, "").replace(/[aeiouy]/g, "");
-  end.links.forEach((l, n) => expect(bare(names[n]), `${l.say} is where its link says`).toContain(bare(l.say)));
+  end.links.forEach((l, n) => expect(names[n], `${l.say} is where its link says`).toContain(l.say));
 
   // Chapter 2 has nothing of the kind, and nothing is left standing for it.
   await page.locator(".chapter-step-on").click();

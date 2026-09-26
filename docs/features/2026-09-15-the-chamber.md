@@ -1813,11 +1813,11 @@ buttons"*): **Notes**, then **Read the whole entry**.
 Aetherealism, Amber Zero and Incantu ..."*). A `<p class="gallery-after">` inside a chapter's
 block is taken out of its description and set **under the last card** instead
 (`.chapter-after`, a short rule over it, in the page's dimmer silver). Chapter 1's names the
-three, each linked to where it stands in ADAR. The owner writes *Aetherealism* and ADAR's
-page *Aetherialism*; the line is theirs and keeps its spelling — so `repository.spec.js`'s
-**`every link into a fragrance lands on that fragrance`**, which compares a link's words with
-the part it lands on, carries that one spelling in a table of its own (`SPELT`), and a link
-landing on any other fragrance still fails.
+three, each linked to where it stands in ADAR. The owner wrote *Aetherealism*; ADAR's page
+says *Aetherialism*, and asked which to use, the owner chose ADAR's — so the line reads
+*Aetherialism* and is otherwise theirs as written, and `repository.spec.js`'s **`every link
+into a fragrance lands on that fragrance`** passes on it as it stands. (For one commit that
+test carried the owner's spelling as an exception; it was taken out with the answer.)
 
 ### What was tried and was wrong
 
